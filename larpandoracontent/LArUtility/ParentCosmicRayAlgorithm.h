@@ -8,7 +8,7 @@
 #ifndef LAR_PARENT_COSMIC_RAY_ALGORITHM_H
 #define LAR_PARENT_COSMIC_RAY_ALGORITHM_H 1
 
-#include "larpandoracontent/LArUtility/ParentBaseAlgorithm.h"
+#include "larpandoracontent/LArUtility/ParentSlicingBaseAlgorithm.h"
 
 namespace lar_content
 {
@@ -16,15 +16,18 @@ namespace lar_content
 /**
  *  @brief  ParentCosmicRayAlgorithm class
  */
-class ParentCosmicRayAlgorithm : public ParentBaseAlgorithm
+class ParentCosmicRayAlgorithm : public ParentSlicingBaseAlgorithm
 {
 private:
     pandora::StatusCode Run();
 
     /**
-     *  @brief  Perform cosmic ray reconstruction using list names provided via algorithm config
+     *  @brief  Perform cosmic ray reconstruction using the provided slice
+     *
+     *  @param  the slice
+     *  @param  sliceIndex the slice index
      */
-    void CosmicRayReconstruction();
+    void CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const unsigned int sliceIndex) const;
 
     /**
      *  @brief  Run algorithms in provided list
@@ -35,22 +38,28 @@ private:
 
     /**
      *  @brief  Run two dimensional track reconstruction using list names provided via algorithm config
+     *
+     *  @param  sliceIndex the slice index
      */
-    void TwoDTrackReconstruction() const;
+    void TwoDTrackReconstruction(const unsigned int sliceIndex) const;
 
     /**
      *  @brief  Run two dimensional delta-ray reconstruction using list names provided via algorithm config
+     *
+     *  @param  sliceIndex the slice index
      */
-    void TwoDDeltaRayReconstruction() const;
+    void TwoDDeltaRayReconstruction(const unsigned int sliceIndex) const;
 
     /**
-     *  @brief  Run two dimensional clustering, using hit list name provided, for given hit type, via algorithm config
+     *  @brief  Run two dimensional clustering, for a given slice index, using hit list names provided via algorithm config
      *
-     *  @param  hitType the hit type
+     *  @param  sliceIndex the slice index
      *  @param  clusteringAlgName the clustering algorithm name
      *  @param  existingClusterList whether the intent is to add clusters to an existing output list, or fill this list for first time
+     *  @param  additionalTwoDAlgorithms the names of any additional two dimensional algorithms to process each new cluster list
      */
-    void RunTwoDClustering(const pandora::HitType hitType, const std::string &clusteringAlgName, const bool existingClusterList) const;
+    void RunTwoDClustering(const unsigned int sliceIndex, const std::string &clusteringAlgName, const bool existingClusterList,
+        const pandora::StringVector &additionalTwoDAlgorithms) const;
 
     /**
      *  @brief  Run two dimensional remnant reconstruction using list names provided via algorithm config

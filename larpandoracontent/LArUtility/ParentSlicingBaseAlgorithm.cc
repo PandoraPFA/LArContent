@@ -61,6 +61,9 @@ void ParentSlicingBaseAlgorithm::CopyAllHitsToSingleSlice(SliceList &sliceList) 
 
 StatusCode ParentSlicingBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldPerformSlicing", m_shouldPerformSlicing));
+
     if (m_shouldPerformSlicing)
     {
         AlgorithmTool *pAlgorithmTool(nullptr);
