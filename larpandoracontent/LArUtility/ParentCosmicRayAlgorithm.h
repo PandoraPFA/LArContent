@@ -30,11 +30,6 @@ private:
      */
     void CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const std::string &sliceIndexString) const;
 
-    /**
-     *  @brief  Run two dimensional remnant reconstruction using list names provided via algorithm config
-     */
-    void TwoDRemnantReconstruction() const;
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string                 m_trackClusteringAlgorithm;         ///< The name of the two dimensional track clustering algorithm

@@ -63,22 +63,17 @@ void ParentCosmicRayAlgorithm::CosmicRayReconstruction(const ParentSlicingBaseAl
     this->RunAlgorithm(m_listPruningAlgorithm);
     this->RunTwoDClustering(sliceIndexString, m_deltaRayClusteringAlgorithm, true);
     this->RunAlgorithms(m_deltaRayAlgorithms);
-    this->TwoDRemnantReconstruction();
-    this->RunAlgorithms(m_threeDRemnantAlgorithms);
-    this->RunAlgorithms(m_threeDHitAlgorithms);
-    this->RunAlgorithms(m_vertexAlgorithms);
-    this->RunAlgorithm(m_listMovingAlgorithm);
-}
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ParentCosmicRayAlgorithm::TwoDRemnantReconstruction() const
-{
     for (const HitType hitType : m_hitTypeList)
     {
         PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, (PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType))));
         this->RunAlgorithms(m_twoDRemnantAlgorithms);
     }
+
+    this->RunAlgorithms(m_threeDRemnantAlgorithms);
+    this->RunAlgorithms(m_threeDHitAlgorithms);
+    this->RunAlgorithms(m_vertexAlgorithms);
+    this->RunAlgorithm(m_listMovingAlgorithm);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
