@@ -20,13 +20,15 @@ class ParentNeutrinoAlgorithm : public ParentSlicingBaseAlgorithm
 {
 private:
     pandora::StatusCode Run();
+    void FastReconstruction() const;
 
     /**
-     *  @brief  Use first-pass 3D event reconstruction to slice events into separate, distinct interactions for processing
+     *  @brief  Perform neutrino reconstruction using the provided slice and its index
      *
-     *  @param  sliceList the slice list to receive the slice list
+     *  @param  slice the slice
+     *  @param  sliceIndex the slice index
      */
-    void PerformSlicing(SliceList &sliceList) const;
+    void NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const unsigned int sliceIndex) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

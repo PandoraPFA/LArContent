@@ -20,46 +20,15 @@ class ParentCosmicRayAlgorithm : public ParentSlicingBaseAlgorithm
 {
 private:
     pandora::StatusCode Run();
+    void FastReconstruction() const;
 
     /**
-     *  @brief  Perform cosmic ray reconstruction using the provided slice
+     *  @brief  Perform cosmic-ray reconstruction using the provided slice and its index
      *
-     *  @param  the slice
+     *  @param  slice the slice
      *  @param  sliceIndex the slice index
      */
     void CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const unsigned int sliceIndex) const;
-
-    /**
-     *  @brief  Run algorithms in provided list
-     *
-     *  @param  algorithmNames
-     */
-    void RunAlgorithms(const pandora::StringVector &algorithmNames) const;
-
-    /**
-     *  @brief  Run two dimensional track reconstruction using list names provided via algorithm config
-     *
-     *  @param  sliceIndex the slice index
-     */
-    void TwoDTrackReconstruction(const unsigned int sliceIndex) const;
-
-    /**
-     *  @brief  Run two dimensional delta-ray reconstruction using list names provided via algorithm config
-     *
-     *  @param  sliceIndex the slice index
-     */
-    void TwoDDeltaRayReconstruction(const unsigned int sliceIndex) const;
-
-    /**
-     *  @brief  Run two dimensional clustering, for a given slice index, using hit list names provided via algorithm config
-     *
-     *  @param  sliceIndex the slice index
-     *  @param  clusteringAlgName the clustering algorithm name
-     *  @param  existingClusterList whether the intent is to add clusters to an existing output list, or fill this list for first time
-     *  @param  additionalTwoDAlgorithms the names of any additional two dimensional algorithms to process each new cluster list
-     */
-    void RunTwoDClustering(const unsigned int sliceIndex, const std::string &clusteringAlgName, const bool existingClusterList,
-        const pandora::StringVector &additionalTwoDAlgorithms) const;
 
     /**
      *  @brief  Run two dimensional remnant reconstruction using list names provided via algorithm config

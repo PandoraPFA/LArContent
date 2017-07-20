@@ -55,11 +55,27 @@ public:
 
 protected:
     /**
+     *  @brief  Perform first-pass 3D event reconstruction
+     */
+    virtual void FastReconstruction() const = 0;
+
+    /**
      *  @brief  Use first-pass 3D event reconstruction to slice events into separate, distinct interactions for processing
      *
      *  @param  sliceList the slice list to receive the slice list
      */
-    void PerformSlicing(SliceList &sliceList) const;
+    virtual void PerformSlicing(SliceList &sliceList) const;
+
+    /**
+     *  @brief  Run two dimensional clustering, for a given slice identifier, using hit list names provided via algorithm config
+     *
+     *  @param  sliceIndexString the slice index string/identifier
+     *  @param  clusteringAlgName the clustering algorithm name
+     *  @param  existingClusterList whether the intent is to add clusters to an existing output list, or fill this list for first time
+     *  @param  additionalTwoDAlgorithms the names of any additional two dimensional algorithms to process each new cluster list
+     */
+    void RunTwoDClustering(const std::string &sliceIndexString, const std::string &clusteringAlgName, const bool existingClusterList,
+        const pandora::StringVector &additionalTwoDAlgorithms = pandora::StringVector()) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

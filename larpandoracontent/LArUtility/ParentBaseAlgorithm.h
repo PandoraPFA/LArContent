@@ -29,6 +29,21 @@ public:
 
 protected:
     pandora::StatusCode Initialize();
+
+    /**
+     *  @brief  Run provided algorithm
+     *
+     *  @param  algorithmName
+     */
+    void RunAlgorithm(const std::string &algorithmName) const;
+
+    /**
+     *  @brief  Run algorithms in provided list
+     *
+     *  @param  algorithmNames
+     */
+    void RunAlgorithms(const pandora::StringVector &algorithmNames) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     HitTypeList                 m_hitTypeList;                      ///< The hit type list

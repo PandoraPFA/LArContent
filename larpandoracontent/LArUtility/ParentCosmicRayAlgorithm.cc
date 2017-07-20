@@ -21,7 +21,7 @@ StatusCode ParentCosmicRayAlgorithm::Run()
 
     if (m_shouldPerformSlicing)
     {
-        //this->PerformSlicing(sliceList);
+        this->PerformSlicing(sliceList);
     }
     else
     {
@@ -38,82 +38,35 @@ StatusCode ParentCosmicRayAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ParentCosmicRayAlgorithm::FastReconstruction() const
+{
+    // TODO
+    throw;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ParentCosmicRayAlgorithm::CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const unsigned int sliceIndex) const
 {
+    const std::string sliceIndexString(TypeToString(sliceIndex));
+
     for (const HitType hitType : m_hitTypeList)
     {
         const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
-        const std::string workingCaloHitListName(m_caloHitListNames.at(hitType) + TypeToString(sliceIndex));
-
+        const std::string workingCaloHitListName(m_caloHitListNames.at(hitType) + sliceIndexString);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, caloHitList, workingCaloHitListName));
     }
 
-    this->TwoDTrackReconstruction(sliceIndex);
+    this->RunTwoDClustering(sliceIndexString, m_trackClusteringAlgorithm, false, m_twoDAlgorithms);
     this->RunAlgorithms(m_threeDAlgorithms);
-    this->RunAlgorithms(StringVector(1, m_listPruningAlgorithm));
-    this->TwoDDeltaRayReconstruction(sliceIndex);
+    this->RunAlgorithm(m_listPruningAlgorithm);
+    this->RunTwoDClustering(sliceIndexString, m_deltaRayClusteringAlgorithm, true);
     this->RunAlgorithms(m_deltaRayAlgorithms);
     this->TwoDRemnantReconstruction();
     this->RunAlgorithms(m_threeDRemnantAlgorithms);
     this->RunAlgorithms(m_threeDHitAlgorithms);
     this->RunAlgorithms(m_vertexAlgorithms);
-    this->RunAlgorithms(StringVector(1, m_listMovingAlgorithm));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ParentCosmicRayAlgorithm::RunAlgorithms(const StringVector &algorithmNames) const
-{
-    for (const std::string &algorithmName : algorithmNames)
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ParentCosmicRayAlgorithm::TwoDTrackReconstruction(const unsigned int sliceIndex) const
-{
-    this->RunTwoDClustering(sliceIndex, m_trackClusteringAlgorithm, false, m_twoDAlgorithms);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ParentCosmicRayAlgorithm::TwoDDeltaRayReconstruction(const unsigned int sliceIndex) const
-{
-    this->RunTwoDClustering(sliceIndex, m_deltaRayClusteringAlgorithm, true, StringVector());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ParentCosmicRayAlgorithm::RunTwoDClustering(const unsigned int sliceIndex, const std::string &clusteringAlgName,
-    const bool existingClusterList, const StringVector &additionalTwoDAlgorithms) const
-{
-    for (const HitType hitType : m_hitTypeList)
-    {
-        const StatusCode listStatusCode(PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType) + TypeToString(sliceIndex)));
-
-        if (STATUS_CODE_NOT_FOUND == listStatusCode)
-            continue;
-
-        if (STATUS_CODE_SUCCESS != listStatusCode)
-            throw StatusCodeException(listStatusCode);
-
-        std::string clusterListName;
-        const ClusterList *pClusterList(nullptr);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, clusteringAlgName, pClusterList, clusterListName));
-
-        if (pClusterList->empty())
-        {
-            if (!existingClusterList || (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType))))
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Cluster>(*this));
-        }
-        else
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
-        }
-
-        this->RunAlgorithms(additionalTwoDAlgorithms);
-    }
+    this->RunAlgorithm(m_listMovingAlgorithm);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

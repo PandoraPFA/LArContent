@@ -59,6 +59,49 @@ void ParentSlicingBaseAlgorithm::CopyAllHitsToSingleSlice(SliceList &sliceList) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ParentSlicingBaseAlgorithm::PerformSlicing(SliceList &sliceList) const
+{
+    this->FastReconstruction();
+    m_pSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
+    this->RunAlgorithm(m_listDeletionAlgorithm);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentSlicingBaseAlgorithm::RunTwoDClustering(const std::string &sliceIndexString, const std::string &clusteringAlgName,
+    const bool existingClusterList, const StringVector &additionalTwoDAlgorithms) const
+{
+    for (const HitType hitType : m_hitTypeList)
+    {
+        const StatusCode listStatusCode(PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_caloHitListNames.at(hitType) + sliceIndexString));
+
+        if (STATUS_CODE_NOT_FOUND == listStatusCode)
+            continue;
+
+        if (STATUS_CODE_SUCCESS != listStatusCode)
+            throw StatusCodeException(listStatusCode);
+
+        std::string clusterListName;
+        const ClusterList *pClusterList(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, clusteringAlgName, pClusterList, clusterListName));
+
+        if (pClusterList->empty())
+        {
+            if (!existingClusterList || (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType))))
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Cluster>(*this));
+        }
+        else
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, m_clusterListNames.at(hitType)));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, m_clusterListNames.at(hitType)));
+        }
+
+        this->RunAlgorithms(additionalTwoDAlgorithms);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ParentSlicingBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,

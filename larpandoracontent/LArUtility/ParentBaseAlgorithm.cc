@@ -40,6 +40,21 @@ StatusCode ParentBaseAlgorithm::Initialize()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ParentBaseAlgorithm::RunAlgorithm(const std::string &algorithmName) const
+{
+    this->RunAlgorithms(StringVector(1, algorithmName));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentBaseAlgorithm::RunAlgorithms(const StringVector &algorithmNames) const
+{
+    for (const std::string &algorithmName : algorithmNames)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, algorithmName));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ParentBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
