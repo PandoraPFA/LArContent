@@ -63,7 +63,7 @@ void ParentSlicingBaseAlgorithm::PerformSlicing(SliceList &sliceList) const
 {
     this->FastReconstruction();
     m_pSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
-    this->RunAlgorithm(m_listDeletionAlgorithm);
+    this->RunAlgorithm(m_slicingListDeletionAlgorithm);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,11 +119,8 @@ StatusCode ParentSlicingBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
             return STATUS_CODE_INVALID_PARAMETER;
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-            "ListDeletion", m_listDeletionAlgorithm));
+            "SlicingListDeletion", m_slicingListDeletionAlgorithm));
     }
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ListMoving", m_listMovingAlgorithm));
 
     return ParentBaseAlgorithm::ReadSettings(xmlHandle);
 }

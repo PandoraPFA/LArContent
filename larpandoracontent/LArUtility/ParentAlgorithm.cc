@@ -22,7 +22,7 @@ StatusCode ParentAlgorithm::Run()
     this->CosmicRayReconstruction(crSliceList.front(), "_hack");
 
     // Delete everything for now
-    this->RunAlgorithm(m_listDeletionAlgorithm);
+    this->RunAlgorithm(m_crListDeletionAlgorithm);
 
     SliceList nuSliceList;
 
@@ -41,6 +41,10 @@ StatusCode ParentAlgorithm::Run()
     {
         const std::string sliceIndexString(TypeToString(sliceIndex++));
         this->NeutrinoReconstruction(slice, sliceIndexString);
+        this->RunAlgorithm(m_nuListDeletionAlgorithm);
+
+        this->CosmicRayReconstruction(slice, sliceIndexString);
+        this->RunAlgorithm(m_crListDeletionAlgorithm);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -50,9 +54,9 @@ StatusCode ParentAlgorithm::Run()
 
 void ParentAlgorithm::FastReconstruction() const
 {
-    this->RunTwoDClustering(std::string(), m_crTrackClusteringAlgorithm, false, m_crTwoDAlgorithms);
-    this->RunAlgorithms(m_crThreeDAlgorithms);
-    this->RunAlgorithms(m_crThreeDHitAlgorithms);
+    this->RunTwoDClustering(std::string(), m_nuClusteringAlgorithm, false, m_nuTwoDAlgorithms);
+    this->RunAlgorithms(m_nuThreeDAlgorithms);
+    this->RunAlgorithms(m_nuThreeDHitAlgorithms);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -81,7 +85,6 @@ void ParentAlgorithm::CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::
     this->RunAlgorithms(m_crThreeDRemnantAlgorithms);
     this->RunAlgorithms(m_crThreeDHitAlgorithms);
     this->RunAlgorithms(m_crVertexAlgorithms);
-    //this->RunAlgorithm(m_listMovingAlgorithm);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -102,7 +105,6 @@ void ParentAlgorithm::NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::S
     this->RunAlgorithms(m_nuThreeDHitAlgorithms);
     this->RunAlgorithms(m_nuThreeDMopUpAlgorithms);
     this->RunAlgorithms(m_nuNeutrinoAlgorithms);
-    this->RunAlgorithm(m_listMovingAlgorithm);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -120,9 +122,6 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
             "TwoDDeltaRayClustering", m_crDeltaRayClusteringAlgorithm));
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
-            "ListPruning", m_crListPruningAlgorithm));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
             "TwoDAlgorithms", m_crTwoDAlgorithms));
@@ -144,6 +143,15 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
             "VertexAlgorithms", m_crVertexAlgorithms));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
+            "ListPruning", m_crListPruningAlgorithm));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
+            "ListDeletion", m_crListDeletionAlgorithm));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
+            "ListMoving", m_crListMovingAlgorithm));
     }
 
     TiXmlElement *const pNeutrinoXmlElement(xmlHandle.FirstChild("NeutrinoReconstruction").Element());
@@ -175,6 +183,12 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
             "NeutrinoAlgorithms", m_nuNeutrinoAlgorithms));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, nuXmlHandle,
+            "ListDeletion", m_nuListDeletionAlgorithm));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, nuXmlHandle,
+            "ListMoving", m_nuListMovingAlgorithm));
     }
 
     return ParentSlicingBaseAlgorithm::ReadSettings(xmlHandle);

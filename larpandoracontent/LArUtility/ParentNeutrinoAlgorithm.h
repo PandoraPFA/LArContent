@@ -40,6 +40,7 @@ private:
     pandora::StringVector       m_twoDMopUpAlgorithms;              ///< The names of the two dimensional mop-up algorithms
     pandora::StringVector       m_threeDMopUpAlgorithms;            ///< The names of the three dimensional mop-up algorithms
     pandora::StringVector       m_neutrinoAlgorithms;               ///< The names of the neutrino building algorithms
+    std::string                 m_listMovingAlgorithm;              ///< The name of the list moving algorithm
 };
 
 } // namespace lar_content

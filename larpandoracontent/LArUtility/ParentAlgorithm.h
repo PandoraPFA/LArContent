@@ -42,7 +42,6 @@ private:
 
     std::string                 m_crTrackClusteringAlgorithm;         ///< CR: the name of the two dimensional track clustering algorithm
     std::string                 m_crDeltaRayClusteringAlgorithm;      ///< CR: the name of the two dimensional delta ray clustering algorithm
-    std::string                 m_crListPruningAlgorithm;             ///< CR: the name of the list pruning algorithm
     pandora::StringVector       m_crTwoDAlgorithms;                   ///< CR: the names of the two dimensional reconstruction algorithms
     pandora::StringVector       m_crThreeDAlgorithms;                 ///< CR: the names of the three dimensional reconstruction algorithms
     pandora::StringVector       m_crDeltaRayAlgorithms;               ///< CR: the names of the delta ray algorithms
@@ -50,6 +49,9 @@ private:
     pandora::StringVector       m_crThreeDRemnantAlgorithms;          ///< CR: the names of the three dimensional remnant algorithms
     pandora::StringVector       m_crThreeDHitAlgorithms;              ///< CR: the names of the three dimensional hit creation algorithms
     pandora::StringVector       m_crVertexAlgorithms;                 ///< CR: the names of the vertex reconstruction algorithms
+    std::string                 m_crListPruningAlgorithm;             ///< CR: the name of the list pruning algorithm
+    std::string                 m_crListDeletionAlgorithm;            ///< CR: the name of the list deletion algorithm
+    std::string                 m_crListMovingAlgorithm;              ///< CR: the name of the list moving algorithm
 
     std::string                 m_nuClusteringAlgorithm;              ///< Nu: the name of the two dimensional clustering algorithm
     pandora::StringVector       m_nuTwoDAlgorithms;                   ///< Nu: the names of the two dimensional reconstruction algorithms
@@ -59,6 +61,8 @@ private:
     pandora::StringVector       m_nuTwoDMopUpAlgorithms;              ///< Nu: the names of the two dimensional mop-up algorithms
     pandora::StringVector       m_nuThreeDMopUpAlgorithms;            ///< Nu: the names of the three dimensional mop-up algorithms
     pandora::StringVector       m_nuNeutrinoAlgorithms;               ///< Nu: the names of the neutrino building algorithms
+    std::string                 m_nuListDeletionAlgorithm;            ///< Nu: the name of the list deletion algorithm
+    std::string                 m_nuListMovingAlgorithm;              ///< Nu: the name of the list moving algorithm
 };
 
 } // namespace lar_content

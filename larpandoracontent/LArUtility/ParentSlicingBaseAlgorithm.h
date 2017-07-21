@@ -81,8 +81,7 @@ protected:
 
     bool                        m_shouldPerformSlicing;             ///< Whether to slice events into separate, distinct interactions for processing
     SlicingTool                *m_pSlicingTool;                     ///< The address of the slicing tool
-    std::string                 m_listDeletionAlgorithm;            ///< The name of the list deletion algorithm
-    std::string                 m_listMovingAlgorithm;              ///< The name of the list moving algorithm
+    std::string                 m_slicingListDeletionAlgorithm;     ///< The name of the slicing list deletion algorithm
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

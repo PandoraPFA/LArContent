@@ -97,6 +97,9 @@ StatusCode ParentNeutrinoAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, xmlHandle,
         "NeutrinoAlgorithms", m_neutrinoAlgorithms));
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "ListMoving", m_listMovingAlgorithm));
+
     return ParentSlicingBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
