@@ -52,13 +52,7 @@ void ParentNeutrinoAlgorithm::FastReconstruction() const
 
 void ParentNeutrinoAlgorithm::NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const std::string &sliceIndexString) const
 {
-    for (const HitType hitType : m_hitTypeList)
-    {
-        const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
-        const std::string workingCaloHitListName(m_caloHitListNames.at(hitType) + sliceIndexString);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, caloHitList, workingCaloHitListName));
-    }
-
+    this->SaveTwoDCaloHitLists(slice, sliceIndexString);
     this->RunTwoDClustering(sliceIndexString, m_clusteringAlgorithm, false, m_twoDAlgorithms);
     this->RunAlgorithms(m_vertexAlgorithms);
     this->RunAlgorithms(m_threeDAlgorithms);

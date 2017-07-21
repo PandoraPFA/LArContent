@@ -67,6 +67,14 @@ protected:
     virtual void PerformSlicing(SliceList &sliceList) const;
 
     /**
+     *  @brief  Save the three lists of two dimensional calo hits in the slice under unique names, if not already present
+     *
+     *  @param  slice the slice
+     *  @param  sliceIndexString the slice index string/identifier
+     */
+    void SaveTwoDCaloHitLists(const Slice &slice, const std::string &sliceIndexString) const;
+
+    /**
      *  @brief  Run two dimensional clustering, for a given slice identifier, using hit list names provided via algorithm config
      *
      *  @param  sliceIndexString the slice index string/identifier

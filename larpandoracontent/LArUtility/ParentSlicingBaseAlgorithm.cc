@@ -68,6 +68,22 @@ void ParentSlicingBaseAlgorithm::PerformSlicing(SliceList &sliceList) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ParentSlicingBaseAlgorithm::SaveTwoDCaloHitLists(const Slice &slice, const std::string &sliceIndexString) const
+{
+    for (const HitType hitType : m_hitTypeList)
+    {
+        const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
+
+        const std::string workingCaloHitListName(m_caloHitListNames.at(hitType) + sliceIndexString);
+        const CaloHitList *pWorkingCaloHitList(nullptr);
+
+        if (!sliceIndexString.empty() && (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, workingCaloHitListName, pWorkingCaloHitList)))
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, caloHitList, workingCaloHitListName));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ParentSlicingBaseAlgorithm::RunTwoDClustering(const std::string &sliceIndexString, const std::string &clusteringAlgName,
     const bool existingClusterList, const StringVector &additionalTwoDAlgorithms) const
 {

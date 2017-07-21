@@ -19,16 +19,19 @@ StatusCode ParentAlgorithm::Run()
 {
     SliceList crSliceList;
     this->CopyAllHitsToSingleSlice(crSliceList);
-    this->CosmicRayReconstruction(crSliceList.front(), "_hack");
-
-    // Delete everything for now
+std::cout << "Full CRReco" << std::endl;
+    this->CosmicRayReconstruction(crSliceList.front(), std::string());
     this->RunAlgorithm(m_crListDeletionAlgorithm);
+std::cout << "Full CRReco -- done" << std::endl;
+    // Move unambiguous CRs into final list, delete/prune everything else, make new hit list from available hits
 
     SliceList nuSliceList;
 
     if (m_shouldPerformSlicing)
     {
+std::cout << "Slicing" << std::endl;
         this->PerformSlicing(nuSliceList);
+std::cout << "Slicing -- done, nSlices " << nuSliceList.size() << std::endl;
     }
     else
     {
@@ -40,12 +43,22 @@ StatusCode ParentAlgorithm::Run()
     for (const Slice &slice : nuSliceList)
     {
         const std::string sliceIndexString(TypeToString(sliceIndex++));
+std::cout << "Neutrino Reco " << sliceIndexString << std::endl;
         this->NeutrinoReconstruction(slice, sliceIndexString);
         this->RunAlgorithm(m_nuListDeletionAlgorithm);
+std::cout << "Neutrino Reco " << sliceIndexString << " -- done" << std::endl;
+        //this->RunAlgorithm(m_nuListMovingAlgorithm);
 
+std::cout << "CR Reco " << sliceIndexString << std::endl;
         this->CosmicRayReconstruction(slice, sliceIndexString);
-        this->RunAlgorithm(m_crListDeletionAlgorithm);
+        //this->RunAlgorithm(m_crListDeletionAlgorithm);
+        this->RunAlgorithm(m_crListMovingAlgorithm);
+std::cout << "CR Reco " << sliceIndexString << " -- done" << std::endl;
+
+        // Store map of top-level PFOs in each slice, for later access
     }
+
+    // For chosen nu slice, delete all PFOs stored in relevant entry of map, above. Get slice index and re-run nu reco and list moving
 
     return STATUS_CODE_SUCCESS;
 }
@@ -54,6 +67,7 @@ StatusCode ParentAlgorithm::Run()
 
 void ParentAlgorithm::FastReconstruction() const
 {
+    // OR, leave blank and slice remainder of initial CR reco
     this->RunTwoDClustering(std::string(), m_nuClusteringAlgorithm, false, m_nuTwoDAlgorithms);
     this->RunAlgorithms(m_nuThreeDAlgorithms);
     this->RunAlgorithms(m_nuThreeDHitAlgorithms);
@@ -63,13 +77,7 @@ void ParentAlgorithm::FastReconstruction() const
 
 void ParentAlgorithm::CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const std::string &sliceIndexString) const
 {
-    for (const HitType hitType : m_hitTypeList)
-    {
-        const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
-        const std::string workingCaloHitListName(m_caloHitListNames.at(hitType) + sliceIndexString);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, caloHitList, workingCaloHitListName));
-    }
-
+    this->SaveTwoDCaloHitLists(slice, sliceIndexString);
     this->RunTwoDClustering(sliceIndexString, m_crTrackClusteringAlgorithm, false, m_crTwoDAlgorithms);
     this->RunAlgorithms(m_crThreeDAlgorithms);
     this->RunAlgorithm(m_crListPruningAlgorithm);
@@ -91,13 +99,7 @@ void ParentAlgorithm::CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::
 
 void ParentAlgorithm::NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::Slice &slice, const std::string &sliceIndexString) const
 {
-    for (const HitType hitType : m_hitTypeList)
-    {
-        const CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
-        const std::string workingCaloHitListName(m_caloHitListNames.at(hitType) + sliceIndexString);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, caloHitList, workingCaloHitListName));
-    }
-
+    this->SaveTwoDCaloHitLists(slice, sliceIndexString);
     this->RunTwoDClustering(sliceIndexString, m_nuClusteringAlgorithm, false, m_nuTwoDAlgorithms);
     this->RunAlgorithms(m_nuVertexAlgorithms);
     this->RunAlgorithms(m_nuThreeDAlgorithms);
