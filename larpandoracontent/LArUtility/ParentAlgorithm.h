@@ -40,6 +40,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    std::string                 m_crParentListName;                   ///< Output: the name of the cr parent pfo list
+    std::string                 m_crDaughterListName;                 ///< Output: the name of the cr daughter pfo list 
+    std::string                 m_outputListPrefix;                   ///< Output: the prefix applied to output list names
+    std::string                 m_outputListPruningAlgorithm;         ///< Output: the name of the list pruning algorithm    
+
     std::string                 m_crTrackClusteringAlgorithm;         ///< CR: the name of the two dimensional track clustering algorithm
     std::string                 m_crDeltaRayClusteringAlgorithm;      ///< CR: the name of the two dimensional delta ray clustering algorithm
     pandora::StringVector       m_crTwoDAlgorithms;                   ///< CR: the names of the two dimensional reconstruction algorithms

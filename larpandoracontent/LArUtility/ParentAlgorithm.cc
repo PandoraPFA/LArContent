@@ -21,6 +21,23 @@ StatusCode ParentAlgorithm::Run()
     this->CopyAllHitsToSingleSlice(crSliceList);
 std::cout << "Full CRReco" << std::endl;
     this->CosmicRayReconstruction(crSliceList.front(), std::string());
+
+    const PfoList *pParentCRPfoList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_crParentListName, pParentCRPfoList));
+
+    if (!pParentCRPfoList || pParentCRPfoList->empty())
+    {
+        std::cout << "ParentAlgorithm: No cosmic-ray muons reconstructed " << std::endl;
+        return STATUS_CODE_SUCCESS;
+    }
+
+    PfoList unambiguousCosmicRays;
+
+    for (const Pfo *const pCosmicRayPfo : *pParentCRPfoList)
+    {
+        std::cout << "pCosmicRayPfo " << pCosmicRayPfo->GetParticleId() << std::endl;
+    }
+
     this->RunAlgorithm(m_crListDeletionAlgorithm);
 std::cout << "Full CRReco -- done" << std::endl;
     // Move unambiguous CRs into final list, delete/prune everything else, make new hit list from available hits
@@ -113,6 +130,18 @@ void ParentAlgorithm::NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::S
 
 StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "CRParentListName", m_crParentListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "CRDaughterListName", m_crDaughterListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputListPrefix", m_outputListPrefix));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "OutputListPruning", m_outputListPruningAlgorithm));
+
     TiXmlElement *const pCosmicRayXmlElement(xmlHandle.FirstChild("CosmicRayReconstruction").Element());
 
     if (nullptr != pCosmicRayXmlElement)
