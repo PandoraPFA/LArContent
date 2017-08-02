@@ -20,9 +20,10 @@ namespace lar_content
 ParentAlgorithm::ParentAlgorithm() :
     m_shouldRunAllHitsCosmicReco(true),
     m_shouldRunCosmicHitRemoval(true),
-    m_shouldRunSliceNeutrinoReco(true),
-    m_shouldRunSliceCosmicReco(true),
-    m_shouldIdentifyNeutrinoSlice(true)
+    m_shouldRunNeutrinoRecoOption(true),
+    m_shouldRunCosmicRecoOption(true),
+    m_shouldIdentifyNeutrinoSlice(true),
+    m_printStatus(false)
 {
 }
 
@@ -44,9 +45,11 @@ StatusCode ParentAlgorithm::Run()
             this->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos);
             this->RemoveAmbiguousCosmicRayPfos(ambiguousPfos);
         }
+
+        this->RunAlgorithm(m_crListMovingAlgorithm);
     }
 
-    if (!m_shouldRunSliceNeutrinoReco && !m_shouldRunSliceCosmicReco)
+    if (!m_shouldRunNeutrinoRecoOption && !m_shouldRunCosmicRecoOption)
         return STATUS_CODE_SUCCESS;
 
     SliceList sliceList;
@@ -87,7 +90,7 @@ void ParentAlgorithm::RunAllHitsCosmicRayReconstruction(PfoList &parentCosmicRay
     if (pParentCRPfoList)
         parentCosmicRayPfos = *pParentCRPfoList;
 
-    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+    if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: cosmic-ray reconstuction done" << std::endl;
 }
 
@@ -132,7 +135,6 @@ void ParentAlgorithm::RemoveAmbiguousCosmicRayPfos(const PfoList &ambiguousPfos)
     }
 
     this->RunAlgorithm(m_crListPruningAlgorithm);
-    this->RunAlgorithm(m_crListMovingAlgorithm);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,7 +150,7 @@ void ParentAlgorithm::RunFastReconstructionAndSlicing(SliceList &sliceList) cons
         this->CopyAllHitsToSingleSlice(sliceList);
     }
 
-    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+    if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: slicing done, nSlices " << sliceList.size() << std::endl;
 }
 
@@ -165,7 +167,7 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
         const std::string sliceIndexString(TypeToString(thisSliceIndex));
         SliceProperties sliceProperties;
 
-        if (m_shouldRunSliceNeutrinoReco)
+        if (m_shouldRunNeutrinoRecoOption)
         {
             this->NeutrinoReconstruction(slice, sliceIndexString);
 
@@ -177,14 +179,14 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
                 // TODO - fill neutrino slice properties
             }
 
-            const std::string postProcessAlg(!m_shouldRunSliceCosmicReco ? m_nuListMovingAlgorithm : m_nuListDeletionAlgorithm);
+            const std::string postProcessAlg(!m_shouldRunCosmicRecoOption ? m_nuListMovingAlgorithm : m_nuListDeletionAlgorithm);
             this->RunAlgorithm(postProcessAlg);
 
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "ParentAlgorithm: neutrino reconstruction done for slice " << thisSliceIndex << std::endl;
         }
 
-        if (m_shouldRunSliceCosmicReco)
+        if (m_shouldRunCosmicRecoOption)
         {
             this->CosmicRayReconstruction(slice, sliceIndexString);
 
@@ -199,7 +201,7 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
 
             this->RunAlgorithm(m_crListMovingAlgorithm);
 
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "ParentAlgorithm: cosmic-ray reconstruction done for slice " << thisSliceIndex << std::endl;
         }
 
@@ -227,9 +229,6 @@ void ParentAlgorithm::RemoveSliceCosmicRayReconstruction(const SliceIndexToPfoLi
 
     PfoList allPfosToDelete;
     LArPfoHelper::GetAllConnectedPfos(sliceToCosmicRayPfosMap.at(neutrinoSliceIndex), allPfosToDelete);
-PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allPfosToDelete , "allPfosToDelete", RED);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     for (const Pfo *const pPfo : allPfosToDelete)
     {
@@ -247,7 +246,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     this->RunAlgorithm(m_outputListPruningAlgorithm);
 
-    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+    if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: cosmic-ray reconstruction removed for slice " << neutrinoSliceIndex << std::endl;
 }
 
@@ -258,7 +257,7 @@ void ParentAlgorithm::AddSliceNeutrinoReconstruction(const SliceList &sliceList,
     this->NeutrinoReconstruction(sliceList.at(neutrinoSliceIndex), TypeToString(neutrinoSliceIndex));
     this->RunAlgorithm(m_nuListMovingAlgorithm);
 
-    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+    if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: neutrino reconstruction applied to slice " << neutrinoSliceIndex << std::endl;
 }
 
@@ -324,19 +323,22 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldRunSliceNeutrinoReco", m_shouldRunSliceNeutrinoReco));
+        "ShouldRunNeutrinoRecoOption", m_shouldRunNeutrinoRecoOption));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldRunSliceCosmicReco", m_shouldRunSliceCosmicReco));
+        "ShouldRunCosmicRecoOption", m_shouldRunCosmicRecoOption));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldIdentifyNeutrinoSlice", m_shouldIdentifyNeutrinoSlice));
 
-    if (m_shouldIdentifyNeutrinoSlice && (!m_shouldRunSlicing || (!m_shouldRunSliceNeutrinoReco && !m_shouldRunSliceCosmicReco)))
+    if (m_shouldIdentifyNeutrinoSlice && (!m_shouldRunSlicing || !m_shouldRunNeutrinoRecoOption || !m_shouldRunCosmicRecoOption))
     {
-        std::cout << "ParentAlgorithm::ReadSettings - ShouldIdentifyNeutrinoSlice requires ShouldRunSlicing to be true and per-slice neutrino and cosmic reconstructions enabled" << std::endl;
+        std::cout << "ParentAlgorithm::ReadSettings - ShouldIdentifyNeutrinoSlice requires ShouldRunSlicing and both neutrino and cosmic reconstruction options" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PrintStatus", m_printStatus));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "CRParentListName", m_crParentListName));
@@ -355,7 +357,7 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     TiXmlElement *const pCosmicRayXmlElement(xmlHandle.FirstChild("CosmicRayReconstruction").Element());
 
-    if (nullptr != pCosmicRayXmlElement)
+    if ((m_shouldRunAllHitsCosmicReco || m_shouldRunCosmicRecoOption) && pCosmicRayXmlElement)
     {
         const TiXmlHandle crXmlHandle(pCosmicRayXmlElement);
 
@@ -398,7 +400,7 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     TiXmlElement *const pNeutrinoXmlElement(xmlHandle.FirstChild("NeutrinoReconstruction").Element());
 
-    if (nullptr != pNeutrinoXmlElement)
+    if ((m_shouldRunSlicing || m_shouldRunNeutrinoRecoOption) && pNeutrinoXmlElement)
     {
         const TiXmlHandle nuXmlHandle(pNeutrinoXmlElement);
 

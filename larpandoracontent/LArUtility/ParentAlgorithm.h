@@ -125,9 +125,10 @@ private:
 
     bool                        m_shouldRunAllHitsCosmicReco;         ///< Steering: whether to run all hits cosmic-ray reconstruction
     bool                        m_shouldRunCosmicHitRemoval;          ///< Steering: whether to remove hits from tagged cosmic-rays
-    bool                        m_shouldRunSliceNeutrinoReco;         ///< Steering: whether to run neutrino reconstruction for each slice
-    bool                        m_shouldRunSliceCosmicReco;           ///< Steering: whether to run cosmic-ray reconstruction for each slice
+    bool                        m_shouldRunNeutrinoRecoOption;        ///< Steering: whether to run neutrino reconstruction for each slice
+    bool                        m_shouldRunCosmicRecoOption;          ///< Steering: whether to run cosmic-ray reconstruction for each slice
     bool                        m_shouldIdentifyNeutrinoSlice;        ///< Steering: whether to identify most appropriate neutrino slice
+    bool                        m_printStatus;                        ///< Steering: whether to print current operation status messages
 
     std::string                 m_crParentListName;                   ///< Output: the name of the cr parent pfo list
     std::string                 m_crDaughterListName;                 ///< Output: the name of the cr daughter pfo list 
