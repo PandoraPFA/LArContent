@@ -64,7 +64,7 @@ protected:
      *
      *  @param  sliceList the slice list to receive the slice list
      */
-    virtual void PerformSlicing(SliceList &sliceList) const;
+    virtual void RunSlicing(SliceList &sliceList) const;
 
     /**
      *  @brief  Save the three lists of two dimensional calo hits in the slice under unique names, if not already present
@@ -87,7 +87,7 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool                        m_shouldPerformSlicing;             ///< Whether to slice events into separate, distinct interactions for processing
+    bool                        m_shouldRunSlicing;                 ///< Whether to slice events into separate, distinct interactions for processing
     SlicingTool                *m_pSlicingTool;                     ///< The address of the slicing tool
     std::string                 m_slicingListDeletionAlgorithm;     ///< The name of the slicing list deletion algorithm
 };

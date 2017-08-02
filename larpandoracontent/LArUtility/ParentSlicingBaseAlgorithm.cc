@@ -16,7 +16,7 @@ namespace lar_content
 {
 
 ParentSlicingBaseAlgorithm::ParentSlicingBaseAlgorithm() :
-    m_shouldPerformSlicing(true),
+    m_shouldRunSlicing(true),
     m_pSlicingTool(nullptr)
 {
 }
@@ -59,7 +59,7 @@ void ParentSlicingBaseAlgorithm::CopyAllHitsToSingleSlice(SliceList &sliceList) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ParentSlicingBaseAlgorithm::PerformSlicing(SliceList &sliceList) const
+void ParentSlicingBaseAlgorithm::RunSlicing(SliceList &sliceList) const
 {
     this->FastReconstruction();
     m_pSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
@@ -121,9 +121,9 @@ void ParentSlicingBaseAlgorithm::RunTwoDClustering(const std::string &sliceIndex
 StatusCode ParentSlicingBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldPerformSlicing", m_shouldPerformSlicing));
+        "ShouldRunSlicing", m_shouldRunSlicing));
 
-    if (m_shouldPerformSlicing)
+    if (m_shouldRunSlicing)
     {
         AlgorithmTool *pAlgorithmTool(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,

@@ -19,9 +19,9 @@ StatusCode ParentNeutrinoAlgorithm::Run()
 {
     SliceList sliceList;
 
-    if (m_shouldPerformSlicing)
+    if (m_shouldRunSlicing)
     {
-        this->PerformSlicing(sliceList);
+        this->RunSlicing(sliceList);
     }
     else
     {
