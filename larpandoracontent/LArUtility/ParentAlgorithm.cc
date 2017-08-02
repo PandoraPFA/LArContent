@@ -142,9 +142,18 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
     {
         const unsigned int thisSliceIndex(sliceIndex++);
         const std::string sliceIndexString(TypeToString(thisSliceIndex));
-        SliceProperties sliceProperties; // TODO - fill with nu and cr properties
+        SliceProperties sliceProperties;
 
         this->NeutrinoReconstruction(slice, sliceIndexString);
+
+        const PfoList *pParentNeutrinosInSlice(nullptr);
+        (void) PandoraContentApi::GetList(*this, m_nuParentListName, pParentNeutrinosInSlice);
+
+        if (pParentNeutrinosInSlice)
+        {
+            // TODO - fill neutrino slice properties
+        }
+
         this->RunAlgorithm(m_nuListDeletionAlgorithm);
 
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
@@ -156,14 +165,17 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
         (void) PandoraContentApi::GetList(*this, m_crParentListName, pParentCRPfosInSlice);
 
         if (pParentCRPfosInSlice)
+        {
             sliceToCosmicRayPfosMap[thisSliceIndex] = *pParentCRPfosInSlice;
+            // TODO - fill CR slice properties
+        }
 
         this->RunAlgorithm(m_crListMovingAlgorithm);
 
-        sliceIndexToPropertiesMap[thisSliceIndex] = sliceProperties;
-
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             std::cout << "ParentAlgorithm: cosmic-ray reconstruction done for slice " << thisSliceIndex << std::endl;
+
+        sliceIndexToPropertiesMap[thisSliceIndex] = sliceProperties;
     }
 }
 
@@ -276,6 +288,9 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "CRDaughterListName", m_crDaughterListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NuParentListName", m_nuParentListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputListPrefix", m_outputListPrefix));

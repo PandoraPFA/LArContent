@@ -119,6 +119,7 @@ private:
 
     std::string                 m_crParentListName;                   ///< Output: the name of the cr parent pfo list
     std::string                 m_crDaughterListName;                 ///< Output: the name of the cr daughter pfo list 
+    std::string                 m_nuParentListName;                   ///< Output: the name of the nu parent pfo list
     std::string                 m_outputListPrefix;                   ///< Output: the prefix applied to output list names
     std::string                 m_outputListPruningAlgorithm;         ///< Output: the name of the list pruning algorithm    
 
