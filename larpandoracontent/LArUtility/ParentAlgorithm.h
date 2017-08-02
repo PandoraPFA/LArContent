@@ -20,6 +20,83 @@ class ParentAlgorithm : public ParentSlicingBaseAlgorithm
 {
 private:
     pandora::StatusCode Run();
+
+    /**
+     *  @brief SliceProperties class
+     */
+    class SliceProperties
+    {
+        // Placeholder
+    };
+
+    typedef std::map<unsigned int, pandora::PfoList> SliceIndexToPfoListMap;
+    typedef std::map<unsigned int, SliceProperties> SliceIndexToPropertiesMap;
+
+    /**
+     *  @brief  Run the cosmic-ray reconstruction on the list of all input hits
+     *
+     *  @param  parentCosmicRayPfos to receive the list of parent cosmic-ray pfos
+     */
+    void RunAllHitsCosmicRayReconstruction(pandora::PfoList &parentCosmicRayPfos) const;
+
+    /**
+     *  @brief  Find the list of ambiguous pfos (could represent cosmic-ray muons or neutrinos)
+     *
+     *  @param  parentCosmicRayPfos the list of parent cosmic-ray pfos
+     *  @param  ambiguousPfos to receive the list of ambiguous pfos
+     */
+    void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
+
+    /**
+     *  @brief  Remove ambiguous pfos from the cosmic-ray working lists
+     *
+     *  @param  ambiguousPfos the list of ambiguous pfos
+     */
+    void RemoveAmbiguousCosmicRayPfos(const pandora::PfoList &ambiguousPfos) const;
+
+    /**
+     *  @brief  Run the fast reconstruction and slicing (if configured to do so)
+     *
+     *  @param  sliceList to receive the slice list
+     */
+    void RunFastReconstructionAndSlicing(SliceList &sliceList) const;
+
+    /**
+     *  @brief  Run neutrino and cosmic-ray reconstructions for each slice, leaving the cosmic-ray outcomes in the output lists.
+     *          Maps of slice index to lists of parent cosmic-ray particles, and slice index to slice properties, are populated.
+     *
+     *  @param  sliceList the slice list
+     *  @param  sliceToCosmicRayPfosMap the slice index to cosmic-ray parent pfo list mapping
+     *  @param  sliceIndexToPropertiesMap the slice index to slice properties mapping
+     */
+    void ReconstructSlices(const SliceList &sliceList, SliceIndexToPfoListMap &sliceToCosmicRayPfosMap, SliceIndexToPropertiesMap &sliceIndexToPropertiesMap) const;
+
+    /**
+     *  @brief  Try to identify a neutrino slice. If such a slice is found, return true and provide the neutrino slice index
+     *
+     *  @param  sliceIndexToPropertiesMap the slice index to slice properties mapping
+     *  @param  neutrinoSliceIndex to receive the neutrino slice index, if a neutrino slice is identified
+     *
+     *  @return whether a neutrino slice is identified
+     */
+    bool GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const;
+
+    /**
+     *  @brief  Remove the cosmic-ray outcome from the output lists for a given slice index
+     *
+     *  @param  sliceToCosmicRayPfosMap the slice index to cosmic-ray parent pfo list mapping
+     *  @param  neutrinoSliceIndex the relevant slice index
+     */
+    void RemoveSliceCosmicRayReconstruction(const SliceIndexToPfoListMap &sliceToCosmicRayPfosMap, const unsigned int neutrinoSliceIndex) const;
+
+    /**
+     *  @brief  Rerun the neutrino reconstruction for a given slice index and add the results to the output lists
+     *
+     *  @param  sliceList the slice list
+     *  @param  neutrinoSliceIndex the relevant slice index
+     */
+    void AddSliceNeutrinoReconstruction(const SliceList &sliceList, const unsigned int neutrinoSliceIndex) const;
+
     void FastReconstruction() const;
 
     /**

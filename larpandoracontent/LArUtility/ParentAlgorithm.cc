@@ -19,145 +19,213 @@ namespace lar_content
 
 StatusCode ParentAlgorithm::Run()
 {
-    // Run cosmic-ray reconstruction for all hits
-    SliceList crSliceList;
-    this->CopyAllHitsToSingleSlice(crSliceList);
-    this->CosmicRayReconstruction(crSliceList.front(), std::string());
-std::cout << "CRReco -- done" << std::endl;
+    PfoList parentCosmicRayPfos;
+    this->RunAllHitsCosmicRayReconstruction(parentCosmicRayPfos);
 
-    const PfoList *pParentCRPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_crParentListName, pParentCRPfoList));
-
-    if (!pParentCRPfoList || pParentCRPfoList->empty())
-    {
-        std::cout << "ParentAlgorithm: No cosmic-ray muons reconstructed " << std::endl;
+    if (parentCosmicRayPfos.empty())
         return STATUS_CODE_SUCCESS;
-    }
 
-    // Tag and delete all products associated with ambiguous cosmic rays, moving only clear cosmic rays to the output lists
-    int counter(0); // TODO
-    PfoList pfosToDelete;
+    PfoList ambiguousPfos;
+    this->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos);
+    this->RemoveAmbiguousCosmicRayPfos(ambiguousPfos);
 
-    for (const Pfo *const pCosmicRayPfo : *pParentCRPfoList)
-    {
-        if (++counter % 2 == 0)
-            pfosToDelete.push_back(pCosmicRayPfo);
-    }
+    SliceList sliceList;
+    this->RunFastReconstructionAndSlicing(sliceList);
 
-    PfoList allPfosToDelete;
-    LArPfoHelper::GetAllConnectedPfos(pfosToDelete, allPfosToDelete);
-
-    const PfoList *pCRDaughterPfoList(nullptr);
-    (void) PandoraContentApi::GetList(*this, m_crDaughterListName, pCRDaughterPfoList);
-
-    for (const Pfo *const pPfo : allPfosToDelete)
-    {
-        const std::string listName(std::find(pParentCRPfoList->begin(), pParentCRPfoList->end(), pPfo) != pParentCRPfoList->end() ? m_crParentListName :
-            (pCRDaughterPfoList && std::find(pCRDaughterPfoList->begin(), pCRDaughterPfoList->end(), pPfo) != pCRDaughterPfoList->end()) ? m_crDaughterListName : "");
-
-        if (listName.empty())
-        {
-            std::cout << "ParentAlgorithm: cosmic-ray parent/daughter particles list mismatch " << std::endl;
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, listName));
-    }
-
-    this->RunAlgorithm(m_crListPruningAlgorithm);
-    this->RunAlgorithm(m_crListMovingAlgorithm);
-std::cout << "CRTagging -- done" << std::endl;
-
-    // Perform slicing, using simple fast reconstruction of the remaining available hits
-    SliceList nuSliceList;
-
-    if (m_shouldPerformSlicing)
-    {
-        this->PerformSlicing(nuSliceList);
-    }
-    else
-    {
-        this->CopyAllHitsToSingleSlice(nuSliceList);
-    }
-
-    if (nuSliceList.empty())
-    {
-        std::cout << "ParentAlgorithm: No slices found, so neutrino reconstructed " << std::endl;
+    if (sliceList.empty())
         return STATUS_CODE_SUCCESS;
-    }
-std::cout << "Slicing -- done, nSlices " << nuSliceList.size() << std::endl;
 
-    // Run cosmic-ray and neutrino reconstruction for each slice, keeping just the cosmic-ray output for now
-    unsigned int sliceIndex(0);
+    SliceIndexToPfoListMap sliceToCosmicRayPfosMap;
+    SliceIndexToPropertiesMap sliceIndexToPropertiesMap;
+    this->ReconstructSlices(sliceList, sliceToCosmicRayPfosMap, sliceIndexToPropertiesMap);
 
-    typedef std::map<unsigned int, PfoList> SliceToParentPfosMap;
-    SliceToParentPfosMap sliceToParentCRPfosMap;
+    if (sliceToCosmicRayPfosMap.empty())
+        return STATUS_CODE_SUCCESS;
 
-    for (const Slice &slice : nuSliceList)
+    unsigned int neutrinoSliceIndex(0);
+    if (this->GetNeutrinoSliceIndex(sliceIndexToPropertiesMap, neutrinoSliceIndex))
     {
-        const unsigned int thisSliceIndex(sliceIndex++);
-        const std::string sliceIndexString(TypeToString(thisSliceIndex));
-
-        this->NeutrinoReconstruction(slice, sliceIndexString);
-        this->RunAlgorithm(m_nuListDeletionAlgorithm);
-std::cout << "Neutrino Reco " << sliceIndexString << " -- done" << std::endl;
-
-        this->CosmicRayReconstruction(slice, sliceIndexString);
-
-        const PfoList *pParentCRPfosInSlice(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_crParentListName, pParentCRPfosInSlice));
-
-        if (pParentCRPfosInSlice)
-            sliceToParentCRPfosMap[thisSliceIndex] = *pParentCRPfosInSlice;
-
-        this->RunAlgorithm(m_crListMovingAlgorithm);
-std::cout << "CR Reco " << sliceIndexString << " -- done" << std::endl;
+        this->RemoveSliceCosmicRayReconstruction(sliceToCosmicRayPfosMap, neutrinoSliceIndex);
+        this->AddSliceNeutrinoReconstruction(sliceList, neutrinoSliceIndex);
     }
-
-    // For chosen nu slice, replace cosmic-ray reconstruction output with the neutrino reconstruction output
-    const int neutrinoSliceIndex(0); // TODO
-
-    const PfoList *pAllParentCRPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_outputListPrefix + m_crParentListName, pAllParentCRPfoList));
-
-    const PfoList *pAllCRDaughterPfoList(nullptr);
-    (void) PandoraContentApi::GetList(*this, m_outputListPrefix + m_crDaughterListName, pAllCRDaughterPfoList);
-
-    PfoList allSlicePfosToDelete;
-    LArPfoHelper::GetAllConnectedPfos(sliceToParentCRPfosMap.at(neutrinoSliceIndex), allSlicePfosToDelete);
-PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allSlicePfosToDelete , "allSlicePfosToDelete", RED);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
-    for (const Pfo *const pPfo : allSlicePfosToDelete)
-    {
-        const std::string listName(std::find(pAllParentCRPfoList->begin(), pAllParentCRPfoList->end(), pPfo) != pAllParentCRPfoList->end() ? m_outputListPrefix + m_crParentListName :
-            (pAllCRDaughterPfoList && std::find(pAllCRDaughterPfoList->begin(), pAllCRDaughterPfoList->end(), pPfo) != pAllCRDaughterPfoList->end()) ? m_outputListPrefix + m_crDaughterListName : "");
-
-        if (listName.empty())
-        {
-            std::cout << "ParentAlgorithm: cosmic-ray parent/daughter particles list mismatch " << std::endl;
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, listName));
-    }
-
-    this->RunAlgorithm(m_outputListPruningAlgorithm);
-std::cout << "NeutrinoTagging " << neutrinoSliceIndex << " -- done" << std::endl;
-
-    this->NeutrinoReconstruction(nuSliceList.at(neutrinoSliceIndex), TypeToString(neutrinoSliceIndex));
-    this->RunAlgorithm(m_nuListMovingAlgorithm);
-std::cout << "NeutrinoReco -- done" << std::endl;
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ParentAlgorithm::RunAllHitsCosmicRayReconstruction(PfoList &parentCosmicRayPfos) const
+{
+    SliceList sliceList;
+    this->CopyAllHitsToSingleSlice(sliceList);
+    this->CosmicRayReconstruction(sliceList.front(), std::string());
+
+    const PfoList *pParentCRPfoList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_crParentListName, pParentCRPfoList));
+
+    if (pParentCRPfoList)
+        parentCosmicRayPfos = *pParentCRPfoList;
+
+    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+        std::cout << "ParentAlgorithm: cosmic-ray reconstuction done" << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentAlgorithm::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos) const
+{
+    int counter(0); // TODO - use tool here
+    PfoList ambiguousParentPfos;
+
+    for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)
+    {
+        if (++counter % 4 == 0)
+            ambiguousParentPfos.push_back(pParentCosmicRayPfo);
+    }
+
+    LArPfoHelper::GetAllConnectedPfos(ambiguousParentPfos, ambiguousPfos);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentAlgorithm::RemoveAmbiguousCosmicRayPfos(const PfoList &ambiguousPfos) const
+{
+    const PfoList *pParentCosmicRayPfos(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_crParentListName, pParentCosmicRayPfos));
+
+    const PfoList *pCosmicRayDaughterPfos(nullptr);
+    (void) PandoraContentApi::GetList(*this, m_crDaughterListName, pCosmicRayDaughterPfos);
+
+    for (const Pfo *const pPfo : ambiguousPfos)
+    {
+        const std::string listName(std::find(pParentCosmicRayPfos->begin(), pParentCosmicRayPfos->end(), pPfo) != pParentCosmicRayPfos->end() ? m_crParentListName :
+            (pCosmicRayDaughterPfos && std::find(pCosmicRayDaughterPfos->begin(), pCosmicRayDaughterPfos->end(), pPfo) != pCosmicRayDaughterPfos->end()) ? m_crDaughterListName : "");
+
+        if (listName.empty())
+        {
+            std::cout << "ParentAlgorithm::RemoveAmbiguousCosmicRayPfos: parent/daughter particles list mismatch" << std::endl;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, listName));
+    }
+
+    this->RunAlgorithm(m_crListPruningAlgorithm);
+    this->RunAlgorithm(m_crListMovingAlgorithm);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentAlgorithm::RunFastReconstructionAndSlicing(SliceList &sliceList) const
+{
+    if (m_shouldPerformSlicing)
+    {
+        this->PerformSlicing(sliceList);
+    }
+    else
+    {
+        this->CopyAllHitsToSingleSlice(sliceList);
+    }
+
+    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+        std::cout << "ParentAlgorithm: slicing done, nSlices " << sliceList.size() << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexToPfoListMap &sliceToCosmicRayPfosMap,
+    SliceIndexToPropertiesMap &sliceIndexToPropertiesMap) const
+{
+    unsigned int sliceIndex(0);
+
+    for (const Slice &slice : sliceList)
+    {
+        const unsigned int thisSliceIndex(sliceIndex++);
+        const std::string sliceIndexString(TypeToString(thisSliceIndex));
+        SliceProperties sliceProperties; // TODO - fill with nu and cr properties
+
+        this->NeutrinoReconstruction(slice, sliceIndexString);
+        this->RunAlgorithm(m_nuListDeletionAlgorithm);
+
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ParentAlgorithm: neutrino reconstruction done for slice " << thisSliceIndex << std::endl;
+
+        this->CosmicRayReconstruction(slice, sliceIndexString);
+
+        const PfoList *pParentCRPfosInSlice(nullptr);
+        (void) PandoraContentApi::GetList(*this, m_crParentListName, pParentCRPfosInSlice);
+
+        if (pParentCRPfosInSlice)
+            sliceToCosmicRayPfosMap[thisSliceIndex] = *pParentCRPfosInSlice;
+
+        this->RunAlgorithm(m_crListMovingAlgorithm);
+
+        sliceIndexToPropertiesMap[thisSliceIndex] = sliceProperties;
+
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ParentAlgorithm: cosmic-ray reconstruction done for slice " << thisSliceIndex << std::endl;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ParentAlgorithm::GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &/*sliceIndexToPropertiesMap*/, unsigned int &neutrinoSliceIndex) const
+{
+    neutrinoSliceIndex = 0;
+    return true; // TODO - examine properties here, using tool maybe
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentAlgorithm::RemoveSliceCosmicRayReconstruction(const SliceIndexToPfoListMap &sliceToCosmicRayPfosMap, const unsigned int neutrinoSliceIndex) const
+{
+    const PfoList *pParentCosmicRayPfos(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_outputListPrefix + m_crParentListName, pParentCosmicRayPfos));
+
+    const PfoList *pCosmicRayDaughterPfos(nullptr);
+    (void) PandoraContentApi::GetList(*this, m_outputListPrefix + m_crDaughterListName, pCosmicRayDaughterPfos);
+
+    PfoList allPfosToDelete;
+    LArPfoHelper::GetAllConnectedPfos(sliceToCosmicRayPfosMap.at(neutrinoSliceIndex), allPfosToDelete);
+PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allPfosToDelete , "allPfosToDelete", RED);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    for (const Pfo *const pPfo : allPfosToDelete)
+    {
+        const std::string listName(std::find(pParentCosmicRayPfos->begin(), pParentCosmicRayPfos->end(), pPfo) != pParentCosmicRayPfos->end() ? m_outputListPrefix + m_crParentListName :
+            (pCosmicRayDaughterPfos && std::find(pCosmicRayDaughterPfos->begin(), pCosmicRayDaughterPfos->end(), pPfo) != pCosmicRayDaughterPfos->end()) ? m_outputListPrefix + m_crDaughterListName : "");
+
+        if (listName.empty())
+        {
+            std::cout << "ParentAlgorithm::RemoveSliceCosmicRayReconstruction: parent/daughter particles list mismatch" << std::endl;
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+        }
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, listName));
+    }
+
+    this->RunAlgorithm(m_outputListPruningAlgorithm);
+
+    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+        std::cout << "ParentAlgorithm: cosmic-ray reconstruction removed for slice " << neutrinoSliceIndex << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ParentAlgorithm::AddSliceNeutrinoReconstruction(const SliceList &sliceList, const unsigned int neutrinoSliceIndex) const
+{
+    this->NeutrinoReconstruction(sliceList.at(neutrinoSliceIndex), TypeToString(neutrinoSliceIndex));
+    this->RunAlgorithm(m_nuListMovingAlgorithm);
+
+    if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+        std::cout << "ParentAlgorithm: neutrino reconstruction applied to slice " << neutrinoSliceIndex << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ParentAlgorithm::FastReconstruction() const
 {
-    // OR, leave blank and slice remainder of initial CR reco
     this->RunTwoDClustering(std::string(), m_nuClusteringAlgorithm, false, m_nuTwoDAlgorithms);
     this->RunAlgorithms(m_nuThreeDAlgorithms);
     this->RunAlgorithms(m_nuThreeDHitAlgorithms);
