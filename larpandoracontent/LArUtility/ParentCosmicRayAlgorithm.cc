@@ -43,8 +43,9 @@ StatusCode ParentCosmicRayAlgorithm::Run()
 
 void ParentCosmicRayAlgorithm::FastReconstruction() const
 {
-    std::cout << "Fast reconstruction not implemented for dedicated cosmic-ray reconstruction." << std::endl;
-    throw StatusCodeException(STATUS_CODE_FAILURE);
+    this->RunTwoDClustering(std::string(), m_trackClusteringAlgorithm, false, m_nuTwoDAlgorithms);
+    this->RunAlgorithms(m_nuThreeDAlgorithms);
+    this->RunAlgorithms(m_nuThreeDHitAlgorithms);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,6 +107,22 @@ StatusCode ParentCosmicRayAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "ListMoving", m_listMovingAlgorithm));
+
+    TiXmlElement *const pSlicingXmlElement(xmlHandle.FirstChild("SlicingAlgorithms").Element());
+
+    if (nullptr != pSlicingXmlElement)
+    {
+        const TiXmlHandle slicingXmlHandle(pSlicingXmlElement);
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, slicingXmlHandle,
+            "TwoDAlgorithms", m_nuTwoDAlgorithms));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, slicingXmlHandle,
+            "ThreeDAlgorithms", m_nuThreeDAlgorithms));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, slicingXmlHandle,
+            "ThreeDHitAlgorithms", m_nuThreeDHitAlgorithms));
+    }
 
     return ParentSlicingBaseAlgorithm::ReadSettings(xmlHandle);
 }

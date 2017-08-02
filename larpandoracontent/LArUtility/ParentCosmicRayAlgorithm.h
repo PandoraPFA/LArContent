@@ -32,17 +32,21 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string                 m_trackClusteringAlgorithm;         ///< The name of the two dimensional track clustering algorithm
-    std::string                 m_deltaRayClusteringAlgorithm;      ///< The name of the two dimensional delta ray clustering algorithm
-    pandora::StringVector       m_twoDAlgorithms;                   ///< The names of the two dimensional reconstruction algorithms
-    pandora::StringVector       m_threeDAlgorithms;                 ///< The names of the three dimensional reconstruction algorithms
-    pandora::StringVector       m_deltaRayAlgorithms;               ///< The names of the delta ray algorithms
-    pandora::StringVector       m_twoDRemnantAlgorithms;            ///< The names of the two dimensional remnant algorithms
-    pandora::StringVector       m_threeDRemnantAlgorithms;          ///< The names of the three dimensional remnant algorithms
-    pandora::StringVector       m_threeDHitAlgorithms;              ///< The names of the three dimensional hit creation algorithms
-    pandora::StringVector       m_vertexAlgorithms;                 ///< The names of the vertex reconstruction algorithms
-    std::string                 m_listPruningAlgorithm;             ///< The name of the list pruning algorithm
-    std::string                 m_listMovingAlgorithm;              ///< The name of the list moving algorithm
+    std::string                 m_trackClusteringAlgorithm;         ///< CR: the name of the two dimensional track clustering algorithm
+    std::string                 m_deltaRayClusteringAlgorithm;      ///< CR: the name of the two dimensional delta ray clustering algorithm
+    pandora::StringVector       m_twoDAlgorithms;                   ///< CR: the names of the two dimensional reconstruction algorithms
+    pandora::StringVector       m_threeDAlgorithms;                 ///< CR: the names of the three dimensional reconstruction algorithms
+    pandora::StringVector       m_deltaRayAlgorithms;               ///< CR: the names of the delta ray algorithms
+    pandora::StringVector       m_twoDRemnantAlgorithms;            ///< CR: the names of the two dimensional remnant algorithms
+    pandora::StringVector       m_threeDRemnantAlgorithms;          ///< CR: the names of the three dimensional remnant algorithms
+    pandora::StringVector       m_threeDHitAlgorithms;              ///< CR: the names of the three dimensional hit creation algorithms
+    pandora::StringVector       m_vertexAlgorithms;                 ///< CR: the names of the vertex reconstruction algorithms
+    std::string                 m_listPruningAlgorithm;             ///< CR: the name of the list pruning algorithm
+    std::string                 m_listMovingAlgorithm;              ///< CR: the name of the list moving algorithm
+
+    pandora::StringVector       m_nuTwoDAlgorithms;                 ///< Nu: the names of the two dimensional reconstruction algorithms
+    pandora::StringVector       m_nuThreeDAlgorithms;               ///< Nu: the names of the three dimensional reconstruction algorithms
+    pandora::StringVector       m_nuThreeDHitAlgorithms;            ///< Nu: the names of the three dimensional hit creation algorithms
 };
 
 } // namespace lar_content
