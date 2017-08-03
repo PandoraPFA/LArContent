@@ -18,7 +18,7 @@ namespace lar_content
 /**
  *  @brief  CheatingEventSlicingTool class
  */
-class CheatingEventSlicingTool : public SlicingTool
+class CheatingEventSlicingTool : public EventSlicingBaseTool
 {
 public:
     void Slice(const ParentSlicingBaseAlgorithm *const pAlgorithm, const ParentSlicingBaseAlgorithm::HitTypeToNameMap &caloHitListNames,

@@ -16,9 +16,11 @@
 #include "larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
+#include "larpandoracontent/LArCheating/CheatingCosmicRayTaggingTool.h"
 #include "larpandoracontent/LArCheating/CheatingEventSlicingTool.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoIdTool.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h"
@@ -51,11 +53,13 @@
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoIdTool.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
 
@@ -256,9 +260,13 @@
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArStitchingObjectCreation",             StitchingObjectCreationTool)                                                    \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
+    d("LArCheatingCosmicRayTagging",            CheatingCosmicRayTaggingTool)                                                   \
+    d("LArCheatingNeutrinoId",                  CheatingNeutrinoIdTool)                                                         \
     d("LArBranchAssociatedPfos",                BranchAssociatedPfosTool)                                                       \
+    d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
     d("LArEndAssociatedPfos",                   EndAssociatedPfosTool)                                                          \
     d("LArEventSlicing",                        EventSlicingTool)                                                               \
+    d("LArNeutrinoId",                          NeutrinoIdTool)                                                                 \
     d("LArVertexAssociatedPfos",                VertexAssociatedPfosTool)                                                       \
     d("LArClearShowers",                        ClearShowersTool)                                                               \
     d("LArShowerTensorVisualization",           ShowerTensorVisualizationTool)                                                  \

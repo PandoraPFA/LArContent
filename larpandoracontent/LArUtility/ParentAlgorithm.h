@@ -13,6 +13,11 @@
 namespace lar_content
 {
 
+class CosmicRayTaggingBaseTool;
+class NeutrinoIdBaseTool;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
  *  @brief  ParentAlgorithm class
  */
@@ -24,19 +29,25 @@ public:
      */
     ParentAlgorithm();
 
-private:
-    pandora::StatusCode Run();
-
     /**
      *  @brief SliceProperties class
      */
     class SliceProperties
     {
-        // Placeholder
+    public:
+        /**
+         *  @brief  Default constructor
+         */
+        SliceProperties();
+    
+        float       m_trueNeutrinoWeight;       ///< Placeholder property, the true neutrino weight for the slice
     };
 
     typedef std::map<unsigned int, pandora::PfoList> SliceIndexToPfoListMap;
     typedef std::map<unsigned int, SliceProperties> SliceIndexToPropertiesMap;
+
+private:
+    pandora::StatusCode Run();
 
     /**
      *  @brief  Run the cosmic-ray reconstruction on the list of all input hits
@@ -44,14 +55,6 @@ private:
      *  @param  parentCosmicRayPfos to receive the list of parent cosmic-ray pfos
      */
     void RunAllHitsCosmicRayReconstruction(pandora::PfoList &parentCosmicRayPfos) const;
-
-    /**
-     *  @brief  Find the list of ambiguous pfos (could represent cosmic-ray muons or neutrinos)
-     *
-     *  @param  parentCosmicRayPfos the list of parent cosmic-ray pfos
-     *  @param  ambiguousPfos to receive the list of ambiguous pfos
-     */
-    void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
 
     /**
      *  @brief  Remove ambiguous pfos from the cosmic-ray working lists
@@ -76,16 +79,6 @@ private:
      *  @param  sliceIndexToPropertiesMap the slice index to slice properties mapping
      */
     void ReconstructSlices(const SliceList &sliceList, SliceIndexToPfoListMap &sliceToCosmicRayPfosMap, SliceIndexToPropertiesMap &sliceIndexToPropertiesMap) const;
-
-    /**
-     *  @brief  Try to identify a neutrino slice. If such a slice is found, return true and provide the neutrino slice index
-     *
-     *  @param  sliceIndexToPropertiesMap the slice index to slice properties mapping
-     *  @param  neutrinoSliceIndex to receive the neutrino slice index, if a neutrino slice is identified
-     *
-     *  @return whether a neutrino slice is identified
-     */
-    bool GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const;
 
     /**
      *  @brief  Remove the cosmic-ray outcome from the output lists for a given slice index
@@ -130,6 +123,9 @@ private:
     bool                        m_shouldIdentifyNeutrinoSlice;        ///< Steering: whether to identify most appropriate neutrino slice
     bool                        m_printStatus;                        ///< Steering: whether to print current operation status messages
 
+    CosmicRayTaggingBaseTool   *m_pCosmicRayTaggingTool;              ///< The address of the cosmic-ray tagging tool
+    NeutrinoIdBaseTool         *m_pNeutrinoIdTool;                    ///< The address of the neutrino id tool
+
     std::string                 m_crParentListName;                   ///< Output: the name of the cr parent pfo list
     std::string                 m_crDaughterListName;                 ///< Output: the name of the cr daughter pfo list 
     std::string                 m_nuParentListName;                   ///< Output: the name of the nu parent pfo list
@@ -159,6 +155,51 @@ private:
     pandora::StringVector       m_nuNeutrinoAlgorithms;               ///< Nu: the names of the neutrino building algorithms
     std::string                 m_nuListDeletionAlgorithm;            ///< Nu: the name of the list deletion algorithm
     std::string                 m_nuListMovingAlgorithm;              ///< Nu: the name of the list moving algorithm
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ParentAlgorithm::SliceProperties::SliceProperties() :
+    m_trueNeutrinoWeight(0.f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  CosmicRayTaggingBaseTool class
+ */
+class CosmicRayTaggingBaseTool : public pandora::AlgorithmTool
+{
+public:
+    /**
+     *  @brief  Find the list of ambiguous pfos (could represent cosmic-ray muons or neutrinos)
+     *
+     *  @param  parentCosmicRayPfos the list of parent cosmic-ray pfos
+     *  @param  ambiguousPfos to receive the list of ambiguous pfos
+     */
+    virtual void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos) const = 0;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  NeutrinoIdBaseTool class
+ */
+class NeutrinoIdBaseTool : public pandora::AlgorithmTool
+{
+public:
+    /**
+     *  @brief  Try to identify a neutrino slice. If such a slice is found, return true and provide the neutrino slice index
+     *
+     *  @param  sliceIndexToPropertiesMap the slice index to slice properties mapping
+     *  @param  neutrinoSliceIndex to receive the neutrino slice index, if a neutrino slice is identified
+     *
+     *  @return whether a neutrino slice is identified
+     */
+    virtual bool GetNeutrinoSliceIndex(const ParentAlgorithm::SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const = 0;
 };
 
 } // namespace lar_content

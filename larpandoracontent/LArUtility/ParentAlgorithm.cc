@@ -41,8 +41,11 @@ StatusCode ParentAlgorithm::Run()
 
         if (m_shouldRunCosmicHitRemoval)
         {
+            if (!m_pCosmicRayTaggingTool)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
             PfoList ambiguousPfos;
-            this->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos);
+            m_pCosmicRayTaggingTool->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos);
             this->RemoveAmbiguousCosmicRayPfos(ambiguousPfos);
         }
 
@@ -65,12 +68,17 @@ StatusCode ParentAlgorithm::Run()
     if (sliceToCosmicRayPfosMap.empty())
         return STATUS_CODE_SUCCESS;
 
-    unsigned int neutrinoSliceIndex(0);
-
-    if (m_shouldIdentifyNeutrinoSlice && this->GetNeutrinoSliceIndex(sliceIndexToPropertiesMap, neutrinoSliceIndex))
+    if (m_shouldIdentifyNeutrinoSlice)
     {
-        this->RemoveSliceCosmicRayReconstruction(sliceToCosmicRayPfosMap, neutrinoSliceIndex);
-        this->AddSliceNeutrinoReconstruction(sliceList, neutrinoSliceIndex);
+        if (!m_pNeutrinoIdTool)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        unsigned int neutrinoSliceIndex(0);
+        if (m_pNeutrinoIdTool->GetNeutrinoSliceIndex(sliceIndexToPropertiesMap, neutrinoSliceIndex))
+        {
+            this->RemoveSliceCosmicRayReconstruction(sliceToCosmicRayPfosMap, neutrinoSliceIndex);
+            this->AddSliceNeutrinoReconstruction(sliceList, neutrinoSliceIndex);
+        }
     }
 
     return STATUS_CODE_SUCCESS;
@@ -92,22 +100,6 @@ void ParentAlgorithm::RunAllHitsCosmicRayReconstruction(PfoList &parentCosmicRay
 
     if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: cosmic-ray reconstuction done" << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ParentAlgorithm::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos) const
-{
-    int counter(0); // TODO - use tool here
-    PfoList ambiguousParentPfos;
-
-    for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)
-    {
-        if (++counter % 4 == 0)
-            ambiguousParentPfos.push_back(pParentCosmicRayPfo);
-    }
-
-    LArPfoHelper::GetAllConnectedPfos(ambiguousParentPfos, ambiguousPfos);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -207,14 +199,6 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
 
         sliceIndexToPropertiesMap[thisSliceIndex] = sliceProperties;
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ParentAlgorithm::GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &/*sliceIndexToPropertiesMap*/, unsigned int &neutrinoSliceIndex) const
-{
-    neutrinoSliceIndex = 0;
-    return true; // TODO - examine properties here, using tool maybe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -322,6 +306,18 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
+    if (m_shouldRunCosmicHitRemoval)
+    {
+        AlgorithmTool *pAlgorithmTool(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
+            "CosmicRayTagging", pAlgorithmTool));
+
+        m_pCosmicRayTaggingTool = dynamic_cast<CosmicRayTaggingBaseTool*>(pAlgorithmTool);
+
+        if (!m_pCosmicRayTaggingTool)
+            return STATUS_CODE_INVALID_PARAMETER;
+    }
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldRunNeutrinoRecoOption", m_shouldRunNeutrinoRecoOption));
 
@@ -335,6 +331,18 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         std::cout << "ParentAlgorithm::ReadSettings - ShouldIdentifyNeutrinoSlice requires ShouldRunSlicing and both neutrino and cosmic reconstruction options" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
+    }
+
+    if (m_shouldIdentifyNeutrinoSlice)
+    {
+        AlgorithmTool *pAlgorithmTool(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
+            "NeutrinoId", pAlgorithmTool));
+
+        m_pNeutrinoIdTool = dynamic_cast<NeutrinoIdBaseTool*>(pAlgorithmTool);
+
+        if (!m_pNeutrinoIdTool)
+            return STATUS_CODE_INVALID_PARAMETER;
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

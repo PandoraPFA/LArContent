@@ -27,7 +27,7 @@ class SimpleCone;
 /**
  *  @brief  EventSlicingTool class
  */
-class EventSlicingTool : public SlicingTool
+class EventSlicingTool : public EventSlicingBaseTool
 {
 public:
     /**

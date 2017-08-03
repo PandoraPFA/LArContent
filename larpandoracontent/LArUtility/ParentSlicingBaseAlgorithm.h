@@ -13,7 +13,7 @@
 namespace lar_content
 {
 
-class SlicingTool;
+class EventSlicingBaseTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -88,16 +88,17 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     bool                        m_shouldRunSlicing;                 ///< Whether to slice events into separate, distinct interactions for processing
-    SlicingTool                *m_pSlicingTool;                     ///< The address of the slicing tool
+    EventSlicingBaseTool       *m_pEventSlicingTool;                ///< The address of the event slicing tool
     std::string                 m_slicingListDeletionAlgorithm;     ///< The name of the slicing list deletion algorithm
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  SlicingTool class
+ *  @brief  EventSlicingBaseTool class
  */
-class SlicingTool : public pandora::AlgorithmTool
+class EventSlicingBaseTool : public pandora::AlgorithmTool
 {
 public:
     /**

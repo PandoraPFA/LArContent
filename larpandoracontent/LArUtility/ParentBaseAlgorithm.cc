@@ -15,6 +15,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+ParentBaseAlgorithm::ParentBaseAlgorithm()
+{
+    m_hitTypeList.push_back(TPC_VIEW_U);
+    m_hitTypeList.push_back(TPC_VIEW_V);
+    m_hitTypeList.push_back(TPC_VIEW_W);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 ParentBaseAlgorithm::~ParentBaseAlgorithm()
 {
 }
@@ -23,10 +32,6 @@ ParentBaseAlgorithm::~ParentBaseAlgorithm()
 
 StatusCode ParentBaseAlgorithm::Initialize()
 {
-    m_hitTypeList.push_back(TPC_VIEW_U);
-    m_hitTypeList.push_back(TPC_VIEW_V);
-    m_hitTypeList.push_back(TPC_VIEW_W);
-
     m_caloHitListNames[TPC_VIEW_U] = m_caloHitListNameU;
     m_caloHitListNames[TPC_VIEW_V] = m_caloHitListNameV;
     m_caloHitListNames[TPC_VIEW_W] = m_caloHitListNameW;

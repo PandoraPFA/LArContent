@@ -20,6 +20,11 @@ class ParentBaseAlgorithm : public pandora::Algorithm
 {
 public:
     /**
+     *  @brief  Default constructor
+     */
+    ParentBaseAlgorithm();
+
+    /**
      *  @brief  Destructor
      */
     virtual ~ParentBaseAlgorithm();

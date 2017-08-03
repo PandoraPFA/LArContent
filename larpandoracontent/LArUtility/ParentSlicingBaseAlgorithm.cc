@@ -17,7 +17,7 @@ namespace lar_content
 
 ParentSlicingBaseAlgorithm::ParentSlicingBaseAlgorithm() :
     m_shouldRunSlicing(true),
-    m_pSlicingTool(nullptr)
+    m_pEventSlicingTool(nullptr)
 {
 }
 
@@ -62,7 +62,7 @@ void ParentSlicingBaseAlgorithm::CopyAllHitsToSingleSlice(SliceList &sliceList) 
 void ParentSlicingBaseAlgorithm::RunSlicing(SliceList &sliceList) const
 {
     this->FastReconstruction();
-    m_pSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
+    m_pEventSlicingTool->Slice(this, m_caloHitListNames, m_clusterListNames, sliceList);
     this->RunAlgorithm(m_slicingListDeletionAlgorithm);
 }
 
@@ -129,9 +129,9 @@ StatusCode ParentSlicingBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
             "Slicing", pAlgorithmTool));
 
-        m_pSlicingTool = dynamic_cast<SlicingTool*>(pAlgorithmTool);
+        m_pEventSlicingTool = dynamic_cast<EventSlicingBaseTool*>(pAlgorithmTool);
 
-        if (!m_pSlicingTool)
+        if (!m_pEventSlicingTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
