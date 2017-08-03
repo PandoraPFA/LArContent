@@ -130,6 +130,15 @@ public:
     static bool IsNeutrinoInduced(const pandora::CaloHit *const pCaloHit, const float minWeight = 0.f);
 
     /**
+     *  @brief  Calculate the combined weight of neutrino-induced particles associated with a pfo and its downstream hierarchy
+     *
+     *  @param  pPfo the input pfo
+     *
+     *  @return the combined weight of neutrino-induced particles associated with the pfo and its downstream hierarchy
+     */
+    static float GetDownstreamNeutrinoScore(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
      *  @brief  Calculate the combined weight of neutrino-induced particles associated with a cluster
      *
      *  @param  pCluster the input cluster

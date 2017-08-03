@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+    #include "larpandoracontent/LArHelpers/LArClusterHelper.h" // TODO
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArCheating/CheatingCosmicRayTaggingTool.h"
@@ -25,15 +27,35 @@ CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool()
 
 void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos) const
 {
-    // TODO
-    int counter(0);
     PfoList ambiguousParentPfos;                                                                                                            
                                                                                                                                             
     for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)                                                                        
-    {                                                                                                                                       
-        if (++counter % 4 == 0)                                                                                                             
-            ambiguousParentPfos.push_back(pParentCosmicRayPfo);                                                                             
-    }                                                                                                                                       
+    {
+        if (LArPfoHelper::IsNeutrino(pParentCosmicRayPfo))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        const float neutrinoScore(LArMCParticleHelper::GetDownstreamNeutrinoScore(pParentCosmicRayPfo));
+
+        // TODO Sort out normalisation of this score
+        PfoList downstreamPfos;
+        LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);
+        downstreamPfos.sort(LArPfoHelper::SortByNHits);
+
+        float nHits(0.f);
+
+        for (const Pfo *const pDownstreamPfo : downstreamPfos)
+        {
+            ClusterList twoDClusters;
+            LArPfoHelper::GetTwoDClusterList(pDownstreamPfo, twoDClusters);
+            twoDClusters.sort(LArClusterHelper::SortByNHits);
+
+            for (const Cluster *const pCluster : twoDClusters)
+                nHits += static_cast<float>(pCluster->GetNCaloHits());
+        }
+
+        if ((nHits > std::numeric_limits<float>::epsilon()) && ((neutrinoScore / nHits) > 0.75f)) // TODO
+            ambiguousParentPfos.push_back(pParentCosmicRayPfo);
+    }
 
     LArPfoHelper::GetAllConnectedPfos(ambiguousParentPfos, ambiguousPfos);
 }

@@ -15,6 +15,7 @@
 #include "Pandora/PdgTable.h"
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -174,6 +175,36 @@ bool LArMCParticleHelper::IsNeutrinoInduced(const CaloHit *const pCaloHit, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArMCParticleHelper::GetDownstreamNeutrinoScore(const ParticleFlowObject *const pPfo)
+{
+    // TODO Consolidate normalisation of all these neutrino weights
+    PfoList downstreamPfos;
+    LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
+    downstreamPfos.sort(LArPfoHelper::SortByNHits);
+
+    float neutrinoWeight(0.f);
+
+    for (const Pfo *const pDownstreamPfo : downstreamPfos)
+    {
+        ClusterList twoDClusters;
+        LArPfoHelper::GetTwoDClusterList(pDownstreamPfo, twoDClusters);
+        twoDClusters.sort(LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pCluster : twoDClusters)
+        {
+            try
+            {
+                neutrinoWeight += LArMCParticleHelper::GetNeutrinoWeight(pCluster) * static_cast<float>(pCluster->GetNCaloHits());
+            }
+            catch (const StatusCodeException &) {}
+        }
+    }
+
+    return neutrinoWeight;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
 {
     float neutrinoWeight(0.f);
@@ -185,13 +216,10 @@ float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
         {
             try
             {
-                // note: order is important here
                 neutrinoWeight += LArMCParticleHelper::GetNeutrinoWeight(pCaloHit);
                 totalWeight += 1.f;
             }
-            catch (const StatusCodeException &)
-            {
-            }
+            catch (const StatusCodeException &) {}
         }
     }
 

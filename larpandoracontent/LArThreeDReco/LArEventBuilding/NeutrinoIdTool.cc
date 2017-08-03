@@ -21,6 +21,18 @@ NeutrinoIdTool::NeutrinoIdTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void NeutrinoIdTool::FillNeutrinoProperties(const PfoList *const /*pPfoList*/, ParentAlgorithm::SliceProperties &/*sliceProperties*/) const
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoIdTool::FillCosmicRayProperties(const PfoList *const /*pPfoList*/, ParentAlgorithm::SliceProperties &/*sliceProperties*/) const
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool NeutrinoIdTool::GetNeutrinoSliceIndex(const ParentAlgorithm::SliceIndexToPropertiesMap &/*sliceIndexToPropertiesMap*/, unsigned int &neutrinoSliceIndex) const
 {
     // TODO

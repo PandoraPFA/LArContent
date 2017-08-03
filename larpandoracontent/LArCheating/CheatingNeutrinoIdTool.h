@@ -24,6 +24,8 @@ public:
      */
     CheatingNeutrinoIdTool();
 
+    void FillNeutrinoProperties(const pandora::PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const;
+    void FillCosmicRayProperties(const pandora::PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const;
     bool GetNeutrinoSliceIndex(const ParentAlgorithm::SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const;
 
 private:

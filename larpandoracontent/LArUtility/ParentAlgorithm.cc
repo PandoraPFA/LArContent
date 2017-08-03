@@ -41,9 +41,6 @@ StatusCode ParentAlgorithm::Run()
 
         if (m_shouldRunCosmicHitRemoval)
         {
-            if (!m_pCosmicRayTaggingTool)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
             PfoList ambiguousPfos;
             m_pCosmicRayTaggingTool->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos);
             this->RemoveAmbiguousCosmicRayPfos(ambiguousPfos);
@@ -68,17 +65,11 @@ StatusCode ParentAlgorithm::Run()
     if (sliceToCosmicRayPfosMap.empty())
         return STATUS_CODE_SUCCESS;
 
-    if (m_shouldIdentifyNeutrinoSlice)
+    unsigned int neutrinoSliceIndex(0);
+    if (m_shouldIdentifyNeutrinoSlice && m_pNeutrinoIdTool->GetNeutrinoSliceIndex(sliceIndexToPropertiesMap, neutrinoSliceIndex))
     {
-        if (!m_pNeutrinoIdTool)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        unsigned int neutrinoSliceIndex(0);
-        if (m_pNeutrinoIdTool->GetNeutrinoSliceIndex(sliceIndexToPropertiesMap, neutrinoSliceIndex))
-        {
-            this->RemoveSliceCosmicRayReconstruction(sliceToCosmicRayPfosMap, neutrinoSliceIndex);
-            this->AddSliceNeutrinoReconstruction(sliceList, neutrinoSliceIndex);
-        }
+        this->RemoveSliceCosmicRayReconstruction(sliceToCosmicRayPfosMap, neutrinoSliceIndex);
+        this->AddSliceNeutrinoReconstruction(sliceList, neutrinoSliceIndex);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -167,9 +158,7 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
             (void) PandoraContentApi::GetList(*this, m_nuParentListName, pParentNeutrinosInSlice);
 
             if (pParentNeutrinosInSlice)
-            {
-                // TODO - fill neutrino slice properties
-            }
+                m_pNeutrinoIdTool->FillNeutrinoProperties(pParentNeutrinosInSlice, sliceProperties);
 
             const std::string postProcessAlg(!m_shouldRunCosmicRecoOption ? m_nuListMovingAlgorithm : m_nuListDeletionAlgorithm);
             this->RunAlgorithm(postProcessAlg);
@@ -186,10 +175,10 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
             (void) PandoraContentApi::GetList(*this, m_crParentListName, pParentCRPfosInSlice);
 
             if (pParentCRPfosInSlice)
-            {
+                m_pNeutrinoIdTool->FillCosmicRayProperties(pParentCRPfosInSlice, sliceProperties);
+
+            if (pParentCRPfosInSlice)
                 sliceToCosmicRayPfosMap[thisSliceIndex] = *pParentCRPfosInSlice;
-                // TODO - fill CR slice properties
-            }
 
             this->RunAlgorithm(m_crListMovingAlgorithm);
 

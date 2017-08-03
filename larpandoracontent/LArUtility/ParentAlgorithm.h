@@ -40,7 +40,7 @@ public:
          */
         SliceProperties();
     
-        float       m_trueNeutrinoWeight;       ///< Placeholder property, the true neutrino weight for the slice
+        float       m_weight;           ///< Generic weight property
     };
 
     typedef std::map<unsigned int, pandora::PfoList> SliceIndexToPfoListMap;
@@ -160,7 +160,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ParentAlgorithm::SliceProperties::SliceProperties() :
-    m_trueNeutrinoWeight(0.f)
+    m_weight(0.f)
 {
 }
 
@@ -191,6 +191,22 @@ public:
 class NeutrinoIdBaseTool : public pandora::AlgorithmTool
 {
 public:
+    /**
+     *  @brief  Fill slice properties given provided neutrino pfos
+     *
+     *  @param  pPfoList the address of the parent neutrino pfo list
+     *  @param  sliceProperties to receive the populated neutrino slice properties
+     */
+    virtual void FillNeutrinoProperties(const pandora::PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const = 0;
+
+    /**
+     *  @brief  Fill slice properties given provided cosmic-ray pfos
+     *
+     *  @param  pPfoList the address of the parent cosmic-ray pfo list
+     *  @param  sliceProperties to receive the populated cosmic-ray slice properties
+     */
+    virtual void FillCosmicRayProperties(const pandora::PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const = 0;
+
     /**
      *  @brief  Try to identify a neutrino slice. If such a slice is found, return true and provide the neutrino slice index
      *
