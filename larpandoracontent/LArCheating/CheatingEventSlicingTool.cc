@@ -86,7 +86,7 @@ void CheatingEventSlicingTool::FillSlices(const ParentSlicingBaseAlgorithm *cons
             CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
             caloHitList.push_back(pCaloHit);
         }
-        catch (StatusCodeException &statusCodeException)
+        catch (const StatusCodeException &statusCodeException)
         {
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;

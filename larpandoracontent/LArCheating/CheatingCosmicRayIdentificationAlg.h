@@ -18,6 +18,12 @@ namespace lar_content
  */
 class CheatingCosmicRayIdentificationAlg : public pandora::Algorithm
 {
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    CheatingCosmicRayIdentificationAlg();
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -26,6 +32,7 @@ private:
     std::string     m_outputPfoListName;            ///< The output pfo list name
     std::string     m_inputDaughterPfoListName;     ///< The input daughter pfo list name (if not specified, will assume same as main input list)
     std::string     m_outputDaughterPfoListName;    ///< The output daughter pfo list name (if not specified, will assume same as main output list)
+    float           m_maxNeutrinoFraction;          ///< The maximum true neutrino fraction in a particle to be labelled as a cosmic ray
 };
 
 } // namespace lar_content

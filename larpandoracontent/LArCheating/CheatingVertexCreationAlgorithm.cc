@@ -28,16 +28,14 @@ CheatingVertexCreationAlgorithm::CheatingVertexCreationAlgorithm() :
 
 StatusCode CheatingVertexCreationAlgorithm::Run()
 {
-    const MCParticleList *pMCParticleList(NULL);
+    const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
-    const VertexList *pVertexList(NULL); std::string temporaryListName;
+    const VertexList *pVertexList(nullptr); std::string temporaryListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
-    for (MCParticleList::const_iterator iter = pMCParticleList->begin(), iterEnd = pMCParticleList->end(); iter != iterEnd; ++iter)
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        const MCParticle *const pMCParticle(*iter);
-
         if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
             continue;
 
@@ -49,7 +47,7 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
         parameters.m_vertexLabel = VERTEX_INTERACTION;
         parameters.m_vertexType = VERTEX_3D;
 
-        const Vertex *pVertex(NULL);
+        const Vertex *pVertex(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
     }
 
