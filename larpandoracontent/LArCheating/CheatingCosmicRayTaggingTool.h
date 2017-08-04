@@ -28,6 +28,8 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    float   m_minNeutrinoFraction;        ///< The minimum neutrino fraction for a cosmic-ray pfo to be declared ambiguous
 };
 
 } // namespace lar_content

@@ -19,7 +19,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool()
+CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() :
+    m_minNeutrinoFraction(0.75f)
 {
 }
 
@@ -31,29 +32,11 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
                                                                                                                                             
     for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)                                                                        
     {
-        if (LArPfoHelper::IsNeutrino(pParentCosmicRayPfo))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        const float neutrinoScore(LArMCParticleHelper::GetDownstreamNeutrinoScore(pParentCosmicRayPfo));
-
-        // TODO Sort out normalisation of this score
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);
-        downstreamPfos.sort(LArPfoHelper::SortByNHits);
+        const float neutrinoFraction(LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
 
-        float nHits(0.f);
-
-        for (const Pfo *const pDownstreamPfo : downstreamPfos)
-        {
-            ClusterList twoDClusters;
-            LArPfoHelper::GetTwoDClusterList(pDownstreamPfo, twoDClusters);
-            twoDClusters.sort(LArClusterHelper::SortByNHits);
-
-            for (const Cluster *const pCluster : twoDClusters)
-                nHits += static_cast<float>(pCluster->GetNCaloHits());
-        }
-
-        if ((nHits > std::numeric_limits<float>::epsilon()) && ((neutrinoScore / nHits) > 0.75f)) // TODO
+        if (neutrinoFraction > m_minNeutrinoFraction)
             ambiguousParentPfos.push_back(pParentCosmicRayPfo);
     }
 
@@ -62,8 +45,11 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingCosmicRayTaggingTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode CheatingCosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinNeutrinoFraction", m_minNeutrinoFraction));
+
     return STATUS_CODE_SUCCESS;
 }
 

@@ -26,24 +26,29 @@ CheatingNeutrinoIdTool::CheatingNeutrinoIdTool()
 
 void CheatingNeutrinoIdTool::FillNeutrinoProperties(const PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const
 {
-    float neutrinoScore(0.f);
+    float neutrinoWeight(0.f);
 
     for (const Pfo *const pNeutrinoPfo : *pPfoList)
     {
         if (!LArPfoHelper::IsNeutrino(pNeutrinoPfo))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        // TODO Sort out normalisation of this score
-        neutrinoScore += LArMCParticleHelper::GetDownstreamNeutrinoScore(pNeutrinoPfo);
+        PfoList downstreamPfos;
+        LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
+
+        float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
+        LArMCParticleHelper::GetNeutrinoWeight(&downstreamPfos, thisNeutrinoWeight, thisTotalWeight);
+        neutrinoWeight += thisNeutrinoWeight;
     }
 
-    sliceProperties.m_weight = neutrinoScore;
+    sliceProperties.m_weight = neutrinoWeight;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CheatingNeutrinoIdTool::FillCosmicRayProperties(const PfoList *const /*pPfoList*/, ParentAlgorithm::SliceProperties &/*sliceProperties*/) const
 {
+    // Deliberately empty
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

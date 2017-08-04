@@ -195,17 +195,20 @@ void EventValidationAlgorithm::SelectRecoNeutrinos(const PfoList &allRecoParticl
     }
 
     const Pfo *pBestNeutrino(nullptr);
-    float bestNeutrinoScore(0.f);
+    float bestNeutrinoWeight(0.f);
 
     for (const Pfo *const pNeutrinoPfo : allRecoNeutrinoList)
     {
-        // TODO Sort out normalisation of this score
-        const float neutrinoScore(LArMCParticleHelper::GetDownstreamNeutrinoScore(pNeutrinoPfo));
+        PfoList downstreamPfos;
+        LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
 
-        if (neutrinoScore > bestNeutrinoScore)
+        float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
+        LArMCParticleHelper::GetNeutrinoWeight(&downstreamPfos, thisNeutrinoWeight, thisTotalWeight);
+
+        if (thisNeutrinoWeight > bestNeutrinoWeight)
         {
             pBestNeutrino = pNeutrinoPfo;
-            bestNeutrinoScore = neutrinoScore;
+            bestNeutrinoWeight = thisNeutrinoWeight;
         }
     }
 

@@ -113,48 +113,41 @@ public:
      *  @brief  Whether a cluster is the product of a neutrino interaction
      *
      *  @param  pCluster the input cluster
-     *  @param  minWeight minimum threshold for the combined weight of neutrino-induced particles associated with the cluster
+     *  @param  minFraction minimum threshold for the combined fraction of neutrino-induced particles associated with the cluster
      *
      *  @return boolean
      */
-    static bool IsNeutrinoInduced(const pandora::Cluster *const pCluster, const float minWeight = 0.f);
+    static bool IsNeutrinoInduced(const pandora::Cluster *const pCluster, const float minFraction = 0.f);
 
     /**
      *  @brief  Whether a hit is the product of a neutrino interaction
      *
      *  @param  pCaloHit the input calo hit
-     *  @param  minWeight minimum threshold for the combined weight of neutrino-induced particles associated with the hit
+     *  @param  minFraction minimum threshold for the combined fraction of neutrino-induced particles associated with the hit
      *
      *  @return boolean
      */
-    static bool IsNeutrinoInduced(const pandora::CaloHit *const pCaloHit, const float minWeight = 0.f);
+    static bool IsNeutrinoInduced(const pandora::CaloHit *const pCaloHit, const float minFraction = 0.f);
 
     /**
-     *  @brief  Calculate the combined weight of neutrino-induced particles associated with a pfo and its downstream hierarchy
+     *  @brief  Calculate the fractional weight of neutrino-induced particles associated with a given object
      *
-     *  @param  pPfo the input pfo
+     *  @param  pT the input object
      *
-     *  @return the combined weight of neutrino-induced particles associated with the pfo and its downstream hierarchy
+     *  @return the fractional weight of neutrino-induced particles associated with the object
      */
-    static float GetDownstreamNeutrinoScore(const pandora::ParticleFlowObject *const pPfo);
+    template <typename T>
+    static float GetNeutrinoFraction(const T *const pT);
 
     /**
-     *  @brief  Calculate the combined weight of neutrino-induced particles associated with a cluster
+     *  @brief  Calculate the weight of neutrino-induced particles (and, separately, of all particles) associated with a given object
      *
-     *  @param  pCluster the input cluster
-     *
-     *  @return the combined weight of neutrino-induced particles associated with the cluster
+     *  @param  pT the input object
+     *  @param  neutrinoWeight to receive the neutrino weight
+     *  @param  totalWeight to receive the total weight
      */
-    static float GetNeutrinoWeight(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Calculate the combined weight of neutrino-induced particles associated with a calo hit
-     *
-     *  @param  pCaloHit the input calo hit
-     *
-     *  @return the combined weight of neutrino-induced particles associated with the calo hit
-     */
-    static float GetNeutrinoWeight(const pandora::CaloHit *const pCaloHit);
+    template <typename T>
+    static void GetNeutrinoWeight(const T *const pT, float &neutrinoWeight, float &totalWeight);
 
     typedef std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
 
