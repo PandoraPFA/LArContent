@@ -184,6 +184,7 @@ private:
 
     typedef std::pair<const ThreeDSlidingFitResult, const ThreeDSlidingFitResult> SlidingFitPair;
     typedef std::unordered_map<const pandora::ParticleFlowObject *, SlidingFitPair> PfoToSlidingFitsMap;
+    typedef std::vector<pandora::PfoList> SliceList;
 
     /**
      *  @brief  Choose a set of cuts using a keyword - "cautious" = remove as few neutrinos as possible
