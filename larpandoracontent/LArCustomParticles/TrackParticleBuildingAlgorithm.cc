@@ -13,7 +13,6 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTrackPfo.h"
-#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
@@ -52,7 +51,8 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
 
         // Calculate sliding fit trajectory
         LArTrackStateVector trackStateVector;
-        this->GetSlidingFitTrajectory(pInputPfo, pInputVertex, trackStateVector);
+        LArPfoHelper::GetSlidingFitTrajectory(pInputPfo, pInputVertex, m_slidingFitHalfWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()),
+            trackStateVector);
 
         if (trackStateVector.empty())
             return;
@@ -94,112 +94,6 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
         if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
             throw statusCodeException;
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackParticleBuildingAlgorithm::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo, const Vertex *const pVertex,
-    LArTrackStateVector &trackStateVector) const
-{
-    // Get 3D clusters (normally there should only be one)
-    ClusterList clusterList;
-    LArPfoHelper::GetClusters(pPfo, TPC_3D, clusterList);
-
-    if (clusterList.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    // Get seed direction from 3D clusters (bail out for single-hit clusters)
-    CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinates(clusterList, minPosition, maxPosition);
-
-    if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    const CartesianVector seedDirection((maxPosition - minPosition).GetUnitVector());
-    const CartesianVector seedPosition((maxPosition + minPosition) * 0.5f);
-
-    const bool isForward((seedDirection.GetDotProduct(seedPosition - pVertex->GetPosition()) > 0.f) ? true : false);
-    const float scaleFactor(isForward ? +1.f : -1.f);
-
-    // Calculate trajectory from 3D sliding fits
-    LArTrackTrajectory trackTrajectory;
-    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    const unsigned int layerWindow(m_slidingFitHalfWindow);
-
-    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
-    {
-        const Cluster *const pCluster = *cIter;
-
-        try
-        {
-            const ThreeDSlidingFitResult slidingFitResult(pCluster, layerWindow, layerPitch);
-
-            CaloHitList caloHitList;
-            pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-
-            for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
-            {
-                const CaloHit *const pCaloHit3D = *hIter;
-                const CaloHit *const pCaloHit2D = static_cast<const CaloHit*>(pCaloHit3D->GetParentAddress());
-
-                try
-                {
-                    const float rL(slidingFitResult.GetLongitudinalDisplacement(pCaloHit3D->GetPositionVector()));
-
-                    CartesianVector position(0.f, 0.f, 0.f);
-                    const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
-
-                    if (positionStatusCode != STATUS_CODE_SUCCESS)
-                        throw StatusCodeException(positionStatusCode);
-
-                    CartesianVector direction(0.f, 0.f, 0.f);
-                    const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
-
-                    if (directionStatusCode != STATUS_CODE_SUCCESS)
-                        throw StatusCodeException(directionStatusCode);
-
-                    const float projection(seedDirection.GetDotProduct(position - seedPosition));
-
-                    trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
-                        LArTrackState(position, direction * scaleFactor, pCaloHit2D)));
-                }
-                catch (StatusCodeException &statusCodeException1)
-                {
-                    if (STATUS_CODE_FAILURE == statusCodeException1.GetStatusCode())
-                        throw statusCodeException1;
-                }
-            }
-        }
-        catch (StatusCodeException &statusCodeException2)
-        {
-            if (STATUS_CODE_FAILURE == statusCodeException2.GetStatusCode())
-                throw statusCodeException2;
-        }
-    }
-
-    // Sort trajectory points by distance along track
-    std::sort(trackTrajectory.begin(), trackTrajectory.end(), TrackParticleBuildingAlgorithm::SortByHitProjection);
-
-    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter)
-    {
-        trackStateVector.push_back(tIter->second);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool TrackParticleBuildingAlgorithm::SortByHitProjection(const LArTrackTrajectoryPoint &lhs, const LArTrackTrajectoryPoint &rhs)
-{
-    if (lhs.first != rhs.first)
-        return (lhs.first < rhs.first);
-
-    if (lhs.second.GetCaloHit() && rhs.second.GetCaloHit())
-        return (lhs.second.GetCaloHit()->GetInputEnergy() > rhs.second.GetCaloHit()->GetInputEnergy());
-
-    const float dx(lhs.second.GetPosition().GetX() - rhs.second.GetPosition().GetX());
-    const float dy(lhs.second.GetPosition().GetY() - rhs.second.GetPosition().GetY());
-    const float dz(lhs.second.GetPosition().GetZ() - rhs.second.GetPosition().GetZ());
-    return (dx + dy + dz > 0.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -31,23 +31,6 @@ private:
 
     void CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject*& pOutputPfo) const;
 
-    /**
-     *  @brief  Apply 3D sliding fit to Pfo and return track trajectory
-     *
-     *  @param  pPfo the address of the input Pfo
-     *  @param  trackTrajectory the output track trajectory
-     */
-    void GetSlidingFitTrajectory(const pandora::ParticleFlowObject *const pPfo, const pandora::Vertex *const pVertex,
-        LArTrackStateVector &trackStateVector) const;
-
-    /**
-     *  @brief  Sort pfos by number of constituent hits
-     *
-     *  @param  pLhs address of first pfo
-     *  @param  pRhs address of second pfo
-     */
-    static bool SortByHitProjection(const LArTrackTrajectoryPoint &lhs, const LArTrackTrajectoryPoint &rhs);
-
     bool            m_cosmicMode;             ///<
     unsigned int    m_slidingFitHalfWindow;   ///<
 };
