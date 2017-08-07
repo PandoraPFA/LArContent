@@ -12,6 +12,8 @@
 #include "Objects/ParticleFlowObject.h"
 #include "Objects/Vertex.h"
 
+#include "larpandoracontent/LArObjects/LArTrackPfo.h"
+
 namespace lar_content
 {
 
@@ -72,7 +74,7 @@ public:
      *  @param  pPfo the input Pfo
      *  @param  clusterList the output list of clusters
      */
-    static void GetTwoDClusterList(const pandora::ParticleFlowObject *const pPfo, pandora::ClusterList &clusterList); 
+    static void GetTwoDClusterList(const pandora::ParticleFlowObject *const pPfo, pandora::ClusterList &clusterList);
 
     /**
      *  @brief Get the list of 3D clusters from an input pfo
@@ -222,7 +224,7 @@ public:
 
     /**
      *  @brief  Get neutrino pfos from an input pfo list
-     * 
+     *
      *  @param  pPfoList the input pfo list
      *  @param  recoNeutrinos to receive the list of neutrino pfos
      */
@@ -254,6 +256,38 @@ public:
      *  @return address of pfo vertex
      */
     static const pandora::Vertex *GetVertex(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Apply 3D sliding fit to a set of points and return track trajectory
+     *
+     *  @param  pointVector  the input list of 3D positions
+     *  @param  vertexPosition  the input vertex position
+     *  @param  slidingFitHalfWindow  size of half window for sliding linear fit
+     *  @param  layerPitch  size of pitch for sliding linear fit
+     *  @param  trackStateVector  the output track trajectory
+     */
+    static void GetSlidingFitTrajectory(const pandora::CartesianPointVector &pointVector, const pandora::CartesianVector &vertexPosition,
+        const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector);
+
+    /**
+     *  @brief  Apply 3D sliding fit to Pfo and return track trajectory
+     *
+     *  @param  pPfo  the address of the input Pfo
+     *  @param  pVertex  the address of the input vertex
+     *  @param  slidingFitHalfWindow  size of half window for sliding linear fit
+     *  @param  layerPitch  size of pitch for sliding linear fit
+     *  @param  trackStateVector  the output track trajectory
+     */
+    static void GetSlidingFitTrajectory(const pandora::ParticleFlowObject *const pPfo, const pandora::Vertex *const pVertex,
+        const unsigned int slidingFitHalfWindow, const float layerPitch, LArTrackStateVector &trackStateVector);
+
+    /**
+     *  @brief  Sort pfos by number of constituent hits
+     *
+     *  @param  pLhs address of first pfo
+     *  @param  pRhs address of second pfo
+     */
+    static bool SortByHitProjection(const LArTrackTrajectoryPoint &lhs, const LArTrackTrajectoryPoint &rhs);
 
     /**
      *  @brief  Sort pfos by number of constituent hits
