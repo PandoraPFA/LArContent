@@ -107,34 +107,12 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
 
     PfoToBoolMap pfoToIsLikelyCRMuonMap;
     this->TagCRMuons(candidates, pfoToInTimeMap, pfoToIsTopToBottomMap, neutrinoSliceSet, pfoToIsLikelyCRMuonMap);
-ClusterList crClusters3D, ambiguousClusters3D;
 
     for (const ParticleFlowObject *const pPfo : parentCosmicRayPfos)
     {
-        const Cluster *pCluster3D(nullptr);
-        if (this->GetValid3DCluster(pPfo, pCluster3D))
-        {
-            if (!pfoToIsLikelyCRMuonMap.at(pPfo))
-                ambiguousClusters3D.push_back(pCluster3D);
-            else
-                crClusters3D.push_back(pCluster3D);
-        }
-
         if (!pfoToIsLikelyCRMuonMap.at(pPfo))
             ambiguousPfos.push_back(pPfo);
     }
-PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XY, -1., -1, 0.1f);
-const CartesianVector topYStart(m_face_Xc, m_face_Yt - m_marginY, 0.);
-const CartesianVector topYEnd(m_face_Xa, m_face_Yt - m_marginY, 0.);
-const CartesianVector bottomYStart(m_face_Xc, m_face_Yb + m_marginY, 0.);
-const CartesianVector bottomYEnd(m_face_Xa, m_face_Yb + m_marginY, 0.);
-PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &topYStart, &topYEnd, "TOP", BLACK, 2, 1);
-PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &bottomYStart, &bottomYEnd, "BOTTOM", BLACK, 2, 1);
-//PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &parentCosmicRayPfos, "All", BLUE);
-//PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "NuCand", RED);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &crClusters3D, "crClusters3D", BLUE);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &ambiguousClusters3D, "ambiguousClusters3D", RED);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -405,40 +383,11 @@ void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, 
 void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap, const PfoToBoolMap &pfoToIsTopToBottomMap,
     const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const
 {
-std::cout << "TagCRMuons, candidates.size() " << candidates.size() << ", neutrinoSliceSet.size() " << neutrinoSliceSet.size() << std::endl;
     for (const CRCandidate &candidate : candidates)
     {
-std::cout << "TagCRMuons, sliceId " << candidate.m_sliceId << std::endl;
-std::cout << "canFit " << candidate.m_canFit << std::endl;
-std::cout << "neutrinoSliceSet.count(candidate.m_sliceId) " << neutrinoSliceSet.count(candidate.m_sliceId) << std::endl;
         const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) && candidate.m_canFit &&
             (!pfoToInTimeMap.at(candidate.m_pPfo) || pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
             (candidate.m_theta > m_minCosmicCosTheta && candidate.m_curvature < m_maxCosmicCurvature)));
-
-std::cout << "!pfoToInTimeMap.at(candidate.m_pPfo) " << !pfoToInTimeMap.at(candidate.m_pPfo) << std::endl;
-std::cout << "pfoToIsTopToBottomMap.at(candidate.m_pPfo) " << pfoToIsTopToBottomMap.at(candidate.m_pPfo) << std::endl;
-std::cout << "candidate.m_theta > m_minCosmicCosTheta " << (candidate.m_theta > m_minCosmicCosTheta) << std::endl;
-std::cout << "candidate.m_curvature < m_maxCosmicCurvature " << (candidate.m_curvature < m_maxCosmicCurvature) << std::endl;
-std::cout << "candidate.m_theta " << candidate.m_theta << std::endl;
-std::cout << "candidate.m_curvature " << candidate.m_curvature << std::endl;
-std::cout << " likelyCRMuon " << likelyCRMuon << std::endl;
-
-ClusterList crClusters3D;
-const Cluster *pCluster3D(nullptr);
-if (this->GetValid3DCluster(candidate.m_pPfo, pCluster3D))
-    crClusters3D.push_back(pCluster3D);
-
-PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XY, -1., -1, 0.1f);
-const CartesianVector topYStart(m_face_Xc, m_face_Yt - m_marginY, 0.);
-const CartesianVector topYEnd(m_face_Xa, m_face_Yt - m_marginY, 0.);
-const CartesianVector bottomYStart(m_face_Xc, m_face_Yb + m_marginY, 0.);
-const CartesianVector bottomYEnd(m_face_Xa, m_face_Yb + m_marginY, 0.);
-PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &topYStart, &topYEnd, "TOP", BLACK, 2, 1);
-PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &bottomYStart, &bottomYEnd, "BOTTOM", BLACK, 2, 1);
-//PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &parentCosmicRayPfos, "All", BLUE);
-//PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "NuCand", RED);
-PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &crClusters3D, "Candidate", BLUE);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
         if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
