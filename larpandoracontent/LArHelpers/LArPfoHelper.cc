@@ -86,7 +86,7 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitTy
 
 void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
 {
-    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); 
+    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end();
         cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = *cIter;
@@ -102,7 +102,7 @@ void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, Clus
 
 void LArPfoHelper::GetThreeDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
 {
-    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); 
+    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end();
         cIter != cIterEnd; ++cIter)
     {
         const Cluster *const pCluster = *cIter;
@@ -441,6 +441,182 @@ const Vertex *LArPfoHelper::GetVertex(const ParticleFlowObject *const pPfo)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     return pVertex;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetSlidingFitTrajectory(const CartesianPointVector &pointVector, const CartesianVector &vertexPosition,
+    const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector)
+{
+    // Calculate trajectory using 3D sliding fit
+    LArTrackTrajectory trackTrajectory;
+
+    try
+    {
+        const ThreeDSlidingFitResult slidingFitResult(&pointVector, layerWindow, layerPitch);
+        const CartesianVector minPosition(slidingFitResult.GetGlobalMinLayerPosition());
+        const CartesianVector maxPosition(slidingFitResult.GetGlobalMaxLayerPosition());
+
+        if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        const CartesianVector seedPosition((maxPosition + minPosition) * 0.5f);
+        const CartesianVector seedDirection((maxPosition - minPosition).GetUnitVector());
+
+        const float scaleFactor((seedDirection.GetDotProduct(seedPosition - vertexPosition) > 0.f) ? +1.f : -1.f);
+
+        for (CartesianPointVector::const_iterator pIter = pointVector.begin(), pIterEnd =  pointVector.end(); pIter != pIterEnd; ++pIter)
+        {
+            const CartesianVector nextPoint = *pIter;
+
+            try
+            {
+                const float rL(slidingFitResult.GetLongitudinalDisplacement(nextPoint));
+
+                CartesianVector position(0.f, 0.f, 0.f);
+                const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
+
+                if (positionStatusCode != STATUS_CODE_SUCCESS)
+                    throw StatusCodeException(positionStatusCode);
+
+                CartesianVector direction(0.f, 0.f, 0.f);
+                const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
+
+                if (directionStatusCode != STATUS_CODE_SUCCESS)
+                    throw StatusCodeException(directionStatusCode);
+
+                const float projection(seedDirection.GetDotProduct(position - seedPosition));
+
+                trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
+                    LArTrackState(position, direction * scaleFactor, nullptr)));
+            }
+            catch (StatusCodeException &statusCodeException1)
+            {
+                if (STATUS_CODE_FAILURE == statusCodeException1.GetStatusCode())
+                    throw statusCodeException1;
+            }
+        }
+    }
+    catch (StatusCodeException &statusCodeException2)
+    {
+        if (STATUS_CODE_FAILURE == statusCodeException2.GetStatusCode())
+            throw statusCodeException2;
+    }
+
+    // Sort trajectory points by distance along track
+    std::sort(trackTrajectory.begin(), trackTrajectory.end(), LArPfoHelper::SortByHitProjection);
+
+    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter)
+    {
+        trackStateVector.push_back(tIter->second);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo, const Vertex *const pVertex,
+    const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector)
+{
+    // Get 3D vertex position
+    const CartesianVector vertexPosition(pVertex->GetPosition());
+
+    // Get 3D hits
+    CaloHitList caloHitList;
+    LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList);
+
+    // Get 3D space points
+    CartesianPointVector pointVector;
+    for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
+    {
+        const CaloHit *const pCaloHit3D = *hIter;
+        pointVector.push_back(pCaloHit3D->GetPositionVector());
+    }
+
+    // Check that input list contains some points, and then sort point coordinates by position
+    if (pointVector.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    std::sort(pointVector.begin(), pointVector.end(), LArClusterHelper::SortCoordinatesByPosition);
+
+    // Calculate trajectory using 3D sliding fit
+    LArTrackTrajectory trackTrajectory;
+
+    try
+    {
+        const ThreeDSlidingFitResult slidingFitResult(&pointVector, layerWindow, layerPitch);
+        const CartesianVector minPosition(slidingFitResult.GetGlobalMinLayerPosition());
+        const CartesianVector maxPosition(slidingFitResult.GetGlobalMaxLayerPosition());
+
+        if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        const CartesianVector seedPosition((maxPosition + minPosition) * 0.5f);
+        const CartesianVector seedDirection((maxPosition - minPosition).GetUnitVector());
+
+        const float scaleFactor((seedDirection.GetDotProduct(seedPosition - vertexPosition) > 0.f) ? +1.f : -1.f);
+
+        for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
+        {
+            const CaloHit *const pCaloHit3D = *hIter;
+            const CaloHit *const pCaloHit2D = static_cast<const CaloHit*>(pCaloHit3D->GetParentAddress());
+
+            try
+            {
+                const float rL(slidingFitResult.GetLongitudinalDisplacement(pCaloHit3D->GetPositionVector()));
+
+                CartesianVector position(0.f, 0.f, 0.f);
+                const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
+
+                if (positionStatusCode != STATUS_CODE_SUCCESS)
+                    throw StatusCodeException(positionStatusCode);
+
+                CartesianVector direction(0.f, 0.f, 0.f);
+                const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
+
+                if (directionStatusCode != STATUS_CODE_SUCCESS)
+                    throw StatusCodeException(directionStatusCode);
+
+                const float projection(seedDirection.GetDotProduct(position - seedPosition));
+
+                trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
+                    LArTrackState(position, direction * scaleFactor, pCaloHit2D)));
+            }
+            catch (StatusCodeException &statusCodeException1)
+            {
+                if (STATUS_CODE_FAILURE == statusCodeException1.GetStatusCode())
+                    throw statusCodeException1;
+            }
+        }
+    }
+    catch (StatusCodeException &statusCodeException2)
+    {
+        if (STATUS_CODE_FAILURE == statusCodeException2.GetStatusCode())
+            throw statusCodeException2;
+    }
+
+    // Sort trajectory points by distance along track
+    std::sort(trackTrajectory.begin(), trackTrajectory.end(), LArPfoHelper::SortByHitProjection);
+
+    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter)
+    {
+        trackStateVector.push_back(tIter->second);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPfoHelper::SortByHitProjection(const LArTrackTrajectoryPoint &lhs, const LArTrackTrajectoryPoint &rhs)
+{
+    if (lhs.first != rhs.first)
+        return (lhs.first < rhs.first);
+
+    if (lhs.second.GetCaloHit() && rhs.second.GetCaloHit())
+        return (lhs.second.GetCaloHit()->GetInputEnergy() > rhs.second.GetCaloHit()->GetInputEnergy());
+
+    const float dx(lhs.second.GetPosition().GetX() - rhs.second.GetPosition().GetX());
+    const float dy(lhs.second.GetPosition().GetY() - rhs.second.GetPosition().GetY());
+    const float dz(lhs.second.GetPosition().GetZ() - rhs.second.GetPosition().GetZ());
+    return (dx + dy + dz > 0.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
