@@ -179,7 +179,7 @@ public:
      *  @param  parentCosmicRayPfos the list of parent cosmic-ray pfos
      *  @param  ambiguousPfos to receive the list of ambiguous pfos
      */
-    virtual void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos) const = 0;
+    virtual void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

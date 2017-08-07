@@ -26,7 +26,7 @@ CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos) const
+void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos)
 {
     PfoList ambiguousParentPfos;                                                                                                            
                                                                                                                                             
