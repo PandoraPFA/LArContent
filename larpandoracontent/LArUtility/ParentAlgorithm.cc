@@ -7,6 +7,7 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
+#include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -90,7 +91,7 @@ void ParentAlgorithm::RunAllHitsCosmicRayReconstruction(PfoList &parentCosmicRay
         parentCosmicRayPfos = *pParentCRPfoList;
 
     if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-        std::cout << "ParentAlgorithm: cosmic-ray reconstuction done" << std::endl;
+        std::cout << "ParentAlgorithm: cosmic-ray reconstruction done" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
