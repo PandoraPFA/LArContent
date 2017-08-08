@@ -448,68 +448,7 @@ const Vertex *LArPfoHelper::GetVertex(const ParticleFlowObject *const pPfo)
 void LArPfoHelper::GetSlidingFitTrajectory(const CartesianPointVector &pointVector, const CartesianVector &vertexPosition,
     const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector)
 {
-    // Calculate trajectory using 3D sliding fit
-    LArTrackTrajectory trackTrajectory;
-
-    try
-    {
-        const ThreeDSlidingFitResult slidingFitResult(&pointVector, layerWindow, layerPitch);
-        const CartesianVector minPosition(slidingFitResult.GetGlobalMinLayerPosition());
-        const CartesianVector maxPosition(slidingFitResult.GetGlobalMaxLayerPosition());
-
-        if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-        const CartesianVector seedPosition((maxPosition + minPosition) * 0.5f);
-        const CartesianVector seedDirection((maxPosition - minPosition).GetUnitVector());
-
-        const float scaleFactor((seedDirection.GetDotProduct(seedPosition - vertexPosition) > 0.f) ? +1.f : -1.f);
-
-        for (CartesianPointVector::const_iterator pIter = pointVector.begin(), pIterEnd =  pointVector.end(); pIter != pIterEnd; ++pIter)
-        {
-            const CartesianVector nextPoint = *pIter;
-
-            try
-            {
-                const float rL(slidingFitResult.GetLongitudinalDisplacement(nextPoint));
-
-                CartesianVector position(0.f, 0.f, 0.f);
-                const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
-
-                if (positionStatusCode != STATUS_CODE_SUCCESS)
-                    throw StatusCodeException(positionStatusCode);
-
-                CartesianVector direction(0.f, 0.f, 0.f);
-                const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
-
-                if (directionStatusCode != STATUS_CODE_SUCCESS)
-                    throw StatusCodeException(directionStatusCode);
-
-                const float projection(seedDirection.GetDotProduct(position - seedPosition));
-
-                trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
-                    LArTrackState(position, direction * scaleFactor, nullptr)));
-            }
-            catch (StatusCodeException &statusCodeException1)
-            {
-                if (STATUS_CODE_FAILURE == statusCodeException1.GetStatusCode())
-                    throw statusCodeException1;
-            }
-        }
-    }
-    catch (StatusCodeException &statusCodeException2)
-    {
-        if (STATUS_CODE_FAILURE == statusCodeException2.GetStatusCode())
-            throw statusCodeException2;
-    }
-
-    // Sort trajectory points by distance along track
-    std::sort(trackTrajectory.begin(), trackTrajectory.end(), LArPfoHelper::SortByHitProjection);
-
-    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter)
-    {
-        trackStateVector.push_back(tIter->second);
-    }
+    LArPfoHelper::SlidingFitTrajectoryImpl(&pointVector, vertexPosition, layerWindow, layerPitch, trackStateVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -517,90 +456,9 @@ void LArPfoHelper::GetSlidingFitTrajectory(const CartesianPointVector &pointVect
 void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo, const Vertex *const pVertex,
     const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector)
 {
-    // Get 3D vertex position
-    const CartesianVector vertexPosition(pVertex->GetPosition());
-
-    // Get 3D hits
     CaloHitList caloHitList;
     LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList);
-
-    // Get 3D space points
-    CartesianPointVector pointVector;
-    for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
-    {
-        const CaloHit *const pCaloHit3D = *hIter;
-        pointVector.push_back(pCaloHit3D->GetPositionVector());
-    }
-
-    // Check that input list contains some points, and then sort point coordinates by position
-    if (pointVector.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    std::sort(pointVector.begin(), pointVector.end(), LArClusterHelper::SortCoordinatesByPosition);
-
-    // Calculate trajectory using 3D sliding fit
-    LArTrackTrajectory trackTrajectory;
-
-    try
-    {
-        const ThreeDSlidingFitResult slidingFitResult(&pointVector, layerWindow, layerPitch);
-        const CartesianVector minPosition(slidingFitResult.GetGlobalMinLayerPosition());
-        const CartesianVector maxPosition(slidingFitResult.GetGlobalMaxLayerPosition());
-
-        if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-        const CartesianVector seedPosition((maxPosition + minPosition) * 0.5f);
-        const CartesianVector seedDirection((maxPosition - minPosition).GetUnitVector());
-
-        const float scaleFactor((seedDirection.GetDotProduct(seedPosition - vertexPosition) > 0.f) ? +1.f : -1.f);
-
-        for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
-        {
-            const CaloHit *const pCaloHit3D = *hIter;
-            const CaloHit *const pCaloHit2D = static_cast<const CaloHit*>(pCaloHit3D->GetParentAddress());
-
-            try
-            {
-                const float rL(slidingFitResult.GetLongitudinalDisplacement(pCaloHit3D->GetPositionVector()));
-
-                CartesianVector position(0.f, 0.f, 0.f);
-                const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
-
-                if (positionStatusCode != STATUS_CODE_SUCCESS)
-                    throw StatusCodeException(positionStatusCode);
-
-                CartesianVector direction(0.f, 0.f, 0.f);
-                const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
-
-                if (directionStatusCode != STATUS_CODE_SUCCESS)
-                    throw StatusCodeException(directionStatusCode);
-
-                const float projection(seedDirection.GetDotProduct(position - seedPosition));
-
-                trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
-                    LArTrackState(position, direction * scaleFactor, pCaloHit2D)));
-            }
-            catch (StatusCodeException &statusCodeException1)
-            {
-                if (STATUS_CODE_FAILURE == statusCodeException1.GetStatusCode())
-                    throw statusCodeException1;
-            }
-        }
-    }
-    catch (StatusCodeException &statusCodeException2)
-    {
-        if (STATUS_CODE_FAILURE == statusCodeException2.GetStatusCode())
-            throw statusCodeException2;
-    }
-
-    // Sort trajectory points by distance along track
-    std::sort(trackTrajectory.begin(), trackTrajectory.end(), LArPfoHelper::SortByHitProjection);
-
-    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter)
-    {
-        trackStateVector.push_back(tIter->second);
-    }
+    LArPfoHelper::SlidingFitTrajectoryImpl(&caloHitList, pVertex->GetPosition(), layerWindow, layerPitch, trackStateVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -658,5 +516,114 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
     // ATTN Need an efficient (balance with well-motivated) tie-breaker here. Pfo length, for instance, is extremely slow.
     return (energyLhs > energyRhs);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVector &vertexPosition, const unsigned int layerWindow,
+    const float layerPitch, LArTrackStateVector &trackStateVector)
+{
+    CartesianPointVector pointVector;
+
+    for (const auto &nextPoint : *pT)
+        pointVector.push_back(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint));
+
+    if (pointVector.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    std::sort(pointVector.begin(), pointVector.end(), LArClusterHelper::SortCoordinatesByPosition);
+
+    LArTrackTrajectory trackTrajectory;
+
+    try
+    {
+        const ThreeDSlidingFitResult slidingFitResult(&pointVector, layerWindow, layerPitch);
+        const CartesianVector minPosition(slidingFitResult.GetGlobalMinLayerPosition());
+        const CartesianVector maxPosition(slidingFitResult.GetGlobalMaxLayerPosition());
+
+        if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        const CartesianVector seedPosition((maxPosition + minPosition) * 0.5f);
+        const CartesianVector seedDirection((maxPosition - minPosition).GetUnitVector());
+
+        const float scaleFactor((seedDirection.GetDotProduct(seedPosition - vertexPosition) > 0.f) ? +1.f : -1.f);
+
+        for (const auto &nextPoint : *pT)
+        {
+            try
+            {
+                const float rL(slidingFitResult.GetLongitudinalDisplacement(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint)));
+
+                CartesianVector position(0.f, 0.f, 0.f);
+                const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
+
+                if (positionStatusCode != STATUS_CODE_SUCCESS)
+                    throw StatusCodeException(positionStatusCode);
+
+                CartesianVector direction(0.f, 0.f, 0.f);
+                const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
+
+                if (directionStatusCode != STATUS_CODE_SUCCESS)
+                    throw StatusCodeException(directionStatusCode);
+
+                const float projection(seedDirection.GetDotProduct(position - seedPosition));
+
+                trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
+                    LArTrackState(position, direction * scaleFactor, LArPfoHelper::TypeAdaptor::GetCaloHit(nextPoint))));
+            }
+            catch (const StatusCodeException &statusCodeException1)
+            {
+                if (STATUS_CODE_FAILURE == statusCodeException1.GetStatusCode())
+                    throw statusCodeException1;
+            }
+        }
+    }
+    catch (const StatusCodeException &statusCodeException2)
+    {
+        if (STATUS_CODE_FAILURE == statusCodeException2.GetStatusCode())
+            throw statusCodeException2;
+    }
+
+    // Sort trajectory points by distance along track
+    std::sort(trackTrajectory.begin(), trackTrajectory.end(), LArPfoHelper::SortByHitProjection);
+
+    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter)
+        trackStateVector.push_back(tIter->second);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <>
+const CartesianVector LArPfoHelper::TypeAdaptor::GetPosition(const CartesianVector &t)
+{
+    return t;
+}
+
+template <>
+const CartesianVector LArPfoHelper::TypeAdaptor::GetPosition(const CaloHit *const &pT)
+{
+    return pT->GetPositionVector();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <>
+const CaloHit *LArPfoHelper::TypeAdaptor::GetCaloHit(const CartesianVector &)
+{
+    return nullptr;
+}
+
+template <>
+const CaloHit *LArPfoHelper::TypeAdaptor::GetCaloHit(const CaloHit *const &pT)
+{
+    return pT;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template void LArPfoHelper::SlidingFitTrajectoryImpl(const CartesianPointVector *const, const CartesianVector &, const unsigned int, const float, LArTrackStateVector &);
+template void LArPfoHelper::SlidingFitTrajectoryImpl(const CaloHitList *const, const CartesianVector &, const unsigned int, const float, LArTrackStateVector &);
 
 } // namespace lar_content
