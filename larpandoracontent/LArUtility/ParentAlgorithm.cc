@@ -24,7 +24,10 @@ ParentAlgorithm::ParentAlgorithm() :
     m_shouldRunNeutrinoRecoOption(true),
     m_shouldRunCosmicRecoOption(true),
     m_shouldIdentifyNeutrinoSlice(true),
-    m_printStatus(false)
+    m_printStatus(false),
+    m_pCosmicRayTaggingTool(nullptr),
+    m_pNeutrinoIdTool(nullptr),
+    m_nuRepeatThreeDTrackReco(true)
 {
 }
 
@@ -67,7 +70,7 @@ StatusCode ParentAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
 
     unsigned int neutrinoSliceIndex(0);
-    if (m_shouldIdentifyNeutrinoSlice && m_pNeutrinoIdTool->GetNeutrinoSliceIndex(sliceIndexToPropertiesMap, neutrinoSliceIndex))
+    if (m_shouldIdentifyNeutrinoSlice && m_pNeutrinoIdTool && m_pNeutrinoIdTool->GetNeutrinoSliceIndex(sliceIndexToPropertiesMap, neutrinoSliceIndex))
     {
         this->RemoveSliceCosmicRayReconstruction(sliceToCosmicRayPfosMap, neutrinoSliceIndex);
         this->AddSliceNeutrinoReconstruction(sliceList, neutrinoSliceIndex);
@@ -158,7 +161,7 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
             const PfoList *pParentNeutrinosInSlice(nullptr);
             (void) PandoraContentApi::GetList(*this, m_nuParentListName, pParentNeutrinosInSlice);
 
-            if (pParentNeutrinosInSlice)
+            if (pParentNeutrinosInSlice && m_shouldIdentifyNeutrinoSlice && m_pNeutrinoIdTool)
                 m_pNeutrinoIdTool->FillNeutrinoProperties(pParentNeutrinosInSlice, sliceProperties);
 
             const std::string postProcessAlg(!m_shouldRunCosmicRecoOption ? m_nuListMovingAlgorithm : m_nuListDeletionAlgorithm);
@@ -175,7 +178,7 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
             const PfoList *pParentCRPfosInSlice(nullptr);
             (void) PandoraContentApi::GetList(*this, m_crParentListName, pParentCRPfosInSlice);
 
-            if (pParentCRPfosInSlice)
+            if (pParentCRPfosInSlice && m_shouldIdentifyNeutrinoSlice && m_pNeutrinoIdTool)
                 m_pNeutrinoIdTool->FillCosmicRayProperties(pParentCRPfosInSlice, sliceProperties);
 
             if (pParentCRPfosInSlice)
@@ -240,7 +243,10 @@ void ParentAlgorithm::AddSliceNeutrinoReconstruction(const SliceList &sliceList,
 void ParentAlgorithm::FastReconstruction() const
 {
     this->RunTwoDClustering(std::string(), m_nuClusteringAlgorithm, false, m_nuTwoDAlgorithms);
-    this->RunAlgorithms(m_nuThreeDAlgorithms);
+    this->RunAlgorithms(m_nuThreeDTrackAlgorithms);
+    this->RunAlgorithms(m_nuThreeDShowerAlgorithms);
+    if (m_nuRepeatThreeDTrackReco) this->RunAlgorithms(m_nuThreeDTrackAlgorithms);
+    this->RunAlgorithms(m_nuThreeDRecoveryAlgorithms);
     this->RunAlgorithms(m_nuThreeDHitAlgorithms);
 }
 
@@ -250,7 +256,7 @@ void ParentAlgorithm::CosmicRayReconstruction(const ParentSlicingBaseAlgorithm::
 {
     this->SaveTwoDCaloHitLists(slice, sliceIndexString);
     this->RunTwoDClustering(sliceIndexString, m_crTrackClusteringAlgorithm, false, m_crTwoDAlgorithms);
-    this->RunAlgorithms(m_crThreeDAlgorithms);
+    this->RunAlgorithms(m_crThreeDTrackAlgorithms);
     this->RunAlgorithm(m_crListPruningAlgorithm);
     this->RunTwoDClustering(sliceIndexString, m_crDeltaRayClusteringAlgorithm, true);
     this->RunAlgorithms(m_crDeltaRayAlgorithms);
@@ -273,7 +279,10 @@ void ParentAlgorithm::NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::S
     this->SaveTwoDCaloHitLists(slice, sliceIndexString);
     this->RunTwoDClustering(sliceIndexString, m_nuClusteringAlgorithm, false, m_nuTwoDAlgorithms);
     this->RunAlgorithms(m_nuVertexAlgorithms);
-    this->RunAlgorithms(m_nuThreeDAlgorithms);
+    this->RunAlgorithms(m_nuThreeDTrackAlgorithms);
+    this->RunAlgorithms(m_nuThreeDShowerAlgorithms);
+    if (m_nuRepeatThreeDTrackReco) this->RunAlgorithms(m_nuThreeDTrackAlgorithms);
+    this->RunAlgorithms(m_nuThreeDRecoveryAlgorithms);
     this->RunAlgorithms(m_nuTwoDMopUpAlgorithms);
     this->RunAlgorithms(m_nuThreeDHitAlgorithms);
     this->RunAlgorithms(m_nuThreeDMopUpAlgorithms);
@@ -369,7 +378,7 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
             "TwoDAlgorithms", m_crTwoDAlgorithms));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
-            "ThreeDAlgorithms", m_crThreeDAlgorithms));
+            "ThreeDTrackAlgorithms", m_crThreeDTrackAlgorithms));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
             "DeltaRayAlgorithms", m_crDeltaRayAlgorithms));
@@ -409,7 +418,13 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
             "TwoDAlgorithms", m_nuTwoDAlgorithms));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
-            "ThreeDAlgorithms", m_nuThreeDAlgorithms));
+            "ThreeDTrackAlgorithms", m_nuThreeDTrackAlgorithms));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+            "ThreeDShowerAlgorithms", m_nuThreeDShowerAlgorithms));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+            "ThreeDRecoveryAlgorithms", m_nuThreeDRecoveryAlgorithms));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
             "ThreeDHitAlgorithms", m_nuThreeDHitAlgorithms));
@@ -431,6 +446,9 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, nuXmlHandle,
             "ListMoving", m_nuListMovingAlgorithm));
+
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+            "NuRepeatThreeDTrackReco", m_nuRepeatThreeDTrackReco));
     }
 
     return ParentSlicingBaseAlgorithm::ReadSettings(xmlHandle);

@@ -135,7 +135,7 @@ private:
     std::string                 m_crTrackClusteringAlgorithm;         ///< CR: the name of the two dimensional track clustering algorithm
     std::string                 m_crDeltaRayClusteringAlgorithm;      ///< CR: the name of the two dimensional delta ray clustering algorithm
     pandora::StringVector       m_crTwoDAlgorithms;                   ///< CR: the names of the two dimensional reconstruction algorithms
-    pandora::StringVector       m_crThreeDAlgorithms;                 ///< CR: the names of the three dimensional reconstruction algorithms
+    pandora::StringVector       m_crThreeDTrackAlgorithms;            ///< CR: the names of the three dimensional track reconstruction algorithms
     pandora::StringVector       m_crDeltaRayAlgorithms;               ///< CR: the names of the delta ray algorithms
     pandora::StringVector       m_crTwoDRemnantAlgorithms;            ///< CR: the names of the two dimensional remnant algorithms
     pandora::StringVector       m_crThreeDRemnantAlgorithms;          ///< CR: the names of the three dimensional remnant algorithms
@@ -147,7 +147,9 @@ private:
 
     std::string                 m_nuClusteringAlgorithm;              ///< Nu: the name of the two dimensional clustering algorithm
     pandora::StringVector       m_nuTwoDAlgorithms;                   ///< Nu: the names of the two dimensional reconstruction algorithms
-    pandora::StringVector       m_nuThreeDAlgorithms;                 ///< Nu: the names of the three dimensional reconstruction algorithms
+    pandora::StringVector       m_nuThreeDTrackAlgorithms;            ///< Nu: the names of the three dimensional track reconstruction algorithms
+    pandora::StringVector       m_nuThreeDShowerAlgorithms;           ///< Nu: the names of the three dimensional shower reconstruction algorithms
+    pandora::StringVector       m_nuThreeDRecoveryAlgorithms;         ///< Nu: the names of the three dimensional recovery reconstruction algorithms
     pandora::StringVector       m_nuThreeDHitAlgorithms;              ///< Nu: the names of the three dimensional hit creation algorithms
     pandora::StringVector       m_nuVertexAlgorithms;                 ///< Nu: the names of the vertex reconstruction algorithms
     pandora::StringVector       m_nuTwoDMopUpAlgorithms;              ///< Nu: the names of the two dimensional mop-up algorithms
@@ -155,6 +157,8 @@ private:
     pandora::StringVector       m_nuNeutrinoAlgorithms;               ///< Nu: the names of the neutrino building algorithms
     std::string                 m_nuListDeletionAlgorithm;            ///< Nu: the name of the list deletion algorithm
     std::string                 m_nuListMovingAlgorithm;              ///< Nu: the name of the list moving algorithm
+
+    bool                        m_nuRepeatThreeDTrackReco;            ///< Nu: whether to repeat 3d track algs in between 3d shower and recovery algs
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
