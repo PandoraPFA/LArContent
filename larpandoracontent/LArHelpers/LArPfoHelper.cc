@@ -525,7 +525,7 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
 {
     CartesianPointVector pointVector;
 
-    for (const auto nextPoint : *pT)
+    for (const auto &nextPoint : *pT)
         pointVector.push_back(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint));
 
     if (pointVector.empty())
@@ -549,7 +549,7 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
 
         const float scaleFactor((seedDirection.GetDotProduct(seedPosition - vertexPosition) > 0.f) ? +1.f : -1.f);
 
-        for (const auto nextPoint : *pT)
+        for (const auto &nextPoint : *pT)
         {
             try
             {
