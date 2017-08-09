@@ -60,6 +60,51 @@ void ParentBaseAlgorithm::RunAlgorithms(const StringVector &algorithmNames) cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode ParentBaseAlgorithm::ProcessAlgorithm(const TiXmlHandle &xmlHandle, const std::string &description, std::string &algorithmName) const
+{
+    for (TiXmlElement *pXmlElement = xmlHandle.FirstChild("algorithm").Element(); nullptr != pXmlElement;
+        pXmlElement = pXmlElement->NextSiblingElement("algorithm"))
+    {
+        if (description.empty())
+            return PandoraContentApi::CreateDaughterAlgorithm(*this, pXmlElement, algorithmName);
+
+        try
+        {
+            const char *const pAttribute(pXmlElement->Attribute("description"));
+
+            if (!pAttribute)
+                return STATUS_CODE_NOT_FOUND;
+
+            if (description == std::string(pAttribute))
+                return PandoraContentApi::CreateDaughterAlgorithm(*this, pXmlElement, algorithmName);
+        }
+        catch (...)
+        {
+        }
+    }
+
+    return STATUS_CODE_NOT_FOUND;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ParentBaseAlgorithm::ProcessAlgorithmList(const TiXmlHandle &xmlHandle, const std::string &listName, StringVector &algorithmNames) const
+{
+    const TiXmlHandle algorithmListHandle = TiXmlHandle(xmlHandle.FirstChild(listName).Element());
+
+    for (TiXmlElement *pXmlElement = algorithmListHandle.FirstChild("algorithm").Element(); nullptr != pXmlElement;
+        pXmlElement = pXmlElement->NextSiblingElement("algorithm"))
+    {
+        std::string algorithmName;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateDaughterAlgorithm(*this, pXmlElement, algorithmName));
+        algorithmNames.push_back(algorithmName);
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ParentBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,

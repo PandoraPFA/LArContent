@@ -368,40 +368,40 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         const TiXmlHandle crXmlHandle(pCosmicRayXmlElement);
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithm(crXmlHandle,
             "TwoDTrackClustering", m_crTrackClusteringAlgorithm));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithm(crXmlHandle,
             "TwoDDeltaRayClustering", m_crDeltaRayClusteringAlgorithm));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(crXmlHandle,
             "TwoDAlgorithms", m_crTwoDAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(crXmlHandle,
             "ThreeDTrackAlgorithms", m_crThreeDTrackAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(crXmlHandle,
             "DeltaRayAlgorithms", m_crDeltaRayAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(crXmlHandle,
             "TwoDRemnantAlgorithms", m_crTwoDRemnantAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(crXmlHandle,
             "ThreeDRemnantAlgorithms", m_crThreeDRemnantAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(crXmlHandle,
             "ThreeDHitAlgorithms", m_crThreeDHitAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(crXmlHandle,
             "VertexAlgorithms", m_crVertexAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithm(crXmlHandle,
             "ListPruning", m_crListPruningAlgorithm));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithm(crXmlHandle,
             "ListDeletion", m_crListDeletionAlgorithm));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, crXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithm(crXmlHandle,
             "ListMoving", m_crListMovingAlgorithm));
     }
 
@@ -411,40 +411,40 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         const TiXmlHandle nuXmlHandle(pNeutrinoXmlElement);
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithm(nuXmlHandle,
             "TwoDClustering", m_nuClusteringAlgorithm));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "TwoDAlgorithms", m_nuTwoDAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "ThreeDTrackAlgorithms", m_nuThreeDTrackAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "ThreeDShowerAlgorithms", m_nuThreeDShowerAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "ThreeDRecoveryAlgorithms", m_nuThreeDRecoveryAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "ThreeDHitAlgorithms", m_nuThreeDHitAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "VertexAlgorithms", m_nuVertexAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "TwoDMopUpAlgorithms", m_nuTwoDMopUpAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "ThreeDMopUpAlgorithms", m_nuThreeDMopUpAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmList(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithmList(nuXmlHandle,
             "NeutrinoAlgorithms", m_nuNeutrinoAlgorithms));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithm(nuXmlHandle,
             "ListDeletion", m_nuListDeletionAlgorithm));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, nuXmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ProcessAlgorithm(nuXmlHandle,
             "ListMoving", m_nuListMovingAlgorithm));
 
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

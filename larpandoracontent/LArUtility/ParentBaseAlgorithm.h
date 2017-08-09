@@ -49,6 +49,27 @@ protected:
      */
     void RunAlgorithms(const pandora::StringVector &algorithmNames) const;
 
+    /**
+     *  @brief  Local version to allow placement of algorithms within a non-algorithm parent xml tag.
+     *          Process an algorithm described in an xml element with a matching "description = ..." attribute
+     *
+     *  @param  algorithm the parent algorithm calling this function
+     *  @param  xmlHandle the relevant xml handle
+     *  @param  description the description attribute of the algorithm xml element
+     *  @param  algorithmName to receive the name of the algorithm instance
+     */
+    pandora::StatusCode ProcessAlgorithm(const pandora::TiXmlHandle &xmlHandle, const std::string &description, std::string &algorithmName) const;
+
+    /**
+     *  @brief  Local version to allow placement of algorithms within a non-algorithm parent xml tag.
+     *          Process a list of daughter algorithms in an xml file.
+     *
+     *  @param  xmlHandle the relevant xml handle
+     *  @param  listName the name of the algorithm list
+     *  @param  algorithmNames to receive the names of the algorithm instances
+     */
+    pandora::StatusCode ProcessAlgorithmList(const pandora::TiXmlHandle &xmlHandle, const std::string &listName, pandora::StringVector &algorithmNames) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     HitTypeList                 m_hitTypeList;                      ///< The hit type list
