@@ -67,10 +67,6 @@ private:
     pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
     std::string             m_outputPfoListName;            ///< The output pfo list name
 
-    int                     m_idOffsetU;                    ///< The mc particle parent address offset for u clusters
-    int                     m_idOffsetV;                    ///< The mc particle parent address offset for v clusters
-    int                     m_idOffsetW;                    ///< The mc particle parent address offset for w clusters
-
     bool                    m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
     std::string             m_mcParticleListName;           ///< The mc particle list name
 
