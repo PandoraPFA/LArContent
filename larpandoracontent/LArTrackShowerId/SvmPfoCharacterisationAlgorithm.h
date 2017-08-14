@@ -24,7 +24,7 @@ public:
      *  @brief  Default constructor
      */
     SvmPfoCharacterisationAlgorithm();
-
+	
 protected:
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -34,6 +34,7 @@ protected:
 
     bool                    m_trainingSetMode;              ///< Whether to train
     bool                    m_ratioVariables;               ///< Whether to divide all variables by the straight line length
+    bool                    m_enableProbability;            ///< Whether to use probabilities instead of binary classification
     unsigned int            m_minCaloHitsCut;               ///< The minimum number of calo hits to qualify as a track
 
     std::string             m_trainingOutputFile;           ///< The training output file
