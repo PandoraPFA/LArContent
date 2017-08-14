@@ -27,6 +27,7 @@ SvmPfoCharacterisationAlgorithm::SvmPfoCharacterisationAlgorithm() :
     m_minCaloHitsCut(5)
 {
 }
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const

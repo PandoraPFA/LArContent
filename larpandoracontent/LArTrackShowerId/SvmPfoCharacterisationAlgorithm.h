@@ -24,7 +24,7 @@ public:
      *  @brief  Default constructor
      */
     SvmPfoCharacterisationAlgorithm();
-	
+
 protected:
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
