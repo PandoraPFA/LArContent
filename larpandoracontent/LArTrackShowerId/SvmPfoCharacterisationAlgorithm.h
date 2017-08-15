@@ -35,6 +35,7 @@ protected:
     bool                    m_trainingSetMode;              ///< Whether to train
     bool                    m_ratioVariables;               ///< Whether to divide all variables by the straight line length
     bool                    m_enableProbability;            ///< Whether to use probabilities instead of binary classification
+    float                   m_minProbabilityCut;            ///< The minimum probability to label a cluster as track-like
     unsigned int            m_minCaloHitsCut;               ///< The minimum number of calo hits to qualify as a track
 
     std::string             m_trainingOutputFile;           ///< The training output file
