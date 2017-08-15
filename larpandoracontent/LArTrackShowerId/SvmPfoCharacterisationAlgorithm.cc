@@ -23,7 +23,8 @@ namespace lar_content
 SvmPfoCharacterisationAlgorithm::SvmPfoCharacterisationAlgorithm() :
     m_trainingSetMode(false),
     m_ratioVariables(true),
-	m_enableProbability(false),
+    m_enableProbability(false),
+    m_minProbCut(0.5f),
     m_minCaloHitsCut(5)
 {
 }
@@ -64,14 +65,14 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
         return isTrueTrack;
     }
 	
-	if (!m_enableProbability)
-	{
-		return LArSvmHelper::Classify(m_supportVectorMachine, featureVector);
-	}
-	else
-	{		
-	  return (0.5 <= LArSvmHelper::CalculateProbability(m_supportVectorMachine, featureVector));
-	}
+    if (!m_enableProbability)
+    {
+	return LArSvmHelper::Classify(m_supportVectorMachine, featureVector);
+    }
+    else
+    {		
+        return (LArSvmHelper::CalculateProbability(m_supportVectorMachine, featureVector) >= m_minProbCut);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,8 +94,11 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SvmName", m_svmName));
 		
-	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-		"EnableProbability",  m_enableProbability));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	"EnableProbability",  m_enableProbability));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	"MinProbabilityCut", m_minProbCut));
 
     if (m_trainingSetMode)
     {
