@@ -12,7 +12,7 @@
 #include "Objects/ParticleFlowObject.h"
 #include "Objects/Vertex.h"
 
-#include "larpandoracontent/LArObjects/LArTrackPfo.h"
+#include "larpandoracontent/LArObjects/LArPfoObjects.h"
 
 namespace lar_content
 {
@@ -23,6 +23,16 @@ namespace lar_content
 class LArPfoHelper
 {
 public:
+    /**
+     *  @brief  Get a list of coordinates of a particular hit type from an input pfos
+     *
+     *  @param  pPfo the address of the input Pfo
+     *  @param  hitType the cluster hit type
+     *  @param  coordinateVector the output list of coordinates
+     */
+    static void GetCoordinateVector(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType,
+        pandora::CartesianPointVector &coordinateVector);
+
     /**
      *  @brief  Get a list of calo hits of a particular hit type from a list of pfos
      *
@@ -258,7 +268,7 @@ public:
     static const pandora::Vertex *GetVertex(const pandora::ParticleFlowObject *const pPfo);
 
     /**
-     *  @brief  Apply 3D sliding fit to a set of points and return track trajectory
+     *  @brief  Apply 3D sliding fit to a set of 3D points and return track trajectory
      *
      *  @param  pointVector  the input list of 3D positions
      *  @param  vertexPosition  the input vertex position
@@ -280,6 +290,22 @@ public:
      */
     static void GetSlidingFitTrajectory(const pandora::ParticleFlowObject *const pPfo, const pandora::Vertex *const pVertex,
         const unsigned int slidingFitHalfWindow, const float layerPitch, LArTrackStateVector &trackStateVector);
+
+    /**
+     *  @brief  Perform PCA analysis on a set of 3D points and return results
+     *
+     *  @param  pointVector the input list of 3D positions
+     *  @param  vertexPosition the input vertex position
+     */
+    static LArShowerPCA GetPrincipalComponents(const pandora::CartesianPointVector &pointVector, const pandora::CartesianVector &vertexPosition);
+
+    /**
+     *  @brief  Perform PCA analysis on Pfo and return results
+     *
+     *  @param  pPfo the address of the input Pfo
+     *  @param  pVertex the address of the input vertex
+     */
+    static LArShowerPCA GetPrincipalComponents(const pandora::ParticleFlowObject *const pPfo, const pandora::Vertex *const pVertex);
 
     /**
      *  @brief  Sort pfos by number of constituent hits

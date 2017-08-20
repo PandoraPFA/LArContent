@@ -26,7 +26,7 @@ namespace lar_content
 
 template <typename T>
 ThreeDSlidingFitResult::ThreeDSlidingFitResult(const T *const pT, const unsigned int layerWindow, const float layerPitch) :
-    m_primaryAxis(ThreeDSlidingFitResult::GetPrimaryAxis(pT)),
+    m_primaryAxis(ThreeDSlidingFitResult::GetPrimaryAxis(pT, layerPitch)),
     m_axisIntercept(m_primaryAxis.GetPosition()),
     m_axisDirection(m_primaryAxis.GetMomentum()),
     m_firstOrthoDirection(ThreeDSlidingFitResult::GetSeedDirection(m_axisDirection).GetCrossProduct(m_axisDirection).GetUnitVector()),
@@ -80,7 +80,7 @@ int ThreeDSlidingFitResult::GetMaxLayer() const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
- 
+
 float ThreeDSlidingFitResult::GetMinLayerRms() const
 {
     const float firstRms(m_firstFitResult.GetMinLayerRms());
@@ -100,7 +100,7 @@ float ThreeDSlidingFitResult::GetMaxLayerRms() const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-   
+
 float ThreeDSlidingFitResult::GetFitRms(const float rL) const
 {
     const float firstRms(m_firstFitResult.GetFitRms(rL));
@@ -204,16 +204,16 @@ void ThreeDSlidingFitResult::GetGlobalDirection(const float dTdL1, const float d
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster)
+TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const Cluster *const pCluster, const float layerPitch)
 {
     CartesianPointVector pointVector;
     LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
-    return ThreeDSlidingFitResult::GetPrimaryAxis(&pointVector);
+    return ThreeDSlidingFitResult::GetPrimaryAxis(&pointVector, layerPitch);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointVector *const pPointVector)
+TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointVector *const pPointVector, const float layerPitch)
 {
     if (pPointVector->size() < 2)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -224,12 +224,20 @@ TrackState ThreeDSlidingFitResult::GetPrimaryAxis(const CartesianPointVector *co
     LArPcaHelper::RunPca(*pPointVector, centroid, eigenValues, eigenVecs);
 
     float minProjection(std::numeric_limits<float>::max());
-    const CartesianVector &fitDirection(eigenVecs.at(0));
+    CartesianVector fitDirection(eigenVecs.at(0));
+
+    // By convention, the primary axis has a positive z-component.
+    // However, downstream algorithms should be independent of this convention.
+    if (fitDirection.GetZ() < 0.f)
+        fitDirection *= -1.f;
 
     for (const CartesianVector &coordinate : *pPointVector)
         minProjection = std::min(minProjection, fitDirection.GetDotProduct(coordinate - centroid));
 
-    return TrackState(centroid + (fitDirection * minProjection), fitDirection);
+    // Define layers based on centroid rather than individual extremal hits
+    const float fitProjection(layerPitch * std::floor(minProjection / layerPitch));
+
+    return TrackState(centroid + (fitDirection * fitProjection), fitDirection);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
