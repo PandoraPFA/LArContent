@@ -394,11 +394,26 @@ CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const Hit
 
 bool LArGeometryHelper::IsInGap(const Pandora &pandora, const CartesianVector &testPoint2D, const HitType hitType, const float gapTolerance)
 {
-    // ATTN: input test point MUST be a 2D position vector 
+    // ATTN: input test point MUST be a 2D position vector
     for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
     {
-        if (pDetectorGap->IsInGap(testPoint2D, hitType, gapTolerance))
-            return true;
+        // Check line gaps (need to input 2D hit type)
+        const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
+
+        if (pLineGap)
+        {
+            if (pLineGap->IsInGap(testPoint2D, hitType, gapTolerance))
+                return true;
+        }
+
+        // Check box gaps (need to input 3D hit type)
+        const BoxGap *const pBoxGap = dynamic_cast<const BoxGap*>(pDetectorGap);
+
+        if (pBoxGap)
+        {
+            if (pBoxGap->IsInGap(testPoint2D, TPC_3D, gapTolerance))
+                return true;
+        }
     }
 
     return false;
@@ -451,31 +466,295 @@ bool LArGeometryHelper::IsXSamplingPointInGap(const Pandora &pandora, const floa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArGeometryHelper::IsInGap(const Pandora &pandora, const CartesianVector &p1, const CartesianVector &p2, const HitType hitType,
+    const float gapTolerance)
+{
+    // ATTN: input test points MUST be 2D position vectors
+    for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
+    {
+        // Check line gaps
+        const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
+
+        if (pLineGap)
+        {
+            if (pLineGap->IsInGap(p1, hitType, gapTolerance) && pLineGap->IsInGap(p2, hitType, gapTolerance))
+                return true;
+        }
+
+        // Check box gaps (need to input 3D hit type)
+        const BoxGap *const pBoxGap = dynamic_cast<const BoxGap*>(pDetectorGap);
+
+        if (pBoxGap)
+        {
+            if (pBoxGap->IsInGap(p1, TPC_3D, gapTolerance) && pBoxGap->IsInGap(p2, TPC_3D, gapTolerance))
+                return true;
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float minZ, const float maxZ, const HitType hitType)
 {
     if (maxZ - minZ < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    float gapDeltaZ(0.f);
+    float gapFraction(0.f);
 
     for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
     {
+        // Check line gaps
         const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
 
-        if (NULL == pLineGap)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        if (pLineGap->GetHitType() != hitType || pLineGap->GetLineStartZ() > maxZ || pLineGap->GetLineEndZ() < minZ)
-            continue;
-
-        const float gapMinZ(std::max(minZ,pLineGap->GetLineStartZ()));
-        const float gapMaxZ(std::min(maxZ,pLineGap->GetLineEndZ()));
-
-        if ((gapMaxZ - gapMinZ) > std::numeric_limits<float>::epsilon())
-            gapDeltaZ += (gapMaxZ - gapMinZ);
+        if (pLineGap)
+        {
+            if (pLineGap->GetHitType() == hitType)
+                gapFraction += LArGeometryHelper::CalculateOverlapFraction(pLineGap, minZ, maxZ);
+        }
     }
 
-    return gapDeltaZ;
+    return gapFraction * (maxZ - minZ);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::CalculateGapDisplacement(const LineGap *const pLineGap, const float &z)
+{
+    const float deltaStartZ(z - pLineGap->GetLineStartZ());
+    const float deltaEndZ(z - pLineGap->GetLineEndZ());
+
+    return ((deltaStartZ < 0.f) ? std::fabs(deltaStartZ) : (deltaEndZ > 0.f) ? deltaEndZ : 0.f);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::CalculateGapDisplacement(const BoxGap *const pBoxGap, const CartesianVector &positionVector)
+{
+    bool inGap(false);
+    float gapDisplacement(std::numeric_limits<float>::max());
+
+    // This method should work for both 2D and 3D position vectors
+    const CartesianVector relativePosition(positionVector - pBoxGap->GetVertex());
+
+    // Calculate displacement from first pair of edges
+    const float s1(pBoxGap->GetSide1().GetMagnitude());
+    const float p1(relativePosition.GetDotProduct(pBoxGap->GetSide1().GetUnitVector()));
+    const float x1((p1 < 0.f) ? std::fabs(p1) : (p1 > s1) ? (p1 - s1) : 0.f);
+
+    if (x1 > std::numeric_limits<float>::epsilon())
+    {
+        inGap = true;
+        gapDisplacement = std::min(gapDisplacement, x1);
+    }
+
+    // Calculate displacement from second pair of edges
+    const float s2(pBoxGap->GetSide2().GetMagnitude());
+    const float p2(relativePosition.GetDotProduct(pBoxGap->GetSide2().GetUnitVector()));
+    const float x2((p2 < 0.f) ? std::fabs(p2) : (p2 > s2) ? (p2 - s2) : 0.f);
+
+    if (x2 > std::numeric_limits<float>::epsilon())
+    {
+        inGap = true;
+        gapDisplacement = std::min(gapDisplacement, x2);
+    }
+
+    // Calculate displacement from third pair of edges
+    const float s3(pBoxGap->GetSide3().GetMagnitude());
+    const float p3(relativePosition.GetDotProduct(pBoxGap->GetSide3().GetUnitVector()));
+    const float x3((p3 < 0.f) ? std::fabs(p3) : (p3 > s3) ? (p3 - s3) : 0.f);
+
+    if (x3 > std::numeric_limits<float>::epsilon())
+    {
+        inGap = true;
+        gapDisplacement = std::min(gapDisplacement, x3);
+    }
+
+    if (inGap)
+        return gapDisplacement;
+
+    return 0.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::CalculateOverlapFraction(const Pandora &pandora, const CartesianVector &p1, const CartesianVector &p2,
+    const HitType hitType)
+{
+    float gapFraction(0.f);
+
+    for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
+    {
+        // Check line gaps
+        const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
+
+        if (pLineGap)
+        {
+            if (pLineGap->GetHitType() == hitType)
+                gapFraction += LArGeometryHelper::CalculateOverlapFraction(pLineGap, p1.GetZ(), p2.GetZ());
+        }
+
+        // Check box gaps
+        const BoxGap *const pBoxGap = dynamic_cast<const BoxGap*>(pDetectorGap);
+
+        if (pBoxGap)
+        {
+            gapFraction += LArGeometryHelper::CalculateOverlapFraction(pBoxGap, p1, p2);
+        }
+    }
+
+    return std::min(gapFraction, 1.f);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::CalculateOverlapFraction(const LineGap *const pLineGap, const float &z1, const float &z2)
+{
+    const float pointMinZ(std::min(z1,z2));
+    const float pointMaxZ(std::max(z1,z2));
+
+    if (pLineGap->GetLineStartZ() > pointMaxZ || pLineGap->GetLineEndZ() < pointMinZ)
+        return 0.f;
+
+    const float overlapMinZ(std::max(pointMinZ,pLineGap->GetLineStartZ()));
+    const float overlapMaxZ(std::min(pointMaxZ,pLineGap->GetLineEndZ()));
+
+    return (overlapMaxZ - overlapMinZ) / (pointMaxZ - pointMinZ);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::CalculateOverlapFraction(const BoxGap *const pBoxGap, const CartesianVector &p1, const CartesianVector &p2)
+{
+    // If input points are coincident, then just check whether they are inside the box gap
+    if ((p2-p1).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
+    {
+        if (pBoxGap->IsInGap(p1, TPC_3D, 0.f) || pBoxGap->IsInGap(p2, TPC_3D, 0.f))
+        {
+            return 1.f;
+        }
+        else
+        {
+            return 0.f;
+        }
+    }
+
+    // Cache properties of box gap to use in the calculations that follow
+    const CartesianVector &s1(pBoxGap->GetSide1());
+    const CartesianVector &s2(pBoxGap->GetSide2());
+    const CartesianVector &s3(pBoxGap->GetSide3());
+    const CartesianVector &v1(pBoxGap->GetVertex());
+
+    const CartesianVector v2(v1 + s1 + s2 + s3);
+    const CartesianVector traj((p2-p1).GetUnitVector());
+
+    // Consider intersections with all six faces of the box gap
+    float tmin(+std::numeric_limits<float>::max());
+    float tmax(-std::numeric_limits<float>::max());
+
+    try
+    {
+        const CartesianVector r1(LArGeometryHelper::CalculateIntersection(v1, s1, s2, p1, traj));
+        const float t(traj.GetDotProduct((r1-p1)));
+        tmin = std::min(tmin, t);
+        tmax = std::max(tmax, t);
+    }
+    catch (StatusCodeException &) { }
+
+    try
+    {
+        const CartesianVector r2(LArGeometryHelper::CalculateIntersection(v1, s2, s3, p1, traj));
+        const float t(traj.GetDotProduct((r2-p1)));
+        tmin = std::min(tmin, t);
+        tmax = std::max(tmax, t);
+    }
+    catch (StatusCodeException &) { }
+
+    try
+    {
+        const CartesianVector r3(LArGeometryHelper::CalculateIntersection(v1, s3, s1, p1, traj));
+        const float t(traj.GetDotProduct((r3-p1)));
+        tmin = std::min(tmin, t);
+        tmax = std::max(tmax, t);
+    }
+    catch (StatusCodeException &) { }
+
+    try
+    {
+        const CartesianVector r4(LArGeometryHelper::CalculateIntersection(v2, s1 * -1.f, s2 * -1.f, p1, traj));
+        const float t(traj.GetDotProduct((r4-p1)));
+        tmin = std::min(tmin, t);
+        tmax = std::max(tmax, t);
+    }
+    catch (StatusCodeException &) { }
+
+    try
+    {
+        const CartesianVector r5(LArGeometryHelper::CalculateIntersection(v2, s2 * -1.f, s3 * -1.f, p1, traj));
+        const float t(traj.GetDotProduct((r5-p1)));
+        tmin = std::min(tmin, t);
+        tmax = std::max(tmax, t);
+    }
+    catch (StatusCodeException &) { }
+
+    try
+    {
+        const CartesianVector r6(LArGeometryHelper::CalculateIntersection(v2, s3 * -1.f, s1 * -1.f, p1, traj));
+        const float t(traj.GetDotProduct((r6-p1)));
+        tmin = std::min(tmin, t);
+        tmax = std::max(tmax, t);
+    }
+    catch (StatusCodeException &) { }
+
+    // Calculate overlap between input pair of points and this box gap
+    const float t0(0.f);
+    const float t1((p2-p1).GetMagnitude());
+    const float gmin(std::max(t0,tmin));
+    const float gmax(std::min(t1,tmax));
+
+    if (gmax - gmin > std::numeric_limits<float>::epsilon())
+        return (gmax - gmin) / (t1 - t0);
+
+    return 0.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArGeometryHelper::CalculateIntersection(const CartesianVector &v0, const CartesianVector &s1, const CartesianVector &s2,
+    const CartesianVector &r0, const CartesianVector &traj)
+{
+    // Calculate intersection of line with *finite* plane
+
+    // Step (1): Calculate intersection of line with infinite plane
+    //  Equation of line:    r = r0 + t * traj
+    //  Equation of plane:  (r - v0).n = 0, where n = s1 x s2
+    //  Intersection point:  t_int = (r0 - v0).n / traj.n
+    //
+    // Step (2): Check that line intersects the finite plane
+    //  Not parallel:  traj.n != 0
+    //  Finite plane:  0 < (r_int - v0).s1 < |s1|^2 and 0 < (r_int - v0).s2 < |s2|^2
+
+    // Calculate intersection of line with the infinite plane
+    const CartesianVector n(s1.GetCrossProduct(s2).GetUnitVector());
+    const float n1(n.GetDotProduct(r0-v0));
+    const float n2(n.GetDotProduct(traj));
+
+    // Check that line and plane are not parallel
+    if (std::fabs(n2) < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    // Get the intersection point
+    const CartesianVector p(r0 - traj * (n1/n2));
+
+    // Check that line intersects with the finite plane
+    const float t1((p - v0).GetDotProduct(s1.GetUnitVector()));
+    const float t2((p - v0).GetDotProduct(s2.GetUnitVector()));
+
+    if (t1 < 0.f || t2 < 0.f || t1 > s1.GetMagnitude() || t2 > s2.GetMagnitude())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return p;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
