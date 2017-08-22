@@ -24,8 +24,7 @@ namespace lar_content
 {
 
 PcaShowerParticleBuildingAlgorithm::PcaShowerParticleBuildingAlgorithm() :
-    m_cosmicMode(false),
-    m_layerFitHalfWindow(20)
+    m_cosmicMode(false)
 {
 }
 
@@ -102,9 +101,6 @@ StatusCode PcaShowerParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xm
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CosmicMode", m_cosmicMode));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "LayerFitHalfWindow", m_layerFitHalfWindow));
 
     return CustomParticleCreationAlgorithm::ReadSettings(xmlHandle);
 }

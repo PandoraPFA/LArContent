@@ -32,7 +32,7 @@ CrossGapsExtensionAlgorithm::CrossGapsExtensionAlgorithm() :
 
 void CrossGapsExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-    // ATTN - We opt out completely if there is no gap information available
+    // ATTN - Opt out completely if there is no gap information available
     if (PandoraContentApi::GetGeometry(*this)->GetDetectorGapList().empty())
          return;
 

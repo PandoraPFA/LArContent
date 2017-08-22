@@ -36,9 +36,9 @@ CrossGapsAssociationAlgorithm::CrossGapsAssociationAlgorithm() :
 
 void CrossGapsAssociationAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-    // ATTN May want to opt-out completely if no gap information available
-    // if (PandoraContentApi::GetGeometry(*this)->GetDetectorGapList().empty())
-    //     return;
+    // ATTN - Opt out completely if there is no gap information available
+    if (PandoraContentApi::GetGeometry(*this)->GetDetectorGapList().empty())
+         return;
 
     for (const Cluster *const pCluster : *pClusterList)
     {
