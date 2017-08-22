@@ -41,7 +41,6 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     bool            m_cosmicMode;               ///<
-    unsigned int    m_layerFitHalfWindow;       ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
