@@ -13,7 +13,7 @@
 
 #include <unordered_map>
 
-namespace pandora {class CartesianVector; class Pandora;}
+namespace pandora {class CartesianVector; class Pandora; }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -136,7 +136,7 @@ public:
      *  @param  chi-squared
      */
     static void MergeTwoPositions3D(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D, 
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D,
         float &chiSquared);
 
     /**
@@ -227,7 +227,7 @@ public:
 
     /**
      *  @brief  Whether there is a gap in a cluster (described via its sliding fit result) at a specified x sampling position
-     * 
+     *
      *  @param  pandora the associated pandora instance
      *  @param  xSample the x sampling position
      *  @param  slidingFitResult the sliding fit result for a cluster
@@ -239,6 +239,20 @@ public:
         const float gapTolerance = 0.f);
 
     /**
+     *  @brief  Whether a pair of 2D test points lies in the same registered gap with the associated hit type
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  p1 the first test point
+     *  @param  p2 the second test point
+     *  @param  hitType the hit type
+     *  @param  gapTolerance the gap tolerance
+     *
+     *  @return boolean
+     */
+    static bool IsInGap(const pandora::Pandora &pandora, const pandora::CartesianVector &p1, const pandora::CartesianVector &p2,
+        const pandora::HitType hitType, const float gapTolerance = 0.f);
+
+    /**
      *  @brief  Calculate the total distance within a given 2D region that is composed of detector gaps
      *
      *  @param  pandora the associated pandora instance
@@ -247,6 +261,76 @@ public:
      *  @param  hitType the hit type
      */
     static float CalculateGapDeltaZ(const pandora::Pandora &pandora, const float minZ, const float maxZ, const pandora::HitType hitType);
+
+    /**
+     *  @brief  Calculate displacement of a given z-position from a specified line gap
+     *
+     *  @param  pLineGap  the specified line gap
+     *  @param  z the given position in Z
+     *
+     *  @return the displacement
+     */
+    static float CalculateGapDisplacement(const pandora::LineGap *const pLineGap, const float &z);
+
+    /**
+     *  @brief  Calculate displacement of a given position from a specified box gap
+     *
+     *  @param  pBoxGap  the specified box gap
+     *  @param  z the given position in Z
+     *
+     *  @return the displacement
+     */
+    static float CalculateGapDisplacement(const pandora::BoxGap *const pBoxGap, const pandora::CartesianVector &positionVector);
+
+    /**
+     *  @brief  Calculate the fractional overlap between a pair of input points and the list of registered gaps
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  p1 the first test point
+     *  @param  p2 the second test point
+     *  @param  hitType the hit type
+     *
+     *  @return The fraction of the distance between the test points that lies within a gap.
+     */
+    static float CalculateOverlapFraction(const pandora::Pandora &pandora, const pandora::CartesianVector &p1,
+        const pandora::CartesianVector &p2, const pandora::HitType hitType);
+
+    /**
+     *  @brief  Calculate the fractional overlap between a pair of input points and a single registered line gap
+     *
+     *  @param  pLineGap the input line gap
+     *  @param  z1 the Z position of the first test point
+     *  @param  z2 the Z position of the second test point
+     *
+     *  @return The fraction of the distance between the test points that lies within this line gap.
+     */
+    static float CalculateOverlapFraction(const pandora::LineGap *const pLineGap, const float &z1, const float &z2);
+
+    /**
+     *  @brief  Calculate the fractional overlap between a pair of input points and a single registered box gap
+     *
+     *  @param  pBoxGap the input box gap
+     *  @param  p1 the position of the first test point
+     *  @param  p2 the position of the second test point
+     *
+     *  @return The fraction of the distance between the test points that lies within this box gap.
+     */
+    static float CalculateOverlapFraction(const pandora::BoxGap *const pBoxGap, const pandora::CartesianVector &p1,
+        const pandora::CartesianVector &p2);
+
+    /**
+     *  @brief  Calculate intersection between a line and a *finite* plane
+     *
+     *  @param  v0 the corner point on the plane
+     *  @param  s1 the extent of the plane along the first edge
+     *  @param  s2 the extent of the plane along the second edge
+     *  @param  r0 a point on the line
+     *  @param  traj the direction vector of the line
+     *
+     *  @return The intersection point if it exists
+     */
+    static pandora::CartesianVector CalculateIntersection(const pandora::CartesianVector &v0, const pandora::CartesianVector &s1,
+        const pandora::CartesianVector &s2, const pandora::CartesianVector &r0, const pandora::CartesianVector &traj);
 
     /**
      *  @brief  Get the LArPseudoLayerPlugin registered with a specified pandora instance

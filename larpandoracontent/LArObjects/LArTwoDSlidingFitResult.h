@@ -275,7 +275,7 @@ public:
      *
      *  @param  rL the longitudinal coordinate
      *  @param  position the fitted position at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
@@ -285,7 +285,7 @@ public:
      *
      *  @param  rL the longitudinal coordinate
      *  @param  direction the fitted direction at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
@@ -295,7 +295,7 @@ public:
      *
      *  @param  x the input coordinate
      *  @param  position the fitted position at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitPositionAtX(const float x, pandora::CartesianVector &position) const;
@@ -305,7 +305,7 @@ public:
      *
      *  @param  x the input coordinate
      *  @param  direction the fitted direction at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitDirectionAtX(const float x, pandora::CartesianVector &direction) const;
@@ -315,7 +315,7 @@ public:
      *
      *  @param  inputPosition the input coordinate
      *  @param  projectedPosition the projected position on the global fit for these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
@@ -325,7 +325,7 @@ public:
      *
      *  @param  x the input x coordinate
      *  @param  positionList the output list of positions
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitPositionListAtX(const float x, pandora::CartesianPointVector &positionList) const;
@@ -336,7 +336,7 @@ public:
      *  @param x the input x coordinate
      *  @param fitSegment the portion of sliding linear fit
      *  @param position the output position
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position) const;
@@ -348,7 +348,7 @@ public:
      *  @param fitSegment the portion of sliding linear fit
      *  @param position the output position
      *  @param position the output direction
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position,
@@ -359,17 +359,17 @@ public:
      *
      *  @param  rL the input coordinate
      *  @param  position the extrapolated position at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
-    pandora::StatusCode GetExtrapolatedPosition(const float rL, pandora::CartesianVector &position) const;    
+    pandora::StatusCode GetExtrapolatedPosition(const float rL, pandora::CartesianVector &position) const;
 
     /**
      *  @brief  Get extrapolated direction (beyond span) for a given input coordinate
      *
      *  @param  rL the input coordinate
      *  @param  position the extrapolated direction at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetExtrapolatedDirection(const float rL, pandora::CartesianVector &direction) const;
@@ -379,7 +379,7 @@ public:
      *
      *  @param  x the input coordinate
      *  @param  position the extrapolated position at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetExtrapolatedPositionAtX(const float x, pandora::CartesianVector &position) const;
@@ -395,7 +395,7 @@ private:
     /**
      *  @brief  Calculate the longitudinal and transverse axes
      */
-    void CalculateAxes(const pandora::CartesianPointVector &coordinateVector);
+    void CalculateAxes(const pandora::CartesianPointVector &coordinateVector, const float layerPitch);
 
     /**
      *  @brief  Fill the layer fit contribution map
@@ -453,7 +453,7 @@ private:
      *
      *  @param  rL the longitudinal coordinate
      *  @param  layerInterpolation to receive the populated layer interpolation object
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode LongitudinalInterpolation(const float rL, LayerInterpolation &layerInterpolation) const;
@@ -464,7 +464,7 @@ private:
      *  @param  x the input coordinate
      *  @param  fitSegment the fit segment
      *  @param  layerInterpolation to receive the populated layer interpolation object
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode TransverseInterpolation(const float x, const FitSegment &fitSegment, LayerInterpolation &layerInterpolation) const;
@@ -474,7 +474,7 @@ private:
      *
      *  @param  x the input coordinate
      *  @param  layerInterpolationList the output list of layer interpolation objects
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode TransverseInterpolation(const float x, LayerInterpolationList &layerInterpolationList) const;
@@ -485,7 +485,7 @@ private:
      *  @param  rL the longitudinal coordinate
      *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
      *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetLongitudinalSurroundingLayers(const float rL, LayerFitResultMap::const_iterator &firstLayerIter,
@@ -499,7 +499,7 @@ private:
      *  @param  maxLayer the maximum allowed layer
      *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
      *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetTransverseSurroundingLayers(const float x, const int minLayer, const int maxLayer,

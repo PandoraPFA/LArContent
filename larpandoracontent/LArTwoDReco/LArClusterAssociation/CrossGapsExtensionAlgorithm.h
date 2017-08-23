@@ -32,24 +32,12 @@ private:
     void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
 
     /**
-     *  @brief Build lists of pointing clusters that are adjacent to a detector gap
+     *  @brief Build lists of pointing clusters that are in proximity to a detector gap
      *
      *  @param clusterVector the input vector of clusters
-     *  @param innerPointingClusterList the pointing clusters whose inner vertex is close to a detector gap
-     *  @param outerPointingClusterList the pointing clusters whose outer vertex is close to a detector gap
+     *  @param pointingClusterList the list pointing clusters that are in proximity to a detector gap
      */
-    void BuildPointingClusterList(const pandora::ClusterVector &clusterVector, LArPointingClusterList &innerPointingClusterList,
-        LArPointingClusterList &outerPointingClusterList) const;
-
-    /**
-     *  @brief Build a list of pointing clusters that are adjacent to a detector gap
-     *
-     *  @param useInner check the inner vertex
-     *  @param inputPointingClusterList the input list of pointing clusters
-     *  @param outputPointingClusterList the output list of pointing clusters
-     */
-    void BuildPointingClusterList(const bool useInner, const LArPointingClusterList &inputPointingClusterList,
-        LArPointingClusterList &outputPointingClusterList) const;
+    void BuildPointingClusterList(const pandora::ClusterVector &clusterVector, LArPointingClusterList &pointingClusterList) const;
 
     /**
      *  @brief Use pointing information to determine whether two clusters are associated
@@ -71,10 +59,10 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float   m_minClusterLength;               ///<
-    float   m_minGapFraction;                 ///<
     float   m_maxGapTolerance;                ///<
     float   m_maxTransverseDisplacement;      ///<
     float   m_maxRelativeAngle;               ///<
+    float   m_minCosRelativeAngle;            ///<
 };
 
 } // namespace lar_content
