@@ -84,7 +84,7 @@ bool TrackOverlapResult::operator<(const TrackOverlapResult &rhs) const
     if (std::fabs(m_reducedChi2 - rhs.m_reducedChi2) > std::numeric_limits<float>::epsilon())
         return (m_reducedChi2 > rhs.m_reducedChi2);
 
-    return (m_matchedFraction > rhs.m_matchedFraction);
+    return (m_matchedFraction < rhs.m_matchedFraction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

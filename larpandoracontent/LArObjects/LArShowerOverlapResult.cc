@@ -78,9 +78,9 @@ bool ShowerOverlapResult::operator<(const ShowerOverlapResult &rhs) const
         return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
 
     if (std::fabs(m_xOverlap.GetXOverlapSpan() - rhs.m_xOverlap.GetXOverlapSpan()) > std::numeric_limits<float>::epsilon())
-        return (m_xOverlap.GetXOverlapSpan() > rhs.m_xOverlap.GetXOverlapSpan());
+        return (m_xOverlap.GetXOverlapSpan() < rhs.m_xOverlap.GetXOverlapSpan());
 
-    return (m_matchedFraction > rhs.m_matchedFraction);
+    return (m_matchedFraction < rhs.m_matchedFraction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
