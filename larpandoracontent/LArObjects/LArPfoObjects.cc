@@ -50,7 +50,7 @@ const CaloHit *LArTrackState::GetCaloHit() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArShowerPCA::LArShowerPCA(const CartesianVector &centroid, const CartesianVector &primaryAxis, const CartesianVector &secondaryAxis,
-    const CartesianVector &tertiaryAxis, const CartesianVector &eigenValues) :
+        const CartesianVector &tertiaryAxis, const CartesianVector &eigenValues) :
     m_centroid(centroid),
     m_primaryAxis(primaryAxis),
     m_secondaryAxis(secondaryAxis),

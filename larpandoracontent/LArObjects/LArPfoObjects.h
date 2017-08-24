@@ -26,27 +26,31 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  position
-     *  @param  direction
-     *  @param  pCaloHit
+     *  @param  position the position
+     *  @param  direction the direction
+     *  @param  pCaloHit the address of the associated calo hit
      */
     LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction, const pandora::CaloHit *const pCaloHit);
 
     /**
      *  @brief  Constructor
      *
-     *  @param  position
-     *  @param  direction
+     *  @param  position the position
+     *  @param  direction the direction
      */
     LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction);
 
     /**
      *  @brief  Return direction at this trajectory point
+     *
+     *  @return the direction at this trajectory point
      */
     const pandora::CartesianVector &GetDirection() const;
 
     /**
-     *  @brief  Return calo hit at trajectory point
+     *  @brief  Return calo hit at this trajectory point
+     *
+     *  @param  the address of the calo hit at this trajectory point
      */
     const pandora::CaloHit *GetCaloHit() const;
 
@@ -72,62 +76,79 @@ public:
      *  @param  tertiaryAxis  tertiary axis of shower
      *  @param  axisLengths  ordered vector of shower lengths
      */
-    LArShowerPCA(const pandora::CartesianVector &centroid, const pandora::CartesianVector &primaryAxis,
-        const pandora::CartesianVector &secondaryAxis, const pandora::CartesianVector &tertiaryAxis,
-        const pandora::CartesianVector &eigenvalues);
+    LArShowerPCA(const pandora::CartesianVector &centroid, const pandora::CartesianVector &primaryAxis, const pandora::CartesianVector &secondaryAxis,
+        const pandora::CartesianVector &tertiaryAxis, const pandora::CartesianVector &eigenvalues);
 
     /**
      *  @brief  Return centroid
+     *
+     *  @return the centroid
      */
     const pandora::CartesianVector &GetCentroid() const;
 
     /**
      *  @brief  Return primary axis
+     *
+     *  @return the primary axis
      */
     const pandora::CartesianVector &GetPrimaryAxis() const;
 
     /**
      *  @brief  Return secondary axis
+     *
+     *  @return the secondary axis
      */
     const pandora::CartesianVector &GetSecondaryAxis() const;
 
     /**
      *  @brief  Return tertiary axis
+     *
+     *  @return the tertiary axis
      */
     const pandora::CartesianVector &GetTertiaryAxis() const;
 
     /**
-     *  @brief  Return vector eigenvalues
+     *  @brief  Return vector of eigenvalues
+     *
+     *  @return the vector of eigenvalues
      */
     const pandora::CartesianVector &GetEigenValues() const;
 
     /**
      *  @brief  Return vector of lengths
+     *
+     *  @return the vector of lengths
      */
     const pandora::CartesianVector &GetAxisLengths() const;
 
     /**
      *  @brief  Return primary length
+     *
+     *  @return the primary length
      */
     float GetPrimaryLength() const;
 
     /**
      *  @brief  Return secondary length
+     *
+     *  @return the secondary length
      */
     float GetSecondaryLength() const;
 
-   /**
-    *  @brief  Return tertiary length
-    */
+    /**
+     *  @brief  Return tertiary length
+     *
+     *  @return the tertiary length
+     */
     float GetTertiaryLength() const;
 
 private:
-    const pandora::CartesianVector m_centroid;
-    const pandora::CartesianVector m_primaryAxis;
-    const pandora::CartesianVector m_secondaryAxis;
-    const pandora::CartesianVector m_tertiaryAxis;
-    const pandora::CartesianVector m_eigenValues;
-    const pandora::CartesianVector m_axisLengths;
+    const pandora::CartesianVector  m_centroid;         ///< The centroid
+    const pandora::CartesianVector  m_primaryAxis;      ///< The primary axis
+    const pandora::CartesianVector  m_secondaryAxis;    ///< The secondary axis
+    const pandora::CartesianVector  m_tertiaryAxis;     ///< The tertiary axis
+    const pandora::CartesianVector  m_eigenValues;      ///< The vector of eigenvalues
+    const pandora::CartesianVector  m_axisLengths;      ///< The vector of lengths
 };
 
 } // namespace lar_content
