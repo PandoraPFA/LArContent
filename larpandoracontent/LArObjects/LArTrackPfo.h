@@ -15,52 +15,14 @@
 #include "Pandora/ObjectCreation.h"
 #include "Pandora/ObjectFactory.h"
 
+#include "larpandoracontent/LArObjects/LArPfoObjects.h"
+
 namespace pandora {class CaloHit;}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 namespace lar_content
 {
-
-class LArTrackState : public pandora::TrackState
-{
-public:
-    /**
-     *  @brief  Constructor
-     *
-     *  @param  position
-     *  @param  direction
-     *  @param  pCaloHit
-     */
-    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction, const pandora::CaloHit *const pCaloHit);
-
-    /**
-     *  @brief  Constructor
-     *
-     *  @param  position
-     *  @param  direction
-     */
-    LArTrackState(const pandora::CartesianVector &position, const pandora::CartesianVector &direction);
-
-    /**
-     *  @brief  Return direction at this trajectory point
-     */
-    const pandora::CartesianVector &GetDirection() const;
-
-    /**
-     *  @brief  Return calo hit at trajectory point
-     */
-    const pandora::CaloHit *GetCaloHit() const;
-
-private:
-    const pandora::CaloHit  *m_pCaloHit;
-};
-
-typedef std::vector<LArTrackState> LArTrackStateVector;
-typedef std::pair<float, LArTrackState> LArTrackTrajectoryPoint;
-typedef std::vector<LArTrackTrajectoryPoint> LArTrackTrajectory;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  lar pfo parameters
