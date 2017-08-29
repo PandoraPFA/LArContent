@@ -75,8 +75,8 @@ else()
     # project version
     # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
     set(${PROJECT_NAME}_VERSION_MAJOR 03)
-    set(${PROJECT_NAME}_VERSION_MINOR 07)
-    set(${PROJECT_NAME}_VERSION_PATCH 05)
+    set(${PROJECT_NAME}_VERSION_MINOR 08)
+    set(${PROJECT_NAME}_VERSION_PATCH 00)
     set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
@@ -86,7 +86,7 @@ else()
     # Prefer local include directory to any paths to installed header files
     include_directories(./)
 
-    find_package(PandoraSDK 03.00.00 REQUIRED)
+    find_package(PandoraSDK 03.01.00 REQUIRED)
     include_directories(${PandoraSDK_INCLUDE_DIRS})
     link_libraries(${PandoraSDK_LIBRARIES})
     add_definitions(${PandoraSDK_DEFINITIONS})
