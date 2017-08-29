@@ -126,28 +126,42 @@ FileType EventReadingAlgorithm::GetFileType(const std::string &fileName) const
 
 StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    if (!this->ExternalParametersPresent())
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "GeometryFileName", m_geometryFileName));
+    ExternalEventReadingParameters *pExternalParameters(nullptr);
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "EventFileName", m_eventFileName));
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "SkipToEvent", m_skipToEvent));
-    }
-    else
+    if (this->ExternalParametersPresent())
     {
         this->RegisterParameterAccessAttempt();
-        ExternalEventReadingParameters *const pExternalParameters(dynamic_cast<ExternalEventReadingParameters*>(this->GetExternalParameters()));
+        pExternalParameters = dynamic_cast<ExternalEventReadingParameters*>(this->GetExternalParameters());
 
         if (!pExternalParameters)
             return STATUS_CODE_FAILURE;
+    }
 
+    if (pExternalParameters && !pExternalParameters->m_geometryFileName.empty())
+    {
         m_geometryFileName = pExternalParameters->m_geometryFileName;
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "GeometryFileName", m_geometryFileName));
+    }
+
+    if (pExternalParameters && !pExternalParameters->m_eventFileName.empty())
+    {
         m_eventFileName = pExternalParameters->m_eventFileName;
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "EventFileName", m_eventFileName));
+    }
+
+    if (pExternalParameters && pExternalParameters->m_skipToEvent.IsInitialized())
+    {
         m_skipToEvent = pExternalParameters->m_skipToEvent.Get();
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SkipToEvent", m_skipToEvent));
     }
 
     if (!m_geometryFileName.empty())
