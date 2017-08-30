@@ -356,25 +356,31 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
         if (!m_pNeutrinoIdTool)
             return STATUS_CODE_INVALID_PARAMETER;
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+            "OutputListPruning", m_outputListPruningAlgorithm));
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
         pExternalParameters->m_printOverallRecoStatus, xmlHandle, "PrintOverallRecoStatus", m_printOverallRecoStatus));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "CRParentListName", m_crParentListName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "CRDaughterListName", m_crDaughterListName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "NuParentListName", m_nuParentListName));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputListPrefix", m_outputListPrefix));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "OutputListPruning", m_outputListPruningAlgorithm));
+    if ((m_shouldRunAllHitsCosmicReco || m_shouldRunCosmicRecoOption))
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+            "CRParentListName", m_crParentListName));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+            "CRDaughterListName", m_crDaughterListName));
+    }
+
+    if ((m_shouldRunSlicing || m_shouldRunNeutrinoRecoOption))
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+            "NuParentListName", m_nuParentListName));
+    }
 
     TiXmlElement *const pCosmicRayXmlElement(xmlHandle.FirstChild("CosmicRayReconstruction").Element());
 
