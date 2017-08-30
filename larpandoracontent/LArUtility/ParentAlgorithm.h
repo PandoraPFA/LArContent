@@ -30,6 +30,21 @@ public:
     ParentAlgorithm();
 
     /**
+     *  @brief  External steering parameters class
+     */
+    class ExternalSteeringParameters : public ExternalParameters
+    {
+    public:
+        pandora::InputBool      m_shouldRunAllHitsCosmicReco;       ///< Whether to run all hits cosmic-ray reconstruction
+        pandora::InputBool      m_shouldRunCosmicHitRemoval;        ///< Whether to remove hits from tagged cosmic-rays
+        pandora::InputBool      m_shouldRunSlicing;                 ///< Whether to slice events into separate regions for processing
+        pandora::InputBool      m_shouldRunNeutrinoRecoOption;      ///< Whether to run neutrino reconstruction for each slice
+        pandora::InputBool      m_shouldRunCosmicRecoOption;        ///< Whether to run cosmic-ray reconstruction for each slice
+        pandora::InputBool      m_shouldIdentifyNeutrinoSlice;      ///< Whether to identify most appropriate neutrino slice
+        pandora::InputBool      m_printOverallRecoStatus;           ///< Whether to print current operation status messages
+    };
+
+    /**
      *  @brief SliceProperties class
      */
     class SliceProperties
@@ -116,12 +131,24 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    /**
+     *  @brief  Read settings from external steering parameters block, if present, otherwise from xml as standard
+     *
+     *  @param  pExternalParameters the address of the external parameters (if present)
+     *  @param  inputBool the input boolean value, from the external parameters (if present)
+     *  @param  xmlHandle the xml handle
+     *  @param  xmlTag the xml tag
+     *  @param  outputBool to receive the output boolean value
+     */
+    pandora::StatusCode ReadExternalSettings(const ExternalSteeringParameters *const pExternalParameters, const pandora::InputBool inputBool,
+        const pandora::TiXmlHandle xmlHandle, const std::string &xmlTag, bool &outputBool);
+
     bool                        m_shouldRunAllHitsCosmicReco;         ///< Steering: whether to run all hits cosmic-ray reconstruction
     bool                        m_shouldRunCosmicHitRemoval;          ///< Steering: whether to remove hits from tagged cosmic-rays
     bool                        m_shouldRunNeutrinoRecoOption;        ///< Steering: whether to run neutrino reconstruction for each slice
     bool                        m_shouldRunCosmicRecoOption;          ///< Steering: whether to run cosmic-ray reconstruction for each slice
     bool                        m_shouldIdentifyNeutrinoSlice;        ///< Steering: whether to identify most appropriate neutrino slice
-    bool                        m_printStatus;                        ///< Steering: whether to print current operation status messages
+    bool                        m_printOverallRecoStatus;             ///< Steering: whether to print current operation status messages
 
     CosmicRayTaggingBaseTool   *m_pCosmicRayTaggingTool;              ///< The address of the cosmic-ray tagging tool
     NeutrinoIdBaseTool         *m_pNeutrinoIdTool;                    ///< The address of the neutrino id tool

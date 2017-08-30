@@ -24,7 +24,7 @@ ParentAlgorithm::ParentAlgorithm() :
     m_shouldRunNeutrinoRecoOption(true),
     m_shouldRunCosmicRecoOption(true),
     m_shouldIdentifyNeutrinoSlice(true),
-    m_printStatus(false),
+    m_printOverallRecoStatus(false),
     m_pCosmicRayTaggingTool(nullptr),
     m_pNeutrinoIdTool(nullptr),
     m_nuRepeatThreeDTrackReco(true)
@@ -93,7 +93,7 @@ void ParentAlgorithm::RunAllHitsCosmicRayReconstruction(PfoList &parentCosmicRay
     if (pParentCRPfoList)
         parentCosmicRayPfos = *pParentCRPfoList;
 
-    if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+    if (m_printOverallRecoStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: cosmic-ray reconstruction done" << std::endl;
 }
 
@@ -137,7 +137,7 @@ void ParentAlgorithm::RunFastReconstructionAndSlicing(SliceList &sliceList) cons
         this->CopyAllHitsToSingleSlice(sliceList);
     }
 
-    if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+    if (m_printOverallRecoStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: slicing done, nSlices " << sliceList.size() << std::endl;
 }
 
@@ -167,7 +167,7 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
             const std::string postProcessAlg(!m_shouldRunCosmicRecoOption ? m_nuListMovingAlgorithm : m_nuListDeletionAlgorithm);
             this->RunAlgorithm(postProcessAlg);
 
-            if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            if (m_printOverallRecoStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "ParentAlgorithm: neutrino reconstruction done for slice " << thisSliceIndex << std::endl;
         }
 
@@ -186,7 +186,7 @@ void ParentAlgorithm::ReconstructSlices(const SliceList &sliceList, SliceIndexTo
 
             this->RunAlgorithm(m_crListMovingAlgorithm);
 
-            if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            if (m_printOverallRecoStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "ParentAlgorithm: cosmic-ray reconstruction done for slice " << thisSliceIndex << std::endl;
         }
 
@@ -223,7 +223,7 @@ void ParentAlgorithm::RemoveSliceCosmicRayReconstruction(const SliceIndexToPfoLi
 
     this->RunAlgorithm(m_outputListPruningAlgorithm);
 
-    if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+    if (m_printOverallRecoStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: cosmic-ray reconstruction removed for slice " << neutrinoSliceIndex << std::endl;
 }
 
@@ -234,7 +234,7 @@ void ParentAlgorithm::AddSliceNeutrinoReconstruction(const SliceList &sliceList,
     this->NeutrinoReconstruction(sliceList.at(neutrinoSliceIndex), TypeToString(neutrinoSliceIndex));
     this->RunAlgorithm(m_nuListMovingAlgorithm);
 
-    if (m_printStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+    if (m_printOverallRecoStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
         std::cout << "ParentAlgorithm: neutrino reconstruction applied to slice " << neutrinoSliceIndex << std::endl;
 }
 
@@ -293,11 +293,22 @@ void ParentAlgorithm::NeutrinoReconstruction(const ParentSlicingBaseAlgorithm::S
 
 StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldRunAllHitsCosmicReco", m_shouldRunAllHitsCosmicReco));
+    ExternalSteeringParameters *pExternalParameters(nullptr);
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldRunCosmicHitRemoval", m_shouldRunCosmicHitRemoval));
+    if (this->ExternalParametersPresent())
+    {
+        this->RegisterParameterAccessAttempt();
+        pExternalParameters = dynamic_cast<ExternalSteeringParameters*>(this->GetExternalParameters());
+
+        if (!pExternalParameters)
+            return STATUS_CODE_FAILURE;
+    }
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
+        pExternalParameters->m_shouldRunAllHitsCosmicReco, xmlHandle, "ShouldRunAllHitsCosmicReco", m_shouldRunAllHitsCosmicReco));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
+        pExternalParameters->m_shouldRunCosmicHitRemoval, xmlHandle, "ShouldRunCosmicHitRemoval", m_shouldRunCosmicHitRemoval));
 
     if (m_shouldRunCosmicHitRemoval && !m_shouldRunAllHitsCosmicReco)
     {
@@ -317,14 +328,17 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
             return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldRunNeutrinoRecoOption", m_shouldRunNeutrinoRecoOption));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
+        pExternalParameters->m_shouldRunSlicing, xmlHandle, "ShouldRunSlicing", m_shouldRunSlicing));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldRunCosmicRecoOption", m_shouldRunCosmicRecoOption));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
+        pExternalParameters->m_shouldRunNeutrinoRecoOption, xmlHandle, "ShouldRunNeutrinoRecoOption", m_shouldRunNeutrinoRecoOption));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldIdentifyNeutrinoSlice", m_shouldIdentifyNeutrinoSlice));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
+        pExternalParameters->m_shouldRunCosmicRecoOption, xmlHandle, "ShouldRunCosmicRecoOption", m_shouldRunCosmicRecoOption));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
+        pExternalParameters->m_shouldIdentifyNeutrinoSlice, xmlHandle, "ShouldIdentifyNeutrinoSlice", m_shouldIdentifyNeutrinoSlice));
 
     if (m_shouldIdentifyNeutrinoSlice && (!m_shouldRunSlicing || !m_shouldRunNeutrinoRecoOption || !m_shouldRunCosmicRecoOption))
     {
@@ -344,8 +358,8 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
             return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "PrintStatus", m_printStatus));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
+        pExternalParameters->m_printOverallRecoStatus, xmlHandle, "PrintOverallRecoStatus", m_printOverallRecoStatus));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "CRParentListName", m_crParentListName));
@@ -452,6 +466,23 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     return ParentSlicingBaseAlgorithm::ReadSettings(xmlHandle);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ParentAlgorithm::ReadExternalSettings(const ExternalSteeringParameters *const pExternalParameters, const InputBool inputBool,
+    const TiXmlHandle xmlHandle, const std::string &xmlTag, bool &outputBool)
+{
+    if (pExternalParameters && inputBool.IsInitialized())
+    {
+        outputBool = inputBool.Get();
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, xmlTag, outputBool));
+    }
+
+    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content

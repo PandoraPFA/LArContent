@@ -8,6 +8,8 @@
 #ifndef LAR_PARENT_SLICING_BASE_ALGORITHM_H
 #define LAR_PARENT_SLICING_BASE_ALGORITHM_H 1
 
+#include "Pandora/AlgorithmTool.h"
+
 #include "larpandoracontent/LArUtility/ParentBaseAlgorithm.h"
 
 namespace lar_content

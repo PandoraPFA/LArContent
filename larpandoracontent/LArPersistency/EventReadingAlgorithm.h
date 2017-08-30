@@ -28,6 +28,16 @@ class EventReadingAlgorithm : public pandora::ExternallyConfiguredAlgorithm
 {
 public:
     /**
+     *  @brief  Default constructor
+     */
+    EventReadingAlgorithm();
+
+    /**
+     *  @brief  Destructor
+     */
+    ~EventReadingAlgorithm();
+
+    /**
      *  @brief  External event reading parameters class
      */
     class ExternalEventReadingParameters : public ExternalParameters
@@ -37,16 +47,6 @@ public:
         std::string             m_eventFileName;                ///< Name of the file containing event information
         pandora::InputUInt      m_skipToEvent;                  ///< Index of first event to consider in input file
     };
-
-    /**
-     *  @brief  Default constructor
-     */
-    EventReadingAlgorithm();
-
-    /**
-     *  @brief  Destructor
-     */
-    ~EventReadingAlgorithm();
 
 private:
     pandora::StatusCode Initialize();

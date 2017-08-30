@@ -8,7 +8,7 @@
 #ifndef LAR_PARENT_BASE_ALGORITHM_H
 #define LAR_PARENT_BASE_ALGORITHM_H 1
 
-#include "Pandora/Algorithm.h"
+#include "Pandora/ExternallyConfiguredAlgorithm.h"
 
 namespace lar_content
 {
@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  ParentBaseAlgorithm class
  */
-class ParentBaseAlgorithm : public pandora::Algorithm
+class ParentBaseAlgorithm : public pandora::ExternallyConfiguredAlgorithm
 {
 public:
     /**

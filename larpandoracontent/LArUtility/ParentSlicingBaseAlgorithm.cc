@@ -120,8 +120,8 @@ void ParentSlicingBaseAlgorithm::RunTwoDClustering(const std::string &sliceIndex
 
 StatusCode ParentSlicingBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldRunSlicing", m_shouldRunSlicing));
+    // ATTN Delegated to derived algorithms, due to interplay with external configuration functionality
+    // PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ShouldRunSlicing", m_shouldRunSlicing));
 
     if (m_shouldRunSlicing)
     {
