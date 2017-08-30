@@ -130,7 +130,6 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     if (this->ExternalParametersPresent())
     {
-        this->RegisterParameterAccessAttempt();
         pExternalParameters = dynamic_cast<ExternalEventReadingParameters*>(this->GetExternalParameters());
 
         if (!pExternalParameters)

@@ -297,7 +297,6 @@ StatusCode ParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     if (this->ExternalParametersPresent())
     {
-        this->RegisterParameterAccessAttempt();
         pExternalParameters = dynamic_cast<ExternalSteeringParameters*>(this->GetExternalParameters());
 
         if (!pExternalParameters)
