@@ -16,14 +16,14 @@
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lar_content
 {
 
 EventReadingAlgorithm::EventReadingAlgorithm() :
-    m_geometryFileType(UNKNOWN_FILE_TYPE),
-    m_eventFileType(UNKNOWN_FILE_TYPE),
     m_skipToEvent(0),
     m_useLArCaloHits(false),
     m_useLArMCParticles(true),
@@ -44,12 +44,14 @@ StatusCode EventReadingAlgorithm::Initialize()
 {
     if (!m_geometryFileName.empty())
     {
-        if (BINARY == m_geometryFileType)
+        const FileType geometryFileType(this->GetFileType(m_geometryFileName));
+
+        if (BINARY == geometryFileType)
         {
             BinaryFileReader fileReader(this->GetPandora(), m_geometryFileName);
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGeometry());
         }
-        else if (XML == m_geometryFileType)
+        else if (XML == geometryFileType)
         {
             XmlFileReader fileReader(this->GetPandora(), m_geometryFileName);
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGeometry());
@@ -62,25 +64,7 @@ StatusCode EventReadingAlgorithm::Initialize()
 
     if (!m_eventFileName.empty())
     {
-        if (BINARY == m_eventFileType)
-        {
-            m_pEventFileReader = new BinaryFileReader(this->GetPandora(), m_eventFileName);
-        }
-        else if (XML == m_eventFileType)
-        {
-            m_pEventFileReader = new XmlFileReader(this->GetPandora(), m_eventFileName);
-        }
-        else
-        {
-            return STATUS_CODE_FAILURE;
-        }
-
-        if (m_useLArCaloHits)
-            m_pEventFileReader->SetFactory(new LArCaloHitFactory);
-
-        if (m_useLArMCParticles)
-            m_pEventFileReader->SetFactory(new LArMCParticleFactory);
-
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->GoToEvent(m_skipToEvent));
     }
 
@@ -93,9 +77,70 @@ StatusCode EventReadingAlgorithm::Run()
 {
     if ((nullptr != m_pEventFileReader) && !m_eventFileName.empty())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadEvent());
+        try
+        {
+            m_pEventFileReader->ReadEvent();
+        }
+        catch (const StatusCodeException &)
+        {
+            this->MoveToNextEventFile();
+        }
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RepeatEventPreparation(*this));
     }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventReadingAlgorithm::MoveToNextEventFile()
+{
+    if (m_eventFileNameVector.empty())
+        throw StopProcessingException("All event files processed");
+
+    m_eventFileName = m_eventFileNameVector.back();
+    m_eventFileNameVector.pop_back();
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
+
+    try
+    {
+        m_pEventFileReader->ReadEvent();
+    }
+    catch (const StatusCodeException &)
+    {
+        this->MoveToNextEventFile();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode EventReadingAlgorithm::ReplaceEventFileReader(const std::string &fileName)
+{
+    delete m_pEventFileReader;
+    m_pEventFileReader = nullptr;
+
+    std::cout << "EventReadingAlgorithm: Processing event file: " << fileName << std::endl;
+    const FileType eventFileType(this->GetFileType(fileName));
+
+    if (BINARY == eventFileType)
+    {
+        m_pEventFileReader = new BinaryFileReader(this->GetPandora(), fileName);
+    }
+    else if (XML == eventFileType)
+    {
+        m_pEventFileReader = new XmlFileReader(this->GetPandora(), fileName);
+    }
+    else
+    {
+        return STATUS_CODE_FAILURE;
+    }
+
+    if (m_useLArCaloHits)
+        m_pEventFileReader->SetFactory(new LArCaloHitFactory);
+
+    if (m_useLArMCParticles)
+        m_pEventFileReader->SetFactory(new LArMCParticleFactory);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -145,13 +190,20 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GeometryFileName", m_geometryFileName));
     }
 
-    if (pExternalParameters && !pExternalParameters->m_eventFileName.empty())
+    if (pExternalParameters && !pExternalParameters->m_eventFileNameList.empty())
     {
-        m_eventFileName = pExternalParameters->m_eventFileName;
+        XmlHelper::TokenizeString(pExternalParameters->m_eventFileNameList, m_eventFileNameVector, ":");
     }
     else
     {
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EventFileName", m_eventFileName));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "EventFileNameList", m_eventFileNameVector));
+    }
+
+    if (!m_eventFileNameVector.empty())
+    {
+        std::reverse(m_eventFileNameVector.begin(), m_eventFileNameVector.end());
+        m_eventFileName = m_eventFileNameVector.back();
+        m_eventFileNameVector.pop_back();
     }
 
     if (pExternalParameters && pExternalParameters->m_skipToEvent.IsInitialized())
@@ -162,12 +214,6 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SkipToEvent", m_skipToEvent));
     }
-
-    if (!m_geometryFileName.empty())
-        m_geometryFileType = this->GetFileType(m_geometryFileName);
-
-    if (!m_eventFileName.empty())
-        m_eventFileType = this->GetFileType(m_eventFileName);
 
     if (m_geometryFileName.empty() && m_eventFileName.empty())
     {
