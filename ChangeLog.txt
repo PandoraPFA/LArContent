@@ -1,4 +1,15 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_07_04
+--------------------------------------------------------------------------------------------------------------------------------------------
+Tweaked tie-breaking in shower and track overlap result operators.
+Added the possibility to work with track vs. shower probabilities instead of binary classification.
+Modified track direction for compatibility with LArSoft.
+Fixed forward/backward asymmetries in 2D and 3D sliding linear fits.
+Simplified PcaShowerParticleBuildingAlgorithm by moving bulk of PCA calculations to LArPfoHelper.
+Refactored SlidingFitTrajectory implementation.
+Moved track trajectory determination into LArPfoHelper and removed any assumptions about sliding fit direction conventions.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_07_03
 --------------------------------------------------------------------------------------------------------------------------------------------
 Selected license: GPLv3.

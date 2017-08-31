@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the particle recovery algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -254,36 +254,41 @@ void ParticleRecoveryAlgorithm::CalculateEffectiveOverlapFractions(const Cluster
 
 void ParticleRecoveryAlgorithm::CalculateEffectiveSpan(const pandora::Cluster *const pCluster, const float xMin, const float xMax, float &xMinEff, float &xMaxEff) const
 {
-    // TODO cache sliding linear fit results
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitPitch);
-
-    const int nSamplingPointsLeft(1 + static_cast<int>((xMinEff - xMin) / m_sampleStepSize));
-    const int nSamplingPointsRight(1 + static_cast<int>((xMax - xMaxEff) / m_sampleStepSize));
-    float dxMin(0.f), dxMax(0.f);
-
-    for (int iSample = 1; iSample <= nSamplingPointsLeft; ++iSample)
+    // TODO cache sliding linear fit results and optimise protection against exceptions from TwoDSlidingFitResult and IsXSamplingPointInGap
+    try
     {
-        const float xSample(std::max(xMin, xMinEff - static_cast<float>(iSample) * m_sampleStepSize));
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
-        if (!LArGeometryHelper::IsXSamplingPointInGap(this->GetPandora(), xSample, slidingFitResult, m_sampleStepSize))
-            break;
+        const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitHalfWindow, slidingFitPitch);
 
-        dxMin = xMinEff - xSample;
+        const int nSamplingPointsLeft(1 + static_cast<int>((xMinEff - xMin) / m_sampleStepSize));
+        const int nSamplingPointsRight(1 + static_cast<int>((xMax - xMaxEff) / m_sampleStepSize));
+        float dxMin(0.f), dxMax(0.f);
+
+        for (int iSample = 1; iSample <= nSamplingPointsLeft; ++iSample)
+        {
+            const float xSample(std::max(xMin, xMinEff - static_cast<float>(iSample) * m_sampleStepSize));
+
+            if (!LArGeometryHelper::IsXSamplingPointInGap(this->GetPandora(), xSample, slidingFitResult, m_sampleStepSize))
+                break;
+
+            dxMin = xMinEff - xSample;
+        }
+
+        for (int iSample = 1; iSample <= nSamplingPointsRight; ++iSample)
+        {
+            const float xSample(std::min(xMax, xMaxEff + static_cast<float>(iSample) * m_sampleStepSize));
+
+            if (!LArGeometryHelper::IsXSamplingPointInGap(this->GetPandora(), xSample, slidingFitResult, m_sampleStepSize))
+                break;
+
+            dxMax = xSample - xMaxEff;
+        }
+
+        xMinEff = xMinEff - dxMin;
+        xMaxEff = xMaxEff + dxMax;
     }
-
-    for (int iSample = 1; iSample <= nSamplingPointsRight; ++iSample)
-    {
-        const float xSample(std::min(xMax, xMaxEff + static_cast<float>(iSample) * m_sampleStepSize));
-
-        if (!LArGeometryHelper::IsXSamplingPointInGap(this->GetPandora(), xSample, slidingFitResult, m_sampleStepSize))
-            break;
-
-        dxMax = xSample - xMaxEff;
-    }
-
-    xMinEff = xMinEff - dxMin;
-    xMaxEff = xMaxEff + dxMax;
+    catch (StatusCodeException &) {}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
