@@ -131,14 +131,14 @@ void ParentAlgorithm::RunFastReconstructionAndSlicing(SliceList &sliceList) cons
     if (m_shouldRunSlicing)
     {
         this->RunSlicing(sliceList);
+
+        if (m_printOverallRecoStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ParentAlgorithm: slicing done, nSlices " << sliceList.size() << std::endl;
     }
     else
     {
         this->CopyAllHitsToSingleSlice(sliceList);
     }
-
-    if (m_printOverallRecoStatus || PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-        std::cout << "ParentAlgorithm: slicing done, nSlices " << sliceList.size() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
