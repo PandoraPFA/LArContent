@@ -55,7 +55,10 @@ public:
          */
         SliceProperties();
     
-        float       m_weight;           ///< Generic weight property
+        float       m_weight;               ///< Generic weight property
+        float       m_nuVtxY;               ///< The neutrino vertex x coordinate
+        float       m_nuVtxZ;               ///< The neutrino vertex y coordinate
+        float       m_nuCosWeightedDir;     ///< Cosine of angle between z-axis and (hit weighted) mean direction of primary particles
     };
 
     typedef std::map<unsigned int, pandora::PfoList> SliceIndexToPfoListMap;
@@ -191,7 +194,10 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline ParentAlgorithm::SliceProperties::SliceProperties() :
-    m_weight(0.f)
+    m_weight(0.f),
+    m_nuVtxY(std::numeric_limits<float>::max()),
+    m_nuVtxZ(std::numeric_limits<float>::max()),
+    m_nuCosWeightedDir(std::numeric_limits<float>::max())
 {
 }
 
