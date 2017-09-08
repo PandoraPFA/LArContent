@@ -107,10 +107,13 @@ void ParentAlgorithm::RemoveAmbiguousCosmicRayPfos(const PfoList &ambiguousPfos)
     const PfoList *pCosmicRayDaughterPfos(nullptr);
     (void) PandoraContentApi::GetList(*this, m_crDaughterListName, pCosmicRayDaughterPfos);
 
-    for (const Pfo *const pPfo : ambiguousPfos)
+    PfoList allPfosToDelete;
+    LArPfoHelper::GetAllConnectedPfos(ambiguousPfos, allPfosToDelete);
+
+    for (const Pfo *const pPfoToDelete : allPfosToDelete)
     {
-        const std::string listName(std::find(pParentCosmicRayPfos->begin(), pParentCosmicRayPfos->end(), pPfo) != pParentCosmicRayPfos->end() ? m_crParentListName :
-            (pCosmicRayDaughterPfos && std::find(pCosmicRayDaughterPfos->begin(), pCosmicRayDaughterPfos->end(), pPfo) != pCosmicRayDaughterPfos->end()) ? m_crDaughterListName : "");
+        const std::string listName(std::find(pParentCosmicRayPfos->begin(), pParentCosmicRayPfos->end(), pPfoToDelete) != pParentCosmicRayPfos->end() ? m_crParentListName :
+            (pCosmicRayDaughterPfos && std::find(pCosmicRayDaughterPfos->begin(), pCosmicRayDaughterPfos->end(), pPfoToDelete) != pCosmicRayDaughterPfos->end()) ? m_crDaughterListName : "");
 
         if (listName.empty())
         {
@@ -118,7 +121,7 @@ void ParentAlgorithm::RemoveAmbiguousCosmicRayPfos(const PfoList &ambiguousPfos)
             throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, listName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfoToDelete, listName));
     }
 
     this->RunAlgorithm(m_crListPruningAlgorithm);
@@ -207,10 +210,10 @@ void ParentAlgorithm::RemoveSliceCosmicRayReconstruction(const SliceIndexToPfoLi
     PfoList allPfosToDelete;
     LArPfoHelper::GetAllConnectedPfos(sliceToCosmicRayPfosMap.at(neutrinoSliceIndex), allPfosToDelete);
 
-    for (const Pfo *const pPfo : allPfosToDelete)
+    for (const Pfo *const pPfoToDelete : allPfosToDelete)
     {
-        const std::string listName(std::find(pParentCosmicRayPfos->begin(), pParentCosmicRayPfos->end(), pPfo) != pParentCosmicRayPfos->end() ? m_outputListPrefix + m_crParentListName :
-            (pCosmicRayDaughterPfos && std::find(pCosmicRayDaughterPfos->begin(), pCosmicRayDaughterPfos->end(), pPfo) != pCosmicRayDaughterPfos->end()) ? m_outputListPrefix + m_crDaughterListName : "");
+        const std::string listName(std::find(pParentCosmicRayPfos->begin(), pParentCosmicRayPfos->end(), pPfoToDelete) != pParentCosmicRayPfos->end() ? m_outputListPrefix + m_crParentListName :
+            (pCosmicRayDaughterPfos && std::find(pCosmicRayDaughterPfos->begin(), pCosmicRayDaughterPfos->end(), pPfoToDelete) != pCosmicRayDaughterPfos->end()) ? m_outputListPrefix + m_crDaughterListName : "");
 
         if (listName.empty())
         {
@@ -218,7 +221,7 @@ void ParentAlgorithm::RemoveSliceCosmicRayReconstruction(const SliceIndexToPfoLi
             throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfo, listName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfoToDelete, listName));
     }
 
     this->RunAlgorithm(m_outputListPruningAlgorithm);
