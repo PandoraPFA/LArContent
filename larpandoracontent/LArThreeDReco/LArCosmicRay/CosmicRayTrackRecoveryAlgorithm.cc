@@ -89,14 +89,10 @@ StatusCode CosmicRayTrackRecoveryAlgorithm::GetAvailableClusters(const std::stri
         return STATUS_CODE_SUCCESS;
     }
 
-    for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : *pClusterList)
     {
-        const Cluster *const pCluster = *cIter;
-
-        if (!pCluster->IsAvailable())
-            continue;
-
-        clusterVector.push_back(pCluster);
+        if (PandoraContentApi::IsAvailable(*this, pCluster))
+            clusterVector.push_back(pCluster);
     }
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
@@ -631,12 +627,13 @@ void CosmicRayTrackRecoveryAlgorithm::BuildParticles(const ParticleList &particl
     if (particleList.empty())
         return;
 
-    const PfoList *pPfoList = NULL; std::string pfoListName;
+    const PfoList *pPfoList(nullptr); std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
-    for (ParticleList::const_iterator iter = particleList.begin(), iterEnd = particleList.end(); iter != iterEnd; ++iter)
+    for (const Particle &particle : particleList)
     {
-        const Particle &particle = *iter;
+        if (!PandoraContentApi::IsAvailable(*this, &particle.m_clusterList))
+            continue;
 
         ClusterList clusterList;
         this->MergeClusters(particle.m_clusterList, clusterList);
@@ -652,7 +649,7 @@ void CosmicRayTrackRecoveryAlgorithm::BuildParticles(const ParticleList &particl
         pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
         pfoParameters.m_clusterList = clusterList;
 
-        const ParticleFlowObject *pPfo(NULL);
+        const ParticleFlowObject *pPfo(nullptr);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
     }
 
@@ -677,20 +674,18 @@ void CosmicRayTrackRecoveryAlgorithm::MergeClusters(const ClusterList &inputClus
         if (clusterList.empty())
             continue;
 
-        const Cluster *const pSeedCluster = *(clusterList.begin());
+        const Cluster *const pSeedCluster(clusterList.front());
 
-        if (!pSeedCluster->IsAvailable())
+        if (!PandoraContentApi::IsAvailable(*this, pSeedCluster))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+        for (const Cluster *const pAssociatedCluster : clusterList)
         {
-            const Cluster *const pAssociatedCluster = *iter;
-
             if (pAssociatedCluster == pSeedCluster)
                 continue;
 
-            if (!pAssociatedCluster->IsAvailable())
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+            if (!PandoraContentApi::IsAvailable(*this, pAssociatedCluster))
+                continue;
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster,
                 inputClusterListName, inputClusterListName));
