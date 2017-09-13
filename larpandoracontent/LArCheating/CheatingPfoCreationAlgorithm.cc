@@ -29,11 +29,14 @@ CheatingPfoCreationAlgorithm::CheatingPfoCreationAlgorithm() :
 
 StatusCode CheatingPfoCreationAlgorithm::Run()
 {
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
-
     LArMCParticleHelper::MCRelationMap mcPrimaryMap;
-    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
+
+    if (m_collapseToPrimaryMCParticles)
+    {
+        const MCParticleList *pMCParticleList(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
+    }
 
     MCParticleToClusterListMap mcParticleToClusterListMap;
 

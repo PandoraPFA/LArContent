@@ -42,20 +42,15 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
     for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
+        if (!pPfo->GetParentPfoList().empty())
+            continue;
+
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
         const float neutrinoFraction(LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
 
         if (neutrinoFraction < m_maxNeutrinoFraction)
-        {
             outputPfoList.push_back(pPfo);
-            LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
-
-            PfoList::iterator parentIter(std::find(downstreamPfos.begin(), downstreamPfos.end(), pPfo));
-
-            if (downstreamPfos.end() != parentIter)
-                downstreamPfos.erase(parentIter);
-        }
     }
 
     if (!outputPfoList.empty())
