@@ -16,16 +16,14 @@
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
 
+#include <algorithm>
+
 using namespace pandora;
 
 namespace lar_content
 {
 
 EventReadingAlgorithm::EventReadingAlgorithm() :
-    m_geometryFileType(UNKNOWN_FILE_TYPE),
-    m_eventFileType(UNKNOWN_FILE_TYPE),
-    m_shouldReadGeometry(false),
-    m_shouldReadEvents(true),
     m_skipToEvent(0),
     m_useLArCaloHits(false),
     m_useLArMCParticles(true),
@@ -44,14 +42,16 @@ EventReadingAlgorithm::~EventReadingAlgorithm()
 
 StatusCode EventReadingAlgorithm::Initialize()
 {
-    if (m_shouldReadGeometry)
+    if (!m_geometryFileName.empty())
     {
-        if (BINARY == m_geometryFileType)
+        const FileType geometryFileType(this->GetFileType(m_geometryFileName));
+
+        if (BINARY == geometryFileType)
         {
             BinaryFileReader fileReader(this->GetPandora(), m_geometryFileName);
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGeometry());
         }
-        else if (XML == m_geometryFileType)
+        else if (XML == geometryFileType)
         {
             XmlFileReader fileReader(this->GetPandora(), m_geometryFileName);
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, fileReader.ReadGeometry());
@@ -62,27 +62,9 @@ StatusCode EventReadingAlgorithm::Initialize()
         }
     }
 
-    if (m_shouldReadEvents)
+    if (!m_eventFileName.empty())
     {
-        if (BINARY == m_eventFileType)
-        {
-            m_pEventFileReader = new BinaryFileReader(this->GetPandora(), m_eventFileName);
-        }
-        else if (XML == m_eventFileType)
-        {
-            m_pEventFileReader = new XmlFileReader(this->GetPandora(), m_eventFileName);
-        }
-        else
-        {
-            return STATUS_CODE_FAILURE;
-        }
-
-        if (m_useLArCaloHits)
-            m_pEventFileReader->SetFactory(new LArCaloHitFactory);
-
-        if (m_useLArMCParticles)
-            m_pEventFileReader->SetFactory(new LArMCParticleFactory);
-
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->GoToEvent(m_skipToEvent));
     }
 
@@ -93,9 +75,17 @@ StatusCode EventReadingAlgorithm::Initialize()
 
 StatusCode EventReadingAlgorithm::Run()
 {
-    if ((nullptr != m_pEventFileReader) && m_shouldReadEvents)
+    if ((nullptr != m_pEventFileReader) && !m_eventFileName.empty())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileReader->ReadEvent());
+        try
+        {
+            m_pEventFileReader->ReadEvent();
+        }
+        catch (const StatusCodeException &)
+        {
+            this->MoveToNextEventFile();
+        }
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RepeatEventPreparation(*this));
     }
 
@@ -104,62 +94,132 @@ StatusCode EventReadingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void EventReadingAlgorithm::MoveToNextEventFile()
+{
+    if (m_eventFileNameVector.empty())
+        throw StopProcessingException("All event files processed");
+
+    m_eventFileName = m_eventFileNameVector.back();
+    m_eventFileNameVector.pop_back();
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceEventFileReader(m_eventFileName));
+
+    try
+    {
+        m_pEventFileReader->ReadEvent();
+    }
+    catch (const StatusCodeException &)
+    {
+        this->MoveToNextEventFile();
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode EventReadingAlgorithm::ReplaceEventFileReader(const std::string &fileName)
+{
+    delete m_pEventFileReader;
+    m_pEventFileReader = nullptr;
+
+    std::cout << "EventReadingAlgorithm: Processing event file: " << fileName << std::endl;
+    const FileType eventFileType(this->GetFileType(fileName));
+
+    if (BINARY == eventFileType)
+    {
+        m_pEventFileReader = new BinaryFileReader(this->GetPandora(), fileName);
+    }
+    else if (XML == eventFileType)
+    {
+        m_pEventFileReader = new XmlFileReader(this->GetPandora(), fileName);
+    }
+    else
+    {
+        return STATUS_CODE_FAILURE;
+    }
+
+    if (m_useLArCaloHits)
+        m_pEventFileReader->SetFactory(new LArCaloHitFactory);
+
+    if (m_useLArMCParticles)
+        m_pEventFileReader->SetFactory(new LArMCParticleFactory);
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+FileType EventReadingAlgorithm::GetFileType(const std::string &fileName) const
+{
+    std::string fileExtension(fileName.substr(fileName.find_last_of(".")));
+    std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
+
+    if (std::string(".xml") == fileExtension)
+    {
+        return XML;
+    }
+    else if (std::string(".pndr") == fileExtension)
+    {
+        return BINARY;
+    }
+    else
+    {
+        std::cout << "EventReadingAlgorithm: Unknown file type specified " << fileName << std::endl;
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldReadGeometry", m_shouldReadGeometry));
+    ExternalEventReadingParameters *pExternalParameters(nullptr);
 
-    if (m_shouldReadGeometry)
+    if (this->ExternalParametersPresent())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "GeometryFileName", m_geometryFileName));
+        pExternalParameters = dynamic_cast<ExternalEventReadingParameters*>(this->GetExternalParameters());
 
-        std::string fileExtension(m_geometryFileName.substr(m_geometryFileName.find_last_of(".")));
-        std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
-
-        if (std::string(".xml") == fileExtension)
-        {
-            m_geometryFileType = XML;
-        }
-        else if (std::string(".pndr") == fileExtension)
-        {
-            m_geometryFileType = BINARY;
-        }
-        else
-        {
-            std::cout << "EventReadingAlgorithm: Unknown geometry file type specified " << std::endl;
-            return STATUS_CODE_INVALID_PARAMETER;
-        }
+        if (!pExternalParameters)
+            return STATUS_CODE_FAILURE;
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldReadEvents", m_shouldReadEvents));
-
-    if (m_shouldReadEvents)
+    if (pExternalParameters && !pExternalParameters->m_geometryFileName.empty())
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "EventFileName", m_eventFileName));
-
-        std::string fileExtension(m_eventFileName.substr(m_eventFileName.find_last_of(".")));
-        std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
-
-        if (std::string(".xml") == fileExtension)
-        {
-            m_eventFileType = XML;
-        }
-        else if (std::string(".pndr") == fileExtension)
-        {
-            m_eventFileType = BINARY;
-        }
-        else
-        {
-            std::cout << "EventReadingAlgorithm: Unknown event file type specified " << std::endl;
-            return STATUS_CODE_INVALID_PARAMETER;
-        }
+        m_geometryFileName = pExternalParameters->m_geometryFileName;
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GeometryFileName", m_geometryFileName));
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SkipToEvent", m_skipToEvent));
+    if (pExternalParameters && !pExternalParameters->m_eventFileNameList.empty())
+    {
+        XmlHelper::TokenizeString(pExternalParameters->m_eventFileNameList, m_eventFileNameVector, ":");
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "EventFileNameList", m_eventFileNameVector));
+    }
+
+    if (!m_eventFileNameVector.empty())
+    {
+        std::reverse(m_eventFileNameVector.begin(), m_eventFileNameVector.end());
+        m_eventFileName = m_eventFileNameVector.back();
+        m_eventFileNameVector.pop_back();
+    }
+
+    if (pExternalParameters && pExternalParameters->m_skipToEvent.IsInitialized())
+    {
+        m_skipToEvent = pExternalParameters->m_skipToEvent.Get();
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SkipToEvent", m_skipToEvent));
+    }
+
+    if (m_geometryFileName.empty() && m_eventFileName.empty())
+    {
+        std::cout << "EventReadingAlgorithm - nothing to do; neither geometry nor event file specified." << std::endl;
+        return STATUS_CODE_NOT_INITIALIZED;
+    }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseLArCaloHits", m_useLArCaloHits));

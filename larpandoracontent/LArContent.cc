@@ -16,15 +16,16 @@
 #include "larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayShowerMatchingAlg.h"
+#include "larpandoracontent/LArCheating/CheatingCosmicRayTaggingTool.h"
 #include "larpandoracontent/LArCheating/CheatingEventSlicingTool.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoIdTool.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h"
 
 #include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
-#include "larpandoracontent/LArCustomParticles/ShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
@@ -44,19 +45,22 @@
 #include "larpandoracontent/LArStitching/StitchingCosmicRayMergingTool.h"
 #include "larpandoracontent/LArStitching/StitchingObjectCreationTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/UnattachedDeltaRaysAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoIdTool.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
 
@@ -154,12 +158,12 @@
 #include "larpandoracontent/LArTwoDReco/TwoDParticleCreationAlgorithm.h"
 
 #include "larpandoracontent/LArUtility/ListChangingAlgorithm.h"
-#include "larpandoracontent/LArUtility/ListDissolutionAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListDeletionAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListMergingAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListMovingAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListPreparationAlgorithm.h"
-#include "larpandoracontent/LArUtility/NeutrinoParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
+#include "larpandoracontent/LArUtility/ParentAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
@@ -184,19 +188,19 @@
     d("LArCheatingPfoCreation",                 CheatingPfoCreationAlgorithm)                                                   \
     d("LArCheatingVertexCreation",              CheatingVertexCreationAlgorithm)                                                \
     d("LArPcaShowerParticleBuilding",           PcaShowerParticleBuildingAlgorithm)                                             \
-    d("LArShowerParticleBuilding",              ShowerParticleBuildingAlgorithm)                                                \
     d("LArTrackParticleBuilding",               TrackParticleBuildingAlgorithm)                                                 \
     d("LArStitching",                           StitchingAlgorithm)                                                             \
-    d("LArCosmicRayTrackRecovery",              CosmicRayTrackRecoveryAlgorithm)                                                \
-    d("LArCosmicRayVertexBuilding",             CosmicRayVertexBuildingAlgorithm)                                               \
     d("LArNeutrinoCreation",                    NeutrinoCreationAlgorithm)                                                      \
     d("LArNeutrinoDaughterVertices",            NeutrinoDaughterVerticesAlgorithm)                                              \
     d("LArNeutrinoHierarchy",                   NeutrinoHierarchyAlgorithm)                                                     \
     d("LArNeutrinoProperties",                  NeutrinoPropertiesAlgorithm)                                                    \
-    d("LArDeltaRayIdentification",              DeltaRayIdentificationAlgorithm)                                                \
-    d("LArDeltaRayMatching",                    DeltaRayMatchingAlgorithm)                                                      \
     d("LArCosmicRayShowerMatching",             CosmicRayShowerMatchingAlgorithm)                                               \
     d("LArCosmicRayTrackMatching",              CosmicRayTrackMatchingAlgorithm)                                                \
+    d("LArCosmicRayTrackRecovery",              CosmicRayTrackRecoveryAlgorithm)                                                \
+    d("LArCosmicRayVertexBuilding",             CosmicRayVertexBuildingAlgorithm)                                               \
+    d("LArDeltaRayIdentification",              DeltaRayIdentificationAlgorithm)                                                \
+    d("LArDeltaRayMatching",                    DeltaRayMatchingAlgorithm)                                                      \
+    d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
     d("LArThreeDLongitudinalTracks",            ThreeDLongitudinalTracksAlgorithm)                                              \
     d("LArSlidingConePfoMopUp",                 SlidingConePfoMopUpAlgorithm)                                                   \
@@ -244,11 +248,11 @@
     d("LArTwoDParticleCreation",                TwoDParticleCreationAlgorithm)                                                  \
     d("LArListChanging",                        ListChangingAlgorithm)                                                          \
     d("LArListDeletion",                        ListDeletionAlgorithm)                                                          \
-    d("LArListDissolution",                     ListDissolutionAlgorithm)                                                       \
     d("LArListMerging",                         ListMergingAlgorithm)                                                           \
     d("LArListMoving",                          ListMovingAlgorithm)                                                            \
     d("LArListPreparation",                     ListPreparationAlgorithm)                                                       \
-    d("LArNeutrinoParent",                      NeutrinoParentAlgorithm)                                                        \
+    d("LArListPruning",                         ListPruningAlgorithm)                                                           \
+    d("LArParent",                              ParentAlgorithm)                                                                \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
@@ -258,9 +262,13 @@
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArStitchingObjectCreation",             StitchingObjectCreationTool)                                                    \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
+    d("LArCheatingCosmicRayTagging",            CheatingCosmicRayTaggingTool)                                                   \
+    d("LArCheatingNeutrinoId",                  CheatingNeutrinoIdTool)                                                         \
     d("LArBranchAssociatedPfos",                BranchAssociatedPfosTool)                                                       \
+    d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
     d("LArEndAssociatedPfos",                   EndAssociatedPfosTool)                                                          \
     d("LArEventSlicing",                        EventSlicingTool)                                                               \
+    d("LArNeutrinoId",                          NeutrinoIdTool)                                                                 \
     d("LArVertexAssociatedPfos",                VertexAssociatedPfosTool)                                                       \
     d("LArClearShowers",                        ClearShowersTool)                                                               \
     d("LArShowerTensorVisualization",           ShowerTensorVisualizationTool)                                                  \

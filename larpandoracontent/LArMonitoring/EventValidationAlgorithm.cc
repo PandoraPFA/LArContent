@@ -201,26 +201,14 @@ void EventValidationAlgorithm::SelectRecoNeutrinos(const PfoList &allRecoParticl
     {
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
-        downstreamPfos.sort(LArPfoHelper::SortByNHits);
-        float neutrinoWeight(0.f);
 
-        for (const Pfo *const pDownstreamPfo : downstreamPfos)
-        {
-            ClusterList twoDClusters;
-            LArPfoHelper::GetTwoDClusterList(pDownstreamPfo, twoDClusters);
-            twoDClusters.sort(LArClusterHelper::SortByNHits);
+        float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
+        LArMCParticleHelper::GetNeutrinoWeight(&downstreamPfos, thisNeutrinoWeight, thisTotalWeight);
 
-            for (const Cluster *const pCluster : twoDClusters)
-            {
-                try {neutrinoWeight += LArMCParticleHelper::GetNeutrinoWeight(pCluster) * static_cast<float>(pCluster->GetNCaloHits());}
-                catch (const StatusCodeException &) {}
-            }
-        }
-
-        if (neutrinoWeight > bestNeutrinoWeight)
+        if (thisNeutrinoWeight > bestNeutrinoWeight)
         {
             pBestNeutrino = pNeutrinoPfo;
-            bestNeutrinoWeight = neutrinoWeight;
+            bestNeutrinoWeight = thisNeutrinoWeight;
         }
     }
 

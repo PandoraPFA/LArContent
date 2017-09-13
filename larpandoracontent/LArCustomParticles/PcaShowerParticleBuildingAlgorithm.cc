@@ -24,7 +24,6 @@ namespace lar_content
 {
 
 PcaShowerParticleBuildingAlgorithm::PcaShowerParticleBuildingAlgorithm() :
-    m_cosmicMode(false),
     m_layerFitHalfWindow(20)
 {
 }
@@ -36,14 +35,14 @@ void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
     try
     {
         // In cosmic mode, build showers from all daughter pfos, otherwise require that pfo is shower-like
-        if (m_cosmicMode)
+        if (LArPfoHelper::IsNeutrinoFinalState(pInputPfo))
         {
-            if (LArPfoHelper::IsFinalState(pInputPfo))
+            if (!LArPfoHelper::IsShower(pInputPfo))
                 return;
         }
         else
         {
-            if (!LArPfoHelper::IsShower(pInputPfo))
+            if (LArPfoHelper::IsFinalState(pInputPfo))
                 return;
         }
 
@@ -100,9 +99,6 @@ void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
 
 StatusCode PcaShowerParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CosmicMode", m_cosmicMode));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "LayerFitHalfWindow", m_layerFitHalfWindow));
 

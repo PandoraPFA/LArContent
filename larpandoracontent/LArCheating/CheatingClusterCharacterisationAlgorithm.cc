@@ -27,9 +27,7 @@ bool CheatingClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const
         if ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())))
             return true;
     }
-    catch (StatusCodeException &)
-    {
-    }
+    catch (const StatusCodeException &) {}
 
     return false;
 }

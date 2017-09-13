@@ -31,7 +31,6 @@ private:
 
     void CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject*& pOutputPfo) const;
 
-    bool            m_cosmicMode;             ///<
     unsigned int    m_slidingFitHalfWindow;   ///<
 };
 

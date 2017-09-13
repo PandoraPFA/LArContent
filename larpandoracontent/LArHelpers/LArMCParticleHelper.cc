@@ -15,6 +15,7 @@
 #include "Pandora/PdgTable.h"
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -160,40 +161,25 @@ int LArMCParticleHelper::GetParentNeutrinoId(const MCParticle *const pMCParticle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::IsNeutrinoInduced(const Cluster *const pCluster, const float minWeight)
+bool LArMCParticleHelper::IsNeutrinoInduced(const Cluster *const pCluster, const float minFraction)
 {
-    return (LArMCParticleHelper::GetNeutrinoWeight(pCluster) > minWeight);
+    return (LArMCParticleHelper::GetNeutrinoFraction(pCluster) > minFraction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::IsNeutrinoInduced(const CaloHit *const pCaloHit, const float minWeight)
+bool LArMCParticleHelper::IsNeutrinoInduced(const CaloHit *const pCaloHit, const float minFraction)
 {
-    return (LArMCParticleHelper::GetNeutrinoWeight(pCaloHit) > minWeight);
+    return (LArMCParticleHelper::GetNeutrinoFraction(pCaloHit) > minFraction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
+template <typename T>
+float LArMCParticleHelper::GetNeutrinoFraction(const T *const pT)
 {
-    float neutrinoWeight(0.f);
-    float totalWeight(0.f);
-
-    for (const auto &layerEntry : pCluster->GetOrderedCaloHitList())
-    {
-        for (const CaloHit *const pCaloHit : *layerEntry.second)
-        {
-            try
-            {
-                // note: order is important here
-                neutrinoWeight += LArMCParticleHelper::GetNeutrinoWeight(pCaloHit);
-                totalWeight += 1.f;
-            }
-            catch (const StatusCodeException &)
-            {
-            }
-        }
-    }
+    float neutrinoWeight(0.f), totalWeight(0.f);
+    LArMCParticleHelper::GetNeutrinoWeight(pT, neutrinoWeight, totalWeight);
 
     if (totalWeight > std::numeric_limits<float>::epsilon())
         return (neutrinoWeight / totalWeight);
@@ -203,15 +189,14 @@ float LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
+template <>
+void LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit, float &neutrinoWeight, float &totalWeight)
 {
+    neutrinoWeight = 0.f; totalWeight = 0.f;
     const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
 
     if (hitMCParticleWeightMap.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    float neutrinoWeight(0.f);
-    float totalWeight(0.f);
+        return;
 
     MCParticleList mcParticleList;
     for (const auto &mapEntry : hitMCParticleWeightMap) mcParticleList.push_back(mapEntry.first);
@@ -227,10 +212,52 @@ float LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit)
         totalWeight += weight;
     }
 
+    // ATTN normalise arbitrary input weights at this point
     if (totalWeight > std::numeric_limits<float>::epsilon())
-        return (neutrinoWeight / totalWeight);
+    {
+        neutrinoWeight *= 1.f / totalWeight;
+        totalWeight = 1.f;
+    }
+    else
+    {
+        neutrinoWeight = 0.f;
+        totalWeight = 0.f;
+    }
+}
 
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+template <>
+void LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster, float &neutrinoWeight, float &totalWeight)
+{
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+
+    if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    CaloHitList caloHitList;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+    LArMCParticleHelper::GetNeutrinoWeight(&caloHitList, neutrinoWeight, totalWeight);
+}
+
+template <>
+void LArMCParticleHelper::GetNeutrinoWeight(const ParticleFlowObject *const pPfo, float &neutrinoWeight, float &totalWeight)
+{
+    ClusterList twoDClusters;
+    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusters);
+    LArMCParticleHelper::GetNeutrinoWeight(&twoDClusters, neutrinoWeight, totalWeight);
+}
+
+template <typename T>
+void LArMCParticleHelper::GetNeutrinoWeight(const T *const pT, float &neutrinoWeight, float &totalWeight)
+{
+    neutrinoWeight = 0.f; totalWeight = 0.f;
+
+    for (const auto *const pValueT : *pT)
+    {
+        float thisNeutrinoWeight = 0.f, thisTotalWeight = 0.f;
+        LArMCParticleHelper::GetNeutrinoWeight(pValueT, thisNeutrinoWeight, thisTotalWeight);
+        neutrinoWeight += thisNeutrinoWeight;
+        totalWeight += thisTotalWeight;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -809,5 +836,19 @@ bool LArMCParticleHelper::PassMCParticleChecks(const MCParticle *const pOriginal
 
     return false;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template float LArMCParticleHelper::GetNeutrinoFraction(const CaloHit *const);
+template float LArMCParticleHelper::GetNeutrinoFraction(const Cluster *const);
+template float LArMCParticleHelper::GetNeutrinoFraction(const ParticleFlowObject *const);
+template float LArMCParticleHelper::GetNeutrinoFraction(const CaloHitList *const);
+template float LArMCParticleHelper::GetNeutrinoFraction(const ClusterList *const);
+template float LArMCParticleHelper::GetNeutrinoFraction(const PfoList *const);
+
+template void LArMCParticleHelper::GetNeutrinoWeight(const CaloHitList *const, float &, float &);
+template void LArMCParticleHelper::GetNeutrinoWeight(const ClusterList *const, float &, float &);
+template void LArMCParticleHelper::GetNeutrinoWeight(const PfoList *const, float &, float &);
 
 } // namespace lar_content

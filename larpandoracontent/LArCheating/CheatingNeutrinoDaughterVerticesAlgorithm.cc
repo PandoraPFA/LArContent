@@ -26,9 +26,8 @@ CheatingNeutrinoDaughterVerticesAlgorithm::CheatingNeutrinoDaughterVerticesAlgor
 
 StatusCode CheatingNeutrinoDaughterVerticesAlgorithm::Run()
 {
-    const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoListName,
-        pPfoList));
+    const PfoList *pPfoList(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoListName, pPfoList));
 
     if (!pPfoList)
     {
@@ -55,7 +54,7 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::GetMCPrimaryMap(LArMCParticleHel
 {
     if (m_collapseToPrimaryMCParticles)
     {
-        const MCParticleList *pMCParticleList = NULL;
+        const MCParticleList *pMCParticleList(nullptr);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
         LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
@@ -83,9 +82,7 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessRecoNeutrinos(const PfoLi
             {
                 this->ProcessDaughterPfo(pDaughterPfo, mcPrimaryMap);
             }
-            catch (StatusCodeException &)
-            {
-            }
+            catch (StatusCodeException &) {}
         }
     }
 }
@@ -98,17 +95,15 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessDaughterPfo(const Particl
     const MCParticle *const pMCParticle(!m_collapseToPrimaryMCParticles ? LArMCParticleHelper::GetMainMCParticle(pDaughterPfo) :
         LArMCParticleHelper::GetMainMCPrimary(pDaughterPfo, mcPrimaryMap));
 
-    const CartesianVector &vtxPosition(pMCParticle->GetVertex());
-
-    const VertexList *pVertexList = NULL; std::string vertexListName;
+    const VertexList *pVertexList(nullptr); std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
 
     PandoraContentApi::Vertex::Parameters parameters;
-    parameters.m_position = vtxPosition;
+    parameters.m_position = pMCParticle->GetVertex();
     parameters.m_vertexLabel = VERTEX_INTERACTION;
     parameters.m_vertexType = VERTEX_3D;
 
-    const Vertex *pVertex(NULL);
+    const Vertex *pVertex(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
 
     if (!pVertexList->empty())

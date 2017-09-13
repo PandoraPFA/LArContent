@@ -21,36 +21,19 @@ namespace lar_content
 
 StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
 {
-    const PfoList *pPfoList = NULL;
+    ClusterList candidateClusterList;
+    this->GetCandidateClusters(candidateClusterList);
+
+    const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
-    PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
-    std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
-
-    for (PfoVector::const_iterator iter = pfoVector.begin(), iterEnd = pfoVector.end(); iter != iterEnd; ++iter)
+    for (const ParticleFlowObject *const pPfo  : *pPfoList)
     {
-        const ParticleFlowObject *const pPfo = *iter;
-        const ClusterList &pfoClusterList(pPfo->GetClusterList());
+        ClusterList twoDClusters;
+        LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusters);
 
-        for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
-        {
-            const Cluster *const pPfoCluster = *cIter;
-            const HitType hitType(LArClusterHelper::GetClusterHitType(pPfoCluster));
-
-            if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
-            {
-                if (TPC_3D == hitType)
-                    continue;
-
-                std::cout << "CheatingCosmicRayShowerMatchingAlg: Encountered unexpected hit type " << std::endl;
-                return STATUS_CODE_INVALID_PARAMETER;
-            }
-
-            const StringVector &clusterListNames((TPC_VIEW_U == hitType) ? m_inputClusterListNamesU :
-                (TPC_VIEW_V == hitType) ? m_inputClusterListNamesV : m_inputClusterListNamesW);
-
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CosmicRayShowerMatching(clusterListNames, pPfoCluster, pPfo));
-        }
+        for (const Cluster *const pPfoCluster : twoDClusters)
+            this->CosmicRayShowerMatching(pPfo, pPfoCluster, candidateClusterList);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -58,47 +41,56 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const StringVector &clusterListNames, const Cluster *const pPfoCluster,
-    const ParticleFlowObject *const pPfo) const
+void CheatingCosmicRayShowerMatchingAlg::GetCandidateClusters(ClusterList &candidateClusterList) const
+{
+    for (const std::string &clusterListName : m_inputClusterListNames)
+    {
+        const ClusterList *pClusterList(nullptr);
+
+        if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, clusterListName, pClusterList))
+        {
+            std::cout << "CheatingCosmicRayShowerMatchingAlg - Could not access cluster list with name " << clusterListName << std::endl;
+            continue;
+        }
+
+        candidateClusterList.insert(candidateClusterList.end(), pClusterList->begin(), pClusterList->end());
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const ParticleFlowObject *const pPfo, const Cluster *const pPfoCluster,
+    const ClusterList &candidateClusterList) const
 {
     try
     {
+        const HitType pfoClusterHitType(LArClusterHelper::GetClusterHitType(pPfoCluster));
         const MCParticle *const pPfoMCParticle(MCParticleHelper::GetMainMCParticle(pPfoCluster));
         const MCParticle *const pPfoParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pPfoMCParticle));
 
-        for (StringVector::const_iterator sIter = clusterListNames.begin(), sIterEnd = clusterListNames.end(); sIter != sIterEnd; ++sIter)
+        for (const Cluster *const pCandidateCluster : candidateClusterList)
         {
-            const ClusterList *pClusterList = NULL;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, *sIter, pClusterList));
+            if (pfoClusterHitType != LArClusterHelper::GetClusterHitType(pCandidateCluster))
+                continue;
 
-            for (ClusterList::const_iterator cIter = pClusterList->begin(), cIterEnd = pClusterList->end(); cIter != cIterEnd; ++cIter)
+            if (!PandoraContentApi::IsAvailable(*this, pCandidateCluster))
+                continue;
+
+            if (pPfoCluster == pCandidateCluster)
+                continue;
+
+            try
             {
-                const Cluster *const pCluster = *cIter;
+                const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCandidateCluster));
+                const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
 
-                if (!pCluster->IsAvailable() || (pPfoCluster == pCluster))
-                    continue;
-
-                try
-                {
-                    const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-                    const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
-
-                    if (!LArMCParticleHelper::IsNeutrino(pParentMCParticle) && (pPfoParentMCParticle == pParentMCParticle))
-                    {
-                        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCluster));
-                    }
-                }
-                catch (StatusCodeException &)
-                {
-                }
+                if (!LArMCParticleHelper::IsNeutrino(pParentMCParticle) && (pPfoParentMCParticle == pParentMCParticle))
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCandidateCluster));
             }
+            catch (const StatusCodeException &) {}
         }
     }
-    catch (StatusCodeException &)
-    {
-    }
-
-    return STATUS_CODE_SUCCESS;
+    catch (const StatusCodeException &) {}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -109,13 +101,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::ReadSettings(const TiXmlHandle xm
         "InputPfoListName", m_inputPfoListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesU", m_inputClusterListNamesU));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesV", m_inputClusterListNamesV));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNamesW", m_inputClusterListNamesW));
+        "InputClusterListNames", m_inputClusterListNames));
 
     return STATUS_CODE_SUCCESS;
 }
