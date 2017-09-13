@@ -44,7 +44,15 @@ StatusCode NeutrinoPropertiesAlgorithm::Run()
     if (!pNeutrinoPfo || !LArPfoHelper::IsNeutrino(pNeutrinoPfo))
         return STATUS_CODE_FAILURE;
 
-    this->SetNeutrinoId(pNeutrinoPfo);
+    // ATTN At this (maybe unconventional) stage, remove any lone, placeholder neutrinos, with no daughter particles
+    if (pNeutrinoPfo->GetDaughterPfoList().empty())
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pNeutrinoPfo, m_neutrinoPfoListName));
+    }
+    else
+    {
+        this->SetNeutrinoId(pNeutrinoPfo);
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -53,9 +61,6 @@ StatusCode NeutrinoPropertiesAlgorithm::Run()
 
 void NeutrinoPropertiesAlgorithm::SetNeutrinoId(const ParticleFlowObject *const pNeutrinoPfo) const
 {
-    if (pNeutrinoPfo->GetDaughterPfoList().empty())
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
     unsigned int nPrimaryTwoDHits(0);
     const ParticleFlowObject *pPrimaryDaughter(nullptr);
 

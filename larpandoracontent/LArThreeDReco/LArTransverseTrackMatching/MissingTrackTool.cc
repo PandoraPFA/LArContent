@@ -52,16 +52,14 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
 
         for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
+            const bool includeU(eIter->GetClusterU()->IsAvailable() && !usedClusters.count(eIter->GetClusterU()));
+            const bool includeV(eIter->GetClusterV()->IsAvailable() && !usedClusters.count(eIter->GetClusterV()));
+            const bool includeW(eIter->GetClusterW()->IsAvailable() && !usedClusters.count(eIter->GetClusterW()));
+
             unsigned int nAvailable(0);
-
-            if (eIter->GetClusterU()->IsAvailable() && !usedClusters.count(eIter->GetClusterU()))
-                ++nAvailable;
-
-            if (eIter->GetClusterV()->IsAvailable() && !usedClusters.count(eIter->GetClusterV()))
-                ++nAvailable;
-
-            if (eIter->GetClusterW()->IsAvailable() && !usedClusters.count(eIter->GetClusterW()))
-                ++nAvailable;
+            if (includeU) ++nAvailable;
+            if (includeV) ++nAvailable;
+            if (includeW) ++nAvailable;
 
             if (2 != nAvailable)
                 continue;
@@ -86,25 +84,19 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
 
             const float xOverlapSpan(overlapResult.GetXOverlap().GetXOverlapSpan());
 
-            if (eIter->GetClusterU()->IsAvailable() && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanU() < m_minXOverlapFraction))
+            if (includeU && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanU() < m_minXOverlapFraction))
                 continue;
 
-            if (eIter->GetClusterV()->IsAvailable() && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanV() < m_minXOverlapFraction))
+            if (includeV && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanV() < m_minXOverlapFraction))
                 continue;
 
-            if (eIter->GetClusterW()->IsAvailable() && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanW() < m_minXOverlapFraction))
+            if (includeW && (xOverlapSpan / overlapResult.GetXOverlap().GetXSpanW() < m_minXOverlapFraction))
                 continue;
 
             ProtoParticle protoParticle;
-
-            if (eIter->GetClusterU()->IsAvailable())
-                protoParticle.m_clusterListU.push_back(eIter->GetClusterU());
-
-            if (eIter->GetClusterV()->IsAvailable())
-                protoParticle.m_clusterListV.push_back(eIter->GetClusterV());
-
-            if (eIter->GetClusterW()->IsAvailable())
-                protoParticle.m_clusterListW.push_back(eIter->GetClusterW());
+            if (includeU) protoParticle.m_clusterListU.push_back(eIter->GetClusterU());
+            if (includeV) protoParticle.m_clusterListV.push_back(eIter->GetClusterV());
+            if (includeW) protoParticle.m_clusterListW.push_back(eIter->GetClusterW());
 
             protoParticleVector.push_back(protoParticle);
             usedClusters.insert(eIter->GetClusterU());
