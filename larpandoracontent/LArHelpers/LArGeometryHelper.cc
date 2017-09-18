@@ -462,14 +462,23 @@ float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float 
     {
         const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
 
-        if (NULL == pLineGap)
+        if (!pLineGap)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        if (pLineGap->GetHitType() != hitType || pLineGap->GetLineStartZ() > maxZ || pLineGap->GetLineEndZ() < minZ)
+        const LineGapType lineGapType(pLineGap->GetLineGapType());
+
+        if (!(((TPC_VIEW_U == hitType) && (TPC_WIRE_GAP_VIEW_U == lineGapType)) ||
+              ((TPC_VIEW_V == hitType) && (TPC_WIRE_GAP_VIEW_V == lineGapType)) ||
+              ((TPC_VIEW_W == hitType) && (TPC_WIRE_GAP_VIEW_W == lineGapType))))
+        {
+            continue;
+        }
+
+        if ((pLineGap->GetLineStartZ() > maxZ) || (pLineGap->GetLineEndZ() < minZ))
             continue;
 
-        const float gapMinZ(std::max(minZ,pLineGap->GetLineStartZ()));
-        const float gapMaxZ(std::min(maxZ,pLineGap->GetLineEndZ()));
+        const float gapMinZ(std::max(minZ, pLineGap->GetLineStartZ()));
+        const float gapMaxZ(std::min(maxZ, pLineGap->GetLineEndZ()));
 
         if ((gapMaxZ - gapMinZ) > std::numeric_limits<float>::epsilon())
             gapDeltaZ += (gapMaxZ - gapMinZ);
