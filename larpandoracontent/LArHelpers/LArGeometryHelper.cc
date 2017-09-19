@@ -27,11 +27,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-LArGeometryHelper::PseudoLayerInstanceMap LArGeometryHelper::m_pseudolayerInstanceMap;
-LArGeometryHelper::TransformationInstanceMap LArGeometryHelper::m_transformationInstanceMap;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 float LArGeometryHelper::MergeTwoPositions(const Pandora &pandora, const HitType view1, const HitType view2, const float position1, const float position2)
 {
     if (view1 == view2)
@@ -485,60 +480,6 @@ float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float 
     }
 
     return gapDeltaZ;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const LArPseudoLayerPlugin *LArGeometryHelper::GetLArPseudoLayerPlugin(const Pandora &pandora)
-{
-    PseudoLayerInstanceMap::const_iterator iter = m_pseudolayerInstanceMap.find(&pandora);
-
-    if (m_pseudolayerInstanceMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    return iter->second;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const LArTransformationPlugin *LArGeometryHelper::GetLArTransformationPlugin(const Pandora &pandora)
-{
-    TransformationInstanceMap::const_iterator iter = m_transformationInstanceMap.find(&pandora);
-
-    if (m_transformationInstanceMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    return iter->second;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode LArGeometryHelper::SetLArPseudoLayerPlugin(const Pandora &pandora, const LArPseudoLayerPlugin *const pLArPseudoLayerPlugin)
-{
-    PseudoLayerInstanceMap::const_iterator iter = m_pseudolayerInstanceMap.find(&pandora);
-
-    if (m_pseudolayerInstanceMap.end() != iter)
-        return STATUS_CODE_ALREADY_INITIALIZED;
-
-    if (!m_pseudolayerInstanceMap.insert(PseudoLayerInstanceMap::value_type(&pandora, pLArPseudoLayerPlugin)).second)
-        return STATUS_CODE_FAILURE;
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode LArGeometryHelper::SetLArTransformationPlugin(const Pandora &pandora, const LArTransformationPlugin *const pLArTransformationPlugin)
-{
-    TransformationInstanceMap::const_iterator iter = m_transformationInstanceMap.find(&pandora);
-
-    if (m_transformationInstanceMap.end() != iter)
-        return STATUS_CODE_ALREADY_INITIALIZED;
-
-    if (!m_transformationInstanceMap.insert(TransformationInstanceMap::value_type(&pandora, pLArTransformationPlugin)).second)
-        return STATUS_CODE_FAILURE;
-
-    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content
