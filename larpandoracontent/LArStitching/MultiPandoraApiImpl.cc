@@ -139,30 +139,6 @@ void MultiPandoraApiImpl::SetVolumeInfo(const pandora::Pandora *const pPandora, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MultiPandoraApiImpl::SetParticleX0(const pandora::Pandora *const pPandora, const pandora::ParticleFlowObject *const pPfo, const float x0)
-{
-    VolumeInfoMap::iterator iter = m_volumeInfoMap.find(pPandora);
-
-    if (m_volumeInfoMap.end() == iter)
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-
-    iter->second->SetParticleX0(pPfo, x0);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MultiPandoraApiImpl::ClearParticleX0Map(const pandora::Pandora *const pPandora)
-{
-    VolumeInfoMap::iterator iter = m_volumeInfoMap.find(pPandora);
-
-    if (m_volumeInfoMap.end() == iter)
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-
-    iter->second->ClearParticleX0Map();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 MultiPandoraApiImpl::MultiPandoraApiImpl()
 {
 }

@@ -132,22 +132,6 @@ public:
      */
     static void SetVolumeInfo(const pandora::Pandora *const pPandora, VolumeInfo *const pVolumeInfo);
 
-    /**
-     *  @brief  Set the x0 value for a specified particle
-     *
-     *  @param  pPandora the address of the pandora instance
-     *  @param  pPfo the address of the particle
-     *  @param  x0 the x0 value for the particle
-     */
-    static void SetParticleX0(const pandora::Pandora *const pPandora, const pandora::ParticleFlowObject *const pPfo, const float x0);
-
-    /**
-     *  @brief  Clear the particle x0 map
-     *
-     *  @param  pPandora the address of the pandora instance
-     */
-    static void ClearParticleX0Map(const pandora::Pandora *const pPandora);
-
 private:
     static MultiPandoraApiImpl      m_multiPandoraApiImpl;          ///< The multi pandora api implementation
 };
@@ -162,20 +146,11 @@ class VolumeInfo
 {
 public:
     /**
-     *  @brief  Constructor (including widths)
+     *  @brief  Constructor
      *
      *  @param  idNumber the volume identifier number
-     *  @param  idString the volume identifier string or name
-     *  @param  centerX the centre of the drift volume (X)
-     *  @param  centerY the centre of the drift volume (Y)
-     *  @param  centerZ the centre of the drift volume (Z)
-     *  @param  widthX the width of the drift volume (X)
-     *  @param  widthY the width of the drift volume (Y)
-     *  @param  widthZ the width of the drift volume (Z)
-     *  @param  isDriftInPositiveX whether the drift direction for electrons corresponds to positive X direction
      */
-    VolumeInfo(const int idNumber, const std::string &idString, const float centerX, const float centerY, const float centerZ,
-               const float widthX, const float widthY, const float widthZ, const bool isDriftInPositiveX);
+    VolumeInfo(const int idNumber);
 
     /**
      *  @brief  Get the volume identifier number
@@ -184,97 +159,8 @@ public:
      */
     int GetIdNumber() const;
 
-    /**
-     *  @brief  Get the volume identifier string or name
-     *
-     *  @return the volume identifier string or name
-     */
-    const std::string &GetIdString() const;
-
-    /**
-     *  @brief  Get centre in X for this drift volume
-     *
-     *  @return the centre in X for this drift volume
-     */
-    float GetCenterX() const;
-
-    /**
-     *  @brief  Get centre in Y for this drift volume
-     *
-     *  @return the centre in Y for this drift volume
-     */
-    float GetCenterY() const;
-
-    /**
-     *  @brief  Get centre in Z for this drift volume
-     *
-     *  @return the centre in Z for this drift volume
-     */
-    float GetCenterZ() const;
-
-    /**
-     *  @brief  Get the width in X of this drift volume
-     *
-     *  @return the width in X of this drift volume
-     */
-    float GetWidthX() const;
-
-    /**
-     *  @brief  Get the width in Y of this drift volume
-     *
-     *  @return the width in Y of this drift volume
-     */
-    float GetWidthY() const;
-
-    /**
-     *  @brief  Get the width in Z of this drift volume
-     *
-     *  @return the width in Z of this drift volume
-     */
-    float GetWidthZ() const;
-
-    /**
-     *  @brief  Whether the drift direction for electrons corresponds to positive x direction
-     *
-     *  @return boolean
-     */
-    bool IsDriftInPositiveX() const;
-
-    /**
-     *  @brief  Get the x0 value for a specified particle
-     *
-     *  @param  pPfo the address of the particle
-     *
-     *  @return the x0 value for the particle
-     */
-    float GetParticleX0(const pandora::ParticleFlowObject *const pPfo) const;
-
-    /**
-     *  @brief  Set the x0 value for a specified particle
-     *
-     *  @param  pPfo the address of the particle
-     *  @param  x0 the x0 value for the particle
-     */
-    void SetParticleX0(const pandora::ParticleFlowObject *const pPfo, const float x0);
-
-    /**
-     *  @brief  Clear the particle x0 map
-     */
-    void ClearParticleX0Map();
-
 private:
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, float> ParticleX0Map;
-
-    const int                       m_idNumber;             ///< The volume identifier number
-    const std::string               m_idString;             ///< The volume identifier string or name
-    const float                     m_centerX;              ///< The centre in X of this drift volume
-    const float                     m_centerY;              ///< The centre in Y of this drift volume
-    const float                     m_centerZ;              ///< The centre in Z of this drift volume
-    const float                     m_widthX;               ///< The width in X of this drift volume
-    const float                     m_widthY;               ///< The width in Y of this drift volume
-    const float                     m_widthZ;               ///< The width in Z of this drift volume
-    const bool                      m_isDriftInPositiveX;   ///< Whether the drift direction for electrons corresponds to positive x direction
-    ParticleX0Map                   m_particleX0Map;        ///< The particle x0 map (x0 is t0 times drift velocity)
+    const int                       m_idNumber;                     ///< The volume identifier number
 };
 
 #endif // #ifndef MULTI_PANDORA_API_H

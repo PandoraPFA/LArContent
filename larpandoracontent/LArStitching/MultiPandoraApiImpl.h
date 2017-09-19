@@ -124,22 +124,6 @@ private:
      */
     void SetVolumeInfo(const pandora::Pandora *const pPandora, VolumeInfo *const pVolumeInfo);
 
-    /**
-     *  @brief  Set the x0 value for a specified particle
-     *
-     *  @param  pPandora the address of the pandora instance
-     *  @param  pPfo the address of the particle
-     *  @param  x0 the x0 value for the particle
-     */
-    void SetParticleX0(const pandora::Pandora *const pPandora, const pandora::ParticleFlowObject *const pPfo, const float x0);
-
-    /**
-     *  @brief  Clear the particle x0 map
-     *
-     *  @param  pPandora the address of the pandora instance
-     */
-    void ClearParticleX0Map(const pandora::Pandora *const pPandora);
-
     PandoraInstanceMap              m_pandoraInstanceMap;   ///< The map from primary pandora instance to list of daughter pandora instances
     PandoraVolumeIdMap              m_pandoraVolumeIdMap;   ///< The map from primary pandora instance to list of volume IDs
 
