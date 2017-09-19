@@ -6,7 +6,15 @@
  *  $Log: $
  */
 
+#include "Geometry/LArTPC.h"
+
+#include "Helpers/XmlHelper.h"
+
+#include "Managers/GeometryManager.h"
+
 #include "Objects/CartesianVector.h"
+
+#include "Pandora/Pandora.h"
 
 #include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
 
@@ -232,7 +240,7 @@ void LArRotationalTransformationPlugin::GetProjectedYZ(const PositionAndType &hi
 
 StatusCode LArRotationalTransformationPlugin::Initialize()
 {
-    const LArTPC &larTPC(this->GetPandora().GetGeometry().GetLArTPC());
+    const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
 
     m_thetaU = larTPC.GetThetaU();
     m_thetaV = larTPC.GetThetaV();
@@ -243,6 +251,8 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
     m_sinV = std::sin(m_thetaV);
     m_cosU = std::cos(m_thetaU);
     m_cosV = std::cos(m_thetaV);
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

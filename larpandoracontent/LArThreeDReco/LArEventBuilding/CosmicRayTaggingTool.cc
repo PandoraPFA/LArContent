@@ -11,8 +11,6 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
-
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.h"
 
 using namespace pandora;
@@ -76,13 +74,13 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     // TODO First time only
-    const VolumeInfo &volumeInfo(MultiPandoraApi::GetVolumeInfo(&this->GetPandora()));
-    m_face_Xa = volumeInfo.GetCenterX() - volumeInfo.GetWidthX() / 2.f;
-    m_face_Xc = volumeInfo.GetCenterX() + volumeInfo.GetWidthX() / 2.f;
-    m_face_Yb = volumeInfo.GetCenterY() - volumeInfo.GetWidthY() / 2.f;
-    m_face_Yt = volumeInfo.GetCenterY() + volumeInfo.GetWidthY() / 2.f;
-    m_face_Zu = volumeInfo.GetCenterZ() - volumeInfo.GetWidthZ() / 2.f;
-    m_face_Zd = volumeInfo.GetCenterZ() + volumeInfo.GetWidthZ() / 2.f;
+    const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
+    m_face_Xa = larTPC.GetCenterX() - larTPC.GetWidthX() / 2.f;
+    m_face_Xc = larTPC.GetCenterX() + larTPC.GetWidthX() / 2.f;
+    m_face_Yb = larTPC.GetCenterY() - larTPC.GetWidthY() / 2.f;
+    m_face_Yt = larTPC.GetCenterY() + larTPC.GetWidthY() / 2.f;
+    m_face_Zu = larTPC.GetCenterZ() - larTPC.GetWidthZ() / 2.f;
+    m_face_Zd = larTPC.GetCenterZ() + larTPC.GetWidthZ() / 2.f;
 
     PfoToPfoListMap pfoAssociationMap;
     this->GetPfoAssociations(parentCosmicRayPfos, pfoAssociationMap);

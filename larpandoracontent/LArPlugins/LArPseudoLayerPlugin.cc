@@ -6,8 +6,13 @@
  *  $Log: $
  */
 
+#include "Geometry/LArTPC.h"
+
 #include "Helpers/XmlHelper.h"
 
+#include "Managers/GeometryManager.h"
+
+#include "Pandora/Pandora.h"
 #include "Pandora/PandoraInputTypes.h"
 
 #include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
@@ -42,7 +47,9 @@ unsigned int LArPseudoLayerPlugin::GetPseudoLayer(const pandora::CartesianVector
 
 StatusCode LArPseudoLayerPlugin::Initialize()
 {
-    m_zPitch = this->GetPandora().GetGeometry().GetLArTPC().GetWirePitchW();
+    m_zPitch = this->GetPandora().GetGeometry()->GetLArTPC().GetWirePitchW();
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

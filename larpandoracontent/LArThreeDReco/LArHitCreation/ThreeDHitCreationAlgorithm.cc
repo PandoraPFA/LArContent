@@ -14,8 +14,6 @@
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
-
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 
@@ -193,7 +191,7 @@ void ThreeDHitCreationAlgorithm::ExtractResults(const ProtoHitVector &protoHitVe
 
 double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &slidingFitResult, const ProtoHitVector &protoHitVector) const
 {
-    const double sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigmaUVW(PandoraContentApi::GetGeometry(*this)->GetLArTPC().GetSigmaUVW());
     const double sigma3DFit(sigmaUVW * m_sigma3DFitMultiplier);
 
     double chi2WrtFit(0.);
@@ -206,12 +204,12 @@ double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &s
         if (STATUS_CODE_SUCCESS != slidingFitResult.GetGlobalFitPosition(rL, pointOnFit))
             continue;
 
-        const double uFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(pointOnFit.GetY(), pointOnFit.GetZ()));
-        const double vFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
+        const double uFit(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(pointOnFit.GetY(), pointOnFit.GetZ()));
+        const double vFit(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
         const double wFit(pointOnFit.GetZ());
 
-        const double outputU(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
-        const double outputV(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
+        const double outputU(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
+        const double outputV(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
         const double outputW(protoHit.GetPosition3D().GetZ());
 
         const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
@@ -225,7 +223,7 @@ double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &s
 
 double ThreeDHitCreationAlgorithm::GetHitMovementChi2(const ProtoHitVector &protoHitVector) const
 {
-    const double sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigmaUVW(PandoraContentApi::GetGeometry(*this)->GetLArTPC().GetSigmaUVW());
     double hitMovementChi2(0.);
 
     for (const ProtoHit &protoHit : protoHitVector)
@@ -246,7 +244,7 @@ double ThreeDHitCreationAlgorithm::GetHitMovementChi2(const ProtoHitVector &prot
 
 void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult &slidingFitResult, ProtoHitVector &protoHitVector) const
 {
-    const double sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigmaUVW(PandoraContentApi::GetGeometry(*this)->GetLArTPC().GetSigmaUVW());
     const double sigmaFit(sigmaUVW); // ATTN sigmaFit and sigmaHit here should agree with treatment in HitCreation tools
     const double sigmaHit(sigmaUVW);
     const double sigma3DFit(sigmaUVW * m_sigma3DFitMultiplier);
@@ -262,8 +260,8 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
         const HitType hitType(pCaloHit2D->GetHitType());
 
-        const double uFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(pointOnFit.GetY(), pointOnFit.GetZ()));
-        const double vFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
+        const double uFit(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(pointOnFit.GetY(), pointOnFit.GetZ()));
+        const double vFit(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
         const double wFit(pointOnFit.GetZ());
 
         const double sigmaU((TPC_VIEW_U == hitType) ? sigmaHit : sigmaFit);
@@ -282,8 +280,8 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         }
         else if (protoHit.GetNTrajectorySamples() == 1)
         {
-            u = LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
-            v = LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
+            u = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
+            v = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
             w = protoHit.GetPosition3D().GetZ();
         }
         else
@@ -293,7 +291,7 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         }
 
         double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
-        LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, uFit, vFit, wFit, sigma3DFit, bestY, bestZ, chi2);
+        PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, uFit, vFit, wFit, sigma3DFit, bestY, bestZ, chi2);
         position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
 
         protoHit.SetPosition3D(position3D, chi2);
@@ -357,7 +355,7 @@ bool ThreeDHitCreationAlgorithm::CheckThreeDHit(const ProtoHit &protoHit) const
 {
     try
     {
-        // Check that corresponding pseudo layer is within range
+        // Check that corresponding pseudo layer is within range - TODO use full LArTPC geometry here
         (void) PandoraContentApi::GetPlugins(*this)->GetPseudoLayerPlugin()->GetPseudoLayer(protoHit.GetPosition3D());
     }
     catch (StatusCodeException &)
