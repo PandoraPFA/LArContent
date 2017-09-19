@@ -32,7 +32,7 @@ public:
     /**
      *  @brief  External steering parameters class
      */
-    class ExternalSteeringParameters : public ExternalParameters
+    class ExternalSteeringParameters : public pandora::ExternalParameters
     {
     public:
         pandora::InputBool      m_shouldRunAllHitsCosmicReco;       ///< Whether to run all hits cosmic-ray reconstruction
