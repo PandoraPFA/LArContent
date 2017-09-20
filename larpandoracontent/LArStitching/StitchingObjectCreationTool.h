@@ -8,6 +8,8 @@
 #ifndef LAR_STITCHING_OBJECT_CREATION_TOOL_H
 #define LAR_STITCHING_OBJECT_CREATION_TOOL_H 1
 
+#include "Geometry/LArTPC.h"
+
 #include "larpandoracontent/LArStitching/MultiPandoraApi.h"
 #include "larpandoracontent/LArStitching/StitchingAlgorithm.h"
 
@@ -20,15 +22,6 @@ namespace lar_content
 class StitchingObjectCreationTool : public StitchingTool
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
     /**
      *  @brief  Default constructor
      */
@@ -44,10 +37,10 @@ private:
      *
      *  @param  pAlgorithm the address of the calling algorithm
      *  @param  pPandora the address of the input pandora instance acting as a source for pfos
-     *  @param  volumeInfo the volume information for the input pandora instance
+     *  @param  larTPC the lar tpc description association with the input pandora instance
      *  @param  stitchingInfo to receive any modifications to the stitching info
      */
-    void Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const pandora::Pandora *const pPandora, const VolumeInfo &volumeInfo,
+    void Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const pandora::Pandora *const pPandora, const pandora::LArTPC &larTPC,
         StitchingInfo &stitchingInfo) const;
 
     /**
@@ -56,35 +49,23 @@ private:
      *  @param  pAlgorithm the address of the calling algorithm
      *  @param  pInputPfo the address of the input pfo
      *  @param  pNewParentPfo the address of the parent for the new pfo, nullptr if not relevant
-     *  @param  pPandora the address of the pandora instance that owns the input pfo
-     *  @param  volumeInfo the volume information for the input pandora instance
+     *  @param  larTPC the lar tpc description association with the input pandora instance
      *  @param  stitchingInfo to receive any modifications to the stitching info
      */
     void Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo,
-        const pandora::ParticleFlowObject *const pNewParentPfo, const pandora::Pandora *const pPandora, const VolumeInfo &volumeInfo,
-        StitchingInfo &stitchingInfo) const;
+        const pandora::ParticleFlowObject *const pNewParentPfo, const pandora::LArTPC &larTPC, StitchingInfo &stitchingInfo) const;
 
     /**
      *  @brief  Add details to the stitching information block
      *
      *  @param  pNewPfo the address of a new pfo, recreated from an input pfo
-     *  @param  pPandora the address of the pandora instance that owns the input pfo
-     *  @param  volumeInfo the volume information for the input pandora instance
+     *  @param  larTPC the lar tpc description association with the input pandora instance
      *  @param  stitchingInfo to receive any modifications to the stitching info
      */
-    void AddStitchingInfo(const pandora::ParticleFlowObject *const pNewPfo, const pandora::Pandora *const pPandora,
-        const VolumeInfo &volumeInfo, StitchingInfo &stitchingInfo) const;
+    void AddStitchingInfo(const pandora::ParticleFlowObject *const pNewPfo, const pandora::LArTPC &larTPC, StitchingInfo &stitchingInfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *StitchingObjectCreationTool::Factory::CreateAlgorithmTool() const
-{
-    return new StitchingObjectCreationTool();
-}
 
 } // namespace lar_content
 
