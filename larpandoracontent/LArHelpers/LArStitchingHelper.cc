@@ -274,4 +274,17 @@ CartesianVector LArStitchingHelper::GetCorrectedPosition(const LArTPC &larTPC, c
   return (inputPosition + CartesianVector(larTPC.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f));
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArStitchingHelper::SortTPCs(const pandora::LArTPC *const pLhs, const pandora::LArTPC *const pRhs)
+{
+    if (std::fabs(pLhs->GetCenterX() - pRhs->GetCenterX()) > std::numeric_limits<float>::epsilon())
+        return (pLhs->GetCenterX() < pRhs->GetCenterX());
+
+    if (std::fabs(pLhs->GetCenterY() - pRhs->GetCenterY()) > std::numeric_limits<float>::epsilon())
+        return (pLhs->GetCenterY() < pRhs->GetCenterY());
+
+    return (pLhs->GetCenterZ() < pRhs->GetCenterZ());
+}
+
 } // namespace lar_content

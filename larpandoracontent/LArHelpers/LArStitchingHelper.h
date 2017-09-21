@@ -133,6 +133,14 @@ public:
      */
     static pandora::CartesianVector GetCorrectedPosition(const pandora::LArTPC &larTPC, const float x0,
         const pandora::CartesianVector &inputPosition);
+
+    /**
+     *  @brief  Sort tpcs by central positions
+     *
+     *  @param  pLhs address of first tpc
+     *  @param  pRhs address of second tpc
+     */
+    static bool SortTPCs(const pandora::LArTPC *const pLhs, const pandora::LArTPC *const pRhs);
 };
 
 } // namespace lar_content
