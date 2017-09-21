@@ -240,17 +240,25 @@ void LArRotationalTransformationPlugin::GetProjectedYZ(const PositionAndType &hi
 
 StatusCode LArRotationalTransformationPlugin::Initialize()
 {
-    const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
+    try
+    {
+        const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
 
-    m_thetaU = larTPC.GetThetaU();
-    m_thetaV = larTPC.GetThetaV();
-    m_sigmaUVW = larTPC.GetSigmaUVW();
+        m_thetaU = larTPC.GetThetaU();
+        m_thetaV = larTPC.GetThetaV();
+        m_sigmaUVW = larTPC.GetSigmaUVW();
 
-    m_sinUplusV = std::sin(m_thetaU + m_thetaV);
-    m_sinU = std::sin(m_thetaU);
-    m_sinV = std::sin(m_thetaV);
-    m_cosU = std::cos(m_thetaU);
-    m_cosV = std::cos(m_thetaV);
+        m_sinUplusV = std::sin(m_thetaU + m_thetaV);
+        m_sinU = std::sin(m_thetaU);
+        m_sinV = std::sin(m_thetaV);
+        m_cosU = std::cos(m_thetaU);
+        m_cosV = std::cos(m_thetaV);
+    }
+    catch (const StatusCodeException &statusCodeException)
+    {
+        std::cout << "LArRotationalTransformationPlugin::Initialize - LArTPC description not registered with Pandora as required " << std::endl;
+        return statusCodeException.GetStatusCode();
+    }
 
     return STATUS_CODE_SUCCESS;
 }
