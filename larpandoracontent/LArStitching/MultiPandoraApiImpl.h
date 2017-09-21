@@ -51,11 +51,11 @@ private:
      *  @brief  Get the address of the daughter pandora instance associated with a given primary pandora instance and volume id number
      *
      *  @param  pPrimaryPandora the address of the primary pandora instance
-     *  @param  idNumber the volume identifier number
+     *  @param  volumeId the volume identifier number
      *
      *  @return the address of the daughter pandora instance
      */
-    const pandora::Pandora *GetDaughterPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const int idNumber) const;
+    const pandora::Pandora *GetDaughterPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const unsigned int volumeId) const;
 
     /**
      *  @brief  Get the address of the primary pandora instance associated with a given daughter pandora instance
@@ -67,32 +67,13 @@ private:
     const pandora::Pandora *GetPrimaryPandoraInstance(const pandora::Pandora *const pDaughterPandora) const;
 
     /**
-     *  @brief  Get the volume info block associated with a given pandora instance
+     *  @brief  Get the volume id associated with a given pandora instance
      *
      *  @param  pPandora the address of the pandora instance
      *
-     *  @return the volume info block
+     *  @return the volume id
      */
-    const VolumeInfo &GetVolumeInfo(const pandora::Pandora *const pPandora) const;
-
-    /**
-     *  @brief  Get the volume info block associated with a given pandora stitching instance and volume ID number
-     *
-     *  @param  pPrimaryPandora the address of the primary pandora instance
-     *  @param  idNumber the volume identifier number
-     *
-     *  @return the volume info block
-     */
-    const VolumeInfo &GetVolumeInfo(const pandora::Pandora *const pPrimaryPandora, const int idNumber) const;
-
-    /**
-     *  @brief  Get the list of volume IDs associated with a given primary pandora instance
-     *
-     *  @param  pPrimaryPandora the address of the primary pandora instance
-     *
-     *  @return the volume ID list
-     */
-    const VolumeIdList &GetVolumeIdList(const pandora::Pandora *const pPrimaryPandora) const;
+    unsigned int GetVolumeId(const pandora::Pandora *const pPandora) const;
 
     /**
      *  @brief  Declare a new primary pandora instance
@@ -117,29 +98,19 @@ private:
     void DeletePandoraInstances(const pandora::Pandora *const pPrimaryPandora);
 
     /**
-     *  @brief  Set the volume info block associated with a given pandora instance
+     *  @brief  Set the volume id associated with a given pandora instance
      *
      *  @param  pPandora the address of the pandora instance
-     *  @param  pVolumeInfo the address of the volume info block
+     *  @param  volumeId the volume id
      */
-    void SetVolumeInfo(const pandora::Pandora *const pPandora, VolumeInfo *const pVolumeInfo);
-
-    PandoraInstanceMap              m_pandoraInstanceMap;   ///< The map from primary pandora instance to list of daughter pandora instances
-    PandoraVolumeIdMap              m_pandoraVolumeIdMap;   ///< The map from primary pandora instance to list of volume IDs
+    void SetVolumeId(const pandora::Pandora *const pPandora, const unsigned int volumeId);
 
     typedef std::unordered_map<const pandora::Pandora *, const pandora::Pandora *> PandoraRelationMap;
-    PandoraRelationMap              m_pandoraRelationMap;   ///< The map from daughter pandora instance to primary pandora instance
+    typedef std::unordered_map<const pandora::Pandora *, unsigned int> PandoraToVolumeIdMap;
 
-    typedef std::unordered_map<const pandora::Pandora *, VolumeInfo *> VolumeInfoMap;
-    VolumeInfoMap                   m_volumeInfoMap;        ///< The map from pandora instance to volume info object
-
-    typedef std::map<int, VolumeInfo *> VolumeIdToInfoMap;
-    typedef std::unordered_map<const pandora::Pandora *, VolumeIdToInfoMap> PrimaryToInfoMap;
-    PrimaryToInfoMap                m_primaryToInfoMap; ///< The primary --> id --> volume info mapping
-
-    typedef std::map<int, const pandora::Pandora *> VolumeIdToDaughterMap;
-    typedef std::unordered_map<const pandora::Pandora *, VolumeIdToDaughterMap> PrimaryToDaughterMap;
-    PrimaryToDaughterMap            m_primaryToDaughterMap; ///< The primary --> id --> daughter mapping
+    PandoraInstanceMap              m_primaryToDaughtersMap;    ///< The map from primary pandora instance to list of daughter pandora instances
+    PandoraRelationMap              m_daughterToPrimaryMap;     ///< The map from daughter pandora instance to primary pandora instance
+    PandoraToVolumeIdMap            m_pandoraToVolumeIdMap;     ///< The map from pandora instance to volume id
 
     friend class MultiPandoraApi;
 };

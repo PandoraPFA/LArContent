@@ -30,9 +30,9 @@ const PandoraInstanceList &MultiPandoraApi::GetDaughterPandoraInstanceList(const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::Pandora *MultiPandoraApi::GetDaughterPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const int idNumber)
+const pandora::Pandora *MultiPandoraApi::GetDaughterPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const unsigned int volumeId)
 {
-    return m_multiPandoraApiImpl.GetDaughterPandoraInstance(pPrimaryPandora, idNumber);
+    return m_multiPandoraApiImpl.GetDaughterPandoraInstance(pPrimaryPandora, volumeId);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -44,23 +44,9 @@ const pandora::Pandora *MultiPandoraApi::GetPrimaryPandoraInstance(const pandora
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const pandora::Pandora *const pPandora)
+unsigned int MultiPandoraApi::GetVolumeId(const pandora::Pandora *const pPandora)
 {
-    return m_multiPandoraApiImpl.GetVolumeInfo(pPandora);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const VolumeInfo &MultiPandoraApi::GetVolumeInfo(const pandora::Pandora *const pPrimaryPandora, const int idNumber)
-{
-    return m_multiPandoraApiImpl.GetVolumeInfo(pPrimaryPandora, idNumber);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const VolumeIdList &MultiPandoraApi::GetVolumeIdList(const pandora::Pandora *const pPrimaryPandora)
-{
-    return m_multiPandoraApiImpl.GetVolumeIdList(pPrimaryPandora);
+    return m_multiPandoraApiImpl.GetVolumeId(pPandora);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -86,22 +72,7 @@ void MultiPandoraApi::DeletePandoraInstances(const pandora::Pandora *const pPrim
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MultiPandoraApi::SetVolumeInfo(const pandora::Pandora *const pPandora, VolumeInfo *const pVolumeInfo)
+void MultiPandoraApi::SetVolumeId(const pandora::Pandora *const pPandora, const unsigned int volumeId)
 {
-    m_multiPandoraApiImpl.SetVolumeInfo(pPandora, pVolumeInfo);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-VolumeInfo::VolumeInfo(const int idNumber) :
-    m_idNumber(idNumber)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-int VolumeInfo::GetIdNumber() const
-{
-    return m_idNumber;
+    m_multiPandoraApiImpl.SetVolumeId(pPandora, volumeId);
 }
