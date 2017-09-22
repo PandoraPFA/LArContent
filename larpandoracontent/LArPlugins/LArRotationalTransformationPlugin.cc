@@ -244,8 +244,8 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
     {
         const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
 
-        m_thetaU = larTPC.GetThetaU();
-        m_thetaV = larTPC.GetThetaV();
+        m_thetaU = larTPC.GetWireAngleU();
+        m_thetaV = larTPC.GetWireAngleV();
         m_sigmaUVW = larTPC.GetSigmaUVW();
 
         m_sinUplusV = std::sin(m_thetaU + m_thetaV);
