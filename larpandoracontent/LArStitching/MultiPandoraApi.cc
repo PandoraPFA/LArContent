@@ -23,16 +23,16 @@ const PandoraInstanceMap &MultiPandoraApi::GetPandoraInstanceMap()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const PandoraInstanceList &MultiPandoraApi::GetDaughterPandoraInstanceList(const pandora::Pandora *const pPrimaryPandora)
+const pandora::Pandora *MultiPandoraApi::GetPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const unsigned int volumeId)
 {
-    return m_multiPandoraApiImpl.GetDaughterPandoraInstanceList(pPrimaryPandora);
+    return m_multiPandoraApiImpl.GetPandoraInstance(pPrimaryPandora, volumeId);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::Pandora *MultiPandoraApi::GetDaughterPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const unsigned int volumeId)
+const PandoraInstanceList &MultiPandoraApi::GetDaughterPandoraInstanceList(const pandora::Pandora *const pPrimaryPandora)
 {
-    return m_multiPandoraApiImpl.GetDaughterPandoraInstance(pPrimaryPandora, volumeId);
+    return m_multiPandoraApiImpl.GetDaughterPandoraInstanceList(pPrimaryPandora);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

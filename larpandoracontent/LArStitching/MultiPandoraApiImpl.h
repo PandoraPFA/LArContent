@@ -39,6 +39,16 @@ private:
     const PandoraInstanceMap &GetPandoraInstanceMap() const;
 
     /**
+     *  @brief  Get the address of the pandora instance associated with a given primary pandora instance and volume id number
+     *
+     *  @param  pPrimaryPandora the address of the primary pandora instance
+     *  @param  volumeId the volume identifier number
+     *
+     *  @return the address of the pandora instance
+     */
+    const pandora::Pandora *GetPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const unsigned int volumeId) const;
+
+    /**
      *  @brief  Get the list of daughter pandora instances associated with a given primary pandora instance
      *
      *  @param  pPrimaryPandora the address of the primary pandora instance
@@ -46,16 +56,6 @@ private:
      *  @return the daughter pandora instance list
      */
     const PandoraInstanceList &GetDaughterPandoraInstanceList(const pandora::Pandora *const pPrimaryPandora) const;
-
-    /**
-     *  @brief  Get the address of the daughter pandora instance associated with a given primary pandora instance and volume id number
-     *
-     *  @param  pPrimaryPandora the address of the primary pandora instance
-     *  @param  volumeId the volume identifier number
-     *
-     *  @return the address of the daughter pandora instance
-     */
-    const pandora::Pandora *GetDaughterPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const unsigned int volumeId) const;
 
     /**
      *  @brief  Get the address of the primary pandora instance associated with a given daughter pandora instance

@@ -18,6 +18,26 @@ const PandoraInstanceMap &MultiPandoraApiImpl::GetPandoraInstanceMap() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const pandora::Pandora *MultiPandoraApiImpl::GetPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const unsigned int volumeId) const
+{
+    PandoraInstanceList instanceList(this->GetDaughterPandoraInstanceList(pPrimaryPandora));
+    instanceList.push_back(pPrimaryPandora);
+
+    for (const pandora::Pandora *const pPandora : instanceList)
+    {
+        try
+        {
+            if (volumeId == this->GetVolumeId(pPandora))
+                return pPandora;
+        }
+        catch (const pandora::StatusCodeException &) {}
+    }
+
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const PandoraInstanceList &MultiPandoraApiImpl::GetDaughterPandoraInstanceList(const pandora::Pandora *const pPrimaryPandora) const
 {
     PandoraInstanceMap::const_iterator iter = m_primaryToDaughtersMap.find(pPrimaryPandora);
@@ -26,21 +46,6 @@ const PandoraInstanceList &MultiPandoraApiImpl::GetDaughterPandoraInstanceList(c
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 
     return iter->second;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const pandora::Pandora *MultiPandoraApiImpl::GetDaughterPandoraInstance(const pandora::Pandora *const pPrimaryPandora, const unsigned int volumeId) const
-{
-    const PandoraInstanceList &daughterInstanceList(this->GetDaughterPandoraInstanceList(pPrimaryPandora));
-
-    for (const pandora::Pandora *const pDaughterPandora : daughterInstanceList)
-    {
-        if (volumeId == this->GetVolumeId(pDaughterPandora))
-            return pDaughterPandora;
-    }
-
-    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
