@@ -95,17 +95,18 @@ private:
      */
     void SelectPrimaryPfos(const pandora::PfoList *pInputPfoList, pandora::PfoList &outputPfoList) const;
 
+    typedef StitchingAlgorithm::PfoToLArTPCMap PfoToLArTPCMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject*, LArPointingCluster> ThreeDPointingClusterMap;
 
     /**
      *  @brief  Build a 3D pointing cluster for each Pfo
      *
-     *  @param  inputPfoList  the input list of Pfos
+     *  @param  inputPfoList the input list of Pfos
+     *  @param  pfoToLArTPCMap the input mapping between Pfos and tpc
      *  @param  pointingClusterMap  the mapping between Pfos and their corresponding 3D pointing clusters
      */
-    void BuildPointingClusterMaps(const pandora::PfoList &inputPfoList, ThreeDPointingClusterMap &pointingClusterMap) const;
+    void BuildPointingClusterMaps(const pandora::PfoList &inputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, ThreeDPointingClusterMap &pointingClusterMap) const;
 
-    typedef StitchingAlgorithm::PfoToLArTPCMap PfoToLArTPCMap;
     typedef std::unordered_map<const pandora::LArTPC*, pandora::PfoList> LArTPCToPfoMap;
 
     /**

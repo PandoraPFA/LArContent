@@ -50,7 +50,7 @@ void StitchingCosmicRayMergingTool::Run(const StitchingAlgorithm *const pAlgorit
     this->SelectPrimaryPfos(pMultiPfoList, primaryPfos);
 
     ThreeDPointingClusterMap pointingClusterMap;
-    this->BuildPointingClusterMaps(primaryPfos, pointingClusterMap);
+    this->BuildPointingClusterMaps(primaryPfos, stitchingInfo.m_pfoToLArTPCMap, pointingClusterMap);
 
     LArTPCToPfoMap larTPCToPfoMap;
     this->BuildTPCMaps(primaryPfos, stitchingInfo.m_pfoToLArTPCMap, larTPCToPfoMap);
@@ -87,14 +87,19 @@ void StitchingCosmicRayMergingTool::SelectPrimaryPfos(const PfoList *pInputPfoLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::BuildPointingClusterMaps(const PfoList &inputPfoList, ThreeDPointingClusterMap &pointingClusterMap) const
+void StitchingCosmicRayMergingTool::BuildPointingClusterMaps(const PfoList &inputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, ThreeDPointingClusterMap &pointingClusterMap) const
 {
-    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-
     for (const ParticleFlowObject *const pPfo : inputPfoList)
     {
         try
         {
+            PfoToLArTPCMap::const_iterator tpcIter(pfoToLArTPCMap.find(pPfo));
+
+            if (pfoToLArTPCMap.end() == tpcIter)
+                throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+            const float slidingFitPitch(tpcIter->second->GetWirePitchW());
+
             ClusterList clusterList;
             LArPfoHelper::GetThreeDClusterList(pPfo, clusterList);
 
