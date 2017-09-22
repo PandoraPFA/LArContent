@@ -10,8 +10,6 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
-
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 
 using namespace pandora;
@@ -81,7 +79,7 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
     const HitType hitType(pCaloHit2D->GetHitType());
 
-    const double sigmaFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigmaFit(this->GetPandora().GetGeometry()->GetLArTPC().GetSigmaUVW());
     const double sigmaHit(sigmaFit);
 
     CartesianVector position3D(0.f, 0.f, 0.f);
@@ -96,7 +94,7 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType1, const HitTyp
     const double sigmaW((TPC_VIEW_W == hitType) ? sigmaHit : sigmaFit);
 
     double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
-    LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chi2);
+    this->GetPandora().GetPlugins()->GetLArTransformationPlugin()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, bestY, bestZ, chi2);
     position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
 
     const double deltaX1(pCaloHit2D->GetPositionVector().GetX() - fitPosition1.GetX());
@@ -114,7 +112,7 @@ void HitCreationBaseTool::GetBestPosition3D(const HitType hitType, const Cartesi
 {
     // TODO Input better uncertainties into this method (sigmaHit, sigmaFit, sigmaX)
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
-    const double sigmaFit(LArGeometryHelper::GetLArTransformationPlugin(this->GetPandora())->GetSigmaUVW());
+    const double sigmaFit(this->GetPandora().GetGeometry()->GetLArTPC().GetSigmaUVW());
 
     if (pCaloHit2D->GetHitType() == hitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

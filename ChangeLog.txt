@@ -1,4 +1,22 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_08_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Consolidated approach made available, with ParentAlgorithm guiding a number of different reconstruction options.
+ParentAlgorithm reconstruction options: Full, AllHitsCR, AllHitsNu, CRRemHitsSliceCR, CRRemHitsSliceNu, AllHitsSliceCR, AllHitsSliceNu.
+Added first, simple implementation of NeutrinoId tool.
+Added first implementation of CosmicRayTagging tool.
+Parent algorithm and EventReading algorithm now offer external configuration options for single-instance (per-Pandora instance) usage.
+EventReading algorithm now has ability to read lists of event files and terminate when last event reached.
+Renamed ListDissolution algorithm as ListPruning algorithm, and added vertex functionality.
+Coverity-motivated changes to the development cheating-based reconstruction chain.
+Overhauled and simplied MultiPandoraApi, removing VolumeInfo structures.
+Updated stitching algorithms and helper to use new LArTPC geometry description available in Pandora SDK v03-01-00.
+LArTransformation and LArPseudoLayer plugins are now proper Pandora plugins in Pandora SDK v03-01-00, not a LArContent add-on.
+LineGaps now have a line gap type, start/end x and z positions in Pandora SDK v03-01-00.
+Explicitly handled a few exceptions causing some algorithms to bail in rare circumstances.
+Added UnattachedDeltaRays algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_07_04
 --------------------------------------------------------------------------------------------------------------------------------------------
 Tweaked tie-breaking in shower and track overlap result operators.

@@ -10,8 +10,6 @@
 
 namespace pandora { class Pandora; }
 
-namespace lar_content { class LArPseudoLayerPlugin; class LArTransformationPlugin; }
-
 /**
  *  @brief  LArContent class
  */
@@ -31,22 +29,6 @@ public:
      *  @param  pandora the pandora instance with which to register content
      */
     static pandora::StatusCode RegisterBasicPlugins(const pandora::Pandora &pandora);
-
-    /**
-     *  @brief  Register pseudo layer plugin with pandora
-     * 
-     *  @param  pandora the pandora instance with which to register content
-     *  @param  pPseudoLayerPlugin the address of the pseudo layer plugin
-     */
-    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, lar_content::LArPseudoLayerPlugin *const pLArPseudoLayerPlugin);
-
-    /**
-     *  @brief  Register lar coordinate transformation plugin with pandora
-     * 
-     *  @param  pandora the pandora instance with which to register content
-     *  @param  pLArTransformationPlugin the address of the lar transformation plugin
-     */
-    static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, lar_content::LArTransformationPlugin *const pLArTransformationPlugin);
 };
 
 #endif // #ifndef LAR_CONTENT_H

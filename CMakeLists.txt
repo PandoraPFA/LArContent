@@ -92,7 +92,7 @@ else()
     add_definitions(${PandoraSDK_DEFINITIONS})
 
     if(PANDORA_MONITORING)
-        find_package(PandoraMonitoring 03.00.00 REQUIRED)
+        find_package(PandoraMonitoring 03.02.00 REQUIRED)
         include_directories(${PandoraMonitoring_INCLUDE_DIRS})
         link_libraries(${PandoraMonitoring_LIBRARIES})
         add_definitions(${PandoraMonitoring_DEFINITIONS})

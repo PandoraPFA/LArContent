@@ -48,7 +48,7 @@ void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm
 
     for (const Pandora *const pPandora : pandoraInstances)
     {
-        this->Recreate3DContent(pAlgorithm, pPandora, MultiPandoraApi::GetVolumeInfo(pPandora), stitchingInfo);
+        this->Recreate3DContent(pAlgorithm, pPandora, pPandora->GetGeometry()->GetLArTPC(), stitchingInfo);
     }
 
     if (!pClusterList->empty())
@@ -75,7 +75,7 @@ void StitchingObjectCreationTool::Run(const StitchingAlgorithm *const pAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const Pandora *const pPandora, const VolumeInfo &volumeInfo,
+void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const Pandora *const pPandora, const LArTPC &larTPC,
     StitchingInfo &stitchingInfo) const
 {
     const PfoList *pPfoList = nullptr;
@@ -86,25 +86,17 @@ void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *co
         if (!pInputPfo->GetParentPfoList().empty())
             continue;
 
-        this->Recreate3DContent(pAlgorithm, pInputPfo, nullptr, pPandora, volumeInfo, stitchingInfo);
+        this->Recreate3DContent(pAlgorithm, pInputPfo, nullptr, larTPC, stitchingInfo);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *const pAlgorithm, const ParticleFlowObject *const pInputPfo,
-    const ParticleFlowObject *const pNewParentPfo, const Pandora *const pPandora, const VolumeInfo &volumeInfo, StitchingInfo &stitchingInfo) const
+    const ParticleFlowObject *const pNewParentPfo, const LArTPC &larTPC, StitchingInfo &stitchingInfo) const
 {
-    // Get input X0 for this Pfo
-    float x0(0.f);
-
-    try
-    {
-        x0 = volumeInfo.GetParticleX0(pInputPfo);
-    }
-    catch (pandora::StatusCodeException& )
-    {
-    }
+    // Assume zero input/offset X0
+    const float x0(0.f);
 
     // Recreate clusters
     typedef std::map<const CaloHit*, const CaloHit*> CaloHitMap;
@@ -124,14 +116,14 @@ void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *co
 
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
         {
-            const CaloHit *const pNewCaloHit = pAlgorithm->CreateCaloHit(pInputCaloHit, volumeInfo, x0);
+            const CaloHit *const pNewCaloHit = pAlgorithm->CreateCaloHit(pInputCaloHit, larTPC, x0);
             newCaloHitList.push_back(pNewCaloHit);
             newParentAddresses.insert(CaloHitMap::value_type(pInputCaloHit, pNewCaloHit));
         }
 
         for (const CaloHit *const pInputCaloHit : pInputCluster->GetIsolatedCaloHitList())
         {
-            const CaloHit *const pNewCaloHit = pAlgorithm->CreateCaloHit(pInputCaloHit, volumeInfo, x0);
+            const CaloHit *const pNewCaloHit = pAlgorithm->CreateCaloHit(pInputCaloHit, larTPC, x0);
             newIsolatedCaloHitList.push_back(pNewCaloHit);
             newParentAddresses.insert(CaloHitMap::value_type(pInputCaloHit, pNewCaloHit));
         }
@@ -154,7 +146,7 @@ void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *co
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
             const CaloHit *const pNewParentCaloHit = (pAlgorithm->RecreateTwoDContent() ? iter->second : pParentCaloHit);
-            newCaloHitList.push_back(pAlgorithm->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, volumeInfo, x0));
+            newCaloHitList.push_back(pAlgorithm->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, larTPC, x0));
         }
 
         for (const CaloHit *const pInputCaloHit : pInputCluster->GetIsolatedCaloHitList())
@@ -166,7 +158,7 @@ void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *co
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
             const CaloHit *const pNewParentCaloHit = (pAlgorithm->RecreateTwoDContent() ? iter->second : pParentCaloHit);
-            newIsolatedCaloHitList.push_back(pAlgorithm->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, volumeInfo, x0));
+            newIsolatedCaloHitList.push_back(pAlgorithm->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, larTPC, x0));
         }
 
         if (!newCaloHitList.empty())
@@ -179,32 +171,30 @@ void StitchingObjectCreationTool::Recreate3DContent(const StitchingAlgorithm *co
     for (const Vertex *const pInputVertex : pInputPfo->GetVertexList())
     {
         if (VERTEX_3D == pInputVertex->GetVertexType())
-          newVertexList.push_back(pAlgorithm->CreateVertex(pInputVertex, volumeInfo, x0));
+          newVertexList.push_back(pAlgorithm->CreateVertex(pInputVertex, larTPC, x0));
     }
 
     const ParticleFlowObject *const pNewPfo = pAlgorithm->CreatePfo(pInputPfo, newClusterList, newVertexList);
-    this->AddStitchingInfo(pNewPfo, pPandora, volumeInfo, stitchingInfo);
+    this->AddStitchingInfo(pNewPfo, larTPC, stitchingInfo);
 
     if (pNewParentPfo)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*pAlgorithm, pNewParentPfo, pNewPfo))
 
     for (const ParticleFlowObject *const pInputDaughterPfo : pInputPfo->GetDaughterPfoList())
-        this->Recreate3DContent(pAlgorithm, pInputDaughterPfo, pNewPfo, pPandora, volumeInfo, stitchingInfo);
+        this->Recreate3DContent(pAlgorithm, pInputDaughterPfo, pNewPfo, larTPC, stitchingInfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingObjectCreationTool::AddStitchingInfo(const ParticleFlowObject *const pNewPfo, const Pandora *const /*pPandora*/,
-    const VolumeInfo &volumeInfo, StitchingInfo &stitchingInfo) const
+void StitchingObjectCreationTool::AddStitchingInfo(const ParticleFlowObject *const pNewPfo, const LArTPC &larTPC, StitchingInfo &stitchingInfo) const
 {
-    // TODO - work out what kind of information needs to be recorded
-    if (!stitchingInfo.m_pfoToVolumeIdMap.insert(StitchingAlgorithm::PfoToVolumeIdMap::value_type(pNewPfo, volumeInfo.GetIdNumber())).second)
+    if (!stitchingInfo.m_pfoToLArTPCMap.insert(StitchingAlgorithm::PfoToLArTPCMap::value_type(pNewPfo, &larTPC)).second)
         throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-  StatusCode StitchingObjectCreationTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode StitchingObjectCreationTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
 }

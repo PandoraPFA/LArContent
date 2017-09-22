@@ -8,9 +8,9 @@
 #ifndef PANDORA_STITCHING_ALGORITHM_H
 #define PANDORA_STITCHING_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
+#include "Geometry/LArTPC.h"
 
-#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -27,7 +27,7 @@ class StitchingTool;
 class StitchingAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, int> PfoToVolumeIdMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::LArTPC*> PfoToLArTPCMap;
 
     /**
      *  @brief  StitchingInfo class
@@ -35,7 +35,7 @@ public:
     class StitchingInfo
     {
     public:
-        PfoToVolumeIdMap    m_pfoToVolumeIdMap;         ///< Mapping between Pfos and Volume IDs
+        PfoToLArTPCMap      m_pfoToLArTPCMap;         ///< Mapping between Pfos and LArTPCs
     };
 
     /**
@@ -75,24 +75,25 @@ public:
      *  @brief  Create a new calo hit in the current pandora instance, based upon the provided input calo hit
      *
      *  @param  pInputCaloHit the address of the input calo hit
-     *  @param  volumeInfo the volume information block for this drift volume
+     *  @param  larTPC the lar tpc description association with the input pandora instance
      *  @param  x0 the x0 correction relative to the input hit
      *
      *  @return the address of the new calo hit
      */
-    const pandora::CaloHit *CreateCaloHit(const pandora::CaloHit *const pInputCaloHit, const VolumeInfo &volumeInfo, const float x0) const;
+    const pandora::CaloHit *CreateCaloHit(const pandora::CaloHit *const pInputCaloHit, const pandora::LArTPC &larTPC, const float x0) const;
 
     /**
      *  @brief  Create a new calo hit in the current pandora instance, based upon the provided input calo hit
      *
      *  @param  pInputCaloHit the address of the input calo hit
      *  @param  pParentCaloHit the address of the parent calo hit
-     *  @param  volumeInfo the volume information block for this drift volume
+     *  @param  larTPC the lar tpc description association with the input pandora instance
      *  @param  x0 the x0 correction relative to the input hit
      *
      *  @return the address of the new calo hit
      */
-    const pandora::CaloHit *CreateCaloHit(const pandora::CaloHit *const pInputCaloHit, const pandora::CaloHit *const pParentCaloHit, const VolumeInfo &volumeInfo, const float x0) const;
+    const pandora::CaloHit *CreateCaloHit(const pandora::CaloHit *const pInputCaloHit, const pandora::CaloHit *const pParentCaloHit,
+        const pandora::LArTPC &larTPC, const float x0) const;
 
     /**
      *  @brief  Create a new cluster in the current pandora instance, based upon the provided input cluster
@@ -110,12 +111,12 @@ public:
      *  @brief  Create a new vertex in the current pandora instance, based upon the provided input vertex
      *
      *  @param  pInputVertex the address of the input vertex
-     *  @param  volumeInfo the volume information block for this drift volume
+     *  @param  larTPC the lar tpc description association with the input pandora instance
      *  @param  x0 the x0 correction relative to the input vertex
      *
      *  @return the address of the new vertex
      */
-    const pandora::Vertex *CreateVertex(const pandora::Vertex *const pInputVertex, const VolumeInfo &volumeInfo, const float x0) const;
+    const pandora::Vertex *CreateVertex(const pandora::Vertex *const pInputVertex, const pandora::LArTPC &larTPC, const float x0) const;
 
     /**
      *  @brief  Create a new pfo in the current pandora instance, based upon the provided input pfo
@@ -126,15 +127,15 @@ public:
      *
      *  @return the address of the new pfo
      */
-    const pandora::ParticleFlowObject *CreatePfo(const pandora::ParticleFlowObject *const pInputPfo,
-        const pandora::ClusterList &newClusterList, const pandora::VertexList &newVertexList) const;
+    const pandora::ParticleFlowObject *CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ClusterList &newClusterList,
+        const pandora::VertexList &newVertexList) const;
 
     /**
      *  @brief  Shift a Pfo hierarchy by a specified x0 value
      *
-     *  @param  pPfo  the address of the parent pfo
+     *  @param  pPfo the address of the parent pfo
      *  @param  stitchingInfo  the source for additional, local, stitching information
-     *  @param  x0  the x0 correction relative to the input pfo
+     *  @param  x0 the x0 correction relative to the input pfo
      */
     void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pPfo, const StitchingAlgorithm::StitchingInfo &stitchingInfo,
         const float x0) const;
@@ -142,11 +143,11 @@ public:
     /**
      *  @brief  Shift a Pfo by a specified x0 value
      *
-     *  @param  pInputPfo  the address of the input pfo
-     *  @param  volumeInfo  the volume information block for this drift volume
-     *  @param  x0  the x0 correction relative to the input pfo
+     *  @param  pInputPfo the address of the input pfo
+     *  @param  larTPC the lar tpc description association with the input pandora instance
+     *  @param  x0 the x0 correction relative to the input pfo
      */
-    void ShiftPfo(const pandora::ParticleFlowObject *const pInputPfo, const VolumeInfo &volumeInfo, const float x0) const;
+    void ShiftPfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::LArTPC &larTPC, const float x0) const;
 
     /**
      *  @brief  Stitch together a pair of pfos
@@ -169,7 +170,7 @@ private:
     std::string             m_newVertexListName;        ///< The new/recreated vertex list name
     std::string             m_newPfoListName;           ///< The new/recreated pfo list name
 
-    bool                    m_recreateTwoDContent;      ///<
+    bool                    m_recreateTwoDContent;      ///< Whether to recreate input 2D building blocks too
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -6,7 +6,15 @@
  *  $Log: $
  */
 
+#include "Geometry/LArTPC.h"
+
+#include "Helpers/XmlHelper.h"
+
+#include "Managers/GeometryManager.h"
+
 #include "Objects/CartesianVector.h"
+
+#include "Pandora/Pandora.h"
 
 #include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
 
@@ -17,22 +25,15 @@ namespace lar_content
 
 using namespace pandora;
 
-LArRotationalTransformationPlugin::LArRotationalTransformationPlugin(const double thetaU, const double thetaV, const double sigmaUVW) : 
-    m_thetaU(thetaU),
-    m_thetaV(thetaV),
-    m_sigmaUVW(sigmaUVW),
-    m_sinUplusV(std::sin(m_thetaU + m_thetaV)),
-    m_sinU(std::sin(m_thetaU)),
-    m_sinV(std::sin(m_thetaV)),
-    m_cosU(std::cos(m_thetaU)),
-    m_cosV(std::cos(m_thetaV))
-{
-
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-LArRotationalTransformationPlugin::~LArRotationalTransformationPlugin()
+LArRotationalTransformationPlugin::LArRotationalTransformationPlugin() : 
+    m_thetaU(0.),
+    m_thetaV(0.),
+    m_sigmaUVW(0.),
+    m_sinUplusV(0.),
+    m_sinU(0.),
+    m_sinV(0.),
+    m_cosU(0.),
+    m_cosV(0.)
 {
 }
 
@@ -233,6 +234,40 @@ void LArRotationalTransformationPlugin::GetProjectedYZ(const PositionAndType &hi
     const double deltaV(v - LArRotationalTransformationPlugin::YZtoV(y, z));
     const double deltaW(w - z);
     chiSquared = ((deltaU * deltaU) / (sigmaU * sigmaU)) + ((deltaV * deltaV) / (sigmaV * sigmaV)) + ((deltaW * deltaW) / (sigmaW * sigmaW));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode LArRotationalTransformationPlugin::Initialize()
+{
+    try
+    {
+        const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
+
+        m_thetaU = larTPC.GetWireAngleU();
+        m_thetaV = larTPC.GetWireAngleV();
+        m_sigmaUVW = larTPC.GetSigmaUVW();
+
+        m_sinUplusV = std::sin(m_thetaU + m_thetaV);
+        m_sinU = std::sin(m_thetaU);
+        m_sinV = std::sin(m_thetaV);
+        m_cosU = std::cos(m_thetaU);
+        m_cosV = std::cos(m_thetaV);
+    }
+    catch (const StatusCodeException &statusCodeException)
+    {
+        std::cout << "LArRotationalTransformationPlugin::Initialize - LArTPC description not registered with Pandora as required " << std::endl;
+        return statusCodeException.GetStatusCode();
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::StatusCode LArRotationalTransformationPlugin::ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/)
+{
+    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content

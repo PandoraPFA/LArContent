@@ -1,10 +1,12 @@
 /**
  *  @file   larpandoracontent/LArHelpers/LArStitchingHelper.cc
  *
- *  @brief  Implementation of the helper class for multiple drift volumes
+ *  @brief  Implementation of the helper class for multiple tpcs
  *
  *  $Log: $
  */
+
+#include "Managers/GeometryManager.h"
 
 #include "larpandoracontent/LArStitching/MultiPandoraApi.h"
 
@@ -18,27 +20,27 @@ using namespace pandora;
 namespace lar_content
 {
 
-const VolumeInfo &LArStitchingHelper::FindClosestVolume(const Pandora &pandora, const VolumeInfo &inputVolume, const bool checkPositive)
+const LArTPC &LArStitchingHelper::FindClosestTPC(const Pandora &pandora, const LArTPC &inputTPC, const bool checkPositive)
 {
-    const VolumeIdList &volumeIdList(MultiPandoraApi::GetVolumeIdList(&pandora));
+    const PandoraInstanceList &pandoraInstanceList(MultiPandoraApi::GetDaughterPandoraInstanceList(&pandora));
 
-    int closestId(-1);
+    const LArTPC *pClosestTPC(nullptr);
     float closestSeparation(std::numeric_limits<float>::max());
     const float maxDisplacement(30.f); // TODO: 30cm should be fine, but can we do better than a hard-coded number here?
 
-    for (const int volumeId : volumeIdList)
+    for (const Pandora *const pPandora : pandoraInstanceList)
     {
-        const VolumeInfo &checkVolume(MultiPandoraApi::GetVolumeInfo(&pandora, volumeId));
+        const LArTPC &checkTPC(pPandora->GetGeometry()->GetLArTPC());
 
-        if (inputVolume.GetIdNumber() == checkVolume.GetIdNumber())
+        if (&inputTPC == &checkTPC)
             continue;
 
-        if (checkPositive != (checkVolume.GetCenterX() > inputVolume.GetCenterX()))
+        if (checkPositive != (checkTPC.GetCenterX() > inputTPC.GetCenterX()))
             continue;
 
-        const float deltaX(std::fabs(checkVolume.GetCenterX() - inputVolume.GetCenterX()));
-        const float deltaY(std::fabs(checkVolume.GetCenterY() - inputVolume.GetCenterY()));
-        const float deltaZ(std::fabs(checkVolume.GetCenterZ() - inputVolume.GetCenterZ()));
+        const float deltaX(std::fabs(checkTPC.GetCenterX() - inputTPC.GetCenterX()));
+        const float deltaY(std::fabs(checkTPC.GetCenterY() - inputTPC.GetCenterY()));
+        const float deltaZ(std::fabs(checkTPC.GetCenterZ() - inputTPC.GetCenterZ()));
 
         if (deltaY > maxDisplacement || deltaZ > maxDisplacement)
             continue;
@@ -46,42 +48,40 @@ const VolumeInfo &LArStitchingHelper::FindClosestVolume(const Pandora &pandora, 
         if (deltaX < closestSeparation)
         {
             closestSeparation = deltaX;
-            closestId = checkVolume.GetIdNumber();
+            pClosestTPC = &checkTPC;
         }
     }
 
-    if (closestId < 0)
+    if (!pClosestTPC)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return MultiPandoraApi::GetVolumeInfo(&pandora, closestId);
+    return (*pClosestTPC);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArStitchingHelper::CanVolumesBeStitched(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+bool LArStitchingHelper::CanTPCsBeStitched(const LArTPC &firstTPC, const LArTPC &secondTPC)
 {
-    // Require that drift volumes should have unique identifiers
-    if (firstVolume.GetIdNumber() == secondVolume.GetIdNumber())
+    if (&firstTPC == &secondTPC)
         return false;
 
     // ATTN: We assume that Pfos are crossing either an anode-anode boundary or a cathode-cathode boundary
-    if (firstVolume.IsDriftInPositiveX() == secondVolume.IsDriftInPositiveX())
+    if (firstTPC.IsDriftInPositiveX() == secondTPC.IsDriftInPositiveX())
         return false;
 
-    // Check if volumes are adjacent
-    return LArStitchingHelper::AreVolumesAdjacent(firstVolume, secondVolume);
+    return LArStitchingHelper::AreTPCsAdjacent(firstTPC, secondTPC);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArStitchingHelper::AreVolumesAdjacent(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+bool LArStitchingHelper::AreTPCsAdjacent(const LArTPC &firstTPC, const LArTPC &secondTPC)
 {
     // Check the relative positions of the centres of each drift volume
     const float maxDisplacement(30.f); // TODO: 30cm should be fine, but can we do better than a hard-coded number here?
-    const float widthX(0.5f * (firstVolume.GetWidthX() + secondVolume.GetWidthX()));
-    const float deltaX(std::fabs(firstVolume.GetCenterX() - secondVolume.GetCenterX()));
-    const float deltaY(std::fabs(firstVolume.GetCenterY() - secondVolume.GetCenterY()));
-    const float deltaZ(std::fabs(firstVolume.GetCenterZ() - secondVolume.GetCenterZ()));
+    const float widthX(0.5f * (firstTPC.GetWidthX() + secondTPC.GetWidthX()));
+    const float deltaX(std::fabs(firstTPC.GetCenterX() - secondTPC.GetCenterX()));
+    const float deltaY(std::fabs(firstTPC.GetCenterY() - secondTPC.GetCenterY()));
+    const float deltaZ(std::fabs(firstTPC.GetCenterZ() - secondTPC.GetCenterZ()));
 
     if (std::fabs(deltaX-widthX) > maxDisplacement || deltaY > maxDisplacement || deltaZ > maxDisplacement)
         return false;
@@ -91,99 +91,93 @@ bool LArStitchingHelper::AreVolumesAdjacent(const VolumeInfo &firstVolume, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArStitchingHelper::AreVolumesAdjacent(const Pandora &pandora, const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+bool LArStitchingHelper::AreTPCsAdjacent(const Pandora &pandora, const LArTPC &firstTPC, const LArTPC &secondTPC)
 {
-    // Check if first volume is just upstream of second volume
+    // Check if first tpc is just upstream of second tpc
     try
     {
-        const VolumeInfo &firstVolumeCheck(LArStitchingHelper::FindClosestVolume(pandora, secondVolume, true));
-        const VolumeInfo &secondVolumeCheck(LArStitchingHelper::FindClosestVolume(pandora, firstVolume, false));
+        const LArTPC &firstTPCCheck(LArStitchingHelper::FindClosestTPC(pandora, secondTPC, true));
+        const LArTPC &secondTPCCheck(LArStitchingHelper::FindClosestTPC(pandora, firstTPC, false));
 
-        if (firstVolumeCheck.GetIdNumber() == firstVolume.GetIdNumber() && secondVolumeCheck.GetIdNumber() == secondVolume.GetIdNumber())
+        if ((&firstTPCCheck == &firstTPC) && (&secondTPCCheck == &secondTPC))
             return true;
     }
     catch (pandora::StatusCodeException& )
     {
     }
 
-    // Check if second volume is just upstream of first volume
+    // Check if second tpc is just upstream of first tpc
     try
     {
-        const VolumeInfo &firstVolumeCheck(LArStitchingHelper::FindClosestVolume(pandora, secondVolume, false));
-        const VolumeInfo &secondVolumeCheck(LArStitchingHelper::FindClosestVolume(pandora, firstVolume, true));
+        const LArTPC &firstTPCCheck(LArStitchingHelper::FindClosestTPC(pandora, secondTPC, false));
+        const LArTPC &secondTPCCheck(LArStitchingHelper::FindClosestTPC(pandora, firstTPC, true));
 
-        if (firstVolumeCheck.GetIdNumber() == firstVolume.GetIdNumber() && secondVolumeCheck.GetIdNumber() == secondVolume.GetIdNumber())
+        if ((&firstTPCCheck == &firstTPC) && (&secondTPCCheck == &secondTPC))
             return true;
     }
     catch (pandora::StatusCodeException& )
     {
     }
 
-    // Drift volumes aren't adjacent to each other
     return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArStitchingHelper::GetVolumeBoundaryCenterX(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+float LArStitchingHelper::GetTPCBoundaryCenterX(const LArTPC &firstTPC, const LArTPC &secondTPC)
 {
-    if (!LArStitchingHelper::AreVolumesAdjacent(firstVolume, secondVolume))
+    if (!LArStitchingHelper::AreTPCsAdjacent(firstTPC, secondTPC))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    if (firstVolume.GetCenterX() < secondVolume.GetCenterX())
+    if (firstTPC.GetCenterX() < secondTPC.GetCenterX())
     {
-        return 0.5 * ((firstVolume.GetCenterX() + 0.5 * firstVolume.GetWidthX()) +
-                      (secondVolume.GetCenterX() - 0.5 * secondVolume.GetWidthX()));
+        return 0.5 * ((firstTPC.GetCenterX() + 0.5 * firstTPC.GetWidthX()) + (secondTPC.GetCenterX() - 0.5 * secondTPC.GetWidthX()));
     }
     else
     {
-        return 0.5 * ((firstVolume.GetCenterX() - 0.5 * firstVolume.GetWidthX()) +
-                      (secondVolume.GetCenterX() + 0.5 * secondVolume.GetWidthX()));
+        return 0.5 * ((firstTPC.GetCenterX() - 0.5 * firstTPC.GetWidthX()) + (secondTPC.GetCenterX() + 0.5 * secondTPC.GetWidthX()));
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArStitchingHelper::GetVolumeBoundaryWidthX(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+float LArStitchingHelper::GetTPCBoundaryWidthX(const LArTPC &firstTPC, const LArTPC &secondTPC)
 {
-    if (!LArStitchingHelper::AreVolumesAdjacent(firstVolume, secondVolume))
+    if (!LArStitchingHelper::AreTPCsAdjacent(firstTPC, secondTPC))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    if (firstVolume.GetCenterX() < secondVolume.GetCenterX())
+    if (firstTPC.GetCenterX() < secondTPC.GetCenterX())
     {
-        return ((secondVolume.GetCenterX() - 0.5 * secondVolume.GetWidthX()) -
-                (firstVolume.GetCenterX() + 0.5 * firstVolume.GetWidthX()));
+        return ((secondTPC.GetCenterX() - 0.5 * secondTPC.GetWidthX()) - (firstTPC.GetCenterX() + 0.5 * firstTPC.GetWidthX()));
     }
     else
     {
-        return ((firstVolume.GetCenterX() - 0.5 * firstVolume.GetWidthX()) -
-                (secondVolume.GetCenterX() + 0.5 * secondVolume.GetWidthX()));
+        return ((firstTPC.GetCenterX() - 0.5 * firstTPC.GetWidthX()) - (secondTPC.GetCenterX() + 0.5 * secondTPC.GetWidthX()));
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArStitchingHelper::GetVolumeDisplacement(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume)
+float LArStitchingHelper::GetTPCDisplacement(const LArTPC &firstTPC, const LArTPC &secondTPC)
 {
-    const float deltaX(firstVolume.GetCenterX() - secondVolume.GetCenterX());
-    const float deltaY(firstVolume.GetCenterY() - secondVolume.GetCenterY());
-    const float deltaZ(firstVolume.GetCenterZ() - secondVolume.GetCenterZ());
+    const float deltaX(firstTPC.GetCenterX() - secondTPC.GetCenterX());
+    const float deltaY(firstTPC.GetCenterY() - secondTPC.GetCenterY());
+    const float deltaZ(firstTPC.GetCenterZ() - secondTPC.GetCenterZ());
 
     return std::sqrt(deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArStitchingHelper::GetClosestVertices(const VolumeInfo &driftVolume1, const VolumeInfo &driftVolume2,
+void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC &larTPC2,
     const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
     LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2)
 {
-    // Check that drift volumes have different identifiers (just in case)
-    if (driftVolume1.GetIdNumber() == driftVolume2.GetIdNumber())
+    if (&larTPC1 == &larTPC2)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    // Find the closest vertices based on relative X positions in drift volume
-    const float dxVolume(driftVolume2.GetCenterX() - driftVolume1.GetCenterX());
+    // Find the closest vertices based on relative X positions in tpc
+    const float dxVolume(larTPC2.GetCenterX() - larTPC1.GetCenterX());
     const float dx1(pointingCluster1.GetOuterVertex().GetPosition().GetX() - pointingCluster1.GetInnerVertex().GetPosition().GetX());
     const float dx2(pointingCluster2.GetOuterVertex().GetPosition().GetX() - pointingCluster2.GetInnerVertex().GetPosition().GetX());
 
@@ -229,15 +223,14 @@ void LArStitchingHelper::GetClosestVertices(const VolumeInfo &driftVolume1, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArStitchingHelper::CalculateX0(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume,
+float LArStitchingHelper::CalculateX0(const LArTPC &firstTPC, const LArTPC &secondTPC,
     const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex)
 {
-    // Require that drift volumes should have unique identifiers
-    if (firstVolume.GetIdNumber() == secondVolume.GetIdNumber())
+    if (&firstTPC == &secondTPC)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     // ATTN: Assume that Pfos are crossing either an anode-anode boundary or a cathode-cathode boundary
-    if (firstVolume.IsDriftInPositiveX() == secondVolume.IsDriftInPositiveX())
+    if (firstTPC.IsDriftInPositiveX() == secondTPC.IsDriftInPositiveX())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     // Assume that Pfos have opposite direction components in x, and have some direction component in the y-z plane
@@ -276,9 +269,22 @@ float LArStitchingHelper::CalculateX0(const VolumeInfo &firstVolume, const Volum
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector LArStitchingHelper::GetCorrectedPosition(const VolumeInfo &driftVolume, const float x0, const CartesianVector &inputPosition)
+CartesianVector LArStitchingHelper::GetCorrectedPosition(const LArTPC &larTPC, const float x0, const CartesianVector &inputPosition)
 {
-  return (inputPosition + CartesianVector(driftVolume.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f));
+  return (inputPosition + CartesianVector(larTPC.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArStitchingHelper::SortTPCs(const pandora::LArTPC *const pLhs, const pandora::LArTPC *const pRhs)
+{
+    if (std::fabs(pLhs->GetCenterX() - pRhs->GetCenterX()) > std::numeric_limits<float>::epsilon())
+        return (pLhs->GetCenterX() < pRhs->GetCenterX());
+
+    if (std::fabs(pLhs->GetCenterY() - pRhs->GetCenterY()) > std::numeric_limits<float>::epsilon())
+        return (pLhs->GetCenterY() < pRhs->GetCenterY());
+
+    return (pLhs->GetCenterZ() < pRhs->GetCenterZ());
 }
 
 } // namespace lar_content

@@ -8,11 +8,11 @@
 #ifndef LAR_STITCHING_HELPER_H
 #define LAR_STITCHING_HELPER_H 1
 
+#include "Geometry/LArTPC.h"
+
 #include "Objects/ParticleFlowObject.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
-
-#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
 
 namespace lar_content
 {
@@ -24,116 +24,123 @@ class LArStitchingHelper
 {
 public:
    /**
-     *  @brief Find neighbouring drift volume to a specified drift volume
+     *  @brief  Find closest tpc to a specified input tpc
      *
-     *  @param pandora  the pandora stitching instance
-     *  @param inputVolume  the specified drift volume
-     *  @param checkPositive  look in higher (lower) x positions if this is set to true (false)
+     *  @param  pandora the pandora stitching instance
+     *  @param  inputTPC the specified drift volume
+     *  @param  checkPositive look in higher (lower) x positions if this is set to true (false)
      *
-     *  @return volume information block
+     *  @return the closest tpc
      */
-    static const VolumeInfo &FindClosestVolume(const pandora::Pandora &pandora, const VolumeInfo &inputVolume, const bool checkPositive);
+    static const pandora::LArTPC &FindClosestTPC(const pandora::Pandora &pandora, const pandora::LArTPC &inputTPC, const bool checkPositive);
 
     /**
-     *  @brief Check that a pair of drift volumes are adjacent to each other
+     *  @brief  Whether particles from a given pair of tpcs can be stitched together
      *
-     *  @param firstVolume the first drift volume
-     *  @param secondVolume the second drift volume
+     *  @param  firstTPC the first tpc
+     *  @param  secondTPC the second tpc
      *
      *  @return boolean
      */
-    static bool CanVolumesBeStitched(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static bool CanTPCsBeStitched(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     /**
-     *  @brief Check that a pair of drift volumes are adjacent to each other
+     *  @brief  Whether a pair of drift volumes are adjacent to each other
      *
-     *  @param firstVolume the first drift volume
-     *  @param secondVolume the second drift volume
+     *  @param  firstTPC the first tpc
+     *  @param  secondTPC the second tpc
      *
      *  @return boolean
      */
-    static bool AreVolumesAdjacent(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static bool AreTPCsAdjacent(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     /**
-     *  @brief Check that a pair of drift volumes are adjacent to each other
+     *  @brief  Whether a pair of drift volumes are adjacent to each other
      *
-     *  @param pandora  the pandora stitching instance
-     *  @param firstVolume  the first drift volume
-     *  @param secondVolume  the second drift volume
+     *  @param  pandora  the pandora stitching instance
+     *  @param  firstTPC the first tpc
+     *  @param  secondTPC the second tpc
      *
      *  @return boolean
      */
-    static bool AreVolumesAdjacent(const pandora::Pandora &pandora, const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static bool AreTPCsAdjacent(const pandora::Pandora &pandora, const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     /**
-     *  @brief Determine centre in X at the boundary between a pair of drift volumes
+     *  @brief  Determine centre in X at the boundary between a pair of tpcs
      *
-     *  @param firstVolume the first drift volume
-     *  @param secondVolume the second drift volume
+     *  @param  firstTPC the first tpc
+     *  @param  secondTPC the second tpc
      *
-     *  @return Boundary X centre
+     *  @return boundary X centre
      */
-    static float GetVolumeBoundaryCenterX(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static float GetTPCBoundaryCenterX(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     /**
-     *  @brief Determine width in X at the boundary between a pair of drift volumes
+     *  @brief  Determine width in X at the boundary between a pair of tpcs
      *
-     *  @param firstVolume the first drift volume
-     *  @param secondVolume the second drift volume
+     *  @param  firstTPC the first tpc
+     *  @param  secondTPC the second tpc
      *
-     *  @return Boundary X width
+     *  @return boundary X width
      */
-    static float GetVolumeBoundaryWidthX(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static float GetTPCBoundaryWidthX(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     /**
-     *  @brief Calculate distance between central positions of a pair of drift volumes
+     *  @brief  Calculate distance between central positions of a pair of tpcs
      *
-     *  @param firstVolume the first drift volume
-     *  @param secondVolume the second drift volume
+     *  @param  firstTPC the first tpc
+     *  @param  secondTPC the second tpc
      *
-     *  @return the distance as a float
+     *  @return the distance
      */
-    static float GetVolumeDisplacement(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume);
+    static float GetTPCDisplacement(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC);
 
     /**
      *  @brief  Given a pair of pointing clusters, find the pair of vertices with smallest yz-separation
      *
-     *  @param  driftVolume1 the first drift volume
-     *  @param  driftVolume2 the second drift volume
-     *  @param  pointingCluster1 the pointing cluster in the first drift volume
-     *  @param  pointingCluster2 the pointing cluster in the second drift volume
+     *  @param  larTPC1 the first tpc
+     *  @param  larTPC2 the second tpc
+     *  @param  pointingCluster1 the pointing cluster in the first tpc
+     *  @param  pointingCluster2 the pointing cluster in the second tpc
      *  @param  closestVertex1 to receive the relevant vertex from the first pointing cluster
      *  @param  closestVertex2 to receive the relevant vertex from the second pointing cluster
      */
-    static void GetClosestVertices(const VolumeInfo &driftVolume1, const VolumeInfo &driftVolume2,
+    static void GetClosestVertices(const pandora::LArTPC &larTPC1, const pandora::LArTPC &larTPC2,
         const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
         LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
 
     /**
      *  @brief  Calculate X0 for a pair of vertices
      *
-     *  @param  firstVolume the first drift volume
-     *  @param  secondVolume the second drift volume
+     *  @param  firstTPC the first tpc
+     *  @param  secondTPC the second tpc
      *  @param  firstVertex the relevant vertex from the first pointing cluster
      *  @param  secondVertex the relevant vertex from the second pointing cluster
      *
      *  @return X0 value for this pair of vertices
      */
-    static float CalculateX0(const VolumeInfo &firstVolume, const VolumeInfo &secondVolume,
+    static float CalculateX0(const pandora::LArTPC &firstTPC, const pandora::LArTPC &secondTPC,
         const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex);
 
     /**
      *  @brief  Apply the X0 correction to an input position vector
      *
-     *  @param  driftVolume  the drift volume
+     *  @param  larTPC the tpc
      *  @param  x0  the x0 value
      *  @param  inputPosition  the input uncorrected position vector
      *
      *  @return the output corrected position vector
      */
-    static pandora::CartesianVector GetCorrectedPosition(const VolumeInfo &driftVolume, const float x0,
+    static pandora::CartesianVector GetCorrectedPosition(const pandora::LArTPC &larTPC, const float x0,
         const pandora::CartesianVector &inputPosition);
 
+    /**
+     *  @brief  Sort tpcs by central positions
+     *
+     *  @param  pLhs address of first tpc
+     *  @param  pRhs address of second tpc
+     */
+    static bool SortTPCs(const pandora::LArTPC *const pLhs, const pandora::LArTPC *const pRhs);
 };
 
 } // namespace lar_content

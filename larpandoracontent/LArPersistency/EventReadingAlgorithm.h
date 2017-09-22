@@ -40,7 +40,7 @@ public:
     /**
      *  @brief  External event reading parameters class
      */
-    class ExternalEventReadingParameters : public ExternalParameters
+    class ExternalEventReadingParameters : public pandora::ExternalParameters
     {
     public:
         std::string             m_geometryFileName;             ///< Name of the file containing geometry information

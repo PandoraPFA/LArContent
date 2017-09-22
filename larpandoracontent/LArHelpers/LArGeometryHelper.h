@@ -15,13 +15,9 @@
 
 namespace pandora {class CartesianVector; class Pandora;}
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 namespace lar_content
 {
 
-class LArPseudoLayerPlugin;
-class LArTransformationPlugin;
 class TwoDSlidingFitResult;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,46 +243,6 @@ public:
      *  @param  hitType the hit type
      */
     static float CalculateGapDeltaZ(const pandora::Pandora &pandora, const float minZ, const float maxZ, const pandora::HitType hitType);
-
-    /**
-     *  @brief  Get the LArPseudoLayerPlugin registered with a specified pandora instance
-     *
-     *  @param  pandora the associated pandora instance
-     *
-     *  @return the address of the relevant LArPseudoLayerPlugin
-     */
-    static const LArPseudoLayerPlugin *GetLArPseudoLayerPlugin(const pandora::Pandora &pandora);
-
-    /**
-     *  @brief  Get the LArTransformationPlugin registered with a specified pandora instance
-     *
-     *  @param  pandora the associated pandora instance
-     *
-     *  @return the address of the relevant LArTransformationPlugin
-     */
-    static const LArTransformationPlugin *GetLArTransformationPlugin(const pandora::Pandora &pandora);
-
-    /**
-     *  @brief  Set the LArPseudoLayerPlugin for a given pandora instance
-     *
-     *  @param  pandora the pandora instance
-     *  @param  pLArPseudoLayerPlugin the address of the LArPseudoLayerPlugin
-     */
-    static pandora::StatusCode SetLArPseudoLayerPlugin(const pandora::Pandora &pandora, const LArPseudoLayerPlugin *const pLArPseudoLayerPlugin);
-
-    /**
-     *  @brief  Set the LArTransformationPlugin for a given pandora instance
-     *
-     *  @param  pandora the pandora instance
-     *  @param  pLArTransformationPlugin the address of the LArTransformationPlugin
-     */
-    static pandora::StatusCode SetLArTransformationPlugin(const pandora::Pandora &pandora, const LArTransformationPlugin *const pLArTransformationPlugin);
-
-private:
-    typedef std::unordered_map<const pandora::Pandora*, const LArPseudoLayerPlugin*>    PseudoLayerInstanceMap;
-    typedef std::unordered_map<const pandora::Pandora*, const LArTransformationPlugin*> TransformationInstanceMap;
-    static PseudoLayerInstanceMap       m_pseudolayerInstanceMap;       ///< The pseudolayer instance map
-    static TransformationInstanceMap    m_transformationInstanceMap;    ///< The transformation instance map
 };
 
 } // namespace lar_content

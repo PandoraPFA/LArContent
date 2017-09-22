@@ -39,18 +39,18 @@ StatusCode StitchingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCaloHit, const VolumeInfo &volumeInfo, const float x0) const
+const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCaloHit, const LArTPC &larTPC, const float x0) const
 {
-    return this->CreateCaloHit(pInputCaloHit, nullptr, volumeInfo, x0);
+    return this->CreateCaloHit(pInputCaloHit, nullptr, larTPC, x0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const CaloHit *StitchingAlgorithm::CreateCaloHit(const CaloHit *const pInputCaloHit, const CaloHit *const pParentCaloHit,
-    const VolumeInfo &volumeInfo, const float x0) const
+    const LArTPC &larTPC, const float x0) const
 {
     PandoraContentApi::CaloHit::Parameters parameters;
-    parameters.m_positionVector = LArStitchingHelper::GetCorrectedPosition(volumeInfo, x0, pInputCaloHit->GetPositionVector());
+    parameters.m_positionVector = LArStitchingHelper::GetCorrectedPosition(larTPC, x0, pInputCaloHit->GetPositionVector());
     parameters.m_expectedDirection = pInputCaloHit->GetExpectedDirection();
     parameters.m_cellNormalVector = pInputCaloHit->GetCellNormalVector();
     parameters.m_cellGeometry = pInputCaloHit->GetCellGeometry();
@@ -111,10 +111,10 @@ const Cluster *StitchingAlgorithm::CreateCluster(const Cluster *const pInputClus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Vertex *StitchingAlgorithm::CreateVertex(const Vertex *const pInputVertex, const VolumeInfo &volumeInfo, const float x0) const
+const Vertex *StitchingAlgorithm::CreateVertex(const Vertex *const pInputVertex, const LArTPC &larTPC, const float x0) const
 {
     PandoraContentApi::Vertex::Parameters parameters;
-    parameters.m_position = LArStitchingHelper::GetCorrectedPosition(volumeInfo, x0, pInputVertex->GetPosition());
+    parameters.m_position = LArStitchingHelper::GetCorrectedPosition(larTPC, x0, pInputVertex->GetPosition());
     parameters.m_vertexLabel = pInputVertex->GetVertexLabel();
     parameters.m_vertexType = pInputVertex->GetVertexType();
 
@@ -126,8 +126,8 @@ const Vertex *StitchingAlgorithm::CreateVertex(const Vertex *const pInputVertex,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const ParticleFlowObject *StitchingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo,
-    const ClusterList &newClusterList, const VertexList &newVertexList) const
+const ParticleFlowObject *StitchingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ClusterList &newClusterList,
+    const VertexList &newVertexList) const
 {
     PandoraContentApi::ParticleFlowObject::Parameters parameters;
     parameters.m_particleId = pInputPfo->GetParticleId();
@@ -154,26 +154,25 @@ void StitchingAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pPare
     if (!pParentPfo->GetParentPfoList().empty())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    // Get the volume information for this Pfo
-    const StitchingAlgorithm::PfoToVolumeIdMap &pfoToVolumeIdMap(stitchingInfo.m_pfoToVolumeIdMap);
-    PfoToVolumeIdMap::const_iterator iter = pfoToVolumeIdMap.find(pParentPfo);
+    // Get the lar tpc information for this Pfo
+    PfoToLArTPCMap::const_iterator iter = stitchingInfo.m_pfoToLArTPCMap.find(pParentPfo);
 
-    if (pfoToVolumeIdMap.end() == iter)
+    if (stitchingInfo.m_pfoToLArTPCMap.end() == iter)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const VolumeInfo &volumeInfo(MultiPandoraApi::GetVolumeInfo(&this->GetPandora(), iter->second));
+    const LArTPC &larTPC(*(iter->second));
 
     // Shift the Pfo hierarchy
     PfoList pfoList;
     LArPfoHelper::GetAllDownstreamPfos(pParentPfo, pfoList);
 
     for (const ParticleFlowObject *const pDaughterPfo : pfoList)
-        this->ShiftPfo(pDaughterPfo, volumeInfo, x0);
+        this->ShiftPfo(pDaughterPfo, larTPC, x0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, const VolumeInfo &volumeInfo, const float x0) const
+void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, const LArTPC &larTPC, const float x0) const
 {
     // Shift x positions of all calo hits associated with a Pfo. We do this by recreating the calo hits in their shifted positions.
     // ATTN: need to keep careful track of parent addresses when recreating both 2D and 3D hits
@@ -193,7 +192,7 @@ void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, con
 
         for (const CaloHit *const pInputCaloHit : inputCaloHitList)
         {
-            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, volumeInfo, x0);
+            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, larTPC, x0);
             newParentAddresses.insert(CaloHitMap::value_type(pInputCaloHit, pNewCaloHit));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pInputCluster, pNewCaloHit));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pInputCluster, pInputCaloHit));
@@ -203,7 +202,7 @@ void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, con
 
         for (const CaloHit *const pInputCaloHit : isolatedCaloHitList)
         {
-            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, volumeInfo, x0);
+            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, larTPC, x0);
             newParentAddresses.insert(CaloHitMap::value_type(pInputCaloHit, pNewCaloHit));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pInputCluster, pNewCaloHit));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveIsolatedFromCluster(*this, pInputCluster, pInputCaloHit));
@@ -224,7 +223,7 @@ void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, con
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
             const CaloHit *const pNewParentCaloHit = (m_recreateTwoDContent ? iter->second : pParentCaloHit);
-            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, volumeInfo, x0);
+            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, larTPC, x0);
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pInputCluster, pNewCaloHit));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pInputCluster, pInputCaloHit));
@@ -241,7 +240,7 @@ void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, con
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
             const CaloHit *const pNewParentCaloHit = (m_recreateTwoDContent ? iter->second : pParentCaloHit);
-            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, volumeInfo, x0);
+            const CaloHit *const pNewCaloHit = this->CreateCaloHit(pInputCaloHit, pNewParentCaloHit, larTPC, x0);
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddIsolatedToCluster(*this, pInputCluster, pNewCaloHit));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveIsolatedFromCluster(*this, pInputCluster, pInputCaloHit));
@@ -257,7 +256,7 @@ void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, con
 
     for (const Vertex *const pInputVertex : inputVertexList)
     {
-        const Vertex *const pNewVertex = this->CreateVertex(pInputVertex, volumeInfo, x0);
+        const Vertex *const pNewVertex = this->CreateVertex(pInputVertex, larTPC, x0);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pInputPfo, pNewVertex));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo<Vertex>(*this, pInputPfo, pInputVertex));
     }
@@ -274,12 +273,10 @@ void StitchingAlgorithm::ShiftPfo(const ParticleFlowObject *const pInputPfo, con
 void StitchingAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, const ParticleFlowObject *const pPfoToDelete,
     StitchingAlgorithm::StitchingInfo &stitchingInfo) const
 {
-    // Get the mapping between Pfos and their drift volume IDs
-    StitchingAlgorithm::PfoToVolumeIdMap &pfoToVolumeIdMap(stitchingInfo.m_pfoToVolumeIdMap);
-
-    // Update stitching information here (ATTN: We assume that -1 is an invalid volume ID)
-    pfoToVolumeIdMap[pPfoToEnlarge] = -1;
-    pfoToVolumeIdMap.erase(pPfoToDelete);
+    // ATTN Remove both pfos from stitching information here - could cause problems if stitching across multiple TPCs
+    StitchingAlgorithm::PfoToLArTPCMap &pfoToLArTPCMap(stitchingInfo.m_pfoToLArTPCMap);
+    pfoToLArTPCMap.erase(pPfoToEnlarge);
+    pfoToLArTPCMap.erase(pPfoToDelete);
 
     this->MergeAndDeletePfos(pPfoToEnlarge, pPfoToDelete);
 }
