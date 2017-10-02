@@ -39,6 +39,11 @@ public:
     };
 
     /**
+     *  @brief  default constructor
+     */
+    StitchingAlgorithm();
+
+    /**
      *  @brief  Get the new/recreated cluster list name
      *
      *  @return the new/recreated cluster list name
