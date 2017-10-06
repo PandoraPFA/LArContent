@@ -8,11 +8,15 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "Managers/GeometryManager.h"
+
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTrackPfo.h"
+
+#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
 
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
@@ -48,9 +52,22 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
                 return;
         }
 
+        // ATTN This is temporary, and will cover usage of algorithm by a Pandora stitching instance
+        const Pandora *pPandora(&this->GetPandora());
+
+        if (PandoraContentApi::GetGeometry(*this)->GetLArTPCMap().empty())
+        {
+            const PandoraInstanceList &daughterList(MultiPandoraApi::GetDaughterPandoraInstanceList(&this->GetPandora()));
+
+            if (daughterList.empty())
+                throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+            pPandora = daughterList.front();
+        }
+
         // Calculate sliding fit trajectory
         LArTrackStateVector trackStateVector;
-        LArPfoHelper::GetSlidingFitTrajectory(pInputPfo, pInputVertex, m_slidingFitHalfWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()),
+        LArPfoHelper::GetSlidingFitTrajectory(pInputPfo, pInputVertex, m_slidingFitHalfWindow, LArGeometryHelper::GetWireZPitch(*pPandora),
             trackStateVector);
 
         if (trackStateVector.empty())
