@@ -87,15 +87,17 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    typedef StitchingAlgorithm::PfoToLArTPCMap PfoToLArTPCMap;
+
     /**
      *  @brief  Select primary Pfos from the input list of Pfos
      *
      *  @param  pInputPfoList the input list of Pfos
+     *  @param  pfoToLArTPCMap the input mapping between Pfos and tpc
      *  @param  outputPfoList the output list of Pfos
      */
-    void SelectPrimaryPfos(const pandora::PfoList *pInputPfoList, pandora::PfoList &outputPfoList) const;
+    void SelectPrimaryPfos(const pandora::PfoList *pInputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoList &outputPfoList) const;
 
-    typedef StitchingAlgorithm::PfoToLArTPCMap PfoToLArTPCMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject*, LArPointingCluster> ThreeDPointingClusterMap;
 
     /**

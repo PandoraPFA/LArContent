@@ -47,7 +47,7 @@ void StitchingCosmicRayMergingTool::Run(const StitchingAlgorithm *const pAlgorit
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pMultiPfoList));
 
     PfoList primaryPfos;
-    this->SelectPrimaryPfos(pMultiPfoList, primaryPfos);
+    this->SelectPrimaryPfos(pMultiPfoList, stitchingInfo.m_pfoToLArTPCMap, primaryPfos);
 
     ThreeDPointingClusterMap pointingClusterMap;
     this->BuildPointingClusterMaps(primaryPfos, stitchingInfo.m_pfoToLArTPCMap, pointingClusterMap);
@@ -72,11 +72,14 @@ void StitchingCosmicRayMergingTool::Run(const StitchingAlgorithm *const pAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::SelectPrimaryPfos(const PfoList *pInputPfoList, PfoList &outputPfoList) const
+void StitchingCosmicRayMergingTool::SelectPrimaryPfos(const PfoList *pInputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, PfoList &outputPfoList) const
 {
     for (const ParticleFlowObject *const pPfo : *pInputPfoList)
     {
         if (!LArPfoHelper::IsFinalState(pPfo) || !LArPfoHelper::IsTrack(pPfo))
+            continue;
+
+        if (!pfoToLArTPCMap.count(pPfo))
             continue;
 
         outputPfoList.push_back(pPfo);
@@ -118,7 +121,12 @@ void StitchingCosmicRayMergingTool::BuildPointingClusterMaps(const PfoList &inpu
 void StitchingCosmicRayMergingTool::BuildTPCMaps(const PfoList &inputPfoList, const PfoToLArTPCMap &pfoToLArTPCMap, LArTPCToPfoMap &larTPCToPfoMap) const
 {
     for (const ParticleFlowObject *const pPfo : inputPfoList)
-        larTPCToPfoMap[pfoToLArTPCMap.at(pPfo)].push_back(pPfo);
+    {
+        PfoToLArTPCMap::const_iterator iter(pfoToLArTPCMap.find(pPfo));
+
+        if (pfoToLArTPCMap.end() != iter)
+            larTPCToPfoMap[iter->second].push_back(pPfo);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
