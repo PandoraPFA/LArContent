@@ -302,9 +302,16 @@
     d("LArShowerFitFeatureTool",                ShowerFitFeatureTool)                                                           \
     d("LArNHitsFeatureTool",                    NHitsFeatureTool)                                                               \
     d("LArLinearFitFeatureTool",                LinearFitFeatureTool)                                                           \
+    d("LArThreeDLinearFitFeatureTool",          ThreeDLinearFitFeatureTool)                                                     \
     d("LArNNearbyClustersFeatureTool",          NNearbyClustersFeatureTool)                                                     \
     d("LArMipEnergyFeatureTool",                MipEnergyFeatureTool)                                                           \
-    d("LArVertexDistanceFeatureTool",           VertexDistanceFeatureTool)
+    d("LArVertexDistanceFeatureTool",           VertexDistanceFeatureTool)                                                      \
+    d("LArThreeDVertexDistanceFeatureTool",     ThreeDVertexDistanceFeatureTool)                                                \
+    d("LArChargeFeatureTool",                   ChargeFeatureTool)                                                              \
+    d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
+    d("LArPCAFeatureTool",                      PCAFeatureTool)                                                                 \
+    d("LArOpeningAngleFeatureTool",             OpeningAngleFeatureTool)                                                        
+
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)
