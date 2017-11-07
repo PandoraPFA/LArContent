@@ -33,13 +33,22 @@ protected:
     pandora::StatusCode Run();
 
     /**
+     *  @brief  Whether pfo is identified as a track-like object
+     *
+     *  @param  pPfo address of the relevant pfo
+     *
+     *  @return boolean
+     */
+    virtual bool IsTrackLike(const pandora::ParticleFlowObject *const pPfo) const;
+
+    /**
      *  @brief  Whether pfo is identified as a clear track
      *
      *  @param  pPfo address of the relevant pfo
      * 
      *  @return boolean
      */
-    virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
+    virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const = 0;
 
     /**
      *  @brief  Whether cluster is identified as a clear track
@@ -58,9 +67,9 @@ protected:
 
     bool                    m_updateClusterIds;             ///< Whether to update daughter cluster particle id labels to match pfo id
     bool                    m_postBranchAddition;           ///< Whether to use configuration for shower clusters post branch addition
-	bool                    m_useThreeDInformation;         ///< Whether to use 3D informatin from pfo rather than cluster info and min track-like views
+    bool                    m_useThreeDInformation;         ///< Whether to use 3D informatin from pfo rather than cluster info and min track-like views
   
-	unsigned int            m_minTrackLikeViews;            ///< The minimum number of track-like views to declare a pfo as track-like
+    unsigned int            m_minTrackLikeViews;            ///< The minimum number of track-like views to declare a pfo as track-like
 };
 
 } // namespace lar_content

@@ -23,7 +23,7 @@ namespace lar_content
 PfoCharacterisationBaseAlgorithm::PfoCharacterisationBaseAlgorithm() :
     m_updateClusterIds(true),
     m_postBranchAddition(false),
-	m_useThreeDInformation(false),
+    m_useThreeDInformation(false),
     m_minTrackLikeViews(2)
 {
 }
@@ -57,7 +57,7 @@ StatusCode PfoCharacterisationBaseAlgorithm::Run()
         {
             PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
 
-            if (this->IsClearTrack(pPfo))
+            if (this->IsTrackLike(pPfo))
             {
                 pfoMetadata.m_particleId = MU_MINUS;
 
@@ -104,36 +104,36 @@ StatusCode PfoCharacterisationBaseAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool PfoCharacterisationBaseAlgorithm::IsClearTrack(const ParticleFlowObject *const pPfo) const
+bool PfoCharacterisationBaseAlgorithm::IsTrackLike(const ParticleFlowObject *const pPfo) const
 {
-    ClusterList twoDClusterList;
-    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
 
-    typedef std::set<pandora::HitType> HitTypeSet;
-    HitTypeSet hitTypeSet;
+    if (m_useThreeDInformation)
+    {
+        return this->IsClearTrack(pPfo);
+    }
+    else
+    {
+        ClusterList twoDClusterList;
+        LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
 
-    unsigned int nTrackLikeViews(0);
+        typedef std::set<pandora::HitType> HitTypeSet;
+        HitTypeSet hitTypeSet;
 
-	if (m_useThreeDInformation)
-	{
-		return this->IsClearTrack(pPfo);
-	}
-	else
-	{
-		for (const Cluster *const pCluster : twoDClusterList)
-		{
-			const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+        unsigned int nTrackLikeViews(0);
+        for (const Cluster *const pCluster : twoDClusterList)
+        {
+            const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-			if (!hitTypeSet.insert(hitType).second)
-				continue;
+            if (!hitTypeSet.insert(hitType).second)
+                continue;
 
-			if (this->IsClearTrack(pCluster))
-				++nTrackLikeViews;
+            if (this->IsClearTrack(pCluster))
+                ++nTrackLikeViews;
 
-			if (nTrackLikeViews >= m_minTrackLikeViews)
-				return true;
-		}		
-	}
+            if (nTrackLikeViews >= m_minTrackLikeViews)
+                return true;
+        }
+    }
 
     return false;
 }
@@ -153,8 +153,8 @@ StatusCode PfoCharacterisationBaseAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinTrackLikeViews", m_minTrackLikeViews));
-		
-	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseThreeDInformation", m_useThreeDInformation));
 
     return STATUS_CODE_SUCCESS;
