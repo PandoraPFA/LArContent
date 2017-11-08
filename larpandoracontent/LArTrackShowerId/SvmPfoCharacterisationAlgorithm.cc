@@ -193,7 +193,7 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     else
     {
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));x
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
     }
 
     return PfoCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);
