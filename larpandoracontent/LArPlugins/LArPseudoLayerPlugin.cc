@@ -47,14 +47,26 @@ unsigned int LArPseudoLayerPlugin::GetPseudoLayer(const pandora::CartesianVector
 
 StatusCode LArPseudoLayerPlugin::Initialize()
 {
-    try
-    {
-        m_zPitch = this->GetPandora().GetGeometry()->GetLArTPC().GetWirePitchW();
-    }
-    catch (const StatusCodeException &statusCodeException)
+    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+
+    if (larTPCMap.empty())
     {
         std::cout << "LArPseudoLayerPlugin::Initialize - LArTPC description not registered with Pandora as required " << std::endl;
-        return statusCodeException.GetStatusCode();
+        return STATUS_CODE_NOT_INITIALIZED;
+    }
+
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+    m_zPitch = pFirstLArTPC->GetWirePitchW();
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+
+        if (std::fabs(m_zPitch - pLArTPC->GetWirePitchW()) > std::numeric_limits<float>::epsilon())
+        {
+            std::cout << "LArPseudoLayerPlugin::Initialize - Plugin does not support provided LArTPC configurations " << std::endl;
+            return STATUS_CODE_INVALID_PARAMETER;
+        }
     }
 
     return STATUS_CODE_SUCCESS;
