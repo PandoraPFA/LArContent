@@ -36,9 +36,9 @@ MasterAlgorithm::MasterAlgorithm() :
     m_pCosmicRayTaggingTool(nullptr),
     m_pEventSlicingTool(nullptr),
     m_pNeutrinoIdTool(nullptr),
-    m_fastWorkerInstance(nullptr),
-    m_sliceNuWorkerInstance(nullptr),
-    m_sliceCrWorkerInstance(nullptr)
+    m_pFastWorkerInstance(nullptr),
+    m_pSliceNuWorkerInstance(nullptr),
+    m_pSliceCrWorkerInstance(nullptr)
 {
 }
 
@@ -55,13 +55,13 @@ StatusCode MasterAlgorithm::Initialize()
             m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile));
 
         if (m_shouldRunSlicing)
-            m_fastWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_fastSettingsFile);
+            m_pFastWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_fastSettingsFile);
 
         if (m_shouldRunNeutrinoRecoOption)
-            m_sliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
+            m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
 
         if (m_shouldRunNeutrinoRecoOption)
-            m_sliceCrWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile);
+            m_pSliceCrWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile);
     }
     catch (const StatusCodeException &statusCodeException)
     {
@@ -238,6 +238,7 @@ StatusCode MasterAlgorithm::Run()
             parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
             parameters.m_pParentAddress = pCaloHit->GetParentAddress();
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pCRWorker, parameters));
+PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pSliceNuWorkerInstance, parameters));
         }
 
         if (m_printOverallRecoStatus)
@@ -247,6 +248,9 @@ StatusCode MasterAlgorithm::Run()
         PandoraApi::Reset(*pCRWorker);
     }
 
+if (m_printOverallRecoStatus)
+    std::cout << "Running slice neutrino reconstruction worker instance" << std::endl;
+PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance);
     return STATUS_CODE_SUCCESS;
 }
 

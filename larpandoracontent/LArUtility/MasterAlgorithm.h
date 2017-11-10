@@ -103,9 +103,9 @@ private:
     NeutrinoIdBaseTool         *m_pNeutrinoIdTool;                  ///< The address of the neutrino id tool
 
     PandoraInstanceList         m_crWorkerInstances;                ///< The list of cosmic-ray reconstruction worker instances
-    const pandora::Pandora     *m_fastWorkerInstance;               ///< The fast reconstruction worker instance
-    const pandora::Pandora     *m_sliceNuWorkerInstance;            ///< The per-slice neutrino reconstruction worker instance
-    const pandora::Pandora     *m_sliceCrWorkerInstance;            ///< The per-slice cosmic-ray reconstruction worker instance
+    const pandora::Pandora     *m_pFastWorkerInstance;              ///< The fast reconstruction worker instance
+    const pandora::Pandora     *m_pSliceNuWorkerInstance;           ///< The per-slice neutrino reconstruction worker instance
+    const pandora::Pandora     *m_pSliceCrWorkerInstance;           ///< The per-slice cosmic-ray reconstruction worker instance
 
     std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
     std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file
