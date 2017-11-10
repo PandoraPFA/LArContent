@@ -26,7 +26,7 @@ NeutrinoIdTool::NeutrinoIdTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoIdTool::FillNeutrinoProperties(const PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const
+void NeutrinoIdTool::FillNeutrinoProperties(const PfoList *const pPfoList, SliceProperties &sliceProperties) const
 {
     if (1 != pPfoList->size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -70,19 +70,19 @@ void NeutrinoIdTool::FillNeutrinoProperties(const PfoList *const pPfoList, Paren
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoIdTool::FillCosmicRayProperties(const PfoList *const /*pPfoList*/, ParentAlgorithm::SliceProperties &/*sliceProperties*/) const
+void NeutrinoIdTool::FillCosmicRayProperties(const PfoList *const /*pPfoList*/, SliceProperties &/*sliceProperties*/) const
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool NeutrinoIdTool::GetNeutrinoSliceIndex(const ParentAlgorithm::SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const
+bool NeutrinoIdTool::GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const
 {
     float maxLikelihood(-std::numeric_limits<float>::max());
 
     for (const auto &mapEntry : sliceIndexToPropertiesMap)
     {
-        const ParentAlgorithm::SliceProperties &sliceProperties(mapEntry.second);
+        const SliceProperties &sliceProperties(mapEntry.second);
 
         // TODO This is just a preliminary parameterisation, to be developed and all parameters made configurable
         const float likelihood_nuVtxY((sliceProperties.m_nuVtxY < 93.f) && (sliceProperties.m_nuVtxY > -93.f) ? 0.6f : 0.1f);

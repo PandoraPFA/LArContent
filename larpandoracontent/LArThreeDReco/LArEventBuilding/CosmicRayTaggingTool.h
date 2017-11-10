@@ -10,7 +10,7 @@
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
-#include "larpandoracontent/LArUtility/ParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/MasterAlgorithm.h"
 
 #include <unordered_map>
 

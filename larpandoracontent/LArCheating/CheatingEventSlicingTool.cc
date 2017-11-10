@@ -17,8 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-void CheatingEventSlicingTool::Slice(const ParentSlicingBaseAlgorithm *const pAlgorithm, const ParentSlicingBaseAlgorithm::HitTypeToNameMap &caloHitListNames,
-    const ParentSlicingBaseAlgorithm::HitTypeToNameMap &/*clusterListNames*/, ParentSlicingBaseAlgorithm::SliceList &sliceList)
+void CheatingEventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
+    const HitTypeToNameMap &/*clusterListNames*/, SliceList &sliceList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -35,7 +35,7 @@ void CheatingEventSlicingTool::Slice(const ParentSlicingBaseAlgorithm *const pAl
         if (mcParticleToSliceMap.count(pParentMCParticle))
             continue;
 
-        if (!mcParticleToSliceMap.insert(MCParticleToSliceMap::value_type(pParentMCParticle, ParentSlicingBaseAlgorithm::Slice())).second)
+        if (!mcParticleToSliceMap.insert(MCParticleToSliceMap::value_type(pParentMCParticle, Slice())).second)
             throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
@@ -49,7 +49,7 @@ void CheatingEventSlicingTool::Slice(const ParentSlicingBaseAlgorithm *const pAl
 
     for (const MCParticle *const pMCParticle : mcParticleVector)
     {
-        const ParentSlicingBaseAlgorithm::Slice &slice(mcParticleToSliceMap.at(pMCParticle));
+        const Slice &slice(mcParticleToSliceMap.at(pMCParticle));
 
         if (!slice.m_caloHitListU.empty() || !slice.m_caloHitListV.empty() || !slice.m_caloHitListW.empty())
             sliceList.push_back(slice);
@@ -58,8 +58,8 @@ void CheatingEventSlicingTool::Slice(const ParentSlicingBaseAlgorithm *const pAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingEventSlicingTool::FillSlices(const ParentSlicingBaseAlgorithm *const pAlgorithm, const HitType hitType,
-    const ParentSlicingBaseAlgorithm::HitTypeToNameMap &caloHitListNames, MCParticleToSliceMap &mcParticleToSliceMap) const
+void CheatingEventSlicingTool::FillSlices(const Algorithm *const pAlgorithm, const HitType hitType, const HitTypeToNameMap &caloHitListNames,
+    MCParticleToSliceMap &mcParticleToSliceMap) const
 {
     if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -82,7 +82,7 @@ void CheatingEventSlicingTool::FillSlices(const ParentSlicingBaseAlgorithm *cons
             if (mcParticleToSliceMap.end() == mapIter)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            ParentSlicingBaseAlgorithm::Slice &slice(mapIter->second);
+            Slice &slice(mapIter->second);
             CaloHitList &caloHitList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
             caloHitList.push_back(pCaloHit);
         }

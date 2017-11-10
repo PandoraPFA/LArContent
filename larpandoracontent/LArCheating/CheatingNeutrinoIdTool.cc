@@ -24,7 +24,7 @@ CheatingNeutrinoIdTool::CheatingNeutrinoIdTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingNeutrinoIdTool::FillNeutrinoProperties(const PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const
+void CheatingNeutrinoIdTool::FillNeutrinoProperties(const PfoList *const pPfoList, SliceProperties &sliceProperties) const
 {
     float neutrinoWeight(0.f);
 
@@ -46,14 +46,14 @@ void CheatingNeutrinoIdTool::FillNeutrinoProperties(const PfoList *const pPfoLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingNeutrinoIdTool::FillCosmicRayProperties(const PfoList *const /*pPfoList*/, ParentAlgorithm::SliceProperties &/*sliceProperties*/) const
+void CheatingNeutrinoIdTool::FillCosmicRayProperties(const PfoList *const /*pPfoList*/, SliceProperties &/*sliceProperties*/) const
 {
     // Deliberately empty
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CheatingNeutrinoIdTool::GetNeutrinoSliceIndex(const ParentAlgorithm::SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const
+bool CheatingNeutrinoIdTool::GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const
 {
     float bestWeight(0.f);
     unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());

@@ -8,7 +8,7 @@
 #ifndef LAR_CHEATING_EVENT_SLICING_TOOL_H
 #define LAR_CHEATING_EVENT_SLICING_TOOL_H 1
 
-#include "larpandoracontent/LArUtility/ParentSlicingBaseAlgorithm.h"
+#include "larpandoracontent/LArUtility/MasterAlgorithm.h"
 
 #include <unordered_map>
 
@@ -21,13 +21,13 @@ namespace lar_content
 class CheatingEventSlicingTool : public EventSlicingBaseTool
 {
 public:
-    void Slice(const ParentSlicingBaseAlgorithm *const pAlgorithm, const ParentSlicingBaseAlgorithm::HitTypeToNameMap &caloHitListNames,
-        const ParentSlicingBaseAlgorithm::HitTypeToNameMap &clusterListNames, ParentSlicingBaseAlgorithm::SliceList &sliceList);
+    void RunSlicing(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, const HitTypeToNameMap &clusterListNames,
+        SliceList &sliceList);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::MCParticle*, ParentSlicingBaseAlgorithm::Slice> MCParticleToSliceMap;
+    typedef std::unordered_map<const pandora::MCParticle*, Slice> MCParticleToSliceMap;
 
     /**
      *  @brief  Fill slices using hits from a specified view
@@ -37,8 +37,8 @@ private:
      *  @param  caloHitListNames the hit type to calo hit list name map
      *  @param  mcParticleToSliceMap the parent mc particle to slice map
      */
-    void FillSlices(const ParentSlicingBaseAlgorithm *const pAlgorithm, const pandora::HitType hitType,
-        const ParentSlicingBaseAlgorithm::HitTypeToNameMap &caloHitListNames, MCParticleToSliceMap &mcParticleToSliceMap) const;
+    void FillSlices(const pandora::Algorithm *const pAlgorithm, const pandora::HitType hitType, const HitTypeToNameMap &caloHitListNames,
+        MCParticleToSliceMap &mcParticleToSliceMap) const;
 
     std::string     m_mcParticleListName;           ///< The name of the three d mc particle list name
 };

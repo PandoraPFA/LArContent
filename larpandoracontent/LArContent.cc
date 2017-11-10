@@ -161,7 +161,7 @@
 #include "larpandoracontent/LArUtility/ListMovingAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListPreparationAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
-#include "larpandoracontent/LArUtility/ParentAlgorithm.h"
+#include "larpandoracontent/LArUtility/MasterAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
@@ -250,7 +250,7 @@
     d("LArListMoving",                          ListMovingAlgorithm)                                                            \
     d("LArListPreparation",                     ListPreparationAlgorithm)                                                       \
     d("LArListPruning",                         ListPruningAlgorithm)                                                           \
-    d("LArParent",                              ParentAlgorithm)                                                                \
+    d("LArMaster",                              MasterAlgorithm)                                                                \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
