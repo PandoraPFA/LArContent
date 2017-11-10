@@ -36,7 +36,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_pCosmicRayTaggingTool(nullptr),
     m_pEventSlicingTool(nullptr),
     m_pNeutrinoIdTool(nullptr),
-    m_fastRecoWorkerInstance(nullptr),
+    m_fastWorkerInstance(nullptr),
     m_sliceNuWorkerInstance(nullptr),
     m_sliceCrWorkerInstance(nullptr)
 {
@@ -55,7 +55,7 @@ StatusCode MasterAlgorithm::Initialize()
             m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile));
 
         if (m_shouldRunSlicing)
-            m_fastRecoWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_fastRecoSettingsFile);
+            m_fastWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_fastSettingsFile);
 
         if (m_shouldRunNeutrinoRecoOption)
             m_sliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
@@ -107,9 +107,7 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const
     {
         const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pGap));
 
-        if (pLineGap &&
-            (pLineGap->GetLineEndX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) && (pLineGap->GetLineStartX() > (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())) &&
-            (pLineGap->GetLineEndZ() > (larTPC.GetCenterZ() - 0.5f * larTPC.GetWidthZ())) && (pLineGap->GetLineStartZ() > (larTPC.GetCenterZ() + 0.5f * larTPC.GetWidthZ())))
+        if (pLineGap && (pLineGap->GetLineEndX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) && (pLineGap->GetLineStartX() > (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
         {
             PandoraApi::Geometry::LineGap::Parameters lineGapParameters;
             lineGapParameters.m_lineGapType = pLineGap->GetLineGapType();
@@ -203,6 +201,52 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap,
 
 StatusCode MasterAlgorithm::Run()
 {
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "Input", pCaloHitList)); // TODO
+
+    for (const Pandora *const pCRWorker : m_crWorkerInstances)
+    {
+        const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
+
+        for (const CaloHit *const pCaloHit : *pCaloHitList)
+        {
+            if ((pCaloHit->GetPositionVector().GetX() < (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) ||
+                (pCaloHit->GetPositionVector().GetX() > (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
+            {
+                continue;
+            }
+
+            PandoraApi::CaloHit::Parameters parameters;
+            parameters.m_positionVector = pCaloHit->GetPositionVector();
+            parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
+            parameters.m_cellNormalVector = pCaloHit->GetCellNormalVector();
+            parameters.m_cellGeometry = pCaloHit->GetCellGeometry();
+            parameters.m_cellSize0 = pCaloHit->GetCellSize0();
+            parameters.m_cellSize1 = pCaloHit->GetCellSize1();
+            parameters.m_cellThickness = pCaloHit->GetCellThickness();
+            parameters.m_nCellRadiationLengths = pCaloHit->GetNCellRadiationLengths();
+            parameters.m_nCellInteractionLengths = pCaloHit->GetNCellInteractionLengths();
+            parameters.m_time = pCaloHit->GetTime();
+            parameters.m_inputEnergy = pCaloHit->GetInputEnergy();
+            parameters.m_mipEquivalentEnergy = pCaloHit->GetMipEquivalentEnergy();
+            parameters.m_electromagneticEnergy = pCaloHit->GetElectromagneticEnergy();
+            parameters.m_hadronicEnergy = pCaloHit->GetHadronicEnergy();
+            parameters.m_isDigital = pCaloHit->IsDigital();
+            parameters.m_hitType = pCaloHit->GetHitType();
+            parameters.m_hitRegion = pCaloHit->GetHitRegion();
+            parameters.m_layer = pCaloHit->GetLayer();
+            parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
+            parameters.m_pParentAddress = pCaloHit->GetParentAddress();
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pCRWorker, parameters));
+        }
+
+        if (m_printOverallRecoStatus)
+            std::cout << "Running cosmic-ray reconstruction worker instance" << std::endl;
+
+        PandoraApi::ProcessEvent(*pCRWorker);
+        PandoraApi::Reset(*pCRWorker);
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -302,6 +346,15 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
         pExternalParameters->m_printOverallRecoStatus, xmlHandle, "PrintOverallRecoStatus", m_printOverallRecoStatus));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "CRSettingsFile", m_crSettingsFile));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "NuSettingsFile", m_nuSettingsFile));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "FastSettingsFile", m_fastSettingsFile));
 
     return STATUS_CODE_SUCCESS;
 }
