@@ -11,6 +11,8 @@
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/ExternallyConfiguredAlgorithm.h"
 
+#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
+
 namespace lar_content
 {
 
@@ -48,6 +50,30 @@ public:
     };
 
 private:
+    pandora::StatusCode Initialize();
+
+    /**
+     *  @brief  Create a pandora worker instance to handle a single LArTPC
+     *
+     *  @param  larTPC the lar tpc
+     *  @param  gapList the gap list
+     *  @param  settingsFile the pandora settings file
+     *
+     *  @return the address of the pandora instance
+     */
+    const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPC &larTPC, const pandora::DetectorGapList &gapList, const std::string &settingsFile) const;
+
+    /**
+     *  @brief  Create a pandora worker instance to handle a number of LArTPCs
+     *
+     *  @param  larTPCMap the lar tpc map
+     *  @param  gapList the gap list
+     *  @param  settingsFile the pandora settings file
+     *
+     *  @return the address of the pandora instance
+     */
+    const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPCMap &larTPCMap, const pandora::DetectorGapList &gapList, const std::string &settingsFile) const;
+
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -75,6 +101,15 @@ private:
     CosmicRayTaggingBaseTool   *m_pCosmicRayTaggingTool;            ///< The address of the cosmic-ray tagging tool
     EventSlicingBaseTool       *m_pEventSlicingTool;                ///< The address of the event slicing tool
     NeutrinoIdBaseTool         *m_pNeutrinoIdTool;                  ///< The address of the neutrino id tool
+
+    PandoraInstanceList         m_crWorkerInstances;                ///< The list of cosmic-ray reconstruction worker instances
+    const pandora::Pandora     *m_fastRecoWorkerInstance;           ///< The fast reconstruction worker instance
+    const pandora::Pandora     *m_sliceNuWorkerInstance;            ///< The per-slice neutrino reconstruction worker instance
+    const pandora::Pandora     *m_sliceCrWorkerInstance;            ///< The per-slice cosmic-ray reconstruction worker instance
+
+    std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
+    std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file
+    std::string                 m_fastRecoSettingsFile;             ///< The fast reconstruction settings file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -149,7 +184,7 @@ public:
          *  @brief  Default constructor
          */
         SliceProperties();
-    
+
         float       m_weight;               ///< Generic weight property
         float       m_nuVtxY;               ///< The neutrino vertex x coordinate
         float       m_nuVtxZ;               ///< The neutrino vertex y coordinate
