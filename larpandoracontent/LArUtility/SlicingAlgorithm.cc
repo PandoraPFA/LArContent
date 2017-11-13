@@ -48,15 +48,18 @@ StatusCode SlicingAlgorithm::Run()
         clusterParametersU.m_caloHitList = slice.m_caloHitListU;
         clusterParametersV.m_caloHitList = slice.m_caloHitListV;
         clusterParametersW.m_caloHitList = slice.m_caloHitListW;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersU, pClusterU));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersV, pClusterV));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersW, pClusterW));
+        if (!clusterParametersU.m_caloHitList.empty()) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersU, pClusterU));
+        if (!clusterParametersV.m_caloHitList.empty()) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersV, pClusterV));
+        if (!clusterParametersW.m_caloHitList.empty()) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersW, pClusterW));
+
+        if (!pClusterU && !pClusterV && !pClusterW)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
         const Pfo *pSlicePfo(nullptr);
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-        pfoParameters.m_clusterList.push_back(pClusterU);
-        pfoParameters.m_clusterList.push_back(pClusterV);
-        pfoParameters.m_clusterList.push_back(pClusterW);
+        if (pClusterU) pfoParameters.m_clusterList.push_back(pClusterU);
+        if (pClusterV) pfoParameters.m_clusterList.push_back(pClusterV);
+        if (pClusterW) pfoParameters.m_clusterList.push_back(pClusterW);
         pfoParameters.m_charge = 0;
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_mass = 0.f;
@@ -85,7 +88,7 @@ StatusCode SlicingAlgorithm::Run()
 StatusCode SlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmTool *pAlgorithmTool(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "Slicing", pAlgorithmTool));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "SliceCreation", pAlgorithmTool));
     m_pEventSlicingTool = dynamic_cast<EventSlicingBaseTool*>(pAlgorithmTool);
 
     if (!m_pEventSlicingTool)

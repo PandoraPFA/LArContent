@@ -26,9 +26,7 @@ ListPreparationAlgorithm::ListPreparationAlgorithm() :
     m_searchRegion1D(0.1f),
     m_onlyAvailableCaloHits(true),
     m_inputCaloHitListName("Input"),
-    m_inputMCParticleListName("Input"),
-    m_selectNeutrinos(true),
-    m_selectCosmics(true)
+    m_inputMCParticleListName("Input")
 {
 }
 
@@ -89,23 +87,10 @@ void ListPreparationAlgorithm::ProcessCaloHits()
     if (pCaloHitList->empty())
         return;
 
-    const bool checkMC(!m_selectNeutrinos || !m_selectCosmics);
     CaloHitList selectedCaloHitListU, selectedCaloHitListV, selectedCaloHitListW;
 
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
-        if (checkMC)
-        {
-            try
-            {
-                const bool isSelected(LArMCParticleHelper::IsNeutrinoInduced(pCaloHit) ? m_selectNeutrinos : m_selectCosmics);
-
-                if (!isSelected)
-                    continue;
-            }
-            catch (StatusCodeException &) {}
-        }
-
         if (m_onlyAvailableCaloHits && !PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
 
@@ -231,19 +216,10 @@ void ListPreparationAlgorithm::ProcessMCParticles()
     if (pMCParticleList->empty())
         return;
 
-    const bool checkMC(!m_selectNeutrinos || !m_selectCosmics);
     MCParticleList mcParticleListU, mcParticleListV, mcParticleListW, mcParticleList3D;
 
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        if (checkMC)
-        {
-            const bool isSelected(LArMCParticleHelper::IsNeutrinoInduced(pMCParticle) ? m_selectNeutrinos : m_selectCosmics);
-
-            if (!isSelected)
-                continue;
-        }
-
         if (MC_VIEW_U == pMCParticle->GetMCParticleType())
         {
             mcParticleListU.push_back(pMCParticle);
@@ -329,12 +305,6 @@ StatusCode ListPreparationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "CurrentMCParticleListReplacement", m_currentMCParticleListReplacement));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectNeutrinos", m_selectNeutrinos));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectCosmics", m_selectCosmics));
 
     return STATUS_CODE_SUCCESS;
 }

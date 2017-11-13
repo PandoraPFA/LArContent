@@ -74,9 +74,6 @@ private:
     std::string     m_outputMCParticleListNameW;        ///< The output MC particle list name for MC_VIEW_W particles
     std::string     m_outputMCParticleListName3D;       ///< The output MC particle list name for 3D particles
     std::string     m_currentMCParticleListReplacement; ///< The name of the MC particle list to replace the current list (optional)
-
-    bool            m_selectNeutrinos;                  ///< Select MC particles and hits associated with neutrinos
-    bool            m_selectCosmics;                    ///< Select MC particles and hits associated with cosmics
 };
 
 } // namespace lar_content

@@ -74,6 +74,15 @@ private:
     const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPCMap &larTPCMap, const pandora::DetectorGapList &gapList, const std::string &settingsFile) const;
 
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Copy a specified calo hit to the provided pandora instance
+     *
+     *  @param  pPandora the address of the target pandora instance
+     *  @param  pCaloHit the address of the calo hit
+     */
+    pandora::StatusCode Copy(const pandora::Pandora *const pPandora, const pandora::CaloHit *const pCaloHit) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -103,7 +112,7 @@ private:
     PandoraInstanceList         m_crWorkerInstances;                ///< The list of cosmic-ray reconstruction worker instances
     const pandora::Pandora     *m_pSlicingWorkerInstance;           ///< The slicing worker instance
     const pandora::Pandora     *m_pSliceNuWorkerInstance;           ///< The per-slice neutrino reconstruction worker instance
-    const pandora::Pandora     *m_pSliceCrWorkerInstance;           ///< The per-slice cosmic-ray reconstruction worker instance
+    const pandora::Pandora     *m_pSliceCRWorkerInstance;           ///< The per-slice cosmic-ray reconstruction worker instance
 
     std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
     std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file

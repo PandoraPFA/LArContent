@@ -37,7 +37,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_pNeutrinoIdTool(nullptr),
     m_pSlicingWorkerInstance(nullptr),
     m_pSliceNuWorkerInstance(nullptr),
-    m_pSliceCrWorkerInstance(nullptr)
+    m_pSliceCRWorkerInstance(nullptr)
 {
 }
 
@@ -60,7 +60,7 @@ StatusCode MasterAlgorithm::Initialize()
             m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
 
         if (m_shouldRunNeutrinoRecoOption)
-            m_pSliceCrWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile);
+            m_pSliceCRWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile);
     }
     catch (const StatusCodeException &statusCodeException)
     {
@@ -200,6 +200,9 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap,
 
 StatusCode MasterAlgorithm::Run()
 {
+    // CR Reconstruction
+    PfoList allCRPfos;
+
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "Input", pCaloHitList)); // TODO
 
@@ -209,48 +212,131 @@ StatusCode MasterAlgorithm::Run()
 
         for (const CaloHit *const pCaloHit : *pCaloHitList)
         {
-            if ((pCaloHit->GetPositionVector().GetX() < (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) ||
-                (pCaloHit->GetPositionVector().GetX() > (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
+            if ((pCaloHit->GetPositionVector().GetX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) &&
+                (pCaloHit->GetPositionVector().GetX() < (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
             {
-                continue;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
             }
-
-            PandoraApi::CaloHit::Parameters parameters;
-            parameters.m_positionVector = pCaloHit->GetPositionVector();
-            parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
-            parameters.m_cellNormalVector = pCaloHit->GetCellNormalVector();
-            parameters.m_cellGeometry = pCaloHit->GetCellGeometry();
-            parameters.m_cellSize0 = pCaloHit->GetCellSize0();
-            parameters.m_cellSize1 = pCaloHit->GetCellSize1();
-            parameters.m_cellThickness = pCaloHit->GetCellThickness();
-            parameters.m_nCellRadiationLengths = pCaloHit->GetNCellRadiationLengths();
-            parameters.m_nCellInteractionLengths = pCaloHit->GetNCellInteractionLengths();
-            parameters.m_time = pCaloHit->GetTime();
-            parameters.m_inputEnergy = pCaloHit->GetInputEnergy();
-            parameters.m_mipEquivalentEnergy = pCaloHit->GetMipEquivalentEnergy();
-            parameters.m_electromagneticEnergy = pCaloHit->GetElectromagneticEnergy();
-            parameters.m_hadronicEnergy = pCaloHit->GetHadronicEnergy();
-            parameters.m_isDigital = pCaloHit->IsDigital();
-            parameters.m_hitType = pCaloHit->GetHitType();
-            parameters.m_hitRegion = pCaloHit->GetHitRegion();
-            parameters.m_layer = pCaloHit->GetLayer();
-            parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
-            parameters.m_pParentAddress = pCaloHit->GetParentAddress();
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pCRWorker, parameters));
-PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*m_pSliceNuWorkerInstance, parameters));
         }
 
         if (m_printOverallRecoStatus)
             std::cout << "Running cosmic-ray reconstruction worker instance" << std::endl;
 
         PandoraApi::ProcessEvent(*pCRWorker);
-        PandoraApi::Reset(*pCRWorker);
+        const PfoList *pCRPfos(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*pCRWorker, pCRPfos));
+        allCRPfos.insert(allCRPfos.end(), pCRPfos->begin(), pCRPfos->end());
     }
 
-if (m_printOverallRecoStatus)
-    std::cout << "Running slice neutrino reconstruction worker instance" << std::endl;
-PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance);
+PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1., -1., 1.);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allCRPfos, "allCRPfos", RED);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    // Stitching
+    // TODO
+
+    // CR tagging and hit removal
+    // TODO
+
+    // Slicing
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
+            continue;
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSlicingWorkerInstance, pCaloHit));
+    }
+
+    if (m_printOverallRecoStatus)
+        std::cout << "Running slicing worker instance" << std::endl;
+
+    PandoraApi::ProcessEvent(*m_pSlicingWorkerInstance);
+    const PfoList *pSlicePfos(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSlicingWorkerInstance, pSlicePfos));
+
+    if (m_printOverallRecoStatus)
+        std::cout << "Identified " << pSlicePfos->size() << " slice(s)" << std::endl;
+
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSlicePfos, "slices", BLUE);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    // Slice hypotheses
+    typedef std::vector<PfoList> SliceHypothesis;
+    SliceHypothesis nuSliceHypothesis, crSliceHypothesis;
+
+    for (const Pfo *const pSlicePfo : *pSlicePfos)
+    {
+        CaloHitList caloHitList;
+        LArPfoHelper::GetCaloHits(pSlicePfo, TPC_VIEW_U, caloHitList);
+        LArPfoHelper::GetCaloHits(pSlicePfo, TPC_VIEW_V, caloHitList);
+        LArPfoHelper::GetCaloHits(pSlicePfo, TPC_VIEW_W, caloHitList);
+
+        for (const CaloHit *const pCaloHit : caloHitList)
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHit));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceCRWorkerInstance, pCaloHit));
+        }
+
+        if (m_printOverallRecoStatus)
+            std::cout << "Running slice nu worker instance" << std::endl;
+
+        PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance);
+        const PfoList *pSliceNuPfos(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceNuWorkerInstance, pSliceNuPfos));
+        nuSliceHypothesis.push_back(*pSliceNuPfos);
+
+        if (m_printOverallRecoStatus)
+            std::cout << "Running slice cr worker instance" << std::endl;
+
+        PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance);
+        const PfoList *pSliceCRPfos(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
+        crSliceHypothesis.push_back(*pSliceCRPfos);
+
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSliceNuPfos, "nuSliceHypothesis", GREEN);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSliceCRPfos, "crSliceHypothesis", MAGENTA);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
+
+    // Select best slice hypotheses
+    if (m_printOverallRecoStatus)
+        std::cout << "Select best slice hypotheses" << std::endl;    
+
+    // Tidy up
+    for (const Pandora *const pCRWorker : m_crWorkerInstances) PandoraApi::Reset(*pCRWorker);
+    PandoraApi::Reset(*m_pSlicingWorkerInstance);
+    PandoraApi::Reset(*m_pSliceNuWorkerInstance);
+    PandoraApi::Reset(*m_pSliceCRWorkerInstance);
+
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
+{
+    PandoraApi::CaloHit::Parameters parameters;
+    parameters.m_positionVector = pCaloHit->GetPositionVector();
+    parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
+    parameters.m_cellNormalVector = pCaloHit->GetCellNormalVector();
+    parameters.m_cellGeometry = pCaloHit->GetCellGeometry();
+    parameters.m_cellSize0 = pCaloHit->GetCellSize0();
+    parameters.m_cellSize1 = pCaloHit->GetCellSize1();
+    parameters.m_cellThickness = pCaloHit->GetCellThickness();
+    parameters.m_nCellRadiationLengths = pCaloHit->GetNCellRadiationLengths();
+    parameters.m_nCellInteractionLengths = pCaloHit->GetNCellInteractionLengths();
+    parameters.m_time = pCaloHit->GetTime();
+    parameters.m_inputEnergy = pCaloHit->GetInputEnergy();
+    parameters.m_mipEquivalentEnergy = pCaloHit->GetMipEquivalentEnergy();
+    parameters.m_electromagneticEnergy = pCaloHit->GetElectromagneticEnergy();
+    parameters.m_hadronicEnergy = pCaloHit->GetHadronicEnergy();
+    parameters.m_isDigital = pCaloHit->IsDigital();
+    parameters.m_hitType = pCaloHit->GetHitType();
+    parameters.m_hitRegion = pCaloHit->GetHitRegion();
+    parameters.m_layer = pCaloHit->GetLayer();
+    parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
+    parameters.m_pParentAddress = pCaloHit->GetParentAddress();
+    return PandoraApi::CaloHit::Create(*pPandora, parameters);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -296,9 +382,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     if (m_shouldRunCosmicHitRemoval)
     {
         AlgorithmTool *pAlgorithmTool(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-            "CosmicRayTagging", pAlgorithmTool));
-
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "CosmicRayTagging", pAlgorithmTool));
         m_pCosmicRayTaggingTool = dynamic_cast<CosmicRayTaggingBaseTool*>(pAlgorithmTool);
 
         if (!m_pCosmicRayTaggingTool)
@@ -326,9 +410,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     if (m_shouldIdentifyNeutrinoSlice)
     {
         AlgorithmTool *pAlgorithmTool(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-            "NeutrinoId", pAlgorithmTool));
-
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "NeutrinoId", pAlgorithmTool));
         m_pNeutrinoIdTool = dynamic_cast<NeutrinoIdBaseTool*>(pAlgorithmTool);
 
         if (!m_pNeutrinoIdTool)
