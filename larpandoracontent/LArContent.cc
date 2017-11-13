@@ -162,6 +162,7 @@
 #include "larpandoracontent/LArUtility/ListPreparationAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
 #include "larpandoracontent/LArUtility/MasterAlgorithm.h"
+#include "larpandoracontent/LArUtility/SlicingAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
@@ -251,6 +252,7 @@
     d("LArListPreparation",                     ListPreparationAlgorithm)                                                       \
     d("LArListPruning",                         ListPruningAlgorithm)                                                           \
     d("LArMaster",                              MasterAlgorithm)                                                                \
+    d("LArSlicing",                             SlicingAlgorithm)                                                               \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \

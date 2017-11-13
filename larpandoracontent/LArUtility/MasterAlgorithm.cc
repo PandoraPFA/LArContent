@@ -34,9 +34,8 @@ MasterAlgorithm::MasterAlgorithm() :
     m_shouldIdentifyNeutrinoSlice(true),
     m_printOverallRecoStatus(false),
     m_pCosmicRayTaggingTool(nullptr),
-    m_pEventSlicingTool(nullptr),
     m_pNeutrinoIdTool(nullptr),
-    m_pFastWorkerInstance(nullptr),
+    m_pSlicingWorkerInstance(nullptr),
     m_pSliceNuWorkerInstance(nullptr),
     m_pSliceCrWorkerInstance(nullptr)
 {
@@ -55,7 +54,7 @@ StatusCode MasterAlgorithm::Initialize()
             m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile));
 
         if (m_shouldRunSlicing)
-            m_pFastWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_fastSettingsFile);
+            m_pSlicingWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_slicingSettingsFile);
 
         if (m_shouldRunNeutrinoRecoOption)
             m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
@@ -309,18 +308,6 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
         pExternalParameters->m_shouldRunSlicing, xmlHandle, "ShouldRunSlicing", m_shouldRunSlicing));
 
-    if (m_shouldRunSlicing)
-    {
-        AlgorithmTool *pAlgorithmTool(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle,
-            "Slicing", pAlgorithmTool));
-
-        m_pEventSlicingTool = dynamic_cast<EventSlicingBaseTool*>(pAlgorithmTool);
-
-        if (!m_pEventSlicingTool)
-            return STATUS_CODE_INVALID_PARAMETER;
-    }
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
         pExternalParameters->m_shouldRunNeutrinoRecoOption, xmlHandle, "ShouldRunNeutrinoRecoOption", m_shouldRunNeutrinoRecoOption));
 
@@ -351,14 +338,9 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
         pExternalParameters->m_printOverallRecoStatus, xmlHandle, "PrintOverallRecoStatus", m_printOverallRecoStatus));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "CRSettingsFile", m_crSettingsFile));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "NuSettingsFile", m_nuSettingsFile));
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "FastSettingsFile", m_fastSettingsFile));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CRSettingsFile", m_crSettingsFile));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NuSettingsFile", m_nuSettingsFile));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SlicingSettingsFile", m_slicingSettingsFile));
 
     return STATUS_CODE_SUCCESS;
 }

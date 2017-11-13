@@ -25,6 +25,12 @@ using namespace pandora;
 namespace lar_content
 {
 
+typedef SlicingAlgorithm::HitTypeToNameMap HitTypeToNameMap;
+typedef SlicingAlgorithm::SliceList SliceList;
+typedef SlicingAlgorithm::Slice Slice;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 EventSlicingTool::EventSlicingTool() :
     m_minHitsPer3DCluster(20),
     m_min3DHitsToSeedNewSlice(50),

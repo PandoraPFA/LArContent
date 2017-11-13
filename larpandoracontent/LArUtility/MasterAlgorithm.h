@@ -17,7 +17,6 @@ namespace lar_content
 {
 
 class CosmicRayTaggingBaseTool;
-class EventSlicingBaseTool;
 class NeutrinoIdBaseTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -99,17 +98,16 @@ private:
     bool                        m_printOverallRecoStatus;           ///< Whether to print current operation status messages
 
     CosmicRayTaggingBaseTool   *m_pCosmicRayTaggingTool;            ///< The address of the cosmic-ray tagging tool
-    EventSlicingBaseTool       *m_pEventSlicingTool;                ///< The address of the event slicing tool
     NeutrinoIdBaseTool         *m_pNeutrinoIdTool;                  ///< The address of the neutrino id tool
 
     PandoraInstanceList         m_crWorkerInstances;                ///< The list of cosmic-ray reconstruction worker instances
-    const pandora::Pandora     *m_pFastWorkerInstance;              ///< The fast reconstruction worker instance
+    const pandora::Pandora     *m_pSlicingWorkerInstance;           ///< The slicing worker instance
     const pandora::Pandora     *m_pSliceNuWorkerInstance;           ///< The per-slice neutrino reconstruction worker instance
     const pandora::Pandora     *m_pSliceCrWorkerInstance;           ///< The per-slice cosmic-ray reconstruction worker instance
 
     std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
     std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file
-    std::string                 m_fastSettingsFile;                 ///< The fast reconstruction settings file
+    std::string                 m_slicingSettingsFile;              ///< The slicing settings file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,41 +126,6 @@ public:
      *  @param  ambiguousPfos to receive the list of ambiguous pfos
      */
     virtual void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos) = 0;
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
- *  @brief  EventSlicingBaseTool class
- */
-class EventSlicingBaseTool : public pandora::AlgorithmTool
-{
-public:
-    /**
-     *  @brief  Slice class
-     */
-    class Slice
-    {
-    public:
-        pandora::CaloHitList    m_caloHitListU;                     ///< The u calo hit list
-        pandora::CaloHitList    m_caloHitListV;                     ///< The v calo hit list
-        pandora::CaloHitList    m_caloHitListW;                     ///< The w calo hit list
-    };
-
-    typedef std::vector<Slice> SliceList;
-    typedef std::map<pandora::HitType, std::string> HitTypeToNameMap;
-
-    /**
-     *  @brief  Run the slicing tool
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  caloHitListNames the hit type to calo hit list name map
-     *  @param  clusterListNames the hit type to cluster list name map
-     *  @param  sliceList to receive the populated slice list
-     */
-    virtual void RunSlicing(const pandora::Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, const HitTypeToNameMap &clusterListNames,
-        SliceList &sliceList) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
