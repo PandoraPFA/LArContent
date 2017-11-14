@@ -8,7 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.h"
@@ -153,8 +152,11 @@ bool CosmicRayTaggingTool::GetValid3DCluster(const ParticleFlowObject *const pPf
 
 void CosmicRayTaggingTool::GetPfoAssociations(const PfoList &parentCosmicRayPfos, PfoToPfoListMap &pfoAssociationMap) const
 {
+    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
+    const LArTPC *const pFirstLArTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
+    const float layerPitch(pFirstLArTPC->GetWirePitchW());
+
     PfoToSlidingFitsMap pfoToSlidingFitsMap;
-    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (const ParticleFlowObject *const pPfo : parentCosmicRayPfos)
     {
@@ -431,7 +433,8 @@ CosmicRayTaggingTool::CRCandidate::CRCandidate(const Pandora &pandora, const Par
     if (!clusters3D.empty() && (clusters3D.front()->GetNCaloHits() > 15)) // TODO Configurable
     {
         m_canFit = true;
-        const ThreeDSlidingFitResult slidingFitResult(clusters3D.front(), 5, LArGeometryHelper::GetWireZPitch(pandora)); // TODO Configurable
+        const LArTPC *const pFirstLArTPC(pandora.GetGeometry()->GetLArTPCMap().begin()->second);
+        const ThreeDSlidingFitResult slidingFitResult(clusters3D.front(), 5, pFirstLArTPC->GetWirePitchW()); // TODO Configurable
         this->CalculateFitVariables(slidingFitResult);
     }
 }
