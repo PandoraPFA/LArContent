@@ -48,6 +48,17 @@ public:
         pandora::InputBool      m_printOverallRecoStatus;           ///< Whether to print current operation status messages
     };
 
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::LArTPC*> PfoToLArTPCMap;
+
+    /**
+     *  @brief  StitchingInfo class
+     */
+    class StitchingInfo
+    {
+    public:
+        PfoToLArTPCMap      m_pfoToLArTPCMap;         ///< Mapping between Pfos and LArTPCs
+    };
+
 private:
     pandora::StatusCode Initialize();
 
@@ -82,6 +93,67 @@ private:
      *  @param  pCaloHit the address of the calo hit
      */
     pandora::StatusCode Copy(const pandora::Pandora *const pPandora, const pandora::CaloHit *const pCaloHit) const;
+
+    /**
+     *  @brief  Recreate a specified list of pfos in the current pandora instance
+     *
+     *  @param  inputPfoList the input pfo list
+     *  @param  newPfoList to receive the list of new pfos
+     */
+    pandora::StatusCode Recreate(const pandora::PfoList &inputPfoList, pandora::PfoList &newPfoList) const;
+
+    /**
+     *  @brief  Recreate a specified pfo in the current pandora instance
+     *
+     *  @param  pInputPfo the input pfo
+     *  @param  pNewParentPfo the new parent of the new output pfo (nullptr if none)
+     *  @param  newPfoList to receive the list of new pfos
+     */
+    pandora::StatusCode Recreate(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject *const pNewParentPfo,
+        pandora::PfoList &newPfoList) const;
+
+    /**
+     *  @brief  Create a new calo hit in the current pandora instance, based upon the provided input calo hit
+     *
+     *  @param  pInputCaloHit the address of the input calo hit
+     *  @param  pParentCaloHit the address of the parent calo hit
+     *
+     *  @return the address of the new calo hit
+     */
+    const pandora::CaloHit *CreateCaloHit(const pandora::CaloHit *const pInputCaloHit, const pandora::CaloHit *const pParentCaloHit) const;
+
+    /**
+     *  @brief  Create a new cluster in the current pandora instance, based upon the provided input cluster
+     *
+     *  @param  pInputCluster the address of the input cluster
+     *  @param  newCaloHitList the list of calo hits for the new cluster
+     *  @param  newIsolatedCaloHitList the list of isolated calo hits for the new cluster
+     *
+     *  @return the address of the new cluster
+     */
+    const pandora::Cluster *CreateCluster(const pandora::Cluster *const pInputCluster, const pandora::CaloHitList &newCaloHitList,
+        const pandora::CaloHitList &newIsolatedCaloHitList) const;
+
+    /**
+     *  @brief  Create a new vertex in the current pandora instance, based upon the provided input vertex
+     *
+     *  @param  pInputVertex the address of the input vertex
+     *
+     *  @return the address of the new vertex
+     */
+    const pandora::Vertex *CreateVertex(const pandora::Vertex *const pInputVertex) const;
+
+    /**
+     *  @brief  Create a new pfo in the current pandora instance, based upon the provided input pfo
+     *
+     *  @param  pInputPfo the address of the input pfo
+     *  @param  newClusterList the list of clusters for the new pfo
+     *  @param  newVertexList the list of vertices for the new pfo
+     *
+     *  @return the address of the new pfo
+     */
+    const pandora::ParticleFlowObject *CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ClusterList &newClusterList,
+        const pandora::VertexList &newVertexList) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

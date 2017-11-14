@@ -200,21 +200,24 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap,
 
 StatusCode MasterAlgorithm::Run()
 {
+    //--------------------------------------------------------------------------------------------------------------------------------------
     // CR Reconstruction
-    PfoList allCRPfos;
-
+    //--------------------------------------------------------------------------------------------------------------------------------------
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "Input", pCaloHitList)); // TODO
 
     for (const Pandora *const pCRWorker : m_crWorkerInstances)
     {
         const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
-
+int nHitsU(0), nHitsV(0), nHitsW(0);
         for (const CaloHit *const pCaloHit : *pCaloHitList)
         {
             if ((pCaloHit->GetPositionVector().GetX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) &&
                 (pCaloHit->GetPositionVector().GetX() < (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
             {
+if (TPC_VIEW_U == pCaloHit->GetHitType() && ++nHitsU > 1000) continue;
+if (TPC_VIEW_V == pCaloHit->GetHitType() && ++nHitsV > 1000) continue;
+if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nHitsW > 1000) continue;
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
             }
         }
@@ -223,27 +226,51 @@ StatusCode MasterAlgorithm::Run()
             std::cout << "Running cosmic-ray reconstruction worker instance" << std::endl;
 
         PandoraApi::ProcessEvent(*pCRWorker);
-        const PfoList *pCRPfos(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*pCRWorker, pCRPfos));
-        allCRPfos.insert(allCRPfos.end(), pCRPfos->begin(), pCRPfos->end());
     }
 
-PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1., -1., 1.);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allCRPfos, "allCRPfos", RED);
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // Recreate CR worker particles in master instance
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    StitchingInfo stitchingInfo;
+
+    for (const Pandora *const pCRWorker : m_crWorkerInstances)
+    {
+        const PfoList *pCRPfos(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*pCRWorker, pCRPfos));
+
+        PfoList newPfoList;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(*pCRPfos, newPfoList));
+        //const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
+    }
+
+const PfoList *pRecreatedCRPfos(nullptr);
+PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "pRecreatedCRPfos", GREEN);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
+    //--------------------------------------------------------------------------------------------------------------------------------------
     // Stitching
-    // TODO
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // Care with new hit creation within tools (logic for which should be encapsulated within tools)
+//    for (StitchingTool *const pStitchingTool : m_algorithmToolVector)
+//        pStitchingTool->Run(this, stitchingInfo);
 
+    //--------------------------------------------------------------------------------------------------------------------------------------
     // CR tagging and hit removal
-    // TODO
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // Carefully construct new hit list to give to future worker instances - if no slicing, just give this to hypothesis workers
 
+    //--------------------------------------------------------------------------------------------------------------------------------------
     // Slicing
+    //--------------------------------------------------------------------------------------------------------------------------------------
+int nSliceHitsU(0), nSliceHitsV(0), nSliceHitsW(0);
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
-
+if (TPC_VIEW_U == pCaloHit->GetHitType() && ++nSliceHitsU > 3000) continue;
+if (TPC_VIEW_V == pCaloHit->GetHitType() && ++nSliceHitsV > 3000) continue;
+if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nSliceHitsW > 3000) continue;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSlicingWorkerInstance, pCaloHit));
     }
 
@@ -256,11 +283,12 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     if (m_printOverallRecoStatus)
         std::cout << "Identified " << pSlicePfos->size() << " slice(s)" << std::endl;
-
 PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSlicePfos, "slices", BLUE);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
+    //--------------------------------------------------------------------------------------------------------------------------------------
     // Slice hypotheses
+    //--------------------------------------------------------------------------------------------------------------------------------------
     typedef std::vector<PfoList> SliceHypothesis;
     SliceHypothesis nuSliceHypothesis, crSliceHypothesis;
 
@@ -298,15 +326,29 @@ PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSliceCRP
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
     }
 
+    //--------------------------------------------------------------------------------------------------------------------------------------
     // Select best slice hypotheses
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    // Recreate just the hypotheses that are required
     if (m_printOverallRecoStatus)
         std::cout << "Select best slice hypotheses" << std::endl;    
 
+    PfoList sliceNuPfos, sliceCRPfos;
+    // Select using tool
+
+    PfoList newSlicePfoList;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(sliceNuPfos, newSlicePfoList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(sliceCRPfos, newSlicePfoList));
+
+    //--------------------------------------------------------------------------------------------------------------------------------------
     // Tidy up
-    for (const Pandora *const pCRWorker : m_crWorkerInstances) PandoraApi::Reset(*pCRWorker);
-    PandoraApi::Reset(*m_pSlicingWorkerInstance);
-    PandoraApi::Reset(*m_pSliceNuWorkerInstance);
-    PandoraApi::Reset(*m_pSliceCRWorkerInstance);
+    //--------------------------------------------------------------------------------------------------------------------------------------
+    for (const Pandora *const pCRWorker : m_crWorkerInstances)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*pCRWorker));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSlicingWorkerInstance));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceNuWorkerInstance));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceCRWorkerInstance));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -335,8 +377,209 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     parameters.m_hitRegion = pCaloHit->GetHitRegion();
     parameters.m_layer = pCaloHit->GetLayer();
     parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
-    parameters.m_pParentAddress = pCaloHit->GetParentAddress();
+    parameters.m_pParentAddress = static_cast<const void*>(pCaloHit);
     return PandoraApi::CaloHit::Create(*pPandora, parameters);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::Recreate(const PfoList &inputPfoList, PfoList &newPfoList) const
+{
+    if (inputPfoList.empty())
+        return STATUS_CODE_SUCCESS;
+
+    std::string clusterListName;
+    const ClusterList *pClusterList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, clusterListName));
+
+    std::string vertexListName;
+    const VertexList *pVertexList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
+    std::string pfoListName;
+    const PfoList *pPfoList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
+
+    for (const Pfo *const pPfo : inputPfoList)
+    {
+        if (pPfo->GetParentPfoList().empty())
+            this->Recreate(pPfo, nullptr, newPfoList);
+    }
+
+    if (!pClusterList->empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, "RecreatedClusters"));// TODO
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, "RecreatedClusters"));
+    }
+
+    if (!pVertexList->empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, "RecreatedVertices"));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, "RecreatedVertices"));
+    }
+
+    if (!pPfoList->empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<ParticleFlowObject>(*this, "RecreatedPfos"));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<ParticleFlowObject>(*this, "RecreatedPfos"));
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::Recreate(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject *const pNewParentPfo, PfoList &newPfoList) const
+{
+    ClusterList inputClusterList2D, inputClusterList3D, newClusterList;
+    LArPfoHelper::GetTwoDClusterList(pInputPfo, inputClusterList2D);
+    LArPfoHelper::GetThreeDClusterList(pInputPfo, inputClusterList3D);
+
+    for (const Cluster *const pInputCluster : inputClusterList2D)
+    {
+        CaloHitList inputCaloHitList, newCaloHitList, newIsolatedCaloHitList;
+        pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
+
+        for (const CaloHit *const pInputCaloHit : inputCaloHitList)
+            newCaloHitList.push_back(static_cast<const CaloHit*>(pInputCaloHit->GetParentAddress()));
+
+        for (const CaloHit *const pInputCaloHit : pInputCluster->GetIsolatedCaloHitList())
+            newIsolatedCaloHitList.push_back(static_cast<const CaloHit*>(pInputCaloHit->GetParentAddress()));
+
+        if (!newCaloHitList.empty())
+            newClusterList.push_back(this->CreateCluster(pInputCluster, newCaloHitList, newIsolatedCaloHitList));
+    }
+
+    for (const Cluster *const pInputCluster : inputClusterList3D)
+    {
+        CaloHitList inputCaloHitList, newCaloHitList, newIsolatedCaloHitList;
+        pInputCluster->GetOrderedCaloHitList().FillCaloHitList(inputCaloHitList);
+
+        for (const CaloHit *const pInputCaloHit : inputCaloHitList)
+        {
+            const CaloHit *const pWorkerParentCaloHit(static_cast<const CaloHit*>(pInputCaloHit->GetParentAddress()));
+            const CaloHit *const pMasterParentCaloHit(static_cast<const CaloHit*>(pWorkerParentCaloHit->GetParentAddress()));
+            newCaloHitList.push_back(this->CreateCaloHit(pInputCaloHit, pMasterParentCaloHit));
+        }
+
+        for (const CaloHit *const pInputCaloHit : pInputCluster->GetIsolatedCaloHitList())
+        {
+            const CaloHit *const pWorkerParentCaloHit(static_cast<const CaloHit*>(pInputCaloHit->GetParentAddress()));
+            const CaloHit *const pMasterParentCaloHit(static_cast<const CaloHit*>(pWorkerParentCaloHit->GetParentAddress()));
+            newIsolatedCaloHitList.push_back(this->CreateCaloHit(pInputCaloHit, pMasterParentCaloHit));
+        }
+
+        if (!newCaloHitList.empty())
+            newClusterList.push_back(this->CreateCluster(pInputCluster, newCaloHitList, newIsolatedCaloHitList));
+    }
+
+    VertexList newVertexList;
+
+    for (const Vertex *const pInputVertex : pInputPfo->GetVertexList())
+        newVertexList.push_back(this->CreateVertex(pInputVertex));
+
+    const ParticleFlowObject *const pNewPfo(this->CreatePfo(pInputPfo, newClusterList, newVertexList));
+    newPfoList.push_back(pNewPfo);
+
+    if (pNewParentPfo)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNewParentPfo, pNewPfo))
+
+    for (const ParticleFlowObject *const pInputDaughterPfo : pInputPfo->GetDaughterPfoList())
+        this->Recreate(pInputDaughterPfo, pNewPfo, newPfoList);
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const CaloHit *MasterAlgorithm::CreateCaloHit(const CaloHit *const pInputCaloHit, const CaloHit *const pParentCaloHit) const
+{
+    PandoraContentApi::CaloHit::Parameters parameters;
+    parameters.m_positionVector = pInputCaloHit->GetPositionVector();
+    parameters.m_expectedDirection = pInputCaloHit->GetExpectedDirection();
+    parameters.m_cellNormalVector = pInputCaloHit->GetCellNormalVector();
+    parameters.m_cellGeometry = pInputCaloHit->GetCellGeometry();
+    parameters.m_cellSize0 = pInputCaloHit->GetCellSize0();
+    parameters.m_cellSize1 = pInputCaloHit->GetCellSize1();
+    parameters.m_cellThickness = pInputCaloHit->GetCellThickness();
+    parameters.m_nCellRadiationLengths = pInputCaloHit->GetNCellRadiationLengths();
+    parameters.m_nCellInteractionLengths = pInputCaloHit->GetNCellInteractionLengths();
+    parameters.m_time = pInputCaloHit->GetTime();
+    parameters.m_inputEnergy = pInputCaloHit->GetInputEnergy();
+    parameters.m_mipEquivalentEnergy = pInputCaloHit->GetMipEquivalentEnergy();
+    parameters.m_electromagneticEnergy = pInputCaloHit->GetElectromagneticEnergy();
+    parameters.m_hadronicEnergy = pInputCaloHit->GetHadronicEnergy();
+    parameters.m_isDigital = pInputCaloHit->IsDigital();
+    parameters.m_hitType = pInputCaloHit->GetHitType();
+    parameters.m_hitRegion = pInputCaloHit->GetHitRegion();
+    parameters.m_layer = pInputCaloHit->GetLayer();
+    parameters.m_isInOuterSamplingLayer = pInputCaloHit->IsInOuterSamplingLayer();
+    parameters.m_pParentAddress = static_cast<const void*>(pParentCaloHit);
+
+    const CaloHit *pNewCaloHit(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::Create(*this, parameters, pNewCaloHit));
+
+    PandoraContentApi::CaloHit::Metadata metadata;
+    metadata.m_isIsolated = pInputCaloHit->IsIsolated();
+    metadata.m_isPossibleMip = pInputCaloHit->IsPossibleMip();
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pNewCaloHit, metadata));
+
+    return pNewCaloHit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const Cluster *MasterAlgorithm::CreateCluster(const Cluster *const pInputCluster, const CaloHitList &newCaloHitList,
+    const CaloHitList &newIsolatedCaloHitList) const
+{
+    PandoraContentApi::Cluster::Parameters parameters;
+    parameters.m_caloHitList = newCaloHitList;
+    parameters.m_isolatedCaloHitList = newIsolatedCaloHitList;
+
+    const Cluster *pNewCluster(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pNewCluster));
+
+    PandoraContentApi::Cluster::Metadata metadata;
+    metadata.m_particleId = pInputCluster->GetParticleId();
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::AlterMetadata(*this, pNewCluster, metadata));
+
+    return pNewCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const Vertex *MasterAlgorithm::CreateVertex(const Vertex *const pInputVertex) const
+{
+    PandoraContentApi::Vertex::Parameters parameters;
+    parameters.m_position = pInputVertex->GetPosition();
+    parameters.m_vertexLabel = pInputVertex->GetVertexLabel();
+    parameters.m_vertexType = pInputVertex->GetVertexType();
+
+    const Vertex *pNewVertex(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pNewVertex));
+
+    return pNewVertex;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const ParticleFlowObject *MasterAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ClusterList &newClusterList,
+    const VertexList &newVertexList) const
+{
+    PandoraContentApi::ParticleFlowObject::Parameters parameters;
+    parameters.m_particleId = pInputPfo->GetParticleId();
+    parameters.m_charge = pInputPfo->GetCharge();
+    parameters.m_mass = pInputPfo->GetMass();
+    parameters.m_energy = pInputPfo->GetEnergy();
+    parameters.m_momentum = pInputPfo->GetMomentum();
+    parameters.m_clusterList = newClusterList;
+    parameters.m_trackList.clear();
+    parameters.m_vertexList = newVertexList;
+
+    const ParticleFlowObject *pNewPfo(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, parameters, pNewPfo));
+
+    return pNewPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
