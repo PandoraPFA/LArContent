@@ -73,14 +73,34 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    // TODO First time only
-    const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
-    m_face_Xa = larTPC.GetCenterX() - larTPC.GetWidthX() / 2.f;
-    m_face_Xc = larTPC.GetCenterX() + larTPC.GetWidthX() / 2.f;
-    m_face_Yb = larTPC.GetCenterY() - larTPC.GetWidthY() / 2.f;
-    m_face_Yt = larTPC.GetCenterY() + larTPC.GetWidthY() / 2.f;
-    m_face_Zu = larTPC.GetCenterZ() - larTPC.GetWidthZ() / 2.f;
-    m_face_Zd = larTPC.GetCenterZ() + larTPC.GetWidthZ() / 2.f;
+    // TODO First time only, TODO Refactor with master algorithm
+    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+
+    float parentMinX(pFirstLArTPC->GetCenterX() - 0.5f * pFirstLArTPC->GetWidthX());
+    float parentMaxX(pFirstLArTPC->GetCenterX() + 0.5f * pFirstLArTPC->GetWidthX());
+    float parentMinY(pFirstLArTPC->GetCenterY() - 0.5f * pFirstLArTPC->GetWidthY());
+    float parentMaxY(pFirstLArTPC->GetCenterY() + 0.5f * pFirstLArTPC->GetWidthY());
+    float parentMinZ(pFirstLArTPC->GetCenterZ() - 0.5f * pFirstLArTPC->GetWidthZ());
+    float parentMaxZ(pFirstLArTPC->GetCenterZ() + 0.5f * pFirstLArTPC->GetWidthZ());
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+        parentMinX = std::min(parentMinX, pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX());
+        parentMaxX = std::max(parentMaxX, pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX());
+        parentMinY = std::min(parentMinY, pLArTPC->GetCenterY() - 0.5f * pLArTPC->GetWidthY());
+        parentMaxY = std::max(parentMaxY, pLArTPC->GetCenterY() + 0.5f * pLArTPC->GetWidthY());
+        parentMinZ = std::min(parentMinZ, pLArTPC->GetCenterZ() - 0.5f * pLArTPC->GetWidthZ());
+        parentMaxZ = std::max(parentMaxZ, pLArTPC->GetCenterZ() + 0.5f * pLArTPC->GetWidthZ());
+    }
+
+    m_face_Xa = parentMinX;
+    m_face_Xc = parentMaxX;
+    m_face_Yb = parentMinY;
+    m_face_Yt = parentMaxY;
+    m_face_Zu = parentMinZ;
+    m_face_Zd = parentMaxZ;
 
     PfoToPfoListMap pfoAssociationMap;
     this->GetPfoAssociations(parentCosmicRayPfos, pfoAssociationMap);
