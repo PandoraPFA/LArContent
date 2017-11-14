@@ -209,15 +209,15 @@ StatusCode MasterAlgorithm::Run()
     for (const Pandora *const pCRWorker : m_crWorkerInstances)
     {
         const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
-int nHitsU(0), nHitsV(0), nHitsW(0);
+//int nHitsU(0), nHitsV(0), nHitsW(0);
         for (const CaloHit *const pCaloHit : *pCaloHitList)
         {
             if ((pCaloHit->GetPositionVector().GetX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) &&
                 (pCaloHit->GetPositionVector().GetX() < (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
             {
-if (TPC_VIEW_U == pCaloHit->GetHitType() && ++nHitsU > 1000) continue;
-if (TPC_VIEW_V == pCaloHit->GetHitType() && ++nHitsV > 1000) continue;
-if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nHitsW > 1000) continue;
+//if (TPC_VIEW_U == pCaloHit->GetHitType() && ++nHitsU > 1000) continue;
+//if (TPC_VIEW_V == pCaloHit->GetHitType() && ++nHitsV > 1000) continue;
+//if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nHitsW > 1000) continue;
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
             }
         }
@@ -243,34 +243,62 @@ if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nHitsW > 1000) continue;
         //const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
     }
 
-const PfoList *pRecreatedCRPfos(nullptr);
-PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "pRecreatedCRPfos", GREEN);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Stitching
     //--------------------------------------------------------------------------------------------------------------------------------------
+    const PfoList *pRecreatedCRPfos(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "pRecreatedCRPfos", GREEN);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
     // Care with new hit creation within tools (logic for which should be encapsulated within tools)
-//    for (StitchingTool *const pStitchingTool : m_algorithmToolVector)
-//        pStitchingTool->Run(this, stitchingInfo);
+    //    for (StitchingTool *const pStitchingTool : m_algorithmToolVector)
+    //        pStitchingTool->Run(this, stitchingInfo);
 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // CR tagging and hit removal
     //--------------------------------------------------------------------------------------------------------------------------------------
-    // Carefully construct new hit list to give to future worker instances - if no slicing, just give this to hypothesis workers
+    PfoList parentCosmicRayPfos;
+    for (const Pfo *const pPfo : *pRecreatedCRPfos)
+    {
+        if (pPfo->GetParentPfoList().empty())
+            parentCosmicRayPfos.push_back(pPfo);
+    }
+
+    PfoList ambiguousPfos;
+    m_pCosmicRayTaggingTool->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &parentCosmicRayPfos, "parentCosmicRayPfos", RED);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "ambiguousPfos", BLUE);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    PfoList allPfosToDelete;
+    LArPfoHelper::GetAllConnectedPfos(ambiguousPfos, allPfosToDelete);
+
+    for (const Pfo *const pPfoToDelete : allPfosToDelete)
+    {
+        const ClusterList clusterList(pPfoToDelete->GetClusterList());
+        const VertexList vertexList(pPfoToDelete->GetVertexList());
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfoToDelete));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, &clusterList));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, &vertexList));
+    }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Slicing
     //--------------------------------------------------------------------------------------------------------------------------------------
-int nSliceHitsU(0), nSliceHitsV(0), nSliceHitsW(0);
+//int nSliceHitsU(0), nSliceHitsV(0), nSliceHitsW(0);
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
-if (TPC_VIEW_U == pCaloHit->GetHitType() && ++nSliceHitsU > 3000) continue;
-if (TPC_VIEW_V == pCaloHit->GetHitType() && ++nSliceHitsV > 3000) continue;
-if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nSliceHitsW > 3000) continue;
+
+        const HitType hitType(pCaloHit->GetHitType());
+
+        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+            continue;
+//if (TPC_VIEW_U == pCaloHit->GetHitType() && ++nSliceHitsU > 3000) continue;
+//if (TPC_VIEW_V == pCaloHit->GetHitType() && ++nSliceHitsV > 3000) continue;
+//if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nSliceHitsW > 3000) continue;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSlicingWorkerInstance, pCaloHit));
     }
 
@@ -289,6 +317,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Slice hypotheses
     //--------------------------------------------------------------------------------------------------------------------------------------
+    // TODO if no slicing, just give all non-CR hits to workers
     typedef std::vector<PfoList> SliceHypothesis;
     SliceHypothesis nuSliceHypothesis, crSliceHypothesis;
 
