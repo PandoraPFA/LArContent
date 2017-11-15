@@ -158,10 +158,10 @@
 #include "larpandoracontent/LArUtility/ListChangingAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListDeletionAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListMergingAlgorithm.h"
-#include "larpandoracontent/LArUtility/ListMovingAlgorithm.h"
-#include "larpandoracontent/LArUtility/ListPreparationAlgorithm.h"
 #include "larpandoracontent/LArUtility/ListPruningAlgorithm.h"
 #include "larpandoracontent/LArUtility/MasterAlgorithm.h"
+#include "larpandoracontent/LArUtility/PostProcessingAlgorithm.h"
+#include "larpandoracontent/LArUtility/PreProcessingAlgorithm.h"
 #include "larpandoracontent/LArUtility/SlicingAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h"
@@ -248,10 +248,10 @@
     d("LArListChanging",                        ListChangingAlgorithm)                                                          \
     d("LArListDeletion",                        ListDeletionAlgorithm)                                                          \
     d("LArListMerging",                         ListMergingAlgorithm)                                                           \
-    d("LArListMoving",                          ListMovingAlgorithm)                                                            \
-    d("LArListPreparation",                     ListPreparationAlgorithm)                                                       \
     d("LArListPruning",                         ListPruningAlgorithm)                                                           \
     d("LArMaster",                              MasterAlgorithm)                                                                \
+    d("LArPostProcessing",                      PostProcessingAlgorithm)                                                        \
+    d("LArPreProcessing",                       PreProcessingAlgorithm)                                                         \
     d("LArSlicing",                             SlicingAlgorithm)                                                               \
     d("LArCandidateVertexCreation",             CandidateVertexCreationAlgorithm)                                               \
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
