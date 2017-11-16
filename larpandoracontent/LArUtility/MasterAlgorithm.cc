@@ -205,19 +205,19 @@ StatusCode MasterAlgorithm::Run()
     //--------------------------------------------------------------------------------------------------------------------------------------
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "Input", pCaloHitList)); // TODO
+    const CaloHitList originalHitList(*pCaloHitList);
 
     for (const Pandora *const pCRWorker : m_crWorkerInstances)
     {
         const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
-//int nHitsU(0), nHitsV(0), nHitsW(0);
-        for (const CaloHit *const pCaloHit : *pCaloHitList)
+
+        for (const CaloHit *const pCaloHit : originalHitList)
         {
-            if ((pCaloHit->GetPositionVector().GetX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) &&
-                (pCaloHit->GetPositionVector().GetX() < (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
+            // TODO Whether to truncate hits at tpc boundaries - configurable parameter (replace map size check)
+            if ((this->GetPandora().GetGeometry()->GetLArTPCMap().size() == 1) ||
+                ((pCaloHit->GetPositionVector().GetX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) &&
+                (pCaloHit->GetPositionVector().GetX() < (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX()))))
             {
-//if (TPC_VIEW_U == pCaloHit->GetHitType() && ++nHitsU > 1000) continue;
-//if (TPC_VIEW_V == pCaloHit->GetHitType() && ++nHitsV > 1000) continue;
-//if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nHitsW > 1000) continue;
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
             }
         }
@@ -225,7 +225,7 @@ StatusCode MasterAlgorithm::Run()
         if (m_printOverallRecoStatus)
             std::cout << "Running cosmic-ray reconstruction worker instance" << std::endl;
 
-        PandoraApi::ProcessEvent(*pCRWorker);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*pCRWorker));
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -294,27 +294,23 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Slicing
     //--------------------------------------------------------------------------------------------------------------------------------------
-//int nSliceHitsU(0), nSliceHitsV(0), nSliceHitsW(0);
-    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    for (const CaloHit *const pCaloHit : originalHitList)
     {
         if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
 
         const HitType hitType(pCaloHit->GetHitType());
-
         if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             continue;
-//if (TPC_VIEW_U == pCaloHit->GetHitType() && ++nSliceHitsU > 3000) continue;
-//if (TPC_VIEW_V == pCaloHit->GetHitType() && ++nSliceHitsV > 3000) continue;
-//if (TPC_VIEW_W == pCaloHit->GetHitType() && ++nSliceHitsW > 3000) continue;
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSlicingWorkerInstance, pCaloHit));
     }
 
     if (m_printOverallRecoStatus)
         std::cout << "Running slicing worker instance" << std::endl;
 
-    PandoraApi::ProcessEvent(*m_pSlicingWorkerInstance);
     const PfoList *pSlicePfos(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSlicingWorkerInstance));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSlicingWorkerInstance, pSlicePfos));
 
     if (m_printOverallRecoStatus)
@@ -335,25 +331,26 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
         LArPfoHelper::GetCaloHits(pSlicePfo, TPC_VIEW_V, caloHitList);
         LArPfoHelper::GetCaloHits(pSlicePfo, TPC_VIEW_W, caloHitList);
 
-        for (const CaloHit *const pCaloHit : caloHitList)
+        for (const CaloHit *const pSliceCaloHit : caloHitList)
         {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHit));
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceCRWorkerInstance, pCaloHit));
+            const CaloHit *const pCaloHitInMaster(static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHitInMaster));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceCRWorkerInstance, pCaloHitInMaster));
         }
 
         if (m_printOverallRecoStatus)
             std::cout << "Running slice nu worker instance" << std::endl;
 
-        PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance);
         const PfoList *pSliceNuPfos(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceNuWorkerInstance, pSliceNuPfos));
         nuSliceHypotheses.push_back(*pSliceNuPfos);
 
         if (m_printOverallRecoStatus)
             std::cout << "Running slice cr worker instance" << std::endl;
 
-        PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance);
         const PfoList *pSliceCRPfos(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
         crSliceHypotheses.push_back(*pSliceCRPfos);
     }
@@ -362,14 +359,11 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
 PfoList allSliceNuOutcomes, allSliceCROutcomes;
-
 for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
 {
-    // TODO check for daughter particles in this list - origin?
     allSliceNuOutcomes.insert(allSliceNuOutcomes.end(), nuSliceHypotheses.at(sliceIndex).begin(), nuSliceHypotheses.at(sliceIndex).end());
     allSliceCROutcomes.insert(allSliceCROutcomes.end(), crSliceHypotheses.at(sliceIndex).begin(), crSliceHypotheses.at(sliceIndex).end());
 }
-
 PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allSliceNuOutcomes, "allSliceNuOutcomes", GREEN);
 PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allSliceCROutcomes, "allSliceCROutcomes", RED);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
@@ -407,6 +401,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
 StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
 {
+    // TODO Useful protection to ensure that only calo hits owned by the master instance are copied
     PandoraApi::CaloHit::Parameters parameters;
     parameters.m_positionVector = pCaloHit->GetPositionVector();
     parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
