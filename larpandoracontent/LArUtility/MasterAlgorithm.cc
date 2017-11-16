@@ -322,6 +322,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
     // Slice hypotheses
     //--------------------------------------------------------------------------------------------------------------------------------------
     // TODO if no slicing, just give all non-CR hits to workers
+    unsigned int sliceCounter(0);
     NeutrinoIdBaseTool::SliceHypotheses nuSliceHypotheses, crSliceHypotheses;
 
     for (const Pfo *const pSlicePfo : *pSlicePfos)
@@ -339,7 +340,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
         }
 
         if (m_printOverallRecoStatus)
-            std::cout << "Running slice nu worker instance" << std::endl;
+            std::cout << "Running slice nu worker instance " << sliceCounter << " of " << pSlicePfos->size() << std::endl;
 
         const PfoList *pSliceNuPfos(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
@@ -347,12 +348,14 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
         nuSliceHypotheses.push_back(*pSliceNuPfos);
 
         if (m_printOverallRecoStatus)
-            std::cout << "Running slice cr worker instance" << std::endl;
+            std::cout << "Running slice cr worker instance " << sliceCounter << " of " << pSlicePfos->size() << std::endl;
 
         const PfoList *pSliceCRPfos(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
         crSliceHypotheses.push_back(*pSliceCRPfos);
+
+        ++sliceCounter;
     }
 
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
