@@ -52,6 +52,8 @@ StatusCode PostProcessingAlgorithm::Run()
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
                 std::cout << "PostProcessingAlgorithm: could not replace current pfo list with list named: " << replacementListName << std::endl;
+
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Pfo>(*this));
         }
     }
 
