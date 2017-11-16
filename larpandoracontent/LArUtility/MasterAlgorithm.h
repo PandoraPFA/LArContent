@@ -178,13 +178,13 @@ private:
     bool                        m_shouldIdentifyNeutrinoSlice;      ///< Whether to identify most appropriate neutrino slice
     bool                        m_printOverallRecoStatus;           ///< Whether to print current operation status messages
 
-    CosmicRayTaggingBaseTool   *m_pCosmicRayTaggingTool;            ///< The address of the cosmic-ray tagging tool
-    NeutrinoIdBaseTool         *m_pNeutrinoIdTool;                  ///< The address of the neutrino id tool
-
     PandoraInstanceList         m_crWorkerInstances;                ///< The list of cosmic-ray reconstruction worker instances
     const pandora::Pandora     *m_pSlicingWorkerInstance;           ///< The slicing worker instance
     const pandora::Pandora     *m_pSliceNuWorkerInstance;           ///< The per-slice neutrino reconstruction worker instance
     const pandora::Pandora     *m_pSliceCRWorkerInstance;           ///< The per-slice cosmic-ray reconstruction worker instance
+
+    CosmicRayTaggingBaseTool   *m_pCosmicRayTaggingTool;            ///< The address of the cosmic-ray tagging tool
+    NeutrinoIdBaseTool         *m_pNeutrinoIdTool;                  ///< The address of the neutrino id tool
 
     std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
     std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file
@@ -218,62 +218,18 @@ public:
 class NeutrinoIdBaseTool : public pandora::AlgorithmTool
 {
 public:
-    /**
-     *  @brief SliceProperties class
-     */
-    class SliceProperties
-    {
-    public:
-        /**
-         *  @brief  Default constructor
-         */
-        SliceProperties();
-
-        float       m_weight;               ///< Generic weight property
-        float       m_nuVtxY;               ///< The neutrino vertex x coordinate
-        float       m_nuVtxZ;               ///< The neutrino vertex y coordinate
-        float       m_nuCosWeightedDir;     ///< Cosine of angle between z-axis and (hit weighted) mean direction of primary particles
-    };
-
-    typedef std::map<unsigned int, pandora::PfoList> SliceIndexToPfoListMap;
-    typedef std::map<unsigned int, SliceProperties> SliceIndexToPropertiesMap;
+    typedef std::vector<pandora::PfoList> SliceHypotheses;
 
     /**
-     *  @brief  Fill slice properties given provided neutrino pfos
+     *  @brief  Select which reconstruction hypotheses to use; neutrino outcomes or cosmic-ray muon outcomes for each slice
      *
-     *  @param  pPfoList the address of the parent neutrino pfo list
-     *  @param  sliceProperties to receive the populated neutrino slice properties
+     *  @param  nuSliceHypotheses the parent pfos representing the neutrino outcome for each slice
+     *  @param  crSliceHypotheses the parent pfos representing the cosmic-ray muon outcome for each slice
+     *  @param  sliceNuPfos to receive the list of selected pfos
      */
-    virtual void FillNeutrinoProperties(const pandora::PfoList *const pPfoList, SliceProperties &sliceProperties) const = 0;
-
-    /**
-     *  @brief  Fill slice properties given provided cosmic-ray pfos
-     *
-     *  @param  pPfoList the address of the parent cosmic-ray pfo list
-     *  @param  sliceProperties to receive the populated cosmic-ray slice properties
-     */
-    virtual void FillCosmicRayProperties(const pandora::PfoList *const pPfoList, SliceProperties &sliceProperties) const = 0;
-
-    /**
-     *  @brief  Try to identify a neutrino slice. If such a slice is found, return true and provide the neutrino slice index
-     *
-     *  @param  sliceIndexToPropertiesMap the slice index to slice properties mapping
-     *  @param  neutrinoSliceIndex to receive the neutrino slice index, if a neutrino slice is identified
-     *
-     *  @return whether a neutrino slice is identified
-     */
-    virtual bool GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const = 0;
+    virtual void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
+        pandora::PfoList &selectedPfos) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline NeutrinoIdBaseTool::SliceProperties::SliceProperties() :
-    m_weight(0.f),
-    m_nuVtxY(std::numeric_limits<float>::max()),
-    m_nuVtxZ(std::numeric_limits<float>::max()),
-    m_nuCosWeightedDir(std::numeric_limits<float>::max())
-{
-}
 
 } // namespace lar_content
 

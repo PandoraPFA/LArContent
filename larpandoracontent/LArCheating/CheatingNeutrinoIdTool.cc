@@ -18,60 +18,44 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingNeutrinoIdTool::CheatingNeutrinoIdTool()
+void CheatingNeutrinoIdTool::SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
-}
+    if (nuSliceHypotheses.size() != crSliceHypotheses.size())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CheatingNeutrinoIdTool::FillNeutrinoProperties(const PfoList *const pPfoList, SliceProperties &sliceProperties) const
-{
-    float neutrinoWeight(0.f);
-
-    for (const Pfo *const pNeutrinoPfo : *pPfoList)
-    {
-        if (!LArPfoHelper::IsNeutrino(pNeutrinoPfo))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        PfoList downstreamPfos;
-        LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
-
-        float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
-        LArMCParticleHelper::GetNeutrinoWeight(&downstreamPfos, thisNeutrinoWeight, thisTotalWeight);
-        neutrinoWeight += thisNeutrinoWeight;
-    }
-
-    sliceProperties.m_weight = neutrinoWeight;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CheatingNeutrinoIdTool::FillCosmicRayProperties(const PfoList *const /*pPfoList*/, SliceProperties &/*sliceProperties*/) const
-{
-    // Deliberately empty
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool CheatingNeutrinoIdTool::GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const
-{
-    float bestWeight(0.f);
+    float bestNeutrinoWeight(0.f);
     unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
 
-    for (const auto &mapEntry : sliceIndexToPropertiesMap)
+    for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
-        if (mapEntry.second.m_weight > bestWeight)
+        float neutrinoWeight(0.f);
+        const PfoList &neutrinoPfoList(nuSliceHypotheses.at(sliceIndex));
+
+        for (const Pfo *const pNeutrinoPfo : neutrinoPfoList)
         {
-            bestWeight = mapEntry.second.m_weight;
-            bestSliceIndex = mapEntry.first;
+            if (!LArPfoHelper::IsNeutrino(pNeutrinoPfo))
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+            PfoList downstreamPfos;
+            LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
+
+            float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
+            LArMCParticleHelper::GetNeutrinoWeight(&downstreamPfos, thisNeutrinoWeight, thisTotalWeight);
+            neutrinoWeight += thisNeutrinoWeight;
+        }
+
+        if (neutrinoWeight > bestNeutrinoWeight)
+        {
+            neutrinoWeight = bestNeutrinoWeight;
+            bestSliceIndex = sliceIndex;
         }
     }
 
-    if (bestWeight < std::numeric_limits<float>::epsilon())
-        return false;
-
-    neutrinoSliceIndex = bestSliceIndex;
-    return true;
+    for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+    {
+        const PfoList &sliceOutput((bestSliceIndex == sliceIndex) ? nuSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
+        selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -33,11 +33,11 @@ MasterAlgorithm::MasterAlgorithm() :
     m_shouldRunCosmicRecoOption(true),
     m_shouldIdentifyNeutrinoSlice(true),
     m_printOverallRecoStatus(false),
-    m_pCosmicRayTaggingTool(nullptr),
-    m_pNeutrinoIdTool(nullptr),
     m_pSlicingWorkerInstance(nullptr),
     m_pSliceNuWorkerInstance(nullptr),
-    m_pSliceCRWorkerInstance(nullptr)
+    m_pSliceCRWorkerInstance(nullptr),
+    m_pCosmicRayTaggingTool(nullptr),
+    m_pNeutrinoIdTool(nullptr)
 {
 }
 
@@ -267,7 +267,15 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     PfoList ambiguousPfos;
     m_pCosmicRayTaggingTool->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &parentCosmicRayPfos, "parentCosmicRayPfos", RED);
+
+    PfoList clearCosmicRayPfos;
+    for (const Pfo *const pPfo : parentCosmicRayPfos)
+    {
+        if (ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo))
+            clearCosmicRayPfos.push_back(pPfo);
+    }
+
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &clearCosmicRayPfos, "clearCosmicRayPfos", RED);
 PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "ambiguousPfos", BLUE);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
@@ -318,8 +326,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
     // Slice hypotheses
     //--------------------------------------------------------------------------------------------------------------------------------------
     // TODO if no slicing, just give all non-CR hits to workers
-    typedef std::vector<PfoList> SliceHypothesis;
-    SliceHypothesis nuSliceHypothesis, crSliceHypothesis;
+    NeutrinoIdBaseTool::SliceHypotheses nuSliceHypotheses, crSliceHypotheses;
 
     for (const Pfo *const pSlicePfo : *pSlicePfos)
     {
@@ -340,7 +347,7 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
         PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance);
         const PfoList *pSliceNuPfos(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceNuWorkerInstance, pSliceNuPfos));
-        nuSliceHypothesis.push_back(*pSliceNuPfos);
+        nuSliceHypotheses.push_back(*pSliceNuPfos);
 
         if (m_printOverallRecoStatus)
             std::cout << "Running slice cr worker instance" << std::endl;
@@ -348,12 +355,24 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
         PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance);
         const PfoList *pSliceCRPfos(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
-        crSliceHypothesis.push_back(*pSliceCRPfos);
-
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSliceNuPfos, "nuSliceHypothesis", GREEN);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSliceCRPfos, "crSliceHypothesis", MAGENTA);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        crSliceHypotheses.push_back(*pSliceCRPfos);
     }
+
+    if (nuSliceHypotheses.size() != crSliceHypotheses.size())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+PfoList allSliceNuOutcomes, allSliceCROutcomes;
+
+for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+{
+    // TODO check for daughter particles in this list - origin?
+    allSliceNuOutcomes.insert(allSliceNuOutcomes.end(), nuSliceHypotheses.at(sliceIndex).begin(), nuSliceHypotheses.at(sliceIndex).end());
+    allSliceCROutcomes.insert(allSliceCROutcomes.end(), crSliceHypotheses.at(sliceIndex).begin(), crSliceHypotheses.at(sliceIndex).end());
+}
+
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allSliceNuOutcomes, "allSliceNuOutcomes", GREEN);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &allSliceCROutcomes, "allSliceCROutcomes", RED);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Select best slice hypotheses
@@ -362,12 +381,11 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
     if (m_printOverallRecoStatus)
         std::cout << "Select best slice hypotheses" << std::endl;    
 
-    PfoList sliceNuPfos, sliceCRPfos;
-    // Select using tool
+    PfoList selectedSlicePfos;
+    m_pNeutrinoIdTool->SelectOutputPfos(nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos);
 
     PfoList newSlicePfoList;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(sliceNuPfos, newSlicePfoList));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(sliceCRPfos, newSlicePfoList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(selectedSlicePfos, newSlicePfoList));
 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Tidy up
@@ -378,6 +396,9 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSlicingWorkerInstance));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceNuWorkerInstance));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceCRWorkerInstance));
+
+    if (m_printOverallRecoStatus)
+        std::cout << "PatRec complete" << std::endl;  
 
     return STATUS_CODE_SUCCESS;
 }
@@ -416,6 +437,8 @@ StatusCode MasterAlgorithm::Recreate(const PfoList &inputPfoList, PfoList &newPf
 {
     if (inputPfoList.empty())
         return STATUS_CODE_SUCCESS;
+
+    // TODO if no pfos in input list is primary - raise exception
 
     std::string clusterListName;
     const ClusterList *pClusterList(nullptr);

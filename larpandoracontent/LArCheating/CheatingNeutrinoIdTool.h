@@ -19,14 +19,7 @@ namespace lar_content
 class CheatingNeutrinoIdTool : public NeutrinoIdBaseTool
 {
 public:
-    /**
-     *  @brief  Default constructor
-     */
-    CheatingNeutrinoIdTool();
-
-    void FillNeutrinoProperties(const pandora::PfoList *const pPfoList, SliceProperties &sliceProperties) const;
-    void FillCosmicRayProperties(const pandora::PfoList *const pPfoList, SliceProperties &sliceProperties) const;
-    bool GetNeutrinoSliceIndex(const SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const;
+    void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
