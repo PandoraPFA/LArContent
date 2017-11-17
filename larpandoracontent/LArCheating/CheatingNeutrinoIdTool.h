@@ -8,7 +8,7 @@
 #ifndef LAR_CHEATING_NEUTRINO_ID_TOOL_H
 #define LAR_CHEATING_NEUTRINO_ID_TOOL_H 1
 
-#include "larpandoracontent/LArUtility/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
 namespace lar_content
 {

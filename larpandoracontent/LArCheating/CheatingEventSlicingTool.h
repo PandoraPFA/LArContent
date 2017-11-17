@@ -8,7 +8,7 @@
 #ifndef LAR_CHEATING_EVENT_SLICING_TOOL_H
 #define LAR_CHEATING_EVENT_SLICING_TOOL_H 1
 
-#include "larpandoracontent/LArUtility/SlicingAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
 
 #include <unordered_map>
 

@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArUtility/PreProcessingAlgorithm.cc
+ *  @file   larpandoracontent/LArControlFlow/PreProcessingAlgorithm.cc
  *
  *  @brief  Implementation of the list preparation algorithm class.
  *
@@ -8,10 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArControlFlow/PreProcessingAlgorithm.h"
+
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
-#include "larpandoracontent/LArUtility/PreProcessingAlgorithm.h"
 
 using namespace pandora;
 

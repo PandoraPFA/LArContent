@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoIdTool.cc
+ *  @file   larpandoracontent/LArControlFlow/NeutrinoIdTool.cc
  *
  *  @brief  Implementation of the neutrino id tool class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoIdTool.h"
+#include "larpandoracontent/LArControlFlow/NeutrinoIdTool.h"
 
 using namespace pandora;
 

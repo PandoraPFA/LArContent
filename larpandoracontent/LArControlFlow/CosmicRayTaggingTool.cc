@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.cc
+ *  @file   larpandoracontent/LArControlFlow/CosmicRayTaggingTool.cc
  *
  *  @brief  Implementation of the cosmic-ray tagging tool class.
  *
@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 using namespace pandora;
 

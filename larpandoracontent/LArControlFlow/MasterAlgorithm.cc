@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArUtility/MasterAlgorithm.cc
+ *  @file   larpandoracontent/LArControlFlow/MasterAlgorithm.cc
  *
  *  @brief  Implementation of the master algorithm class.
  *
@@ -10,14 +10,14 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArContent.h"
+
+#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
+
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
 #include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
-
-#include "larpandoracontent/LArUtility/MasterAlgorithm.h"
-
-#include "larpandoracontent/LArContent.h"
 
 using namespace pandora;
 

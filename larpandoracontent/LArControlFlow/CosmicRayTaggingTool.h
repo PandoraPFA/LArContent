@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.h
+ *  @file   larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h
  *
  *  @brief  Header file for the cosmic-ray tagging tool class.
  *
@@ -8,9 +8,9 @@
 #ifndef LAR_COSMIC_RAY_TAGGING_TOOL_H
 #define LAR_COSMIC_RAY_TAGGING_TOOL_H 1
 
-#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
-#include "larpandoracontent/LArUtility/MasterAlgorithm.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include <unordered_map>
 

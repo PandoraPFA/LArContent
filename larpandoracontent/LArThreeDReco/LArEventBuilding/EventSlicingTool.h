@@ -8,9 +8,9 @@
 #ifndef LAR_EVENT_SLICING_TOOL_H
 #define LAR_EVENT_SLICING_TOOL_H 1
 
-#include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
+#include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
 
-#include "larpandoracontent/LArUtility/SlicingAlgorithm.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 
 #include <unordered_map>
 

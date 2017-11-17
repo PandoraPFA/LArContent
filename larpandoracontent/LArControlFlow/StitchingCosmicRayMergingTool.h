@@ -1,5 +1,5 @@
 /**
- *  @file   LArContent/include/LArStitching/StitchingCosmicRayMergingTool.h
+ *  @file   LArContent/include/LArControlFlow/StitchingCosmicRayMergingTool.h
  *
  *  @brief  Header file for the stitching pfo merging tool class.
  *
@@ -8,8 +8,7 @@
 #ifndef LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H
 #define LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H 1
 
-#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
-#include "larpandoracontent/LArStitching/StitchingAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
@@ -22,7 +21,7 @@ namespace lar_content
 /**
  *  @brief  StitchingCosmicRayMergingTool class
  */
-class StitchingCosmicRayMergingTool : public StitchingTool
+class StitchingCosmicRayMergingTool : public StitchingBaseTool
 {
 public:
     /**
@@ -30,7 +29,7 @@ public:
      */
     StitchingCosmicRayMergingTool();
 
-    void Run(const StitchingAlgorithm *const pAlgorithm, StitchingAlgorithm::StitchingInfo &stitchingInfo);
+    void Run(const MasterAlgorithm *const pAlgorithm, PfoToLArTPCMap &pfoToLArTPCMap);
 
     /**
      *  @brief  PfoAssociation class
@@ -86,8 +85,6 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    typedef StitchingAlgorithm::PfoToLArTPCMap PfoToLArTPCMap;
 
     /**
      *  @brief  Select primary Pfos from the input list of Pfos
@@ -193,10 +190,10 @@ private:
      *  @param  pAlgorithm the address of the parent stitching algorithm
      *  @param  pointingClusterMap  the mapping between Pfos and their corresponding 3D pointing clusters
      *  @param  pfoMerges the input map of Pfo merges
-     *  @param  stitchingInfo the stitching information block
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
      */
-    void StitchPfos(const StitchingAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
-        const PfoMergeMap &pfoMerges, StitchingAlgorithm::StitchingInfo &stitchingInfo) const;
+    void StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
+        const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap) const;
 
     /**
      *  @brief  Calculate x0 shift for a group of associated Pfos

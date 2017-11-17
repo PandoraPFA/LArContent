@@ -8,7 +8,7 @@
 
 #include "Managers/GeometryManager.h"
 
-#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 
 #include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
 

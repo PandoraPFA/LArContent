@@ -1,7 +1,7 @@
 /**
- *  @file   LArContent/src/LArStitching/StitchingCosmicRayMergingTool.cc
+ *  @file   LArContent/src/LArControlFlow/StitchingCosmicRayMergingTool.cc
  *
- *  @brief  Implementation of the stitching pfo merging tool class.
+ *  @brief  Implementation of the stitching cosmic ray merging tool class.
  *
  *  $Log: $
  */
@@ -14,7 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
 
-#include "larpandoracontent/LArStitching/StitchingCosmicRayMergingTool.h"
+#include "larpandoracontent/LArControlFlow/StitchingCosmicRayMergingTool.h"
 
 using namespace pandora;
 
@@ -35,25 +35,25 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::Run(const StitchingAlgorithm *const pAlgorithm, StitchingAlgorithm::StitchingInfo &stitchingInfo)
+void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm, PfoToLArTPCMap &pfoToLArTPCMap)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    if (stitchingInfo.m_pfoToLArTPCMap.empty())
+    if (pfoToLArTPCMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     const PfoList *pMultiPfoList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pMultiPfoList));
 
     PfoList primaryPfos;
-    this->SelectPrimaryPfos(pMultiPfoList, stitchingInfo.m_pfoToLArTPCMap, primaryPfos);
+    this->SelectPrimaryPfos(pMultiPfoList, pfoToLArTPCMap, primaryPfos);
 
     ThreeDPointingClusterMap pointingClusterMap;
-    this->BuildPointingClusterMaps(primaryPfos, stitchingInfo.m_pfoToLArTPCMap, pointingClusterMap);
+    this->BuildPointingClusterMaps(primaryPfos, pfoToLArTPCMap, pointingClusterMap);
 
     LArTPCToPfoMap larTPCToPfoMap;
-    this->BuildTPCMaps(primaryPfos, stitchingInfo.m_pfoToLArTPCMap, larTPCToPfoMap);
+    this->BuildTPCMaps(primaryPfos, pfoToLArTPCMap, larTPCToPfoMap);
 
     PfoAssociationMatrix pfoAssociationMatrix;
     this->CreatePfoMatches(larTPCToPfoMap, pointingClusterMap, pfoAssociationMatrix);
@@ -65,9 +65,9 @@ void StitchingCosmicRayMergingTool::Run(const StitchingAlgorithm *const pAlgorit
     this->SelectPfoMerges(pfoSelectedMatches, pfoSelectedMerges);
 
     PfoMergeMap pfoOrderedMerges;
-    this->OrderPfoMerges(stitchingInfo.m_pfoToLArTPCMap, pointingClusterMap, pfoSelectedMerges, pfoOrderedMerges);
+    this->OrderPfoMerges(pfoToLArTPCMap, pointingClusterMap, pfoSelectedMerges, pfoOrderedMerges);
 
-    this->StitchPfos(pAlgorithm, pointingClusterMap, pfoOrderedMerges, stitchingInfo);
+    this->StitchPfos(pAlgorithm, pointingClusterMap, pfoOrderedMerges, pfoToLArTPCMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -509,8 +509,8 @@ void StitchingCosmicRayMergingTool::OrderPfoMerges(const PfoToLArTPCMap &pfoToLA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::StitchPfos(const StitchingAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
-    const PfoMergeMap &pfoMerges, StitchingAlgorithm::StitchingInfo &stitchingInfo) const
+void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const /*pAlgorithm*/, const ThreeDPointingClusterMap &pointingClusterMap,
+    const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap) const
 {
     PfoVector pfoVectorToEnlarge;
     for (const auto &mapEntry : pfoMerges) pfoVectorToEnlarge.push_back(mapEntry.first);
@@ -530,15 +530,15 @@ void StitchingCosmicRayMergingTool::StitchPfos(const StitchingAlgorithm *const p
 
             try
             {
-                this->CalculateX0(stitchingInfo.m_pfoToLArTPCMap, pointingClusterMap, pfoVector, x0);
+                this->CalculateX0(pfoToLArTPCMap, pointingClusterMap, pfoVector, x0);
             }
             catch (const pandora::StatusCodeException &)
             {
                 continue;
             }
 
-            for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, stitchingInfo, x0);
+// TODO           for (const ParticleFlowObject *const pPfoToShift : pfoVector)
+// TODO                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, stitchingInfo, x0);
         }
 
         for (const ParticleFlowObject *const pPfoToDelete : pfoVector)
@@ -546,7 +546,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const StitchingAlgorithm *const p
             if (pPfoToEnlarge == pPfoToDelete)
                 continue;
 
-            pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, stitchingInfo);
+// TODO           pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, stitchingInfo);
         }
     }
 }

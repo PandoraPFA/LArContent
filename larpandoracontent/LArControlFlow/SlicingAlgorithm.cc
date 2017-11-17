@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArUtility/SlicingAlgorithm.cc
+ *  @file   larpandoracontent/LArControlFlow/SlicingAlgorithm.cc
  *
  *  @brief  Implementation of the slicing algorithm class.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArUtility/SlicingAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
 
 using namespace pandora;
 

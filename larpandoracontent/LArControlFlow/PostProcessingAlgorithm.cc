@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArUtility/PostProcessingAlgorithm.cc
+ *  @file   larpandoracontent/LArControlFlow/PostProcessingAlgorithm.cc
  * 
  *  @brief  Implementation of the list moving algorithm class.
  * 
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArUtility/PostProcessingAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/PostProcessingAlgorithm.h"
 
 using namespace pandora;
 

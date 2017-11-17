@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArUtility/SlicingAlgorithm.h
+ *  @file   larpandoracontent/LArControlFlow/SlicingAlgorithm.h
  *
  *  @brief  Header file for the master algorithm class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArUtility/MasterAlgorithm.h
+ *  @file   larpandoracontent/LArControlFlow/MasterAlgorithm.h
  *
  *  @brief  Header file for the master algorithm class.
  *
@@ -11,11 +11,14 @@
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/ExternallyConfiguredAlgorithm.h"
 
-#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
+
+#include <unordered_map>
 
 namespace lar_content
 {
 
+class SlicingBaseTool;
 class CosmicRayTaggingBaseTool;
 class NeutrinoIdBaseTool;
 
@@ -189,6 +192,26 @@ private:
     std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
     std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file
     std::string                 m_slicingSettingsFile;              ///< The slicing settings file
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  StitchingBaseTool class
+ */
+class StitchingBaseTool : public pandora::AlgorithmTool
+{
+public:
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::LArTPC*> PfoToLArTPCMap;
+
+    /**
+     *  @brief  Run the algorithm tool
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
+     */
+    virtual void Run(const MasterAlgorithm *const pAlgorithm, PfoToLArTPCMap &pfoToLArTPCMap) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

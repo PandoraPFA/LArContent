@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoIdTool.h
+ *  @file   larpandoracontent/LArControlFlow/NeutrinoIdTool.h
  *
  *  @brief  Header file for the neutrino id tool class.
  *
@@ -8,7 +8,7 @@
 #ifndef LAR_NEUTRINO_ID_TOOL_H
 #define LAR_NEUTRINO_ID_TOOL_H 1
 
-#include "larpandoracontent/LArUtility/MasterAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
 namespace lar_content
 {

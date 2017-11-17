@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArUtility/PostProcessingAlgorithm.h
+ *  @file   larpandoracontent/LArControlFlow/PostProcessingAlgorithm.h
  * 
  *  @brief  Header file for the post processing algorithm class.
  * 

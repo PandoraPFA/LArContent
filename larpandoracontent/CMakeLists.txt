@@ -2,13 +2,13 @@ include_directories( $ENV{EIGEN_INC} )
 include_directories( $ENV{CETLIB_INC} )
 
 set( subdir_list LArCheating
+                 LArControlFlow
 		 LArCustomParticles
 		 LArHelpers
 		 LArMonitoring
 		 LArObjects
 		 LArPersistency
 		 LArPlugins
-		 LArStitching
 		 LArThreeDReco
 		 LArThreeDReco/LArCosmicRay
 		 LArThreeDReco/LArEventBuilding
