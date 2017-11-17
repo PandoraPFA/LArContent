@@ -538,7 +538,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const /*pA
             }
 
 // TODO           for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-// TODO                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, stitchingInfo, x0);
+// TODO                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
         }
 
         for (const ParticleFlowObject *const pPfoToDelete : pfoVector)
@@ -546,7 +546,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const /*pA
             if (pPfoToEnlarge == pPfoToDelete)
                 continue;
 
-// TODO           pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, stitchingInfo);
+// TODO           pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
         }
     }
 }

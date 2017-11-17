@@ -53,15 +53,6 @@ public:
 
     typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::LArTPC*> PfoToLArTPCMap;
 
-    /**
-     *  @brief  StitchingInfo class
-     */
-    class StitchingInfo
-    {
-    public:
-        PfoToLArTPCMap      m_pfoToLArTPCMap;         ///< Mapping between Pfos and LArTPCs
-    };
-
 private:
     pandora::StatusCode Initialize();
 

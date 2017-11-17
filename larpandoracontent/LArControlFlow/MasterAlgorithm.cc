@@ -231,7 +231,7 @@ StatusCode MasterAlgorithm::Run()
     //--------------------------------------------------------------------------------------------------------------------------------------
     // Recreate CR worker particles in master instance
     //--------------------------------------------------------------------------------------------------------------------------------------
-    StitchingInfo stitchingInfo;
+    PfoToLArTPCMap pfoToLArTPCMap;
 
     for (const Pandora *const pCRWorker : m_crWorkerInstances)
     {
@@ -240,7 +240,11 @@ StatusCode MasterAlgorithm::Run()
 
         PfoList newPfoList;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(*pCRPfos, newPfoList));
-        //const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
+
+        const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
+
+        for (const Pfo *const pNewPfo : newPfoList)
+            pfoToLArTPCMap[pNewPfo] = &larTPC;
     }
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -251,9 +255,8 @@ StatusCode MasterAlgorithm::Run()
 PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "pRecreatedCRPfos", GREEN);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
-    // Care with new hit creation within tools (logic for which should be encapsulated within tools)
-    //    for (StitchingTool *const pStitchingTool : m_algorithmToolVector)
-    //        pStitchingTool->Run(this, stitchingInfo);
+    // TODO
+    // m_pStitchingTool->Run(this, pRecreatedCRPfos, pfoToLArTPCMap);
 
     //--------------------------------------------------------------------------------------------------------------------------------------
     // CR tagging and hit removal
