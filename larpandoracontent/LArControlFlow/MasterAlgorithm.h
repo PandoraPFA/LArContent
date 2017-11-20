@@ -57,31 +57,27 @@ public:
 
     typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::LArTPC*> PfoToLArTPCMap;
 
+    /**
+     *  @brief  Shift a Pfo hierarchy by a specified x0 value
+     *
+     *  @param  pPfo the address of the parent pfo
+     *  @param  stitchingInfo  the source for additional, local, stitching information
+     *  @param  x0 the x0 correction relative to the input pfo
+     */
+    void ShiftPfoHierarchy(const pandora::ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap, const float x0) const;
+
+    /**
+     *  @brief  Stitch together a pair of pfos
+     *
+     *  @param  pPfoToEnlarge the address of the pfo to enlarge
+     *  @param  pPfoToDelete the address of the pfo to delete (will become a dangling pointer)
+     *  @param  stitchingInfo the source for additional, local, stitching information
+     */
+    void StitchPfos(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::ParticleFlowObject *const pPfoToDelete,
+        PfoToLArTPCMap &pfoToLArTPCMap) const;
+
 private:
     pandora::StatusCode Initialize();
-
-    /**
-     *  @brief  Create a pandora worker instance to handle a single LArTPC
-     *
-     *  @param  larTPC the lar tpc
-     *  @param  gapList the gap list
-     *  @param  settingsFile the pandora settings file
-     *
-     *  @return the address of the pandora instance
-     */
-    const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPC &larTPC, const pandora::DetectorGapList &gapList, const std::string &settingsFile) const;
-
-    /**
-     *  @brief  Create a pandora worker instance to handle a number of LArTPCs
-     *
-     *  @param  larTPCMap the lar tpc map
-     *  @param  gapList the gap list
-     *  @param  settingsFile the pandora settings file
-     *
-     *  @return the address of the pandora instance
-     */
-    const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPCMap &larTPCMap, const pandora::DetectorGapList &gapList, const std::string &settingsFile) const;
-
     pandora::StatusCode Run();
 
     /**
@@ -218,6 +214,30 @@ private:
      */
     const pandora::ParticleFlowObject *CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ClusterList &newClusterList,
         const pandora::VertexList &newVertexList) const;
+
+    /**
+     *  @brief  Create a pandora worker instance to handle a single LArTPC
+     *
+     *  @param  larTPC the lar tpc
+     *  @param  gapList the gap list
+     *  @param  settingsFile the pandora settings file
+     *
+     *  @return the address of the pandora instance
+     */
+    const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPC &larTPC, const pandora::DetectorGapList &gapList,
+        const std::string &settingsFile) const;
+
+    /**
+     *  @brief  Create a pandora worker instance to handle a number of LArTPCs
+     *
+     *  @param  larTPCMap the lar tpc map
+     *  @param  gapList the gap list
+     *  @param  settingsFile the pandora settings file
+     *
+     *  @return the address of the pandora instance
+     */
+    const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPCMap &larTPCMap, const pandora::DetectorGapList &gapList,
+        const std::string &settingsFile) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

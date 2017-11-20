@@ -509,7 +509,7 @@ void StitchingCosmicRayMergingTool::OrderPfoMerges(const PfoToLArTPCMap &pfoToLA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const /*pAlgorithm*/, const ThreeDPointingClusterMap &pointingClusterMap,
+void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
     const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap) const
 {
     PfoVector pfoVectorToEnlarge;
@@ -537,8 +537,8 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const /*pA
                 continue;
             }
 
-// TODO           for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-// TODO                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
+            for (const ParticleFlowObject *const pPfoToShift : pfoVector)
+                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
         }
 
         for (const ParticleFlowObject *const pPfoToDelete : pfoVector)
@@ -546,7 +546,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const /*pA
             if (pPfoToEnlarge == pPfoToDelete)
                 continue;
 
-// TODO           pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
+            pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
         }
     }
 }
@@ -600,7 +600,7 @@ void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
         }
     }
 
-    if (sumN < std::numeric_limits<float>::epsilon())
+    if ((sumN < std::numeric_limits<float>::epsilon()) || (std::fabs(sumX) < std::numeric_limits<float>::epsilon()))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     x0 = (sumX / sumN);

@@ -14,10 +14,13 @@
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
 #include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
+
+#include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
 using namespace pandora;
 
@@ -37,6 +40,82 @@ MasterAlgorithm::MasterAlgorithm() :
     m_pSliceNuWorkerInstance(nullptr),
     m_pSliceCRWorkerInstance(nullptr)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentPfo, const PfoToLArTPCMap &pfoToLArTPCMap, const float x0) const
+{
+    if (!pParentPfo->GetParentPfoList().empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    PfoToLArTPCMap::const_iterator larTPCIter(pfoToLArTPCMap.find(pParentPfo));
+
+    if (pfoToLArTPCMap.end() == larTPCIter)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float signedX0(larTPCIter->second->IsDriftInPositiveX() ? -x0 : x0);
+std::cout << "ShiftPfoHierarchy: signedX0 " << signedX0 << std::endl;
+
+    PfoList pfoList;
+    LArPfoHelper::GetAllDownstreamPfos(pParentPfo, pfoList);
+
+    for (const ParticleFlowObject *const pDaughterPfo : pfoList)
+    {
+        for (const Cluster *const pCluster : pDaughterPfo->GetClusterList())
+        {
+            CaloHitList caloHitList;
+            pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+            caloHitList.insert(caloHitList.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
+            // TODO Shift x0
+        }
+
+//        for (const Vertex *const pVertex : pDaughterPfo->GetVertexList())
+//        {
+//            // TODO Shift x0
+//        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, const ParticleFlowObject *const pPfoToDelete,
+    PfoToLArTPCMap &pfoToLArTPCMap) const
+{
+    if (pPfoToEnlarge == pPfoToDelete)
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+    // ATTN Remove both pfos from stitching information here - could cause problems if stitching across multiple TPCs
+    pfoToLArTPCMap.erase(pPfoToEnlarge);
+    pfoToLArTPCMap.erase(pPfoToDelete);
+
+    const PfoList daughterPfos(pPfoToDelete->GetDaughterPfoList());
+    const ClusterVector daughterClusters(pPfoToDelete->GetClusterList().begin(), pPfoToDelete->GetClusterList().end());
+    const VertexVector daughterVertices(pPfoToDelete->GetVertexList().begin(), pPfoToDelete->GetVertexList().end());
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pPfoToDelete, m_recreatedPfoListName));
+
+    for (const ParticleFlowObject *const pDaughterPfo : daughterPfos)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoToEnlarge, pDaughterPfo));
+
+    for (const  Vertex *const pDaughterVertex : daughterVertices)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pDaughterVertex, m_recreatedVertexListName));
+
+    for (const Cluster *const pDaughterCluster : daughterClusters)
+    {
+        const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
+        const Cluster *pParentCluster(PfoMopUpBaseAlgorithm::GetParentCluster(pPfoToEnlarge->GetClusterList(), daughterHitType));
+
+        if (pParentCluster)
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
+                m_recreatedClusterListName, m_recreatedClusterListName));
+        }
+        else
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfoToEnlarge, pDaughterCluster));
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,131 +146,6 @@ StatusCode MasterAlgorithm::Initialize()
     }
 
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const DetectorGapList &gapList, const std::string &settingsFile) const
-{
-    // The Pandora instance
-    const Pandora *const pPandora(new Pandora());
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPandora));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterBasicPlugins(*pPandora));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(*pPandora, new lar_content::LArPseudoLayerPlugin));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetLArTransformationPlugin(*pPandora, new lar_content::LArRotationalTransformationPlugin));
-    MultiPandoraApi::AddDaughterPandoraInstance(&(this->GetPandora()), pPandora);
-
-    // The LArTPC
-    PandoraApi::Geometry::LArTPC::Parameters larTPCParameters;
-    larTPCParameters.m_larTPCName = larTPC.GetLArTPCName();
-    larTPCParameters.m_centerX = larTPC.GetCenterX();
-    larTPCParameters.m_centerY = larTPC.GetCenterY();
-    larTPCParameters.m_centerZ = larTPC.GetCenterZ();
-    larTPCParameters.m_widthX = larTPC.GetWidthX();
-    larTPCParameters.m_widthY = larTPC.GetWidthY();
-    larTPCParameters.m_widthZ = larTPC.GetWidthZ();
-    larTPCParameters.m_wirePitchU = larTPC.GetWirePitchU();
-    larTPCParameters.m_wirePitchV = larTPC.GetWirePitchV();
-    larTPCParameters.m_wirePitchW = larTPC.GetWirePitchW();
-    larTPCParameters.m_wireAngleU = larTPC.GetWireAngleU();
-    larTPCParameters.m_wireAngleV = larTPC.GetWireAngleV();
-    larTPCParameters.m_sigmaUVW = larTPC.GetSigmaUVW();
-    larTPCParameters.m_isDriftInPositiveX = larTPC.IsDriftInPositiveX();
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
-
-    // The Gaps
-    for (const DetectorGap *const pGap : gapList)
-    {
-        const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pGap));
-
-        if (pLineGap && (pLineGap->GetLineEndX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) && (pLineGap->GetLineStartX() > (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
-        {
-            PandoraApi::Geometry::LineGap::Parameters lineGapParameters;
-            lineGapParameters.m_lineGapType = pLineGap->GetLineGapType();
-            lineGapParameters.m_lineStartX = pLineGap->GetLineStartX();
-            lineGapParameters.m_lineEndX = pLineGap->GetLineEndX();
-            lineGapParameters.m_lineStartZ = pLineGap->GetLineStartZ();
-            lineGapParameters.m_lineEndZ = pLineGap->GetLineEndZ();
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LineGap::Create(*pPandora, lineGapParameters));
-        }
-    }
-
-    // Configuration
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*pPandora, settingsFile));
-    return pPandora;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap, const DetectorGapList &gapList, const std::string &settingsFile) const
-{
-    // The Pandora instance
-    const Pandora *const pPandora(new Pandora());
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPandora));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterBasicPlugins(*pPandora));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(*pPandora, new lar_content::LArPseudoLayerPlugin));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetLArTransformationPlugin(*pPandora, new lar_content::LArRotationalTransformationPlugin));
-    MultiPandoraApi::AddDaughterPandoraInstance(&(this->GetPandora()), pPandora);
-
-    // The Parent LArTPC
-    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
-    const bool switchViews(pFirstLArTPC->IsDriftInPositiveX());
-
-    float parentMinX(pFirstLArTPC->GetCenterX() - 0.5f * pFirstLArTPC->GetWidthX());
-    float parentMaxX(pFirstLArTPC->GetCenterX() + 0.5f * pFirstLArTPC->GetWidthX());
-    float parentMinY(pFirstLArTPC->GetCenterY() - 0.5f * pFirstLArTPC->GetWidthY());
-    float parentMaxY(pFirstLArTPC->GetCenterY() + 0.5f * pFirstLArTPC->GetWidthY());
-    float parentMinZ(pFirstLArTPC->GetCenterZ() - 0.5f * pFirstLArTPC->GetWidthZ());
-    float parentMaxZ(pFirstLArTPC->GetCenterZ() + 0.5f * pFirstLArTPC->GetWidthZ());
-
-    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
-    {
-        const LArTPC *const pLArTPC(mapEntry.second);
-        parentMinX = std::min(parentMinX, pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX());
-        parentMaxX = std::max(parentMaxX, pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX());
-        parentMinY = std::min(parentMinY, pLArTPC->GetCenterY() - 0.5f * pLArTPC->GetWidthY());
-        parentMaxY = std::max(parentMaxY, pLArTPC->GetCenterY() + 0.5f * pLArTPC->GetWidthY());
-        parentMinZ = std::min(parentMinZ, pLArTPC->GetCenterZ() - 0.5f * pLArTPC->GetWidthZ());
-        parentMaxZ = std::max(parentMaxZ, pLArTPC->GetCenterZ() + 0.5f * pLArTPC->GetWidthZ());
-    }
-
-    PandoraApi::Geometry::LArTPC::Parameters larTPCParameters;
-    larTPCParameters.m_larTPCName = "ParentLArTPC";
-    larTPCParameters.m_centerX = 0.5f * (parentMaxX + parentMinX);
-    larTPCParameters.m_centerY = 0.5f * (parentMaxY + parentMinY);
-    larTPCParameters.m_centerZ = 0.5f * (parentMaxZ + parentMinZ);
-    larTPCParameters.m_widthX = parentMaxX - parentMinX;
-    larTPCParameters.m_widthY = parentMaxY - parentMinY;
-    larTPCParameters.m_widthZ = parentMaxZ - parentMinZ;
-    larTPCParameters.m_wirePitchU = std::max(pFirstLArTPC->GetWirePitchU(), pFirstLArTPC->GetWirePitchV());
-    larTPCParameters.m_wirePitchV = std::max(pFirstLArTPC->GetWirePitchU(), pFirstLArTPC->GetWirePitchV());
-    larTPCParameters.m_wirePitchW = pFirstLArTPC->GetWirePitchW();
-    larTPCParameters.m_wireAngleU = switchViews ? -pFirstLArTPC->GetWireAngleV() : pFirstLArTPC->GetWireAngleU();
-    larTPCParameters.m_wireAngleV = switchViews ? -pFirstLArTPC->GetWireAngleU() : pFirstLArTPC->GetWireAngleV();
-    larTPCParameters.m_sigmaUVW = pFirstLArTPC->GetSigmaUVW();
-    larTPCParameters.m_isDriftInPositiveX = switchViews ? !pFirstLArTPC->IsDriftInPositiveX() : pFirstLArTPC->IsDriftInPositiveX();
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
-
-    // The Gaps
-    for (const DetectorGap *const pGap : gapList)
-    {
-        const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pGap));
-
-        if (pLineGap)
-        {
-            PandoraApi::Geometry::LineGap::Parameters lineGapParameters;
-            lineGapParameters.m_lineGapType = pLineGap->GetLineGapType();
-            lineGapParameters.m_lineStartX = pLineGap->GetLineStartX();
-            lineGapParameters.m_lineEndX = pLineGap->GetLineEndX();
-            lineGapParameters.m_lineStartZ = pLineGap->GetLineStartZ();
-            lineGapParameters.m_lineEndZ = pLineGap->GetLineEndZ();
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LineGap::Create(*pPandora, lineGapParameters));
-        }
-    }
-
-    // Configuration
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*pPandora, settingsFile));
-    return pPandora;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -280,10 +234,11 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) 
 {
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
-
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "pRecreatedCRPfos", GREEN);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
     for (StitchingBaseTool *const pStitchingTool : m_stitchingToolVector)
         pStitchingTool->Run(this, pRecreatedCRPfos, pfoToLArTPCMap);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "pRecreatedCRPfos", GREEN);
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "AfterStitching", RED);
 PandoraMonitoringApi::ViewEvent(this->GetPandora());
     return STATUS_CODE_SUCCESS;
 }
@@ -691,6 +646,131 @@ const ParticleFlowObject *MasterAlgorithm::CreatePfo(const ParticleFlowObject *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const DetectorGapList &gapList, const std::string &settingsFile) const
+{
+    // The Pandora instance
+    const Pandora *const pPandora(new Pandora());
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPandora));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterBasicPlugins(*pPandora));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(*pPandora, new lar_content::LArPseudoLayerPlugin));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetLArTransformationPlugin(*pPandora, new lar_content::LArRotationalTransformationPlugin));
+    MultiPandoraApi::AddDaughterPandoraInstance(&(this->GetPandora()), pPandora);
+
+    // The LArTPC
+    PandoraApi::Geometry::LArTPC::Parameters larTPCParameters;
+    larTPCParameters.m_larTPCName = larTPC.GetLArTPCName();
+    larTPCParameters.m_centerX = larTPC.GetCenterX();
+    larTPCParameters.m_centerY = larTPC.GetCenterY();
+    larTPCParameters.m_centerZ = larTPC.GetCenterZ();
+    larTPCParameters.m_widthX = larTPC.GetWidthX();
+    larTPCParameters.m_widthY = larTPC.GetWidthY();
+    larTPCParameters.m_widthZ = larTPC.GetWidthZ();
+    larTPCParameters.m_wirePitchU = larTPC.GetWirePitchU();
+    larTPCParameters.m_wirePitchV = larTPC.GetWirePitchV();
+    larTPCParameters.m_wirePitchW = larTPC.GetWirePitchW();
+    larTPCParameters.m_wireAngleU = larTPC.GetWireAngleU();
+    larTPCParameters.m_wireAngleV = larTPC.GetWireAngleV();
+    larTPCParameters.m_sigmaUVW = larTPC.GetSigmaUVW();
+    larTPCParameters.m_isDriftInPositiveX = larTPC.IsDriftInPositiveX();
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
+
+    // The Gaps
+    for (const DetectorGap *const pGap : gapList)
+    {
+        const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pGap));
+
+        if (pLineGap && (pLineGap->GetLineEndX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) && (pLineGap->GetLineStartX() > (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
+        {
+            PandoraApi::Geometry::LineGap::Parameters lineGapParameters;
+            lineGapParameters.m_lineGapType = pLineGap->GetLineGapType();
+            lineGapParameters.m_lineStartX = pLineGap->GetLineStartX();
+            lineGapParameters.m_lineEndX = pLineGap->GetLineEndX();
+            lineGapParameters.m_lineStartZ = pLineGap->GetLineStartZ();
+            lineGapParameters.m_lineEndZ = pLineGap->GetLineEndZ();
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LineGap::Create(*pPandora, lineGapParameters));
+        }
+    }
+
+    // Configuration
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*pPandora, settingsFile));
+    return pPandora;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap, const DetectorGapList &gapList, const std::string &settingsFile) const
+{
+    // The Pandora instance
+    const Pandora *const pPandora(new Pandora());
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPandora));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterBasicPlugins(*pPandora));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(*pPandora, new lar_content::LArPseudoLayerPlugin));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetLArTransformationPlugin(*pPandora, new lar_content::LArRotationalTransformationPlugin));
+    MultiPandoraApi::AddDaughterPandoraInstance(&(this->GetPandora()), pPandora);
+
+    // The Parent LArTPC
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+    const bool switchViews(pFirstLArTPC->IsDriftInPositiveX());
+
+    float parentMinX(pFirstLArTPC->GetCenterX() - 0.5f * pFirstLArTPC->GetWidthX());
+    float parentMaxX(pFirstLArTPC->GetCenterX() + 0.5f * pFirstLArTPC->GetWidthX());
+    float parentMinY(pFirstLArTPC->GetCenterY() - 0.5f * pFirstLArTPC->GetWidthY());
+    float parentMaxY(pFirstLArTPC->GetCenterY() + 0.5f * pFirstLArTPC->GetWidthY());
+    float parentMinZ(pFirstLArTPC->GetCenterZ() - 0.5f * pFirstLArTPC->GetWidthZ());
+    float parentMaxZ(pFirstLArTPC->GetCenterZ() + 0.5f * pFirstLArTPC->GetWidthZ());
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+        parentMinX = std::min(parentMinX, pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX());
+        parentMaxX = std::max(parentMaxX, pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX());
+        parentMinY = std::min(parentMinY, pLArTPC->GetCenterY() - 0.5f * pLArTPC->GetWidthY());
+        parentMaxY = std::max(parentMaxY, pLArTPC->GetCenterY() + 0.5f * pLArTPC->GetWidthY());
+        parentMinZ = std::min(parentMinZ, pLArTPC->GetCenterZ() - 0.5f * pLArTPC->GetWidthZ());
+        parentMaxZ = std::max(parentMaxZ, pLArTPC->GetCenterZ() + 0.5f * pLArTPC->GetWidthZ());
+    }
+
+    PandoraApi::Geometry::LArTPC::Parameters larTPCParameters;
+    larTPCParameters.m_larTPCName = "ParentLArTPC";
+    larTPCParameters.m_centerX = 0.5f * (parentMaxX + parentMinX);
+    larTPCParameters.m_centerY = 0.5f * (parentMaxY + parentMinY);
+    larTPCParameters.m_centerZ = 0.5f * (parentMaxZ + parentMinZ);
+    larTPCParameters.m_widthX = parentMaxX - parentMinX;
+    larTPCParameters.m_widthY = parentMaxY - parentMinY;
+    larTPCParameters.m_widthZ = parentMaxZ - parentMinZ;
+    larTPCParameters.m_wirePitchU = std::max(pFirstLArTPC->GetWirePitchU(), pFirstLArTPC->GetWirePitchV());
+    larTPCParameters.m_wirePitchV = std::max(pFirstLArTPC->GetWirePitchU(), pFirstLArTPC->GetWirePitchV());
+    larTPCParameters.m_wirePitchW = pFirstLArTPC->GetWirePitchW();
+    larTPCParameters.m_wireAngleU = switchViews ? -pFirstLArTPC->GetWireAngleV() : pFirstLArTPC->GetWireAngleU();
+    larTPCParameters.m_wireAngleV = switchViews ? -pFirstLArTPC->GetWireAngleU() : pFirstLArTPC->GetWireAngleV();
+    larTPCParameters.m_sigmaUVW = pFirstLArTPC->GetSigmaUVW();
+    larTPCParameters.m_isDriftInPositiveX = switchViews ? !pFirstLArTPC->IsDriftInPositiveX() : pFirstLArTPC->IsDriftInPositiveX();
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
+
+    // The Gaps
+    for (const DetectorGap *const pGap : gapList)
+    {
+        const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pGap));
+
+        if (pLineGap)
+        {
+            PandoraApi::Geometry::LineGap::Parameters lineGapParameters;
+            lineGapParameters.m_lineGapType = pLineGap->GetLineGapType();
+            lineGapParameters.m_lineStartX = pLineGap->GetLineStartX();
+            lineGapParameters.m_lineEndX = pLineGap->GetLineEndX();
+            lineGapParameters.m_lineStartZ = pLineGap->GetLineStartZ();
+            lineGapParameters.m_lineEndZ = pLineGap->GetLineEndZ();
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LineGap::Create(*pPandora, lineGapParameters));
+        }
+    }
+
+    // Configuration
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ReadSettings(*pPandora, settingsFile));
+    return pPandora;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     ExternalSteeringParameters *pExternalParameters(nullptr);
@@ -698,9 +778,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     if (this->ExternalParametersPresent())
     {
         pExternalParameters = dynamic_cast<ExternalSteeringParameters*>(this->GetExternalParameters());
-
-        if (!pExternalParameters)
-            return STATUS_CODE_FAILURE;
+        if (!pExternalParameters) return STATUS_CODE_FAILURE;
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
@@ -723,10 +801,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
         {
             StitchingBaseTool *const pStitchingTool(dynamic_cast<StitchingBaseTool*>(pAlgorithmTool));
-
-            if (!pStitchingTool)
-                return STATUS_CODE_INVALID_PARAMETER;
-
+            if (!pStitchingTool) return STATUS_CODE_INVALID_PARAMETER;
             m_stitchingToolVector.push_back(pStitchingTool);
         }
     }
@@ -748,10 +823,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
         {
             CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool(dynamic_cast<CosmicRayTaggingBaseTool*>(pAlgorithmTool));
-
-            if (!pCosmicRayTaggingTool)
-                return STATUS_CODE_INVALID_PARAMETER;
-
+            if (!pCosmicRayTaggingTool) return STATUS_CODE_INVALID_PARAMETER;
             m_cosmicRayTaggingToolVector.push_back(pCosmicRayTaggingTool);
         }
     }
@@ -782,10 +854,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
         {
             SliceIdBaseTool *const pSliceIdIdTool(dynamic_cast<SliceIdBaseTool*>(pAlgorithmTool));
-
-            if (!pSliceIdIdTool)
-                return STATUS_CODE_INVALID_PARAMETER;
-
+            if (!pSliceIdIdTool) return STATUS_CODE_INVALID_PARAMETER;
             m_sliceIdToolVector.push_back(pSliceIdIdTool);
         }
     }
@@ -796,7 +865,6 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CRSettingsFile", m_crSettingsFile));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NuSettingsFile", m_nuSettingsFile));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "SlicingSettingsFile", m_slicingSettingsFile));
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputHitListName", m_inputHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedPfoListName", m_recreatedPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedClusterListName", m_recreatedClusterListName));
