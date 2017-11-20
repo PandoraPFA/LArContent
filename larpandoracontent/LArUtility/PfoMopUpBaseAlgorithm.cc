@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.cc
+ *  @file   larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.cc
  * 
  *  @brief  Implementation of the pfo mop up algorithm base class.
  * 
@@ -10,7 +10,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
+#include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
 using namespace pandora;
 
@@ -41,7 +41,7 @@ void PfoMopUpBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const p
     for (const Cluster *const pDaughterCluster : daughterClusters)
     {
         const HitType daughterHitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
-        const Cluster *pParentCluster(this->GetParentCluster(pPfoToEnlarge->GetClusterList(), daughterHitType));
+        const Cluster *pParentCluster(PfoMopUpBaseAlgorithm::GetParentCluster(pPfoToEnlarge->GetClusterList(), daughterHitType));
 
         if (pParentCluster)
         {
@@ -57,7 +57,7 @@ void PfoMopUpBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *PfoMopUpBaseAlgorithm::GetParentCluster(const ClusterList &clusterList, const HitType hitType) const
+const Cluster *PfoMopUpBaseAlgorithm::GetParentCluster(const ClusterList &clusterList, const HitType hitType)
 {
     unsigned int mostHits(0);
     const Cluster *pBestParentCluster(nullptr);

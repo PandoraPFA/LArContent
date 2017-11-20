@@ -8,7 +8,7 @@
 #ifndef LAR_SLIDING_CONE_CLUSTER_MOP_UP_ALGORITHM_H
 #define LAR_SLIDING_CONE_CLUSTER_MOP_UP_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
+#include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
