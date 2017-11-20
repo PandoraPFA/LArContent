@@ -29,7 +29,7 @@ public:
      */
     StitchingCosmicRayMergingTool();
 
-    void Run(const MasterAlgorithm *const pAlgorithm, PfoToLArTPCMap &pfoToLArTPCMap);
+    void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap);
 
     /**
      *  @brief  PfoAssociation class

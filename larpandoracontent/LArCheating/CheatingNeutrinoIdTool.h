@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  CheatingNeutrinoIdTool class
  */
-class CheatingNeutrinoIdTool : public NeutrinoIdBaseTool
+class CheatingNeutrinoIdTool : public SliceIdBaseTool
 {
 public:
     void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);

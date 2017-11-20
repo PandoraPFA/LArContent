@@ -18,9 +18,13 @@
 namespace lar_content
 {
 
-class SlicingBaseTool;
+class StitchingBaseTool;
 class CosmicRayTaggingBaseTool;
-class NeutrinoIdBaseTool;
+class SliceIdBaseTool;
+
+typedef std::vector<pandora::CaloHitList> SliceVector;
+typedef std::vector<pandora::PfoList> SliceHypotheses;
+typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::LArTPC*> PfoToLArTPCMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -79,6 +83,72 @@ private:
     const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPCMap &larTPCMap, const pandora::DetectorGapList &gapList, const std::string &settingsFile) const;
 
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Run the cosmic-ray reconstruction worker instances
+     *
+     *  @param  originalHitList the original hit list
+     */
+    pandora::StatusCode RunCosmicRayReconstruction(const pandora::CaloHitList &originalHitList) const;
+
+    /**
+     *  @brief  Recreate cosmic-ray pfos (created by worker instances) in the master instance
+     *
+     *  @param  pfoToLArTPCMap to receive the populated pfo to lar tpc map
+     */
+    pandora::StatusCode RecreateCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) const;
+
+    /**
+     *  @brief  Stitch together cosmic-ray pfos crossing between adjacent lar tpcs
+     *
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
+     */
+    pandora::StatusCode StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) const;
+
+    /**
+     *  @brief  Tag clear, unambiguous cosmic-ray pfos 
+     *
+     *  @param  clearCosmicRayPfos to receive the list of clear cosmic-ray pfos
+     *  @param  ambiguousPfos to receive the list of ambiguous cosmic-ray pfos for further analysis
+     */
+    pandora::StatusCode TagCosmicRayPfos(pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
+
+    /**
+     *  @brief  Run cosmic-ray hit removal, freeing hits in ambiguous pfos for further processing
+     *
+     *  @param  ambiguousPfos the list of ambiguous cosmic-ray pfos
+     */
+    pandora::StatusCode RunCosmicRayHitRemoval(const pandora::PfoList &ambiguousPfos) const;
+
+    /**
+     *  @brief  Run the event slicing procedures, dividing available hits up into distinct 3D regions
+     *
+     *  @param  originalHitList the original hit list
+     *  @param  sliceVector to receive the populated slice vector
+     */
+    pandora::StatusCode RunSlicing(const pandora::CaloHitList &originalHitList, SliceVector &sliceVector) const;
+
+    /**
+     *  @brief  Process each slice under different reconstruction hypotheses
+     *
+     *  @param  sliceVector the slice vector
+     *  @param  nuSliceHypotheses to receive the vector of slice neutrino hypotheses
+     *  @param  crSliceHypotheses to receive the vector of slice cosmic-ray hypotheses
+     */
+    pandora::StatusCode RunSliceReconstruction(SliceVector &sliceVector, SliceHypotheses &nuSliceHypotheses, SliceHypotheses &crSliceHypotheses) const;
+
+    /**
+     *  @brief  Examine slice hypotheses to identify the most appropriate to provide in final event output
+     *
+     *  @param  nuSliceHypotheses the vector of slice neutrino hypotheses
+     *  @param  crSliceHypotheses the vector of slice cosmic-ray hypotheses
+     */
+    pandora::StatusCode SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses) const;
+
+    /**
+     *  @brief  Reset all worker instances
+     */
+    pandora::StatusCode Reset();
 
     /**
      *  @brief  Copy a specified calo hit to the provided pandora instance
@@ -177,12 +247,22 @@ private:
     const pandora::Pandora     *m_pSliceNuWorkerInstance;           ///< The per-slice neutrino reconstruction worker instance
     const pandora::Pandora     *m_pSliceCRWorkerInstance;           ///< The per-slice cosmic-ray reconstruction worker instance
 
-    CosmicRayTaggingBaseTool   *m_pCosmicRayTaggingTool;            ///< The address of the cosmic-ray tagging tool
-    NeutrinoIdBaseTool         *m_pNeutrinoIdTool;                  ///< The address of the neutrino id tool
+    typedef std::vector<StitchingBaseTool*> StitchingToolVector;
+    typedef std::vector<CosmicRayTaggingBaseTool*> CosmicRayTaggingToolVector;
+    typedef std::vector<SliceIdBaseTool*> SliceIdToolVector;
+
+    StitchingToolVector         m_stitchingToolVector;              ///< The stitching tool vector
+    CosmicRayTaggingToolVector  m_cosmicRayTaggingToolVector;       ///< The cosmic-ray tagging tool vector
+    SliceIdToolVector           m_sliceIdToolVector;                ///< The slice id tool vector
 
     std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
     std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file
     std::string                 m_slicingSettingsFile;              ///< The slicing settings file
+
+    std::string                 m_inputHitListName;                 ///< The input hit list name
+    std::string                 m_recreatedPfoListName;             ///< The output recreated pfo list name
+    std::string                 m_recreatedClusterListName;         ///< The output recreated cluster list name
+    std::string                 m_recreatedVertexListName;          ///< The output recreated vertex list name
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -194,15 +274,14 @@ private:
 class StitchingBaseTool : public pandora::AlgorithmTool
 {
 public:
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::LArTPC*> PfoToLArTPCMap;
-
     /**
      *  @brief  Run the algorithm tool
      *
      *  @param  pAlgorithm address of the calling algorithm
+     *  @param  pMultiPfoList the list of pfos in multiple lar tpcs
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
      */
-    virtual void Run(const MasterAlgorithm *const pAlgorithm, PfoToLArTPCMap &pfoToLArTPCMap) = 0;
+    virtual void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -227,13 +306,11 @@ public:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  NeutrinoIdBaseTool class
+ *  @brief  SliceIdBaseTool class
  */
-class NeutrinoIdBaseTool : public pandora::AlgorithmTool
+class SliceIdBaseTool : public pandora::AlgorithmTool
 {
 public:
-    typedef std::vector<pandora::PfoList> SliceHypotheses;
-
     /**
      *  @brief  Select which reconstruction hypotheses to use; neutrino outcomes or cosmic-ray muon outcomes for each slice
      *

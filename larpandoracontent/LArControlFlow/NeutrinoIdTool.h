@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  NeutrinoIdTool class
  */
-class NeutrinoIdTool : public NeutrinoIdBaseTool
+class NeutrinoIdTool : public SliceIdBaseTool
 {
 public:
     void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);

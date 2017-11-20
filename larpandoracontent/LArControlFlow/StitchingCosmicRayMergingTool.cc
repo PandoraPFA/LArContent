@@ -35,16 +35,16 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm, PfoToLArTPCMap &pfoToLArTPCMap)
+void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm, const PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
+    if (this->GetPandora().GetGeometry()->GetLArTPCMap().size() < 2)
+        return;
+
     if (pfoToLArTPCMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    const PfoList *pMultiPfoList(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pMultiPfoList));
 
     PfoList primaryPfos;
     this->SelectPrimaryPfos(pMultiPfoList, pfoToLArTPCMap, primaryPfos);
