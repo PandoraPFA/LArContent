@@ -149,7 +149,7 @@ StatusCode MasterAlgorithm::Initialize()
         if (m_shouldRunNeutrinoRecoOption)
             m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
 
-        if (m_shouldRunNeutrinoRecoOption)
+        if (m_shouldRunCosmicRecoOption)
             m_pSliceCRWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile);
     }
     catch (const StatusCodeException &statusCodeException)
@@ -404,15 +404,22 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
     {
         for (const CaloHit *const pSliceCaloHit : sliceHits)
         {
-            const CaloHit *const pCaloHitInMaster(static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()));
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHitInMaster));
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceCRWorkerInstance, pCaloHitInMaster));
+            // ATTN Must ensure we copy the hit actually owned by master instance; access differs with/without slicing enabled
+            const CaloHit *const pCaloHitInMaster(m_shouldRunSlicing ? static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()) : pSliceCaloHit);
+
+            if (m_shouldRunNeutrinoRecoOption)
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHitInMaster));
+
+            if (m_shouldRunCosmicRecoOption)
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceCRWorkerInstance, pCaloHitInMaster));
         }
+
+        ++sliceCounter;
 
         if (m_shouldRunNeutrinoRecoOption)
         {
             if (m_printOverallRecoStatus)
-                std::cout << "Running slice nu worker instance " << ++sliceCounter << " of " << sliceVector.size() << std::endl;
+                std::cout << "Running nu worker instance for slice " << sliceCounter << " of " << sliceVector.size() << std::endl;
 
             const PfoList *pSliceNuPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
@@ -423,7 +430,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
         if (m_shouldRunCosmicRecoOption)
         {
             if (m_printOverallRecoStatus)
-                std::cout << "Running slice cr worker instance " << sliceCounter << " of " << sliceVector.size() << std::endl;
+                std::cout << "Running cr worker instance for slice " << sliceCounter << " of " << sliceVector.size() << std::endl;
 
             const PfoList *pSliceCRPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
@@ -473,9 +480,14 @@ StatusCode MasterAlgorithm::Reset()
     for (const Pandora *const pCRWorker : m_crWorkerInstances)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*pCRWorker));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSlicingWorkerInstance));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceNuWorkerInstance));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceCRWorkerInstance));
+    if (m_pSlicingWorkerInstance)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSlicingWorkerInstance));
+
+    if (m_pSliceNuWorkerInstance)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceNuWorkerInstance));
+
+    if (m_pSliceCRWorkerInstance)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceCRWorkerInstance));
 
     if (m_printOverallRecoStatus)
         std::cout << "PatRec complete" << std::endl;  
