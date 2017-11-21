@@ -36,7 +36,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_shouldRunSlicing(true),
     m_shouldRunNeutrinoRecoOption(true),
     m_shouldRunCosmicRecoOption(true),
-    m_shouldIdentifyNeutrinoSlice(true),
+    m_shouldPerformSliceId(true),
     m_printOverallRecoStatus(false),
     m_pSlicingWorkerInstance(nullptr),
     m_pSliceNuWorkerInstance(nullptr),
@@ -167,22 +167,34 @@ StatusCode MasterAlgorithm::Run()
 {
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap));
 
-    PfoToLArTPCMap pfoToLArTPCMap;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->StitchCosmicRayPfos(pfoToLArTPCMap));
+    if (m_shouldRunAllHitsCosmicReco)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap));
 
-    PfoList clearCosmicRayPfos, ambiguousPfos;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(clearCosmicRayPfos, ambiguousPfos));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
+        PfoToLArTPCMap pfoToLArTPCMap;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
+
+        if (m_shouldRunStitching)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->StitchCosmicRayPfos(pfoToLArTPCMap));
+    }
+
+    if (m_shouldRunCosmicHitRemoval)
+    {
+        PfoList clearCosmicRayPfos, ambiguousPfos;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(clearCosmicRayPfos, ambiguousPfos));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
+    }
 
     SliceVector sliceVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSlicing(volumeIdToHitListMap, sliceVector));
 
-    SliceHypotheses nuSliceHypotheses, crSliceHypotheses;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSliceReconstruction(sliceVector, nuSliceHypotheses, crSliceHypotheses));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses));
+    if (m_shouldRunNeutrinoRecoOption || m_shouldRunCosmicRecoOption)
+    {
+        SliceHypotheses nuSliceHypotheses, crSliceHypotheses;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSliceReconstruction(sliceVector, nuSliceHypotheses, crSliceHypotheses));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses));
+    }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
     return STATUS_CODE_SUCCESS;
@@ -397,24 +409,30 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceCRWorkerInstance, pCaloHitInMaster));
         }
 
-        if (m_printOverallRecoStatus)
-            std::cout << "Running slice nu worker instance " << ++sliceCounter << " of " << sliceVector.size() << std::endl;
+        if (m_shouldRunNeutrinoRecoOption)
+        {
+            if (m_printOverallRecoStatus)
+                std::cout << "Running slice nu worker instance " << ++sliceCounter << " of " << sliceVector.size() << std::endl;
 
-        const PfoList *pSliceNuPfos(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceNuWorkerInstance, pSliceNuPfos));
-        nuSliceHypotheses.push_back(*pSliceNuPfos);
+            const PfoList *pSliceNuPfos(nullptr);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceNuWorkerInstance, pSliceNuPfos));
+            nuSliceHypotheses.push_back(*pSliceNuPfos);
+        }
 
-        if (m_printOverallRecoStatus)
-            std::cout << "Running slice cr worker instance " << sliceCounter << " of " << sliceVector.size() << std::endl;
+        if (m_shouldRunCosmicRecoOption)
+        {
+            if (m_printOverallRecoStatus)
+                std::cout << "Running slice cr worker instance " << sliceCounter << " of " << sliceVector.size() << std::endl;
 
-        const PfoList *pSliceCRPfos(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
-        crSliceHypotheses.push_back(*pSliceCRPfos);
+            const PfoList *pSliceCRPfos(nullptr);
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
+            crSliceHypotheses.push_back(*pSliceCRPfos);
+        }
     }
 
-    if (nuSliceHypotheses.size() != crSliceHypotheses.size())
+    if (m_shouldRunNeutrinoRecoOption && m_shouldRunCosmicRecoOption && (nuSliceHypotheses.size() != crSliceHypotheses.size()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     return STATUS_CODE_SUCCESS;
@@ -428,8 +446,19 @@ StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuS
         std::cout << "Select best slice hypotheses" << std::endl;    
 
     PfoList selectedSlicePfos;
-    for (SliceIdBaseTool *const pSliceIdTool : m_sliceIdToolVector)
-        pSliceIdTool->SelectOutputPfos(nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos);
+
+    if (m_shouldPerformSliceId)
+    {
+        for (SliceIdBaseTool *const pSliceIdTool : m_sliceIdToolVector)
+            pSliceIdTool->SelectOutputPfos(nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos);
+    }
+    else if (m_shouldRunNeutrinoRecoOption != m_shouldRunCosmicRecoOption)
+    {
+        const SliceHypotheses &sliceHypotheses(m_shouldRunNeutrinoRecoOption ? nuSliceHypotheses : crSliceHypotheses);
+
+        for (const PfoList &slice : sliceHypotheses)
+            selectedSlicePfos.insert(selectedSlicePfos.end(), slice.begin(), slice.end());
+    }
 
     PfoList newSlicePfoList;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(selectedSlicePfos, newSlicePfoList));
@@ -880,15 +909,15 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         pExternalParameters->m_shouldRunCosmicRecoOption, xmlHandle, "ShouldRunCosmicRecoOption", m_shouldRunCosmicRecoOption));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
-        pExternalParameters->m_shouldIdentifyNeutrinoSlice, xmlHandle, "ShouldIdentifyNeutrinoSlice", m_shouldIdentifyNeutrinoSlice));
+        pExternalParameters->m_shouldPerformSliceId, xmlHandle, "ShouldPerformSliceId", m_shouldPerformSliceId));
 
-    if (m_shouldIdentifyNeutrinoSlice && (!m_shouldRunSlicing || !m_shouldRunNeutrinoRecoOption || !m_shouldRunCosmicRecoOption))
+    if (m_shouldPerformSliceId && (!m_shouldRunSlicing || !m_shouldRunNeutrinoRecoOption || !m_shouldRunCosmicRecoOption))
     {
-        std::cout << "MasterAlgorithm::ReadSettings - ShouldIdentifyNeutrinoSlice requires ShouldRunSlicing and both neutrino and cosmic reconstruction options" << std::endl;
+        std::cout << "MasterAlgorithm::ReadSettings - ShouldPerformSliceId requires ShouldRunSlicing and both neutrino and cosmic reconstruction options" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    if (m_shouldIdentifyNeutrinoSlice)
+    if (m_shouldPerformSliceId)
     {
         AlgorithmToolVector algorithmToolVector;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "SliceIdTools", algorithmToolVector));
