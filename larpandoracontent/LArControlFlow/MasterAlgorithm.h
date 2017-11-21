@@ -77,15 +77,34 @@ public:
         PfoToLArTPCMap &pfoToLArTPCMap) const;
 
 private:
+    /**
+     *  @brief  LArTPCHitList class
+     */
+    class LArTPCHitList
+    {
+    public:
+        pandora::CaloHitList    m_allHitList;                       ///< The list of all hits originating from a given LArTPC
+        pandora::CaloHitList    m_truncatedHitList;                 ///< The list of hits confined within LArTPC boundaries for given beam t0 value
+    };
+
+    typedef std::map<unsigned int, LArTPCHitList> VolumeIdToHitListMap;
+
     pandora::StatusCode Initialize();
     pandora::StatusCode Run();
 
     /**
+     *  @brief  Get the mapping from lar tpc volume id to lists of all hits, and truncated hits
+     *
+     *  @param  volumeIdToHitListMap to receive the populated volume id to hit list map
+     */
+    pandora::StatusCode GetVolumeIdToHitListMap(VolumeIdToHitListMap &volumeIdToHitListMap) const;
+
+    /**
      *  @brief  Run the cosmic-ray reconstruction worker instances
      *
-     *  @param  originalHitList the original hit list
+     *  @param  volumeIdToHitListMap the volume id to hit list map
      */
-    pandora::StatusCode RunCosmicRayReconstruction(const pandora::CaloHitList &originalHitList) const;
+    pandora::StatusCode RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap) const;
 
     /**
      *  @brief  Recreate cosmic-ray pfos (created by worker instances) in the master instance
@@ -119,10 +138,10 @@ private:
     /**
      *  @brief  Run the event slicing procedures, dividing available hits up into distinct 3D regions
      *
-     *  @param  originalHitList the original hit list
+     *  @param  volumeIdToHitListMap the volume id to hit list map
      *  @param  sliceVector to receive the populated slice vector
      */
-    pandora::StatusCode RunSlicing(const pandora::CaloHitList &originalHitList, SliceVector &sliceVector) const;
+    pandora::StatusCode RunSlicing(const VolumeIdToHitListMap &volumeIdToHitListMap, SliceVector &sliceVector) const;
 
     /**
      *  @brief  Process each slice under different reconstruction hypotheses

@@ -27,10 +27,7 @@ namespace lar_content
 class LArCaloHitParameters : public object_creation::CaloHit::Parameters
 {
 public:
-    pandora::InputFloat     m_showerProbability;    ///< The probability for electromagnetic shower hypothesis
-    pandora::InputFloat     m_trackProbability;     ///< The probability for track hypothesis
-    pandora::InputFloat     m_michelProbability;    ///< The probability for michel hypothesis
-    pandora::InputFloat     m_otherProbability;     ///< The probability for other hypotheses
+    pandora::InputUInt      m_larTPCVolumeId;       ///< The lar tpc volume id
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -49,38 +46,14 @@ public:
     LArCaloHit(const LArCaloHitParameters &parameters);
 
     /**
-     *  @brief  Get the probability for electromagnetic shower hypothesis
+     *  @brief  Get the lar tpc volume id
      *
-     *  @return the probability for electromagnetic shower hypothesis
+     *  @return the lar tpc volume id
      */
-    float GetShowerProbability() const;
-
-    /**
-     *  @brief  Get the probability for track hypothesis
-     *
-     *  @return the probability for track hypothesis
-     */
-    float GetTrackProbability() const;
-
-    /**
-     *  @brief  Get the probability for michel hypothesis
-     *
-     *  @return the probability for michel hypothesis
-     */
-    float GetMichelProbability() const;
-
-    /**
-     *  @brief  Get the probability for other hypotheses
-     * 
-     *  @return the probability for other hypotheses
-     */
-    float GetOtherProbability() const;
+    unsigned int GetLArTPCVolumeId() const;
 
 private:
-    float                   m_showerProbability;    ///< The probability for electromagnetic shower hypothesis
-    float                   m_trackProbability;     ///< The probability for track hypothesis
-    float                   m_michelProbability;    ///< The probability for michel hypothesis
-    float                   m_otherProbability;     ///< The probability for other hypotheses
+    unsigned int            m_larTPCVolumeId;       ///< The lar tpc volume id
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -128,39 +101,15 @@ public:
 
 inline LArCaloHit::LArCaloHit(const LArCaloHitParameters &parameters) :
     object_creation::CaloHit::Object(parameters),
-    m_showerProbability(parameters.m_showerProbability.Get()),
-    m_trackProbability(parameters.m_trackProbability.Get()),
-    m_michelProbability(parameters.m_michelProbability.Get()),
-    m_otherProbability(parameters.m_otherProbability.Get())
+    m_larTPCVolumeId(parameters.m_larTPCVolumeId.Get())
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float LArCaloHit::GetShowerProbability() const
+inline unsigned int LArCaloHit::GetLArTPCVolumeId() const
 {
-    return m_showerProbability;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float LArCaloHit::GetTrackProbability() const
-{
-    return m_trackProbability;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float LArCaloHit::GetMichelProbability() const
-{
-    return m_michelProbability;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float LArCaloHit::GetOtherProbability() const
-{
-    return m_otherProbability;
+    return m_larTPCVolumeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -186,26 +135,17 @@ inline pandora::StatusCode LArCaloHitFactory::Create(const Parameters &parameter
 inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pandora::FileReader &fileReader) const
 {
     // ATTN: To receive this call-back must have already set file reader mc particle factory to this factory
-    float showerProbability(0.f);
-    float trackProbability(0.f);
-    float michelProbability(0.f);
-    float otherProbability(0.f);
+    unsigned int larTPCVolumeId(std::numeric_limits<unsigned int>::max());
 
     if (pandora::BINARY == fileReader.GetFileType())
     {
         pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader&>(fileReader));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(showerProbability));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(trackProbability));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(michelProbability));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(otherProbability));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(larTPCVolumeId));
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
         pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader&>(fileReader));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("ShowerProbability", showerProbability));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("TrackProbability", trackProbability));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("MichelProbability", michelProbability));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("OtherProbability", otherProbability));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("LArTPCVolumeId", larTPCVolumeId));
     }
     else
     {
@@ -213,10 +153,7 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
     }
 
     LArCaloHitParameters &larCaloHitParameters(dynamic_cast<LArCaloHitParameters&>(parameters));
-    larCaloHitParameters.m_showerProbability = showerProbability;
-    larCaloHitParameters.m_trackProbability = trackProbability;
-    larCaloHitParameters.m_michelProbability = michelProbability;
-    larCaloHitParameters.m_otherProbability = otherProbability;
+    larCaloHitParameters.m_larTPCVolumeId = larTPCVolumeId;
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -234,18 +171,12 @@ inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject,
     if (pandora::BINARY == fileWriter.GetFileType())
     {
         pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter&>(fileWriter));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetShowerProbability()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetTrackProbability()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetMichelProbability()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetOtherProbability()));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetLArTPCVolumeId()));
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
         pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter&>(fileWriter));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("ShowerProbability", pLArCaloHit->GetShowerProbability()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("TrackProbability", pLArCaloHit->GetTrackProbability()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("MichelProbability", pLArCaloHit->GetMichelProbability()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("OtherProbability", pLArCaloHit->GetOtherProbability()));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("LArTPCVolumeId", pLArCaloHit->GetLArTPCVolumeId()));
     }
     else
     {

@@ -17,6 +17,8 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
+
 #include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
 #include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
 
@@ -163,11 +165,9 @@ StatusCode MasterAlgorithm::Initialize()
 
 StatusCode MasterAlgorithm::Run()
 {
-    const CaloHitList *pCaloHitList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputHitListName, pCaloHitList));
-
-    const CaloHitList originalHitList(*pCaloHitList);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(originalHitList));
+    VolumeIdToHitListMap volumeIdToHitListMap;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap));
 
     PfoToLArTPCMap pfoToLArTPCMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
@@ -178,7 +178,7 @@ StatusCode MasterAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
 
     SliceVector sliceVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSlicing(originalHitList, sliceVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSlicing(volumeIdToHitListMap, sliceVector));
 
     SliceHypotheses nuSliceHypotheses, crSliceHypotheses;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSliceReconstruction(sliceVector, nuSliceHypotheses, crSliceHypotheses));
@@ -190,24 +190,53 @@ StatusCode MasterAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const CaloHitList &originalHitList) const
+StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volumeIdToHitListMap) const
+{
+    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+    const unsigned int nLArTPCs(larTPCMap.size());
+
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputHitListName, pCaloHitList));
+
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit*>(pCaloHit));
+
+        if (!pLArCaloHit && (1 != nLArTPCs))
+            return STATUS_CODE_INVALID_PARAMETER;
+
+        const unsigned int volumeId(pLArCaloHit ? pLArCaloHit->GetLArTPCVolumeId() : 0);
+        const LArTPC *const pLArTPC(larTPCMap.at(volumeId));
+
+        LArTPCHitList &larTPCHitList(volumeIdToHitListMap[volumeId]);
+        larTPCHitList.m_allHitList.push_back(pCaloHit);
+
+        if (((pCaloHit->GetPositionVector().GetX() > (pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX())) &&
+            (pCaloHit->GetPositionVector().GetX() < (pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX()))))
+        {
+            larTPCHitList.m_truncatedHitList.push_back(pCaloHit);
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMap &volumeIdToHitListMap) const
 {
     unsigned int workerCounter(0);
 
     for (const Pandora *const pCRWorker : m_crWorkerInstances)
     {
         const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
+        VolumeIdToHitListMap::const_iterator iter(volumeIdToHitListMap.find(larTPC.GetLArTPCVolumeId()));
 
-        for (const CaloHit *const pCaloHit : originalHitList)
-        {
-            // TODO Use volume ids
-            if ((this->GetPandora().GetGeometry()->GetLArTPCMap().size() == 1) ||
-                ((pCaloHit->GetPositionVector().GetX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) &&
-                (pCaloHit->GetPositionVector().GetX() < (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX()))))
-            {
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
-            }
-        }
+        if (volumeIdToHitListMap.end() == iter)
+            continue;
+
+        for (const CaloHit *const pCaloHit : iter->second.m_allHitList)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
 
         if (m_printOverallRecoStatus)
             std::cout << "Running cosmic-ray reconstruction worker instance " << ++workerCounter << " of " << m_crWorkerInstances.size() << std::endl;
@@ -303,26 +332,28 @@ StatusCode MasterAlgorithm::RunCosmicRayHitRemoval(const PfoList &ambiguousPfos)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::RunSlicing(const CaloHitList &originalHitList, SliceVector &sliceVector) const
+StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHitListMap, SliceVector &sliceVector) const
 {
-    for (const CaloHit *const pCaloHit : originalHitList)
+    for (const VolumeIdToHitListMap::value_type &mapEntry : volumeIdToHitListMap)
     {
-        // TODO Truncate hits at physical boundaries of relevant lar tpcs, using volume ids
-        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
-            continue;
-
-        const HitType hitType(pCaloHit->GetHitType());
-        if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
-            continue;
-
-        if (m_shouldRunSlicing)
+        for (const CaloHit *const pCaloHit : mapEntry.second.m_truncatedHitList)
         {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSlicingWorkerInstance, pCaloHit));
-        }
-        else
-        {
-            if (sliceVector.empty()) sliceVector.push_back(CaloHitList());
-            sliceVector.back().push_back(pCaloHit);
+            if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
+                continue;
+
+            const HitType hitType(pCaloHit->GetHitType());
+            if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
+                continue;
+
+            if (m_shouldRunSlicing)
+            {
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSlicingWorkerInstance, pCaloHit));
+            }
+            else
+            {
+                if (sliceVector.empty()) sliceVector.push_back(CaloHitList());
+                sliceVector.back().push_back(pCaloHit);
+            }
         }
     }
 
@@ -669,7 +700,7 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const
 
     // The LArTPC
     PandoraApi::Geometry::LArTPC::Parameters larTPCParameters;
-    larTPCParameters.m_larTPCName = larTPC.GetLArTPCName();
+    larTPCParameters.m_larTPCVolumeId = larTPC.GetLArTPCVolumeId();
     larTPCParameters.m_centerX = larTPC.GetCenterX();
     larTPCParameters.m_centerY = larTPC.GetCenterY();
     larTPCParameters.m_centerZ = larTPC.GetCenterZ();
@@ -742,7 +773,7 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap,
     }
 
     PandoraApi::Geometry::LArTPC::Parameters larTPCParameters;
-    larTPCParameters.m_larTPCName = "ParentLArTPC";
+    larTPCParameters.m_larTPCVolumeId = 0;
     larTPCParameters.m_centerX = 0.5f * (parentMaxX + parentMinX);
     larTPCParameters.m_centerY = 0.5f * (parentMaxY + parentMinY);
     larTPCParameters.m_centerZ = 0.5f * (parentMaxZ + parentMinZ);
