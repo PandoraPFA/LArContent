@@ -783,6 +783,12 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const
 
 const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap, const DetectorGapList &gapList, const std::string &settingsFile) const
 {
+    if (larTPCMap.empty())
+    {
+        std::cout << "MasterAlgorithm::CreateWorkerInstance - no LArTPC details provided" << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    }
+
     // The Pandora instance
     const Pandora *const pPandora(new Pandora());
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPandora));
@@ -793,8 +799,6 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap,
 
     // The Parent LArTPC
     const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
-    const bool switchViews(pFirstLArTPC->IsDriftInPositiveX());
-
     float parentMinX(pFirstLArTPC->GetCenterX() - 0.5f * pFirstLArTPC->GetWidthX());
     float parentMaxX(pFirstLArTPC->GetCenterX() + 0.5f * pFirstLArTPC->GetWidthX());
     float parentMinY(pFirstLArTPC->GetCenterY() - 0.5f * pFirstLArTPC->GetWidthY());
@@ -824,10 +828,10 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap,
     larTPCParameters.m_wirePitchU = std::max(pFirstLArTPC->GetWirePitchU(), pFirstLArTPC->GetWirePitchV());
     larTPCParameters.m_wirePitchV = std::max(pFirstLArTPC->GetWirePitchU(), pFirstLArTPC->GetWirePitchV());
     larTPCParameters.m_wirePitchW = pFirstLArTPC->GetWirePitchW();
-    larTPCParameters.m_wireAngleU = switchViews ? -pFirstLArTPC->GetWireAngleV() : pFirstLArTPC->GetWireAngleU();
-    larTPCParameters.m_wireAngleV = switchViews ? -pFirstLArTPC->GetWireAngleU() : pFirstLArTPC->GetWireAngleV();
+    larTPCParameters.m_wireAngleU = pFirstLArTPC->GetWireAngleU();
+    larTPCParameters.m_wireAngleV = pFirstLArTPC->GetWireAngleV();
     larTPCParameters.m_sigmaUVW = pFirstLArTPC->GetSigmaUVW();
-    larTPCParameters.m_isDriftInPositiveX = switchViews ? !pFirstLArTPC->IsDriftInPositiveX() : pFirstLArTPC->IsDriftInPositiveX();
+    larTPCParameters.m_isDriftInPositiveX = pFirstLArTPC->IsDriftInPositiveX();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
 
     // The Gaps
