@@ -55,26 +55,37 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     const float signedX0(larTPCIter->second->IsDriftInPositiveX() ? -x0 : x0);
-std::cout << "ShiftPfoHierarchy: signedX0 " << signedX0 << std::endl;
 
     PfoList pfoList;
     LArPfoHelper::GetAllDownstreamPfos(pParentPfo, pfoList);
-
+std::cout << "ShiftPfoHierarchy: signedX0 " << signedX0 << std::endl;
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "BeforeShift", GREEN);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
     for (const ParticleFlowObject *const pDaughterPfo : pfoList)
     {
+        CaloHitList caloHitList;
         for (const Cluster *const pCluster : pDaughterPfo->GetClusterList())
         {
-            CaloHitList caloHitList;
             pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
             caloHitList.insert(caloHitList.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
-            // TODO Shift x0
         }
 
-//        for (const Vertex *const pVertex : pDaughterPfo->GetVertexList())
-//        {
-//            // TODO Shift x0
-//        }
+        for (const CaloHit *const pCaloHit : caloHitList)
+        {
+            PandoraContentApi::CaloHit::Metadata metadata;
+            metadata.m_x0 = signedX0;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
+        }
+
+        for (const Vertex *const pVertex : pDaughterPfo->GetVertexList())
+        {
+            PandoraContentApi::Vertex::Metadata metadata;
+            metadata.m_x0 = signedX0;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::AlterMetadata(*this, pVertex, metadata));
+        }
     }
+PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "AfterShift", RED);
+PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

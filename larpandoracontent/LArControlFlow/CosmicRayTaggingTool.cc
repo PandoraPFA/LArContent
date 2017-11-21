@@ -24,6 +24,7 @@ CosmicRayTaggingTool::CosmicRayTaggingTool() :
     m_maxAssociationDist(3.f * 18.f),
     m_minimumHits(15),
     m_inTimeMargin(5.f),
+    m_inTimeMaxX0(1.f),
     m_marginY(20.f),
     m_marginZ(10.f),
     m_maxNeutrinoCosTheta(0.2f),
@@ -335,7 +336,17 @@ void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoT
         const float maxX((candidate.m_endPoint1.GetX() > candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
         const float minX((candidate.m_endPoint1.GetX() < candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
 
-        const bool isInTime((minX > m_face_Xa - m_inTimeMargin) && (maxX < m_face_Xc + m_inTimeMargin));
+        bool isInTime((minX > m_face_Xa - m_inTimeMargin) && (maxX < m_face_Xc + m_inTimeMargin));
+
+        if (isInTime)
+        {
+            try
+            {
+                if (std::fabs(LArPfoHelper::GetVertex(candidate.m_pPfo)->GetX0()) > m_inTimeMaxX0)
+                    isInTime = false;
+            }
+            catch (const StatusCodeException &) {}
+        }
 
         if (!pfoToInTimeMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isInTime)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -497,6 +508,9 @@ StatusCode CosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InTimeMargin", m_inTimeMargin));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "InTimeMaxX0", m_inTimeMaxX0));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MarginY", m_marginY));
