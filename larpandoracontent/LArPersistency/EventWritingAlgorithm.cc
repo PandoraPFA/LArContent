@@ -36,7 +36,7 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldWriteTrackRelationships(true),
     m_shouldOverwriteEventFile(false),
     m_shouldOverwriteGeometryFile(false),
-    m_useLArCaloHits(false),
+    m_useLArCaloHits(true),
     m_useLArMCParticles(true),
     m_shouldFilterByNuanceCode(false),
     m_filterNuanceCode(0),
