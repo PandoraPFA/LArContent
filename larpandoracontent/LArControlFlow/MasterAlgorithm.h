@@ -295,6 +295,7 @@ private:
     CosmicRayTaggingToolVector  m_cosmicRayTaggingToolVector;       ///< The cosmic-ray tagging tool vector
     SliceIdToolVector           m_sliceIdToolVector;                ///< The slice id tool vector
 
+    std::string                 m_filePathEnvironmentVariable;      ///< The environment variable providing a list of paths to xml files
     std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
     std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file
     std::string                 m_slicingSettingsFile;              ///< The slicing settings file
