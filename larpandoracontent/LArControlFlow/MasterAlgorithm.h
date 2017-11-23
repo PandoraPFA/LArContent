@@ -280,6 +280,7 @@ private:
     bool                        m_shouldRunCosmicRecoOption;        ///< Whether to run cosmic-ray reconstruction for each slice
     bool                        m_shouldPerformSliceId;             ///< Whether to identify slices and select most appropriate pfos
     bool                        m_printOverallRecoStatus;           ///< Whether to print current operation status messages
+    bool                        m_visualizeOverallRecoStatus;       ///< Whether to display results of current operations
 
     PandoraInstanceList         m_crWorkerInstances;                ///< The list of cosmic-ray reconstruction worker instances
     const pandora::Pandora     *m_pSlicingWorkerInstance;           ///< The slicing worker instance

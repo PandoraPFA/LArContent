@@ -38,6 +38,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_shouldRunCosmicRecoOption(true),
     m_shouldPerformSliceId(true),
     m_printOverallRecoStatus(false),
+    m_visualizeOverallRecoStatus(false),
     m_pSlicingWorkerInstance(nullptr),
     m_pSliceNuWorkerInstance(nullptr),
     m_pSliceCRWorkerInstance(nullptr)
@@ -56,13 +57,16 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
     if (pfoToLArTPCMap.end() == larTPCIter)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    const float signedX0(larTPCIter->second->IsDriftInPositiveX() ? -x0 : x0);
-
     PfoList pfoList;
     LArPfoHelper::GetAllDownstreamPfos(pParentPfo, pfoList);
-std::cout << "ShiftPfoHierarchy: signedX0 " << signedX0 << std::endl;
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "BeforeShift", GREEN);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    const float signedX0(larTPCIter->second->IsDriftInPositiveX() ? -x0 : x0);
+
+    if (m_visualizeOverallRecoStatus)
+    {
+        std::cout << "ShiftPfoHierarchy: signedX0 " << signedX0 << std::endl;
+        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "BeforeShiftCRPfos", GREEN);
+    }
+
     for (const ParticleFlowObject *const pDaughterPfo : pfoList)
     {
         CaloHitList caloHitList;
@@ -86,8 +90,12 @@ PandoraMonitoringApi::ViewEvent(this->GetPandora());
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::AlterMetadata(*this, pVertex, metadata));
         }
     }
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "AfterShift", RED);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    if (m_visualizeOverallRecoStatus)
+    {
+        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "AfterShiftCRPfos", RED);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -286,12 +294,22 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) 
 {
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "pRecreatedCRPfos", GREEN);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    if (m_visualizeOverallRecoStatus)
+    {
+        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "RecreatedCRPfos", GREEN);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
+
     for (StitchingBaseTool *const pStitchingTool : m_stitchingToolVector)
         pStitchingTool->Run(this, pRecreatedCRPfos, pfoToLArTPCMap);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "AfterStitching", RED);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    if (m_visualizeOverallRecoStatus)
+    {
+        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "AfterStitchingCRPfos", RED);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -317,9 +335,14 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(PfoList &clearCosmicRayPfos, PfoLis
         if (ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo))
             clearCosmicRayPfos.push_back(pPfo);
     }
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &clearCosmicRayPfos, "clearCosmicRayPfos", RED);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "ambiguousPfos", BLUE);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    if (m_visualizeOverallRecoStatus)
+    {
+        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &clearCosmicRayPfos, "ClearCRPfos", RED);
+        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "AmbiguousCRPfos", BLUE);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -377,8 +400,13 @@ StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHit
         const PfoList *pSlicePfos(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSlicingWorkerInstance));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSlicingWorkerInstance, pSlicePfos));
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSlicePfos, "SlicePfos", BLUE);
-PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+        if (m_visualizeOverallRecoStatus)
+        {
+            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSlicePfos, "OnePfoPerSlice", BLUE);
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        }
+
         for (const Pfo *const pSlicePfo : *pSlicePfos)
         {
             sliceVector.push_back(CaloHitList());
@@ -948,6 +976,9 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
         pExternalParameters->m_printOverallRecoStatus, xmlHandle, "PrintOverallRecoStatus", m_printOverallRecoStatus));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VisualizeOverallRecoStatus", m_visualizeOverallRecoStatus));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CRSettingsFile", m_crSettingsFile));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NuSettingsFile", m_nuSettingsFile));
