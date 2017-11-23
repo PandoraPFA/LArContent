@@ -19,10 +19,18 @@ namespace lar_content
 class NeutrinoIdTool : public SliceIdBaseTool
 {
 public:
+    /**
+     *  @brief  Default constructor
+     */
+    NeutrinoIdTool();
+
     void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    bool        m_selectAllNeutrinos;               ///< First approach: select all neutrinos, as opposed to selecting all cosmics
+    bool        m_selectOnlyFirstSliceNeutrinos;    ///< First approach: select first slice neutrinos, cosmics for all subsequent slices
 };
 
 } // namespace lar_content
