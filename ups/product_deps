@@ -12,7 +12,6 @@ fcldir  -
 # With "product  version" table below, we now define depdendencies
 # Add the dependent product and version
 product		version
-cetlib		v3_01_01
 eigen		v3_3_3
 pandora		v03_05_00
 cetbuildtools	v5_14_03	-	only_for_build
@@ -20,10 +19,10 @@ end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
-qualifier	pandora		cetlib 		eigen notes
-e14:debug	e14:nu:debug	e14:debug	-nq-
-e14:opt		e14:nu:opt	e14:opt		-nq-
-e14:prof	e14:nu:prof	e14:prof	-nq-
+qualifier	pandora 		eigen notes
+e14:debug	e14:nu:debug	-nq-
+e14:opt		e14:nu:opt		-nq-
+e14:prof	e14:nu:prof		-nq-
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:
