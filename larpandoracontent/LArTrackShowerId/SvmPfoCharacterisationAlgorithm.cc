@@ -5,12 +5,10 @@
  * 
  *  $Log: $
  */
-#ifdef CETLIB_AVAILABLE
-#include "cetlib/search_path.h"
-#endif
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArSvmHelper.h"
 
 #include "larpandoracontent/LArTrackShowerId/SvmPfoCharacterisationAlgorithm.h"
@@ -25,7 +23,8 @@ SvmPfoCharacterisationAlgorithm::SvmPfoCharacterisationAlgorithm() :
     m_ratioVariables(true),
     m_enableProbability(false),
     m_minProbabilityCut(0.5f),
-    m_minCaloHitsCut(5)
+    m_minCaloHitsCut(5),
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
 
@@ -89,6 +88,9 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         "MinCaloHitsCut", m_minCaloHitsCut));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SvmFileName", m_svmFileName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -112,16 +114,7 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
             return STATUS_CODE_INVALID_PARAMETER;
         }
 
-        std::string fullSvmFileName(m_svmFileName);
-#ifdef CETLIB_AVAILABLE
-        cet::search_path sp("FW_SEARCH_PATH");
-
-        if (!sp.find_file(m_svmFileName, fullSvmFileName))
-        {
-            std::cout << " SvmPfoCharacterisationAlgorithm::ReadSettings - Failed to find svm file " << m_svmFileName << " in FW search path" << std::endl;
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-        }
-#endif
+        const std::string fullSvmFileName(LArFileHelper::FindFileInPath(m_svmFileName, m_filePathEnvironmentVariable));
         m_supportVectorMachine.Initialize(fullSvmFileName, m_svmName);
     }
 

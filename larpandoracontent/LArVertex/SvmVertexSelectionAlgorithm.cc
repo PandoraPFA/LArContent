@@ -5,16 +5,14 @@
  *
  *  $Log: $
  */
-#ifdef CETLIB_AVAILABLE
-#include "cetlib/search_path.h"
-#endif
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArFileHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
 #include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
@@ -32,7 +30,9 @@ using namespace pandora;
 
 namespace lar_content
 {
-SvmVertexSelectionAlgorithm::SvmVertexSelectionAlgorithm() : VertexSelectionBaseAlgorithm(),
+SvmVertexSelectionAlgorithm::SvmVertexSelectionAlgorithm() :
+    VertexSelectionBaseAlgorithm(),
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_trainingSetMode(false),
     m_allowClassifyDuringTraining(false),
     m_selectInputHits(true),
@@ -785,6 +785,9 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SvmFileName", m_svmFileName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -808,16 +811,7 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
             return STATUS_CODE_INVALID_PARAMETER;
         }
 
-        std::string fullSvmFileName(m_svmFileName);
-#ifdef CETLIB_AVAILABLE
-        cet::search_path sp("FW_SEARCH_PATH");
-
-        if (!sp.find_file(m_svmFileName, fullSvmFileName))
-        {
-            std::cout << " SvmVertexSelectionAlgorithm::ReadSettings - Failed to find svm file " << m_svmFileName << " in FW search path" << std::endl;
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-        }
-#endif
+        const std::string fullSvmFileName(LArFileHelper::FindFileInPath(m_svmFileName, m_filePathEnvironmentVariable));
         m_svMachineRegion.Initialize(fullSvmFileName, m_regionSvmName);
         m_svMachineVertex.Initialize(fullSvmFileName, m_vertexSvmName);
     }

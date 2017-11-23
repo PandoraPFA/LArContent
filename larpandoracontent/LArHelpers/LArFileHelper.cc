@@ -38,6 +38,7 @@ std::string LArFileHelper::FindFileInPath(const std::string &unqualifiedFileName
             return qualifiedFileNameAttempt;
     }
 
+    std::cout << "Unable to find file  " << unqualifiedFileName << " in any path specified by environment variable " << environmentVariable << ", delimiter " << delimiter << std::endl;
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 

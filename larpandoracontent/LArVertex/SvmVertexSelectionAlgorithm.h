@@ -378,12 +378,13 @@ private:
     void PopulateFinalVertexScoreList(const VertexFeatureInfoMap &vertexFeatureInfoMap, const pandora::Vertex *const pFavouriteVertex,
         const pandora::VertexVector &vertexVector, VertexScoreList &finalVertexScoreList) const;
 
-    VertexFeatureTool::FeatureToolVector    m_featureToolVector;    ///< The feature tool vector
-    std::string                             m_svmFileName;          ///< The Svm file name
-    std::string                             m_regionSvmName;        ///< The name of the region Svm to find
-    std::string                             m_vertexSvmName;        ///< The name of the vertex Svm to find
-    SupportVectorMachine                    m_svMachineRegion;      ///< The region support vector machine
-    SupportVectorMachine                    m_svMachineVertex;      ///< The vertex support vector machine
+    VertexFeatureTool::FeatureToolVector    m_featureToolVector;            ///< The feature tool vector
+    std::string                             m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to svm files
+    std::string                             m_svmFileName;                  ///< The Svm file name
+    std::string                             m_regionSvmName;                ///< The name of the region Svm to find
+    std::string                             m_vertexSvmName;                ///< The name of the vertex Svm to find
+    SupportVectorMachine                    m_svMachineRegion;              ///< The region support vector machine
+    SupportVectorMachine                    m_svMachineVertex;              ///< The vertex support vector machine
 
     bool                  m_trainingSetMode;                      ///< Whether to train
     bool                  m_allowClassifyDuringTraining;          ///< Whether classification is allowed during training
