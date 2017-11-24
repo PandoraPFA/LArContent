@@ -287,6 +287,8 @@ private:
     const pandora::Pandora     *m_pSliceNuWorkerInstance;           ///< The per-slice neutrino reconstruction worker instance
     const pandora::Pandora     *m_pSliceCRWorkerInstance;           ///< The per-slice cosmic-ray reconstruction worker instance
 
+    bool                        m_fullWidthCRWorkerWireGaps;        ///< Whether wire-type line gaps in cosmic-ray worker instances should cover all drift time
+
     typedef std::vector<StitchingBaseTool*> StitchingToolVector;
     typedef std::vector<CosmicRayTaggingBaseTool*> CosmicRayTaggingToolVector;
     typedef std::vector<SliceIdBaseTool*> SliceIdToolVector;

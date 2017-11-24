@@ -43,6 +43,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_pSlicingWorkerInstance(nullptr),
     m_pSliceNuWorkerInstance(nullptr),
     m_pSliceCRWorkerInstance(nullptr),
+    m_fullWidthCRWorkerWireGaps(true),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
@@ -795,9 +796,17 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const
         if (pLineGap && (pLineGap->GetLineEndX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) && (pLineGap->GetLineStartX() > (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
         {
             PandoraApi::Geometry::LineGap::Parameters lineGapParameters;
-            lineGapParameters.m_lineGapType = pLineGap->GetLineGapType();
+            const LineGapType lineGapType(pLineGap->GetLineGapType());
+            lineGapParameters.m_lineGapType = lineGapType;
             lineGapParameters.m_lineStartX = pLineGap->GetLineStartX();
             lineGapParameters.m_lineEndX = pLineGap->GetLineEndX();
+
+            if (m_fullWidthCRWorkerWireGaps && ((lineGapType == TPC_WIRE_GAP_VIEW_U) || (lineGapType == TPC_WIRE_GAP_VIEW_V) || (lineGapType == TPC_WIRE_GAP_VIEW_W)))
+            {
+                lineGapParameters.m_lineStartX = -std::numeric_limits<float>::max();
+                lineGapParameters.m_lineEndX = std::numeric_limits<float>::max();
+            }
+
             lineGapParameters.m_lineStartZ = pLineGap->GetLineStartZ();
             lineGapParameters.m_lineEndZ = pLineGap->GetLineEndZ();
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LineGap::Create(*pPandora, lineGapParameters));
@@ -981,6 +990,9 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VisualizeOverallRecoStatus", m_visualizeOverallRecoStatus));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FullWidthCRWorkerWireGaps", m_fullWidthCRWorkerWireGaps));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
