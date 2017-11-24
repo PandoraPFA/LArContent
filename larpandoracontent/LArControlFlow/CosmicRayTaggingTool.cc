@@ -12,6 +12,8 @@
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -331,13 +333,17 @@ void CosmicRayTaggingTool::GetCRCandidates(const PfoList &parentCosmicRayPfos, c
 
 void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoToBoolMap &pfoToInTimeMap) const
 {
+    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+
     for (const CRCandidate &candidate : candidates)
     {
+        // Cosmic-ray muons extending outside of (single) physical volume if given t0 is that of the beam particle
         const float maxX((candidate.m_endPoint1.GetX() > candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
         const float minX((candidate.m_endPoint1.GetX() < candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
 
         bool isInTime((minX > m_face_Xa - m_inTimeMargin) && (maxX < m_face_Xc + m_inTimeMargin));
 
+        // Cosmic-ray muons that have been shifted and stitched across mid plane between volumes
         if (isInTime)
         {
             try
@@ -346,6 +352,48 @@ void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoT
                     isInTime = false;
             }
             catch (const StatusCodeException &) {}
+        }
+
+        // Cosmic-ray muons extending outside of (any individual) physical volume if given t0 is that of the beam particle
+        if (isInTime)
+        {
+            CaloHitList caloHitList;
+            LArPfoHelper::GetCaloHits(candidate.m_pPfo, TPC_VIEW_U, caloHitList);
+            LArPfoHelper::GetCaloHits(candidate.m_pPfo, TPC_VIEW_V, caloHitList);
+            LArPfoHelper::GetCaloHits(candidate.m_pPfo, TPC_VIEW_W, caloHitList);
+
+            bool isFirstHit(true);
+            bool isInSingleVolume(true);
+            unsigned int volumeId(std::numeric_limits<unsigned int>::max());
+
+            for (const CaloHit *const pCaloHit : caloHitList)
+            {
+                const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit*>(pCaloHit));
+
+                if (!pLArCaloHit)
+                    continue;
+
+                if (isFirstHit)
+                {
+                    isFirstHit = false;
+                    volumeId = pLArCaloHit->GetLArTPCVolumeId();
+                }
+                else if (volumeId != pLArCaloHit->GetLArTPCVolumeId())
+                {
+                    isInSingleVolume = false;
+                }
+            }
+
+            LArTPCMap::const_iterator tpcIter(larTPCMap.find(volumeId));
+
+            if (isInSingleVolume && (larTPCMap.end() != tpcIter))
+            {
+                const float thisFaceXLow(tpcIter->second->GetCenterX() - 0.5f * tpcIter->second->GetWidthX());
+                const float thisFaceXHigh(tpcIter->second->GetCenterX() + 0.5f * tpcIter->second->GetWidthX());
+
+                if (!((minX > thisFaceXLow - m_inTimeMargin) && (maxX < thisFaceXHigh + m_inTimeMargin)))
+                    isInTime = false;
+            }
         }
 
         if (!pfoToInTimeMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isInTime)).second)
