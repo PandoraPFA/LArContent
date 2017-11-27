@@ -47,6 +47,9 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
         {
             if (!LArPfoHelper::IsFinalState(pInputPfo))
                 return;
+
+            if (LArPfoHelper::IsNeutrino(pInputPfo))
+                return;
         }
 
         // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin

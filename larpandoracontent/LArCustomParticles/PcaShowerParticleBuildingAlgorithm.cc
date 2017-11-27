@@ -44,6 +44,9 @@ void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
         {
             if (LArPfoHelper::IsFinalState(pInputPfo))
                 return;
+
+            if (LArPfoHelper::IsNeutrino(pInputPfo))
+                return;
         }
 
         // Need an input vertex to provide a shower propagation direction
