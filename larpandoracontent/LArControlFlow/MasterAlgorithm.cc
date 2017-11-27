@@ -67,7 +67,7 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
     if (m_visualizeOverallRecoStatus)
     {
         std::cout << "ShiftPfoHierarchy: signedX0 " << signedX0 << std::endl;
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "BeforeShiftCRPfos", GREEN);
+        PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "BeforeShiftCRPfos", GREEN));
     }
 
     for (const ParticleFlowObject *const pDaughterPfo : pfoList)
@@ -96,8 +96,8 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
 
     if (m_visualizeOverallRecoStatus)
     {
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "AfterShiftCRPfos", RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "AfterShiftCRPfos", RED));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 }
 
@@ -234,8 +234,8 @@ StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volume
         LArTPCHitList &larTPCHitList(volumeIdToHitListMap[volumeId]);
         larTPCHitList.m_allHitList.push_back(pCaloHit);
 
-        if (((pCaloHit->GetPositionVector().GetX() > (pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX())) &&
-            (pCaloHit->GetPositionVector().GetX() < (pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX()))))
+        if (((pCaloHit->GetPositionVector().GetX() >= (pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX())) &&
+            (pCaloHit->GetPositionVector().GetX() <= (pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX()))))
         {
             larTPCHitList.m_truncatedHitList.push_back(pCaloHit);
         }
@@ -300,8 +300,8 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) 
 
     if (m_visualizeOverallRecoStatus)
     {
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "RecreatedCRPfos", GREEN);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "RecreatedCRPfos", GREEN));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 
     for (StitchingBaseTool *const pStitchingTool : m_stitchingToolVector)
@@ -309,8 +309,8 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) 
 
     if (m_visualizeOverallRecoStatus)
     {
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "AfterStitchingCRPfos", RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), pRecreatedCRPfos, "AfterStitchingCRPfos", RED));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -341,9 +341,9 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(PfoList &clearCosmicRayPfos, PfoLis
 
     if (m_visualizeOverallRecoStatus)
     {
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &clearCosmicRayPfos, "ClearCRPfos", RED);
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "AmbiguousCRPfos", BLUE);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &clearCosmicRayPfos, "ClearCRPfos", RED));
+        PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "AmbiguousCRPfos", BLUE));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -406,8 +406,8 @@ StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHit
 
         if (m_visualizeOverallRecoStatus)
         {
-            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pSlicePfos, "OnePfoPerSlice", BLUE);
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), pSlicePfos, "OnePfoPerSlice", BLUE));
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
 
         for (const Pfo *const pSlicePfo : *pSlicePfos)
@@ -785,12 +785,15 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const
     larTPCParameters.m_isDriftInPositiveX = larTPC.IsDriftInPositiveX();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
 
+    const float tpcMinX(larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX()), tpcMaxX(larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX());
+
     // The Gaps
     for (const DetectorGap *const pGap : gapList)
     {
         const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pGap));
 
-        if (pLineGap && (pLineGap->GetLineEndX() > (larTPC.GetCenterX() - 0.5f * larTPC.GetWidthX())) && (pLineGap->GetLineStartX() > (larTPC.GetCenterX() + 0.5f * larTPC.GetWidthX())))
+        if (pLineGap && (((pLineGap->GetLineEndX() >= tpcMinX) && (pLineGap->GetLineEndX() <= tpcMaxX)) ||
+            ((pLineGap->GetLineStartX() >= tpcMinX) && (pLineGap->GetLineStartX() <= tpcMaxX))) )
         {
             PandoraApi::Geometry::LineGap::Parameters lineGapParameters;
             const LineGapType lineGapType(pLineGap->GetLineGapType());
