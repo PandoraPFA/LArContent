@@ -520,9 +520,6 @@ StatusCode MasterAlgorithm::Reset()
     if (m_pSliceCRWorkerInstance)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Reset(*m_pSliceCRWorkerInstance));
 
-    if (m_printOverallRecoStatus)
-        std::cout << "PatRec complete" << std::endl;  
-
     return STATUS_CODE_SUCCESS;
 }
 
