@@ -1,4 +1,19 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_09_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Replaced parent algorithms with new master algorithm, which uses Pandora worker instances, rather than purely daughter algorithms and tools.
+Plugins now handle presence of multiple LArTPCs registered with master instance.
+Slicing now occurs entirely within a Pandora worker instance.
+Introduced pre- and post-processing algorithms.
+Added LArControlFlow directory, collecting algorithms, tools and other content associated with overall control flow.
+Added new, improved interface for neutrino id tools.
+Replaced stitching info with simple Pfo to LArTPC map.
+Used LArFileHelper to access worker PandoraSetting files or SVM data files, removing in-LArSoft usage of cetlib.
+Adopted use of LArTPC volume ids, stored in derived LArCaloHit class.
+Applied x0 shift to Pfo hits and vertices, using vertex x0 value in cosmic-ray tagging.
+Added option to visualize reconstruction status at a number of key stages.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_08_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Consolidated approach made available, with ParentAlgorithm guiding a number of different reconstruction options.
