@@ -10,6 +10,7 @@
 
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
@@ -338,8 +339,24 @@ void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoT
     for (const CRCandidate &candidate : candidates)
     {
         // Cosmic-ray muons extending outside of (single) physical volume if given t0 is that of the beam particle
-        const float maxX((candidate.m_endPoint1.GetX() > candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
-        const float minX((candidate.m_endPoint1.GetX() < candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
+        float minX(std::numeric_limits<float>::max()), maxX(-std::numeric_limits<float>::max());
+
+        if (candidate.m_canFit)
+        {
+            minX = ((candidate.m_endPoint1.GetX() < candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
+            maxX = ((candidate.m_endPoint1.GetX() > candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
+        }
+        else
+        {
+            // Handle any particles with small numbers of 3D hits, for which no 3D sliding fit information is available
+            for (const Cluster *const pCluster : candidate.m_pPfo->GetClusterList())
+            {
+                float clusterMinX(std::numeric_limits<float>::max()), clusterMaxX(-std::numeric_limits<float>::max());
+                LArClusterHelper::GetClusterSpanX(pCluster, clusterMinX, clusterMaxX);
+                minX = std::min(clusterMinX, minX);
+                maxX = std::max(clusterMaxX, maxX);
+            }
+        }
 
         bool isInTime((minX > m_face_Xa - m_inTimeMargin) && (maxX < m_face_Xc + m_inTimeMargin));
 
@@ -381,6 +398,7 @@ void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoT
                 else if (volumeId != pLArCaloHit->GetLArTPCVolumeId())
                 {
                     isInSingleVolume = false;
+                    break;
                 }
             }
 
@@ -464,9 +482,8 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
 {
     for (const CRCandidate &candidate : candidates)
     {
-        const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) && candidate.m_canFit &&
-            (!pfoToInTimeMap.at(candidate.m_pPfo) || pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
-            (candidate.m_theta > m_minCosmicCosTheta && candidate.m_curvature < m_maxCosmicCurvature)));
+        const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) && (!pfoToInTimeMap.at(candidate.m_pPfo) || (candidate.m_canFit &&
+            (pfoToIsTopToBottomMap.at(candidate.m_pPfo) || ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature)))) ));
 
         if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
