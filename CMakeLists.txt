@@ -39,14 +39,11 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     cet_report_compiler_flags()
 
     find_ups_product( pandora )
-    find_ups_product( cetlib )
     find_ups_product( eigen )
 
     cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
     cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
-    cet_find_library( CETLIB NAMES cetlib PATHS ENV CETLIB_LIB )
     add_definitions("-DMONITORING")
-    add_definitions("-DCETLIB_AVAILABLE")
 
     # ADD SOURCE CODE SUBDIRECTORIES HERE
     add_subdirectory(larpandoracontent)

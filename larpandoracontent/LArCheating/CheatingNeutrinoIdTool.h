@@ -8,7 +8,7 @@
 #ifndef LAR_CHEATING_NEUTRINO_ID_TOOL_H
 #define LAR_CHEATING_NEUTRINO_ID_TOOL_H 1
 
-#include "larpandoracontent/LArUtility/ParentAlgorithm.h"
+#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
 namespace lar_content
 {
@@ -16,17 +16,10 @@ namespace lar_content
 /**
  *  @brief  CheatingNeutrinoIdTool class
  */
-class CheatingNeutrinoIdTool : public NeutrinoIdBaseTool
+class CheatingNeutrinoIdTool : public SliceIdBaseTool
 {
 public:
-    /**
-     *  @brief  Default constructor
-     */
-    CheatingNeutrinoIdTool();
-
-    void FillNeutrinoProperties(const pandora::PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const;
-    void FillCosmicRayProperties(const pandora::PfoList *const pPfoList, ParentAlgorithm::SliceProperties &sliceProperties) const;
-    bool GetNeutrinoSliceIndex(const ParentAlgorithm::SliceIndexToPropertiesMap &sliceIndexToPropertiesMap, unsigned int &neutrinoSliceIndex) const;
+    void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

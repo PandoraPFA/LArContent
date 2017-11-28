@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.cc
+ *  @file   larpandoracontent/LArControlFlow/CosmicRayTaggingTool.cc
  *
  *  @brief  Implementation of the cosmic-ray tagging tool class.
  *
@@ -8,10 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h"
+
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.h"
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 
 using namespace pandora;
 
@@ -25,6 +27,7 @@ CosmicRayTaggingTool::CosmicRayTaggingTool() :
     m_maxAssociationDist(3.f * 18.f),
     m_minimumHits(15),
     m_inTimeMargin(5.f),
+    m_inTimeMaxX0(1.f),
     m_marginY(20.f),
     m_marginZ(10.f),
     m_maxNeutrinoCosTheta(0.2f),
@@ -73,14 +76,34 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    // TODO First time only
-    const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
-    m_face_Xa = larTPC.GetCenterX() - larTPC.GetWidthX() / 2.f;
-    m_face_Xc = larTPC.GetCenterX() + larTPC.GetWidthX() / 2.f;
-    m_face_Yb = larTPC.GetCenterY() - larTPC.GetWidthY() / 2.f;
-    m_face_Yt = larTPC.GetCenterY() + larTPC.GetWidthY() / 2.f;
-    m_face_Zu = larTPC.GetCenterZ() - larTPC.GetWidthZ() / 2.f;
-    m_face_Zd = larTPC.GetCenterZ() + larTPC.GetWidthZ() / 2.f;
+    // TODO First time only, TODO Refactor with master algorithm
+    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+
+    float parentMinX(pFirstLArTPC->GetCenterX() - 0.5f * pFirstLArTPC->GetWidthX());
+    float parentMaxX(pFirstLArTPC->GetCenterX() + 0.5f * pFirstLArTPC->GetWidthX());
+    float parentMinY(pFirstLArTPC->GetCenterY() - 0.5f * pFirstLArTPC->GetWidthY());
+    float parentMaxY(pFirstLArTPC->GetCenterY() + 0.5f * pFirstLArTPC->GetWidthY());
+    float parentMinZ(pFirstLArTPC->GetCenterZ() - 0.5f * pFirstLArTPC->GetWidthZ());
+    float parentMaxZ(pFirstLArTPC->GetCenterZ() + 0.5f * pFirstLArTPC->GetWidthZ());
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+        parentMinX = std::min(parentMinX, pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX());
+        parentMaxX = std::max(parentMaxX, pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX());
+        parentMinY = std::min(parentMinY, pLArTPC->GetCenterY() - 0.5f * pLArTPC->GetWidthY());
+        parentMaxY = std::max(parentMaxY, pLArTPC->GetCenterY() + 0.5f * pLArTPC->GetWidthY());
+        parentMinZ = std::min(parentMinZ, pLArTPC->GetCenterZ() - 0.5f * pLArTPC->GetWidthZ());
+        parentMaxZ = std::max(parentMaxZ, pLArTPC->GetCenterZ() + 0.5f * pLArTPC->GetWidthZ());
+    }
+
+    m_face_Xa = parentMinX;
+    m_face_Xc = parentMaxX;
+    m_face_Yb = parentMinY;
+    m_face_Yt = parentMaxY;
+    m_face_Zu = parentMinZ;
+    m_face_Zd = parentMaxZ;
 
     PfoToPfoListMap pfoAssociationMap;
     this->GetPfoAssociations(parentCosmicRayPfos, pfoAssociationMap);
@@ -133,8 +156,11 @@ bool CosmicRayTaggingTool::GetValid3DCluster(const ParticleFlowObject *const pPf
 
 void CosmicRayTaggingTool::GetPfoAssociations(const PfoList &parentCosmicRayPfos, PfoToPfoListMap &pfoAssociationMap) const
 {
+    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
+    const LArTPC *const pFirstLArTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
+    const float layerPitch(pFirstLArTPC->GetWirePitchW());
+
     PfoToSlidingFitsMap pfoToSlidingFitsMap;
-    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (const ParticleFlowObject *const pPfo : parentCosmicRayPfos)
     {
@@ -308,12 +334,85 @@ void CosmicRayTaggingTool::GetCRCandidates(const PfoList &parentCosmicRayPfos, c
 
 void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoToBoolMap &pfoToInTimeMap) const
 {
+    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+
     for (const CRCandidate &candidate : candidates)
     {
-        const float maxX((candidate.m_endPoint1.GetX() > candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
-        const float minX((candidate.m_endPoint1.GetX() < candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
+        // Cosmic-ray muons extending outside of (single) physical volume if given t0 is that of the beam particle
+        float minX(std::numeric_limits<float>::max()), maxX(-std::numeric_limits<float>::max());
 
-        const bool isInTime((minX > m_face_Xa - m_inTimeMargin) && (maxX < m_face_Xc + m_inTimeMargin));
+        if (candidate.m_canFit)
+        {
+            minX = ((candidate.m_endPoint1.GetX() < candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
+            maxX = ((candidate.m_endPoint1.GetX() > candidate.m_endPoint2.GetX()) ? candidate.m_endPoint1.GetX() : candidate.m_endPoint2.GetX());
+        }
+        else
+        {
+            // Handle any particles with small numbers of 3D hits, for which no 3D sliding fit information is available
+            for (const Cluster *const pCluster : candidate.m_pPfo->GetClusterList())
+            {
+                float clusterMinX(std::numeric_limits<float>::max()), clusterMaxX(-std::numeric_limits<float>::max());
+                LArClusterHelper::GetClusterSpanX(pCluster, clusterMinX, clusterMaxX);
+                minX = std::min(clusterMinX, minX);
+                maxX = std::max(clusterMaxX, maxX);
+            }
+        }
+
+        bool isInTime((minX > m_face_Xa - m_inTimeMargin) && (maxX < m_face_Xc + m_inTimeMargin));
+
+        // Cosmic-ray muons that have been shifted and stitched across mid plane between volumes
+        if (isInTime)
+        {
+            try
+            {
+                if (std::fabs(LArPfoHelper::GetVertex(candidate.m_pPfo)->GetX0()) > m_inTimeMaxX0)
+                    isInTime = false;
+            }
+            catch (const StatusCodeException &) {}
+        }
+
+        // Cosmic-ray muons extending outside of (any individual) physical volume if given t0 is that of the beam particle
+        if (isInTime)
+        {
+            CaloHitList caloHitList;
+            LArPfoHelper::GetCaloHits(candidate.m_pPfo, TPC_VIEW_U, caloHitList);
+            LArPfoHelper::GetCaloHits(candidate.m_pPfo, TPC_VIEW_V, caloHitList);
+            LArPfoHelper::GetCaloHits(candidate.m_pPfo, TPC_VIEW_W, caloHitList);
+
+            bool isFirstHit(true);
+            bool isInSingleVolume(true);
+            unsigned int volumeId(std::numeric_limits<unsigned int>::max());
+
+            for (const CaloHit *const pCaloHit : caloHitList)
+            {
+                const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit*>(pCaloHit));
+
+                if (!pLArCaloHit)
+                    continue;
+
+                if (isFirstHit)
+                {
+                    isFirstHit = false;
+                    volumeId = pLArCaloHit->GetLArTPCVolumeId();
+                }
+                else if (volumeId != pLArCaloHit->GetLArTPCVolumeId())
+                {
+                    isInSingleVolume = false;
+                    break;
+                }
+            }
+
+            LArTPCMap::const_iterator tpcIter(larTPCMap.find(volumeId));
+
+            if (isInSingleVolume && (larTPCMap.end() != tpcIter))
+            {
+                const float thisFaceXLow(tpcIter->second->GetCenterX() - 0.5f * tpcIter->second->GetWidthX());
+                const float thisFaceXHigh(tpcIter->second->GetCenterX() + 0.5f * tpcIter->second->GetWidthX());
+
+                if (!((minX > thisFaceXLow - m_inTimeMargin) && (maxX < thisFaceXHigh + m_inTimeMargin)))
+                    isInTime = false;
+            }
+        }
 
         if (!pfoToInTimeMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isInTime)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -383,9 +482,8 @@ void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const P
 {
     for (const CRCandidate &candidate : candidates)
     {
-        const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) && candidate.m_canFit &&
-            (!pfoToInTimeMap.at(candidate.m_pPfo) || pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
-            (candidate.m_theta > m_minCosmicCosTheta && candidate.m_curvature < m_maxCosmicCurvature)));
+        const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) && (!pfoToInTimeMap.at(candidate.m_pPfo) || (candidate.m_canFit &&
+            (pfoToIsTopToBottomMap.at(candidate.m_pPfo) || ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature)))) ));
 
         if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -411,7 +509,8 @@ CosmicRayTaggingTool::CRCandidate::CRCandidate(const Pandora &pandora, const Par
     if (!clusters3D.empty() && (clusters3D.front()->GetNCaloHits() > 15)) // TODO Configurable
     {
         m_canFit = true;
-        const ThreeDSlidingFitResult slidingFitResult(clusters3D.front(), 5, LArGeometryHelper::GetWireZPitch(pandora)); // TODO Configurable
+        const LArTPC *const pFirstLArTPC(pandora.GetGeometry()->GetLArTPCMap().begin()->second);
+        const ThreeDSlidingFitResult slidingFitResult(clusters3D.front(), 5, pFirstLArTPC->GetWirePitchW()); // TODO Configurable
         this->CalculateFitVariables(slidingFitResult);
     }
 }
@@ -474,6 +573,9 @@ StatusCode CosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InTimeMargin", m_inTimeMargin));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "InTimeMaxX0", m_inTimeMaxX0));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MarginY", m_marginY));

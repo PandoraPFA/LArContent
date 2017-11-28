@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h
+ *  @file   larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h
  * 
  *  @brief  Header file for the pfo mop up algorithm base class.
  * 
@@ -35,7 +35,7 @@ public:
      * 
      *  @return the address of the parent cluster
      */
-    virtual const pandora::Cluster *GetParentCluster(const pandora::ClusterList &clusterList, const pandora::HitType hitType) const;
+    static const pandora::Cluster *GetParentCluster(const pandora::ClusterList &clusterList, const pandora::HitType hitType);
 
 protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

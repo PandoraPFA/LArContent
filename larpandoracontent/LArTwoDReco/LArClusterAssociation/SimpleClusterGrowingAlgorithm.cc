@@ -18,7 +18,7 @@ namespace lar_content
 {
 
 SimpleClusterGrowingAlgorithm::SimpleClusterGrowingAlgorithm() :
-    m_minCaloHitsPerCluster(10)
+    m_minCaloHitsPerCluster(5)
 {
 }
 

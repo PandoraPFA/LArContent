@@ -8,9 +8,9 @@
 #ifndef LAR_EVENT_SLICING_TOOL_H
 #define LAR_EVENT_SLICING_TOOL_H 1
 
-#include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
+#include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
 
-#include "larpandoracontent/LArUtility/ParentSlicingBaseAlgorithm.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingConeFitResult.h"
 
 #include <unordered_map>
 
@@ -35,17 +35,27 @@ public:
      */
     EventSlicingTool();
 
-    void Slice(const ParentSlicingBaseAlgorithm *const pAlgorithm, const ParentSlicingBaseAlgorithm::HitTypeToNameMap &caloHitListNames,
-        const ParentSlicingBaseAlgorithm::HitTypeToNameMap &clusterListNames, ParentSlicingBaseAlgorithm::SliceList &sliceList);
+    void RunSlicing(const pandora::Algorithm *const pAlgorithm, const SlicingAlgorithm::HitTypeToNameMap &caloHitListNames,
+        const SlicingAlgorithm::HitTypeToNameMap &clusterListNames, SlicingAlgorithm::SliceList &sliceList);
 
 private:
+    /**
+     *  @brief  Copy all the input hits in an event into a single slice
+     *
+     *  @param  pAlgorithm the address of the calling algorithm
+     *  @param  caloHitListNames the hit type to calo hit list name map
+     *  @param  sliceList the slice list to receive the single new slice
+     */
+    void CopyAllHitsToSingleSlice(const pandora::Algorithm *const pAlgorithm, const SlicingAlgorithm::HitTypeToNameMap &caloHitListNames,
+        SlicingAlgorithm::SliceList &sliceList) const;
+
     typedef std::unordered_map<const pandora::Cluster*, const pandora::ParticleFlowObject*> ClusterToPfoMap;
 
     /**
      *  @brief  Get the 3D clusters from a specified list of pfos, storing the 3D clusters in the provided list and populating
      *          a map from 3D cluster to parent pfo
      *
-     *  @param  pAlgorithm the address of the parent algorithm
+     *  @param  pAlgorithm the address of the calling algorithm
      *  @param  pfoListName the pfo list name
      *  @param  clusters3D to receive the list of 3D clusters
      *  @param  clusterToPfoMap to receive the mapping from 3D clusters to parent pfos
@@ -159,7 +169,7 @@ private:
      *  @param  sliceList the slice list to receive the new slices
      *  @param  clusterToSliceIndexMap to receive the mapping from 3D clusters to index in the slice list
      */
-    void CreateSlices(const ClusterSliceList &clusterSliceList, ParentSlicingBaseAlgorithm::SliceList &sliceList, ClusterToSliceIndexMap &clusterToSliceIndexMap) const;
+    void CreateSlices(const ClusterSliceList &clusterSliceList, SlicingAlgorithm::SliceList &sliceList, ClusterToSliceIndexMap &clusterToSliceIndexMap) const;
 
     /**
      *  @brief  Use 3D clusters in the cluster slice list, find their parent pfos and assign all hits in all 2D clusters in the pfos
@@ -170,24 +180,24 @@ private:
      *  @param  sliceList the list containing slices to be populated with 2D hits
      *  @param  assignedClusters to receive the list of 2D clusters with hits assigned to slices
      */
-    void CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap, ParentSlicingBaseAlgorithm::SliceList &sliceList,
+    void CopyPfoHitsToSlices(const ClusterToSliceIndexMap &clusterToSliceIndexMap, const ClusterToPfoMap &clusterToPfoMap, SlicingAlgorithm::SliceList &sliceList,
         pandora::ClusterSet &assignedClusters) const;
 
     /**
      *  @brief  Get the list of 2D clusters with hits yets to be assigned to slices
      *
-     *  @param  pAlgorithm the address of the parent algorithm
+     *  @param  pAlgorithm the address of the calling algorithm
      *  @param  clusterListNames the hit type to cluster list name map
      *  @param  assignedClusters the list of 2D clusters with hits assigned to slices
      *  @param  remainingClusters to receive the list of 2D clusters with hits yet to be assigned to slices
      */
-    void GetRemainingClusters(const pandora::Algorithm *const pAlgorithm, const ParentSlicingBaseAlgorithm::HitTypeToNameMap &clusterListNames,
+    void GetRemainingClusters(const pandora::Algorithm *const pAlgorithm, const SlicingAlgorithm::HitTypeToNameMap &clusterListNames,
         const pandora::ClusterSet &assignedClusters, pandora::ClusterList &remainingClusters) const;
 
     /**
      *  @brief  Get the list of 2D clusters (from a named 2D cluster list) with hits yets to be assigned to slices
      *
-     *  @param  pAlgorithm the address of the parent algorithm
+     *  @param  pAlgorithm the address of the calling algorithm
      *  @param  clusterListName the cluster list name
      *  @param  assignedClusters the list of 2D clusters with hits assigned to slices
      *  @param  remainingClusters to receive the list of 2D clusters with hits yet to be assigned to slices
@@ -203,7 +213,7 @@ private:
      *  @param  sliceList the list containing slices to be populated with 2D hits
      */
     void AssignRemainingHitsToSlices(const pandora::ClusterList &remainingClusters, const ClusterToSliceIndexMap &clusterToSliceIndexMap,
-        ParentSlicingBaseAlgorithm::SliceList &sliceList) const;
+        SlicingAlgorithm::SliceList &sliceList) const;
 
     typedef KDTreeLinkerAlgo<const pandora::CartesianVector*, 2> PointKDTree2D;
     typedef KDTreeNodeInfoT<const pandora::CartesianVector*, 2> PointKDNode2D;
@@ -221,7 +231,7 @@ private:
      *  @param  pointsW to receive the points in the w view
      *  @param  pointToSliceIndexMap to receive the mapping from points to slice index
      */
-    void GetKDTreeEntries2D(const ParentSlicingBaseAlgorithm::SliceList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW,
+    void GetKDTreeEntries2D(const SlicingAlgorithm::SliceList &sliceList, PointList &pointsU, PointList &pointsV, PointList &pointsW,
         PointToSliceIndexMap &pointToSliceIndexMap) const;
 
     /**

@@ -8,7 +8,7 @@
 #ifndef LAR_VERTEX_BASED_PFO_MOP_UP_ALGORITHM_H
 #define LAR_VERTEX_BASED_PFO_MOP_UP_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
+#include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 

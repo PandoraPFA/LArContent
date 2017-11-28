@@ -8,7 +8,7 @@
 
 #include "Managers/GeometryManager.h"
 
-#include "larpandoracontent/LArStitching/MultiPandoraApi.h"
+#include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 
 #include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
 
@@ -22,15 +22,21 @@ namespace lar_content
 
 const LArTPC &LArStitchingHelper::FindClosestTPC(const Pandora &pandora, const LArTPC &inputTPC, const bool checkPositive)
 {
-    const PandoraInstanceList &pandoraInstanceList(MultiPandoraApi::GetDaughterPandoraInstanceList(&pandora));
+    if (!MultiPandoraApi::GetPandoraInstanceMap().count(&pandora))
+    {
+        std::cout << "LArStitchingHelper::FindClosestTPC - functionality only available to primary/master Pandora instance " << std::endl;
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    }
+
+    const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
 
     const LArTPC *pClosestTPC(nullptr);
     float closestSeparation(std::numeric_limits<float>::max());
     const float maxDisplacement(30.f); // TODO: 30cm should be fine, but can we do better than a hard-coded number here?
 
-    for (const Pandora *const pPandora : pandoraInstanceList)
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
     {
-        const LArTPC &checkTPC(pPandora->GetGeometry()->GetLArTPC());
+        const LArTPC &checkTPC(*(mapEntry.second));
 
         if (&inputTPC == &checkTPC)
             continue;

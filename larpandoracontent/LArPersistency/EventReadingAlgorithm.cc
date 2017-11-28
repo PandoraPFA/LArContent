@@ -25,7 +25,7 @@ namespace lar_content
 
 EventReadingAlgorithm::EventReadingAlgorithm() :
     m_skipToEvent(0),
-    m_useLArCaloHits(false),
+    m_useLArCaloHits(true),
     m_useLArMCParticles(true),
     m_pEventFileReader(nullptr)
 {

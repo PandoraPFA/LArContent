@@ -39,6 +39,7 @@ protected:
     unsigned int            m_minCaloHitsCut;               ///< The minimum number of calo hits to qualify as a track
 
     std::string             m_trainingOutputFile;           ///< The training output file
+    std::string             m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to svm files
     std::string             m_svmFileName;                  ///< The svm input file
     std::string             m_svmName;                      ///< The name of the svm to find
 };

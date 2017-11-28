@@ -25,7 +25,7 @@ namespace lar_content
 
 using namespace pandora;
 
-LArRotationalTransformationPlugin::LArRotationalTransformationPlugin() : 
+LArRotationalTransformationPlugin::LArRotationalTransformationPlugin() :
     m_thetaU(0.),
     m_thetaV(0.),
     m_sigmaUVW(0.),
@@ -222,7 +222,7 @@ void LArRotationalTransformationPlugin::GetProjectedYZ(const PositionAndType &hi
     const double position((TPC_VIEW_U == hitType) ? u : (TPC_VIEW_V == hitType) ? v : w);
     const double fitPosition((TPC_VIEW_U == hitType) ? LArRotationalTransformationPlugin::VWtoU(v, w) : (TPC_VIEW_V == hitType) ? LArRotationalTransformationPlugin::WUtoV(w, u) : LArRotationalTransformationPlugin::UVtoW(u, v));
     const double unitY((TPC_VIEW_U == hitType) ? -m_cosU : (TPC_VIEW_V == hitType) ? m_cosV : 0.);
-    const double unitZ((TPC_VIEW_U == hitType) ? m_sinU : (TPC_VIEW_V == hitType) ? m_sinV : 1.);  
+    const double unitZ((TPC_VIEW_U == hitType) ? m_sinU : (TPC_VIEW_V == hitType) ? m_sinV : 1.);
 
     y = yInput + unitY * (position - fitPosition);
     z = zInput + unitZ * (position - fitPosition);
@@ -240,24 +240,36 @@ void LArRotationalTransformationPlugin::GetProjectedYZ(const PositionAndType &hi
 
 StatusCode LArRotationalTransformationPlugin::Initialize()
 {
-    try
-    {
-        const LArTPC &larTPC(this->GetPandora().GetGeometry()->GetLArTPC());
+    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
 
-        m_thetaU = larTPC.GetWireAngleU();
-        m_thetaV = larTPC.GetWireAngleV();
-        m_sigmaUVW = larTPC.GetSigmaUVW();
-
-        m_sinUplusV = std::sin(m_thetaU + m_thetaV);
-        m_sinU = std::sin(m_thetaU);
-        m_sinV = std::sin(m_thetaV);
-        m_cosU = std::cos(m_thetaU);
-        m_cosV = std::cos(m_thetaV);
-    }
-    catch (const StatusCodeException &statusCodeException)
+    if (larTPCMap.empty())
     {
         std::cout << "LArRotationalTransformationPlugin::Initialize - LArTPC description not registered with Pandora as required " << std::endl;
-        return statusCodeException.GetStatusCode();
+        return STATUS_CODE_NOT_INITIALIZED;
+    }
+
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+    m_thetaU = pFirstLArTPC->GetWireAngleU();
+    m_thetaV = pFirstLArTPC->GetWireAngleV();
+    m_sigmaUVW = pFirstLArTPC->GetSigmaUVW();
+
+    m_sinUplusV = std::sin(m_thetaU + m_thetaV);
+    m_sinU = std::sin(m_thetaU);
+    m_sinV = std::sin(m_thetaV);
+    m_cosU = std::cos(m_thetaU);
+    m_cosV = std::cos(m_thetaV);
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+
+        if ((std::fabs(m_thetaU - pLArTPC->GetWireAngleU()) > std::numeric_limits<float>::epsilon()) ||
+            (std::fabs(m_thetaV - pLArTPC->GetWireAngleV()) > std::numeric_limits<float>::epsilon()) ||
+            (std::fabs(m_sigmaUVW - pLArTPC->GetSigmaUVW()) > std::numeric_limits<float>::epsilon()))
+        {
+            std::cout << "LArRotationalTransformationPlugin::Initialize - Plugin does not support provided LArTPC configurations " << std::endl;
+            return STATUS_CODE_INVALID_PARAMETER;
+        }
     }
 
     return STATUS_CODE_SUCCESS;

@@ -1,14 +1,13 @@
 include_directories( $ENV{EIGEN_INC} )
-include_directories( $ENV{CETLIB_INC} )
 
 set( subdir_list LArCheating
+                 LArControlFlow
 		 LArCustomParticles
 		 LArHelpers
 		 LArMonitoring
 		 LArObjects
 		 LArPersistency
 		 LArPlugins
-		 LArStitching
 		 LArThreeDReco
 		 LArThreeDReco/LArCosmicRay
 		 LArThreeDReco/LArEventBuilding
@@ -36,7 +35,6 @@ cet_make( LIBRARY_NAME LArPandoraContent
           SUBDIRS ${subdir_list}
 	  LIBRARIES ${PANDORASDK}
 	            ${PANDORAMONITORING}
-	            ${CETLIB}
 )
 
 install_source( SUBDIRS ${subdir_list} )

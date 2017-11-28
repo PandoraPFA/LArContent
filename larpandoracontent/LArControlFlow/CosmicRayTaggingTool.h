@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/CosmicRayTaggingTool.h
+ *  @file   larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h
  *
  *  @brief  Header file for the cosmic-ray tagging tool class.
  *
@@ -8,9 +8,9 @@
 #ifndef LAR_COSMIC_RAY_TAGGING_TOOL_H
 #define LAR_COSMIC_RAY_TAGGING_TOOL_H 1
 
-#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
-#include "larpandoracontent/LArUtility/ParentAlgorithm.h"
+#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include <unordered_map>
 
@@ -199,7 +199,8 @@ private:
 
     unsigned int    m_minimumHits;              ///< The minimum number of hits for a Pfo to be considered
 
-    float           m_inTimeMargin;             ///< The maximum distance outise of the physical detector volume that a Pfo may be to still be considered in-time
+    float           m_inTimeMargin;             ///< The maximum distance outside of the physical detector volume that a Pfo may be to still be considered in time
+    float           m_inTimeMaxX0;              ///< The maximum pfo x0 (determined from shifted vertex) to allow pfo to still be considered in time
     float           m_marginY;                  ///< The minimum distance from a detector Y-face for a Pfo to be associated
     float           m_marginZ;                  ///< The minimum distance from a detector Z-face for a Pfo to be associated
     float           m_maxNeutrinoCosTheta;      ///< The maximum cos(theta) that a Pfo can have to be classified as a likely neutrino
