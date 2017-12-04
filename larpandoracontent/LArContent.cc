@@ -25,6 +25,7 @@
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h"
 
+#include "larpandoracontent/LArControlFlow/BeamParticleIdTool.h" 
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h"
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/NeutrinoIdTool.h"
@@ -258,6 +259,7 @@
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
     d("LArNeutrinoId",                          NeutrinoIdTool)                                                                 \
+    d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
     d("LArCheatingCosmicRayTagging",            CheatingCosmicRayTaggingTool)                                                   \
