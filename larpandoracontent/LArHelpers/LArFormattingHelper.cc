@@ -6,8 +6,6 @@
  *  $Log: $
  */
 
-#include "Pandora/StatusCodes.h"
-
 #include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
 
 #include <iomanip>

@@ -9,6 +9,7 @@
 #define LAR_FORMATTING_HELPER_H 1
 
 #include "Pandora/PandoraInternal.h"
+#include "Pandora/StatusCodes.h"
 
 #include <iostream>
 #include <sstream>
@@ -207,7 +208,7 @@ public:
         const unsigned int              m_precision;        ///< The number of significant figures to use when displaying number types
         pandora::StringVector           m_elements;         ///< The vector of flattened table elements
         pandora::StringVector           m_format;           ///< The formatting of each table element
-        pandora::UIntVector             m_widths;           ///< The widths of each column (in units of number of characters)
+        std::vector<unsigned int>       m_widths;           ///< The widths of each column (in units of number of characters)
         std::stringstream               m_stringstream;     ///< The stringstream to print objects to
     };
     
@@ -221,7 +222,7 @@ inline void LArFormattingHelper::Table::AddElement(const T &value, const Style s
     this->CheckAndSetSeparatorColumn();
 
     if (!(m_stringstream << value))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     m_elements.push_back(static_cast<std::string>(m_stringstream.str()));
     m_format.push_back(LArFormattingHelper::GetFormatCharacter(style) + LArFormattingHelper::GetFormatCharacter(color));
