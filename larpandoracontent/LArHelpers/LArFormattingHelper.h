@@ -8,6 +8,8 @@
 #ifndef LAR_FORMATTING_HELPER_H
 #define LAR_FORMATTING_HELPER_H 1
 
+#include "Pandora/PandoraInternal.h"
+
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -22,52 +24,51 @@ namespace lar_content
 class LArFormattingHelper
 {
 public:
-
-    enum Colour : int;
-    enum Style : int;
+    enum Color : unsigned int;
+    enum Style : unsigned int;
 
     /**
      *  @brief  Set the format style (to standard output stream)
      *
      *  @param  style the style of choice
      */
-    static void SetStyle(const Style &style, std::ostream &stream=std::cout);
+    static void SetStyle(const Style style, std::ostream &stream = std::cout);
     
     /**
-     *  @brief  Set the text colour (of standard output stream)
+     *  @brief  Set the text color (of standard output stream)
      *
-     *  @param  colour the colour of choice
+     *  @param  color the color of choice
      */
-    static void SetColour(const Colour &colour, std::ostream &stream=std::cout);
+    static void SetColor(const Color color, std::ostream &stream = std::cout);
     
     /**
      *  @brief  Reset the style of the standard output stream
      */
-    static void ResetStyle(std::ostream &stream=std::cout);
+    static void ResetStyle(std::ostream &stream = std::cout);
 
     /**
-     *  @brief  Reset the text colour of the standard output stream
+     *  @brief  Reset the text color of the standard output stream
      */
-    static void ResetColour(std::ostream &stream=std::cout);
+    static void ResetColor(std::ostream &stream = std::cout);
 
     /**
-     *  @brief  Reset the formatting and text colour of the standard output stream
+     *  @brief  Reset the formatting and text color of the standard output stream
      */
-    static void Reset(std::ostream &stream=std::cout);
+    static void Reset(std::ostream &stream = std::cout);
 
     /**
      *  @brief  Print a formatting character to the standard output stream
      *
      *  @param  code the formatting code to output
      */
-    static void PrintFormatCharacter(const unsigned int &code, std::ostream &stream=std::cout);
+    static void PrintFormatCharacter(const unsigned int code, std::ostream &stream = std::cout);
 
     /**
      *  @brief  Get a formatting character
      *
      *  @param  code the formatting code to output
      */
-    static std::string GetFormatCharacter(const unsigned int &code);
+    static std::string GetFormatCharacter(const unsigned int code);
 
     /**
      *  @brief  Print a header line of a given width
@@ -75,16 +76,19 @@ public:
      *  @param  title the title of the header
      *  @param  width the width of the header line
      */
-    static void PrintHeader(const std::string &title = "", const unsigned int &width = 140);
+    static void PrintHeader(const std::string &title = "", const unsigned int width = 140);
 
     /**
      *  @brief  Print a horizontal rule
      *
      *  @param  width the width of the rule line
      */
-    static void PrintRule(const unsigned int &width = 140);
+    static void PrintRule(const unsigned int width = 140);
 
-    enum Style : int
+    /**
+     *  @brief  Style code enumeration
+     */
+    enum Style : unsigned int
     {
         REGULAR = 0,
         BOLD = 1,
@@ -93,7 +97,10 @@ public:
         INVERTED = 7
     };
     
-    enum Colour : int
+    /**
+     *  @brief  Style code enumeration
+     */
+    enum Color : unsigned int
     {
         DEFAULT = 39,
         BLACK = 30,
@@ -116,45 +123,36 @@ public:
 
     //--------------------------------------------------------------------------------------------------------------------------------------
 
+    /**
+     *  @brief  Table class
+     */
     class Table 
     {
     public:
-
         /**
          * @brief  Table constructor
          *
          * @param  columnTitles the string columns titles use empty string for a separator column
          * @param  precision the number of significant figures to display for number type table elements
          */
-        Table(const std::vector<std::string> &columnTitles, const unsigned int &precision=3);
+        Table(const pandora::StringVector &columnTitles, const unsigned int precision=3);
+
+        /**
+         * @brief  Print the table
+         */
+        void Print() const;
 
         /**
          * @brief  Add an element to the table into the next (non-separator) column
          *
          * @param  value the element to add to the table
          * @param  style the style of the element
-         * @param  colour the colour of the element
+         * @param  color the color of the element
          */
-        template<class T>
-        void AddElement(const T &value, const Style &style=REGULAR, const Colour &colour=DEFAULT);
+        template<typename T>
+        void AddElement(const T &value, const Style style=REGULAR, const Color color=DEFAULT);
 
-        /**
-         * @brief  Print the table
-         */
-        void Print();
     private:
-        const std::vector<std::string>  m_columnTitles;     ///< The vector of columns titles in the table
-        const unsigned int              m_precision;        ///< The number of significant figures to use when displaying number types
-        std::vector<std::string>        m_elements;         ///< The vector of flattened table elements
-        std::vector<std::string>        m_format;           ///< The formatting of each table element
-        std::vector<unsigned int>       m_widths;           ///< The widths of each column (in units of number of characters)
-        std::stringstream               m_stringstream;     ///< The stringstream to print objects to
-
-        /**
-         *  @brief  Check if the next table cell is in a separator column, if so add a blank element
-         */
-        void CheckForSeparatorColumn();
-
         /**
          *  @brief  If the supplied column is a separator (vertical rule)
          *
@@ -162,33 +160,28 @@ public:
          *
          *  @return true/false
          */
-        bool IsSeparatorColumn(const unsigned int &column);
+        bool IsSeparatorColumn(const unsigned int column) const;
     
-        /**
-         *  @brief  Update the width of the last column in which an element was added
-         */
-        void UpdateColumnWidth();
-
         /**
          *  @brief  Print the column titles
          *
          *  @param  widths a vector of the number of characters to include in each column 
          */
-        void PrintColumnTitles();
+        void PrintColumnTitles() const;
 
         /**
          *  @brief  Print a horizontal line
          *
          *  @param  widths a vector of the number of characters to include in each column 
          */
-        void PrintHorizontalLine();
+        void PrintHorizontalLine() const;
 
         /**
          *  @brief  Print the table elements
          *
          *  @param  widths a vector of the number of characters to include in each column 
          */
-        void PrintTableElements();
+        void PrintTableElements() const;
 
         /**
          *  @brief  Print a table cell
@@ -198,23 +191,44 @@ public:
          *  @param  index the index of the table cell (0 --> number of elements) used to find the column
          *  @param  widths a vector of the number of characters to include in each column 
          */
-        void PrintTableCell(const std::string &value, const std::string &format, const unsigned int &index);
+        void PrintTableCell(const std::string &value, const std::string &format, const unsigned int index) const;
+
+        /**
+         *  @brief  Check if the next table cell is in a separator column, if so add a blank element
+         */
+        void CheckAndSetSeparatorColumn();
+
+        /**
+         *  @brief  Update the width of the last column in which an element was added
+         */
+        void UpdateColumnWidth();
+        
+        const pandora::StringVector     m_columnTitles;     ///< The vector of columns titles in the table
+        const unsigned int              m_precision;        ///< The number of significant figures to use when displaying number types
+        pandora::StringVector           m_elements;         ///< The vector of flattened table elements
+        pandora::StringVector           m_format;           ///< The formatting of each table element
+        pandora::UIntVector             m_widths;           ///< The widths of each column (in units of number of characters)
+        std::stringstream               m_stringstream;     ///< The stringstream to print objects to
     };
     
 };
 
-template<class T>
-inline void LArFormattingHelper::Table::AddElement(const T &value, const Style &style, const Colour &colour)
-{
-    this->CheckForSeparatorColumn();
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-    m_stringstream << value;
+template<typename T>
+inline void LArFormattingHelper::Table::AddElement(const T &value, const Style style, const Color color)
+{
+    this->CheckAndSetSeparatorColumn();
+
+    if (!(m_stringstream << value))
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
     m_elements.push_back(static_cast<std::string>(m_stringstream.str()));
-    m_format.push_back(LArFormattingHelper::GetFormatCharacter(style) + LArFormattingHelper::GetFormatCharacter(colour));
+    m_format.push_back(LArFormattingHelper::GetFormatCharacter(style) + LArFormattingHelper::GetFormatCharacter(color));
     m_stringstream.str("");
 
     this->UpdateColumnWidth();
-    this->CheckForSeparatorColumn();
+    this->CheckAndSetSeparatorColumn();
 }
 
 } // namespace lar_content
