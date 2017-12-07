@@ -122,8 +122,6 @@ public:
         WHITE = 97
     };
 
-    //--------------------------------------------------------------------------------------------------------------------------------------
-
     /**
      *  @brief  Table class
      */
@@ -211,7 +209,6 @@ public:
         std::vector<unsigned int>       m_widths;           ///< The widths of each column (in units of number of characters)
         std::stringstream               m_stringstream;     ///< The stringstream to print objects to
     };
-    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
