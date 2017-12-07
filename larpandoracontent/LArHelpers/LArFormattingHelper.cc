@@ -61,7 +61,9 @@ void LArFormattingHelper::PrintFormatCharacter(const unsigned int code, std::ost
 
 std::string LArFormattingHelper::GetFormatCharacter(const unsigned int code)
 {
-    return ("\x1B[" + std::to_string(code) + "m");
+    const std::string startFormattingCode("\x1B[");
+    const std::string endFormattingCode("m");
+    return (startFormattingCode + std::to_string(code) + endFormattingCode);
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------------
