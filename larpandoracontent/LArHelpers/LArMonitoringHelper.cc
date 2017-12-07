@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Pandora/PdgTable.h"
+
 #include "Objects/CaloHit.h"
 #include "Objects/Cluster.h"
 #include "Objects/MCParticle.h"
@@ -17,6 +19,9 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
+
+#include <algorithm>
 
 using namespace pandora;
 
@@ -306,6 +311,82 @@ unsigned int LArMonitoringHelper::CountHitsByType(const HitType hitType, const C
     }
 
     return nHitsOfSpecifiedType;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+void LArMonitoringHelper::GetOrderedMCParticleVector(const std::vector<MCContributionMap> &selectedMCParticleToGoodHitsMaps, MCParticleVector &orderedMCParticleVector)
+{
+    for (const MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
+    {
+        // Copy map contents to vector it can be sorted
+        std::vector<MCParticleCaloHitPair> mcParticleToGoodHitsVect;
+        try 
+        {
+            std::copy(mcParticleToGoodHitsMap.begin(), mcParticleToGoodHitsMap.end(), std::back_inserter(mcParticleToGoodHitsVect));
+
+            // Sort by number of hits descending
+            std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const MCParticleCaloHitPair &a, const MCParticleCaloHitPair &b) -> bool 
+            {
+                if (a.second.size() != b.second.size())
+                    return (a.second.size() > b.second.size());
+        
+                // ATTN default to normal MCParticle sorting to avoid tie-breakers
+                return (a.first < b.first);
+            });
+
+            for (const MCParticleCaloHitPair &mcParticleCaloHitPair : mcParticleToGoodHitsVect)
+                orderedMCParticleVector.push_back(mcParticleCaloHitPair.first);
+        }
+        catch (const StatusCodeException &exception)
+        {
+            throw StatusCodeException(exception);
+        }
+    }
+
+    // Check that all elements of the vector are unique
+    const unsigned int nMCParticles(orderedMCParticleVector.size());
+    if (std::distance(orderedMCParticleVector.begin(), std::unique(orderedMCParticleVector.begin(), orderedMCParticleVector.end())) != nMCParticles)
+        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMonitoringHelper::PrintMCParticleTable(const MCContributionMap &selectedMCParticleToGoodHitsMap, const MCParticleVector &orderedMCParticleVector)
+{
+    if (selectedMCParticleToGoodHitsMap.empty())
+    {
+        std::cout << "No MCParticles supplied." << std::endl;
+        return;
+    }
+
+    LArFormattingHelper::Table table({"ID", "NUANCE", "TYPE", "", "E", "dist", "", "nGoodHits", "U", "V", "W"});
+   
+    unsigned int id(0);
+    for (const MCParticle *const pMCParticle : orderedMCParticleVector)
+    {
+        LArMonitoringHelper::MCContributionMap::const_iterator it = selectedMCParticleToGoodHitsMap.find(pMCParticle);
+        if (selectedMCParticleToGoodHitsMap.end() == it)
+            continue;  // ATTN MCParticles in selectedMCParticleToGoodHitsMap may be a subset of orderedMCParticleVector
+
+        table.AddElement(id++);
+        table.AddElement((dynamic_cast<const LArMCParticle*>(pMCParticle))->GetNuanceCode());
+        table.AddElement(PdgTable::GetParticleName(pMCParticle->GetParticleId()));
+
+        table.AddElement(pMCParticle->GetEnergy());
+        table.AddElement((pMCParticle->GetEndpoint() - pMCParticle->GetVertex()).GetMagnitude());
+
+        table.AddElement(it->second.size());
+        table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, it->second));
+        table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, it->second));
+        table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, it->second));
+    }
+
+    // Check every MCParticle in selectedMCParticleToGoodHitsMap has been printed
+    if (id != selectedMCParticleToGoodHitsMap.size() - 1)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+            
+    table.Print();
 }
 
 } // namespace lar_content

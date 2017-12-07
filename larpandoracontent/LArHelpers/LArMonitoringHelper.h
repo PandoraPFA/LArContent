@@ -33,6 +33,8 @@ public:
 
     typedef std::unordered_map<const pandora::MCParticle*, PfoContributionMap> MCToPfoMatchingMap;
 
+    typedef std::pair<const pandora::MCParticle*, pandora::CaloHitList > MCParticleCaloHitPair;
+
     /**
      *  @brief  Extract a list of target pfos consisting of either i) primary/final-state pfos only, or ii) a full list of all
      *          non-neutrino pfos and their daughters
@@ -116,6 +118,22 @@ public:
      *  @return the number of calo hits of the specified type
      */
     static unsigned int CountHitsByType(const pandora::HitType hitType, const pandora::CaloHitList &caloHitList);
+
+    /**
+     *  @brief  Order input MCParticles by their number of hits.
+     *
+     *  @param  selectedMCParticleToGoodHitsMaps the input vector of mappings from selected reconstructable MCParticles to their good hits
+     *  @param  orderedMCParticleVector the output vector of ordered MCParticles
+     */
+    static void GetOrderedMCParticleVector(const std::vector<MCContributionMap> &selectedMCParticleToGoodHitsMaps, pandora::MCParticleVector &orderedMCParticleVector);
+
+    /**
+     *  @brief  Print details of selected MCParticles to the terminal in a table.
+     *
+     *  @param  selectedMCParticleToGoodHitsMap the input mapping from selected reconstructable MCParticles to their good hits
+     *  @param  orderedMCParticleVector the input vector of ordered MCParticles
+     */
+    static void PrintMCParticleTable(const MCContributionMap &selectedMCParticleToGoodHitsMaps, const pandora::MCParticleVector &orderedMCParticleVector);
 };
 
 } // namespace lar_content
