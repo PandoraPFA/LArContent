@@ -640,10 +640,12 @@ void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoLis
 void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject *const pPfo, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D)
 {
     // Collect all 2D calo hits
+    CaloHitList caloHitList2D;
+
+    // TODO could use LArMonitoringHelper::CollectCaloHits here but it also gets isolated hits. Is this what we want or not?
     CaloHitList caloHitListU;
     CaloHitList caloHitListV;
     CaloHitList caloHitListW;
-    CaloHitList caloHitList2D;
 
     LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitListU);
     LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitListV);
