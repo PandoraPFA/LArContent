@@ -25,6 +25,12 @@ namespace lar_content
 class LArMCParticleHelper
 {
 public:
+    typedef std::map<const pandora::ParticleFlowObject*, pandora::CaloHitList > PfoToCaloHitListMap;
+    typedef std::pair<const pandora::MCParticle*, unsigned int > MCParticleIntPair;
+    typedef std::pair<const pandora::ParticleFlowObject*, unsigned int > PfoIntPair;
+    typedef std::map<const pandora::ParticleFlowObject*, std::vector<MCParticleIntPair> > PfoToMCParticleHitSharingMap;
+    typedef std::map<const pandora::MCParticle*, std::vector<PfoIntPair> > MCParticleToPfoHitSharingMap;
+
     /**
      *  @brief   ValidationParameters class
      */
@@ -303,6 +309,54 @@ public:
      *  @brief  Return true if passed a primary cosmic ray MCParticle
      */
     static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pfoList the input list of Pfos
+     *  @param  selectedMCParticleToGoodHitsMap the input mapping from selected reconstructable MCParticles to their good hits
+     *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     */
+    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const LArMonitoringHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, PfoToCaloHitListMap &pfoToReconstructable2DHitsMap);
+    
+    /**
+     *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pfoList the input list of Pfos
+     *  @param  selectedMCParticleToGoodHitsMaps the input vector of mappings from selected reconstructable MCParticles to their good hits
+     *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     */
+    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToCaloHitListMap &pfoToReconstructable2DHitsMap);
+
+    /**
+     *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pPfo the input pfo
+     *  @param  selectedMCParticleToGoodHitsMaps the input mappings from selected reconstructable MCParticles to their good hits
+     *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
+     */
+    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D);
+
+    /**
+     *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
+     *                                reconstructable MCParticle -> pair (Pfo, number of reconstructable 2D hits shared with MCParticle)
+     *
+     *  @param  pfoToReconstructable2DHitsMap the input mapping from Pfos to reconstructable 2D hits
+     *  @param  selectedMCParticleToGoodHitsMaps the input mappings from selected reconstructable MCParticles to good hits
+     *  @param  pfoToMCParticleHitSharingMap the output mapping from Pfos to selected reconstructable MCParticles and the number hits shared
+     *  @param  mcParticleToPfoHitSharingMap the output mapping from selected reconstructable MCParticles to Pfos and the number hits shared
+     */
+    static void GetPfoMCParticleHitSharingMaps(const PfoToCaloHitListMap &pfoToReconstructable2DHitsMap, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
+
+    /**
+     *  @brief  Count the number of hits in the intersection of two hit lists
+     *
+     *  @param  hitListA an input hit list
+     *  @param  hitListB another input hit list
+     *
+     *  @return The number of hits that are found in both hitListA and hitListB
+     */
+    static unsigned int CountSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
 
     /**
      *  @brief  Get the interaction type of an event
