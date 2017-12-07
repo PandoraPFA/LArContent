@@ -615,7 +615,119 @@ bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+    
+void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const LArMonitoringHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, PfoToCaloHitListMap &pfoToReconstructable2DHitsMap)
+{
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(pfoList, std::vector<LArMonitoringHelper::MCContributionMap>({selectedMCParticleToGoodHitsMap}), pfoToReconstructable2DHitsMap);
+}
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToCaloHitListMap &pfoToReconstructable2DHitsMap)
+{
+    for (const ParticleFlowObject *const pPfo : pfoList)
+    {
+        CaloHitList pfoHitList;                                                                                                              
+        LArMCParticleHelper::CollectReconstructable2DHits(pPfo, selectedMCParticleToGoodHitsMaps, pfoHitList);
+        
+        if (!pfoToReconstructable2DHitsMap.insert(PfoToCaloHitListMap::value_type(pPfo, pfoHitList)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);       
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject *const pPfo, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D)
+{
+    // Collect all 2D calo hits
+    CaloHitList caloHitListU;
+    CaloHitList caloHitListV;
+    CaloHitList caloHitListW;
+    CaloHitList caloHitList2D;
+
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitListU);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitListV);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitListW);
+
+    caloHitList2D.insert(caloHitList2D.end(), caloHitListU.begin(), caloHitListU.end());
+    caloHitList2D.insert(caloHitList2D.end(), caloHitListV.begin(), caloHitListV.end());
+    caloHitList2D.insert(caloHitList2D.end(), caloHitListW.begin(), caloHitListW.end());
+
+    // Filter for only reconstructable hits
+    for (const CaloHit *const pCaloHit : caloHitList2D)
+    {
+        bool isTargetHit(false);
+        for (const LArMonitoringHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
+        {
+            for (LArMonitoringHelper::MCContributionMap::const_iterator it = mcParticleToGoodHitsMap.begin(); it != mcParticleToGoodHitsMap.end(); ++it)
+            {
+                if (std::find(it->second.begin(), it->second.end(), pCaloHit) != it->second.end())
+                {
+                    isTargetHit = true;
+                    break;
+                }
+            }
+            if (isTargetHit) break;
+        }
+
+        if (isTargetHit)
+            reconstructableCaloHitList2D.push_back(pCaloHit);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoToCaloHitListMap &pfoToReconstructable2DHitsMap, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
+{
+    for (PfoToCaloHitListMap::const_iterator pfoIt = pfoToReconstructable2DHitsMap.begin(); pfoIt != pfoToReconstructable2DHitsMap.end(); ++pfoIt)
+    {
+        for (const LArMonitoringHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
+        {
+            for (LArMonitoringHelper::MCContributionMap::const_iterator mcParticleIt = mcParticleToGoodHitsMap.begin(); mcParticleIt != mcParticleToGoodHitsMap.end(); ++mcParticleIt)
+            {
+                // Add map entries for this Pfo & MCParticle if required
+                if (pfoToMCParticleHitSharingMap.find(pfoIt->first) == pfoToMCParticleHitSharingMap.end())
+                    if (!pfoToMCParticleHitSharingMap.insert(PfoToMCParticleHitSharingMap::value_type(pfoIt->first, std::vector<MCParticleIntPair>())).second)
+                        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT); // ATTN maybe overkill
+                
+                if (mcParticleToPfoHitSharingMap.find(mcParticleIt->first) == mcParticleToPfoHitSharingMap.end())
+                    if (!mcParticleToPfoHitSharingMap.insert(MCParticleToPfoHitSharingMap::value_type(mcParticleIt->first, std::vector<PfoIntPair>())).second)
+                        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+                // Check this Pfo & MCParticle pairing hasn't already been checked
+                std::vector<MCParticleIntPair> &mcHitPairs(pfoToMCParticleHitSharingMap.at(pfoIt->first));
+                std::vector<PfoIntPair> &pfoHitPairs(mcParticleToPfoHitSharingMap.at(mcParticleIt->first));
+
+                if (std::any_of(mcHitPairs.begin(), mcHitPairs.end(), [&] (const MCParticleIntPair &pair) { return (pair.first == mcParticleIt->first); }))
+                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+                
+                if (std::any_of(pfoHitPairs.begin(), pfoHitPairs.end(), [&] (const PfoIntPair &pair) { return (pair.first == pfoIt->first); }))
+                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+                // Add the number of shared hits to the maps
+                const unsigned int nSharedHits(LArMCParticleHelper::CountSharedHits(pfoIt->second, mcParticleIt->second));
+                mcHitPairs.push_back(MCParticleIntPair(mcParticleIt->first, nSharedHits));
+                pfoHitPairs.push_back(PfoIntPair(pfoIt->first, nSharedHits)); 
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int LArMCParticleHelper::CountSharedHits(const CaloHitList &hitListA, const CaloHitList &hitListB)
+{
+    unsigned int nSharedHits(0);
+    for (const CaloHit *const pCaloHit : hitListA)
+        if (std::find(hitListB.begin(), hitListB.end(), pCaloHit) != hitListB.end())
+            nSharedHits++;
+
+    return nSharedHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+// TODO make this function use the new helpers
 LArMCParticleHelper::InteractionType LArMCParticleHelper::GetInteractionType(const LArMCParticle *const pLArMCNeutrino, const MCParticleList *pMCParticleList,
     const CaloHitList *pCaloHitList, const unsigned int minPrimaryGoodHits, const unsigned int minHitsForGoodView, const unsigned int minPrimaryGoodViews, const bool selectInputHits,
     const float maxPhotonPropagation, const float minHitSharingFraction)
