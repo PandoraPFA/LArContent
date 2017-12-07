@@ -27,6 +27,18 @@ namespace lar_content
 
 using namespace pandora;
 
+LArMCParticleHelper::ValidationParameters::ValidationParameters() :
+    m_minPrimaryGoodHits(15),
+    m_minHitsForGoodView(5),
+    m_minPrimaryGoodViews(2),
+    m_selectInputHits(true),
+    m_maxPhotonPropagation(2.5f),
+    m_minHitSharingFraction(0.9f)
+{}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArMCParticleHelper::IsNeutrinoFinalState(const MCParticle *const pMCParticle)
 {
     return ((pMCParticle->GetParentList().size() == 1) && (LArMCParticleHelper::IsNeutrino(*(pMCParticle->GetParentList().begin()))));
@@ -501,6 +513,105 @@ void LArMCParticleHelper::SelectGoodCaloHits(const CaloHitList *const pSelectedC
 
         selectedGoodCaloHitList.push_back(pCaloHit);
     }
+}
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::SelectParticlesMatchingCriteria(const MCParticleVector &inputMCParticles, std::function<bool(const MCParticle *const)> fCriteria, MCParticleVector &selectedParticles)
+{
+    for (const MCParticle *const pMCParticle : inputMCParticles)
+        if (fCriteria(pMCParticle))
+            selectedParticles.push_back(pMCParticle);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, 
+    const ValidationParameters &parameters, std::function<bool(const MCParticle *const)> fCriteria, LArMonitoringHelper::MCContributionMap &selectedMCParticlesToGoodHitsMap)
+{
+    // Obtain map: [mc particle -> primary mc particle]
+    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+
+    // Remove non-reconstructable hits, e.g. those downstream of a neutron
+    CaloHitList selectedCaloHitList;
+    LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
+
+    // Remove shared hits where target particle deposits below threshold energy fraction
+    CaloHitList goodCaloHitList;
+    LArMCParticleHelper::SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction);
+
+    // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
+    LArMonitoringHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
+    LArMonitoringHelper::MCContributionMap mcToGoodTrueHitListMap;
+    LArMonitoringHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
+    
+    // Obtain vector: primary mc particles
+    MCParticleVector mcPrimaryVector;
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+
+    // Select MCParticles matching criteria
+    MCParticleVector candidateTargets;
+    LArMCParticleHelper::SelectParticlesMatchingCriteria(mcPrimaryVector, fCriteria, candidateTargets);
+
+    // Apply restrictions on the number of good hits associated with the MCParticles
+    for (const MCParticle * const pMCTarget : candidateTargets)
+    {
+        LArMonitoringHelper::MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCTarget);
+        if (mcToGoodTrueHitListMap.end() == goodTrueHitsIter)
+            continue;
+        
+        const CaloHitList &caloHitList(goodTrueHitsIter->second);
+        if (caloHitList.size() < parameters.m_minPrimaryGoodHits)
+            continue;
+
+        unsigned int nGoodViews(0);
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (nGoodViews < parameters.m_minPrimaryGoodViews)
+            continue;
+
+        if (!selectedMCParticlesToGoodHitsMap.insert(LArMonitoringHelper::MCContributionMap::value_type(goodTrueHitsIter->first, goodTrueHitsIter->second)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsBeamNeutrinoFinalState(const MCParticle *const pMCParticle)
+{
+    if (pMCParticle->GetParentList().size() > 1)
+        throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
+
+    if (pMCParticle->GetParentList().size() != 1)
+        return false;
+
+    const int nuance(dynamic_cast<const LArMCParticle*>(pMCParticle->GetParentList().front())->GetNuanceCode());
+    // TODO  For now I am hardcoding these nuance values, will improve when merging with Steve's updates
+    return (LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle) && nuance != 2000 && nuance != 3000);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsBeamParticle(const MCParticle *const pMCParticle)
+{
+    // TODO  For now I am hardcoding these nuance values, will improve when merging with Steve's updates
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && (dynamic_cast<const LArMCParticle*>(pMCParticle))->GetNuanceCode() == 2000);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
+{
+    // TODO For now, the NUANCE code of cosmic rays is not set to 3000. When Steve's changes are in, this will need to be added here! 
+    //      Currently this will return a beam particle as a cosmic! But it should work for MicroBooNE...
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && !LArMCParticleHelper::IsNeutrinoInduced(pMCParticle));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

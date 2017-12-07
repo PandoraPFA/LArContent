@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
 #include <unordered_map>
+#include <functional>
 
 namespace lar_content
 {
@@ -24,6 +25,27 @@ namespace lar_content
 class LArMCParticleHelper
 {
 public:
+    /**
+     *  @brief   ValidationParameters class
+     */
+    class ValidationParameters
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         */
+        ValidationParameters();
+
+        unsigned int  m_minPrimaryGoodHits;       ///< the minimum number of primary good Hits
+        unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
+        unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
+        bool          m_selectInputHits;          ///< whether to select input hits
+        float         m_maxPhotonPropagation;     ///< the maximum photon propagation length
+        float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
+    };
+
+    // -------------------------------------------------------------------------------------------------------------------------------------
+
     /**
      *  @brief   InteractionType enum
      */
@@ -244,6 +266,43 @@ public:
      */
     static void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
         pandora::CaloHitList &selectedGoodCaloHitList, const bool selectInputHits, const float minHitSharingFraction);
+
+    /**
+     *  @brief  Select mc particles matching given criteria from an input list
+     *
+     *  @param  inputMCParticles input vector of MCParticles
+     *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
+     *  @param  selectedParticles the output vector of particles selected
+     */
+    static void SelectParticlesMatchingCriteria(const pandora::MCParticleVector &inputMCParticles, std::function<bool(const pandora::MCParticle *const)> fCriteria,
+        pandora::MCParticleVector &selectedParticles);
+
+    /**
+     *  @brief  Select primary, reconstructable mc particles that match given criteria.
+     *
+     *  @param  pMCParticleList the address of the list of MCParticles
+     *  @param  pCaloHitList the address of the list of CaloHits
+     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
+     *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
+     *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
+     */
+    static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, 
+        const ValidationParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, LArMonitoringHelper::MCContributionMap &selectedMCParticlesToGoodHitsMap);
+
+    /**
+     *  @brief  Returns true if passed a primary neutrino final state MCParticle
+     */
+    static bool IsBeamNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Returns true if passed a primary beam MCParticle
+     */
+    static bool IsBeamParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Return true if passed a primary cosmic ray MCParticle
+     */
+    static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Get the interaction type of an event
