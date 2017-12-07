@@ -361,15 +361,17 @@ void LArMonitoringHelper::PrintMCParticleTable(const MCContributionMap &selected
     }
 
     LArFormattingHelper::Table table({"ID", "NUANCE", "TYPE", "", "E", "dist", "", "nGoodHits", "U", "V", "W"});
-   
-    unsigned int id(0);
-    for (const MCParticle *const pMCParticle : orderedMCParticleVector)
+ 
+    unsigned int usedParticleCount(0);
+    for (unsigned int id = 0; id < orderedMCParticleVector.size(); id++)
     {
+        const MCParticle *const pMCParticle(orderedMCParticleVector.at(id));
+
         LArMonitoringHelper::MCContributionMap::const_iterator it = selectedMCParticleToGoodHitsMap.find(pMCParticle);
         if (selectedMCParticleToGoodHitsMap.end() == it)
             continue;  // ATTN MCParticles in selectedMCParticleToGoodHitsMap may be a subset of orderedMCParticleVector
 
-        table.AddElement(id++);
+        table.AddElement(id);
         table.AddElement((dynamic_cast<const LArMCParticle*>(pMCParticle))->GetNuanceCode());
         table.AddElement(PdgTable::GetParticleName(pMCParticle->GetParticleId()));
 
@@ -380,10 +382,12 @@ void LArMonitoringHelper::PrintMCParticleTable(const MCContributionMap &selected
         table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, it->second));
         table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, it->second));
         table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, it->second));
+
+        usedParticleCount++;
     }
 
     // Check every MCParticle in selectedMCParticleToGoodHitsMap has been printed
-    if (id != selectedMCParticleToGoodHitsMap.size() - 1)
+    if (usedParticleCount != selectedMCParticleToGoodHitsMap.size())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
             
     table.Print();
