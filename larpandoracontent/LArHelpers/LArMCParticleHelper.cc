@@ -616,21 +616,21 @@ bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const LArMonitoringHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, PfoToCaloHitListMap &pfoToReconstructable2DHitsMap)
+void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const LArMonitoringHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap)
 {
     LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(pfoList, std::vector<LArMonitoringHelper::MCContributionMap>({selectedMCParticleToGoodHitsMap}), pfoToReconstructable2DHitsMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToCaloHitListMap &pfoToReconstructable2DHitsMap)
+void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap)
 {
     for (const ParticleFlowObject *const pPfo : pfoList)
     {
         CaloHitList pfoHitList;                                                                                                              
         LArMCParticleHelper::CollectReconstructable2DHits(pPfo, selectedMCParticleToGoodHitsMaps, pfoHitList);
         
-        if (!pfoToReconstructable2DHitsMap.insert(PfoToCaloHitListMap::value_type(pPfo, pfoHitList)).second)
+        if (!pfoToReconstructable2DHitsMap.insert(LArMonitoringHelper::PfoContributionMap::value_type(pPfo, pfoHitList)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);       
     }
 }
@@ -679,9 +679,9 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoToCaloHitListMap &pfoToReconstructable2DHitsMap, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
+void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
 {
-    for (PfoToCaloHitListMap::const_iterator pfoIt = pfoToReconstructable2DHitsMap.begin(); pfoIt != pfoToReconstructable2DHitsMap.end(); ++pfoIt)
+    for (LArMonitoringHelper::PfoContributionMap::const_iterator pfoIt = pfoToReconstructable2DHitsMap.begin(); pfoIt != pfoToReconstructable2DHitsMap.end(); ++pfoIt)
     {
         for (const LArMonitoringHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
         {

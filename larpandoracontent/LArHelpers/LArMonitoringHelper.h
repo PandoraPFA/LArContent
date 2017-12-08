@@ -33,7 +33,8 @@ public:
 
     typedef std::unordered_map<const pandora::MCParticle*, PfoContributionMap> MCToPfoMatchingMap;
 
-    typedef std::pair<const pandora::MCParticle*, pandora::CaloHitList > MCParticleCaloHitPair;
+    typedef std::pair<const pandora::MCParticle*, pandora::CaloHitList > MCParticleCaloHitListPair;
+    typedef std::pair<const pandora::ParticleFlowObject*, pandora::CaloHitList > PfoCaloHitListPair;
 
     /**
      *  @brief  Extract a list of target pfos consisting of either i) primary/final-state pfos only, or ii) a full list of all
@@ -126,6 +127,14 @@ public:
      *  @param  orderedMCParticleVector the output vector of ordered MCParticles
      */
     static void GetOrderedMCParticleVector(const std::vector<MCContributionMap> &selectedMCParticleToGoodHitsMaps, pandora::MCParticleVector &orderedMCParticleVector);
+    
+    /**
+     *  @brief  Order input Pfos by their number of hits.
+     *
+     *  @param  pfoToReconstructable2DHitsMap the input vector of mappings from Pfos to their reconstructable hits
+     *  @param  orderedPfoVector the output vector of ordered Pfos
+     */
+    static void GetOrderedPfoVector(const PfoContributionMap &pfoToReconstructable2DHitsMap, pandora::PfoVector &orderedPfoVector);
 
     /**
      *  @brief  Print details of selected MCParticles to the terminal in a table.
@@ -134,6 +143,24 @@ public:
      *  @param  orderedMCParticleVector the input vector of ordered MCParticles
      */
     static void PrintMCParticleTable(const MCContributionMap &selectedMCParticleToGoodHitsMaps, const pandora::MCParticleVector &orderedMCParticleVector);
+    
+    /**
+     *  @brief  Print details of input Pfos to the terminal in a table.
+     *
+     *  @param  pfoToReconstructable2DHitsMap the input vector of mappings from Pfos to their reconstructable hits
+     *  @param  orderedPfoVector the input vector of ordered Pfos
+     */
+    static void PrintPfoTable(const PfoContributionMap &pfoToReconstructable2DHitsMap, const pandora::PfoVector &orderedPfoVector);
+
+    /**
+     *  @brief  Print the shared good hits between all Pfos and MCParticles
+     *
+     *  @param  orderedPfoVector the input vector of ordered Pfos
+     *  @param  orderedMCParticleVector the input vector of ordered MCParticles
+     *  @param  mcParticleToPfoHitSharingMap the output mapping from selected reconstructable MCParticles to Pfos and the number hits shared
+     */
+    // TODO
+    // static void PrintMatchingTable(const pandora::PfoVector &orderedPfoVector, const pandora::MCParticleVector &orderedMCParticleVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
 };
 
 } // namespace lar_content
