@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
+    #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArMonitoring/PfoValidationAlgorithm.h"
 
@@ -45,11 +46,21 @@ StatusCode PfoValidationAlgorithm::Run()
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamParticle, beamMCParticlesToGoodHitsMap);
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsCosmicRay, crMCParticlesToGoodHitsMap);
 
-    const std::vector<LArMonitoringHelper::MCContributionMap> mcParticlesToGoodHitsMaps({nuMCParticlesToGoodHitsMap, beamMCParticlesToGoodHitsMap, crMCParticlesToGoodHitsMap});
+    std::vector<LArMonitoringHelper::MCContributionMap> mcParticlesToGoodHitsMaps;
+    mcParticlesToGoodHitsMaps.push_back(nuMCParticlesToGoodHitsMap);
+    mcParticlesToGoodHitsMaps.push_back(beamMCParticlesToGoodHitsMap);
+    mcParticlesToGoodHitsMaps.push_back(crMCParticlesToGoodHitsMap);
 
     // Get the mappings detailing the hits shared between Pfos and reconstructable MCParticles
-    LArMCParticleHelper::PfoToCaloHitListMap pfoToReconstructable2DHitsMap;
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(*pPfoList, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap);
+    pandora::PfoList finalStatePfos;
+
+    // TODO use helper function in LArMonitoringHelper, not sure if it currently give the right output
+    for (const ParticleFlowObject *const pPfo : *pPfoList)
+        if (LArPfoHelper::IsFinalState(pPfo))
+            finalStatePfos.push_back(pPfo);
+
+    LArMonitoringHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap);
 
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
     LArMCParticleHelper::MCParticleToPfoHitSharingMap mcParticleToPfoHitSharingMap;
@@ -67,6 +78,13 @@ StatusCode PfoValidationAlgorithm::Run()
     
     LArFormattingHelper::PrintHeader("MC : Reconstructable primary cosmic-rays");
     LArMonitoringHelper::PrintMCParticleTable(crMCParticlesToGoodHitsMap, orderedMCParticleVector); 
+    
+    // Print the pfo information for this event
+    PfoVector orderedPfoVector;
+    LArMonitoringHelper::GetOrderedPfoVector(pfoToReconstructable2DHitsMap, orderedPfoVector);
+
+    LArFormattingHelper::PrintHeader("Reco : Primary Pfos");
+    LArMonitoringHelper::PrintPfoTable(pfoToReconstructable2DHitsMap, orderedPfoVector);
 
     return STATUS_CODE_SUCCESS;
 }
