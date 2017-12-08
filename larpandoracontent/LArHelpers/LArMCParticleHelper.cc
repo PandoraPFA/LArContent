@@ -525,8 +525,7 @@ void LArMCParticleHelper::SelectParticlesMatchingCriteria(const MCParticleVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, 
-    const ValidationParameters &parameters, std::function<bool(const MCParticle *const)> fCriteria, LArMonitoringHelper::MCContributionMap &selectedMCParticlesToGoodHitsMap)
+void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const ValidationParameters &parameters, std::function<bool(const MCParticle *const)> fCriteria, LArMonitoringHelper::MCContributionMap &selectedMCParticlesToGoodHitsMap)
 {
     // Obtain map: [mc particle -> primary mc particle]
     LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
@@ -544,7 +543,7 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
     LArMonitoringHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
     LArMonitoringHelper::MCContributionMap mcToGoodTrueHitListMap;
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
-    
+
     // Obtain vector: primary mc particles
     MCParticleVector mcPrimaryVector;
     LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
@@ -593,15 +592,15 @@ bool LArMCParticleHelper::IsBeamNeutrinoFinalState(const MCParticle *const pMCPa
         return false;
 
     const int nuance(dynamic_cast<const LArMCParticle*>(pMCParticle->GetParentList().front())->GetNuanceCode());
-    // TODO  For now I am hardcoding these nuance values, will improve when merging with Steve's updates
-    return (LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle) && nuance != 2000 && nuance != 3000);
+
+    // TODO These numbers should be enumerated? 0 = ?, 1001, 1002, ... = beam neutrino, 2000 = test beam particle, 3000 = cosmic (only in protoDUNE samples)
+    return (LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle) && nuance != 0 && nuance != 2000 && nuance != 3000);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArMCParticleHelper::IsBeamParticle(const MCParticle *const pMCParticle)
 {
-    // TODO  For now I am hardcoding these nuance values, will improve when merging with Steve's updates
     return (LArMCParticleHelper::IsPrimary(pMCParticle) && (dynamic_cast<const LArMCParticle*>(pMCParticle))->GetNuanceCode() == 2000);
 }
 
@@ -609,29 +608,28 @@ bool LArMCParticleHelper::IsBeamParticle(const MCParticle *const pMCParticle)
 
 bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
 {
-    // TODO For now, the NUANCE code of cosmic rays is not set to 3000. When Steve's changes are in, this will need to be added here! 
-    //      Currently this will return a beam particle as a cosmic! But it should work for MicroBooNE...
-    return (LArMCParticleHelper::IsPrimary(pMCParticle) && !LArMCParticleHelper::IsNeutrinoInduced(pMCParticle));
+    const int nuance((dynamic_cast<const LArMCParticle*>(pMCParticle))->GetNuanceCode());
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && ((nuance == 0 && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle)) || nuance == 3000));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const LArMonitoringHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap)
 {
     LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(pfoList, std::vector<LArMonitoringHelper::MCContributionMap>({selectedMCParticleToGoodHitsMap}), pfoToReconstructable2DHitsMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap)
 {
     for (const ParticleFlowObject *const pPfo : pfoList)
     {
-        CaloHitList pfoHitList;                                                                                                              
+        CaloHitList pfoHitList;
         LArMCParticleHelper::CollectReconstructable2DHits(pPfo, selectedMCParticleToGoodHitsMaps, pfoHitList);
-        
+
         if (!pfoToReconstructable2DHitsMap.insert(LArMonitoringHelper::PfoContributionMap::value_type(pPfo, pfoHitList)).second)
-            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);       
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
 }
 
@@ -678,7 +676,7 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
 {
     for (LArMonitoringHelper::PfoContributionMap::const_iterator pfoIt = pfoToReconstructable2DHitsMap.begin(); pfoIt != pfoToReconstructable2DHitsMap.end(); ++pfoIt)
@@ -702,7 +700,7 @@ void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const LArMonitoringHelp
 
                 if (std::any_of(mcHitPairs.begin(), mcHitPairs.end(), [&] (const MCParticleIntPair &pair) { return (pair.first == mcParticleIt->first); }))
                     throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-                
+
                 if (std::any_of(pfoHitPairs.begin(), pfoHitPairs.end(), [&] (const PfoIntPair &pair) { return (pair.first == pfoIt->first); }))
                     throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
