@@ -120,6 +120,9 @@ bool LArFormattingHelper::Table::IsSeparatorColumn(const unsigned int column) co
 
 void LArFormattingHelper::Table::UpdateColumnWidth()
 {
+    if (m_widths.empty() || m_elements.empty())
+        throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
+
     const unsigned int currentElementIndex(m_elements.size() - 1);
     const unsigned int column(currentElementIndex % m_widths.size());
     m_widths[column] = std::max(static_cast<unsigned int>(m_elements[currentElementIndex].length()), m_widths[column]);
@@ -141,8 +144,7 @@ void LArFormattingHelper::Table::Print() const
 
 void LArFormattingHelper::Table::PrintColumnTitles() const
 {
-    const unsigned int nColumns(m_columnTitles.size());
-    for (unsigned int i = 0; i < nColumns; ++i)
+    for (unsigned int i = 0, nColumns = m_columnTitles.size(); i < nColumns; ++i)
         this->PrintTableCell(m_columnTitles[i], LArFormattingHelper::GetFormatCharacter(LArFormattingHelper::BOLD), i);
 }
 
@@ -150,8 +152,7 @@ void LArFormattingHelper::Table::PrintColumnTitles() const
 
 void LArFormattingHelper::Table::PrintHorizontalLine() const
 {
-    const unsigned int nColumns(m_columnTitles.size());
-    for (unsigned int i = 0; i < nColumns; ++i) 
+    for (unsigned int i = 0, nColumns = m_columnTitles.size(); i < nColumns; ++i)
         this->PrintTableCell(std::string(m_widths[i], '-'), LArFormattingHelper::GetFormatCharacter(LArFormattingHelper::REGULAR), i);
 }
 
@@ -181,7 +182,7 @@ void LArFormattingHelper::Table::PrintTableCell(const std::string &value, const 
     if (m_columnTitles.empty())
         return;
 
-    const unsigned int column(index % m_columnTitles.size());
+    const unsigned int column(index % m_widths.size());
 
     const std::string separator(this->IsSeparatorColumn(column) ? "" : " ");
     std::cout << "|" << format << separator << std::setw(m_widths[column]) << std::internal << value << separator;
