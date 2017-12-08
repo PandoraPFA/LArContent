@@ -324,27 +324,20 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const std::vector<MCContrib
 
         // Copy map contents to vector it can be sorted
         std::vector<MCParticleCaloHitListPair> mcParticleToGoodHitsVect;
-        try 
-        {
-            std::copy(mcParticleToGoodHitsMap.begin(), mcParticleToGoodHitsMap.end(), std::back_inserter(mcParticleToGoodHitsVect));
+        std::copy(mcParticleToGoodHitsMap.begin(), mcParticleToGoodHitsMap.end(), std::back_inserter(mcParticleToGoodHitsVect));
 
-            // Sort by number of hits descending
-            std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const MCParticleCaloHitListPair &a, const MCParticleCaloHitListPair &b) -> bool 
-            {
-                if (a.second.size() != b.second.size())
-                    return (a.second.size() > b.second.size());
-        
-                // ATTN default to normal MCParticle sorting to avoid tie-breakers
-                return (a.first < b.first);
-            });
-
-            for (const MCParticleCaloHitListPair &mcParticleCaloHitPair : mcParticleToGoodHitsVect)
-                orderedMCParticleVector.push_back(mcParticleCaloHitPair.first);
-        }
-        catch (const StatusCodeException &exception)
+        // Sort by number of hits descending
+        std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const MCParticleCaloHitListPair &a, const MCParticleCaloHitListPair &b) -> bool 
         {
-            throw StatusCodeException(exception);
-        }
+            if (a.second.size() != b.second.size())
+                return (a.second.size() > b.second.size());
+    
+            // ATTN default to normal MCParticle sorting to avoid tie-breakers
+            return (a.first < b.first);
+        });
+
+        for (const MCParticleCaloHitListPair &mcParticleCaloHitPair : mcParticleToGoodHitsVect)
+            orderedMCParticleVector.push_back(mcParticleCaloHitPair.first);
     }
 
     // Check that all elements of the vector are unique
@@ -359,33 +352,26 @@ void LArMonitoringHelper::GetOrderedPfoVector(const PfoContributionMap &pfoToRec
 {
     // Copy map contents to vector it can be sorted
     std::vector<PfoCaloHitListPair> pfoToReconstructable2DHitsVect;
-    try 
+    std::copy(pfoToReconstructable2DHitsMap.begin(), pfoToReconstructable2DHitsMap.end(), std::back_inserter(pfoToReconstructable2DHitsVect));
+
+    // Sort by number of hits descending putting neutrino final states first
+    std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(), [] (const PfoCaloHitListPair &a, const PfoCaloHitListPair &b) -> bool 
     {
-        std::copy(pfoToReconstructable2DHitsMap.begin(), pfoToReconstructable2DHitsMap.end(), std::back_inserter(pfoToReconstructable2DHitsVect));
+        bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first));
+        bool isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
 
-        // Sort by number of hits descending putting neutrino final states first
-        std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(), [] (const PfoCaloHitListPair &a, const PfoCaloHitListPair &b) -> bool 
-        {
-            bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first));
-            bool isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
+        if (isANuFinalState != isBNuFinalState)
+            return isANuFinalState;
 
-            if (isANuFinalState != isBNuFinalState)
-                return isANuFinalState;
+        if (a.second.size() != b.second.size())
+            return (a.second.size() > b.second.size());
 
-            if (a.second.size() != b.second.size())
-                return (a.second.size() > b.second.size());
-    
-            // ATTN fall back on energy as a tie-breaker
-            return (a.first->GetEnergy() > b.first->GetEnergy());
-        });
+        // ATTN fall back on energy as a tie-breaker
+        return (a.first->GetEnergy() > b.first->GetEnergy());
+    });
 
-        for (const PfoCaloHitListPair &pfoCaloHitPair : pfoToReconstructable2DHitsVect)
-            orderedPfoVector.push_back(pfoCaloHitPair.first);
-    }
-    catch (const StatusCodeException &exception)
-    {
-        throw StatusCodeException(exception);
-    }
+    for (const PfoCaloHitListPair &pfoCaloHitPair : pfoToReconstructable2DHitsVect)
+        orderedPfoVector.push_back(pfoCaloHitPair.first);
 
     // Check that all elements of the vector are unique
     const unsigned int nPfos(orderedPfoVector.size());

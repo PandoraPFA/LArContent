@@ -29,6 +29,7 @@ public:
     typedef std::pair<const pandora::ParticleFlowObject*, unsigned int > PfoIntPair;
     typedef std::map<const pandora::ParticleFlowObject*, std::vector<MCParticleIntPair> > PfoToMCParticleHitSharingMap;
     typedef std::map<const pandora::MCParticle*, std::vector<PfoIntPair> > MCParticleToPfoHitSharingMap;
+    typedef std::vector<LArMonitoringHelper::MCContributionMap> MCContributionMapVector; 
 
     /**
      *  @brief   ValidationParameters class
@@ -293,6 +294,17 @@ public:
      */
     static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, const ValidationParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, LArMonitoringHelper::MCContributionMap &selectedMCParticlesToGoodHitsMap);
 
+    /** 
+     *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable 
+     *
+     *  @param  candidateTargets candidate recontructable MCParticles
+     *  @param  mcToGoodTrueHitListMap mapping from candidates reconstructable MCParticles to their good hits
+     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
+     *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
+     */
+    static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const LArMonitoringHelper::MCContributionMap &mcToGoodTrueHitListMap, 
+    const ValidationParameters &parameters, LArMonitoringHelper::MCContributionMap &selectedMCParticlesToGoodHitsMap);
+
     /**
      *  @brief  Returns true if passed a primary neutrino final state MCParticle
      */
@@ -307,6 +319,11 @@ public:
      *  @brief  Return true if passed a primary cosmic ray MCParticle
      */
     static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get the nuance code of an MCParticle
+     */
+    static unsigned int GetNuanceCode(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
@@ -324,7 +341,7 @@ public:
      *  @param  selectedMCParticleToGoodHitsMaps the input vector of mappings from selected reconstructable MCParticles to their good hits
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
      */
-    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap);
+    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap);
 
     /**
      *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
@@ -333,7 +350,7 @@ public:
      *  @param  selectedMCParticleToGoodHitsMaps the input mappings from selected reconstructable MCParticles to their good hits
      *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
      */
-    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D);
+    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D);
 
     /**
      *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
@@ -344,7 +361,7 @@ public:
      *  @param  pfoToMCParticleHitSharingMap the output mapping from Pfos to selected reconstructable MCParticles and the number hits shared
      *  @param  mcParticleToPfoHitSharingMap the output mapping from selected reconstructable MCParticles to Pfos and the number hits shared
      */
-    static void GetPfoMCParticleHitSharingMaps(const LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const std::vector<LArMonitoringHelper::MCContributionMap> &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
+    static void GetPfoMCParticleHitSharingMaps(const LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
 
     /**
      *  @brief  Count the number of hits in the intersection of two hit lists
