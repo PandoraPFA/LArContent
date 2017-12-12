@@ -21,9 +21,17 @@ namespace lar_content
 BeamParticleIdTool::BeamParticleIdTool() :
     m_selectAllBeamParticles(false),
     m_selectOnlyFirstSliceBeamParticles(false),
-    m_projectionIntersectionCut(100.f),
+    m_tpcMinX(std::numeric_limits<float>::max()),
+    m_tpcMaxX(-std::numeric_limits<float>::max()),
+    m_tpcMinY(std::numeric_limits<float>::max()),
+    m_tpcMaxY(-std::numeric_limits<float>::max()),
+    m_tpcMinZ(std::numeric_limits<float>::max()),
+    m_tpcMaxZ(-std::numeric_limits<float>::max()),
     m_beamTPCIntersection(0.f, 0.f, 0.f),
     m_beamDirection(0.f, 0.f, 0.f),
+    m_projectionIntersectionCut(100.f),
+    m_closestDistanceCut(100.f),
+    m_angleToBeamCut(150.f * M_PI / 180.f),
     m_selectedFraction(10.f),
     m_nSelectedHits(100)
 {
@@ -75,6 +83,7 @@ void BeamParticleIdTool::SelectOutputPfos(const SliceHypotheses &beamSliceHypoth
                 LArPcaHelper::RunPca(selectedCaloHitList, centroidSel, eigenValuesSel, eigenVecsSel);
 
                 const CartesianVector &majorAxisSel(eigenVecsSel.front());
+                const float supplementaryAngleToBeam(majorAxisSel.GetOpeningAngle(m_beamDirection));
 
                 CartesianVector interceptOne(0.f, 0.f, 0.f), interceptTwo(0.f, 0.f, 0.f);
                 this->GetTPCIntercepts(centroidSel, majorAxisSel, interceptOne, interceptTwo);
@@ -82,8 +91,11 @@ void BeamParticleIdTool::SelectOutputPfos(const SliceHypotheses &beamSliceHypoth
                 const float separationOne((interceptOne - m_beamTPCIntersection).GetMagnitude());
                 const float separationTwo((interceptTwo - m_beamTPCIntersection).GetMagnitude());
 
-                if (std::min(separationOne, separationTwo) < m_projectionIntersectionCut)
+                if ((std::min(separationOne, separationTwo) < m_projectionIntersectionCut) &&
+                    (closestDistance < m_closestDistanceCut) && (supplementaryAngleToBeam > m_angleToBeamCut))
+                {
                     usebeamHypothesis = true;
+                }
             }
         }
         catch (const StatusCodeException &)
@@ -258,9 +270,6 @@ StatusCode BeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ProjectionIntersectionCut", m_projectionIntersectionCut));
-
     FloatVector beamTPCIntersection;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "BeamTPCIntersection", beamTPCIntersection));
@@ -299,6 +308,15 @@ StatusCode BeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
         const float thetaXZ0(-11.844f * M_PI / 180.f);
         m_beamDirection.SetValues(std::sin(thetaXZ0), 0, std::cos(thetaXZ0));
     }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ProjectionIntersectionCut", m_projectionIntersectionCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClosestDistanceCut", m_closestDistanceCut));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "AngleToBeamCut", m_angleToBeamCut));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectedFraction", m_selectedFraction));
