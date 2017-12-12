@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #ifdef MONITORING
 #include "PandoraMonitoringApi.h"
@@ -149,8 +149,8 @@ private:
      *  @param  mcToFullPfoMatchingMap the mc to full pfo matching map (to record number of matched pfos)
      *  @param  simpleMCPrimaryList to receive the populated simple mc primary list
      */
-    void GetSimpleMCPrimaryList(const pandora::MCParticleVector &mcPrimaryList, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
-        const LArMonitoringHelper::MCContributionMap &mcToGoodTrueHitListMap, const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap,
+    void GetSimpleMCPrimaryList(const pandora::MCParticleVector &mcPrimaryList, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap,
+        const LArMCParticleHelper::MCContributionMap &mcToGoodTrueHitListMap, const LArMCParticleHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap,
         SimpleMCPrimaryList &simpleMCPrimaryList) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject*, int> PfoIdMap;
@@ -166,7 +166,7 @@ private:
      *  @param  mcPrimaryMatchingMap to receive the populated mc primary matching map
      */
     void GetMCPrimaryMatchingMap(const SimpleMCPrimaryList &simpleMCPrimaryList, const PfoIdMap &pfoIdMap,
-        const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, const LArMonitoringHelper::PfoContributionMap &pfoToHitListMap,
+        const LArMCParticleHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitListMap,
         MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
 
     /**

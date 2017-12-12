@@ -9,6 +9,7 @@
 #define LAR_MONITORING_HELPER_H 1
 
 #include "Pandora/PandoraInternal.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include <unordered_map>
 
@@ -21,21 +22,6 @@ namespace lar_content
 class LArMonitoringHelper
 {
 public:
-    typedef std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
-
-    typedef std::unordered_map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCToPfoMap;
-
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::MCParticle*> CaloHitToMCMap;
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::ParticleFlowObject*> CaloHitToPfoMap;
-
-    typedef std::unordered_map<const pandora::MCParticle*, pandora::CaloHitList> MCContributionMap;
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, pandora::CaloHitList> PfoContributionMap;
-
-    typedef std::unordered_map<const pandora::MCParticle*, PfoContributionMap> MCToPfoMatchingMap;
-
-    typedef std::pair<const pandora::MCParticle*, pandora::CaloHitList > MCParticleCaloHitListPair;
-    typedef std::pair<const pandora::ParticleFlowObject*, pandora::CaloHitList > PfoCaloHitListPair;
-
     /**
      *  @brief  Extract a list of target pfos consisting of either i) primary/final-state pfos only, or ii) a full list of all
      *          non-neutrino pfos and their daughters
@@ -55,7 +41,7 @@ public:
      *  @param  outputPrimaryMap ouput mapping between from true to reconstructed neutrinos
      */
     static void GetNeutrinoMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &recoNeutrinos,
-        const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &outputNeutrinoMap);
+        const LArMCParticleHelper::CaloHitToMCMap &hitToPrimaryMCMap, LArMCParticleHelper::MCToPfoMap &outputNeutrinoMap);
 
     /**
      *  @brief  Match calo hits to their parent particles
@@ -65,8 +51,8 @@ public:
      *  @param  hitToPrimaryMCMap output mapping between calo hits and their main primary MC particle
      *  @param  mcToTrueHitListMap output mapping between MC particles and their associated hits
      */
-    static void GetMCParticleToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
-        CaloHitToMCMap &hitToPrimaryMCMap, MCContributionMap &mcToTrueHitListMap);
+    static void GetMCParticleToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
+        LArMCParticleHelper::CaloHitToMCMap &hitToPrimaryMCMap, LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap);
 
     /**
      *  @brief  Match calo hits to their parent Pfos
@@ -78,7 +64,7 @@ public:
      *  @param  pfoToHitListMap output mapping between Pfos and associated hits
      */
     static void GetPfoToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList &pfoList,
-        const bool collapseToPrimaryPfos, CaloHitToPfoMap &hitToPfoMap, PfoContributionMap &pfoToHitListMap);
+        const bool collapseToPrimaryPfos, LArMCParticleHelper::CaloHitToPfoMap &hitToPfoMap, LArMCParticleHelper::PfoContributionMap &pfoToHitListMap);
 
     /**
      *  @brief  Match MC particle and Pfos
@@ -90,9 +76,9 @@ public:
      *  @param  mcToBestPfoHitsMap output mapping between MC particles and list of matched hits in best pfo
      *  @param  mcToFullPfoMatchingMap output mapping between MC particles and all matched pfos (and matched hits)
      */
-    static void GetMCParticleToPfoMatches(const pandora::CaloHitList *const pCaloHitList, const PfoContributionMap &pfoToHitListMap,
-        const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &mcToBestPfoMap, MCContributionMap &mcToBestPfoHitsMap,
-        MCToPfoMatchingMap &mcToFullPfoMatchingMap);
+    static void GetMCParticleToPfoMatches(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::PfoContributionMap &pfoToHitListMap,
+        const LArMCParticleHelper::CaloHitToMCMap &hitToPrimaryMCMap, LArMCParticleHelper::MCToPfoMap &mcToBestPfoMap, LArMCParticleHelper::MCContributionMap &mcToBestPfoHitsMap,
+        LArMCParticleHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap);
 
     /**
      *  @brief  Collect up all calo hits associated with a Pfo and its daughters
@@ -126,7 +112,7 @@ public:
      *  @param  selectedMCParticleToGoodHitsMaps the input vector of mappings from selected reconstructable MCParticles to their good hits
      *  @param  orderedMCParticleVector the output vector of ordered MCParticles
      */
-    static void GetOrderedMCParticleVector(const std::vector<MCContributionMap> &selectedMCParticleToGoodHitsMaps, pandora::MCParticleVector &orderedMCParticleVector);
+    static void GetOrderedMCParticleVector(const LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, pandora::MCParticleVector &orderedMCParticleVector);
     
     /**
      *  @brief  Order input Pfos by their number of hits.
@@ -134,7 +120,7 @@ public:
      *  @param  pfoToReconstructable2DHitsMap the input vector of mappings from Pfos to their reconstructable hits
      *  @param  orderedPfoVector the output vector of ordered Pfos
      */
-    static void GetOrderedPfoVector(const PfoContributionMap &pfoToReconstructable2DHitsMap, pandora::PfoVector &orderedPfoVector);
+    static void GetOrderedPfoVector(const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, pandora::PfoVector &orderedPfoVector);
 
     /**
      *  @brief  Print details of selected MCParticles to the terminal in a table.
@@ -142,7 +128,7 @@ public:
      *  @param  selectedMCParticleToGoodHitsMap the input mapping from selected reconstructable MCParticles to their good hits
      *  @param  orderedMCParticleVector the input vector of ordered MCParticles
      */
-    static void PrintMCParticleTable(const MCContributionMap &selectedMCParticleToGoodHitsMaps, const pandora::MCParticleVector &orderedMCParticleVector);
+    static void PrintMCParticleTable(const LArMCParticleHelper::MCContributionMap &selectedMCParticleToGoodHitsMaps, const pandora::MCParticleVector &orderedMCParticleVector);
     
     /**
      *  @brief  Print details of input Pfos to the terminal in a table.
@@ -150,7 +136,7 @@ public:
      *  @param  pfoToReconstructable2DHitsMap the input vector of mappings from Pfos to their reconstructable hits
      *  @param  orderedPfoVector the input vector of ordered Pfos
      */
-    static void PrintPfoTable(const PfoContributionMap &pfoToReconstructable2DHitsMap, const pandora::PfoVector &orderedPfoVector);
+    static void PrintPfoTable(const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const pandora::PfoVector &orderedPfoVector);
 
     /**
      *  @brief  Print the shared good hits between all Pfos and MCParticles
