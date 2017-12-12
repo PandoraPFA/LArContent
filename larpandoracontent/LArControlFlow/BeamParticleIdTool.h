@@ -85,6 +85,16 @@ private:
     bool IsContained(pandora::CartesianVector &spacePoint) const;
 
     /**
+     *  @brief Select a given fraction of a slice's calo hits that are closest to the beam spot
+     *
+     *  @param &inputCaloHitList all calo hits in slice
+     *  @param &outputCaloHitList selected calo hits
+     *  @param &closestHitToFaceDistance distance of closest hit to beam spot
+     */
+    pandora::StatusCode GetSelectedCaloHits(pandora::CaloHitList &inputCaloHitList, pandora::CaloHitList &outputCaloHitList, float &closestHitToFaceDistance);
+
+
+    /**
      *  @brief Read settings via xml
      *  
      *  @param xmlHanle
@@ -103,7 +113,10 @@ private:
     float                     m_tpcMinZ;                              ///< Global TPC volume minimum z extent
     float                     m_tpcMaxZ;                              ///< Global TPC volume maximum z extent
     pandora::CartesianVector  m_beamTPCIntersection;                  ///< Intersection of beam and global TPC volume
+    pandora::CartesianVector  m_beamDirection;                        ///< Beam direction
     PlaneVector               m_tpcPlanes;                            ///< Vector of all planes making up global TPC volume
+    float                     m_selectedFraction;                     ///<
+    int                       m_nSelectedHits;                        ///<
 };
 
 } // namespace lar_content

@@ -24,7 +24,10 @@ BeamParticleIdTool::BeamParticleIdTool() :
     m_selectOnlyFirstSliceBeamParticles(false),
     m_visualizeID(false),
     m_projectionIntersectionCut(100.f),
-    m_beamTPCIntersection(CartesianVector(0.f,0.f,0.f))
+    m_beamTPCIntersection(CartesianVector(0.f,0.f,0.f)),
+    m_beamDirection(CartesianVector(0.f,0.f,0.f)),
+    m_selectedFraction(10.f),
+    m_nSelectedHits(100)
 {
 }
 
@@ -121,16 +124,29 @@ void BeamParticleIdTool::SelectOutputPfos(const SliceHypotheses &beamSliceHypoth
             if (caloHitList3D.empty())
                 continue;
 
+            CaloHitList selectedCaloHitList;
+            float closestDistance(std::numeric_limits<float>::max());
+
+            this->GetSelectedCaloHits(caloHitList3D, selectedCaloHitList, closestDistance);
+
+            CartesianVector centroidSel(0.f, 0.f, 0.f);
+            LArPcaHelper::EigenVectors eigenVecsSel;
+            LArPcaHelper::EigenValues eigenValuesSel(0.f, 0.f, 0.f);
+            LArPcaHelper::RunPca(selectedCaloHitList, centroidSel, eigenValuesSel, eigenVecsSel);
+            CartesianVector majorAxisSel(eigenVecsSel.at(0));
+            CartesianVector interceptOne(0.f,0.f,0.f), interceptTwo(0.f,0.f,0.f);
+
+/*
             CartesianVector centroid(0.f, 0.f, 0.f);
             LArPcaHelper::EigenVectors eigenVecs;
             LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
             LArPcaHelper::RunPca(caloHitList3D, centroid, eigenValues, eigenVecs);
             CartesianVector majorAxis(eigenVecs.at(0));
             CartesianVector interceptOne(0.f,0.f,0.f), interceptTwo(0.f,0.f,0.f);
-
+*/
             try
             {
-                this->GetTPCIntercepts(centroid, majorAxis, interceptOne, interceptTwo);
+                this->GetTPCIntercepts(centroidSel, majorAxisSel, interceptOne, interceptTwo);
             }
             catch (...)
             {
@@ -145,6 +161,26 @@ void BeamParticleIdTool::SelectOutputPfos(const SliceHypotheses &beamSliceHypoth
                 selectedPfos.insert(selectedPfos.end(), pfoListBeam.begin(), pfoListBeam.end());
             }
 
+            float angularSeparationToBeam(majorAxisSel.GetOpeningAngle(m_beamDirection));
+
+            std::cout << "angularSeparationToBeam = " << angularSeparationToBeam << std::endl;
+            std::cout << "angularSeparationToBeam deg = " << angularSeparationToBeam*180.f/M_PI << std::endl;
+            std::cout << "closestDistance = " << closestDistance << std::endl;
+
+#ifdef MONITORING
+            std::string name2(std::to_string(sliceIndex));
+            PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
+            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &m_beamTPCIntersection, "BeamTPCIntersection", RED, 1);
+            CartesianVector origin(0.f, 0.f, 0.f);
+            CartesianVector clearBeamDirection = m_beamDirection*100;
+            PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &origin, &clearBeamDirection, "BeamDirection", BLACK, 1, 2);
+            PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoListBeam, "Beam_Slice_" + name2, VIOLET);
+            PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &caloHitList3D, "AllCaloHits", BLUE);
+            PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &selectedCaloHitList, "SelectedCaloHits", RED);
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+#endif
+
+/*
 #ifdef MONITORING
             if (m_visualizeID)
             {
@@ -163,8 +199,36 @@ void BeamParticleIdTool::SelectOutputPfos(const SliceHypotheses &beamSliceHypoth
                 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
             }
 #endif
+*/
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::StatusCode BeamParticleIdTool::GetSelectedCaloHits(CaloHitList &inputCaloHitList, CaloHitList &outputCaloHitList, float &closestHitToFaceDistance)
+{
+    outputCaloHitList.clear();
+
+    std::map<float, const CaloHit *> distanceToCaloHitMap;
+    
+    for (const CaloHit *const pCaloHit : inputCaloHitList)
+    {
+        float distanceToBeamSpot(std::sqrt(pCaloHit->GetPositionVector().GetDistanceSquared(m_beamTPCIntersection)));
+        distanceToCaloHitMap.insert(std::map<float, const CaloHit *>::value_type(distanceToBeamSpot, pCaloHit));
+    }
+
+    closestHitToFaceDistance = distanceToCaloHitMap.begin()->first;
+
+    const int nSelectedCaloHits(inputCaloHitList.size() < m_nSelectedHits ? inputCaloHitList.size() : std::round(inputCaloHitList.size()*m_selectedFraction/100.f + 0.5f));
+
+    for (auto &iter : distanceToCaloHitMap)
+    {
+        outputCaloHitList.push_back(iter.second);
+        if (outputCaloHitList.size() >= nSelectedCaloHits)
+            break;
+    }
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -268,8 +332,29 @@ StatusCode BeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
         m_beamTPCIntersection.SetValues(-33.051, 461.06, 0);
     }
 
+    FloatVector beamDirection;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "BeamDirection", beamDirection));
+
+    if (3 == beamDirection.size())
+    {
+        m_beamDirection.SetValues(beamDirection.at(0), beamDirection.at(1), beamDirection.at(2));
+    }
+    else
+    {
+        // Default for protoDUNE.
+        float thetaXZ0(-11.844f * M_PI / 180.f);
+        m_beamDirection.SetValues(std::sin(thetaXZ0), 0, std::cos(thetaXZ0));
+    }
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VisualizeID", m_visualizeID));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectedFraction", m_selectedFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NSelectedHits", m_nSelectedHits));
 
     return STATUS_CODE_SUCCESS;
 }
