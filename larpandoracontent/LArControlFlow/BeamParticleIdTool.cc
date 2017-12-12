@@ -10,6 +10,9 @@
 
 #include "larpandoracontent/LArControlFlow/BeamParticleIdTool.h"
 
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -28,56 +31,50 @@ void BeamParticleIdTool::SelectOutputPfos(const SliceHypotheses &beamSliceHypoth
     if (beamSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    for (unsigned int sliceIndex = 0, nSlices = beamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+    // First, simple approach
+    if (m_selectAllBeamParticles || m_selectOnlyFirstSliceBeamParticles)
     {
-        const PfoList &sliceOutput((m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex))) ?
-            beamSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
-
-        selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
-    }
-
-/*
-    for (unsigned int sliceIndex = 0, nSlices = beamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
-    {
-        const PfoList pfoListBeam(beamSliceHypotheses.at(sliceIndex));
-
-        PfoList allConnectedPfoList;
-        LArPfoHelper::GetAllConnectedPfos(pfoListBeam, allConnectedPfoList);
-
-        CaloHitList caloHitList3D;
-        for (const ParticleFlowObject *const pPfo : allConnectedPfoList)
+        for (unsigned int sliceIndex = 0, nSlices = beamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
         {
-            // Get Clusters
-            ClusterList clusterList;
-            LArPfoHelper::GetThreeDClusterList(pPfo, clusterList);
+            const PfoList &sliceOutput((m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex))) ?
+                beamSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
 
-            // Get Calo Hit List
-            for (const Cluster *const pCluster : clusterList)
-            {
-                pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList3D);
-            }
+            selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
         }
 
-        CartesianVector centroid(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenVectors eigenVecs;
-        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-        LArPcaHelper::RunPca(caloHitList3D, centroid, eigenValues, eigenVecs);
+        return;
+    }
 
-        // Major axis of slice
-        CartesianVector fitDirection(eigenVecs.at(0));
+    // Now start to examine topology of beam slice hypotheses
+    for (unsigned int sliceIndex = 0, nSlices = beamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+    {
+        bool usebeamHypothesis(false);
+        const PfoList &pfoListBeam(beamSliceHypotheses.at(sliceIndex));
 
+        try
+        {
+            PfoList allConnectedPfoList;
+            LArPfoHelper::GetAllConnectedPfos(pfoListBeam, allConnectedPfoList);
 
+            CaloHitList caloHitList3D;
+            LArPfoHelper::GetCaloHits(allConnectedPfoList, TPC_3D, caloHitList3D);
 
+            if (!caloHitList3D.empty())
+            {
+                CartesianVector centroid(0.f, 0.f, 0.f);
+                LArPcaHelper::EigenVectors eigenVecs;
+                LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+                LArPcaHelper::RunPca(caloHitList3D, centroid, eigenValues, eigenVecs);
 
+                // Major axis of slice
+                //const CartesianVector &fitDirection(eigenVecs.at(0));
+            }            
+        }
+        catch (const StatusCodeException &) {}
 
-
-
-        const PfoList &sliceOutput((m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex))) ?
-            beamSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
-
+        const PfoList &sliceOutput(usebeamHypothesis ? beamSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
         selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
     }
-*/
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
