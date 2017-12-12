@@ -189,8 +189,8 @@ bool EventWritingAlgorithm::PassMCParticleFilter() const
     LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;            // [mc particles -> primary mc particle]
     LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
 
-    LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;          // [hit -> primary mc particle]
-    LArMonitoringHelper::MCContributionMap mcToTrueHitListMap;      // [primary mc particle -> true hit list]
+    LArMCParticleHelper::CaloHitToMCMap hitToPrimaryMCMap;          // [hit -> primary mc particle]
+    LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;      // [primary mc particle -> true hit list]
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
 
     unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPhotons(0), nChargedPions(0);
@@ -200,7 +200,7 @@ bool EventWritingAlgorithm::PassMCParticleFilter() const
         if (m_neutrinoInducedOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
             continue;
 
-        LArMonitoringHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
+        LArMCParticleHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
         const unsigned int nMCHitsTotal((mcToTrueHitListMap.end() != trueHitsIter) ? trueHitsIter->second.size() : 0);
 
         if (nMCHitsTotal < m_matchingMinPrimaryHits)

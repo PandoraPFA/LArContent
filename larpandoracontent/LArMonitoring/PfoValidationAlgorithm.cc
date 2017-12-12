@@ -11,7 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
-    #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArMonitoring/PfoValidationAlgorithm.h"
 
@@ -38,15 +38,15 @@ StatusCode PfoValidationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
     // Identify reconstructable MCParticles, and get mappings to their good hits
-    LArMonitoringHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
-    LArMonitoringHelper::MCContributionMap beamMCParticlesToGoodHitsMap;
-    LArMonitoringHelper::MCContributionMap crMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::MCContributionMap beamMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::MCContributionMap crMCParticlesToGoodHitsMap;
 
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamParticle, beamMCParticlesToGoodHitsMap);
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsCosmicRay, crMCParticlesToGoodHitsMap);
 
-    std::vector<LArMonitoringHelper::MCContributionMap> mcParticlesToGoodHitsMaps;
+    LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps;
     mcParticlesToGoodHitsMaps.push_back(nuMCParticlesToGoodHitsMap);
     mcParticlesToGoodHitsMaps.push_back(beamMCParticlesToGoodHitsMap);
     mcParticlesToGoodHitsMaps.push_back(crMCParticlesToGoodHitsMap);
@@ -56,10 +56,12 @@ StatusCode PfoValidationAlgorithm::Run()
 
     // TODO use helper function in LArMonitoringHelper, not sure if it currently give the right output
     for (const ParticleFlowObject *const pPfo : *pPfoList)
+    {
         if (LArPfoHelper::IsFinalState(pPfo))
             finalStatePfos.push_back(pPfo);
+    }
 
-    LArMonitoringHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
+    LArMCParticleHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
     LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap);
 
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
