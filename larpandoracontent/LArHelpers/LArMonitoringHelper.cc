@@ -18,7 +18,6 @@
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
 
 #include <algorithm>
@@ -64,7 +63,7 @@ void LArMonitoringHelper::ExtractTargetPfos(const PfoList &inputPfoList, const b
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMonitoringHelper::GetNeutrinoMatches(const CaloHitList *const pCaloHitList, const PfoList &recoNeutrinos,
-    const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &outputPrimaryMap)
+    const LArMCParticleHelper::CaloHitToMCMap &hitToPrimaryMCMap, LArMCParticleHelper::MCToPfoMap &outputPrimaryMap)
 {
     const CaloHitSet caloHitSet(pCaloHitList->begin(), pCaloHitList->end());
 
@@ -79,14 +78,14 @@ void LArMonitoringHelper::GetNeutrinoMatches(const CaloHitList *const pCaloHitLi
         CaloHitList clusterHits;
         LArMonitoringHelper::CollectCaloHits(pfoList, clusterHits);
 
-        MCContributionMap inputContributionMap;
+        LArMCParticleHelper::MCContributionMap inputContributionMap;
 
         for (const CaloHit *const pCaloHit : clusterHits)
         {
             if (!caloHitSet.count(pCaloHit))
                 continue;
 
-            CaloHitToMCMap::const_iterator mcIter = hitToPrimaryMCMap.find(pCaloHit);
+            LArMCParticleHelper::CaloHitToMCMap::const_iterator mcIter = hitToPrimaryMCMap.find(pCaloHit);
 
             if (mcIter == hitToPrimaryMCMap.end())
                 continue;
@@ -125,8 +124,8 @@ void LArMonitoringHelper::GetNeutrinoMatches(const CaloHitList *const pCaloHitLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
-    CaloHitToMCMap &hitToPrimaryMCMap, MCContributionMap &mcToTrueHitListMap)
+void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
+    LArMCParticleHelper::CaloHitToMCMap &hitToPrimaryMCMap, LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap)
 {
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
@@ -134,7 +133,7 @@ void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
         {
             const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
-            MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
+            LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
 
             if (mcToPrimaryMCMap.end() == mcIter)
                 continue;
@@ -154,7 +153,7 @@ void LArMonitoringHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloHitList, const PfoList &pfoList, const bool collapseToPrimaryPfos,
-    CaloHitToPfoMap &hitToPfoMap, PfoContributionMap &pfoToHitListMap)
+    LArMCParticleHelper::CaloHitToPfoMap &hitToPfoMap, LArMCParticleHelper::PfoContributionMap &pfoToHitListMap)
 {
     const CaloHitSet caloHitSet(pCaloHitList->begin(), pCaloHitList->end());
 
@@ -206,9 +205,9 @@ void LArMonitoringHelper::GetPfoToCaloHitMatches(const CaloHitList *const pCaloH
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCaloHitList, const PfoContributionMap &pfoToHitListMap,
-    const CaloHitToMCMap &hitToPrimaryMCMap, MCToPfoMap &mcToBestPfoMap, MCContributionMap &mcToBestPfoHitsMap,
-    MCToPfoMatchingMap &mcToFullPfoMatchingMap)
+void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::PfoContributionMap &pfoToHitListMap,
+    const LArMCParticleHelper::CaloHitToMCMap &hitToPrimaryMCMap, LArMCParticleHelper::MCToPfoMap &mcToBestPfoMap, LArMCParticleHelper::MCContributionMap &mcToBestPfoHitsMap,
+    LArMCParticleHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap)
 {
     const CaloHitSet caloHitSet(pCaloHitList->begin(), pCaloHitList->end());
 
@@ -228,7 +227,7 @@ void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCa
             if (!caloHitSet.count(pCaloHit))
                 continue;
 
-            CaloHitToMCMap::const_iterator mcIter = hitToPrimaryMCMap.find(pCaloHit);
+            LArMCParticleHelper::CaloHitToMCMap::const_iterator mcIter = hitToPrimaryMCMap.find(pCaloHit);
 
             if (mcIter == hitToPrimaryMCMap.end())
                 continue;
@@ -244,7 +243,7 @@ void LArMonitoringHelper::GetMCParticleToPfoMatches(const CaloHitList *const pCa
 
     for (const MCParticle *const pPrimaryParticle : mcParticleList)
     {
-        const PfoContributionMap &pfoContributionMap(mcToFullPfoMatchingMap.at(pPrimaryParticle));
+        const LArMCParticleHelper::PfoContributionMap &pfoContributionMap(mcToFullPfoMatchingMap.at(pPrimaryParticle));
         const ParticleFlowObject *pBestMatchPfo(nullptr);
         CaloHitList bestMatchCaloHitList;
 
@@ -315,19 +314,19 @@ unsigned int LArMonitoringHelper::CountHitsByType(const HitType hitType, const C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-void LArMonitoringHelper::GetOrderedMCParticleVector(const std::vector<MCContributionMap> &selectedMCParticleToGoodHitsMaps, MCParticleVector &orderedMCParticleVector)
+void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, MCParticleVector &orderedMCParticleVector)
 {
-    for (const MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
+    for (const LArMCParticleHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
     {
         if (mcParticleToGoodHitsMap.empty())
             continue;
 
         // Copy map contents to vector it can be sorted
-        std::vector<MCParticleCaloHitListPair> mcParticleToGoodHitsVect;
+        std::vector<LArMCParticleHelper::MCParticleCaloHitListPair> mcParticleToGoodHitsVect;
         std::copy(mcParticleToGoodHitsMap.begin(), mcParticleToGoodHitsMap.end(), std::back_inserter(mcParticleToGoodHitsVect));
 
         // Sort by number of hits descending
-        std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const MCParticleCaloHitListPair &a, const MCParticleCaloHitListPair &b) -> bool 
+        std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const LArMCParticleHelper::MCParticleCaloHitListPair &a, const LArMCParticleHelper::MCParticleCaloHitListPair &b) -> bool 
         {
             if (a.second.size() != b.second.size())
                 return (a.second.size() > b.second.size());
@@ -336,7 +335,7 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const std::vector<MCContrib
             return (a.first < b.first);
         });
 
-        for (const MCParticleCaloHitListPair &mcParticleCaloHitPair : mcParticleToGoodHitsVect)
+        for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitPair : mcParticleToGoodHitsVect)
             orderedMCParticleVector.push_back(mcParticleCaloHitPair.first);
     }
 
@@ -348,14 +347,14 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const std::vector<MCContrib
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-void LArMonitoringHelper::GetOrderedPfoVector(const PfoContributionMap &pfoToReconstructable2DHitsMap, pandora::PfoVector &orderedPfoVector)
+void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, pandora::PfoVector &orderedPfoVector)
 {
     // Copy map contents to vector it can be sorted
-    std::vector<PfoCaloHitListPair> pfoToReconstructable2DHitsVect;
+    std::vector<LArMCParticleHelper::PfoCaloHitListPair> pfoToReconstructable2DHitsVect;
     std::copy(pfoToReconstructable2DHitsMap.begin(), pfoToReconstructable2DHitsMap.end(), std::back_inserter(pfoToReconstructable2DHitsVect));
 
     // Sort by number of hits descending putting neutrino final states first
-    std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(), [] (const PfoCaloHitListPair &a, const PfoCaloHitListPair &b) -> bool 
+    std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(), [] (const LArMCParticleHelper::PfoCaloHitListPair &a, const LArMCParticleHelper::PfoCaloHitListPair &b) -> bool 
     {
         bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first));
         bool isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
@@ -370,7 +369,7 @@ void LArMonitoringHelper::GetOrderedPfoVector(const PfoContributionMap &pfoToRec
         return (a.first->GetEnergy() > b.first->GetEnergy());
     });
 
-    for (const PfoCaloHitListPair &pfoCaloHitPair : pfoToReconstructable2DHitsVect)
+    for (const LArMCParticleHelper::PfoCaloHitListPair &pfoCaloHitPair : pfoToReconstructable2DHitsVect)
         orderedPfoVector.push_back(pfoCaloHitPair.first);
 
     // Check that all elements of the vector are unique
@@ -381,7 +380,7 @@ void LArMonitoringHelper::GetOrderedPfoVector(const PfoContributionMap &pfoToRec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::PrintMCParticleTable(const MCContributionMap &selectedMCParticleToGoodHitsMap, const MCParticleVector &orderedMCParticleVector)
+void LArMonitoringHelper::PrintMCParticleTable(const LArMCParticleHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, const MCParticleVector &orderedMCParticleVector)
 {
     if (selectedMCParticleToGoodHitsMap.empty())
     {
@@ -396,12 +395,12 @@ void LArMonitoringHelper::PrintMCParticleTable(const MCContributionMap &selected
     {
         const MCParticle *const pMCParticle(orderedMCParticleVector.at(id));
 
-        MCContributionMap::const_iterator it = selectedMCParticleToGoodHitsMap.find(pMCParticle);
+        LArMCParticleHelper::MCContributionMap::const_iterator it = selectedMCParticleToGoodHitsMap.find(pMCParticle);
         if (selectedMCParticleToGoodHitsMap.end() == it)
             continue;  // ATTN MCParticles in selectedMCParticleToGoodHitsMap may be a subset of orderedMCParticleVector
 
         table.AddElement(id);
-        table.AddElement((dynamic_cast<const LArMCParticle*>(pMCParticle))->GetNuanceCode());
+        table.AddElement(LArMCParticleHelper::GetNuanceCode(pMCParticle));
         table.AddElement(PdgTable::GetParticleName(pMCParticle->GetParticleId()));
 
         table.AddElement(pMCParticle->GetEnergy());
@@ -424,7 +423,7 @@ void LArMonitoringHelper::PrintMCParticleTable(const MCContributionMap &selected
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::PrintPfoTable(const PfoContributionMap &pfoToReconstructable2DHitsMap, const PfoVector &orderedPfoVector)
+void LArMonitoringHelper::PrintPfoTable(const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const PfoVector &orderedPfoVector)
 {
     if (pfoToReconstructable2DHitsMap.empty())
     {
@@ -438,7 +437,7 @@ void LArMonitoringHelper::PrintPfoTable(const PfoContributionMap &pfoToReconstru
     {
         const ParticleFlowObject *const pPfo(orderedPfoVector.at(id));
 
-        PfoContributionMap::const_iterator it = pfoToReconstructable2DHitsMap.find(pPfo);
+        LArMCParticleHelper::PfoContributionMap::const_iterator it = pfoToReconstructable2DHitsMap.find(pPfo);
         if (pfoToReconstructable2DHitsMap.end() == it)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 

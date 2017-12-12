@@ -15,8 +15,9 @@
 #include "Pandora/PdgTable.h"
 #include "Pandora/StatusCodes.h"
 
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include <algorithm>
@@ -529,7 +530,7 @@ void LArMCParticleHelper::SelectParticlesMatchingCriteria(const MCParticleVector
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const ValidationParameters &parameters, 
-    std::function<bool(const MCParticle *const)> fCriteria, LArMonitoringHelper::MCContributionMap &selectedMCParticlesToGoodHitsMap)
+    std::function<bool(const MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToGoodHitsMap)
 {
     // Obtain map: [mc particle -> primary mc particle]
     LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
@@ -544,8 +545,8 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
     LArMCParticleHelper::SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction);
 
     // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
-    LArMonitoringHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
-    LArMonitoringHelper::MCContributionMap mcToGoodTrueHitListMap;
+    CaloHitToMCMap goodHitToPrimaryMCMap;
+    MCContributionMap mcToGoodTrueHitListMap;
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
 
     // Obtain vector: primary mc particles
@@ -562,13 +563,13 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::SelectParticlesByHitCount(const MCParticleVector &candidateTargets, const LArMonitoringHelper::MCContributionMap &mcToGoodTrueHitListMap, 
-    const ValidationParameters &parameters, LArMonitoringHelper::MCContributionMap &selectedMCParticlesToGoodHitsMap)
+void LArMCParticleHelper::SelectParticlesByHitCount(const MCParticleVector &candidateTargets, const MCContributionMap &mcToGoodTrueHitListMap, 
+    const ValidationParameters &parameters, MCContributionMap &selectedMCParticlesToGoodHitsMap)
 {
     // Apply restrictions on the number of good hits associated with the MCParticles
     for (const MCParticle * const pMCTarget : candidateTargets)
     {
-        LArMonitoringHelper::MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCTarget);
+        MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCTarget);
         if (mcToGoodTrueHitListMap.end() == goodTrueHitsIter)
             continue;
         
@@ -589,7 +590,7 @@ void LArMCParticleHelper::SelectParticlesByHitCount(const MCParticleVector &cand
         if (nGoodViews < parameters.m_minPrimaryGoodViews)
             continue;
 
-        if (!selectedMCParticlesToGoodHitsMap.insert(LArMonitoringHelper::MCContributionMap::value_type(goodTrueHitsIter->first, goodTrueHitsIter->second)).second)
+        if (!selectedMCParticlesToGoodHitsMap.insert(MCContributionMap::value_type(goodTrueHitsIter->first, goodTrueHitsIter->second)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
 }
@@ -642,21 +643,21 @@ unsigned int LArMCParticleHelper::GetNuanceCode(const MCParticle *const pMCParti
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const LArMonitoringHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap)
+void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMap &selectedMCParticleToGoodHitsMap, PfoContributionMap &pfoToReconstructable2DHitsMap)
 {
     LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(pfoList, MCContributionMapVector({selectedMCParticleToGoodHitsMap}), pfoToReconstructable2DHitsMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap)
+void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoContributionMap &pfoToReconstructable2DHitsMap)
 {
     for (const ParticleFlowObject *const pPfo : pfoList)
     {
         CaloHitList pfoHitList;
         LArMCParticleHelper::CollectReconstructable2DHits(pPfo, selectedMCParticleToGoodHitsMaps, pfoHitList);
 
-        if (!pfoToReconstructable2DHitsMap.insert(LArMonitoringHelper::PfoContributionMap::value_type(pPfo, pfoHitList)).second)
+        if (!pfoToReconstructable2DHitsMap.insert(PfoContributionMap::value_type(pPfo, pfoHitList)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
 }
@@ -673,9 +674,9 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
     for (const CaloHit *const pCaloHit : caloHitList2D)
     {
         bool isTargetHit(false);
-        for (const LArMonitoringHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
+        for (const MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
         {
-            for (const LArMonitoringHelper::MCContributionMap::value_type &mapEntry : mcParticleToGoodHitsMap)
+            for (const MCContributionMap::value_type &mapEntry : mcParticleToGoodHitsMap)
             {
                 if (std::find(mapEntry.second.begin(), mapEntry.second.end(), pCaloHit) != mapEntry.second.end())
                 {
@@ -693,13 +694,13 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const LArMonitoringHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
+void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
 {
-    for (LArMonitoringHelper::PfoContributionMap::const_iterator pfoIt = pfoToReconstructable2DHitsMap.begin(); pfoIt != pfoToReconstructable2DHitsMap.end(); ++pfoIt)
+    for (PfoContributionMap::const_iterator pfoIt = pfoToReconstructable2DHitsMap.begin(); pfoIt != pfoToReconstructable2DHitsMap.end(); ++pfoIt)
     {
-        for (const LArMonitoringHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
+        for (const MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
         {
-            for (LArMonitoringHelper::MCContributionMap::const_iterator mcParticleIt = mcParticleToGoodHitsMap.begin(); mcParticleIt != mcParticleToGoodHitsMap.end(); ++mcParticleIt)
+            for (MCContributionMap::const_iterator mcParticleIt = mcParticleToGoodHitsMap.begin(); mcParticleIt != mcParticleToGoodHitsMap.end(); ++mcParticleIt)
             {
                 // Add map entries for this Pfo & MCParticle if required
                 if (pfoToMCParticleHitSharingMap.find(pfoIt->first) == pfoToMCParticleHitSharingMap.end())
@@ -765,8 +766,8 @@ LArMCParticleHelper::InteractionType LArMCParticleHelper::GetInteractionType(con
     LArMCParticleHelper::SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList, selectInputHits, minHitSharingFraction);
 
     // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
-    LArMonitoringHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
-    LArMonitoringHelper::MCContributionMap mcToGoodTrueHitListMap;
+    CaloHitToMCMap goodHitToPrimaryMCMap;
+    MCContributionMap mcToGoodTrueHitListMap;
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
 
     // Obtain vector: primary mc particles
@@ -777,7 +778,7 @@ LArMCParticleHelper::InteractionType LArMCParticleHelper::GetInteractionType(con
 
     for (const MCParticle * const pMCPrimary : mcPrimaryVector)
     {
-        LArMonitoringHelper::MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCPrimary);
+        MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCPrimary);
 
         if (mcToGoodTrueHitListMap.end() != goodTrueHitsIter)
         {
