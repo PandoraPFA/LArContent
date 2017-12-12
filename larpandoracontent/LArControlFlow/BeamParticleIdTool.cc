@@ -61,7 +61,7 @@ void BeamParticleIdTool::SelectOutputPfos(const SliceHypotheses &beamSliceHypoth
             LArPfoHelper::GetAllConnectedPfos(beamSliceHypotheses.at(sliceIndex), allConnectedPfoList);
 
             CaloHitList caloHitList3D;
-            LArPfoHelper::GetCaloHits(allConnectedPfoList, TPC_3D, caloHitList3D);        
+            LArPfoHelper::GetCaloHits(allConnectedPfoList, TPC_3D, caloHitList3D);
 
             CaloHitList selectedCaloHitList;
             float closestDistance(std::numeric_limits<float>::max());
@@ -84,21 +84,6 @@ void BeamParticleIdTool::SelectOutputPfos(const SliceHypotheses &beamSliceHypoth
 
                 if (std::min(separationOne, separationTwo) < m_projectionIntersectionCut)
                     usebeamHypothesis = true;
-// Debug, to be removed
-const float angularSeparationToBeam(majorAxisSel.GetOpeningAngle(m_beamDirection));
-std::cout << "angularSeparationToBeam = " << angularSeparationToBeam << std::endl;
-std::cout << "angularSeparationToBeam deg = " << angularSeparationToBeam * 180.f / M_PI << std::endl;
-std::cout << "closestDistance = " << closestDistance << std::endl;
-std::string name2(std::to_string(sliceIndex));
-PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
-PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &m_beamTPCIntersection, "BeamTPCIntersection", RED, 1);
-CartesianVector origin(0.f, 0.f, 0.f);
-CartesianVector clearBeamDirection = m_beamDirection * 100.;
-PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &origin, &clearBeamDirection, "BeamDirection", BLACK, 1, 2);
-PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &(beamSliceHypotheses.at(sliceIndex)), "Beam_Slice_" + name2, VIOLET);
-PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &caloHitList3D, "AllCaloHits", BLUE);
-PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &selectedCaloHitList, "SelectedCaloHits", RED);
-PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
             }
         }
         catch (const StatusCodeException &)
@@ -166,24 +151,23 @@ void BeamParticleIdTool::GetSelectedCaloHits(const CaloHitList &inputCaloHitList
     if (inputCaloHitList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    // TODO
-    std::map<float, const CaloHit *> distanceToCaloHitMap;
+    typedef std::pair<const CaloHit*, float> HitDistancePair;
+    typedef std::vector<HitDistancePair> HitDistanceVector;
+    HitDistanceVector hitDistanceVector;
     
     for (const CaloHit *const pCaloHit : inputCaloHitList)
-    {
-        const float distanceToBeamSpot((pCaloHit->GetPositionVector() - m_beamTPCIntersection).GetMagnitudeSquared());
-        distanceToCaloHitMap.insert(std::map<float, const CaloHit *>::value_type(distanceToBeamSpot, pCaloHit));
-    }
+        hitDistanceVector.emplace_back(pCaloHit, (pCaloHit->GetPositionVector() - m_beamTPCIntersection).GetMagnitudeSquared());
 
-    closestHitToFaceDistance = distanceToCaloHitMap.begin()->first;
+    std::sort(hitDistanceVector.begin(), hitDistanceVector.end(), [](const HitDistancePair &lhs, const HitDistancePair &rhs) -> bool {return (lhs.second < rhs.second);});
+    closestHitToFaceDistance = std::sqrt(hitDistanceVector.front().second);
 
     const unsigned int nInputHits(inputCaloHitList.size());
     const unsigned int nSelectedCaloHits(nInputHits < m_nSelectedHits ? nInputHits :
         static_cast<unsigned int>(std::round(static_cast<float>(nInputHits) * m_selectedFraction / 100.f + 0.5f)));
 
-    for (const auto &mapEntry : distanceToCaloHitMap)
+    for (const HitDistancePair &hitDistancePair : hitDistanceVector)
     {
-        outputCaloHitList.push_back(mapEntry.second);
+        outputCaloHitList.push_back(hitDistancePair.first);
 
         if (outputCaloHitList.size() >= nSelectedCaloHits)
             break;
@@ -221,13 +205,14 @@ void BeamParticleIdTool::GetTPCIntercepts(const CartesianVector &a0, const Carte
 
 bool BeamParticleIdTool::IsContained(const CartesianVector &spacePoint) const 
 {
-    // TODO: Make cleaner floating point comparisons 
-    const float safetyFactor(0.0001);
-    const bool isContainedX(m_tpcMinX - safetyFactor < spacePoint.GetX() && spacePoint.GetX() < m_tpcMaxX + safetyFactor);
-    const bool isContainedY(m_tpcMinY - safetyFactor < spacePoint.GetY() && spacePoint.GetY() < m_tpcMaxY + safetyFactor);
-    const bool isContainedZ(m_tpcMinZ - safetyFactor < spacePoint.GetZ() && spacePoint.GetZ() < m_tpcMaxZ + safetyFactor);
+    if ((m_tpcMinX - spacePoint.GetX() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetX() - m_tpcMaxX > std::numeric_limits<float>::epsilon()) ||
+        (m_tpcMinY - spacePoint.GetY() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetY() - m_tpcMaxY > std::numeric_limits<float>::epsilon()) ||
+        (m_tpcMinZ - spacePoint.GetZ() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetZ() - m_tpcMaxZ > std::numeric_limits<float>::epsilon()))
+    {
+        return false;
+    }
 
-    return (isContainedX && isContainedY && isContainedZ);
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -253,7 +238,7 @@ CartesianVector BeamParticleIdTool::Plane::GetLineIntersection(const CartesianVe
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
     const float t(-1.f * (a0.GetDotProduct(m_unitNormal) + m_d) / denominator);
-    return CartesianVector(a0 + (a * t));
+    return (a0 + (a * t));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -267,9 +252,9 @@ StatusCode BeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectOnlyFirstSliceBeamParticles", m_selectOnlyFirstSliceBeamParticles));
 
-    if (m_selectAllBeamParticles == m_selectOnlyFirstSliceBeamParticles)
+    if (m_selectAllBeamParticles && m_selectOnlyFirstSliceBeamParticles)
     {
-        std::cout << "BeamParticleIdTool::ReadSettings - exactly one of SelectAllBeamParticles and SelectOnlyFirstSliceBeamParticles must be true" << std::endl;
+        std::cout << "BeamParticleIdTool::ReadSettings - cannot use both SelectAllBeamParticles and SelectOnlyFirstSliceBeamParticles simultaneously" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
