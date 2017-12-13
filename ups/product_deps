@@ -13,7 +13,7 @@ fcldir  -
 # Add the dependent product and version
 product		version
 eigen		v3_3_3
-pandora		v03_05_00
+pandora		v03_07_00
 cetbuildtools	v5_14_03	-	only_for_build
 end_product_list
 
