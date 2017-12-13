@@ -26,14 +26,14 @@ CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos)
+void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos, const MasterAlgorithm *const /*pAlgorithm*/)
 {
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    PfoList ambiguousParentPfos;                                                                                                            
-                                                                                                                                            
-    for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)                                                                        
+    PfoList ambiguousParentPfos;
+
+    for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)
     {
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);

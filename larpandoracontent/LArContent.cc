@@ -27,6 +27,7 @@
 
 #include "larpandoracontent/LArControlFlow/BeamParticleIdTool.h"
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h"
+#include "larpandoracontent/LArControlFlow/CosmicRayTaggingMonitoringTool.h"
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/NeutrinoIdTool.h"
 #include "larpandoracontent/LArControlFlow/PostProcessingAlgorithm.h"
@@ -173,7 +174,7 @@
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArEventValidation",                     EventValidationAlgorithm)                                                       \
-    d("LArPfoValidation",                     PfoValidationAlgorithm)                                                           \
+    d("LArPfoValidation",                       PfoValidationAlgorithm)                                                         \
     d("LArMCParticleMonitoring",                MCParticleMonitoringAlgorithm)                                                  \
     d("LArVisualMonitoring",                    VisualMonitoringAlgorithm)                                                      \
     d("LArEventReading",                        EventReadingAlgorithm)                                                          \
@@ -261,6 +262,7 @@
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
+    d("LArCosmicRayTaggingMonitoring",          CosmicRayTaggingMonitoringTool)                                                 \
     d("LArNeutrinoId",                          NeutrinoIdTool)                                                                 \
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \

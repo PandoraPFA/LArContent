@@ -121,7 +121,7 @@ private:
     pandora::StatusCode StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) const;
 
     /**
-     *  @brief  Tag clear, unambiguous cosmic-ray pfos 
+     *  @brief  Tag clear, unambiguous cosmic-ray pfos
      *
      *  @param  clearCosmicRayPfos to receive the list of clear cosmic-ray pfos
      *  @param  ambiguousPfos to receive the list of ambiguous cosmic-ray pfos for further analysis
@@ -341,8 +341,9 @@ public:
      *
      *  @param  parentCosmicRayPfos the list of parent cosmic-ray pfos
      *  @param  ambiguousPfos to receive the list of ambiguous pfos
+     *  @param  pAlgorithm the address of this master algorithm
      */
-    virtual void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos) = 0;
+    virtual void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos, const MasterAlgorithm *const pAlgorithm) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

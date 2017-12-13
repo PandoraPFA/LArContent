@@ -61,7 +61,7 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
 
     LArMCParticleHelper::CaloHitToMCMap hitToMCMap;
     LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
-    LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcParticleToSelfMap, hitToMCMap, mcToTrueHitListMap);    
+    LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcParticleToSelfMap, hitToMCMap, mcToTrueHitListMap);
 
     SimpleMCParticleList simpleMCParticleList;
     this->GetSimpleMCParticleList(mcParticleVector, mcToTrueHitListMap, simpleMCParticleList);
@@ -193,7 +193,7 @@ void MCParticleMonitoringAlgorithm::PrintMCParticle(const MCParticle *const pMCP
             std::cout << "\\_ ";
         }
 
-        std::cout << "MCPDG " << simpleMCParticle.m_pdgCode << ", Energy " << simpleMCParticle.m_energy 
+        std::cout << "MCPDG " << simpleMCParticle.m_pdgCode << ", Energy " << simpleMCParticle.m_energy
                   << ", Dist. " << (simpleMCParticle.m_endpoint - simpleMCParticle.m_vertex).GetMagnitude() << ", nMCHits " << simpleMCParticle.m_nMCHitsTotal
                   << " (" << simpleMCParticle.m_nMCHitsU << ", " << simpleMCParticle.m_nMCHitsV << ", " << simpleMCParticle.m_nMCHitsW << ")" << std::endl;
     }
