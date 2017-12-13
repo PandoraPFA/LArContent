@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArHelpers/LArLArPcaHelper.h
+ *  @file   larpandoracontent/LArHelpers/LArPcaHelper.h
  *
  *  @brief  Header file for the principal curve analysis helper class.
  *

@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/KinkSplittingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h
  *
  *  @brief  Header file for the kink splitting algorithm class.
  *

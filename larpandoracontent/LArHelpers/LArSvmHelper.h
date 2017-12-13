@@ -1,5 +1,5 @@
 /**
- *  @file   larcontent/include/LArHelpers/LArSvmHelper.h
+ *  @file   larpandoracontent/include/LArHelpers/LArSvmHelper.h
  *
  *  @brief  Header file for the lar svm helper class.
  *
