@@ -71,8 +71,10 @@ StatusCode CosmicRayTaggingTool::Initialize()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos)
+void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos, const MasterAlgorithm *const pAlgorithm)
 {
+    (void) pAlgorithm;
+
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 

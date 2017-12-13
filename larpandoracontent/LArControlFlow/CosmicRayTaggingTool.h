@@ -29,7 +29,7 @@ public:
     CosmicRayTaggingTool();
 
     pandora::StatusCode Initialize();
-    void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos);
+    void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos, const MasterAlgorithm *const pAlgorithm);
 
 private:
     /**

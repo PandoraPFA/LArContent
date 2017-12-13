@@ -365,8 +365,8 @@ void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoCont
         if (a.second.size() != b.second.size())
             return (a.second.size() > b.second.size());
 
-        // ATTN fall back on energy as a tie-breaker
-        return (a.first->GetEnergy() > b.first->GetEnergy());
+        // ATTN fall back on using all hits as a tie-breaker
+        return LArPfoHelper::SortByNHits(a.first, b.first);
     });
 
     for (const LArMCParticleHelper::PfoCaloHitListPair &pfoCaloHitPair : pfoToReconstructable2DHitsVect)

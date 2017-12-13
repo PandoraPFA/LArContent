@@ -341,8 +341,9 @@ public:
      *
      *  @param  parentCosmicRayPfos the list of parent cosmic-ray pfos
      *  @param  ambiguousPfos to receive the list of ambiguous pfos
+     *  @param  pAlgorithm the address of this master algorithm
      */
-    virtual void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos) = 0;
+    virtual void FindAmbiguousPfos(const pandora::PfoList &parentCosmicRayPfos, pandora::PfoList &ambiguousPfos, const MasterAlgorithm *const pAlgorithm) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
