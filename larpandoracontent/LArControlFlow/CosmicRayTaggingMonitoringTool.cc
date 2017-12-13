@@ -12,7 +12,6 @@
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingMonitoringTool.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
@@ -154,6 +153,7 @@ bool CosmicRayTaggingMonitoringTool::IsMainMCParticleMuon(const ParticleFlowObje
     catch (const StatusCodeException &) 
     {
     }
+
     return isMuon;
 }
 
