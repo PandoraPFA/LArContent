@@ -43,7 +43,7 @@ public:
     typedef std::pair<const pandora::ParticleFlowObject*, unsigned int > PfoIntPair;
     typedef std::map<const pandora::ParticleFlowObject*, std::vector<MCParticleIntPair> > PfoToMCParticleHitSharingMap;
     typedef std::map<const pandora::MCParticle*, std::vector<PfoIntPair> > MCParticleToPfoHitSharingMap;
-    typedef std::vector<MCContributionMap> MCContributionMapVector; 
+    typedef std::vector<MCContributionMap> MCContributionMapVector;
 
     /**
      *  @brief   ValidationParameters class
@@ -306,15 +306,15 @@ public:
      */
     static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, const ValidationParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToGoodHitsMap);
 
-    /** 
-     *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable 
+    /**
+     *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable
      *
      *  @param  candidateTargets candidate recontructable MCParticles
      *  @param  mcToGoodTrueHitListMap mapping from candidates reconstructable MCParticles to their good hits
      *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
      *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
      */
-    static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const MCContributionMap &mcToGoodTrueHitListMap, 
+    static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const MCContributionMap &mcToGoodTrueHitListMap,
     const ValidationParameters &parameters, MCContributionMap &selectedMCParticlesToGoodHitsMap);
 
     /**
@@ -345,7 +345,7 @@ public:
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
      */
     static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToGoodHitsMap, PfoContributionMap &pfoToReconstructable2DHitsMap);
-    
+
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
      *

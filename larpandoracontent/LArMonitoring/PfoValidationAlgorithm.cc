@@ -33,7 +33,7 @@ StatusCode PfoValidationAlgorithm::Run()
 
     const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
-    
+
     const PfoList *pPfoList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
@@ -73,14 +73,14 @@ StatusCode PfoValidationAlgorithm::Run()
     LArMonitoringHelper::GetOrderedMCParticleVector(mcParticlesToGoodHitsMaps, orderedMCParticleVector);
 
     LArFormattingHelper::PrintHeader("MC : Reconstructable neutrino final state particles");
-    LArMonitoringHelper::PrintMCParticleTable(nuMCParticlesToGoodHitsMap, orderedMCParticleVector); 
-    
+    LArMonitoringHelper::PrintMCParticleTable(nuMCParticlesToGoodHitsMap, orderedMCParticleVector);
+
     LArFormattingHelper::PrintHeader("MC : Reconstructable primary beam particles");
-    LArMonitoringHelper::PrintMCParticleTable(beamMCParticlesToGoodHitsMap, orderedMCParticleVector); 
-    
+    LArMonitoringHelper::PrintMCParticleTable(beamMCParticlesToGoodHitsMap, orderedMCParticleVector);
+
     LArFormattingHelper::PrintHeader("MC : Reconstructable primary cosmic-rays");
-    LArMonitoringHelper::PrintMCParticleTable(crMCParticlesToGoodHitsMap, orderedMCParticleVector); 
-    
+    LArMonitoringHelper::PrintMCParticleTable(crMCParticlesToGoodHitsMap, orderedMCParticleVector);
+
     // Print the pfo information for this event
     PfoVector orderedPfoVector;
     LArMonitoringHelper::GetOrderedPfoVector(pfoToReconstructable2DHitsMap, orderedPfoVector);

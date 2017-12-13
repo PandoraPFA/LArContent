@@ -313,7 +313,7 @@ unsigned int LArMonitoringHelper::CountHitsByType(const HitType hitType, const C
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, MCParticleVector &orderedMCParticleVector)
 {
     for (const LArMCParticleHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
@@ -326,11 +326,11 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::
         std::copy(mcParticleToGoodHitsMap.begin(), mcParticleToGoodHitsMap.end(), std::back_inserter(mcParticleToGoodHitsVect));
 
         // Sort by number of hits descending
-        std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const LArMCParticleHelper::MCParticleCaloHitListPair &a, const LArMCParticleHelper::MCParticleCaloHitListPair &b) -> bool 
+        std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const LArMCParticleHelper::MCParticleCaloHitListPair &a, const LArMCParticleHelper::MCParticleCaloHitListPair &b) -> bool
         {
             if (a.second.size() != b.second.size())
                 return (a.second.size() > b.second.size());
-    
+
             // ATTN default to normal MCParticle sorting to avoid tie-breakers
             return (a.first < b.first);
         });
@@ -346,7 +346,7 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, pandora::PfoVector &orderedPfoVector)
 {
     // Copy map contents to vector it can be sorted
@@ -354,7 +354,7 @@ void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoCont
     std::copy(pfoToReconstructable2DHitsMap.begin(), pfoToReconstructable2DHitsMap.end(), std::back_inserter(pfoToReconstructable2DHitsVect));
 
     // Sort by number of hits descending putting neutrino final states first
-    std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(), [] (const LArMCParticleHelper::PfoCaloHitListPair &a, const LArMCParticleHelper::PfoCaloHitListPair &b) -> bool 
+    std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(), [] (const LArMCParticleHelper::PfoCaloHitListPair &a, const LArMCParticleHelper::PfoCaloHitListPair &b) -> bool
     {
         bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first));
         bool isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
@@ -365,8 +365,8 @@ void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoCont
         if (a.second.size() != b.second.size())
             return (a.second.size() > b.second.size());
 
-        // ATTN fall back on energy as a tie-breaker
-        return (a.first->GetEnergy() > b.first->GetEnergy());
+        // ATTN fall back on using all hits as a tie-breaker
+        return LArPfoHelper::SortByNHits(a.first, b.first);
     });
 
     for (const LArMCParticleHelper::PfoCaloHitListPair &pfoCaloHitPair : pfoToReconstructable2DHitsVect)
@@ -389,7 +389,7 @@ void LArMonitoringHelper::PrintMCParticleTable(const LArMCParticleHelper::MCCont
     }
 
     LArFormattingHelper::Table table({"ID", "NUANCE", "TYPE", "", "E", "dist", "", "nGoodHits", "U", "V", "W"});
- 
+
     unsigned int usedParticleCount(0);
     for (unsigned int id = 0; id < orderedMCParticleVector.size(); ++id)
     {
@@ -417,7 +417,7 @@ void LArMonitoringHelper::PrintMCParticleTable(const LArMCParticleHelper::MCCont
     // Check every MCParticle in selectedMCParticleToGoodHitsMap has been printed
     if (usedParticleCount != selectedMCParticleToGoodHitsMap.size())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-            
+
     table.Print();
 }
 
@@ -432,7 +432,7 @@ void LArMonitoringHelper::PrintPfoTable(const LArMCParticleHelper::PfoContributi
     }
 
     LArFormattingHelper::Table table({"ID", "PID", "Is Nu FS", "", "nHits", "U", "V", "W", "", "nGoodHits", "U", "V", "W"});
- 
+
     for (unsigned int id = 0; id < orderedPfoVector.size(); ++id)
     {
         const ParticleFlowObject *const pPfo(orderedPfoVector.at(id));
@@ -447,7 +447,7 @@ void LArMonitoringHelper::PrintPfoTable(const LArMCParticleHelper::PfoContributi
 
         CaloHitList all2DCaloHits;
         LArMonitoringHelper::CollectCaloHits(pPfo, all2DCaloHits);
-            
+
         table.AddElement(all2DCaloHits.size());
         table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, all2DCaloHits));
         table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, all2DCaloHits));
@@ -472,7 +472,7 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
         std::cout << "No Pfos supplied." << std::endl;
         return;
     }
-    
+
     if (orderedMCParticleVector.empty())
     {
         std::cout << "No MCParticles supplied." << std::endl;

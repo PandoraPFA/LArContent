@@ -113,7 +113,7 @@ public:
      *  @param  orderedMCParticleVector the output vector of ordered MCParticles
      */
     static void GetOrderedMCParticleVector(const LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, pandora::MCParticleVector &orderedMCParticleVector);
-    
+
     /**
      *  @brief  Order input Pfos by their number of hits.
      *
@@ -129,7 +129,7 @@ public:
      *  @param  orderedMCParticleVector the input vector of ordered MCParticles
      */
     static void PrintMCParticleTable(const LArMCParticleHelper::MCContributionMap &selectedMCParticleToGoodHitsMaps, const pandora::MCParticleVector &orderedMCParticleVector);
-    
+
     /**
      *  @brief  Print details of input Pfos to the terminal in a table.
      *

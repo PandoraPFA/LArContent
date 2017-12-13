@@ -40,9 +40,9 @@ private:
 
         /**
          *  @brief  operator <
-         * 
+         *
          *  @param  rhs object for comparison
-         * 
+         *
          *  @return boolean
          */
         bool operator<(const SimpleMCParticle &rhs) const;
@@ -68,7 +68,7 @@ private:
 
     /**
      *  @brief  Extract details of each mc particle (ordered by number of true hits)
-     * 
+     *
      *  @param  mcPrimaryList the mc particle list
      *  @param  mcToTrueHitListMap the mc to true hit list map
      *  @param  simpleMCParticleList to receive the populated simple mc particle list
@@ -78,7 +78,7 @@ private:
 
     /**
      *  @brief  Print all the mc monitoring information to screen
-     * 
+     *
      *  @param  mcNeutrinoVector the mc neutrino vector
      *  @param  simpleMCParticleList the simple mc particle list
      *  @param  simpleMCParticleMap the simple mc particle map
@@ -88,7 +88,7 @@ private:
 
     /**
      *  @brief  Print information for a given mc particle to screen
-     * 
+     *
      *  @param  pMCParticle the address of the mc particle
      *  @param  simpleMCParticleMap the simple mc particle map
      *  @param  depth the depth in the mc particle decay hierarchy
@@ -98,10 +98,10 @@ private:
 
     /**
      *  @brief  Sort simple mc particles by number of mc hits
-     * 
+     *
      *  @param  lhs the left-hand side
      *  @param  rhs the right-hand side
-     * 
+     *
      *  @return boolean
      */
     static bool SortSimpleMCParticles(const SimpleMCParticle &lhs, const SimpleMCParticle &rhs);

@@ -34,14 +34,14 @@ public:
      *  @param  style the style of choice
      */
     static void SetStyle(const Style style, std::ostream &stream = std::cout);
-    
+
     /**
      *  @brief  Set the text color (of standard output stream)
      *
      *  @param  color the color of choice
      */
     static void SetColor(const Color color, std::ostream &stream = std::cout);
-    
+
     /**
      *  @brief  Reset the style of the standard output stream
      */
@@ -97,7 +97,7 @@ public:
         UNDERLINED = 4,
         INVERTED = 7
     };
-    
+
     /**
      *  @brief  Style code enumeration
      */
@@ -125,7 +125,7 @@ public:
     /**
      *  @brief  Table class
      */
-    class Table 
+    class Table
     {
     public:
         /**
@@ -160,25 +160,25 @@ public:
          *  @return true/false
          */
         bool IsSeparatorColumn(const unsigned int column) const;
-    
+
         /**
          *  @brief  Print the column titles
          *
-         *  @param  widths a vector of the number of characters to include in each column 
+         *  @param  widths a vector of the number of characters to include in each column
          */
         void PrintColumnTitles() const;
 
         /**
          *  @brief  Print a horizontal line
          *
-         *  @param  widths a vector of the number of characters to include in each column 
+         *  @param  widths a vector of the number of characters to include in each column
          */
         void PrintHorizontalLine() const;
 
         /**
          *  @brief  Print the table elements
          *
-         *  @param  widths a vector of the number of characters to include in each column 
+         *  @param  widths a vector of the number of characters to include in each column
          */
         void PrintTableElements() const;
 
@@ -188,7 +188,7 @@ public:
          *  @param  value the string to print in the cell
          *  @param  format a formatting string (see GetFormatCharacter(...))
          *  @param  index the index of the table cell (0 --> number of elements) used to find the column
-         *  @param  widths a vector of the number of characters to include in each column 
+         *  @param  widths a vector of the number of characters to include in each column
          */
         void PrintTableCell(const std::string &value, const std::string &format, const unsigned int index) const;
 
@@ -201,7 +201,7 @@ public:
          *  @brief  Update the width of the last column in which an element was added
          */
         void UpdateColumnWidth();
-        
+
         const pandora::StringVector     m_columnTitles;     ///< The vector of columns titles in the table
         const unsigned int              m_precision;        ///< The number of significant figures to use when displaying number types
         pandora::StringVector           m_elements;         ///< The vector of flattened table elements
