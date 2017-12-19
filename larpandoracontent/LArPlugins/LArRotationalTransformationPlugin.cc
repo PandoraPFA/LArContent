@@ -33,7 +33,9 @@ LArRotationalTransformationPlugin::LArRotationalTransformationPlugin() :
     m_sinU(0.),
     m_sinV(0.),
     m_cosU(0.),
-    m_cosV(0.)
+    m_cosV(0.),
+    m_maxAngularDiscrepancy(0.03),
+    m_maxSigmaDiscrepancy(0.01)
 {
 }
 
@@ -263,9 +265,9 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
     {
         const LArTPC *const pLArTPC(mapEntry.second);
 
-        if ((std::fabs(m_thetaU - pLArTPC->GetWireAngleU()) > std::numeric_limits<float>::epsilon()) ||
-            (std::fabs(m_thetaV - pLArTPC->GetWireAngleV()) > std::numeric_limits<float>::epsilon()) ||
-            (std::fabs(m_sigmaUVW - pLArTPC->GetSigmaUVW()) > std::numeric_limits<float>::epsilon()))
+        if ((std::fabs(m_thetaU - pLArTPC->GetWireAngleU()) > m_maxAngularDiscrepancy) ||
+            (std::fabs(m_thetaV - pLArTPC->GetWireAngleV()) > m_maxAngularDiscrepancy) ||
+            (std::fabs(m_sigmaUVW - pLArTPC->GetSigmaUVW()) > m_maxSigmaDiscrepancy))
         {
             std::cout << "LArRotationalTransformationPlugin::Initialize - Plugin does not support provided LArTPC configurations " << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
@@ -277,8 +279,14 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode LArRotationalTransformationPlugin::ReadSettings(const pandora::TiXmlHandle /*xmlHandle*/)
+pandora::StatusCode LArRotationalTransformationPlugin::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxAngularDiscrepancy", m_maxAngularDiscrepancy));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxSigmaDiscrepancy", m_maxSigmaDiscrepancy));
+
     return STATUS_CODE_SUCCESS;
 }
 
