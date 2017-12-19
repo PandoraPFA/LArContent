@@ -150,6 +150,20 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
         }
     }
 
+    for (const MCParticle *pMCParticle : *pMCParticleList)
+    {
+        const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pMCParticle));
+        std::vector<pandora::CartesianVector> steps(pLArMCParticle->GetMCStepPositions());
+        for (unsigned int stepCounter = 0; stepCounter < steps.size() - 1; stepCounter++)
+        {
+            pandora::CartesianVector start(steps.at(stepCounter));
+            pandora::CartesianVector end(steps.at(stepCounter+1));
+            std::stringstream mcStepPositionName;
+            mcStepPositionName << "MCStepPosition" << step;
+            PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), start, end, mcStepPositionName.str(), AUTO, 1, 2);
+        }
+    }
+
     PANDORA_MONITORING_API(VisualizeMCParticles(this->GetPandora(), pMCParticleList, listName.empty() ? "CurrentMCParticles" : listName.c_str(),
         AUTO, &m_particleSuppressionMap));
 }
