@@ -51,6 +51,9 @@ private:
     double    m_sinV;            ///< sin(thetaV)
     double    m_cosU;            ///< cos(thetaU)
     double    m_cosV;            ///< cos(thetaV)
+
+    double    m_maxAngularDiscrepancy;      ///< Maximum allowed difference between like wire (u and v) angles between LArTPCs
+    double    m_maxSigmaDiscrepancy;        ///< Maximum allowed difference between like wire sigma values between LArTPCs
 };
 
 } // namespace lar_content
