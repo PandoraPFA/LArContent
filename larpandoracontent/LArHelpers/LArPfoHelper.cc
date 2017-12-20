@@ -480,8 +480,9 @@ bool LArPfoHelper::SortByHitProjection(const LArTrackTrajectoryPoint &lhs, const
     if (lhs.first != rhs.first)
         return (lhs.first < rhs.first);
 
-    if (lhs.second.GetCaloHit() && rhs.second.GetCaloHit())
-        return (lhs.second.GetCaloHit()->GetInputEnergy() > rhs.second.GetCaloHit()->GetInputEnergy());
+    // ATTN Removed to support use with CartesianVector only (no CaloHit) input
+    // if (lhs.second.GetCaloHit() && rhs.second.GetCaloHit())
+    //     return (lhs.second.GetCaloHit()->GetInputEnergy() > rhs.second.GetCaloHit()->GetInputEnergy());
 
     const float dx(lhs.second.GetPosition().GetX() - rhs.second.GetPosition().GetX());
     const float dy(lhs.second.GetPosition().GetY() - rhs.second.GetPosition().GetY());
