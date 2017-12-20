@@ -71,7 +71,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
 
 bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const
 {
-
     if (!LArPfoHelper::IsThreeD(pPfo))
         return (pPfo->GetParticleId() == MU_MINUS);
 
@@ -86,7 +85,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     {
         bool isTrueTrack(false);
         bool isMainMCParticleSet(false);
-
         try
         {
             const MCParticle *const pMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
@@ -102,6 +100,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
             const std::string end=((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
             outputFile.append(end);
             LArSvmHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
+			
         }
         return isTrueTrack;
     }// training mode
@@ -128,6 +127,9 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseThreeDInformation", m_useThreeDInformation));
+		
+	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+		"FilePathEnvironmentVariable", m_filePathEnvironmentVariable));		
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
@@ -197,7 +199,7 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
     }
-
+	
     return PfoCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
