@@ -27,8 +27,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ShowerFitFeatureTool::ShowerFitFeatureTool() :
-    m_ratioVariables(true),
+TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
     m_slidingShowerFitWindow(3),
     m_slidingLinearFitWindow(10000)
 {
@@ -36,43 +35,34 @@ ShowerFitFeatureTool::ShowerFitFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerFitFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void TwoDShowerFitFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::Cluster *const pCluster)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    if (m_ratioVariables)
-    {
-        float ratio(-1.f);
-        try
-        {
-            const TwoDSlidingFitResult slidingFitResultLarge(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-            float straightLineLength = (slidingFitResultLarge.GetGlobalMaxLayerPosition() - slidingFitResultLarge.GetGlobalMinLayerPosition()).GetMagnitude();
-            if (straightLineLength > std::numeric_limits<double>::epsilon())
-                ratio = (CutClusterCharacterisationAlgorithm::GetShowerFitWidth(pAlgorithm, pCluster, m_slidingShowerFitWindow))/straightLineLength;
-        }
-        catch (const StatusCodeException &)
-        {
-            ratio = -1.f;
-        }
-        featureVector.push_back(ratio);
-    }
-    else
-    {
-        featureVector.push_back(CutClusterCharacterisationAlgorithm::GetShowerFitWidth(pAlgorithm, pCluster, m_slidingShowerFitWindow));
-    }
+	float ratio(-1.f);
+	try
+	{
+		const TwoDSlidingFitResult slidingFitResultLarge(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+		const float straightLineLength = (slidingFitResultLarge.GetGlobalMaxLayerPosition() - slidingFitResultLarge.GetGlobalMinLayerPosition()).GetMagnitude();
+		if (straightLineLength > std::numeric_limits<double>::epsilon())
+			ratio = (CutClusterCharacterisationAlgorithm::GetShowerFitWidth(pAlgorithm, pCluster, m_slidingShowerFitWindow))/straightLineLength;
+	}
+	catch (const StatusCodeException &)
+	{
+		ratio = -1.f;
+	}
+	featureVector.push_back(ratio);
+  
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ShowerFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode TwoDShowerFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingShowerFitWindow", m_slidingShowerFitWindow));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RatioVariables", m_ratioVariables));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingLinearFitWindow", m_slidingLinearFitWindow));
@@ -83,41 +73,15 @@ StatusCode ShowerFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NHitsFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
-    const pandora::Cluster * const pCluster)
-{
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
-    featureVector.push_back(pCluster->GetNCaloHits());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode NHitsFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
-{
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-LinearFitFeatureTool::LinearFitFeatureTool() :
+TwoDLinearFitFeatureTool::TwoDLinearFitFeatureTool() :
     m_slidingLinearFitWindow(3),
-    m_slidingLinearFitWindowLarge(10000),
-    m_ratioVariables(true),
-    m_addStraightLineLength(true),
-    m_addDiffWithStraightLineMean(true),
-    m_addDiffWithStraightLineSigma(true),
-    m_addDTDLWidth(true),
-    m_addMaxFitGapLength(true),
-    m_addRMSLinearFit(true)
+    m_slidingLinearFitWindowLarge(10000)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LinearFitFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void TwoDLinearFitFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
 const pandora::Cluster * const pCluster)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -126,7 +90,7 @@ const pandora::Cluster * const pCluster)
     float dTdLWidth(-1.f), straightLineLengthLarge(-1.f), diffWithStraightLineMean(-1.f), diffWithStraightLineSigma(-1.f), maxFitGapLength(-1.f), rmsSlidingLinearFit(-1.f);
     this->CalculateVariablesSlidingLinearFit(pCluster, straightLineLengthLarge, diffWithStraightLineMean, diffWithStraightLineSigma, dTdLWidth, maxFitGapLength, rmsSlidingLinearFit);
 
-    if (m_ratioVariables && (straightLineLengthLarge > std::numeric_limits<double>::epsilon()))
+    if (straightLineLengthLarge > std::numeric_limits<double>::epsilon())
     {
         diffWithStraightLineMean  /= straightLineLengthLarge;
         diffWithStraightLineSigma /= straightLineLengthLarge;
@@ -135,28 +99,17 @@ const pandora::Cluster * const pCluster)
         rmsSlidingLinearFit       /= straightLineLengthLarge;
     }
 
-    if(m_addStraightLineLength)
-        featureVector.push_back(straightLineLengthLarge);
-
-    if (m_addDiffWithStraightLineMean)
-        featureVector.push_back(diffWithStraightLineMean);
-
-    if (m_addDiffWithStraightLineSigma)
-        featureVector.push_back(diffWithStraightLineSigma);
-
-    if (m_addDTDLWidth)
-        featureVector.push_back(dTdLWidth);
-
-    if (m_addMaxFitGapLength)
-        featureVector.push_back(maxFitGapLength);
-
-    if (m_addRMSLinearFit)
-        featureVector.push_back(rmsSlidingLinearFit);
+	featureVector.push_back(straightLineLengthLarge);
+	featureVector.push_back(diffWithStraightLineMean);
+	featureVector.push_back(diffWithStraightLineSigma);
+	featureVector.push_back(dTdLWidth);
+	featureVector.push_back(maxFitGapLength);
+	featureVector.push_back(rmsSlidingLinearFit);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge,
+void TwoDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge,
     float &diffWithStraightLineMean, float &diffWithStraightLineSigma, float &dTdLWidth, float &maxFitGapLength, float &rmsSlidingLinearFit) const
 {
     try
@@ -177,17 +130,18 @@ void LinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Clu
 
         for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
         {
-            rmsSlidingLinearFit += mapEntry.second.GetRms();
+			const LayerFitResult layerFitResult(mapEntry.second);
+            rmsSlidingLinearFit += layerFitResult.GetRms();
 
             CartesianVector thisFitPosition(0.f, 0.f, 0.f);
-            slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
+            slidingFitResult.GetGlobalPosition(layerFitResult.GetL(), layerFitResult.GetFitT(), thisFitPosition);
 
-            LayerFitResultMap::const_iterator iterLarge = slidingFitResultLarge.GetLayerFitResultMap().find(slidingFitResultLarge.GetLayer(mapEntry.second.GetL()));
+            LayerFitResultMap::const_iterator iterLarge = slidingFitResultLarge.GetLayerFitResultMap().find(slidingFitResultLarge.GetLayer(layerFitResult.GetL()));
 
             if (slidingFitResultLarge.GetLayerFitResultMap().end() == iterLarge)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            diffWithStraightLineVector.push_back(static_cast<float>(std::fabs(mapEntry.second.GetFitT() - iterLarge->second.GetFitT())));
+            diffWithStraightLineVector.push_back(static_cast<float>(std::fabs(layerFitResult.GetFitT() - iterLarge->second.GetFitT())));
 
             const float thisGapLength((thisFitPosition - previousFitPosition).GetMagnitude());
             const float minZ(std::min(thisFitPosition.GetZ(), previousFitPosition.GetZ()));
@@ -202,8 +156,8 @@ void LinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Clu
                     maxFitGapLength = correctedGapLength;
             }
 
-            dTdLMin = std::min(dTdLMin, static_cast<float>(mapEntry.second.GetGradient()));
-            dTdLMax = std::max(dTdLMax, static_cast<float>(mapEntry.second.GetGradient()));
+            dTdLMin = std::min(dTdLMin, static_cast<float>(layerFitResult.GetGradient()));
+            dTdLMax = std::max(dTdLMax, static_cast<float>(layerFitResult.GetGradient()));
             previousFitPosition = thisFitPosition;
         }
 
@@ -240,7 +194,7 @@ void LinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Clu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LinearFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode TwoDLinearFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingLinearFitWindow", m_slidingLinearFitWindow));
@@ -248,173 +202,44 @@ StatusCode LinearFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingLinearFitWindowLarge", m_slidingLinearFitWindowLarge));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddStraightLineLength", m_addStraightLineLength));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddDiffWithStraightLineMean", m_addDiffWithStraightLineMean));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddDiffWithStraightLineSigma", m_addDiffWithStraightLineSigma));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddDTDLWidth", m_addDTDLWidth));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddMaxFitGapLength", m_addMaxFitGapLength));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddRMSLinearFit", m_addRMSLinearFit));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RatioVariables", m_ratioVariables));
-
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-NNearbyClustersFeatureTool::NNearbyClustersFeatureTool() :
-    m_minClusterCaloHits(6),
-    m_nearbyClusterDistance(2.5f)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void NNearbyClustersFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
-    const pandora::Cluster *const pCluster)
-{
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
-    ClusterList candidateClusters;
-
-    for (const std::string &clusterListName : m_clusterListNames)
-    {
-        const pandora::ClusterList *pClusterList = nullptr;
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, clusterListName, pClusterList));
-
-        for (const Cluster *const pCandidateCluster : *pClusterList)
-        {
-            if ((LArClusterHelper::GetClusterHitType(pCluster)) != (LArClusterHelper::GetClusterHitType(pCandidateCluster)))
-                continue;
-
-            if ((pCandidateCluster != pCluster) && (pCandidateCluster->GetNCaloHits() >= m_minClusterCaloHits))
-                candidateClusters.push_back(pCandidateCluster);
-        }
-    }
-
-    int nNearbyClusters(0);
-
-    for (const Cluster *const pCandidateCluster : candidateClusters)
-    {
-        if ((pCluster != pCandidateCluster) && (LArClusterHelper::GetClosestDistance(pCluster, pCandidateCluster) <= m_nearbyClusterDistance))
-            ++nNearbyClusters;
-    }
-
-    featureVector.push_back(nNearbyClusters);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode NNearbyClustersFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "ClusterListNames", m_clusterListNames));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterCaloHits", m_minClusterCaloHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NearbyClusterDistance", m_nearbyClusterDistance));
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-MipEnergyFeatureTool::MipEnergyFeatureTool() :
-    m_mipCorrectionPerHit(1.f)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MipEnergyFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
-    const pandora::Cluster *const pCluster)
-{
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
-    float mipEnergy(0.f);
-
-    for (const OrderedCaloHitList::value_type &layerIter : pCluster->GetOrderedCaloHitList())
-    {
-        for (const CaloHit *const pCaloHit : *layerIter.second)
-            mipEnergy += pCaloHit->GetMipEquivalentEnergy();
-    }
-
-    featureVector.push_back(mipEnergy * m_mipCorrectionPerHit);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode MipEnergyFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MipCorrectionPerHit", m_mipCorrectionPerHit));
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-VertexDistanceFeatureTool::VertexDistanceFeatureTool() :
-    m_ratioVariables(true),
+TwoDVertexDistanceFeatureTool::TwoDVertexDistanceFeatureTool() :
     m_slidingLinearFitWindow(10000)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void TwoDVertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::Cluster *const pCluster)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    if (m_ratioVariables)
-    {
-        float straightLineLength(-1.f), ratio(-1.f);
-        try
-        {
-            const TwoDSlidingFitResult slidingFitResultLarge(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-            straightLineLength = (slidingFitResultLarge.GetGlobalMaxLayerPosition() - slidingFitResultLarge.GetGlobalMinLayerPosition()).GetMagnitude();
-            if (straightLineLength > std::numeric_limits<double>::epsilon())
-                ratio = (CutClusterCharacterisationAlgorithm::GetVertexDistance(pAlgorithm, pCluster))/straightLineLength;
-        }
-        catch (const StatusCodeException &)
-        {
-            ratio = -1.f;
-        }
-        featureVector.push_back(ratio);
-    }
-    else
-    {
-        featureVector.push_back((CutClusterCharacterisationAlgorithm::GetVertexDistance(pAlgorithm, pCluster)));
-    }
+	float straightLineLength(-1.f), ratio(-1.f);
+	try
+	{
+		const TwoDSlidingFitResult slidingFitResultLarge(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+		straightLineLength = (slidingFitResultLarge.GetGlobalMaxLayerPosition() - slidingFitResultLarge.GetGlobalMinLayerPosition()).GetMagnitude();
+		if (straightLineLength > std::numeric_limits<double>::epsilon())
+			ratio = (CutClusterCharacterisationAlgorithm::GetVertexDistance(pAlgorithm, pCluster))/straightLineLength;
+	}
+	catch (const StatusCodeException &)
+	{
+		ratio = -1.f;
+	}
+	featureVector.push_back(ratio);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode VertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode TwoDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RatioVariables", m_ratioVariables));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingLinearFitWindow", m_slidingLinearFitWindow));
@@ -427,14 +252,7 @@ StatusCode VertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
     m_slidingLinearFitWindow(3),
-    m_slidingLinearFitWindowLarge(10000),
-    m_ratioVariables(true),
-    m_addStraightLineLength(true),
-    m_addDiffWithStraightLineMean(true),
-    m_addDiffWithStraightLineSigma(false),
-    m_addDTDLWidth(false),
-    m_addMaxFitGapLength(true),
-    m_addRMSLinearFit(true)
+    m_slidingLinearFitWindowLarge(10000)
 {
 }
 
@@ -448,62 +266,45 @@ const pandora::ParticleFlowObject *const pInputPfo)
 
     ClusterList clusterList;
     LArPfoHelper::GetTwoDClusterList(pInputPfo, clusterList);
-    float dTdLWidth(0.f),  diffWithStraightLineMean(0.f), diffWithStraightLineSigma(0.f), maxFitGapLength(0.f), rmsSlidingLinearFit(0.f);
+    float diffWithStraightLineMean(0.f), maxFitGapLength(0.f), rmsSlidingLinearFit(0.f);
 
     for (const Cluster *const pCluster : clusterList)
     {
-        float dTdLWidthCluster(-1.f), straightLineLengthLargeCluster(-1.f), diffWithStraightLineMeanCluster(-1.f), diffWithStraightLineSigmaCluster(-1.f),maxFitGapLengthCluster(-1.f), rmsSlidingLinearFitCluster(-1.f);
+        float straightLineLengthLargeCluster(-1.f), diffWithStraightLineMeanCluster(-1.f), maxFitGapLengthCluster(-1.f), rmsSlidingLinearFitCluster(-1.f);
 
-        this->CalculateVariablesSlidingLinearFit(pCluster, straightLineLengthLargeCluster, diffWithStraightLineMeanCluster, diffWithStraightLineSigmaCluster,dTdLWidthCluster, maxFitGapLengthCluster, rmsSlidingLinearFitCluster);
+        this->CalculateVariablesSlidingLinearFit(pCluster, straightLineLengthLargeCluster, diffWithStraightLineMeanCluster, maxFitGapLengthCluster, rmsSlidingLinearFitCluster);
 
-        if (m_ratioVariables && (straightLineLengthLargeCluster > std::numeric_limits<double>::epsilon()))
+        if (straightLineLengthLargeCluster > std::numeric_limits<double>::epsilon())
         {
             diffWithStraightLineMeanCluster  /= straightLineLengthLargeCluster;
-            diffWithStraightLineSigmaCluster /= straightLineLengthLargeCluster;
-            dTdLWidthCluster                 /= straightLineLengthLargeCluster;
             maxFitGapLengthCluster           /= straightLineLengthLargeCluster;
             rmsSlidingLinearFitCluster       /= straightLineLengthLargeCluster;
         }
 
         diffWithStraightLineMean   += diffWithStraightLineMeanCluster;
-        diffWithStraightLineSigma  += diffWithStraightLineSigmaCluster;
-        dTdLWidth                  += dTdLWidthCluster;
         maxFitGapLength            += maxFitGapLengthCluster;
         rmsSlidingLinearFit        += rmsSlidingLinearFitCluster;
     }
 
-    const int nClusters(clusterList.size());
-    diffWithStraightLineMean   /= nClusters;
-    diffWithStraightLineSigma  /= nClusters;
-    dTdLWidth                  /= nClusters;
-    maxFitGapLength            /= nClusters;
-    rmsSlidingLinearFit        /= nClusters;
+	const float nClusters(static_cast<float>(clusterList.size()));
+	if (nClusters > std::numeric_limits<double>::epsilon())
+	{
+		diffWithStraightLineMean   /= nClusters;
+		maxFitGapLength            /= nClusters;
+		rmsSlidingLinearFit        /= nClusters;
+	}
 
-    if(m_addStraightLineLength)
-    {
-        float lenghtSquare(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
-        featureVector.push_back(std::sqrt(lenghtSquare));
-    }
-    if (m_addDiffWithStraightLineMean)
-        featureVector.push_back(diffWithStraightLineMean);
-
-    if (m_addDiffWithStraightLineSigma)
-        featureVector.push_back(diffWithStraightLineSigma);
-
-    if (m_addDTDLWidth)
-        featureVector.push_back(dTdLWidth);
-
-    if (m_addMaxFitGapLength)
-        featureVector.push_back(maxFitGapLength);
-
-    if (m_addRMSLinearFit)
-        featureVector.push_back(rmsSlidingLinearFit);
+	const float lenghtSquare(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
+	featureVector.push_back(std::sqrt(lenghtSquare));
+	featureVector.push_back(diffWithStraightLineMean);
+	featureVector.push_back(maxFitGapLength);        
+	featureVector.push_back(rmsSlidingLinearFit);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge,
-    float &diffWithStraightLineMean, float &diffWithStraightLineSigma, float &dTdLWidth, float &maxFitGapLength, float &rmsSlidingLinearFit) const
+    float &diffWithStraightLineMean, float &maxFitGapLength, float &rmsSlidingLinearFit) const
 {
     try
     {
@@ -523,17 +324,18 @@ void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandor
 
         for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
         {
-            rmsSlidingLinearFit += mapEntry.second.GetRms();
+			const LayerFitResult layerFitResult(mapEntry.second);
+            rmsSlidingLinearFit += layerFitResult.GetRms();
 
             CartesianVector thisFitPosition(0.f, 0.f, 0.f);
-            slidingFitResult.GetGlobalPosition(mapEntry.second.GetL(), mapEntry.second.GetFitT(), thisFitPosition);
+            slidingFitResult.GetGlobalPosition(layerFitResult.GetL(), layerFitResult.GetFitT(), thisFitPosition);
 
-            LayerFitResultMap::const_iterator iterLarge = slidingFitResultLarge.GetLayerFitResultMap().find(slidingFitResultLarge.GetLayer(mapEntry.second.GetL()));
+            LayerFitResultMap::const_iterator iterLarge = slidingFitResultLarge.GetLayerFitResultMap().find(slidingFitResultLarge.GetLayer(layerFitResult.GetL()));
 
             if (slidingFitResultLarge.GetLayerFitResultMap().end() == iterLarge)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            diffWithStraightLineVector.push_back(static_cast<float>(std::fabs(mapEntry.second.GetFitT() - iterLarge->second.GetFitT())));
+            diffWithStraightLineVector.push_back(static_cast<float>(std::fabs(layerFitResult.GetFitT() - iterLarge->second.GetFitT())));
 
             const float thisGapLength((thisFitPosition - previousFitPosition).GetMagnitude());
             const float minZ(std::min(thisFitPosition.GetZ(), previousFitPosition.GetZ()));
@@ -548,8 +350,8 @@ void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandor
                     maxFitGapLength = correctedGapLength;
             }
 
-            dTdLMin = std::min(dTdLMin, static_cast<float>(mapEntry.second.GetGradient()));
-            dTdLMax = std::max(dTdLMax, static_cast<float>(mapEntry.second.GetGradient()));
+            dTdLMin = std::min(dTdLMin, static_cast<float>(layerFitResult.GetGradient()));
+            dTdLMax = std::max(dTdLMax, static_cast<float>(layerFitResult.GetGradient()));
             previousFitPosition = thisFitPosition;
         }
 
@@ -557,28 +359,17 @@ void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandor
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         diffWithStraightLineMean = 0.f;
-        diffWithStraightLineSigma = 0.f;
 
         for (const float diffWithStraightLine : diffWithStraightLineVector)
             diffWithStraightLineMean += diffWithStraightLine;
 
         diffWithStraightLineMean /= static_cast<float>(diffWithStraightLineVector.size());
 
-        for (const float diffWithStraightLine : diffWithStraightLineVector)
-            diffWithStraightLineSigma += (diffWithStraightLine - diffWithStraightLineMean) * (diffWithStraightLine - diffWithStraightLineMean);
-
-        if (diffWithStraightLineSigma < 0.f)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        diffWithStraightLineSigma = std::sqrt(diffWithStraightLineSigma / static_cast<float>(diffWithStraightLineVector.size()));
-        dTdLWidth = dTdLMax - dTdLMin;
     }
     catch (const StatusCodeException &)
     {
         straightLineLengthLarge = -1.f;
         diffWithStraightLineMean = -1.f;
-        diffWithStraightLineSigma = -1.f;
-        dTdLWidth = -1.f;
         maxFitGapLength = -1.f;
         rmsSlidingLinearFit = -1.f;
     }
@@ -594,27 +385,6 @@ StatusCode ThreeDLinearFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingLinearFitWindowLarge", m_slidingLinearFitWindowLarge));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddStraightLineLength", m_addStraightLineLength));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddDiffWithStraightLineMean", m_addDiffWithStraightLineMean));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddDiffWithStraightLineSigma", m_addDiffWithStraightLineSigma));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddDTDLWidth", m_addDTDLWidth));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddMaxFitGapLength", m_addMaxFitGapLength));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddRMSLinearFit", m_addRMSLinearFit));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RatioVariables", m_ratioVariables));
-
     return STATUS_CODE_SUCCESS;
 }
 
@@ -622,7 +392,6 @@ StatusCode ThreeDLinearFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDVertexDistanceFeatureTool::ThreeDVertexDistanceFeatureTool() :
-    m_ratioVariables(false),
     m_slidingLinearFitWindow(10000)
 {
 }
@@ -646,46 +415,45 @@ void ThreeDVertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &fe
 
     const Vertex *const nuVertex(pVertexList->front());
     //find the particle vertex
-    const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
-    const CartesianVector nuPosition(nuVertex->GetPosition()), pPosition(pVertex->GetPosition());
+	float ratio(-1.f);
+	try
+	{
+		const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
+		const CartesianVector nuPosition(nuVertex->GetPosition()), pfoPosition(pVertex->GetPosition());
 
-    float vertexDistance((nuPosition - pPosition).GetMagnitudeSquared());
-
-    if (m_ratioVariables)
-    {
-        float ratio(-1.f);
-        try
-        {
-            ClusterList clusterList;
-            LArPfoHelper::GetThreeDClusterList(pInputPfo, clusterList);
-            if (1 == clusterList.size())
-            {
-                const Cluster *const pCluster(clusterList.front());
-                const ThreeDSlidingFitResult sliding3DFitResult(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-                const TwoDSlidingFitResult slidingFitResult(sliding3DFitResult.GetFirstFitResult());
-                float straightLineLength = (slidingFitResult.GetGlobalMaxLayerPosition() - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitude();
-                if (straightLineLength > std::numeric_limits<double>::epsilon())
-                    ratio = vertexDistance / straightLineLength;
-            }
-        }
-        catch (const StatusCodeException &)
-        {
-            ratio = -1.f;
-        }
-        featureVector.push_back(ratio);
-    }
-    else
-    {
-        featureVector.push_back(vertexDistance);
-    }
+		float vertexDistance(std::sqrt((nuPosition - pfoPosition).GetMagnitudeSquared()));
+		
+		try
+		{
+			ClusterList clusterList;
+			LArPfoHelper::GetThreeDClusterList(pInputPfo, clusterList);
+			if (1 == clusterList.size())
+			{
+				const Cluster *const pCluster(clusterList.front());
+				const ThreeDSlidingFitResult sliding3DFitResult(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+				const TwoDSlidingFitResult slidingFitResult(sliding3DFitResult.GetFirstFitResult());
+				const float straightLineLength = (slidingFitResult.GetGlobalMaxLayerPosition() - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitude();
+				if (straightLineLength > std::numeric_limits<double>::epsilon())
+					ratio = vertexDistance / straightLineLength;
+				
+			}
+		}
+		catch (const StatusCodeException &)
+		{
+			ratio = -1.f;
+		}
+	}
+	catch (const StatusCodeException &)
+	{
+		ratio = -1.f;
+	}
+	featureVector.push_back(ratio);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RatioVariables", m_ratioVariables));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingLinearFitWindow", m_slidingLinearFitWindow));
@@ -696,13 +464,13 @@ StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHa
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-OpeningAngleFeatureTool::OpeningAngleFeatureTool() 
+ThreeDOpeningAngleFeatureTool::ThreeDOpeningAngleFeatureTool() 
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OpeningAngleFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void ThreeDOpeningAngleFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -712,9 +480,8 @@ void OpeningAngleFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVec
     ClusterList threeDClusterList;
     LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
 
-    CaloHitList threeDCaloHitList; // Might be able to get through LArPfoHelper instead
-    const Cluster *const pThreeDCluster(threeDClusterList.front());
-    pThreeDCluster->GetOrderedCaloHitList().FillCaloHitList(threeDCaloHitList);
+    CaloHitList threeDCaloHitList; 
+	LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
     if (threeDCaloHitList.empty())
         return;
@@ -739,7 +506,7 @@ void OpeningAngleFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const pAlgorithm, CaloHitList threeDCaloHitList, CartesianPointVector &pointVectorStart, CartesianPointVector &pointVectorEnd)
+void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const pAlgorithm, CaloHitList threeDCaloHitList, CartesianPointVector &pointVectorStart, CartesianPointVector &pointVectorEnd)
 {
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
@@ -747,32 +514,25 @@ void OpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const pAlgori
     if (!pVertexList || (pVertexList->size() != 1) || (VERTEX_3D != pVertexList->front()->GetVertexType()))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const Vertex *const pVertex(pVertexList->front());
-    const CartesianVector nuVertex(pVertex->GetPosition().GetX(),pVertex->GetPosition().GetY(),pVertex->GetPosition().GetZ());
+	const CartesianVector nuVertex(pVertexList->front()->GetPosition());
     CaloHitVector threeDCaloHitVector(threeDCaloHitList.begin(), threeDCaloHitList.end());
 
     //order by distance to vertex, so first ones are closer to nuvertex
-    std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), std::bind(ChargeFeatureTool::SortByDistanceToVertex, std::placeholders::_1, std::placeholders::_2, nuVertex));
+   // std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), std::bind(ThreeDChargeFeatureTool::SortByDistanceToVertex, std::placeholders::_1, std::placeholders::_2, nuVertex));
+	std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), ThreeDChargeFeatureTool::VertexComparator(nuVertex));
     CaloHitList orderedCaloHitList(threeDCaloHitVector.begin(),threeDCaloHitVector.end());
-    const int nhits(orderedCaloHitList.size());
+    const unsigned int nhits(orderedCaloHitList.size());
 
     for (const CaloHit *const pCaloHit : orderedCaloHitList)
     {
-        if (pointVectorStart.size()<(nhits/2))//half in start, half in end
-        {
-            pointVectorStart.push_back(pCaloHit->GetPositionVector());
-        }
-        else
-        {
-            pointVectorEnd.push_back(pCaloHit->GetPositionVector());
-        }
+		CartesianPointVector &targetVector((pointVectorStart.size() < (nhits / 2)) ? pointVectorStart : pointVectorEnd); 
+		targetVector.push_back(pCaloHit->GetPositionVector());
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//TODO - use from PCAShowerBuilding, maybe move to Helper?
 
-float OpeningAngleFeatureTool::OpeningAngle(const CartesianVector &principal, const CartesianVector &secondary,
+float ThreeDOpeningAngleFeatureTool::OpeningAngle(const CartesianVector &principal, const CartesianVector &secondary,
     const CartesianVector &eigenValues) const
 {
     const float principalMagnitude(principal.GetMagnitude());
@@ -812,7 +572,7 @@ float OpeningAngleFeatureTool::OpeningAngle(const CartesianVector &principal, co
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode OpeningAngleFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode ThreeDOpeningAngleFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
 }
@@ -820,14 +580,13 @@ StatusCode OpeningAngleFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-PCAFeatureTool::PCAFeatureTool() :
-    m_ratioVariables(true)
+ThreeDPCAFeatureTool::ThreeDPCAFeatureTool()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PCAFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void ThreeDPCAFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
      if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -840,9 +599,8 @@ void PCAFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, cons
         if (threeDClusterList.empty())
             return;
 
-        CaloHitList threeDCaloHitList; // Might be able to get through LArPfoHelper instead
-        const Cluster *const pThreeDCluster(threeDClusterList.front());
-        pThreeDCluster->GetOrderedCaloHitList().FillCaloHitList(threeDCaloHitList);
+		CaloHitList threeDCaloHitList; 
+		LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
         if (threeDCaloHitList.empty())
             return;
@@ -854,65 +612,80 @@ void PCAFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, cons
         LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
         const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
 
-        if (m_ratioVariables)
-        {
-            float pca1(-1.f), pca2(-1.f);
-            if(principalEigenvalue > std::numeric_limits<float>::epsilon())
-            {
-                pca1 = secondaryEigenvalue/principalEigenvalue;
-                pca2 = tertiaryEigenvalue/principalEigenvalue;
-            }
-            featureVector.push_back(pca1);
-            featureVector.push_back(pca2);
-        }
-        else
-        {
-            featureVector.push_back(principalEigenvalue);
-            featureVector.push_back(secondaryEigenvalue);
-            featureVector.push_back(tertiaryEigenvalue);
-        }
+		float pca1(-1.f), pca2(-1.f);
+		if (principalEigenvalue > std::numeric_limits<float>::epsilon())
+		{
+			pca1 = secondaryEigenvalue/principalEigenvalue;
+			pca2 = tertiaryEigenvalue/principalEigenvalue;
+		}
+		featureVector.push_back(pca1);
+		featureVector.push_back(pca2);
+        
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode PCAFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeDPCAFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RatioVariables", m_ratioVariables));
-
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-ChargeFeatureTool::ChargeFeatureTool() :
-    m_ratioVariables(true),
-    m_addTotalCharge(false),
-    m_addChargeSigma(true),
-    m_addChargeIncrements(false),
-    m_addStartCharge(false),
-    m_addEndCharge(true),
+ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :
     m_endChargeFraction(0.1f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge, float &chargeSigma, 
-    float &chargeMean, float &startCharge, float &endCharge, float &incrementCharge, float endChargeFraction)
+/*bool ThreeDChargeFeatureTool::SortByDistanceToVertex(const CaloHit *const left, const CaloHit *const right, const CartesianVector &nuVertex2D)
+{
+    float distanceL((left->GetPositionVector()-nuVertex2D).GetMagnitudeSquared());
+    float distanceR((right->GetPositionVector()-nuVertex2D).GetMagnitudeSquared());
+    return distanceL < distanceR;
+}*/
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDChargeFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+    const pandora::ParticleFlowObject *const pInputPfo)
+{
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+
+    float totalCharge(-1.f), chargeSigma(-1.f), chargeMean(-1.f), endCharge(-1.f);
+    ClusterList pClusterList;
+    LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, pClusterList);
+    if ((!pClusterList.empty()) && (pClusterList.size() == 1))
+    {
+        const Cluster *const pCluster(pClusterList.front());
+        this->CalculateChargeVariables(pAlgorithm, pCluster, totalCharge, chargeSigma, chargeMean, endCharge, m_endChargeFraction);
+    }
+
+	if (chargeMean > std::numeric_limits<double>::epsilon())
+		chargeSigma /= chargeMean;
+
+	if (totalCharge > std::numeric_limits<double>::epsilon())
+		endCharge /= totalCharge;
+ 
+	featureVector.push_back(chargeSigma);
+	featureVector.push_back(endCharge);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge, 
+	float &chargeSigma, float &chargeMean, float &endCharge, float endChargeFraction)
 {
 
-    CaloHitList orderedCaloHitList(ChargeFeatureTool::OrderCaloHitsByDistanceToVertex(pAlgorithm, pCluster));
+    CaloHitList orderedCaloHitList;
+	this->OrderCaloHitsByDistanceToVertex(pAlgorithm, pCluster, orderedCaloHitList);
 
     const int totalHits(pCluster->GetNCaloHits());
     FloatVector chargeVector;
     int hitCounter(0);
     totalCharge = 0.f;
-    startCharge = 0.f;
-    endCharge = 0.f;
-    incrementCharge = 0.f;
-    float previousCharge(0.f);
 
     for (const CaloHit *const pCaloHit : orderedCaloHitList)
     {
@@ -927,20 +700,11 @@ void ChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pAlgorit
         {
             totalCharge    += pCaloHitCharge;
             chargeVector.push_back(pCaloHitCharge);
-
-            if (hitCounter <= std::ceil(totalHits*endChargeFraction)) //ensure at least 1 hit is used
-            {
-                startCharge += pCaloHitCharge;
-            }
+			
             if (hitCounter >= std::floor(totalHits*(1.f-endChargeFraction)))
             {
                 endCharge += pCaloHitCharge;
             }
-
-            if(hitCounter>1)
-                incrementCharge = (pCaloHitCharge-previousCharge)*(pCaloHitCharge-previousCharge);
-
-            previousCharge = pCaloHitCharge;
         }
     }
 
@@ -959,13 +723,11 @@ void ChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pAlgorit
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     chargeSigma = std::sqrt(chargeSigma / static_cast<float>(chargeVector.size()));
-    incrementCharge = std::sqrt(incrementCharge / static_cast<float>(chargeVector.size()));
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CaloHitList ChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster)
+void ThreeDChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, CaloHitList &caloHitList)
 {
     //find the neutrino vertex and sort hits by distance to vertex
     const VertexList *pVertexList = nullptr;
@@ -984,148 +746,10 @@ CaloHitList ChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *
     CaloHitVector clusterCaloHitVector(clusterCaloHitList.begin(), clusterCaloHitList.end());
 
     //TODO: might give problems if vertex in the middle of the cluster ?
-    std::sort(clusterCaloHitVector.begin(), clusterCaloHitVector.end(), std::bind(SortByDistanceToVertex, std::placeholders::_1, std::placeholders::_2, vertexPosition2D));
+   // std::sort(clusterCaloHitVector.begin(), clusterCaloHitVector.end(), std::bind(SortByDistanceToVertex, std::placeholders::_1, std::placeholders::_2, vertexPosition2D));
+	std::sort(clusterCaloHitVector.begin(), clusterCaloHitVector.end(), VertexComparator(vertexPosition2D));
     CaloHitList orderedCaloHitList(clusterCaloHitVector.begin(),clusterCaloHitVector.end());
-
-    return orderedCaloHitList;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ChargeFeatureTool::SortByDistanceToVertex(const CaloHit *const left, const CaloHit *const right, const CartesianVector &nuVertex2D)
-{
-    float distanceL((left->GetPositionVector()-nuVertex2D).GetMagnitude());
-    float distanceR((right->GetPositionVector()-nuVertex2D).GetMagnitude());
-    return distanceL < distanceR;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ChargeFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
-    const pandora::Cluster *const pCluster)
-{
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
-    float totalCharge(-1.f), chargeSigma(-1.f), chargeMean(-1.f), startCharge(-1.f), endCharge(-1.f), incrementCharge(-1.f);
-    ChargeFeatureTool::CalculateChargeVariables(pAlgorithm, pCluster, totalCharge, chargeSigma, chargeMean, startCharge, endCharge, incrementCharge, m_endChargeFraction);
-
-    if (m_ratioVariables)
-    {
-        if (chargeMean > std::numeric_limits<double>::epsilon())
-            chargeSigma /= chargeMean;
-
-        if (endCharge > std::numeric_limits<double>::epsilon())
-            startCharge /= endCharge;
-
-        if (totalCharge > std::numeric_limits<double>::epsilon())
-            endCharge /= totalCharge;
-
-        if (totalCharge > std::numeric_limits<double>::epsilon())
-            incrementCharge /= totalCharge;
-    }
-
-    if (m_addTotalCharge)
-        featureVector.push_back(totalCharge);
-
-    if (m_addChargeSigma)
-        featureVector.push_back(chargeSigma);
-
-    if     (m_addChargeIncrements)
-        featureVector.push_back(incrementCharge);
-
-    if (m_addStartCharge)
-        featureVector.push_back(startCharge);
-
-    if (m_addEndCharge)
-        featureVector.push_back(endCharge);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode ChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddTotalCharge", m_addTotalCharge));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddChargeSigma", m_addChargeSigma));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddChargeIncrements", m_addChargeIncrements));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddStartCharge", m_addStartCharge));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddEndCharge", m_addEndCharge));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EndChargeFraction", m_endChargeFraction));
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :
-    m_ratioVariables(true),
-    m_addTotalCharge(false),
-    m_addChargeSigma(true),
-    m_addChargeIncrements(false),
-    m_addStartCharge(false),
-    m_addEndCharge(true),
-    m_endChargeFraction(0.1f)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDChargeFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
-    const pandora::ParticleFlowObject *const pInputPfo)
-{
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
-    float totalCharge(-1.f), chargeSigma(-1.f), chargeMean(-1.f), startCharge(-1.f), endCharge(-1.f), incrementCharge(-1.f);
-    ClusterList pClusterList;
-    LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, pClusterList);
-    if ((!pClusterList.empty()) && (pClusterList.size() == 1))
-    {
-        const Cluster *const pCluster(pClusterList.front());
-        ChargeFeatureTool::CalculateChargeVariables(pAlgorithm, pCluster, totalCharge, chargeSigma, chargeMean, startCharge, endCharge, incrementCharge, m_endChargeFraction);
-    }
-
-    if (m_ratioVariables)
-    {
-        if (chargeMean > std::numeric_limits<double>::epsilon())
-            chargeSigma /= chargeMean;
-
-        if (endCharge > std::numeric_limits<double>::epsilon())
-            startCharge /= endCharge;
-
-        if (totalCharge > std::numeric_limits<double>::epsilon())
-            endCharge /= totalCharge;
-
-        if (totalCharge > std::numeric_limits<double>::epsilon())
-            incrementCharge /= totalCharge;
-    }
-
-    if (m_addTotalCharge)
-        featureVector.push_back(totalCharge);
-
-    if (m_addChargeSigma)
-        featureVector.push_back(chargeSigma);
-
-    if     (m_addChargeIncrements)
-        featureVector.push_back(incrementCharge);
-
-    if (m_addStartCharge)
-        featureVector.push_back(startCharge);
-
-    if (m_addEndCharge)
-        featureVector.push_back(endCharge);
+	caloHitList = orderedCaloHitList;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1134,21 +758,26 @@ StatusCode ThreeDChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddTotalCharge", m_addTotalCharge));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddChargeSigma", m_addChargeSigma));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddChargeIncrements", m_addChargeIncrements));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddStartCharge", m_addStartCharge));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddEndCharge", m_addEndCharge));
+        "EndChargeFraction", m_endChargeFraction));
 
     return STATUS_CODE_SUCCESS;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------                
+//------------------------------------------------------------------------------------------------------------------------------------------                
+
+ThreeDChargeFeatureTool::VertexComparator::VertexComparator(const CartesianVector vertexPosition2D) :
+	m_neutrinoVertex(vertexPosition2D)
+{		
+}
+                                                                                                                                                            
+//------------------------------------------------------------------------------------------------------------------------------------------                
+                                                                                                                                                            
+bool ThreeDChargeFeatureTool::VertexComparator::operator()(const CaloHit *const left, const CaloHit *const right) const                                                                 
+{    
+	float distanceL((left->GetPositionVector()-m_neutrinoVertex).GetMagnitudeSquared());
+    float distanceR((right->GetPositionVector()-m_neutrinoVertex).GetMagnitudeSquared());
+    return distanceL < distanceR;                                                                                                                              
+}           
 
 } // namespace lar_content

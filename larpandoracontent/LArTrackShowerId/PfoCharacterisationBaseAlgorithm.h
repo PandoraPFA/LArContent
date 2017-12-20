@@ -32,7 +32,7 @@ public:
 protected:
     pandora::StatusCode Run();
 
-    /**
+	/**
      *  @brief  Whether pfo is identified as a track-like object
      *
      *  @param  pPfo address of the relevant pfo
@@ -67,8 +67,7 @@ protected:
 
     bool                    m_updateClusterIds;             ///< Whether to update daughter cluster particle id labels to match pfo id
     bool                    m_postBranchAddition;           ///< Whether to use configuration for shower clusters post branch addition
-    bool                    m_useThreeDInformation;         ///< Whether to use 3D informatin from pfo rather than cluster info and min track-like views
-  
+	bool                    m_useThreeDInformation;         ///< Whether to use PFO and 3D information or clusters for characterisation
     unsigned int            m_minTrackLikeViews;            ///< The minimum number of track-like views to declare a pfo as track-like
 };
 

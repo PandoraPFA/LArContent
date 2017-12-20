@@ -23,7 +23,7 @@ namespace lar_content
 PfoCharacterisationBaseAlgorithm::PfoCharacterisationBaseAlgorithm() :
     m_updateClusterIds(true),
     m_postBranchAddition(false),
-    m_useThreeDInformation(false),
+    m_useThreeDInformation(true),
     m_minTrackLikeViews(2)
 {
 }
@@ -56,8 +56,17 @@ StatusCode PfoCharacterisationBaseAlgorithm::Run()
         for (const ParticleFlowObject *const pPfo : *pPfoList)
         {
             PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
-
-            if (this->IsTrackLike(pPfo))
+	    bool isTrackLike(false);
+	    try
+	    {
+	        isTrackLike = this->IsTrackLike(pPfo);
+	    }
+	    catch (const StatusCodeException &)
+	    {
+		continue;
+	    }
+			
+            if (isTrackLike)
             {
                 pfoMetadata.m_particleId = MU_MINUS;
 
