@@ -24,7 +24,6 @@ public:
      *  @brief  Default constructor
      */
     SvmPfoCharacterisationAlgorithm();
-	
 
 protected:
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
@@ -34,7 +33,7 @@ protected:
     ClusterCharacterisationFeatureTool::FeatureToolVector   m_featureToolVector;         ///< The feature tool map
     PfoCharacterisationFeatureTool::FeatureToolVector       m_featureToolVectorThreeD;   ///< The feature tool map for 3D info
     PfoCharacterisationFeatureTool::FeatureToolVector       m_featureToolVectorNoChargeInfo; ///< The feature tool map for missing W view
-   
+
     SupportVectorMachine    m_supportVectorMachine;              ///< The support vector machine
     SupportVectorMachine    m_supportVectorMachineNoChargeInfo;  ///< The support vector machine for missing W view
 
@@ -50,7 +49,7 @@ protected:
     std::string             m_svmName;                      ///< The name of the svm to find
     std::string             m_svmFileNameNoChargeInfo;      ///< The svm input file for PFOs missing the W view, and thus charge info
     std::string             m_svmNameNoChargeInfo;          ///< The name of the svm to find for PFOs missing the W view, and thus charge info
-	
+
 };
 
 } // namespace lar_content

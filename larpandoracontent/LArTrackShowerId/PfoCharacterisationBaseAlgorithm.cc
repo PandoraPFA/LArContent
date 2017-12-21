@@ -56,16 +56,22 @@ StatusCode PfoCharacterisationBaseAlgorithm::Run()
         for (const ParticleFlowObject *const pPfo : *pPfoList)
         {
             PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
-	    bool isTrackLike(false);
-	    try
-	    {
-	        isTrackLike = this->IsTrackLike(pPfo);
-	    }
-	    catch (const StatusCodeException &)
-	    {
-		continue;
-	    }
-			
+            bool isTrackLike(false);
+            try
+            {
+                if (m_useThreeDInformation)
+                {
+                    isTrackLike = this->IsClearTrack(pPfo);
+                }
+                else
+                {
+                    isTrackLike = this->IsClearTrack3x2D(pPfo);
+                }
+            }
+            catch (const StatusCodeException &)
+            {
+                continue;
+            }
             if (isTrackLike)
             {
                 pfoMetadata.m_particleId = MU_MINUS;
@@ -113,35 +119,26 @@ StatusCode PfoCharacterisationBaseAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool PfoCharacterisationBaseAlgorithm::IsTrackLike(const ParticleFlowObject *const pPfo) const
+bool PfoCharacterisationBaseAlgorithm::IsClearTrack3x2D(const ParticleFlowObject *const pPfo) const
 {
+    ClusterList twoDClusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
 
-    if (m_useThreeDInformation)
+    typedef std::set<pandora::HitType> HitTypeSet;
+    HitTypeSet hitTypeSet;
+
+    unsigned int nTrackLikeViews(0);
+    for (const Cluster *const pCluster : twoDClusterList)
     {
-        return this->IsClearTrack(pPfo);
-    }
-    else
-    {
-        ClusterList twoDClusterList;
-        LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+        if (!hitTypeSet.insert(hitType).second)
+            continue;
 
-        typedef std::set<pandora::HitType> HitTypeSet;
-        HitTypeSet hitTypeSet;
+        if (this->IsClearTrack(pCluster))
+            ++nTrackLikeViews;
 
-        unsigned int nTrackLikeViews(0);
-        for (const Cluster *const pCluster : twoDClusterList)
-        {
-            const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-
-            if (!hitTypeSet.insert(hitType).second)
-                continue;
-
-            if (this->IsClearTrack(pCluster))
-                ++nTrackLikeViews;
-
-            if (nTrackLikeViews >= m_minTrackLikeViews)
-                return true;
-        }
+        if (nTrackLikeViews >= m_minTrackLikeViews)
+            return true;
     }
 
     return false;

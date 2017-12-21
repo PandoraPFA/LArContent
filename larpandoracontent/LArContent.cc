@@ -299,13 +299,13 @@
     d("LArLocalAsymmetryFeature",               LocalAsymmetryFeatureTool)                                                      \
     d("LArRPhiFeature",                         RPhiFeatureTool)                                                                \
     d("LArShowerAsymmetryFeature",              ShowerAsymmetryFeatureTool)                                                     \
-	d("LArTwoDLinearFitFeatureTool",            TwoDLinearFitFeatureTool)                                                       \
-	d("LArThreeDLinearFitFeatureTool",          ThreeDLinearFitFeatureTool)                                                     \
-	d("LArTwoDVertexDistanceFeatureTool",       TwoDVertexDistanceFeatureTool)                                                  \
-	d("LArThreeDVertexDistanceFeatureTool",     ThreeDVertexDistanceFeatureTool)                                                \
-	d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
-	d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
-	d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  
+    d("LArTwoDLinearFitFeatureTool",            TwoDLinearFitFeatureTool)                                                       \
+    d("LArThreeDLinearFitFeatureTool",          ThreeDLinearFitFeatureTool)                                                     \
+    d("LArTwoDVertexDistanceFeatureTool",       TwoDVertexDistanceFeatureTool)                                                  \
+    d("LArThreeDVertexDistanceFeatureTool",     ThreeDVertexDistanceFeatureTool)                                                \
+    d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
+    d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
+    d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)
