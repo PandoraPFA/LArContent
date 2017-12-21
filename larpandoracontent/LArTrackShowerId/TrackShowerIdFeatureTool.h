@@ -194,7 +194,6 @@ private:
     void Divide3DCaloHitList(const pandora::Algorithm *const pAlgorithm, pandora::CaloHitList threeDCaloHitList,
         pandora::CartesianPointVector &pointVectorStart, pandora::CartesianPointVector &pointVectorEnd);
 
-    //static bool SortByDistanceToVertex(const pandora::CaloHit *const left, const pandora::CaloHit *const right, const pandora::CartesianVector &nuVertex);
     float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary, const pandora::CartesianVector &eigenValues) const;
 };
 
@@ -231,42 +230,32 @@ public:
      *  @brief  Default constructor
      */
     ThreeDChargeFeatureTool();
-	
-	
+
 	class VertexComparator
-	{
-	public:
-		/**                                                                                                                                                 
-         *  @brief  Constructor                                                                                                                             
-         */                                                                                                                                                 
-        VertexComparator(const pandora::CartesianVector vertexPosition2D);  
-		                                                                                                                                                    
-        /**                                                                                                                                                 
-         *  @brief  operator <                                                                                                                              
-         *                                                                                                                                                  
-         *  @param  rhs object for comparison                                                                                                               
-         *                                                                                                                                                  
-         *  @return boolean                                                                                                                                 
-         */                                                                                                                                                 
-        bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const; 
-		
-		pandora::CartesianVector   m_neutrinoVertex;    //The neutrino vertex used to sort 
-		
-	};
-    /**
-     *  @brief  Static function deciding the sorting
-     *
-     *  @param  left, the calohit on the left
-     *  @param  right, the calohit on the right
-     *  @param  nuVertex2D, the 2D projection of the position of the neutrino vertex
-     *
-     */
-	//static bool SortByDistanceToVertex(const pandora::CaloHit *const left, const pandora::CaloHit *const right, const pandora::CartesianVector &nuVertex2D);	
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         */
+        VertexComparator(const pandora::CartesianVector vertexPosition2D);
+
+        /**
+		 *  @brief  operator <
+         *
+         *  @param  rhs object for comparison
+         *
+         *  @return boolean
+         */
+        bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
+
+        pandora::CartesianVector   m_neutrinoVertex;    //The neutrino vertex used to sort
+
+    };
 
     void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
-	/**
+    /**
      *  @brief  Calculation of the charge variables
      *
      *  @param  pAlgorithm, the algorithm
@@ -277,20 +266,20 @@ private:
      *  @param  startCharge, to receive the charge in the initial 10% hits
      *  @param  endCharge, to receive the charge in the last 10% hits
      */
-	void CalculateChargeVariables(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge, float &chargeSigma,
+    void CalculateChargeVariables(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge, float &chargeSigma,
         float &chargeMean, float &endCharge, float endChargeFraction);
-		
-	/**
+
+    /**
      *  @brief  Function to order the calo hit list by distance to neutrino vertex
      *
      *  @param  pAlgorithm, the algorithm
      *  @param  pCluster the cluster we are characterizing
-	 *  @param  caloHitList to receive the ordered calo hit list
+     *  @param  caloHitList to receive the ordered calo hit list
      *
      */
-	void OrderCaloHitsByDistanceToVertex(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
-    
-	pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    void OrderCaloHitsByDistanceToVertex(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float           m_endChargeFraction;           ///< Fraction of hits that will be considered to calculate end charge (default 10%)
 };
