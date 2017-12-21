@@ -29,7 +29,7 @@ SvmPfoCharacterisationAlgorithm::SvmPfoCharacterisationAlgorithm() :
     m_useThreeDInformation(true),
     m_minProbabilityCut(0.5f),
     m_minCaloHitsCut(5),
-	m_filePathEnvironmentVariable("FW_SEARCH_PATH")
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
 
@@ -71,22 +71,21 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
 
 bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const
 {
-	
-	if (!LArPfoHelper::IsThreeD(pPfo))
-		return (pPfo->GetParticleId() == MU_MINUS);
-	
+
+    if (!LArPfoHelper::IsThreeD(pPfo))
+        return (pPfo->GetParticleId() == MU_MINUS);
+
     //charge related features are only calculated using hits in W view
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
-
 
     PfoCharacterisationFeatureTool::FeatureToolVector featureToolVector(wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
     const SupportVectorMachine::DoubleVector featureVector(LArSvmHelper::CalculateFeatures(featureToolVector, this, pPfo));
 
     if (m_trainingSetMode)
     {
-		bool isTrueTrack(false);
-		bool isMainMCParticleSet(false);
+        bool isTrueTrack(false);
+        bool isMainMCParticleSet(false);
 
         try
         {
@@ -98,12 +97,11 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 
         if (isMainMCParticleSet)
         {
-			std::string outputFile;
+            std::string outputFile;
             outputFile.append(m_trainingOutputFile);
             const std::string end=((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
             outputFile.append(end);
             LArSvmHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
-			
         }
         return isTrueTrack;
     }// training mode
@@ -116,7 +114,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     {
         return (m_minProbabilityCut <= LArSvmHelper::CalculateProbability((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector));
     }
- 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -131,9 +128,9 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseThreeDInformation", m_useThreeDInformation));
-		
-	PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-		"FilePathEnvironmentVariable", m_filePathEnvironmentVariable));		
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SvmFileName", m_svmFileName));
@@ -167,20 +164,20 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
             std::cout << "SvmPfoCharacterisationAlgorithm: SvmFileName and SvmName must be set if in classification mode " << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
         }
-		
-		const std::string fullSvmFileName(LArFileHelper::FindFileInPath(m_svmFileName, m_filePathEnvironmentVariable));
+
+        const std::string fullSvmFileName(LArFileHelper::FindFileInPath(m_svmFileName, m_filePathEnvironmentVariable));
         m_supportVectorMachine.Initialize(fullSvmFileName, m_svmName);
-		
+
         if (m_useThreeDInformation)
-		{
-			if (m_svmFileNameNoChargeInfo.empty() || m_svmNameNoChargeInfo.empty())
-			{
-				std::cout << "SvmPfoCharacterisationAlgorithm: SvmFileName and SvmName must be set if in classification mode for no charge info in 3D mode " << std::endl;
-				return STATUS_CODE_INVALID_PARAMETER;
-			}
+        {
+            if (m_svmFileNameNoChargeInfo.empty() || m_svmNameNoChargeInfo.empty())
+            {
+                std::cout << "SvmPfoCharacterisationAlgorithm: SvmFileName and SvmName must be set if in classification mode for no charge info in 3D mode " << std::endl;
+                return STATUS_CODE_INVALID_PARAMETER;
+            }
             const std::string fullSvmFileNameNoChargeInfo(LArFileHelper::FindFileInPath(m_svmFileNameNoChargeInfo, m_filePathEnvironmentVariable));
-			m_supportVectorMachineNoChargeInfo.Initialize(fullSvmFileNameNoChargeInfo, m_svmNameNoChargeInfo);
-		}
+            m_supportVectorMachineNoChargeInfo.Initialize(fullSvmFileNameNoChargeInfo, m_svmNameNoChargeInfo);
+        }
     }
 
     AlgorithmToolVector algorithmToolVector;
@@ -200,7 +197,7 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
     }
-	
+
     return PfoCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
