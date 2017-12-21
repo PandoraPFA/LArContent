@@ -19,10 +19,9 @@ namespace lar_content
 {
 
 ThreeDShowersAlgorithm::ThreeDShowersAlgorithm() :
-    m_nMaxTensorToolRepeats(5000),
+    m_nMaxTensorToolRepeats(1000),
     m_slidingFitWindow(20),
     m_ignoreUnavailableClusters(true),
-    m_ignoreFixedTracks(true),
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f),
     m_minShowerMatchedFraction(0.2f),
@@ -78,9 +77,6 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInput
         const Cluster *const pCluster = *iter;
 
         if (m_ignoreUnavailableClusters && !pCluster->IsAvailable())
-            continue;
-
-        if (m_ignoreFixedTracks && (MU_MINUS == std::abs(pCluster->GetParticleId())))
             continue;
 
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
@@ -407,9 +403,6 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IgnoreUnavailableClusters", m_ignoreUnavailableClusters));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IgnoreFixedTracks", m_ignoreFixedTracks));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));

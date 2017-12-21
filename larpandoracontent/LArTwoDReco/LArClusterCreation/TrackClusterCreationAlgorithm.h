@@ -22,15 +22,6 @@ class TrackClusterCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     TrackClusterCreationAlgorithm();
@@ -211,14 +202,6 @@ private:
     float               m_closeSeparationSquared;       ///< Length scale (squared) for close hit separation
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *TrackClusterCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new TrackClusterCreationAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrackClusterCreationAlgorithm::HitAssociation::HitAssociation(const pandora::CaloHit *const pPrimaryTarget, const float primaryDistanceSquared) :

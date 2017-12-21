@@ -17,9 +17,10 @@ using namespace pandora;
 namespace lar_content
 {
 
-void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-    const CartesianVector &vtx3D, const CartesianVector &end3D, CartesianVector &position3D, float &chiSquared) const
+void MultiValuedLongitudinalTrackHitsTool::GetLongitudinalTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, const CartesianVector &vtx3D,
+    const CartesianVector &end3D, ProtoHit &protoHit) const
 {
+    const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
     const HitType hitType(pCaloHit2D->GetHitType());
     const HitType hitType1((TPC_VIEW_U == hitType) ? TPC_VIEW_V : (TPC_VIEW_V == hitType) ? TPC_VIEW_W : TPC_VIEW_U);
     const HitType hitType2((TPC_VIEW_U == hitType) ? TPC_VIEW_W : (TPC_VIEW_V == hitType) ? TPC_VIEW_U : TPC_VIEW_V);
@@ -74,7 +75,7 @@ void MultiValuedLongitudinalTrackHitsTool::GetThreeDPosition(const CaloHit *cons
     if (nViews < m_minViews)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    this->GetBestPosition3D(pCaloHit2D, hitType1, hitType2, fitPositionList1, fitPositionList2, position3D, chiSquared);  
+    this->GetBestPosition3D(hitType1, hitType2, fitPositionList1, fitPositionList2, protoHit);
 }
 
 } // namespace lar_content

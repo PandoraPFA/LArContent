@@ -28,7 +28,8 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_chiSquaredCut(2.f),
     m_enableEndpointCandidates(true),
     m_maxEndpointXDiscrepancy(4.f),
-    m_enableCrossingCandidates(true),
+    m_enableCrossingCandidates(false),
+    m_nMaxCrossingCandidates(500),
     m_maxCrossingXDiscrepancy(0.5f),
     m_extrapolationNSteps(200),
     m_extrapolationStepSize(0.1f),
@@ -205,9 +206,10 @@ void CandidateVertexCreationAlgorithm::CreateCrossingCandidates(const ClusterVec
     this->FindCrossingPoints(clusterVectorV, crossingsV);
     this->FindCrossingPoints(clusterVectorW, crossingsW);
 
-    this->CreateCrossingVertices(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V);
-    this->CreateCrossingVertices(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W);
-    this->CreateCrossingVertices(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W);
+    unsigned int nCrossingCandidates(0);
+    this->CreateCrossingVertices(crossingsU, crossingsV, TPC_VIEW_U, TPC_VIEW_V, nCrossingCandidates);
+    this->CreateCrossingVertices(crossingsU, crossingsW, TPC_VIEW_U, TPC_VIEW_W, nCrossingCandidates);
+    this->CreateCrossingVertices(crossingsV, crossingsW, TPC_VIEW_V, TPC_VIEW_W, nCrossingCandidates);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -309,12 +311,16 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointVe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CandidateVertexCreationAlgorithm::CreateCrossingVertices(const CartesianPointVector &crossingPoints1, const CartesianPointVector &crossingPoints2,
-    const HitType hitType1, const HitType hitType2) const
+    const HitType hitType1, const HitType hitType2, unsigned int &nCrossingCandidates) const
 {
+
     for (const CartesianVector &position1: crossingPoints1)
     {
         for (const CartesianVector &position2: crossingPoints2)
         {
+            if (nCrossingCandidates > m_nMaxCrossingCandidates)
+                return;
+
             if (std::fabs(position1.GetX() - position2.GetX()) > m_maxCrossingXDiscrepancy)
                 continue;
 
@@ -332,6 +338,7 @@ void CandidateVertexCreationAlgorithm::CreateCrossingVertices(const CartesianPoi
 
             const Vertex *pVertex(NULL);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+            ++nCrossingCandidates;
         }
     }
 }
@@ -401,6 +408,9 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "EnableCrossingCandidates", m_enableCrossingCandidates));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NMaxCrossingCandidates", m_nMaxCrossingCandidates));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxCrossingXDiscrepancy", m_maxCrossingXDiscrepancy));

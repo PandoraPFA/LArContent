@@ -20,15 +20,6 @@ class NeutrinoCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     NeutrinoCreationAlgorithm();
@@ -55,13 +46,6 @@ private:
 
     bool            m_forceSingleEmptyNeutrino;     ///< Whether to force creation of a single neutrino, with no vertex, regardless of number of input vertices
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *NeutrinoCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new NeutrinoCreationAlgorithm();
-}
 
 } // namespace lar_content
 

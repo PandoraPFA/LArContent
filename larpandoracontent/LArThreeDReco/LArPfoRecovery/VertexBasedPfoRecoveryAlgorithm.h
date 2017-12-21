@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArPfoRecovery/VertexBasedPfoRecoveryAlgorithm
+ *  @file   larpandoracontent/LArThreeDReco/LArPfoRecovery/VertexBasedPfoRecoveryAlgorithm.h
  *
  *  @brief  Header file for the vertex-based particle recovery algorithm
  *
@@ -22,15 +22,6 @@ namespace lar_content
 class VertexBasedPfoRecoveryAlgorithm : public pandora::Algorithm
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
     /**
      *  @brief  Default constructor
      */
@@ -221,13 +212,6 @@ private:
     float                 m_twoViewChi2Cut;               ///<
     float                 m_threeViewChi2Cut;             ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *VertexBasedPfoRecoveryAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new VertexBasedPfoRecoveryAlgorithm();
-}
 
 } // namespace lar_content
 

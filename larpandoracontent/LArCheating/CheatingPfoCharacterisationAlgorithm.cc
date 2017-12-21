@@ -18,43 +18,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-StatusCode CheatingPfoCharacterisationAlgorithm::Run()
-{
-    for (const std::string &pfoListName : m_inputPfoListNames)
-    {
-        const PfoList *pPfoList(nullptr);
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, pfoListName, pPfoList));
-
-        if (!pPfoList || pPfoList->empty())
-        {
-            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "CheatingPfoCharacterisationAlgorithm: unable to find pfo list " << pfoListName << std::endl;
-
-            continue;
-        }
-
-        for (const ParticleFlowObject *const pPfo : *pPfoList)
-        {
-            if (this->IsClearTrack(pPfo))
-            {
-                PandoraContentApi::ParticleFlowObject::Metadata metadata;
-                metadata.m_particleId = MU_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
-            }
-            else
-            {
-                PandoraContentApi::ParticleFlowObject::Metadata metadata;
-                metadata.m_particleId = E_MINUS;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
-            }
-        }
-    }
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const pPfo) const
 {
     CaloHitList caloHitList;
@@ -91,17 +54,14 @@ bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject
     if (!pBestMCParticle)
         return false;
 
-    const int absParticleId(std::abs(pBestMCParticle->GetParticleId()));
-    return ((MU_MINUS == absParticleId) || (PROTON == absParticleId) || (PI_PLUS == absParticleId));
+    return ((PHOTON != pBestMCParticle->GetParticleId()) && (E_MINUS != std::abs(pBestMCParticle->GetParticleId())));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const /*pCluster*/) const
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
-
-    return STATUS_CODE_SUCCESS;
+    throw StatusCodeException(STATUS_CODE_FAILURE);
 }
 
 } // namespace lar_content

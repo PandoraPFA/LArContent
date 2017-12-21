@@ -285,6 +285,9 @@ NeutrinoHierarchyAlgorithm::PfoInfo::PfoInfo(const pandora::ParticleFlowObject *
 
     m_pCluster3D = *(clusterList3D.begin());
     m_pSlidingFitResult3D = new ThreeDSlidingFitResult(m_pCluster3D, halfWindowLayers, layerPitch);
+
+    if (m_pSlidingFitResult3D->GetMinLayer() >= m_pSlidingFitResult3D->GetMaxLayer())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

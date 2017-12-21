@@ -25,15 +25,6 @@ class BoundedClusterMopUpAlgorithm : public ClusterMopUpBaseAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     BoundedClusterMopUpAlgorithm();
@@ -92,13 +83,6 @@ private:
     float           m_showerEdgeMultiplier;         ///< Artificially tune width of shower envelope so as to make it more/less inclusive
     float           m_minBoundedFraction;           ///< The minimum cluster bounded fraction for merging
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *BoundedClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new BoundedClusterMopUpAlgorithm();
-}
 
 } // namespace lar_content
 

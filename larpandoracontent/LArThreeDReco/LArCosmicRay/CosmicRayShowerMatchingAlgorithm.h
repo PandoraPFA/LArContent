@@ -16,18 +16,9 @@ namespace lar_content
 /**
  *  @brief  CosmicRayShowerMatchingAlgorithm class
  */
-class CosmicRayShowerMatchingAlgorithm : CosmicRayBaseMatchingAlgorithm
+class CosmicRayShowerMatchingAlgorithm : public CosmicRayBaseMatchingAlgorithm
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
     /**
      *  @brief  Default constructor
      */
@@ -48,13 +39,6 @@ private:
     float          m_minXOverlapFraction;          ///< requirement on minimum X overlap fraction for associated clusters
     float          m_pseudoChi2Cut;                ///< The selection cut on the matched chi2
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CosmicRayShowerMatchingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CosmicRayShowerMatchingAlgorithm();
-}
 
 } // namespace lar_content
 

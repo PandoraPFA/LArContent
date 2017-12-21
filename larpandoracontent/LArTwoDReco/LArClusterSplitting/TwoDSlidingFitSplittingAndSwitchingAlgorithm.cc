@@ -11,8 +11,6 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
-
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitSplittingAndSwitchingAlgorithm.h"
 
 using namespace pandora;

@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
 
@@ -18,63 +18,39 @@ using namespace pandora;
 namespace lar_content
 {
 
+CheatingCosmicRayIdentificationAlg::CheatingCosmicRayIdentificationAlg() :
+    m_maxNeutrinoFraction(0.5f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CheatingCosmicRayIdentificationAlg::Run()
 {
-    const PfoList *pPfoList = NULL;
+    const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
-    if (NULL == pPfoList)
+    if (!pPfoList)
     {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             std::cout << "CheatingCosmicRayIdentificationAlg: pfo list " << m_inputPfoListName << " unavailable." << std::endl;
+
         return STATUS_CODE_SUCCESS;
     }
 
     PfoList outputPfoList, outputDaughterPfoList;
 
-    for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
+    for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
-        const ParticleFlowObject *const pPfo = *iter;
+        if (!pPfo->GetParentPfoList().empty())
+            continue;
 
-        bool isCosmicRay(false);
-        const ClusterList &clusterList(pPfo->GetClusterList());
+        PfoList downstreamPfos;
+        LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
+        const float neutrinoFraction(LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
 
-        for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
-        {
-            const Cluster *const pCluster = *cIter;
-
-            if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
-                continue;
-
-            try
-            {
-                const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-
-                if (!LArMCParticleHelper::GetParentNeutrinoId(pMCParticle))
-                    isCosmicRay = true;
-            }
-            catch (StatusCodeException &)
-            {
-                isCosmicRay = false;
-                break;
-            }
-        }
-
-        if (isCosmicRay)
-        {
+        if (neutrinoFraction < m_maxNeutrinoFraction)
             outputPfoList.push_back(pPfo);
-            const PfoList &daughterPfoList(pPfo->GetDaughterPfoList());
-
-            for (PfoList::const_iterator dIter = daughterPfoList.begin(), dIterEnd = daughterPfoList.end(); dIter != dIterEnd; ++dIter)
-            {
-                const ParticleFlowObject *const pDaughterPfo = *dIter;
-
-                if ((outputPfoList.end() != std::find(outputPfoList.begin(), outputPfoList.end(), pDaughterPfo)) || !pDaughterPfo->GetDaughterPfoList().empty())
-                    throw StatusCodeException(STATUS_CODE_FAILURE);
-
-                outputDaughterPfoList.push_back(pDaughterPfo);
-            }
-        }
     }
 
     if (!outputPfoList.empty())
@@ -92,8 +68,11 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
 StatusCode CheatingCosmicRayIdentificationAlg::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputPfoListName", m_inputPfoListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputPfoListName", m_outputPfoListName));
 
     m_inputDaughterPfoListName = m_inputPfoListName;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -102,6 +81,9 @@ StatusCode CheatingCosmicRayIdentificationAlg::ReadSettings(const TiXmlHandle xm
     m_outputDaughterPfoListName = m_outputPfoListName;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OutputDaughterPfoListName", m_outputDaughterPfoListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxNeutrinoFraction", m_maxNeutrinoFraction));
 
     return STATUS_CODE_SUCCESS;
 }

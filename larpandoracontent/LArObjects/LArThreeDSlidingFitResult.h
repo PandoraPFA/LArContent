@@ -26,11 +26,12 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  pCluster address of the candidate cluster
+     *  @param  pT describing the positions to be fitted
      *  @param  slidingFitWindow the sliding fit window
      *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
      */
-    ThreeDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
+    template <typename T>
+    ThreeDSlidingFitResult(const T *const pT, const unsigned int slidingFitWindow, const float slidingFitLayerPitch);
 
     /**
      *  @brief  Get the address of the cluster
@@ -133,26 +134,6 @@ public:
     float GetFitRms(const float rL) const;
 
     /**
-     *  @brief  Get global fit position for a given longitudinal coordinate
-     *
-     *  @param  rL the longitudinal coordinate
-     *  @param  position the fitted position at these coordinates
-     * 
-     *  @return status code, faster than throwing in regular use-cases
-     */
-    pandora::StatusCode GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
-
-    /**
-     *  @brief  Get global fit direction for a given longitudinal coordinate
-     *
-     *  @param  rL the longitudinal coordinate
-     *  @param  direction the fitted direction at these coordinates
-     * 
-     *  @return status code, faster than throwing in regular use-cases
-     */
-    pandora::StatusCode GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
-
-    /**
      *  @brief  Get longitudinal projection onto primary axis
      *
      *  @param  position the input coordinates
@@ -162,22 +143,24 @@ public:
     float GetLongitudinalDisplacement(const pandora::CartesianVector &position) const;
 
     /**
-     *  @brief  Calculate the position and direction of the primary axis
+     *  @brief  Get global fit position for a given longitudinal coordinate
      *
-     *  @param  pCluster the address of the input cluster
+     *  @param  rL the longitudinal coordinate
+     *  @param  position the fitted position at these coordinates
      *
-     *  @return pandora::TrackState object containing the position and direction
+     *  @return status code, faster than throwing in regular use-cases
      */
-    static pandora::TrackState GetPrimaryAxis(const pandora::Cluster *const pCluster);
+    pandora::StatusCode GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
 
     /**
-     *  @brief  Generate a seed vector to be used in calculating the orthogonal axes
+     *  @brief  Get global fit direction for a given longitudinal coordinate
      *
-     *  @param  axisDirection  the primary axis
+     *  @param  rL the longitudinal coordinate
+     *  @param  direction the fitted direction at these coordinates
      *
-     *  @return the seed direction vector
+     *  @return status code, faster than throwing in regular use-cases
      */
-    static pandora::CartesianVector GetSeedDirection(const pandora::CartesianVector &axisDirection);
+    pandora::StatusCode GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
 
 private:
     /**
@@ -199,7 +182,35 @@ private:
      */
     void GetGlobalDirection(const float dTdL1, const float dTdL2, pandora::CartesianVector &direction) const;
 
-    const pandora::Cluster           *m_pCluster;               ///< The address of the cluster
+    /**
+     *  @brief  Calculate the position and direction of the primary axis
+     *
+     *  @param  pCluster the address of the input cluster
+     *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
+     *
+     *  @return pandora::TrackState object containing the position and direction
+     */
+    static pandora::TrackState GetPrimaryAxis(const pandora::Cluster *const pCluster, const float slidingFitLayerPitch);
+
+    /**
+     *  @brief  Calculate the position and direction of the primary axis
+     *
+     *  @param  pPointVector the address of the input point vector
+     *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
+     *
+     *  @return pandora::TrackState object containing the position and direction
+     */
+    static pandora::TrackState GetPrimaryAxis(const pandora::CartesianPointVector *const pPointVector, const float slidingFitLayerPitch);
+
+    /**
+     *  @brief  Generate a seed vector to be used in calculating the orthogonal axes
+     *
+     *  @param  axisDirection  the primary axis
+     *
+     *  @return the seed direction vector
+     */
+    static pandora::CartesianVector GetSeedDirection(const pandora::CartesianVector &axisDirection);
+
     const pandora::TrackState         m_primaryAxis;            ///< The primary axis position and direction
     const pandora::CartesianVector    m_axisIntercept;          ///< The axis intercept position
     const pandora::CartesianVector    m_axisDirection;          ///< The axis direction vector
@@ -220,13 +231,6 @@ typedef std::vector<ThreeDSlidingFitResult> ThreeDSlidingFitResultList;
 typedef std::unordered_map<const pandora::Cluster*, ThreeDSlidingFitResult> ThreeDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::Cluster *ThreeDSlidingFitResult::GetCluster() const
-{
-    return m_pCluster;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::CartesianVector &ThreeDSlidingFitResult::GetAxisIntercept() const

@@ -19,7 +19,8 @@ namespace lar_content
 {
 
 ThreeDTransverseTracksAlgorithm::ThreeDTransverseTracksAlgorithm() :
-    m_nMaxTensorToolRepeats(5000),
+    m_nMaxTensorToolRepeats(1000),
+    m_maxFitSegmentIndex(50),
     m_pseudoChi2Cut(3.f),
     m_minSegmentMatchedFraction(0.1f),
     m_minSegmentMatchedPoints(3),
@@ -206,6 +207,11 @@ void ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTenso
         }
     }
 
+    // ATTN Protect against longitudinal tracks winding back and forth; can cause large number of memory allocations
+    maxIndexU = std::min(m_maxFitSegmentIndex, maxIndexU);
+    maxIndexV = std::min(m_maxFitSegmentIndex, maxIndexV);
+    maxIndexW = std::min(m_maxFitSegmentIndex, maxIndexW);
+
     FitSegmentTensor fitSegmentSumTensor;
     for (unsigned int indexU = 0; indexU <= maxIndexU; ++indexU)
     {
@@ -320,6 +326,9 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxFitSegmentIndex", m_maxFitSegmentIndex));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));

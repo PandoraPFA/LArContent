@@ -18,43 +18,31 @@ namespace lar_content
  */
 class CheatingCosmicRayShowerMatchingAlg : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    /**
+     *  @brief  Get the list of candidate clusters for matching with existing pfos
+     *
+     *  @param  candidateClusterList to receive the list of candidate clusters
+     */
+    void GetCandidateClusters(pandora::ClusterList &candidateClusterList) const;
 
     /**
      *  @brief  Perform cosmic ray shower matching for a specific cluster in a pfo
-     * 
-     *  @param  clusterListNames the list of cluster list names
+     *
+     *  @param  pPfo the pfo of interest
      *  @param  pPfoCluster the pfo cluster of interest
-     *  @param  pPfoList the address of the list containing the cosmic ray pfos
+     *  @param  candidateClusterList the list of candidate clusters
      */
-    pandora::StatusCode CosmicRayShowerMatching(const pandora::StringVector &clusterListNames, const pandora::Cluster *const pPfoCluster,
-        const pandora::ParticleFlowObject *const pPfo) const;
+    void CosmicRayShowerMatching(const pandora::ParticleFlowObject *const pPfo, const pandora::Cluster *const pPfoCluster,
+        const pandora::ClusterList &candidateClusterList) const;
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string             m_inputPfoListName;           ///< The input pfo list name
-
-    pandora::StringVector   m_inputClusterListNamesU;     ///< The input cluster list names for the u view
-    pandora::StringVector   m_inputClusterListNamesV;     ///< The input cluster list names for the v view
-    pandora::StringVector   m_inputClusterListNamesW;     ///< The input cluster list names for the w view
+    pandora::StringVector   m_inputClusterListNames;      ///< The input cluster list names
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingCosmicRayShowerMatchingAlg::Factory::CreateAlgorithm() const
-{
-    return new CheatingCosmicRayShowerMatchingAlg();
-}
 
 } // namespace lar_content
 

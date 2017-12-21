@@ -21,11 +21,12 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const Cluster *const pCluster, const unsigned int slidingFitWindow,
-        const float slidingFitLayerPitch, const float showerEdgeMultiplier) :
-    m_showerFitResult(TwoDSlidingFitResult(pCluster, slidingFitWindow, slidingFitLayerPitch)),
-    m_negativeEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(m_showerFitResult, NEGATIVE_SHOWER_EDGE, showerEdgeMultiplier)),
-    m_positiveEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(m_showerFitResult, POSITIVE_SHOWER_EDGE, showerEdgeMultiplier))
+template <typename T>
+TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const T *const pT, const unsigned int slidingFitWindow, const float slidingFitLayerPitch,
+        const float showerEdgeMultiplier) :
+    m_showerFitResult(TwoDSlidingFitResult(pT, slidingFitWindow, slidingFitLayerPitch)),
+    m_negativeEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(pT, m_showerFitResult, NEGATIVE_SHOWER_EDGE, showerEdgeMultiplier)),
+    m_positiveEdgeFitResult(TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(pT, m_showerFitResult, POSITIVE_SHOWER_EDGE, showerEdgeMultiplier))
 {
 }
 
@@ -85,16 +86,23 @@ void TwoDSlidingShowerFitResult::GetShowerEdges(const float x, const bool widenI
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge,
-    const float showerEdgeMultiplier)
+TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const Cluster *const pCluster, const TwoDSlidingFitResult &fullShowerFit,
+    const ShowerEdge showerEdge, const float showerEdgeMultiplier)
+{
+    CartesianPointVector pointVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+    return TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(&pointVector, fullShowerFit, showerEdge, showerEdgeMultiplier);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const CartesianPointVector *const pPointVector,
+    const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge, const float showerEdgeMultiplier)
 {
     // Examine all possible fit contributions
     FitCoordinateMap fitCoordinateMap;
 
-    CartesianPointVector hitPositionVector;
-    LArClusterHelper::GetCoordinateVector(fullShowerFit.GetCluster(), hitPositionVector);
-
-    for (const CartesianVector &hitPosition : hitPositionVector)
+    for (const CartesianVector &hitPosition : *pPointVector)
     {
         float rL(0.f), rT(0.f);
         fullShowerFit.GetLocalPosition(hitPosition, rL, rT);
@@ -140,8 +148,14 @@ TwoDSlidingFitResult TwoDSlidingShowerFitResult::LArTwoDShowerEdgeFit(const TwoD
             layerFitContributionMap[mapEntry.first].AddPoint(bestFitCoordinate.first, bestFitCoordinate.second);
     }
 
-    return TwoDSlidingFitResult(fullShowerFit.GetCluster(), fullShowerFit.GetLayerFitHalfWindow(), fullShowerFit.GetLayerPitch(),
-        fullShowerFit.GetAxisIntercept(), fullShowerFit.GetAxisDirection(), fullShowerFit.GetOrthoDirection(), layerFitContributionMap);
+    return TwoDSlidingFitResult(fullShowerFit.GetLayerFitHalfWindow(), fullShowerFit.GetLayerPitch(), fullShowerFit.GetAxisIntercept(),
+        fullShowerFit.GetAxisDirection(), fullShowerFit.GetOrthoDirection(), layerFitContributionMap);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const pandora::Cluster *const, const unsigned int, const float, const float);
+template TwoDSlidingShowerFitResult::TwoDSlidingShowerFitResult(const pandora::CartesianPointVector *const, const unsigned int, const float, const float);
 
 } // namespace lar_content

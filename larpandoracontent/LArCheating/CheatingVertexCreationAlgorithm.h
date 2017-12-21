@@ -20,15 +20,6 @@ class CheatingVertexCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CheatingVertexCreationAlgorithm();
@@ -39,14 +30,8 @@ private:
 
     std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
     bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
+    float           m_vertexXCorrection;            ///< The vertex x correction, added to reported mc neutrino endpoint x value, in cm
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingVertexCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CheatingVertexCreationAlgorithm();
-}
 
 } // namespace lar_content
 

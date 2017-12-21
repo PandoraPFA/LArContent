@@ -18,16 +18,6 @@ namespace lar_content
  */
 class ListDeletionAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -36,13 +26,6 @@ private:
     pandora::StringVector   m_clusterListNames;     ///< The list of cluster list names
     pandora::StringVector   m_vertexListNames;      ///< The list of vertex list names
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ListDeletionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ListDeletionAlgorithm();
-}
 
 } // namespace lar_content
 

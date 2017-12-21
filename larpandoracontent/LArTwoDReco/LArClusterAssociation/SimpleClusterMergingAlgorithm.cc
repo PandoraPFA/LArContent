@@ -18,7 +18,7 @@ namespace lar_content
 {
 
 SimpleClusterMergingAlgorithm::SimpleClusterMergingAlgorithm() :
-    m_minCaloHitsPerCluster(10),
+    m_minCaloHitsPerCluster(5),
     m_maxClusterSeparation(2.5f)
 {
 }

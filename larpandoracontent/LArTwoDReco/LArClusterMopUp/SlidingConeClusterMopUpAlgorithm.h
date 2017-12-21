@@ -8,7 +8,7 @@
 #ifndef LAR_SLIDING_CONE_CLUSTER_MOP_UP_ALGORITHM_H
 #define LAR_SLIDING_CONE_CLUSTER_MOP_UP_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
+#include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -21,15 +21,6 @@ namespace lar_content
 class SlidingConeClusterMopUpAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
     /**
      *  @brief  Default constructor
      */
@@ -153,14 +144,6 @@ private:
     float                   m_coneBoundedFraction;          ///< The minimum cluster bounded fraction for association
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SlidingConeClusterMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new SlidingConeClusterMopUpAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction, const float meanRT) :

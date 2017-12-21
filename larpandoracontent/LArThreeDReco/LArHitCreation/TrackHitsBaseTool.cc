@@ -12,8 +12,6 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
-
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/TrackHitsBaseTool.h"
 
@@ -24,15 +22,14 @@ namespace lar_content
 
 TrackHitsBaseTool::TrackHitsBaseTool() :
     m_minViews(2),
-    m_slidingFitWindow(20),
-    m_chiSquaredCut(5.f)
+    m_slidingFitWindow(20)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo, const CaloHitVector &inputTwoDHits,
-    CaloHitVector &newThreeDHits)
+void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const ParticleFlowObject *const pPfo,
+    const CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -40,15 +37,15 @@ void TrackHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const 
     try
     {
         if (!LArPfoHelper::IsTrack(pPfo))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+            return;
 
         MatchedSlidingFitMap matchedSlidingFitMap;
         this->BuildSlidingFitMap(pPfo, matchedSlidingFitMap);
 
         if (matchedSlidingFitMap.size() < 2)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+            return;
 
-        this->CreateThreeDHits(pAlgorithm, inputTwoDHits, matchedSlidingFitMap, newThreeDHits);
+        this->GetTrackHits3D(inputTwoDHits, matchedSlidingFitMap, protoHitVector);
     }
     catch (StatusCodeException &)
     {
@@ -100,9 +97,6 @@ StatusCode TrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ChiSquaredCut", m_chiSquaredCut));
 
     return HitCreationBaseTool::ReadSettings(xmlHandle);
 }

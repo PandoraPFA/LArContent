@@ -29,15 +29,6 @@ class ThreeDShowersAlgorithm : public ThreeDBaseAlgorithm<ShowerOverlapResult>
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ThreeDShowersAlgorithm();
@@ -169,7 +160,6 @@ private:
     TwoDSlidingShowerFitResultMap   m_slidingFitResultMap;          ///< The sliding shower fit result map
 
     bool                            m_ignoreUnavailableClusters;    ///< Whether to ignore (skip-over) unavailable clusters
-    bool                            m_ignoreFixedTracks;            ///< Whether to ignore (skip-over) clusters flagged as fixed tracks (muons)
     unsigned int                    m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
     float                           m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
 
@@ -198,14 +188,6 @@ public:
      */
     virtual bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ThreeDShowersAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ThreeDShowersAlgorithm();
-}
 
 } // namespace lar_content
 

@@ -9,25 +9,24 @@
 #include "Managers/PluginManager.h"
 #include "Managers/GeometryManager.h"
 
+#include "Geometry/DetectorGap.h"
+#include "Geometry/LArTPC.h"
+
 #include "Objects/CartesianVector.h"
-#include "Objects/DetectorGap.h"
 
 #include "Pandora/Pandora.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
-#include "larpandoracontent/LArPlugins/LArTransformationPlugin.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
+
+#include "Plugins/LArTransformationPlugin.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
-
-LArGeometryHelper::PseudoLayerInstanceMap LArGeometryHelper::m_pseudolayerInstanceMap;
-LArGeometryHelper::TransformationInstanceMap LArGeometryHelper::m_transformationInstanceMap;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArGeometryHelper::MergeTwoPositions(const Pandora &pandora, const HitType view1, const HitType view2, const float position1, const float position2)
 {
@@ -36,32 +35,32 @@ float LArGeometryHelper::MergeTwoPositions(const Pandora &pandora, const HitType
 
     if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_V))
     {
-        return LArGeometryHelper::GetLArTransformationPlugin(pandora)->UVtoW(position1, position2);
+        return pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoW(position1, position2);
     }
 
     if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_U))
     {
-        return LArGeometryHelper::GetLArTransformationPlugin(pandora)->UVtoW(position2, position1);
+        return pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoW(position2, position1);
     }
 
     if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_U))
     {
-        return LArGeometryHelper::GetLArTransformationPlugin(pandora)->WUtoV(position1, position2);
+        return pandora.GetPlugins()->GetLArTransformationPlugin()->WUtoV(position1, position2);
     }
 
     if ((view1 == TPC_VIEW_U) && (view2 == TPC_VIEW_W))
     {
-        return LArGeometryHelper::GetLArTransformationPlugin(pandora)->WUtoV(position2, position1);
+        return pandora.GetPlugins()->GetLArTransformationPlugin()->WUtoV(position2, position1);
     }
 
     if ((view1 == TPC_VIEW_V) && (view2 == TPC_VIEW_W))
     {
-        return LArGeometryHelper::GetLArTransformationPlugin(pandora)->VWtoU(position1, position2);
+        return pandora.GetPlugins()->GetLArTransformationPlugin()->VWtoU(position1, position2);
     }
 
     if ((view1 == TPC_VIEW_W) && (view2 == TPC_VIEW_V))
     {
-        return LArGeometryHelper::GetLArTransformationPlugin(pandora)->VWtoU(position2, position1);
+        return pandora.GetPlugins()->GetLArTransformationPlugin()->VWtoU(position2, position1);
     }
 
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -114,13 +113,13 @@ CartesianVector LArGeometryHelper::MergeTwoDirections(const Pandora &pandora, co
     }
 
     if (newView == TPC_VIEW_W)
-        return CartesianVector(pX, 0.f, LArGeometryHelper::GetLArTransformationPlugin(pandora)->PUPVtoPW(pU, pV)).GetUnitVector();
+        return CartesianVector(pX, 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoW(pU, pV)).GetUnitVector();
 
     if (newView == TPC_VIEW_U)
-        return CartesianVector(pX, 0.f, LArGeometryHelper::GetLArTransformationPlugin(pandora)->PVPWtoPU(pV, pW)).GetUnitVector();
+        return CartesianVector(pX, 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->VWtoU(pV, pW)).GetUnitVector();
 
     if (newView == TPC_VIEW_V)
-        return CartesianVector(pX, 0.f, LArGeometryHelper::GetLArTransformationPlugin(pandora)->PWPUtoPV(pW, pU)).GetUnitVector();
+        return CartesianVector(pX, 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->WUtoV(pW, pU)).GetUnitVector();
 
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 }
@@ -139,7 +138,7 @@ void LArGeometryHelper::MergeTwoPositions(const Pandora &pandora, const HitType 
     const float Z3(LArGeometryHelper::MergeTwoPositions(pandora, view1, view2, Z1, Z2));
 
     position3.SetValues(X3, 0.f, Z3);
-    const float sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(pandora)->GetSigmaUVW());
+    const float sigmaUVW(pandora.GetGeometry()->GetLArTPC().GetSigmaUVW());
     chiSquared = ((X3 - position1.GetX()) * (X3 - position1.GetX()) + (X3 - position2.GetX()) * (X3 - position2.GetX())) / (sigmaUVW * sigmaUVW);
 }
 
@@ -239,21 +238,21 @@ void LArGeometryHelper::MergeThreePositions(const Pandora &pandora, const HitTyp
 void LArGeometryHelper::MergeThreePositions(const Pandora &pandora, const CartesianVector &positionU, const CartesianVector &positionV,
     const CartesianVector &positionW, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float &chiSquared)
 {
-    const float YfromUV(LArGeometryHelper::GetLArTransformationPlugin(pandora)->UVtoY(positionU.GetZ(), positionV.GetZ()));
-    const float ZfromUV(LArGeometryHelper::GetLArTransformationPlugin(pandora)->UVtoZ(positionU.GetZ(), positionV.GetZ()));
+    const float YfromUV(pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoY(positionU.GetZ(), positionV.GetZ()));
+    const float ZfromUV(pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoZ(positionU.GetZ(), positionV.GetZ()));
 
     const float aveX((positionU.GetX() + positionV.GetX() + positionW.GetX()) / 3.f);
     const float aveY(YfromUV);
     const float aveW((positionW.GetZ() + 2.f * ZfromUV ) / 3.f);
 
-    const float aveU(LArGeometryHelper::GetLArTransformationPlugin(pandora)->YZtoU(aveY, aveW));
-    const float aveV(LArGeometryHelper::GetLArTransformationPlugin(pandora)->YZtoV(aveY, aveW));
+    const float aveU(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(aveY, aveW));
+    const float aveV(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(aveY, aveW));
 
     outputU.SetValues(aveX, 0.f, aveU);
     outputV.SetValues(aveX, 0.f, aveV);
     outputW.SetValues(aveX, 0.f, aveW);
 
-    const float sigmaUVW(LArGeometryHelper::GetLArTransformationPlugin(pandora)->GetSigmaUVW());
+    const float sigmaUVW(pandora.GetGeometry()->GetLArTPC().GetSigmaUVW());
     chiSquared = ((outputU.GetX() - positionU.GetX()) * (outputU.GetX() - positionU.GetX()) +
         (outputV.GetX() - positionV.GetX()) * (outputV.GetX() - positionV.GetX()) +
         (outputW.GetX() - positionW.GetX()) * (outputW.GetX() - positionW.GetX()) +
@@ -270,8 +269,8 @@ void LArGeometryHelper::MergeTwoPositions3D(const Pandora &pandora, const HitTyp
     CartesianVector positionU(0.f, 0.f, 0.f), positionV(0.f, 0.f, 0.f), positionW(0.f, 0.f, 0.f);
     LArGeometryHelper::MergeTwoPositions(pandora, view1, view2, position1, position2, positionU, positionV, positionW, chiSquared);
 
-    position3D.SetValues(positionW.GetX(), LArGeometryHelper::GetLArTransformationPlugin(pandora)->UVtoY(positionU.GetZ(),positionV.GetZ()),
-      LArGeometryHelper::GetLArTransformationPlugin(pandora)->UVtoZ(positionU.GetZ(),positionV.GetZ()) );
+    position3D.SetValues(positionW.GetX(), pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoY(positionU.GetZ(),positionV.GetZ()),
+        pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoZ(positionU.GetZ(),positionV.GetZ()) );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -282,8 +281,8 @@ void LArGeometryHelper::MergeThreePositions3D(const Pandora &pandora, const HitT
     CartesianVector positionU(0.f, 0.f, 0.f), positionV(0.f, 0.f, 0.f), positionW(0.f, 0.f, 0.f);
     LArGeometryHelper::MergeThreePositions(pandora, view1, view2, view3, position1, position2, position3, positionU, positionV, positionW, chiSquared);
 
-    position3D.SetValues(positionW.GetX(), LArGeometryHelper::GetLArTransformationPlugin(pandora)->UVtoY(positionU.GetZ(),positionV.GetZ()),
-        LArGeometryHelper::GetLArTransformationPlugin(pandora)->UVtoZ(positionU.GetZ(),positionV.GetZ()));
+    position3D.SetValues(positionW.GetX(), pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoY(positionU.GetZ(),positionV.GetZ()),
+        pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoZ(positionU.GetZ(),positionV.GetZ()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -292,12 +291,12 @@ CartesianVector LArGeometryHelper::ProjectPosition(const Pandora &pandora, const
 {
     if (view == TPC_VIEW_U)
     {
-        return CartesianVector(position3D.GetX(), 0.f, LArGeometryHelper::GetLArTransformationPlugin(pandora)->YZtoU(position3D.GetY(), position3D.GetZ()));
+        return CartesianVector(position3D.GetX(), 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(position3D.GetY(), position3D.GetZ()));
     }
 
     else if (view == TPC_VIEW_V)
     {
-        return CartesianVector(position3D.GetX(), 0.f, LArGeometryHelper::GetLArTransformationPlugin(pandora)->YZtoV(position3D.GetY(), position3D.GetZ()));
+        return CartesianVector(position3D.GetX(), 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(position3D.GetY(), position3D.GetZ()));
     }
 
     else if (view == TPC_VIEW_W)
@@ -314,12 +313,12 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
 {
     if (view == TPC_VIEW_U)
     {
-        return CartesianVector(direction3D.GetX(), 0.f, LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPU(direction3D.GetY(), direction3D.GetZ())).GetUnitVector();
+        return CartesianVector(direction3D.GetX(), 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(direction3D.GetY(), direction3D.GetZ())).GetUnitVector();
     }
 
     else if (view == TPC_VIEW_V)
     {
-        return CartesianVector(direction3D.GetX(), 0.f, LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPV(direction3D.GetY(), direction3D.GetZ())).GetUnitVector();
+        return CartesianVector(direction3D.GetX(), 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(direction3D.GetY(), direction3D.GetZ())).GetUnitVector();
     }
 
     else if (view == TPC_VIEW_W)
@@ -334,7 +333,7 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
 
 float LArGeometryHelper::GetWireZPitch(const Pandora &pandora)
 {
-    return (LArGeometryHelper::GetLArPseudoLayerPlugin(pandora)->GetZPitch());
+    return (pandora.GetGeometry()->GetLArTPC().GetWirePitchW());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -343,17 +342,17 @@ float LArGeometryHelper::GetWirePitch(const Pandora &pandora, const HitType view
 {
     if (view == TPC_VIEW_U)
     {
-        return (LArGeometryHelper::GetLArPseudoLayerPlugin(pandora)->GetUPitch());
+        return (pandora.GetGeometry()->GetLArTPC().GetWirePitchU());
     }
 
     else if (view == TPC_VIEW_V)
     {
-        return (LArGeometryHelper::GetLArPseudoLayerPlugin(pandora)->GetVPitch());
+        return (pandora.GetGeometry()->GetLArTPC().GetWirePitchV());
     }
 
     else if (view == TPC_VIEW_W)
     {
-        return (LArGeometryHelper::GetLArPseudoLayerPlugin(pandora)->GetWPitch());
+        return (pandora.GetGeometry()->GetLArTPC().GetWirePitchW());
     }
 
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -367,16 +366,16 @@ CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const Hit
     {
         // CartesianVector(0.f, -m_sinU, m_cosU)
         return CartesianVector(0.f,
-            LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPU(1.f, 0.f),
-            LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPU(0.f, 1.f));
+            pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(1.f, 0.f),
+            pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(0.f, 1.f));
     }
 
     else if (view == TPC_VIEW_V)
     {
         // CartesianVector(0.f, +m_sinV, m_cosV)
         return CartesianVector(0.f,
-        LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPV(1.f, 0.f),
-        LArGeometryHelper::GetLArTransformationPlugin(pandora)->PYPZtoPV(0.f, 1.f));
+            pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(1.f, 0.f),
+            pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(0.f, 1.f));
     }
 
     else if (view == TPC_VIEW_W)
@@ -411,6 +410,43 @@ bool LArGeometryHelper::IsInGap3D(const Pandora &pandora, const CartesianVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArGeometryHelper::IsXSamplingPointInGap(const Pandora &pandora, const float xSample, const TwoDSlidingFitResult &slidingFitResult,
+    const float gapTolerance)
+{
+    const HitType hitType(LArClusterHelper::GetClusterHitType(slidingFitResult.GetCluster()));
+    const CartesianVector minLayerPosition(slidingFitResult.GetGlobalMinLayerPosition());
+    const CartesianVector maxLayerPosition(slidingFitResult.GetGlobalMaxLayerPosition());
+
+    const bool minLayerIsAtLowX(minLayerPosition.GetX() < maxLayerPosition.GetX());
+    const CartesianVector &lowXCoordinate(minLayerIsAtLowX ? minLayerPosition : maxLayerPosition);
+    const CartesianVector &highXCoordinate(minLayerIsAtLowX ? maxLayerPosition : minLayerPosition);
+
+    if ((xSample > lowXCoordinate.GetX()) && (xSample < highXCoordinate.GetX()))
+    {
+        CartesianVector slidingFitPosition(0.f, 0.f, 0.f);
+
+        if (STATUS_CODE_SUCCESS == slidingFitResult.GetGlobalFitPositionAtX(xSample, slidingFitPosition))
+            return (LArGeometryHelper::IsInGap(pandora, slidingFitPosition, hitType, gapTolerance));
+    }
+
+    const CartesianVector lowXDirection(minLayerIsAtLowX ? slidingFitResult.GetGlobalMinLayerDirection() : slidingFitResult.GetGlobalMaxLayerDirection());
+    const CartesianVector highXDirection(minLayerIsAtLowX ? slidingFitResult.GetGlobalMaxLayerDirection() : slidingFitResult.GetGlobalMinLayerDirection());
+
+    const bool sampleIsNearerToLowX(std::fabs(xSample - lowXCoordinate.GetX()) < std::fabs(xSample - highXCoordinate.GetX()));
+    const CartesianVector &startPosition(sampleIsNearerToLowX ? lowXCoordinate : highXCoordinate);
+    const CartesianVector &startDirection(sampleIsNearerToLowX ? lowXDirection : highXDirection);
+
+    if (std::fabs(startDirection.GetX()) < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float pathLength((xSample - startPosition.GetX()) / startDirection.GetX());
+    const CartesianVector samplingPoint(startPosition + startDirection * pathLength);
+
+    return (LArGeometryHelper::IsInGap(pandora, samplingPoint, hitType, gapTolerance));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float minZ, const float maxZ, const HitType hitType)
 {
     if (maxZ - minZ < std::numeric_limits<float>::epsilon())
@@ -422,74 +458,29 @@ float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float 
     {
         const LineGap *const pLineGap = dynamic_cast<const LineGap*>(pDetectorGap);
 
-        if (NULL == pLineGap)
+        if (!pLineGap)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        if (pLineGap->GetHitType() != hitType || pLineGap->GetLineStartZ() > maxZ || pLineGap->GetLineEndZ() < minZ)
+        const LineGapType lineGapType(pLineGap->GetLineGapType());
+
+        if (!(((TPC_VIEW_U == hitType) && (TPC_WIRE_GAP_VIEW_U == lineGapType)) ||
+              ((TPC_VIEW_V == hitType) && (TPC_WIRE_GAP_VIEW_V == lineGapType)) ||
+              ((TPC_VIEW_W == hitType) && (TPC_WIRE_GAP_VIEW_W == lineGapType))))
+        {
+            continue;
+        }
+
+        if ((pLineGap->GetLineStartZ() > maxZ) || (pLineGap->GetLineEndZ() < minZ))
             continue;
 
-        const float gapMinZ(std::max(minZ,pLineGap->GetLineStartZ()));
-        const float gapMaxZ(std::min(maxZ,pLineGap->GetLineEndZ()));
+        const float gapMinZ(std::max(minZ, pLineGap->GetLineStartZ()));
+        const float gapMaxZ(std::min(maxZ, pLineGap->GetLineEndZ()));
 
         if ((gapMaxZ - gapMinZ) > std::numeric_limits<float>::epsilon())
             gapDeltaZ += (gapMaxZ - gapMinZ);
     }
 
     return gapDeltaZ;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const LArPseudoLayerPlugin *LArGeometryHelper::GetLArPseudoLayerPlugin(const Pandora &pandora)
-{
-    PseudoLayerInstanceMap::const_iterator iter = m_pseudolayerInstanceMap.find(&pandora);
-
-    if (m_pseudolayerInstanceMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    return iter->second;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const LArTransformationPlugin *LArGeometryHelper::GetLArTransformationPlugin(const Pandora &pandora)
-{
-    TransformationInstanceMap::const_iterator iter = m_transformationInstanceMap.find(&pandora);
-
-    if (m_transformationInstanceMap.end() == iter)
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-
-    return iter->second;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode LArGeometryHelper::SetLArPseudoLayerPlugin(const Pandora &pandora, const LArPseudoLayerPlugin *const pLArPseudoLayerPlugin)
-{
-    PseudoLayerInstanceMap::const_iterator iter = m_pseudolayerInstanceMap.find(&pandora);
-
-    if (m_pseudolayerInstanceMap.end() != iter)
-        return STATUS_CODE_ALREADY_INITIALIZED;
-
-    if (!m_pseudolayerInstanceMap.insert(PseudoLayerInstanceMap::value_type(&pandora, pLArPseudoLayerPlugin)).second)
-        return STATUS_CODE_FAILURE;
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode LArGeometryHelper::SetLArTransformationPlugin(const Pandora &pandora, const LArTransformationPlugin *const pLArTransformationPlugin)
-{
-    TransformationInstanceMap::const_iterator iter = m_transformationInstanceMap.find(&pandora);
-
-    if (m_transformationInstanceMap.end() != iter)
-        return STATUS_CODE_ALREADY_INITIALIZED;
-
-    if (!m_transformationInstanceMap.insert(TransformationInstanceMap::value_type(&pandora, pLArTransformationPlugin)).second)
-        return STATUS_CODE_FAILURE;
-
-    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content

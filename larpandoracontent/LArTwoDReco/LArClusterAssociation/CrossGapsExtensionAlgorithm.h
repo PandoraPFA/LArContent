@@ -22,15 +22,6 @@ class CrossGapsExtensionAlgorithm : public ClusterExtensionAlgorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CrossGapsExtensionAlgorithm();
@@ -85,13 +76,6 @@ private:
     float   m_maxTransverseDisplacement;      ///<
     float   m_maxRelativeAngle;               ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CrossGapsExtensionAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CrossGapsExtensionAlgorithm();
-}
 
 } // namespace lar_content
 

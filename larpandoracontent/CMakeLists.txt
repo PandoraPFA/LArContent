@@ -1,12 +1,13 @@
+include_directories( $ENV{EIGEN_INC} )
 
 set( subdir_list LArCheating
+                 LArControlFlow
 		 LArCustomParticles
 		 LArHelpers
 		 LArMonitoring
 		 LArObjects
 		 LArPersistency
 		 LArPlugins
-		 LArStitching
 		 LArThreeDReco
 		 LArThreeDReco/LArCosmicRay
 		 LArThreeDReco/LArEventBuilding
@@ -19,13 +20,13 @@ set( subdir_list LArCheating
 		 LArThreeDReco/LArThreeDBase
 		 LArThreeDReco/LArTrackFragments
 		 LArThreeDReco/LArTransverseTrackMatching
+		 LArTrackShowerId
 		 LArTwoDReco
 		 LArTwoDReco/LArClusterAssociation
 		 LArTwoDReco/LArClusterCreation
 		 LArTwoDReco/LArClusterMopUp
 		 LArTwoDReco/LArClusterSplitting
 		 LArTwoDReco/LArCosmicRay
-		 LArTwoDReco/LArSeedFinding
 		 LArUtility
 		 LArVertex
 )
@@ -38,4 +39,3 @@ cet_make( LIBRARY_NAME LArPandoraContent
 
 install_source( SUBDIRS ${subdir_list} )
 install_headers( SUBDIRS ${subdir_list} )
-

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EventSlicingTool.cc
- * 
+ *
  *  @brief  Implementation of the event slicing tool class.
- * 
+ *
  *  $Log: $
  */
 
@@ -24,6 +24,12 @@ using namespace pandora;
 
 namespace lar_content
 {
+
+typedef SlicingAlgorithm::HitTypeToNameMap HitTypeToNameMap;
+typedef SlicingAlgorithm::SliceList SliceList;
+typedef SlicingAlgorithm::Slice Slice;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 EventSlicingTool::EventSlicingTool() :
     m_minHitsPer3DCluster(20),
@@ -53,8 +59,8 @@ EventSlicingTool::EventSlicingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgorithm, const HitTypeToNameMap &/*caloHitListNames*/,
-    const HitTypeToNameMap &clusterListNames, SliceList &sliceList)
+void EventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, const HitTypeToNameMap &clusterListNames,
+    SliceList &sliceList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -72,11 +78,11 @@ void EventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgorithm, co
 
     if (clusterSliceList.size() < 2)
     {
-        return pAlgorithm->CopyAllHitsToSingleSlice(sliceList);
+        return this->CopyAllHitsToSingleSlice(pAlgorithm, caloHitListNames, sliceList);
     }
     else
     {
-        ClusterToSliceIndexMap clusterToSliceIndexMap;        
+        ClusterToSliceIndexMap clusterToSliceIndexMap;
         this->CreateSlices(clusterSliceList, sliceList, clusterToSliceIndexMap);
 
         ClusterSet assignedClusters;
@@ -86,6 +92,36 @@ void EventSlicingTool::Slice(const NeutrinoParentAlgorithm *const pAlgorithm, co
         this->GetRemainingClusters(pAlgorithm, clusterListNames, assignedClusters, remainingClusters);
 
         this->AssignRemainingHitsToSlices(remainingClusters, clusterToSliceIndexMap, sliceList);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventSlicingTool::CopyAllHitsToSingleSlice(const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, SliceList &sliceList) const
+{
+    if (!sliceList.empty())
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const CaloHitList *pCaloHitListU(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm,
+        caloHitListNames.at(TPC_VIEW_U), pCaloHitListU));
+
+    const CaloHitList *pCaloHitListV(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm,
+        caloHitListNames.at(TPC_VIEW_V), pCaloHitListV));
+
+    const CaloHitList *pCaloHitListW(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*pAlgorithm,
+        caloHitListNames.at(TPC_VIEW_W), pCaloHitListW));
+
+    if (pCaloHitListU || pCaloHitListV || pCaloHitListW)
+    {
+        sliceList.push_back(Slice());
+        Slice &slice(sliceList.at(0));
+
+        if (pCaloHitListU) slice.m_caloHitListU = *pCaloHitListU;
+        if (pCaloHitListV) slice.m_caloHitListV = *pCaloHitListV;
+        if (pCaloHitListW) slice.m_caloHitListW = *pCaloHitListW;
     }
 }
 
@@ -302,7 +338,15 @@ bool EventSlicingTool::CheckClosestApproach(const LArPointingCluster::Vertex &ve
 {
     CartesianVector intersectionPoint(0.f, 0.f, 0.f);
     float displacement1(std::numeric_limits<float>::max()), displacement2(std::numeric_limits<float>::max());
-    LArPointingClusterHelper::GetIntersection(vertex1, vertex2, intersectionPoint, displacement1, displacement2);
+
+    try
+    {
+        LArPointingClusterHelper::GetIntersection(vertex1, vertex2, intersectionPoint, displacement1, displacement2);
+    }
+    catch (const StatusCodeException &)
+    {
+        return false;
+    }
 
     const CartesianVector approach1(vertex1.GetPosition() + vertex1.GetDirection() * displacement1);
     const CartesianVector approach2(vertex2.GetPosition() + vertex2.GetDirection() * displacement2);
@@ -356,7 +400,7 @@ void EventSlicingTool::CreateSlices(const ClusterSliceList &clusterSliceList, Sl
                 throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
         }
 
-        sliceList.push_back(NeutrinoParentAlgorithm::Slice());
+        sliceList.push_back(Slice());
         ++index;
     }
 }
@@ -375,7 +419,7 @@ void EventSlicingTool::CopyPfoHitsToSlices(const ClusterToSliceIndexMap &cluster
         const unsigned int index(clusterToSliceIndexMap.at(pCluster3D));
 
         const Pfo *const pPfo(clusterToPfoMap.at(pCluster3D));
-        NeutrinoParentAlgorithm::Slice &slice(sliceList.at(index));
+        Slice &slice(sliceList.at(index));
 
         ClusterList clusters2D;
         LArPfoHelper::GetTwoDClusterList(pPfo, clusters2D);
@@ -486,7 +530,7 @@ void EventSlicingTool::AssignRemainingHitsToSlices(const ClusterList &remainingC
             if (!pBestResultPoint)
                 continue;
 
-            NeutrinoParentAlgorithm::Slice &slice(sliceList.at(pointToSliceIndexMap.at(pBestResultPoint->data)));
+            Slice &slice(sliceList.at(pointToSliceIndexMap.at(pBestResultPoint->data)));
             CaloHitList &targetList((TPC_VIEW_U == hitType) ? slice.m_caloHitListU : (TPC_VIEW_V == hitType) ? slice.m_caloHitListV : slice.m_caloHitListW);
 
             pCluster2D->GetOrderedCaloHitList().FillCaloHitList(targetList);
@@ -510,7 +554,7 @@ void EventSlicingTool::GetKDTreeEntries2D(const SliceList &sliceList, PointList 
 {
     unsigned int sliceIndex(0);
 
-    for (const NeutrinoParentAlgorithm::Slice &slice : sliceList)
+    for (const Slice &slice : sliceList)
     {
         for (const CaloHit *const pCaloHit : slice.m_caloHitListU)
         {

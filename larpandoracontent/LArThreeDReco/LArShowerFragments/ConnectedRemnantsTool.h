@@ -20,15 +20,6 @@ class ConnectedRemnantsTool : public RemnantTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ConnectedRemnantsTool();
@@ -76,13 +67,6 @@ private:
 
     float m_maxClusterSeparation;       ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ConnectedRemnantsTool::Factory::CreateAlgorithmTool() const
-{
-    return new ConnectedRemnantsTool();
-}
 
 } // namespace lar_content
 

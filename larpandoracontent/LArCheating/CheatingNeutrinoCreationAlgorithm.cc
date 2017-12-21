@@ -33,7 +33,7 @@ StatusCode CheatingNeutrinoCreationAlgorithm::Run()
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
     {
-        const ParticleFlowObject *pNeutrinoPfo(NULL);
+        const ParticleFlowObject *pNeutrinoPfo(nullptr);
         this->CreateAndSaveNeutrinoPfo(pMCNeutrino, pNeutrinoPfo);
 
         if (!pNeutrinoPfo)
@@ -57,7 +57,7 @@ StatusCode CheatingNeutrinoCreationAlgorithm::Run()
 
 void CheatingNeutrinoCreationAlgorithm::GetMCNeutrinoVector(MCParticleVector &mcNeutrinoVector) const
 {
-    const MCParticleList *pMCParticleList = NULL;
+    const MCParticleList *pMCParticleList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
     MCParticleVector allMCNeutrinoVector;
@@ -65,7 +65,7 @@ void CheatingNeutrinoCreationAlgorithm::GetMCNeutrinoVector(MCParticleVector &mc
 
     for (const MCParticle *const pMCNeutrino : allMCNeutrinoVector)
     {
-        if (MC_3D == pMCNeutrino->GetMCParticleType())
+        if (LArMCParticleHelper::IsNeutrino(pMCNeutrino) && (MC_3D == pMCNeutrino->GetMCParticleType()))
             mcNeutrinoVector.push_back(pMCNeutrino);
     }
 }
@@ -74,7 +74,7 @@ void CheatingNeutrinoCreationAlgorithm::GetMCNeutrinoVector(MCParticleVector &mc
 
 void CheatingNeutrinoCreationAlgorithm::CreateAndSaveNeutrinoPfo(const MCParticle *const pMCNeutrino, const ParticleFlowObject *&pNeutrinoPfo) const
 {
-    pNeutrinoPfo = NULL;
+    pNeutrinoPfo = nullptr;
 
     PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
     pfoParameters.m_particleId = pMCNeutrino->GetParticleId();
@@ -84,11 +84,11 @@ void CheatingNeutrinoCreationAlgorithm::CreateAndSaveNeutrinoPfo(const MCParticl
     pfoParameters.m_momentum = pMCNeutrino->GetMomentum();
 
     std::string neutrinoPfoListName;
-    const PfoList *pNeutrinoPfoList = NULL;
+    const PfoList *pNeutrinoPfoList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNeutrinoPfoList, neutrinoPfoListName));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pNeutrinoPfo));
 
-    if ((NULL == pNeutrinoPfoList) || pNeutrinoPfoList->empty())
+    if (!pNeutrinoPfoList || pNeutrinoPfoList->empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_neutrinoPfoListName));
@@ -99,16 +99,13 @@ void CheatingNeutrinoCreationAlgorithm::CreateAndSaveNeutrinoPfo(const MCParticl
 
 void CheatingNeutrinoCreationAlgorithm::AddNeutrinoVertex(const MCParticle *const pMCNeutrino, const ParticleFlowObject *const pNeutrinoPfo) const
 {
-    const VertexList *pVertexList(NULL);
+    const VertexList *pVertexList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-
-    VertexVector vertexVector(pVertexList->begin(), pVertexList->end());
-    std::sort(vertexVector.begin(), vertexVector.end(), SortByVertexZPosition);
 
     const Vertex *pNeutrinoVertex(nullptr);
     float closestVertexDistance(std::numeric_limits<float>::max());
 
-    for (const Vertex *const pVertex : vertexVector)
+    for (const Vertex *const pVertex : *pVertexList)
     {
         const float distance((pVertex->GetPosition() - pMCNeutrino->GetEndpoint()).GetMagnitude());
 
@@ -131,7 +128,7 @@ void CheatingNeutrinoCreationAlgorithm::GetMCPrimaryMap(LArMCParticleHelper::MCR
 {
     if (m_collapseToPrimaryMCParticles)
     {
-        const MCParticleList *pMCParticleList = NULL;
+        const MCParticleList *pMCParticleList(nullptr);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
         LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
@@ -145,7 +142,7 @@ void CheatingNeutrinoCreationAlgorithm::GetMCParticleToDaughterPfoMap(const LArM
 {
     for (const std::string &daughterPfoListName : m_daughterPfoListNames)
     {
-        const PfoList *pDaughterPfoList(NULL);
+        const PfoList *pDaughterPfoList(nullptr);
 
         if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, daughterPfoListName, pDaughterPfoList))
         {
@@ -184,22 +181,6 @@ void CheatingNeutrinoCreationAlgorithm::CreatePfoHierarchy(const MCParticle *con
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pParentPfo, pDaughterPfo));
         this->CreatePfoHierarchy(pDaughterMCParticle, pDaughterPfo, mcParticleToPfoMap);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool CheatingNeutrinoCreationAlgorithm::SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs)
-{
-    const CartesianVector deltaPosition(pRhs->GetPosition() - pLhs->GetPosition());
-
-    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
-
-    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
-
-    // ATTN No way to distinguish between vertices if still have a tie in y coordinate
-    return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

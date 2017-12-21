@@ -29,15 +29,6 @@ class ThreeDTransverseTracksAlgorithm : public ThreeDTracksBaseAlgorithm<Transve
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ThreeDTransverseTracksAlgorithm();
@@ -116,6 +107,7 @@ private:
     TensorToolVector            m_algorithmToolVector;      ///< The algorithm tool vector
 
     unsigned int                m_nMaxTensorToolRepeats;    ///< The maximum number of repeat loops over tensor tools
+    unsigned int                m_maxFitSegmentIndex;       ///< The maximum number of fit segments used when identifying best overlap result
     float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
     float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
     unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
@@ -145,14 +137,6 @@ public:
      */
     virtual bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ThreeDTransverseTracksAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ThreeDTransverseTracksAlgorithm();
-}
 
 } // namespace lar_content
 

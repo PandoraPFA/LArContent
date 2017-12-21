@@ -207,7 +207,14 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
             float mu1(0.f), mu2(0.f);
             CartesianVector C1(0.f,0.f,0.f);
 
-            LArPointingClusterHelper::GetIntersection(a1, p1, a2, p2, C1, mu1, mu2);
+            try
+            {
+                LArPointingClusterHelper::GetIntersection(a1, p1, a2, p2, C1, mu1, mu2);
+            }
+            catch (const StatusCodeException &)
+            {
+                continue;
+            }
 
             if (mu1 < 0.f || mu2 < 0.f || mu1 > (b1 - a1).GetMagnitude() || mu2 > (b2 - a2).GetMagnitude())
                 continue;

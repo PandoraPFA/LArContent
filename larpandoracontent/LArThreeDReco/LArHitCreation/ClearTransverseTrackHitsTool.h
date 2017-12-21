@@ -18,27 +18,9 @@ namespace lar_content
  */
 class ClearTransverseTrackHitsTool : public TransverseTrackHitsBaseTool
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
 private:
-    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        pandora::CartesianVector &position3D, float &chiSquared) const;
+    void GetTransverseTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ClearTransverseTrackHitsTool::Factory::CreateAlgorithmTool() const
-{
-    return new ClearTransverseTrackHitsTool();
-}
 
 } // namespace lar_content
 

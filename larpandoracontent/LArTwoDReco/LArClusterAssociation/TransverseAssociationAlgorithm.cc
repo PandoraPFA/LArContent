@@ -520,12 +520,16 @@ bool TransverseAssociationAlgorithm::IsExtremalCluster(const bool isForward, con
 
     if (isForward)
     {
-        return (testMaxX > currentMaxX);
+        if (std::fabs(testMaxX - currentMaxX) > std::numeric_limits<float>::epsilon())
+            return (testMaxX > currentMaxX);
     }
     else
     {
-        return (testMinX < currentMinX);
+        if (std::fabs(testMinX - currentMaxX) > std::numeric_limits<float>::epsilon())
+            return (testMinX < currentMinX);
     }
+
+    return LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -1,4 +1,133 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_09_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Replaced parent algorithms with new master algorithm, which uses Pandora worker instances, rather than purely daughter algorithms and tools.
+Plugins now handle presence of multiple LArTPCs registered with master instance.
+Slicing now occurs entirely within a Pandora worker instance.
+Introduced pre- and post-processing algorithms.
+Added LArControlFlow directory, collecting algorithms, tools and other content associated with overall control flow.
+Added new, improved interface for neutrino id tools.
+Replaced stitching info with simple Pfo to LArTPC map.
+Used LArFileHelper to access worker PandoraSetting files or SVM data files, removing in-LArSoft usage of cetlib.
+Adopted use of LArTPC volume ids, stored in derived LArCaloHit class.
+Applied x0 shift to Pfo hits and vertices, using vertex x0 value in cosmic-ray tagging.
+Added option to visualize reconstruction status at a number of key stages.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_08_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Consolidated approach made available, with ParentAlgorithm guiding a number of different reconstruction options.
+ParentAlgorithm reconstruction options: Full, AllHitsCR, AllHitsNu, CRRemHitsSliceCR, CRRemHitsSliceNu, AllHitsSliceCR, AllHitsSliceNu.
+Added first, simple implementation of NeutrinoId tool.
+Added first implementation of CosmicRayTagging tool.
+Parent algorithm and EventReading algorithm now offer external configuration options for single-instance (per-Pandora instance) usage.
+EventReading algorithm now has ability to read lists of event files and terminate when last event reached.
+Renamed ListDissolution algorithm as ListPruning algorithm, and added vertex functionality.
+Coverity-motivated changes to the development cheating-based reconstruction chain.
+Overhauled and simplied MultiPandoraApi, removing VolumeInfo structures.
+Updated stitching algorithms and helper to use new LArTPC geometry description available in Pandora SDK v03-01-00.
+LArTransformation and LArPseudoLayer plugins are now proper Pandora plugins in Pandora SDK v03-01-00, not a LArContent add-on.
+LineGaps now have a line gap type, start/end x and z positions in Pandora SDK v03-01-00.
+Explicitly handled a few exceptions causing some algorithms to bail in rare circumstances.
+Added UnattachedDeltaRays algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_07_04
+--------------------------------------------------------------------------------------------------------------------------------------------
+Tweaked tie-breaking in shower and track overlap result operators.
+Added the possibility to work with track vs. shower probabilities instead of binary classification.
+Modified track direction for compatibility with LArSoft.
+Fixed forward/backward asymmetries in 2D and 3D sliding linear fits.
+Simplified PcaShowerParticleBuildingAlgorithm by moving bulk of PCA calculations to LArPfoHelper.
+Refactored SlidingFitTrajectory implementation.
+Moved track trajectory determination into LArPfoHelper and removed any assumptions about sliding fit direction conventions.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_07_03
+--------------------------------------------------------------------------------------------------------------------------------------------
+Selected license: GPLv3.
+Added codecov and badge.
+Added Coverity scan and badge.
+Addressed Coverity recommendations.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_07_02
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added TravisCI builds, Coverity scan and badge.
+Added probability functionality to SVMs.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_07_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Changes to the in-LArSoft build mechanics, from the LArSoft team.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_07_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added Eigen dependency and handled this in build tools.
+Brought PcaShowerParticleBuilding algorithm into LArContent, from LArPandora.
+Used Eigen to determine coordinate system for 2D and 3D sliding linear fits.
+Updated shower direction convention: principal axis points away from vertex (which is assumed to be closer to start of shower than centroid).
+Added LArCaloHit, holding track, shower, michel and other classification probabilities.
+Introduced new vertex selection procedure using svm approach.
+Introduced new track vs. shower identification using svm approach.
+Used cet search_path functionality to find svm data files in FW_SEARCH_PATH.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_06_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Functionality for cosmic-ray stitching and neutrino reconstruction using detectors that have multiple drift volumes
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_05_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Restructured 3D spacepoint creation algorithm and tools, including new iterative refinement of output spacepoints.
+Added new rule for identifying end-associations to build particle hierarchy.
+Added support vector machine interface.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_03_00, v03_04_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Changes to the in-LArSoft build mechanics, from the LArSoft team.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_02_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added LArShowerPfo properties, to hold shower additional/derived shower properties whilst in Pandora.
+New LArPCAShowerParticleBuilding algorithm, currently build as part of larpandora translation module, populates LArShowerPfo properties.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_01_03
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added MaxFitSegmentIndex parameter to ThreeDTransverseTracks algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_01_02
+--------------------------------------------------------------------------------------------------------------------------------------------
+Improved tie-breaker conditions for extremal cluster definitions in ClusterAssociation algorithms.
+Reduced default value for NMaxTensorToolRepeats.
+Added configurable parameter to control max number of crossing vertex candidates.
+Protect against calls to calculate intersection of parallel lines, which raises an exception.
+Updated EventValidation algorithm to handle environment where neutrino-induced events are overlaid with cosmic-ray muon background.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_01_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Improved hit-association mechanics and identification of good primary particles in EventValidation algorithm.
+Added integrate over slices functionality to EventValidation algorithm.
+Changed default setting for crossing vertex candidates to off.
+Added ability to provide a cheated vertex x offset.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_01_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Overhauled track vs. shower identification, moving it into algorithms that deal with it explicitly, by characterising clusters and pfos.
+Added effective overlap treatment, considering detector gaps: new TracksCrossingGaps tensor tool and new ParticleRecovery alg functionality.
+Altered default parameters for VertexSplitting algorithm and added vertex association functionality to SlidingConePfoMopUp algorithm.
+Removed influence of any hits that are deemed post-neutron in the EventValidation algorithm performance metrics.
+Added MCParticleMonitoring algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_00_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Updated to reflect sdk interface changes.

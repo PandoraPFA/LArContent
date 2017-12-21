@@ -24,15 +24,6 @@ class CheatingNeutrinoCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CheatingNeutrinoCreationAlgorithm();
@@ -90,16 +81,6 @@ private:
     void CreatePfoHierarchy(const pandora::MCParticle *const pParentMCParticle, const pandora::ParticleFlowObject *const pParentPfo,
         const MCParticleToPfoMap &mcParticleToPfoMap) const;
 
-    /**
-     *  @brief  Sort vertices by increasing z position
-     * 
-     *  @param  pLhs address of the lhs vertex
-     *  @param  pRhs address of the rhs vertex
-     * 
-     *  @return whether lhs should precedes rhs
-     */
-    static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     bool                    m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
@@ -112,13 +93,6 @@ private:
 
     float                   m_vertexTolerance;              ///< Tolerance, 3d displacement, allowed between reco neutrino vertex and mc neutrino endpoint
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingNeutrinoCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CheatingNeutrinoCreationAlgorithm();
-}
 
 } // namespace lar_content
 

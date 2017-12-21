@@ -8,7 +8,7 @@
 #ifndef LAR_VERTEX_BASED_PFO_MOP_UP_ALGORITHM_H
 #define LAR_VERTEX_BASED_PFO_MOP_UP_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
+#include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -21,15 +21,6 @@ namespace lar_content
 class VertexBasedPfoMopUpAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
     /**
      *  @brief  Default constructor
      */
@@ -374,14 +365,6 @@ protected:
     unsigned int            m_minConsistentDirectionsTrack;     ///< The minimum number of consistent cluster directions to allow a merge involving a track pfo
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *VertexBasedPfoMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new VertexBasedPfoMopUpAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::Cluster *VertexBasedPfoMopUpAlgorithm::ClusterAssociation::GetVertexCluster() const

@@ -24,34 +24,34 @@ class TwoDSlidingFitResult
 {
 public:
     /**
-     *  @brief  Constructor using cluster extremal x-z positions to define primary axis
+     *  @brief  Constructor using internal definition of primary axis
      *
-     *  @param  pCluster address of the cluster
+     *  @param  pT describing the positions to be fitted
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  layerPitch the layer pitch, units cm
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch);
+    template <typename T>
+    TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch);
 
     /**
      *  @brief  Constructor using specified primary axis. The orthogonal axis must be perpendicular to the primary axis.
      *
-     *  @param  pCluster address of the cluster
+     *  @param  pT describing the positions to be fitted
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  layerPitch the layer pitch, units cm
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
      *  @param  orthoDirection the orthogonal direction vector
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
-        const pandora::CartesianVector &orthoDirection);
+    template <typename T>
+    TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch, const pandora::CartesianVector &axisIntercept,
+        const pandora::CartesianVector &axisDirection, const pandora::CartesianVector &orthoDirection);
 
     /**
      *  @brief  Constructor using specified primary axis and layer fit contribution map. User is responsible for ensuring that
      *          z-pitch, axis intercept and axis direction agree with calculations used to fill the layer fit contribution map.
      *          The orthogonal axis must be perpendicular to the primary axis.
      *
-     *  @param  pCluster address of the cluster
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  layerPitch the layer pitch, units cm
      *  @param  axisIntercept the axis intercept position
@@ -59,14 +59,15 @@ public:
      *  @param  orthoDirection the orthogonal direction vector
      *  @param  layerFitContributionMap the layer fit contribution map
      */
-    TwoDSlidingFitResult(const pandora::Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection, 
-        const pandora::CartesianVector &orthoDirection, const LayerFitContributionMap &layerFitContributionMap);
+    TwoDSlidingFitResult(const unsigned int layerFitHalfWindow, const float layerPitch, const pandora::CartesianVector &axisIntercept,
+        const pandora::CartesianVector &axisDirection, const pandora::CartesianVector &orthoDirection, const LayerFitContributionMap &layerFitContributionMap);
 
     /**
-     *  @brief  Get the address of the cluster
+     *  @brief  Get the address of the cluster, if originally provided
      *
      *  @return the address of the cluster
+     *
+     *  @throw  StatusCodeException
      */
     const pandora::Cluster *GetCluster() const;
 
@@ -274,7 +275,7 @@ public:
      *
      *  @param  rL the longitudinal coordinate
      *  @param  position the fitted position at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitPosition(const float rL, pandora::CartesianVector &position) const;
@@ -284,7 +285,7 @@ public:
      *
      *  @param  rL the longitudinal coordinate
      *  @param  direction the fitted direction at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitDirection(const float rL, pandora::CartesianVector &direction) const;
@@ -294,7 +295,7 @@ public:
      *
      *  @param  x the input coordinate
      *  @param  position the fitted position at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitPositionAtX(const float x, pandora::CartesianVector &position) const;
@@ -304,7 +305,7 @@ public:
      *
      *  @param  x the input coordinate
      *  @param  direction the fitted direction at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitDirectionAtX(const float x, pandora::CartesianVector &direction) const;
@@ -314,7 +315,7 @@ public:
      *
      *  @param  inputPosition the input coordinate
      *  @param  projectedPosition the projected position on the global fit for these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitProjection(const pandora::CartesianVector &inputPosition, pandora::CartesianVector &projectedPosition) const;
@@ -324,7 +325,7 @@ public:
      *
      *  @param  x the input x coordinate
      *  @param  positionList the output list of positions
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetGlobalFitPositionListAtX(const float x, pandora::CartesianPointVector &positionList) const;
@@ -335,7 +336,7 @@ public:
      *  @param x the input x coordinate
      *  @param fitSegment the portion of sliding linear fit
      *  @param position the output position
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position) const;
@@ -347,7 +348,7 @@ public:
      *  @param fitSegment the portion of sliding linear fit
      *  @param position the output position
      *  @param position the output direction
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position,
@@ -358,17 +359,17 @@ public:
      *
      *  @param  rL the input coordinate
      *  @param  position the extrapolated position at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
-    pandora::StatusCode GetExtrapolatedPosition(const float rL, pandora::CartesianVector &position) const;    
+    pandora::StatusCode GetExtrapolatedPosition(const float rL, pandora::CartesianVector &position) const;
 
     /**
      *  @brief  Get extrapolated direction (beyond span) for a given input coordinate
      *
      *  @param  rL the input coordinate
      *  @param  position the extrapolated direction at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetExtrapolatedDirection(const float rL, pandora::CartesianVector &direction) const;
@@ -378,7 +379,7 @@ public:
      *
      *  @param  x the input coordinate
      *  @param  position the extrapolated position at these coordinates
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetExtrapolatedPositionAtX(const float x, pandora::CartesianVector &position) const;
@@ -394,7 +395,7 @@ private:
     /**
      *  @brief  Calculate the longitudinal and transverse axes
      */
-    void CalculateAxes(const pandora::CartesianPointVector &coordinateVector);
+    void CalculateAxes(const pandora::CartesianPointVector &coordinateVector, const float layerPitch);
 
     /**
      *  @brief  Fill the layer fit contribution map
@@ -452,7 +453,7 @@ private:
      *
      *  @param  rL the longitudinal coordinate
      *  @param  layerInterpolation to receive the populated layer interpolation object
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode LongitudinalInterpolation(const float rL, LayerInterpolation &layerInterpolation) const;
@@ -463,7 +464,7 @@ private:
      *  @param  x the input coordinate
      *  @param  fitSegment the fit segment
      *  @param  layerInterpolation to receive the populated layer interpolation object
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode TransverseInterpolation(const float x, const FitSegment &fitSegment, LayerInterpolation &layerInterpolation) const;
@@ -473,7 +474,7 @@ private:
      *
      *  @param  x the input coordinate
      *  @param  layerInterpolationList the output list of layer interpolation objects
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode TransverseInterpolation(const float x, LayerInterpolationList &layerInterpolationList) const;
@@ -484,7 +485,7 @@ private:
      *  @param  rL the longitudinal coordinate
      *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
      *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetLongitudinalSurroundingLayers(const float rL, LayerFitResultMap::const_iterator &firstLayerIter,
@@ -498,7 +499,7 @@ private:
      *  @param  maxLayer the maximum allowed layer
      *  @param  firstLayerIter to receive the iterator for the layer just below the input coordinate
      *  @param  secondLayerIter to receive the iterator for the layer just above the input coordinate
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetTransverseSurroundingLayers(const float x, const int minLayer, const int maxLayer,
@@ -543,13 +544,6 @@ typedef std::vector<TwoDSlidingFitResult> TwoDSlidingFitResultList;
 typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::Cluster *TwoDSlidingFitResult::GetCluster() const
-{
-    return m_pCluster;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline unsigned int TwoDSlidingFitResult::GetLayerFitHalfWindow() const

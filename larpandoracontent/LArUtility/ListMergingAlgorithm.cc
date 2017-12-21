@@ -32,11 +32,13 @@ StatusCode ListMergingAlgorithm::Run()
         {
             if (STATUS_CODE_NOT_FOUND == statusCode)
             {
-                std::cout << "ListMergingAlgorithm: cluster list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListMergingAlgorithm: cluster list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
             }
             else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
             {
-                std::cout << "ListMergingAlgorithm: no clusters to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListMergingAlgorithm: no clusters to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
             }
             else
             {
@@ -61,11 +63,13 @@ StatusCode ListMergingAlgorithm::Run()
         {
             if (STATUS_CODE_NOT_FOUND == statusCode)
             {
-                std::cout << "ListMergingAlgorithm: pfo list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListMergingAlgorithm: pfo list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
             }
             else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
             {
-                std::cout << "ListMergingAlgorithm: no pfos to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
+                    std::cout << "ListMergingAlgorithm: no pfos to move, source: " << sourceListName << ", target: " << targetListName << std::endl;
             }
             else
             {

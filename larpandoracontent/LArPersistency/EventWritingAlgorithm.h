@@ -26,15 +26,6 @@ class EventWritingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     EventWritingAlgorithm();
@@ -90,6 +81,9 @@ private:
     bool                    m_shouldOverwriteEventFile;     ///< Whether to overwrite existing event file with specified name, or append
     bool                    m_shouldOverwriteGeometryFile;  ///< Whether to overwrite existing geometry file with specified name, or append
 
+    bool                    m_useLArCaloHits;               ///< Whether to write lar calo hits, or standard pandora calo hits
+    bool                    m_useLArMCParticles;            ///< Whether to write lar mc particles, or standard pandora mc particles
+
     bool                    m_shouldFilterByNuanceCode;     ///< Whether to filter output by nuance code
     int                     m_filterNuanceCode;             ///< The filter nuance code (required if specify filter by nuance code)
 
@@ -114,13 +108,6 @@ private:
     float                   m_selectedBorderY;              ///< Required distance from detector edge in y dimension
     float                   m_selectedBorderZ;              ///< Required distance from detector edge in z dimension
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *EventWritingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new EventWritingAlgorithm();
-}
 
 } // namespace lar_content
 

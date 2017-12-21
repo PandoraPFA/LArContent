@@ -28,13 +28,13 @@ StatusCode CheatingClusterCreationAlgorithm::Run()
 
     if (m_collapseToPrimaryMCParticles)
     {
-        const MCParticleList *pMCParticleList = NULL;
+        const MCParticleList *pMCParticleList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
         LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
     }
 
-    const CaloHitList *pCaloHitList = NULL;
+    const CaloHitList *pCaloHitList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
     MCParticleToHitListMap mcParticleToHitListMap;
@@ -50,18 +50,16 @@ StatusCode CheatingClusterCreationAlgorithm::Run()
 void CheatingClusterCreationAlgorithm::GetMCParticleToHitListMap(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
     MCParticleToHitListMap &mcParticleToHitListMap) const
 {
-    for (CaloHitList::const_iterator iter = pCaloHitList->begin(), iterEnd = pCaloHitList->end(); iter != iterEnd; ++iter)
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         try
         {
-            if (!PandoraContentApi::IsAvailable(*this, *iter))
+            if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
                 continue;
 
-            this->SimpleMCParticleCollection(*iter, mcPrimaryMap, mcParticleToHitListMap);
+            this->SimpleMCParticleCollection(pCaloHit, mcPrimaryMap, mcParticleToHitListMap);
         }
-        catch (StatusCodeException &)
-        {
-        }
+        catch (const StatusCodeException &) {}
     }
 }
 
@@ -95,9 +93,9 @@ bool CheatingClusterCreationAlgorithm::SelectMCParticlesForClustering(const MCPa
     if (m_particleIdList.empty())
         return true;
 
-    for (IntVector::const_iterator iter = m_particleIdList.begin(), iterEnd = m_particleIdList.end(); iter != iterEnd; ++iter)
+    for (const int particleId : m_particleIdList)
     {
-        if (pMCParticle->GetParticleId() == *iter)
+        if (pMCParticle->GetParticleId() == particleId)
             return true;
     }
 
@@ -119,7 +117,7 @@ void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListM
         if (caloHitList.empty())
             continue;
 
-        const Cluster *pCluster = NULL;
+        const Cluster *pCluster(nullptr);
         PandoraContentApi::Cluster::Parameters parameters;
         parameters.m_caloHitList = caloHitList;
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));

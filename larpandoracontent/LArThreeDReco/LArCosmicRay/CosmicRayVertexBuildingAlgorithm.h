@@ -22,15 +22,6 @@ class CosmicRayVertexBuildingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CosmicRayVertexBuildingAlgorithm();
@@ -92,13 +83,6 @@ private:
     std::string             m_parentPfoListName;        ///< The name of the input pfo list
     std::string             m_vertexListName;           ///< The name of the output vertex list
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CosmicRayVertexBuildingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CosmicRayVertexBuildingAlgorithm();
-}
 
 } // namespace lar_content
 

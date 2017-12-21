@@ -27,15 +27,6 @@ class DeltaRayMatchingAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     DeltaRayMatchingAlgorithm();
@@ -345,14 +336,6 @@ inline const pandora::Cluster *DeltaRayMatchingAlgorithm::Particle::GetClusterW(
 inline const pandora::ParticleFlowObject *DeltaRayMatchingAlgorithm::Particle::GetParentPfo() const
 {
     return m_pParentPfo;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *DeltaRayMatchingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new DeltaRayMatchingAlgorithm();
 }
 
 } // namespace lar_content

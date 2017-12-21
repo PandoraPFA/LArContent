@@ -8,7 +8,7 @@
 #ifndef LAR_SLIDING_CONE_PFO_MOP_UP_ALGORITHM_H
 #define LAR_SLIDING_CONE_PFO_MOP_UP_ALGORITHM_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/PfoMopUpBaseAlgorithm.h"
+#include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
 #include <unordered_map>
 
@@ -21,15 +21,6 @@ namespace lar_content
 class SlidingConePfoMopUpAlgorithm : public PfoMopUpBaseAlgorithm
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
     /**
      *  @brief  Default constructor
      */
@@ -121,6 +112,33 @@ private:
     void GetClusterMergeMap(const pandora::Vertex *const pVertex, const pandora::ClusterVector &clusters3D, const ClusterToPfoMap &clusterToPfoMap,
         ClusterMergeMap &clusterMergeMap) const;
 
+    typedef std::unordered_map<const pandora::Cluster*, bool> VertexAssociationMap;
+
+    /**
+     *  @brief  Whether a 3D cluster is nodally associated with a provided vertex
+     * 
+     *  @param  pCluster the address of the cluster
+     *  @param  pVertex the address of the vertex
+     *  @param  vertexAssociationMap the vertex association map, which caches the results for efficiency
+     *  @param  pSlidingFitResult the address of a 3D sliding linear fit, if available, which aids pointing cluster construction efficiency
+     * 
+     *  @return boolean
+     */
+    bool IsVertexAssociated(const pandora::Cluster *const pCluster, const pandora::Vertex *const pVertex,
+        VertexAssociationMap &vertexAssociationMap, const ThreeDSlidingFitResult *const pSlidingFitResult = nullptr) const;
+
+    /**
+     *  @brief  Whether a 3D cluster is nodally associated with a provided vertex
+     * 
+     *  @param  pCluster the address of the cluster
+     *  @param  vertexPosition the vertex position
+     *  @param  pSlidingFitResult the address of a 3D sliding linear fit, if available, which aids pointing cluster construction efficiency
+     * 
+     *  @return boolean
+     */
+    bool IsVertexAssociated(const pandora::Cluster *const pCluster, const pandora::CartesianVector &vertexPosition,
+        const ThreeDSlidingFitResult *const pSlidingFitResult = nullptr) const;
+
     /**
      *  @brief  Make pfo merges based on the provided cluster merge map
      * 
@@ -135,30 +153,24 @@ private:
 
     typedef std::unordered_map<const pandora::Cluster*, const pandora::Cluster*> ClusterReplacementMap;
 
-    pandora::StringVector   m_inputPfoListNames;        ///< The input pfo list names
-    bool                    m_useVertex;                ///< Whether to use the interaction vertex to select useful cone directions
-    unsigned int            m_maxIterations;            ///< The maximum allowed number of algorithm iterations
-    unsigned int            m_maxHitsToConsider3DTrack; ///< The maximum number of hits in a 3d track cluster to warrant inclusion in algorithm
-    unsigned int            m_minHitsToConsider3DShower;///< The minimum number of hits in a 3d shower cluster to attempt cone fits
-    unsigned int            m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
-    unsigned int            m_nConeFitLayers;           ///< The number of layers over which to sum fitted direction to obtain cone fit
-    unsigned int            m_nConeFits;                ///< The number of cone fits to perform, spread roughly uniformly along the shower length
-    float                   m_coneLengthMultiplier;     ///< The cone length multiplier to use when calculating bounded cluster fractions
-    float                   m_maxConeLength;            ///< The maximum allowed cone length to use when calculating bounded cluster fractions
-    float                   m_coneTanHalfAngle1;        ///< The cone tan half angle to use when calculating bounded cluster fractions 1
-    float                   m_coneBoundedFraction1;     ///< The minimum cluster bounded fraction for association 1
-    float                   m_coneTanHalfAngle2;        ///< The cone tan half angle to use when calculating bounded cluster fractions 2
-    float                   m_coneBoundedFraction2;     ///< The minimum cluster bounded fraction for association 2
+    pandora::StringVector   m_inputPfoListNames;                ///< The input pfo list names
+    bool                    m_useVertex;                        ///< Whether to use the interaction vertex to select useful cone directions
+    unsigned int            m_maxIterations;                    ///< The maximum allowed number of algorithm iterations
+    unsigned int            m_maxHitsToConsider3DTrack;         ///< The maximum number of hits in a 3d track cluster to warrant inclusion in algorithm
+    unsigned int            m_minHitsToConsider3DShower;        ///< The minimum number of hits in a 3d shower cluster to attempt cone fits
+    unsigned int            m_halfWindowLayers;                 ///< The number of layers to use for half-window of sliding fit
+    unsigned int            m_nConeFitLayers;                   ///< The number of layers over which to sum fitted direction to obtain cone fit
+    unsigned int            m_nConeFits;                        ///< The number of cone fits to perform, spread roughly uniformly along the shower length
+    float                   m_coneLengthMultiplier;             ///< The cone length multiplier to use when calculating bounded cluster fractions
+    float                   m_maxConeLength;                    ///< The maximum allowed cone length to use when calculating bounded cluster fractions
+    float                   m_coneTanHalfAngle1;                ///< The cone tan half angle to use when calculating bounded cluster fractions 1
+    float                   m_coneBoundedFraction1;             ///< The minimum cluster bounded fraction for association 1
+    float                   m_coneTanHalfAngle2;                ///< The cone tan half angle to use when calculating bounded cluster fractions 2
+    float                   m_coneBoundedFraction2;             ///< The minimum cluster bounded fraction for association 2
+    float                   m_minVertexLongitudinalDistance;    ///< Vertex association check: min longitudinal distance cut
+    float                   m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *SlidingConePfoMopUpAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new SlidingConePfoMopUpAlgorithm();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline SlidingConePfoMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction1, const float boundedFraction2) :

@@ -20,15 +20,6 @@ class ClearTrackFragmentsTool : public FragmentTensorTool
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ClearTrackFragmentsTool();
@@ -146,13 +137,6 @@ private:
     float               m_minMatchedSamplingPointFraction;  ///< The minimum fraction of matched sampling points
     unsigned int        m_minMatchedHits;                   ///< The minimum number of matched calo hits
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ClearTrackFragmentsTool::Factory::CreateAlgorithmTool() const
-{
-    return new ClearTrackFragmentsTool();
-}
 
 } // namespace lar_content
 

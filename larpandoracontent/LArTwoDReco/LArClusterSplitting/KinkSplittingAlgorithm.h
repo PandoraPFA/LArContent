@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/ClusterSplitting/KinkSplittingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/KinkSplittingAlgorithm.h
  *
  *  @brief  Header file for the kink splitting algorithm class.
  *
@@ -19,15 +19,6 @@ namespace lar_content
 class KinkSplittingAlgorithm : public TwoDSlidingFitSplittingAlgorithm
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
     /**
      *  @brief  Default constructor
      */
@@ -50,13 +41,6 @@ private:
     float           m_maxScatterCosTheta;     ///<
     float           m_maxSlidingCosTheta;     ///<
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *KinkSplittingAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new KinkSplittingAlgorithm();
-}
 
 } // namespace lar_content
 

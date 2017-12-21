@@ -9,6 +9,7 @@
 #include "Pandora/PdgTable.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
@@ -22,12 +23,21 @@ using namespace pandora;
 namespace lar_content
 {
 
+void LArPfoHelper::GetCoordinateVector(const ParticleFlowObject *const pPfo, const HitType &hitType, CartesianPointVector &coordinateVector)
+{
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
+
+    for (const Cluster *const pCluster : clusterList)
+        LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetCaloHits(const PfoList &pfoList, const HitType &hitType, CaloHitList &caloHitList)
 {
-    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
-    {
-        LArPfoHelper::GetCaloHits(*pIter, hitType, caloHitList);
-    }
+    for (const ParticleFlowObject *const pPfo : pfoList)
+        LArPfoHelper::GetCaloHits(pPfo, hitType, caloHitList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -37,10 +47,8 @@ void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitTy
     ClusterList clusterList;
     LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
 
-    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
-    {
-        (*cIter)->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-    }
+    for (const Cluster *const pCluster : clusterList)
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -50,35 +58,28 @@ void LArPfoHelper::GetIsolatedCaloHits(const ParticleFlowObject *const pPfo, con
     ClusterList clusterList;
     LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
 
-    for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
-    {
-        caloHitList.insert(caloHitList.end(), (*cIter)->GetIsolatedCaloHitList().begin(), (*cIter)->GetIsolatedCaloHitList().end());
-    }
+    for (const Cluster *const pCluster : clusterList)
+        caloHitList.insert(caloHitList.end(), pCluster->GetIsolatedCaloHitList().begin(), pCluster->GetIsolatedCaloHitList().end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPfoHelper::GetClusters(const PfoList &pfoList, const HitType &hitType, ClusterList &clusterList)
 {
-    for (PfoList::const_iterator pIter = pfoList.begin(), pIterEnd = pfoList.end(); pIter != pIterEnd; ++pIter)
-    {
-        LArPfoHelper::GetClusters(*pIter, hitType, clusterList);
-    }
+    for (const ParticleFlowObject *const pPfo : pfoList)
+        LArPfoHelper::GetClusters(pPfo, hitType, clusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitType &hitType, ClusterList &clusterList)
 {
-    const ClusterList &pfoClusterList = pPfo->GetClusterList();
-    for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : pPfo->GetClusterList())
     {
-        const Cluster *const pPfoCluster = *cIter;
-
-        if (hitType != LArClusterHelper::GetClusterHitType(pPfoCluster))
+        if (hitType != LArClusterHelper::GetClusterHitType(pCluster))
             continue;
 
-        clusterList.push_back(pPfoCluster);
+        clusterList.push_back(pCluster);
     }
 }
 
@@ -86,11 +87,8 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitTy
 
 void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
 {
-    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); 
-        cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : pPfo->GetClusterList())
     {
-        const Cluster *const pCluster = *cIter;
-
         if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
             continue;
 
@@ -102,11 +100,8 @@ void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, Clus
 
 void LArPfoHelper::GetThreeDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
 {
-    for (ClusterList::const_iterator cIter = pPfo->GetClusterList().begin(), cIterEnd = pPfo->GetClusterList().end(); 
-        cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : pPfo->GetClusterList())
     {
-        const Cluster *const pCluster = *cIter;
-
         if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
             continue;
 
@@ -118,10 +113,8 @@ void LArPfoHelper::GetThreeDClusterList(const ParticleFlowObject *const pPfo, Cl
 
 void LArPfoHelper::GetAllConnectedPfos(const PfoList &inputPfoList, PfoList &outputPfoList)
 {
-    for (PfoList::const_iterator pIter = inputPfoList.begin(), pIterEnd = inputPfoList.end(); pIter != pIterEnd; ++pIter)
-    {
-        LArPfoHelper::GetAllConnectedPfos(*pIter, outputPfoList);
-    }
+    for (const ParticleFlowObject *const pPfo : inputPfoList)
+        LArPfoHelper::GetAllConnectedPfos(pPfo, outputPfoList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -140,10 +133,8 @@ void LArPfoHelper::GetAllConnectedPfos(const ParticleFlowObject *const pPfo, Pfo
 
 void LArPfoHelper::GetAllDownstreamPfos(const PfoList &inputPfoList, PfoList &outputPfoList)
 {
-    for (PfoList::const_iterator pIter = inputPfoList.begin(), pIterEnd = inputPfoList.end(); pIter != pIterEnd; ++pIter)
-    {
-        LArPfoHelper::GetAllDownstreamPfos(*pIter, outputPfoList);
-    }
+    for (const ParticleFlowObject *const pPfo : inputPfoList)
+        LArPfoHelper::GetAllDownstreamPfos(pPfo, outputPfoList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -166,15 +157,12 @@ float LArPfoHelper::GetTwoDLengthSquared(const ParticleFlowObject *const pPfo)
 
     float lengthSquared(0.f);
 
-    const ClusterList &pfoClusterList = pPfo->GetClusterList();
-    for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : pPfo->GetClusterList())
     {
-        const Cluster *const pPfoCluster = *cIter;
-
-        if (TPC_3D == LArClusterHelper::GetClusterHitType(pPfoCluster))
+        if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
             continue;
 
-        lengthSquared += LArClusterHelper::GetLengthSquared(pPfoCluster);
+        lengthSquared += LArClusterHelper::GetLengthSquared(pCluster);
     }
 
     return lengthSquared;
@@ -189,15 +177,12 @@ float LArPfoHelper::GetThreeDLengthSquared(const ParticleFlowObject *const pPfo)
 
     float lengthSquared(0.f);
 
-    const ClusterList &pfoClusterList = pPfo->GetClusterList();
-    for (ClusterList::const_iterator cIter = pfoClusterList.begin(), cIterEnd = pfoClusterList.end(); cIter != cIterEnd; ++cIter)
+    for (const Cluster *const pCluster : pPfo->GetClusterList())
     {
-        const Cluster *const pPfoCluster = *cIter;
-
-        if (TPC_3D != LArClusterHelper::GetClusterHitType(pPfoCluster))
+        if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
             continue;
 
-        lengthSquared += LArClusterHelper::GetLengthSquared(pPfoCluster);
+        lengthSquared += LArClusterHelper::GetLengthSquared(pCluster);
     }
 
     return lengthSquared;
@@ -217,9 +202,8 @@ float LArPfoHelper::GetClosestDistance(const ParticleFlowObject *const pPfo, con
 
     float bestDistance(std::numeric_limits<float>::max());
 
-    for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pPfoCluster : clusterList)
     {
-        const Cluster *const pPfoCluster = *iter;
         const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster, pPfoCluster));
 
         if (thisDistance < bestDistance)
@@ -290,10 +274,8 @@ float LArPfoHelper::GetThreeDSeparation(const ParticleFlowObject *const pPfo1, c
 
 bool LArPfoHelper::IsTwoD(const ParticleFlowObject *const pPfo)
 {
-    for (ClusterList::const_iterator iter = pPfo->GetClusterList().begin(), iterEnd = pPfo->GetClusterList().end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : pPfo->GetClusterList())
     {
-        const Cluster *const pCluster = *iter;
-
         if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
             return true;
     }
@@ -305,10 +287,8 @@ bool LArPfoHelper::IsTwoD(const ParticleFlowObject *const pPfo)
 
 bool LArPfoHelper::IsThreeD(const ParticleFlowObject *const pPfo)
 {
-    for (ClusterList::const_iterator iter = pPfo->GetClusterList().begin(), iterEnd = pPfo->GetClusterList().end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : pPfo->GetClusterList())
     {
-        const Cluster *const pCluster = *iter;
-
         if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
             return true;
     }
@@ -390,10 +370,8 @@ void LArPfoHelper::GetRecoNeutrinos(const PfoList *const pPfoList, PfoList &reco
     if (!pPfoList)
         return;
 
-    for (PfoList::const_iterator iter = pPfoList->begin(), iterEnd = pPfoList->end(); iter != iterEnd; ++iter)
+    for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
-        const ParticleFlowObject *const pPfo(*iter);
-
         if (LArPfoHelper::IsNeutrino(pPfo))
             recoNeutrinos.push_back(pPfo);
     }
@@ -445,6 +423,75 @@ const Vertex *LArPfoHelper::GetVertex(const ParticleFlowObject *const pPfo)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetSlidingFitTrajectory(const CartesianPointVector &pointVector, const CartesianVector &vertexPosition,
+    const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector)
+{
+    LArPfoHelper::SlidingFitTrajectoryImpl(&pointVector, vertexPosition, layerWindow, layerPitch, trackStateVector);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetSlidingFitTrajectory(const ParticleFlowObject *const pPfo, const Vertex *const pVertex,
+    const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector)
+{
+    CaloHitList caloHitList;
+    LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList);
+    LArPfoHelper::SlidingFitTrajectoryImpl(&caloHitList, pVertex->GetPosition(), layerWindow, layerPitch, trackStateVector);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArShowerPCA LArPfoHelper::GetPrincipalComponents(const CartesianPointVector &pointVector, const CartesianVector &vertexPosition)
+{
+    // Run the PCA analysis
+    CartesianVector centroid(0.f, 0.f, 0.f);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(pointVector, centroid, eigenValues, eigenVecs);
+
+    // Require that principal eigenvalue should always be positive
+    if (eigenValues.GetX() < std::numeric_limits<float>::epsilon())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    // By convention, principal axis should always point away from vertex
+    const float testProjection(eigenVecs.at(0).GetDotProduct(vertexPosition - centroid));
+    const float directionScaleFactor((testProjection > std::numeric_limits<float>::epsilon()) ? -1.f : 1.f);
+
+    const CartesianVector primaryAxis(eigenVecs.at(0) * directionScaleFactor);
+    const CartesianVector secondaryAxis(eigenVecs.at(1) * directionScaleFactor);
+    const CartesianVector tertiaryAxis(eigenVecs.at(2) * directionScaleFactor);
+
+    return LArShowerPCA(centroid, primaryAxis, secondaryAxis, tertiaryAxis, eigenValues);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArShowerPCA LArPfoHelper::GetPrincipalComponents(const ParticleFlowObject *const pPfo, const Vertex *const pVertex)
+{
+    CartesianPointVector pointVector;
+    LArPfoHelper::GetCoordinateVector(pPfo, TPC_3D, pointVector);
+    return LArPfoHelper::GetPrincipalComponents(pointVector, pVertex->GetPosition());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPfoHelper::SortByHitProjection(const LArTrackTrajectoryPoint &lhs, const LArTrackTrajectoryPoint &rhs)
+{
+    if (lhs.first != rhs.first)
+        return (lhs.first < rhs.first);
+
+    // ATTN Removed to support use with CartesianVector only (no CaloHit) input
+    // if (lhs.second.GetCaloHit() && rhs.second.GetCaloHit())
+    //     return (lhs.second.GetCaloHit()->GetInputEnergy() > rhs.second.GetCaloHit()->GetInputEnergy());
+
+    const float dx(lhs.second.GetPosition().GetX() - rhs.second.GetPosition().GetX());
+    const float dy(lhs.second.GetPosition().GetY() - rhs.second.GetPosition().GetY());
+    const float dz(lhs.second.GetPosition().GetZ() - rhs.second.GetPosition().GetZ());
+    return (dx + dy + dz > 0.f);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const ParticleFlowObject *const pRhs)
 {
     unsigned int nTwoDHitsLhs(0), nThreeDHitsLhs(0); float energyLhs(0.f);
@@ -482,5 +529,115 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
     // ATTN Need an efficient (balance with well-motivated) tie-breaker here. Pfo length, for instance, is extremely slow.
     return (energyLhs > energyRhs);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVector &vertexPosition, const unsigned int layerWindow,
+    const float layerPitch, LArTrackStateVector &trackStateVector)
+{
+    CartesianPointVector pointVector;
+
+    for (const auto &nextPoint : *pT)
+        pointVector.push_back(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint));
+
+    if (pointVector.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    std::sort(pointVector.begin(), pointVector.end(), LArClusterHelper::SortCoordinatesByPosition);
+
+    LArTrackTrajectory trackTrajectory;
+
+    try
+    {
+        const ThreeDSlidingFitResult slidingFitResult(&pointVector, layerWindow, layerPitch);
+        const CartesianVector minPosition(slidingFitResult.GetGlobalMinLayerPosition());
+        const CartesianVector maxPosition(slidingFitResult.GetGlobalMaxLayerPosition());
+
+        if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        const CartesianVector seedPosition((maxPosition + minPosition) * 0.5f);
+        const CartesianVector seedDirection((maxPosition - minPosition).GetUnitVector());
+
+        const float scaleFactor((seedDirection.GetDotProduct(seedPosition - vertexPosition) > 0.f) ? +1.f : -1.f);
+
+        for (const auto &nextPoint : *pT)
+        {
+            try
+            {
+                const float rL(slidingFitResult.GetLongitudinalDisplacement(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint)));
+
+                CartesianVector position(0.f, 0.f, 0.f);
+                const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
+
+                if (positionStatusCode != STATUS_CODE_SUCCESS)
+                    throw StatusCodeException(positionStatusCode);
+
+                CartesianVector direction(0.f, 0.f, 0.f);
+                const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, direction));
+
+                if (directionStatusCode != STATUS_CODE_SUCCESS)
+                    throw StatusCodeException(directionStatusCode);
+
+                const float projection(seedDirection.GetDotProduct(position - seedPosition));
+
+                trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
+                    LArTrackState(position, direction * scaleFactor, LArPfoHelper::TypeAdaptor::GetCaloHit(nextPoint))));
+            }
+            catch (const StatusCodeException &statusCodeException1)
+            {
+                if (STATUS_CODE_FAILURE == statusCodeException1.GetStatusCode())
+                    throw statusCodeException1;
+            }
+        }
+    }
+    catch (const StatusCodeException &statusCodeException2)
+    {
+        if (STATUS_CODE_FAILURE == statusCodeException2.GetStatusCode())
+            throw statusCodeException2;
+    }
+
+    // Sort trajectory points by distance along track
+    std::sort(trackTrajectory.begin(), trackTrajectory.end(), LArPfoHelper::SortByHitProjection);
+
+    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter)
+        trackStateVector.push_back(tIter->second);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <>
+const CartesianVector LArPfoHelper::TypeAdaptor::GetPosition(const CartesianVector &t)
+{
+    return t;
+}
+
+template <>
+const CartesianVector LArPfoHelper::TypeAdaptor::GetPosition(const CaloHit *const &pT)
+{
+    return pT->GetPositionVector();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <>
+const CaloHit *LArPfoHelper::TypeAdaptor::GetCaloHit(const CartesianVector &)
+{
+    return nullptr;
+}
+
+template <>
+const CaloHit *LArPfoHelper::TypeAdaptor::GetCaloHit(const CaloHit *const &pCaloHit3D)
+{
+    const CaloHit *const pCaloHit2D = static_cast<const CaloHit*>(pCaloHit3D->GetParentAddress());
+    return pCaloHit2D;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template void LArPfoHelper::SlidingFitTrajectoryImpl(const CartesianPointVector *const, const CartesianVector &, const unsigned int, const float, LArTrackStateVector &);
+template void LArPfoHelper::SlidingFitTrajectoryImpl(const CaloHitList *const, const CartesianVector &, const unsigned int, const float, LArTrackStateVector &);
 
 } // namespace lar_content

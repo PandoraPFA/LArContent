@@ -18,27 +18,10 @@ namespace lar_content
  */
 class ClearLongitudinalTrackHitsTool : public LongitudinalTrackHitsBaseTool
 {
-public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
 private:
-    void GetThreeDPosition(const pandora::CaloHit *const pCaloHit2D, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        const pandora::CartesianVector &vtx3D, const pandora::CartesianVector &end3D, pandora::CartesianVector &position3D, float &chiSquared) const;
+    void GetLongitudinalTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, const pandora::CartesianVector &vtx3D,
+        const pandora::CartesianVector &end3D, ProtoHit &protoHit) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ClearLongitudinalTrackHitsTool::Factory::CreateAlgorithmTool() const
-{
-    return new ClearLongitudinalTrackHitsTool();
-}
 
 } // namespace lar_content
 

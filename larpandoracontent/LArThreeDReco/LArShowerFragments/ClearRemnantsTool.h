@@ -19,15 +19,6 @@ namespace lar_content
 class ClearRemnantsTool : public RemnantTensorTool
 {
 public:
-    /**
-     *  @brief  Factory class for instantiating algorithm tool
-     */
-    class Factory : public pandora::AlgorithmToolFactory
-    {
-    public:
-        pandora::AlgorithmTool *CreateAlgorithmTool() const;
-    };
-
     bool Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
@@ -42,13 +33,6 @@ private:
      */
     void CreateThreeDParticles(ThreeDRemnantsAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::AlgorithmTool *ClearRemnantsTool::Factory::CreateAlgorithmTool() const
-{
-    return new ClearRemnantsTool();
-}
 
 } // namespace lar_content
 

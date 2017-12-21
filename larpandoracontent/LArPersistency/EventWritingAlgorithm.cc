@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
 #include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
@@ -35,6 +36,8 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldWriteTrackRelationships(true),
     m_shouldOverwriteEventFile(false),
     m_shouldOverwriteGeometryFile(false),
+    m_useLArCaloHits(true),
+    m_useLArMCParticles(true),
     m_shouldFilterByNuanceCode(false),
     m_filterNuanceCode(0),
     m_shouldFilterByMCParticles(false),
@@ -106,7 +109,11 @@ StatusCode EventWritingAlgorithm::Initialize()
             return STATUS_CODE_FAILURE;
         }
 
-        m_pEventFileWriter->SetFactory(new LArMCParticleFactory);
+        if (m_useLArCaloHits)
+            m_pEventFileWriter->SetFactory(new LArCaloHitFactory);
+
+        if (m_useLArMCParticles)
+            m_pEventFileWriter->SetFactory(new LArMCParticleFactory);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -300,16 +307,22 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldWriteMCRelationships", m_shouldWriteMCRelationships));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldWriteTrackRelationships", m_shouldWriteTrackRelationships));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldOverwriteEventFile", m_shouldOverwriteEventFile));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldOverwriteGeometryFile", m_shouldOverwriteGeometryFile));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldWriteMCRelationships", m_shouldWriteMCRelationships));
+        "UseLArCaloHits", m_useLArCaloHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldWriteTrackRelationships", m_shouldWriteTrackRelationships));
+        "UseLArMCParticles", m_useLArMCParticles));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldFilterByNuanceCode", m_shouldFilterByNuanceCode));

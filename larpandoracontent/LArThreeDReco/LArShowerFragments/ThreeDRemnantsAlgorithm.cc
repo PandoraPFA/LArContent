@@ -19,7 +19,7 @@ namespace lar_content
 {
 
 ThreeDRemnantsAlgorithm::ThreeDRemnantsAlgorithm() :
-    m_nMaxTensorToolRepeats(5000),
+    m_nMaxTensorToolRepeats(1000),
     m_minClusterCaloHits(5),
     m_xOverlapWindow(2.f),
     m_pseudoChi2Cut(10.f)

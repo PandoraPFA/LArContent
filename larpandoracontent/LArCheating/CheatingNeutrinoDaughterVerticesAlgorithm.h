@@ -22,15 +22,6 @@ class CheatingNeutrinoDaughterVerticesAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CheatingNeutrinoDaughterVerticesAlgorithm();
@@ -69,13 +60,6 @@ private:
     std::string         m_neutrinoListName;             ///< The input list of pfo list names
     std::string         m_vertexListName;               ///< The name of the output cosmic-ray vertex list
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingNeutrinoDaughterVerticesAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CheatingNeutrinoDaughterVerticesAlgorithm();
-}
 
 } // namespace lar_content
 

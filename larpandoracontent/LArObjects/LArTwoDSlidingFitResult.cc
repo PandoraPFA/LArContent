@@ -8,6 +8,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -20,6 +21,7 @@ using namespace pandora;
 namespace lar_content
 {
 
+template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
@@ -28,19 +30,32 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_axisDirection(0.f, 0.f, 0.f),
     m_orthoDirection(0.f, 0.f, 0.f)
 {
-    // Get a list of hits coordinates from the cluster
-    CartesianPointVector coordinateVector;
-    LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
+    CartesianPointVector pointVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+    this->CalculateAxes(pointVector, layerPitch);
+    this->FillLayerFitContributionMap(pointVector);
+    this->PerformSlidingLinearFit();
+    this->FindSlidingFitSegments();
+}
 
-    // Calculate the sliding fit result
-    this->CalculateAxes(coordinateVector);
-    this->FillLayerFitContributionMap(coordinateVector);
+template <>
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch) :
+    m_pCluster(nullptr),
+    m_layerFitHalfWindow(layerFitHalfWindow),
+    m_layerPitch(layerPitch),
+    m_axisIntercept(0.f, 0.f, 0.f),
+    m_axisDirection(0.f, 0.f, 0.f),
+    m_orthoDirection(0.f, 0.f, 0.f)
+{
+    this->CalculateAxes(*pPointVector, layerPitch);
+    this->FillLayerFitContributionMap(*pPointVector);
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
         const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
     m_pCluster(pCluster),
@@ -50,22 +65,34 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_axisDirection(axisDirection),
     m_orthoDirection(orthoDirection)
 {
-    // Get a list of hits coordinates from the cluster
-    CartesianPointVector coordinateVector;
-    LArClusterHelper::GetCoordinateVector(pCluster, coordinateVector);
+    CartesianPointVector pointVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+    this->FillLayerFitContributionMap(pointVector);
+    this->PerformSlidingLinearFit();
+    this->FindSlidingFitSegments();
+}
 
-    // Calculate the sliding fit result
-    this->FillLayerFitContributionMap(coordinateVector);
+template <>
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
+    m_pCluster(nullptr),
+    m_layerFitHalfWindow(layerFitHalfWindow),
+    m_layerPitch(layerPitch),
+    m_axisIntercept(axisIntercept),
+    m_axisDirection(axisDirection),
+    m_orthoDirection(orthoDirection)
+{
+    this->FillLayerFitContributionMap(*pPointVector);
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, 
+TwoDSlidingFitResult::TwoDSlidingFitResult(const unsigned int layerFitHalfWindow, const float layerPitch,
+        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection,
         const LayerFitContributionMap &layerFitContributionMap) :
-    m_pCluster(pCluster),
+    m_pCluster(nullptr),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
     m_axisIntercept(axisIntercept),
@@ -75,6 +102,16 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 {
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const pandora::Cluster *TwoDSlidingFitResult::GetCluster() const
+{
+    if (!m_pCluster)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    return m_pCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -147,7 +184,7 @@ void TwoDSlidingFitResult::GetLocalDirection(const CartesianVector &direction, f
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TwoDSlidingFitResult::GetGlobalPosition(const float rL, const float rT, CartesianVector &position) const
-{  
+{
     position = m_axisIntercept + (m_axisDirection * rL) + (m_orthoDirection * rT);
 }
 
@@ -418,7 +455,7 @@ StatusCode TwoDSlidingFitResult::GetExtrapolatedPosition(const float rL, Cartesi
     }
 
     return STATUS_CODE_SUCCESS;
-}   
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -427,7 +464,7 @@ StatusCode TwoDSlidingFitResult::GetExtrapolatedDirection(const float rL, Cartes
     const StatusCode statusCode(this->GetGlobalFitDirection(rL, direction));
 
     if (STATUS_CODE_NOT_FOUND != statusCode)
-        return statusCode;  
+        return statusCode;
 
     const int thisLayer(this->GetLayer(rL));
     const int minLayer(this->GetMinLayer());
@@ -494,7 +531,7 @@ StatusCode TwoDSlidingFitResult::GetExtrapolatedPositionAtX(const float x, Carte
     // TODO How to assign an uncertainty on the extrapolated position?
     return STATUS_CODE_SUCCESS;
 }
-  
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const FitSegment &TwoDSlidingFitResult::GetFitSegment(const float rL) const
@@ -515,13 +552,31 @@ const FitSegment &TwoDSlidingFitResult::GetFitSegment(const float rL) const
 // Private member functions start here
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::CalculateAxes(const CartesianPointVector &coordinateVector)
+void TwoDSlidingFitResult::CalculateAxes(const CartesianPointVector &coordinateVector, const float layerPitch)
 {
-    // Use extremal coordinates to define axis intercept and direction
-    CartesianVector innerCoordinate(0.f, 0.f, 0.f), outerCoordinate(0.f, 0.f, 0.f);
-    LArClusterHelper::GetExtremalCoordinates(coordinateVector, innerCoordinate, outerCoordinate);
-    m_axisIntercept = innerCoordinate;
-    m_axisDirection = (outerCoordinate - innerCoordinate).GetUnitVector();
+    if (coordinateVector.size() < 2)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    CartesianVector centroid(0.f, 0.f, 0.f);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(coordinateVector, centroid, eigenValues, eigenVecs);
+
+    float minProjection(std::numeric_limits<float>::max());
+    CartesianVector fitDirection(eigenVecs.at(0));
+
+    // ATTN TwoDSlidingFitResult convention is to point in direction of increasing z
+    if (fitDirection.GetZ() < 0.f)
+        fitDirection *= -1.f;
+
+    for (const CartesianVector &coordinate : coordinateVector)
+        minProjection = std::min(minProjection, fitDirection.GetDotProduct(coordinate - centroid));
+
+    // Define layers based on centroid rather than individual extremal hits
+    const float fitProjection(layerPitch * std::floor(minProjection / layerPitch));
+
+    m_axisIntercept = centroid + (fitDirection * fitProjection);
+    m_axisDirection = fitDirection;
 
     // Use y-axis to generate an orthogonal axis (assuming that cluster occupies X-Z plane)
     CartesianVector yAxis(0.f, 1.f, 0.f);

@@ -24,15 +24,6 @@ class CheatingClusterCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     CheatingClusterCreationAlgorithm();
@@ -84,13 +75,6 @@ private:
 
     pandora::IntVector  m_particleIdList;               ///< list of particle ids of MCPFOs to be selected
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *CheatingClusterCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new CheatingClusterCreationAlgorithm();
-}
 
 } // namespace lar_content
 

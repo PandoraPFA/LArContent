@@ -29,15 +29,6 @@ class ThreeDLongitudinalTracksAlgorithm : public ThreeDTracksBaseAlgorithm<Longi
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
      *  @brief  Default constructor
      */
     ThreeDLongitudinalTracksAlgorithm();
@@ -104,14 +95,6 @@ public:
      */
     virtual bool Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *ThreeDLongitudinalTracksAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new ThreeDLongitudinalTracksAlgorithm();
-}
 
 } // namespace lar_content
 
