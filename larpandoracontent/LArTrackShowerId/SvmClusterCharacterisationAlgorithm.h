@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTrackShowerId/SvmClusterCharacterisationAlgorithm.h
+ *  @file   larpandoracontent/LArTrackShowerId/SvmSvmClusterCharacterisationAlgorithm.h
  *
  *  @brief  Header file for the svm cluster characterisation algorithm class.
  *
