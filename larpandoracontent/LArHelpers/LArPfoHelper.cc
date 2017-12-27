@@ -424,9 +424,9 @@ const Vertex *LArPfoHelper::GetVertex(const ParticleFlowObject *const pPfo)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPfoHelper::GetSlidingFitTrajectory(const CartesianPointVector &pointVector, const CartesianVector &vertexPosition,
-    const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector)
+    const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector, std::vector<int>* indexVec)
 {
-    LArPfoHelper::SlidingFitTrajectoryImpl(&pointVector, vertexPosition, layerWindow, layerPitch, trackStateVector);
+    LArPfoHelper::SlidingFitTrajectoryImpl(&pointVector, vertexPosition, layerWindow, layerPitch, trackStateVector, indexVec);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -534,9 +534,10 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
 
 template <typename T>
 void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVector &vertexPosition, const unsigned int layerWindow,
-    const float layerPitch, LArTrackStateVector &trackStateVector)
+    const float layerPitch, LArTrackStateVector &trackStateVector, std::vector<int>* indexVec)
 {
     CartesianPointVector pointVector;
+    if (indexVec != nullptr) indexVec->clear();
 
     for (const auto &nextPoint : *pT)
         pointVector.push_back(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint));
@@ -547,6 +548,7 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
     std::sort(pointVector.begin(), pointVector.end(), LArClusterHelper::SortCoordinatesByPosition);
 
     LArTrackTrajectory trackTrajectory;
+    std::vector<int> spIndicesNoPoint;
 
     try
     {
@@ -562,8 +564,10 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
 
         const float scaleFactor((seedDirection.GetDotProduct(seedPosition - vertexPosition) > 0.f) ? +1.f : -1.f);
 
+        int index = -1;
         for (const auto &nextPoint : *pT)
         {
+            index++;
             try
             {
                 const float rL(slidingFitResult.GetLongitudinalDisplacement(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint)));
@@ -583,10 +587,11 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
                 const float projection(seedDirection.GetDotProduct(position - seedPosition));
 
                 trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
-                    LArTrackState(position, direction * scaleFactor, LArPfoHelper::TypeAdaptor::GetCaloHit(nextPoint))));
+                    LArTrackState(position, direction * scaleFactor, LArPfoHelper::TypeAdaptor::GetCaloHit(nextPoint)),index));
             }
             catch (const StatusCodeException &statusCodeException1)
             {
+                spIndicesNoPoint.push_back(index);
                 if (STATUS_CODE_FAILURE == statusCodeException1.GetStatusCode())
                     throw statusCodeException1;
             }
@@ -601,8 +606,14 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
     // Sort trajectory points by distance along track
     std::sort(trackTrajectory.begin(), trackTrajectory.end(), LArPfoHelper::SortByHitProjection);
 
-    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter)
+    for (LArTrackTrajectory::const_iterator tIter = trackTrajectory.begin(), tIterEnd = trackTrajectory.end(); tIter != tIterEnd; ++tIter) {
         trackStateVector.push_back(tIter->second);
+        if (indexVec != nullptr) indexVec->push_back(tIter->index());
+    }
+    // Store indices of spacepoints with no associated trajectory point at the end of indexVec
+    if (indexVec != nullptr) {
+        for (auto idx : spIndicesNoPoint) indexVec->push_back(idx);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -637,7 +648,7 @@ const CaloHit *LArPfoHelper::TypeAdaptor::GetCaloHit(const CaloHit *const &pCalo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template void LArPfoHelper::SlidingFitTrajectoryImpl(const CartesianPointVector *const, const CartesianVector &, const unsigned int, const float, LArTrackStateVector &);
-template void LArPfoHelper::SlidingFitTrajectoryImpl(const CaloHitList *const, const CartesianVector &, const unsigned int, const float, LArTrackStateVector &);
+template void LArPfoHelper::SlidingFitTrajectoryImpl(const CartesianPointVector *const, const CartesianVector &, const unsigned int, const float, LArTrackStateVector &, std::vector<int>* indexVec);
+template void LArPfoHelper::SlidingFitTrajectoryImpl(const CaloHitList *const, const CartesianVector &, const unsigned int, const float, LArTrackStateVector &, std::vector<int>* indexVec);
 
 } // namespace lar_content

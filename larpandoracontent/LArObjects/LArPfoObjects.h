@@ -59,7 +59,14 @@ private:
 };
 
 typedef std::vector<LArTrackState> LArTrackStateVector;
-typedef std::pair<float, LArTrackState> LArTrackTrajectoryPoint;
+class LArTrackTrajectoryPoint : public std::pair<float, LArTrackState> {
+ public:
+ LArTrackTrajectoryPoint(float first, LArTrackState second) : std::pair<float, LArTrackState>(first, second) { }
+ LArTrackTrajectoryPoint(float first, LArTrackState second, unsigned int idx) : std::pair<float, LArTrackState>(first, second), index_(idx) { }
+  int index() const { return index_; }
+    private:
+  int index_;
+};
 typedef std::vector<LArTrackTrajectoryPoint> LArTrackTrajectory;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
