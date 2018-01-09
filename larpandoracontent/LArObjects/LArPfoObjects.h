@@ -20,6 +20,9 @@ namespace pandora {class CaloHit;}
 namespace lar_content
 {
 
+/**
+ *  @brief  LArTrackState class
+ */
 class LArTrackState : public pandora::TrackState
 {
 public:
@@ -59,18 +62,50 @@ private:
 };
 
 typedef std::vector<LArTrackState> LArTrackStateVector;
-class LArTrackTrajectoryPoint : public std::pair<float, LArTrackState> {
- public:
- LArTrackTrajectoryPoint(float first, LArTrackState second) : std::pair<float, LArTrackState>(first, second) { }
- LArTrackTrajectoryPoint(float first, LArTrackState second, unsigned int idx) : std::pair<float, LArTrackState>(first, second), index_(idx) { }
-  int index() const { return index_; }
-    private:
-  int index_;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  LArTrackTrajectoryPoint class
+ */
+class LArTrackTrajectoryPoint : public std::pair<float, LArTrackState>
+{
+public:
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  projectedDistance the projected distance
+     *  @param  larTrackState the lar track state
+     */
+    LArTrackTrajectoryPoint(const float projectedDistance, const LArTrackState &larTrackState);
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  projectedDistance the projected distance
+     *  @param  larTrackState the lar track state
+     *  @param  index the index associated with the trajectory point
+     */
+    LArTrackTrajectoryPoint(const float projectedDistance, const LArTrackState &larTrackState, const int index);
+
+    /**
+     *  @brief  Get the index associated with the trajectory point
+     *
+     *  @return the index associated with the trajectory point
+     */
+    int GetIndex() const;
+
+private:
+    int m_index;    ///< The index associated with the trajectory point
 };
+
 typedef std::vector<LArTrackTrajectoryPoint> LArTrackTrajectory;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+/**
+ *  @brief  LArShowerPCA class
+ */
 class LArShowerPCA
 {
 public:
@@ -157,6 +192,30 @@ private:
     const pandora::CartesianVector  m_eigenValues;      ///< The vector of eigenvalues
     const pandora::CartesianVector  m_axisLengths;      ///< The vector of lengths
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArTrackTrajectoryPoint::LArTrackTrajectoryPoint(const float projectedDistance, const LArTrackState &larTrackState) :
+    std::pair<float, LArTrackState>(projectedDistance, larTrackState),
+    m_index(-1)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArTrackTrajectoryPoint::LArTrackTrajectoryPoint(const float projectedDistance, const LArTrackState &larTrackState, const int index) :
+    std::pair<float, LArTrackState>(projectedDistance, larTrackState),
+    m_index(index)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArTrackTrajectoryPoint::GetIndex() const
+{
+    return m_index;
+}
 
 } // namespace lar_content
 
