@@ -229,7 +229,9 @@ void CosmicRayTaggingMonitoringTool::PrintPfoTable(const PfoVector &orderedPfoVe
         table.AddElement(pPfo->GetParticleId());
 
         CaloHitList all2DCaloHits;
-        LArMonitoringHelper::CollectCaloHits(pPfo, all2DCaloHits);
+        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, all2DCaloHits);
+        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, all2DCaloHits);
+        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, all2DCaloHits);
 
         table.AddElement(all2DCaloHits.size());
         table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, all2DCaloHits));

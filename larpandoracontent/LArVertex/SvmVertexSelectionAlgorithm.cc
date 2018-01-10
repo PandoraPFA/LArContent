@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArSvmHelper.h"
 
@@ -35,13 +36,7 @@ SvmVertexSelectionAlgorithm::SvmVertexSelectionAlgorithm() :
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_trainingSetMode(false),
     m_allowClassifyDuringTraining(false),
-    m_selectInputHits(true),
     m_mcVertexXCorrection(0.f),
-    m_minHitSharingFraction(0.9f),
-    m_maxPhotonPropagation(2.5f),
-    m_minHitsForGoodView(5),
-    m_minPrimaryGoodHits(15),
-    m_minPrimaryGoodViews(2),
     m_minClusterCaloHits(12),
     m_slidingFitWindow(100),
     m_minShowerSpineLength(15.f),
@@ -602,6 +597,7 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType(const VertexVector &
     LArMCParticleHelper::SelectTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
 
     std::string interactionType("UNKNOWN");
+    const LArMCParticleHelper::ValidationParameters parameters;
 
     for (const Vertex *const pVertex : vertexVector)
     {
@@ -618,9 +614,8 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType(const VertexVector &
             {
                 if (const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino))
                 {
-                    interactionType = LArMCParticleHelper::ToString(LArMCParticleHelper::GetInteractionType(pLArMCNeutrino, pMCParticleList,
-                        pCaloHitList, m_minPrimaryGoodHits, m_minHitsForGoodView, m_minPrimaryGoodViews, m_selectInputHits, m_maxPhotonPropagation,
-                        m_minHitSharingFraction));
+                    interactionType = LArInteractionTypeHelper::ToString(LArInteractionTypeHelper::GetInteractionType(pLArMCNeutrino,
+                        pMCParticleList, pCaloHitList, parameters));
                 }
 
                 mcVertexDr = dr;
@@ -816,26 +811,9 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
         m_svMachineVertex.Initialize(fullSvmFileName, m_vertexSvmName);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectInputHits", m_selectInputHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MCVertexXCorrection", m_mcVertexXCorrection));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitSharingFraction", m_minHitSharingFraction));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPhotonPropagation", m_maxPhotonPropagation));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsForGoodView", m_minHitsForGoodView));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodHits", m_minPrimaryGoodHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodViews", m_minPrimaryGoodViews));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrainingOutputFileRegion", m_trainingOutputFileRegion));
@@ -915,4 +893,5 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
+
 } // namespace lar_content

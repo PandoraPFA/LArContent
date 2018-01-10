@@ -388,13 +388,7 @@ private:
 
     bool                  m_trainingSetMode;                      ///< Whether to train
     bool                  m_allowClassifyDuringTraining;          ///< Whether classification is allowed during training
-    bool                  m_selectInputHits;                      ///< Whether to use only hits passing mc-based quality (is "reconstructable") checks
     float                 m_mcVertexXCorrection;                  ///< The correction to the x-coordinate of the MC vertex position
-    float                 m_minHitSharingFraction;                ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
-    float                 m_maxPhotonPropagation;                 ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
-    unsigned int          m_minHitsForGoodView;                   ///< Minimum number of Hits for a view to be considered "good"
-    unsigned int          m_minPrimaryGoodHits;                   ///< Minimum number of primary good Hits
-    unsigned int          m_minPrimaryGoodViews;                  ///< Minimum number of primary good views
     std::string           m_trainingOutputFileRegion;             ///< The training output file for the region Svm
     std::string           m_trainingOutputFileVertex;             ///< The training output file for the vertex Svm
     std::string           m_mcParticleListName;                   ///< The MC particle list for creating training examples

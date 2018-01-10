@@ -64,8 +64,6 @@ public:
         float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
     };
 
-    // -------------------------------------------------------------------------------------------------------------------------------------
-
     /**
      *  @brief   InteractionType enum
      */
@@ -252,6 +250,17 @@ public:
     static bool SortByMomentum(const pandora::MCParticle *const pLhs, const pandora::MCParticle *const pRhs);
 
     /**
+     *  @brief  Match calo hits to their parent particles
+     *
+     *  @param  pCaloHitList the input list of calo hits
+     *  @param  mcToPrimaryMCMap input mapping between mc particles and their primaries
+     *  @param  hitToPrimaryMCMap output mapping between calo hits and their main primary MC particle
+     *  @param  mcToTrueHitListMap output mapping between MC particles and their associated hits
+     */
+    static void GetMCParticleToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
+        CaloHitToMCMap &hitToPrimaryMCMap, MCContributionMap &mcToTrueHitListMap);
+
+    /**
      *  @brief  Select a subset of true neutrinos representing those that should be used in performance metrics
      *
      *  @param  pAllMCParticleList address of the input mc particle list
@@ -304,7 +313,8 @@ public:
      *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
      *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
      */
-    static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, const ValidationParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToGoodHitsMap);
+    static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList,
+        const ValidationParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToGoodHitsMap);
 
     /**
      *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable
@@ -315,7 +325,7 @@ public:
      *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
      */
     static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const MCContributionMap &mcToGoodTrueHitListMap,
-    const ValidationParameters &parameters, MCContributionMap &selectedMCParticlesToGoodHitsMap);
+        const ValidationParameters &parameters, MCContributionMap &selectedMCParticlesToGoodHitsMap);
 
     /**
      *  @brief  Returns true if passed a primary neutrino final state MCParticle
@@ -344,7 +354,8 @@ public:
      *  @param  selectedMCParticleToGoodHitsMap the input mapping from selected reconstructable MCParticles to their good hits
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
      */
-    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToGoodHitsMap, PfoContributionMap &pfoToReconstructable2DHitsMap);
+    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToGoodHitsMap,
+        PfoContributionMap &pfoToReconstructable2DHitsMap);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
@@ -353,7 +364,8 @@ public:
      *  @param  selectedMCParticleToGoodHitsMaps the input vector of mappings from selected reconstructable MCParticles to their good hits
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
      */
-    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoContributionMap &pfoToReconstructable2DHitsMap);
+    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps,
+        PfoContributionMap &pfoToReconstructable2DHitsMap);
 
     /**
      *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
@@ -362,7 +374,8 @@ public:
      *  @param  selectedMCParticleToGoodHitsMaps the input mappings from selected reconstructable MCParticles to their good hits
      *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
      */
-    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D);
+    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps,
+        pandora::CaloHitList &reconstructableCaloHitList2D);
 
     /**
      *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
@@ -373,7 +386,8 @@ public:
      *  @param  pfoToMCParticleHitSharingMap the output mapping from Pfos to selected reconstructable MCParticles and the number hits shared
      *  @param  mcParticleToPfoHitSharingMap the output mapping from selected reconstructable MCParticles to Pfos and the number hits shared
      */
-    static void GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
+    static void GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps,
+        PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
 
     /**
      *  @brief  Count the number of hits in the intersection of two hit lists
@@ -384,143 +398,6 @@ public:
      *  @return The number of hits that are found in both hitListA and hitListB
      */
     static unsigned int CountSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
-
-    /**
-     *  @brief  Get the interaction type of an event
-     *
-     *  @param  pLArMCNeutrino the address of the LArMCParticle object
-     *  @param  pMCParticleList the address of the list of MCParticles
-     *  @param  pCaloHitList the address of the list of CaloHits
-     *  @param  minPrimaryGoodHits the minimum number of primary good Hits
-     *  @param  minHitsForGoodView the minimum number of Hits for a good view
-     *  @param  minPrimaryGoodViews the minimum number of primary good views
-     *  @param  selectInputHits whether to select input hits
-     *  @param  maxPhotonPropagation the maximum photon propagation length
-     *  @param  minHitSharingFraction the minimum Hit sharing fraction
-     *
-     *  @return interaction type
-     */
-    static InteractionType GetInteractionType(const LArMCParticle *const pLArMCNeutrino, const pandora::MCParticleList *pMCParticleList,
-        const pandora::CaloHitList *pCaloHitList, const unsigned int minPrimaryGoodHits, const unsigned int minHitsForGoodView,
-        const unsigned int minPrimaryGoodViews, const bool selectInputHits, const float maxPhotonPropagation, const float minHitSharingFraction);
-
-    /**
-     *  @brief  Get a string representation of an interaction type
-     *
-     *  @param  interactionType the interaction type
-     *
-     *  @return string
-     */
-    static std::string ToString(const InteractionType interactionType);
-
-    //--------------------------------------------------------------------------------------------------------------------------------------
-
-    /**
-     *  @brief   InteractionType enum
-     */
-    enum InteractionType : int
-    {
-        CCQEL_MU,
-        CCQEL_MU_P,
-        CCQEL_MU_P_P,
-        CCQEL_MU_P_P_P,
-        CCQEL_MU_P_P_P_P,
-        CCQEL_MU_P_P_P_P_P,
-        CCQEL_E,
-        CCQEL_E_P,
-        CCQEL_E_P_P,
-        CCQEL_E_P_P_P,
-        CCQEL_E_P_P_P_P,
-        CCQEL_E_P_P_P_P_P,
-        NCQEL_P,
-        NCQEL_P_P,
-        NCQEL_P_P_P,
-        NCQEL_P_P_P_P,
-        NCQEL_P_P_P_P_P,
-        CCRES_MU,
-        CCRES_MU_P,
-        CCRES_MU_P_P,
-        CCRES_MU_P_P_P,
-        CCRES_MU_P_P_P_P,
-        CCRES_MU_P_P_P_P_P,
-        CCRES_MU_PIPLUS,
-        CCRES_MU_P_PIPLUS,
-        CCRES_MU_P_P_PIPLUS,
-        CCRES_MU_P_P_P_PIPLUS,
-        CCRES_MU_P_P_P_P_PIPLUS,
-        CCRES_MU_P_P_P_P_P_PIPLUS,
-        CCRES_MU_PHOTON,
-        CCRES_MU_P_PHOTON,
-        CCRES_MU_P_P_PHOTON,
-        CCRES_MU_P_P_P_PHOTON,
-        CCRES_MU_P_P_P_P_PHOTON,
-        CCRES_MU_P_P_P_P_P_PHOTON,
-        CCRES_MU_PIZERO,
-        CCRES_MU_P_PIZERO,
-        CCRES_MU_P_P_PIZERO,
-        CCRES_MU_P_P_P_PIZERO,
-        CCRES_MU_P_P_P_P_PIZERO,
-        CCRES_MU_P_P_P_P_P_PIZERO,
-        CCRES_E,
-        CCRES_E_P,
-        CCRES_E_P_P,
-        CCRES_E_P_P_P,
-        CCRES_E_P_P_P_P,
-        CCRES_E_P_P_P_P_P,
-        CCRES_E_PIPLUS,
-        CCRES_E_P_PIPLUS,
-        CCRES_E_P_P_PIPLUS,
-        CCRES_E_P_P_P_PIPLUS,
-        CCRES_E_P_P_P_P_PIPLUS,
-        CCRES_E_P_P_P_P_P_PIPLUS,
-        CCRES_E_PHOTON,
-        CCRES_E_P_PHOTON,
-        CCRES_E_P_P_PHOTON,
-        CCRES_E_P_P_P_PHOTON,
-        CCRES_E_P_P_P_P_PHOTON,
-        CCRES_E_P_P_P_P_P_PHOTON,
-        CCRES_E_PIZERO,
-        CCRES_E_P_PIZERO,
-        CCRES_E_P_P_PIZERO,
-        CCRES_E_P_P_P_PIZERO,
-        CCRES_E_P_P_P_P_PIZERO,
-        CCRES_E_P_P_P_P_P_PIZERO,
-        NCRES_P,
-        NCRES_P_P,
-        NCRES_P_P_P,
-        NCRES_P_P_P_P,
-        NCRES_P_P_P_P_P,
-        NCRES_PIPLUS,
-        NCRES_P_PIPLUS,
-        NCRES_P_P_PIPLUS,
-        NCRES_P_P_P_PIPLUS,
-        NCRES_P_P_P_P_PIPLUS,
-        NCRES_P_P_P_P_P_PIPLUS,
-        NCRES_PIMINUS,
-        NCRES_P_PIMINUS,
-        NCRES_P_P_PIMINUS,
-        NCRES_P_P_P_PIMINUS,
-        NCRES_P_P_P_P_PIMINUS,
-        NCRES_P_P_P_P_P_PIMINUS,
-        NCRES_PHOTON,
-        NCRES_P_PHOTON,
-        NCRES_P_P_PHOTON,
-        NCRES_P_P_P_PHOTON,
-        NCRES_P_P_P_P_PHOTON,
-        NCRES_P_P_P_P_P_PHOTON,
-        NCRES_PIZERO,
-        NCRES_P_PIZERO,
-        NCRES_P_P_PIZERO,
-        NCRES_P_P_P_PIZERO,
-        NCRES_P_P_P_P_PIZERO,
-        NCRES_P_P_P_P_P_PIZERO,
-        CCDIS,
-        NCDIS,
-        CCCOH,
-        NCCOH,
-        OTHER_INTERACTION,
-        ALL_INTERACTIONS
-    };
 
 private:
     /**

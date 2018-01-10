@@ -98,7 +98,7 @@ StatusCode EventValidationAlgorithm::Run()
 
     // Obtain vector: target pfos
     PfoList pfoList;
-    LArMonitoringHelper::ExtractTargetPfos(m_useRecoNeutrinosOnly ? recoNeutrinoList : allRecoParticleList, m_primaryPfosOnly, pfoList);
+    // TODO LArMonitoringHelper::ExtractTargetPfos(m_useRecoNeutrinosOnly ? recoNeutrinoList : allRecoParticleList, m_primaryPfosOnly, pfoList);
 
     // Obtain map: pfo -> unique identifier
     PfoIdMap pfoIdMap;
@@ -123,18 +123,18 @@ StatusCode EventValidationAlgorithm::Run()
     // Obtain maps: [hit -> primary mc particle], [primary mc particle -> list of hits]
     LArMCParticleHelper::CaloHitToMCMap hitToPrimaryMCMap;
     LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
-    LArMonitoringHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
 
     // Obtain maps: [hit -> pfo], [pfo -> list of hits]
     LArMCParticleHelper::CaloHitToPfoMap hitToPfoMap;
     LArMCParticleHelper::PfoContributionMap pfoToHitListMap;
-    LArMonitoringHelper::GetPfoToCaloHitMatches(&selectedCaloHitList, pfoList, m_collapseToPrimaryPfos, hitToPfoMap, pfoToHitListMap);
+    // TODO LArMonitoringHelper::GetPfoToCaloHitMatches(&selectedCaloHitList, pfoList, m_collapseToPrimaryPfos, hitToPfoMap, pfoToHitListMap);
 
     // Obtain maps: [mc particle -> best matched pfo], [mc particle -> list of hits included in best pfo], [mc particle -> all matched pfos (and matched hits)]
     LArMCParticleHelper::MCToPfoMap mcToBestPfoMap;
     LArMCParticleHelper::MCContributionMap mcToBestPfoHitsMap;
     LArMCParticleHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap;
-    LArMonitoringHelper::GetMCParticleToPfoMatches(&selectedCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
+    // TODO LArMonitoringHelper::GetMCParticleToPfoMatches(&selectedCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
     // Remove shared hits where target particle deposits below threshold energy fraction
     CaloHitList goodCaloHitList;
@@ -143,7 +143,7 @@ StatusCode EventValidationAlgorithm::Run()
     // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
     LArMCParticleHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
     LArMCParticleHelper::MCContributionMap mcToGoodTrueHitListMap;
-    LArMonitoringHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
 
     // Obtain vector: simple mc primaries
     SimpleMCPrimaryList simpleMCPrimaryList;
@@ -491,7 +491,7 @@ void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrino
         nRecoOtherHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, recoOtherHits);
 
         PfoList pfoList;
-        LArMonitoringHelper::ExtractTargetPfos(PfoList(1, pPfo), m_primaryPfosOnly, pfoList);
+        // TODO LArMonitoringHelper::ExtractTargetPfos(PfoList(1, pPfo), m_primaryPfosOnly, pfoList);
         recoNeutrinoNPrimaries = pfoList.size();
     }
 

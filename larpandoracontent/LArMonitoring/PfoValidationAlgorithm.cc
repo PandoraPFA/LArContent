@@ -8,9 +8,9 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
-#include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArMonitoring/PfoValidationAlgorithm.h"

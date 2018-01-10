@@ -48,7 +48,7 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
 
     LArMCParticleHelper::CaloHitToMCMap hitToPrimaryMCMap;
     LArMCParticleHelper::MCContributionMap mcPrimaryToTrueHitListMap;
-    LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcPrimaryToTrueHitListMap);
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcPrimaryToTrueHitListMap);
 
     SimpleMCParticleList simpleMCPrimaryList;
     this->GetSimpleMCParticleList(mcPrimaryVector, mcPrimaryToTrueHitListMap, simpleMCPrimaryList);
@@ -61,7 +61,7 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
 
     LArMCParticleHelper::CaloHitToMCMap hitToMCMap;
     LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
-    LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcParticleToSelfMap, hitToMCMap, mcToTrueHitListMap);
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcParticleToSelfMap, hitToMCMap, mcToTrueHitListMap);
 
     SimpleMCParticleList simpleMCParticleList;
     this->GetSimpleMCParticleList(mcParticleVector, mcToTrueHitListMap, simpleMCParticleList);
