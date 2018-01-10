@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/CosmicRayTaggingMonitoringTool.h
+ *  @file   larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h
  *
  *  @brief  Header file for the cosmic-ray tagging monitoring tool class.
  *
@@ -62,7 +62,8 @@ private:
      *  @param  pfoPurityMap output mapping from Pfos to their target purities
      *  @param  pfoClassificationMap output mapping from Pfos to their classification
      */
-    void CalculatePfoMetrics(const LArMCParticleHelper::PfoToMCParticleHitSharingMap &hitSharingMap, const LArMCParticleHelper::PfoContributionMap &pfoToCaloHitListMap, const LArMCParticleHelper::MCContributionMapVector &targetsToGoodHitsMaps, PfoToFloatMap &pfoSignificanceMap, PfoToFloatMap &pfoPurityMap, PfoClassificationMap &pfoClassificationMap) const;
+    void CalculatePfoMetrics(const LArMCParticleHelper::PfoToMCParticleHitSharingMap &hitSharingMap, const LArMCParticleHelper::PfoContributionMap &pfoToCaloHitListMap,
+        const LArMCParticleHelper::MCContributionMapVector &targetsToGoodHitsMaps, PfoToFloatMap &pfoSignificanceMap, PfoToFloatMap &pfoPurityMap, PfoClassificationMap &pfoClassificationMap) const;
 
     /**
      *  @brief  Returns true if the main MCParticle of the supplied Pfo is a muon
@@ -99,7 +100,8 @@ private:
      *  @param  pfoClassificationMap input mapping from Pfos to their classification
      *  @param  ambiguousPfos input list of ambiguous Pfos as (not) tagged by a previous CR tagging module
      */
-    void PrintPfoTable(const pandora::PfoVector &orderedPfoVector, const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const PfoToFloatMap &pfoPurityMap, const PfoToFloatMap &pfoSignificanceMap, const PfoClassificationMap &pfoClassificationMap, const pandora::PfoList &ambiguousPfos) const;
+    void PrintPfoTable(const pandora::PfoVector &orderedPfoVector, const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap,
+        const PfoToFloatMap &pfoPurityMap, const PfoToFloatMap &pfoSignificanceMap, const PfoClassificationMap &pfoClassificationMap, const pandora::PfoList &ambiguousPfos) const;
 
     /**
      *  @brief  Read settings

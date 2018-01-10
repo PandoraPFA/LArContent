@@ -1,30 +1,30 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h
+ *  @file   larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h
  * 
- *  @brief  Header file for the shower tensor visualization tool class.
+ *  @brief  Header file for the transverse tensor visualization tool class.
  * 
  *  $Log: $
  */
-#ifndef SHOWER_TENSOR_VISUALIZATION_TOOL_H
-#define SHOWER_TENSOR_VISUALIZATION_TOOL_H 1
+#ifndef TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H
+#define TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  ShowerTensorVisualizationTool class
+ *  @brief  TransverseTensorVisualizationTool class
  */
-class ShowerTensorVisualizationTool : public ShowerTensorTool
+class TransverseTensorVisualizationTool : public TransverseTensorTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ShowerTensorVisualizationTool();
+    TransverseTensorVisualizationTool();
 
-    bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -37,4 +37,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef SHOWER_TENSOR_VISUALIZATION_TOOL_H
+#endif // #ifndef TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H

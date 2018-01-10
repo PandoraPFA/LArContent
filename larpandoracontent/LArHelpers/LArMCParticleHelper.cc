@@ -15,9 +15,9 @@
 #include "Pandora/PdgTable.h"
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include <algorithm>
@@ -676,6 +676,7 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
         bool isTargetHit(false);
         for (const MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
         {
+            // ATTN This map is unordered, but this does not impact search for specific target hit
             for (const MCContributionMap::value_type &mapEntry : mcParticleToGoodHitsMap)
             {
                 if (std::find(mapEntry.second.begin(), mapEntry.second.end(), pCaloHit) != mapEntry.second.end())
@@ -694,37 +695,46 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
+void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps,
+    PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
 {
-    for (PfoContributionMap::const_iterator pfoIt = pfoToReconstructable2DHitsMap.begin(); pfoIt != pfoToReconstructable2DHitsMap.end(); ++pfoIt)
+    PfoVector sortedPfos;
+    for (const auto &mapEntry : pfoToReconstructable2DHitsMap) sortedPfos.push_back(mapEntry.first);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const ParticleFlowObject *const pPfo : sortedPfos)
     {
         for (const MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
         {
-            for (MCContributionMap::const_iterator mcParticleIt = mcParticleToGoodHitsMap.begin(); mcParticleIt != mcParticleToGoodHitsMap.end(); ++mcParticleIt)
+            MCParticleVector sortedMCParticles;
+            for (const auto &mapEntry : mcParticleToGoodHitsMap) sortedMCParticles.push_back(mapEntry.first);
+            std::sort(sortedMCParticles.begin(), sortedMCParticles.end(), PointerLessThan<MCParticle>());
+
+            for (const MCParticle *const pMCParticle : sortedMCParticles)
             {
                 // Add map entries for this Pfo & MCParticle if required
-                if (pfoToMCParticleHitSharingMap.find(pfoIt->first) == pfoToMCParticleHitSharingMap.end())
-                    if (!pfoToMCParticleHitSharingMap.insert(PfoToMCParticleHitSharingMap::value_type(pfoIt->first, std::vector<MCParticleIntPair>())).second)
+                if (pfoToMCParticleHitSharingMap.find(pPfo) == pfoToMCParticleHitSharingMap.end())
+                    if (!pfoToMCParticleHitSharingMap.insert(PfoToMCParticleHitSharingMap::value_type(pPfo, std::vector<MCParticleIntPair>())).second)
                         throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT); // ATTN maybe overkill
 
-                if (mcParticleToPfoHitSharingMap.find(mcParticleIt->first) == mcParticleToPfoHitSharingMap.end())
-                    if (!mcParticleToPfoHitSharingMap.insert(MCParticleToPfoHitSharingMap::value_type(mcParticleIt->first, std::vector<PfoIntPair>())).second)
+                if (mcParticleToPfoHitSharingMap.find(pMCParticle) == mcParticleToPfoHitSharingMap.end())
+                    if (!mcParticleToPfoHitSharingMap.insert(MCParticleToPfoHitSharingMap::value_type(pMCParticle, std::vector<PfoIntPair>())).second)
                         throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
                 // Check this Pfo & MCParticle pairing hasn't already been checked
-                std::vector<MCParticleIntPair> &mcHitPairs(pfoToMCParticleHitSharingMap.at(pfoIt->first));
-                std::vector<PfoIntPair> &pfoHitPairs(mcParticleToPfoHitSharingMap.at(mcParticleIt->first));
+                std::vector<MCParticleIntPair> &mcHitPairs(pfoToMCParticleHitSharingMap.at(pPfo));
+                std::vector<PfoIntPair> &pfoHitPairs(mcParticleToPfoHitSharingMap.at(pMCParticle));
 
-                if (std::any_of(mcHitPairs.begin(), mcHitPairs.end(), [&] (const MCParticleIntPair &pair) { return (pair.first == mcParticleIt->first); }))
+                if (std::any_of(mcHitPairs.begin(), mcHitPairs.end(), [&] (const MCParticleIntPair &pair) { return (pair.first == pMCParticle); }))
                     throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
-                if (std::any_of(pfoHitPairs.begin(), pfoHitPairs.end(), [&] (const PfoIntPair &pair) { return (pair.first == pfoIt->first); }))
+                if (std::any_of(pfoHitPairs.begin(), pfoHitPairs.end(), [&] (const PfoIntPair &pair) { return (pair.first == pPfo); }))
                     throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
                 // Add the number of shared hits to the maps
-                const unsigned int nSharedHits(LArMCParticleHelper::CountSharedHits(pfoIt->second, mcParticleIt->second));
-                mcHitPairs.push_back(MCParticleIntPair(mcParticleIt->first, nSharedHits));
-                pfoHitPairs.push_back(PfoIntPair(pfoIt->first, nSharedHits));
+                const unsigned int nSharedHits(LArMCParticleHelper::CountSharedHits(pfoToReconstructable2DHitsMap.at(pPfo), mcParticleToGoodHitsMap.at(pMCParticle)));
+                mcHitPairs.push_back(MCParticleIntPair(pMCParticle, nSharedHits));
+                pfoHitPairs.push_back(PfoIntPair(pPfo, nSharedHits));
             }
         }
     }

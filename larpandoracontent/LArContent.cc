@@ -27,7 +27,6 @@
 
 #include "larpandoracontent/LArControlFlow/BeamParticleIdTool.h"
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h"
-#include "larpandoracontent/LArControlFlow/CosmicRayTaggingMonitoringTool.h"
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/NeutrinoIdTool.h"
 #include "larpandoracontent/LArControlFlow/PostProcessingAlgorithm.h"
@@ -40,10 +39,13 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
+#include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
 #include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/VisualMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/PfoValidationAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/ShowerTensorVisualizationTool.h"
+#include "larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
 #include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
@@ -94,7 +96,6 @@
 
 #include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
-#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerMatching/SimpleShowersTool.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerMatching/SplitShowersTool.h"
 
@@ -109,7 +110,6 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TracksCrossingGapsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
-#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TransverseTensorVisualizationTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
@@ -262,9 +262,11 @@
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
-    d("LArCosmicRayTaggingMonitoring",          CosmicRayTaggingMonitoringTool)                                                 \
     d("LArNeutrinoId",                          NeutrinoIdTool)                                                                 \
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
+    d("LArCosmicRayTaggingMonitoring",          CosmicRayTaggingMonitoringTool)                                                 \
+    d("LArShowerTensorVisualization",           ShowerTensorVisualizationTool)                                                  \
+    d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
     d("LArCheatingCosmicRayTagging",            CheatingCosmicRayTaggingTool)                                                   \
     d("LArCheatingNeutrinoId",                  CheatingNeutrinoIdTool)                                                         \
@@ -273,7 +275,6 @@
     d("LArEventSlicing",                        EventSlicingTool)                                                               \
     d("LArVertexAssociatedPfos",                VertexAssociatedPfosTool)                                                       \
     d("LArClearShowers",                        ClearShowersTool)                                                               \
-    d("LArShowerTensorVisualization",           ShowerTensorVisualizationTool)                                                  \
     d("LArSimpleShowers",                       SimpleShowersTool)                                                              \
     d("LArSplitShowers",                        SplitShowersTool)                                                               \
     d("LArClearTrackFragments",                 ClearTrackFragmentsTool)                                                        \
@@ -296,7 +297,6 @@
     d("LArOvershootTracks",                     OvershootTracksTool)                                                            \
     d("LArTracksCrossingGaps",                  TracksCrossingGapsTool)                                                         \
     d("LArTrackSplitting",                      TrackSplittingTool)                                                             \
-    d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArUndershootTracks",                    UndershootTracksTool)                                                           \
     d("LArEnergyKickFeature",                   EnergyKickFeatureTool)                                                          \
     d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \

@@ -314,7 +314,7 @@ unsigned int LArMonitoringHelper::CountHitsByType(const HitType hitType, const C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, MCParticleVector &orderedMCParticleVector)
+void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, MCParticleVector &orderedMCParticleVector)
 {
     for (const LArMCParticleHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
     {
@@ -332,7 +332,7 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::
                 return (a.second.size() > b.second.size());
 
             // ATTN default to normal MCParticle sorting to avoid tie-breakers
-            return (a.first < b.first);
+            return (*(a.first) < *(b.first));
         });
 
         for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitPair : mcParticleToGoodHitsVect)
