@@ -191,7 +191,7 @@ bool EventWritingAlgorithm::PassMCParticleFilter() const
 
     LArMCParticleHelper::CaloHitToMCMap hitToPrimaryMCMap;          // [hit -> primary mc particle]
     LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;      // [primary mc particle -> true hit list]
-    LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
 
     unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPhotons(0), nChargedPions(0);
 
