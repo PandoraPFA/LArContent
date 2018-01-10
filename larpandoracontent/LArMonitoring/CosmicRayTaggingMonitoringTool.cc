@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/CosmicRayTaggingMonitoringTool.cc
+ *  @file   larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.cc
  *
  *  @brief  Implementation of the cosmic-ray tagging monitoring tool class.
  *
@@ -9,7 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/PdgTable.h"
 
-#include "larpandoracontent/LArControlFlow/CosmicRayTaggingMonitoringTool.h"
+#include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
@@ -93,24 +93,31 @@ void CosmicRayTaggingMonitoringTool::FindAmbiguousPfos(const PfoList &parentCosm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTaggingMonitoringTool::CalculatePfoMetrics(const LArMCParticleHelper::PfoToMCParticleHitSharingMap &hitSharingMap, const LArMCParticleHelper::PfoContributionMap &pfoToCaloHitListMap, const LArMCParticleHelper::MCContributionMapVector &targetsToGoodHitsMaps, PfoToFloatMap &pfoSignificanceMap, PfoToFloatMap &pfoPurityMap, PfoClassificationMap &pfoClassificationMap) const
+void CosmicRayTaggingMonitoringTool::CalculatePfoMetrics(const LArMCParticleHelper::PfoToMCParticleHitSharingMap &hitSharingMap, const LArMCParticleHelper::PfoContributionMap &pfoToCaloHitListMap,
+    const LArMCParticleHelper::MCContributionMapVector &targetsToGoodHitsMaps, PfoToFloatMap &pfoSignificanceMap, PfoToFloatMap &pfoPurityMap, PfoClassificationMap &pfoClassificationMap) const
 {
-    for (LArMCParticleHelper::PfoToMCParticleHitSharingMap::const_iterator it=hitSharingMap.begin(); it != hitSharingMap.end(); ++it)
+    PfoVector sortedPfos;
+    for (const auto &mapEntry : hitSharingMap) sortedPfos.push_back(mapEntry.first);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const ParticleFlowObject *const pPfo : sortedPfos)
     {
-        if (pfoToCaloHitListMap.find(it->first) == pfoToCaloHitListMap.end())
+        if (pfoToCaloHitListMap.find(pPfo) == pfoToCaloHitListMap.end())
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        const unsigned int n2DHits(pfoToCaloHitListMap.at(it->first).size());
+        const unsigned int n2DHits(pfoToCaloHitListMap.at(pPfo).size());
         float significance(0);
         float purity(0);
 
         if (n2DHits != 0)
         {
             // Sum over all target/shared hits pairs
-            for (const LArMCParticleHelper::MCParticleIntPair &targetHitsShared : it->second)
+            for (const LArMCParticleHelper::MCParticleIntPair &targetHitsShared : hitSharingMap.at(pPfo))
             {
                 bool foundTarget(false);
                 unsigned int nMCHits(std::numeric_limits<unsigned int>::max());
+
+                // ATTN This map is unordered, but this does not impact search for specific target hit
                 for (const LArMCParticleHelper::MCContributionMap &mcContributionMap : targetsToGoodHitsMaps)
                 {
                     if (mcContributionMap.find(targetHitsShared.first) != mcContributionMap.end())
@@ -129,14 +136,14 @@ void CosmicRayTaggingMonitoringTool::CalculatePfoMetrics(const LArMCParticleHelp
             }
         }
 
-        if (!pfoSignificanceMap.insert(PfoToFloatMap::value_type(it->first, significance)).second)
+        if (!pfoSignificanceMap.insert(PfoToFloatMap::value_type(pPfo, significance)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
-        if (!pfoPurityMap.insert(PfoToFloatMap::value_type(it->first, purity)).second)
+        if (!pfoPurityMap.insert(PfoToFloatMap::value_type(pPfo, purity)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
 
-        Classification classification(this->ClassifyPfo(n2DHits, significance, purity, this->IsMainMCParticleMuon(it->first)));
-        if (!pfoClassificationMap.insert(PfoClassificationMap::value_type(it->first, classification)).second)
+        Classification classification(this->ClassifyPfo(n2DHits, significance, purity, this->IsMainMCParticleMuon(pPfo)));
+        if (!pfoClassificationMap.insert(PfoClassificationMap::value_type(pPfo, classification)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
 }
