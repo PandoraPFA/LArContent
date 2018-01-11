@@ -33,159 +33,90 @@ MCParticleMonitoringAlgorithm::MCParticleMonitoringAlgorithm() :
 
 StatusCode MCParticleMonitoringAlgorithm::Run()
 {
+    std::cout << "---MC-PARTICLE-MONITORING-----------------------------------------------------------------------" << std::endl;
     const MCParticleList *pMCParticleList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
     const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
-    // MC primary records, with details of all hits associated with all particles in decay chain
-    MCParticleVector mcPrimaryVector;
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+    LArMCParticleHelper::ValidationParameters parameters;
+    parameters.m_minHitSharingFraction = 0.f;
 
-    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
-    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+    LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::MCContributionMap beamMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::MCContributionMap crMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
 
-    LArMCParticleHelper::CaloHitToMCMap hitToPrimaryMCMap;
-    LArMCParticleHelper::MCContributionMap mcPrimaryToTrueHitListMap;
-    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcPrimaryToTrueHitListMap);
+    if (!m_useTrueNeutrinosOnly)
+    {
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, beamMCParticlesToGoodHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, crMCParticlesToGoodHitsMap);
+    }
 
-    SimpleMCParticleList simpleMCPrimaryList;
-    this->GetSimpleMCParticleList(mcPrimaryVector, mcPrimaryToTrueHitListMap, simpleMCPrimaryList);
+    if (!nuMCParticlesToGoodHitsMap.empty())
+    {
+        std::cout << std::endl << "BeamNeutrinos: " << std::endl;
+        this->PrintPrimaryMCParticles(nuMCParticlesToGoodHitsMap);
+    }
 
-    // MC particle records, with details of hits associated to individual mc particles
-    const MCParticleVector mcParticleVector(pMCParticleList->begin(), pMCParticleList->end());
+    if (!beamMCParticlesToGoodHitsMap.empty())
+    {
+        std::cout << std::endl << "BeamParticles: " << std::endl;
+        this->PrintPrimaryMCParticles(beamMCParticlesToGoodHitsMap);
+    }
 
-    LArMCParticleHelper::MCRelationMap mcParticleToSelfMap;
-    for (const MCParticle *const pMCParticle : mcParticleVector) mcParticleToSelfMap[pMCParticle] = pMCParticle;
+    if (!crMCParticlesToGoodHitsMap.empty())
+    {
+        std::cout << std::endl << "CosmicRays: " << std::endl;
+        this->PrintPrimaryMCParticles(crMCParticlesToGoodHitsMap);
+    }
 
-    LArMCParticleHelper::CaloHitToMCMap hitToMCMap;
-    LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
-    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcParticleToSelfMap, hitToMCMap, mcToTrueHitListMap);
-
-    SimpleMCParticleList simpleMCParticleList;
-    this->GetSimpleMCParticleList(mcParticleVector, mcToTrueHitListMap, simpleMCParticleList);
-
-    SimpleMCParticleMap simpleMCParticleMap;
-    for (const SimpleMCParticle &simpleMCParticle : simpleMCParticleList) simpleMCParticleMap[simpleMCParticle.m_pPandoraAddress] = simpleMCParticle;
-
-    // Display full hierarchy for each mc neutrino
-    MCParticleVector mcNeutrinoVector;
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
-    this->PrintAllOutput(mcNeutrinoVector, simpleMCPrimaryList, simpleMCParticleMap);
+    std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MCParticleMonitoringAlgorithm::GetSimpleMCParticleList(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap,
-    SimpleMCParticleList &simpleMCParticleList) const
+void MCParticleMonitoringAlgorithm::PrintPrimaryMCParticles(const LArMCParticleHelper::MCContributionMap &mcContributionMap) const
 {
+    MCParticleVector mcPrimaryVector;
+    LArMonitoringHelper::GetOrderedMCParticleVector({mcContributionMap}, mcPrimaryVector);
+
+    unsigned int index(0);
+
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-        if (m_useTrueNeutrinosOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
-            continue;
+        const CaloHitList &caloHitList(mcContributionMap.at(pMCPrimary));
 
-        SimpleMCParticle simpleMCParticle;
-        // ATTN simpleMCParticle.m_id assigned later, after sorting
-        simpleMCParticle.m_pPandoraAddress = pMCPrimary;
-        simpleMCParticle.m_pdgCode = pMCPrimary->GetParticleId();
-        simpleMCParticle.m_energy = pMCPrimary->GetEnergy();
-        simpleMCParticle.m_momentum = pMCPrimary->GetMomentum();
-        simpleMCParticle.m_vertex = pMCPrimary->GetVertex();
-        simpleMCParticle.m_endpoint = pMCPrimary->GetEndpoint();
-
-        LArMCParticleHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
-
-        if (mcToTrueHitListMap.end() != trueHitsIter)
+        if (caloHitList.size() >= m_minHitsForDisplay)
         {
-            const CaloHitList &caloHitList(trueHitsIter->second);
-            simpleMCParticle.m_nMCHitsTotal = caloHitList.size();
-            simpleMCParticle.m_nMCHitsU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList);
-            simpleMCParticle.m_nMCHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList);
-            simpleMCParticle.m_nMCHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList);
+            std::cout << std::endl << "--Primary " << index << ", MCPDG " << pMCPrimary->GetParticleId() << ", Energy " << pMCPrimary->GetEnergy()
+                      << ", Dist. " << (pMCPrimary->GetEndpoint() - pMCPrimary->GetVertex()).GetMagnitude() << ", nMCHits " << caloHitList.size()
+                      << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList)
+                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList)
+                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) << ")" << std::endl;
+
+            LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+            LArMCParticleHelper::CaloHitToMCMap caloHitToPrimaryMCMap;
+            LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
+            LArMCParticleHelper::GetMCParticleToCaloHitMatches(&caloHitList, mcToPrimaryMCMap, caloHitToPrimaryMCMap, mcToTrueHitListMap);
+            this->PrintMCParticle(pMCPrimary, mcToTrueHitListMap, 1);
         }
 
-        simpleMCParticleList.push_back(simpleMCParticle);
+        ++index;
     }
-
-    std::sort(simpleMCParticleList.begin(), simpleMCParticleList.end(), MCParticleMonitoringAlgorithm::SortSimpleMCParticles);
-
-    int mcPrimaryId(0);
-    for (SimpleMCParticle &simpleMCParticle : simpleMCParticleList)
-        simpleMCParticle.m_id = mcPrimaryId++;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MCParticleMonitoringAlgorithm::PrintAllOutput(const MCParticleVector &mcNeutrinoVector, const SimpleMCParticleList &simpleMCPrimaryList,
-    const SimpleMCParticleMap &simpleMCParticleMap) const
-{
-    std::cout << "---MC-PARTICLE-MONITORING-----------------------------------------------------------------------" << std::endl;
-    MCParticleSet usedMCParticles;
-
-    for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
-    {
-        const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino);
-        std::cout << "---MCNeutrino, PDG " << pMCNeutrino->GetParticleId() << ", Energy " << pMCNeutrino->GetEnergy() << ", Nuance " << (pLArMCNeutrino ? pLArMCNeutrino->GetNuanceCode() : -1) << std::endl;
-
-        for (const SimpleMCParticle &simpleMCPrimary : simpleMCPrimaryList)
-        {
-            const MCParticle *const pMCPrimary(simpleMCPrimary.m_pPandoraAddress);
-
-            try
-            {
-                if (pMCNeutrino != LArMCParticleHelper::GetParentNeutrino(pMCPrimary))
-                    continue;
-            }
-            catch (const StatusCodeException &)
-            {
-                continue;
-            }
-
-            if (simpleMCPrimary.m_nMCHitsTotal >= m_minHitsForDisplay)
-            {
-                std::cout << std::endl << "--NeutrinoPrimary " << simpleMCPrimary.m_id << ", MCPDG " << simpleMCPrimary.m_pdgCode << ", Energy " << simpleMCPrimary.m_energy
-                          << ", Dist. " << (simpleMCPrimary.m_endpoint - simpleMCPrimary.m_vertex).GetMagnitude() << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
-                          << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
-
-                this->PrintMCParticle(pMCPrimary, simpleMCParticleMap, 1);
-                usedMCParticles.insert(pMCPrimary);
-            }
-        }
-
-        std::cout << std::endl;
-    }
-
-    for (const SimpleMCParticle &simpleMCPrimary : simpleMCPrimaryList)
-    {
-        const MCParticle *const pMCPrimary(simpleMCPrimary.m_pPandoraAddress);
-
-        if (usedMCParticles.count(pMCPrimary))
-            continue;
-
-        if (simpleMCPrimary.m_nMCHitsTotal >= m_minHitsForDisplay)
-        {
-            std::cout << std::endl << "--NonNeutrinoPrimary " << simpleMCPrimary.m_id << ", MCPDG " << simpleMCPrimary.m_pdgCode << ", Energy " << simpleMCPrimary.m_energy
-                      << ", Dist. " << (simpleMCPrimary.m_endpoint - simpleMCPrimary.m_vertex).GetMagnitude() << ", nMCHits " << simpleMCPrimary.m_nMCHitsTotal
-                      << " (" << simpleMCPrimary.m_nMCHitsU << ", " << simpleMCPrimary.m_nMCHitsV << ", " << simpleMCPrimary.m_nMCHitsW << ")" << std::endl;
-
-            this->PrintMCParticle(pMCPrimary, simpleMCParticleMap, 1);
-        }
-    }
-
-    std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MCParticleMonitoringAlgorithm::PrintMCParticle(const MCParticle *const pMCParticle, const SimpleMCParticleMap &simpleMCParticleMap,
+void MCParticleMonitoringAlgorithm::PrintMCParticle(const MCParticle *const pMCParticle, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap,
     const int depth) const
 {
-    const SimpleMCParticle &simpleMCParticle(simpleMCParticleMap.at(pMCParticle));
+    const CaloHitList &caloHitList(mcToTrueHitListMap.count(pMCParticle) ? mcToTrueHitListMap.at(pMCParticle) : CaloHitList());
 
-    if (simpleMCParticle.m_nMCHitsTotal >= m_minHitsForDisplay)
+    if (caloHitList.size() >= m_minHitsForDisplay)
     {
         if (depth > 1)
         {
@@ -193,54 +124,17 @@ void MCParticleMonitoringAlgorithm::PrintMCParticle(const MCParticle *const pMCP
             std::cout << "\\_ ";
         }
 
-        std::cout << "MCPDG " << simpleMCParticle.m_pdgCode << ", Energy " << simpleMCParticle.m_energy
-                  << ", Dist. " << (simpleMCParticle.m_endpoint - simpleMCParticle.m_vertex).GetMagnitude() << ", nMCHits " << simpleMCParticle.m_nMCHitsTotal
-                  << " (" << simpleMCParticle.m_nMCHitsU << ", " << simpleMCParticle.m_nMCHitsV << ", " << simpleMCParticle.m_nMCHitsW << ")" << std::endl;
+        std::cout << "MCPDG " << pMCParticle->GetParticleId() << ", Energy " << pMCParticle->GetEnergy()
+                  << ", Dist. " << (pMCParticle->GetEndpoint() - pMCParticle->GetVertex()).GetMagnitude() << ", nMCHits " << caloHitList.size()
+                  << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList)
+                  << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList)
+                  << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) << ")" << std::endl;
     }
 
     for (const MCParticle *const pDaughterParticle : pMCParticle->GetDaughterList())
-        this->PrintMCParticle(pDaughterParticle, simpleMCParticleMap, depth + 1);
+        this->PrintMCParticle(pDaughterParticle, mcToTrueHitListMap, depth + 1);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool MCParticleMonitoringAlgorithm::SortSimpleMCParticles(const SimpleMCParticle &lhs, const SimpleMCParticle &rhs)
-{
-    if (lhs.m_nMCHitsTotal != rhs.m_nMCHitsTotal)
-        return (lhs.m_nMCHitsTotal > rhs.m_nMCHitsTotal);
-
-    return (lhs.m_energy > rhs.m_energy);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-MCParticleMonitoringAlgorithm::SimpleMCParticle::SimpleMCParticle() :
-    m_id(-1),
-    m_pdgCode(0),
-    m_nMCHitsTotal(0),
-    m_nMCHitsU(0),
-    m_nMCHitsV(0),
-    m_nMCHitsW(0),
-    m_energy(0.f),
-    m_momentum(0.f, 0.f, 0.f),
-    m_vertex(-1.f, -1.f, -1.f),
-    m_endpoint(-1.f, -1.f, -1.f),
-    m_pPandoraAddress(nullptr)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool MCParticleMonitoringAlgorithm::SimpleMCParticle::operator<(const SimpleMCParticle &rhs) const
-{
-    if (this == &rhs)
-        return false;
-
-    return (m_id < rhs.m_id);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode MCParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)

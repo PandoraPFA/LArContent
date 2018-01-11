@@ -19,38 +19,20 @@ namespace lar_content
 LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteractionType(const LArMCParticle *const pLArMCNeutrino,
     const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const LArMCParticleHelper::ValidationParameters &parameters)
 {
-    // Obtain vector: true neutrinos
-    MCParticleVector mcNeutrinoVector;
-    LArMCParticleHelper::SelectTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
+    LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
 
-    // Obtain map: [mc particle -> primary mc particle]
-    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
-    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
-
-    // Remove non-reconstructable hits, e.g. those downstream of a neutron
-    CaloHitList selectedCaloHitList;
-    LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
-
-    // Remove shared hits where target particle deposits below threshold energy fraction
-    CaloHitList goodCaloHitList;
-    LArMCParticleHelper::SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction);
-
-    // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
-    LArMCParticleHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
-    LArMCParticleHelper::MCContributionMap mcToGoodTrueHitListMap;
-    LArMCParticleHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
-
-    // Obtain vector: primary mc particles
-    MCParticleVector mcPrimaryVector;
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+    MCParticleList mcParticleList;
+    for (const auto &mapEntry : nuMCParticlesToGoodHitsMap) mcParticleList.push_back(mapEntry.first);
+    mcParticleList.sort(LArMCParticleHelper::SortByMomentum);
 
     unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPiMinus(0), nNeutrons(0), nPhotons(0);
 
-    for (const MCParticle * const pMCPrimary : mcPrimaryVector)
+    for (const MCParticle *const pMCPrimary : mcParticleList)
     {
-        LArMCParticleHelper::MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCPrimary);
+        LArMCParticleHelper::MCContributionMap::const_iterator goodTrueHitsIter = nuMCParticlesToGoodHitsMap.find(pMCPrimary);
 
-        if (mcToGoodTrueHitListMap.end() != goodTrueHitsIter)
+        if (nuMCParticlesToGoodHitsMap.end() != goodTrueHitsIter)
         {
             const CaloHitList &caloHitList(goodTrueHitsIter->second);
             if (caloHitList.size() < parameters.m_minPrimaryGoodHits)
