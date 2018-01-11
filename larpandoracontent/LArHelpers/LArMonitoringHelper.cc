@@ -9,14 +9,12 @@
 #include "Pandora/PdgTable.h"
 
 #include "Objects/CaloHit.h"
-#include "Objects/Cluster.h"
 #include "Objects/MCParticle.h"
 #include "Objects/ParticleFlowObject.h"
 
 #include "Helpers/MCParticleHelper.h"
 
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
 
@@ -60,7 +58,7 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::
                 return (a.second.size() > b.second.size());
 
             // ATTN default to normal MCParticle sorting to avoid tie-breakers
-            return (*(a.first) < *(b.first));
+            return LArMCParticleHelper::SortByMomentum(a.first, b.first);
         });
 
         for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitPair : mcParticleToGoodHitsVect)

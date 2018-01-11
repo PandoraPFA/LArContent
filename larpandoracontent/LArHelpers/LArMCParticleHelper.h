@@ -65,11 +65,6 @@ public:
     };
 
     /**
-     *  @brief   InteractionType enum
-     */
-    enum InteractionType : int;
-
-    /**
      *  @brief  Whether a mc particle is a final-state particle from a neutrino or antineutrino interaction
      *
      *  @param  pMCParticle the input mc particle
@@ -223,25 +218,6 @@ public:
     static void GetNeutrinoMCParticleList(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &mcNeutrinoVector);
 
     /**
-     *  @brief  Find the mc particle making the largest contribution to 2D clusters in a specified pfo
-     *
-     *  @param  pT address of the pfo to examine
-     *
-     *  @return address of the main mc particle
-     */
-    static const pandora::MCParticle *GetMainMCParticle(const pandora::ParticleFlowObject *const pPfo);
-
-    /**
-     *  @brief  Find the primary mc particle making the largest contribution to 2D clusters in a specified pfo
-     *
-     *  @param  pT address of the pfo to examine
-     *  @param  mcPrimaryMap the provided mapping between mc particles and their parents
-     *
-     *  @return address of the main mc primary
-     */
-    static const pandora::MCParticle *GetMainMCPrimary(const pandora::ParticleFlowObject *const pPfo, const MCRelationMap &mcPrimaryMap);
-
-    /**
      *  @brief  Sort mc particles by their momentum
      *
      *  @param  pLhs address of first mc particle
@@ -254,11 +230,11 @@ public:
      *
      *  @param  pCaloHitList the input list of calo hits
      *  @param  mcToPrimaryMCMap input mapping between mc particles and their primaries
-     *  @param  hitToPrimaryMCMap output mapping between calo hits and their main primary MC particle
+     *  @param  hitToPrimaryMCMap output mapping between calo hits and their main MC particle (primary MC particle if mcToPrimaryMCMap provided)
      *  @param  mcToTrueHitListMap output mapping between MC particles and their associated hits
      */
     static void GetMCParticleToCaloHitMatches(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
-        CaloHitToMCMap &hitToPrimaryMCMap, MCContributionMap &mcToTrueHitListMap);
+        CaloHitToMCMap &hitToMCMap, MCContributionMap &mcToTrueHitListMap);
 
     /**
      *  @brief  Select a subset of true neutrinos representing those that should be used in performance metrics
@@ -267,42 +243,6 @@ public:
      *  @param  selectedMCNeutrinoVector to receive the populated selected true neutrino vector
      */
     static void SelectTrueNeutrinos(const pandora::MCParticleList *const pAllMCParticleList, pandora::MCParticleVector &selectedMCNeutrinoVector);
-
-    /**
-     *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
-     *
-     *  @param  pCaloHitList the address of the input calo hit list
-     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
-     *  @param  selectedCaloHitList to receive the populated selected calo hit list
-     *  @param  selectInputHits whether to select input hits
-     *  @param  maxPhotonPropagation the maximum photon propagation length
-     */
-    static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
-        pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float maxPhotonPropagation);
-
-    /**
-     *  @brief  Apply further selection criteria to end up with a collection of "good" calo hits that can be use to define whether
-     *          a target mc particle is reconstructable.
-     *
-     *  @param  pSelectedCaloHitList the address of the calo hit list (typically already been through some selection procedure)
-     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
-     *  @param  selectedGoodCaloHitList to receive the populated good selected calo hit list
-     *  @param  selectInputHits whether to select input hits
-     *  @param  minHitSharingFraction the minimum Hit sharing fraction
-     *
-     */
-    static void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
-        pandora::CaloHitList &selectedGoodCaloHitList, const bool selectInputHits, const float minHitSharingFraction);
-
-    /**
-     *  @brief  Select mc particles matching given criteria from an input list
-     *
-     *  @param  inputMCParticles input vector of MCParticles
-     *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
-     *  @param  selectedParticles the output vector of particles selected
-     */
-    static void SelectParticlesMatchingCriteria(const pandora::MCParticleVector &inputMCParticles, std::function<bool(const pandora::MCParticle *const)> fCriteria,
-        pandora::MCParticleVector &selectedParticles);
 
     /**
      *  @brief  Select primary, reconstructable mc particles that match given criteria.
@@ -315,17 +255,6 @@ public:
      */
     static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList,
         const ValidationParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToGoodHitsMap);
-
-    /**
-     *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable
-     *
-     *  @param  candidateTargets candidate recontructable MCParticles
-     *  @param  mcToGoodTrueHitListMap mapping from candidates reconstructable MCParticles to their good hits
-     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
-     *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
-     */
-    static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const MCContributionMap &mcToGoodTrueHitListMap,
-        const ValidationParameters &parameters, MCContributionMap &selectedMCParticlesToGoodHitsMap);
 
     /**
      *  @brief  Returns true if passed a primary neutrino final state MCParticle
@@ -368,16 +297,6 @@ public:
         PfoContributionMap &pfoToReconstructable2DHitsMap);
 
     /**
-     *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
-     *
-     *  @param  pPfo the input pfo
-     *  @param  selectedMCParticleToGoodHitsMaps the input mappings from selected reconstructable MCParticles to their good hits
-     *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
-     */
-    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps,
-        pandora::CaloHitList &reconstructableCaloHitList2D);
-
-    /**
      *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
      *                                reconstructable MCParticle -> pair (Pfo, number of reconstructable 2D hits shared with MCParticle)
      *
@@ -389,17 +308,63 @@ public:
     static void GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps,
         PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
 
-    /**
-     *  @brief  Count the number of hits in the intersection of two hit lists
-     *
-     *  @param  hitListA an input hit list
-     *  @param  hitListB another input hit list
-     *
-     *  @return The number of hits that are found in both hitListA and hitListB
-     */
-    static unsigned int CountSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
-
 private:
+    /**
+     *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pPfo the input pfo
+     *  @param  selectedMCParticleToGoodHitsMaps the input mappings from selected reconstructable MCParticles to their good hits
+     *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
+     */
+    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps,
+        pandora::CaloHitList &reconstructableCaloHitList2D);
+
+    /**
+     *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
+     *
+     *  @param  pCaloHitList the address of the input calo hit list
+     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
+     *  @param  selectedCaloHitList to receive the populated selected calo hit list
+     *  @param  selectInputHits whether to select input hits
+     *  @param  maxPhotonPropagation the maximum photon propagation length
+     */
+    static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
+        pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float maxPhotonPropagation);
+
+    /**
+     *  @brief  Apply further selection criteria to end up with a collection of "good" calo hits that can be use to define whether
+     *          a target mc particle is reconstructable.
+     *
+     *  @param  pSelectedCaloHitList the address of the calo hit list (typically already been through some selection procedure)
+     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
+     *  @param  selectedGoodCaloHitList to receive the populated good selected calo hit list
+     *  @param  selectInputHits whether to select input hits
+     *  @param  minHitSharingFraction the minimum Hit sharing fraction
+     */
+    static void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
+        pandora::CaloHitList &selectedGoodCaloHitList, const bool selectInputHits, const float minHitSharingFraction);
+
+    /**
+     *  @brief  Select mc particles matching given criteria from an input list
+     *
+     *  @param  inputMCParticles input vector of MCParticles
+     *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
+     *  @param  selectedParticles the output vector of particles selected
+     */
+    static void SelectParticlesMatchingCriteria(const pandora::MCParticleVector &inputMCParticles, std::function<bool(const pandora::MCParticle *const)> fCriteria,
+        pandora::MCParticleVector &selectedParticles);
+
+    /**
+     *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable
+     *
+     *  @param  candidateTargets candidate recontructable MCParticles
+     *  @param  mcToGoodTrueHitListMap mapping from candidates reconstructable MCParticles to their good hits
+     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
+     *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
+     */
+    static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const MCContributionMap &mcToGoodTrueHitListMap,
+        const ValidationParameters &parameters, MCContributionMap &selectedMCParticlesToGoodHitsMap);
+
     /**
      *  @brief  Whether it is possible to navigate from a primary mc particle to a downstream mc particle without "passing through" a neutron
      *
@@ -412,6 +377,16 @@ private:
      */
     static bool PassMCParticleChecks(const pandora::MCParticle *const pOriginalPrimary, const pandora::MCParticle *const pThisMCParticle,
         const pandora::MCParticle *const pHitMCParticle, const float maxPhotonPropagation);
+
+    /**
+     *  @brief  Count the number of hits in the intersection of two hit lists
+     *
+     *  @param  hitListA an input hit list
+     *  @param  hitListB another input hit list
+     *
+     *  @return The number of hits that are found in both hitListA and hitListB
+     */
+    static unsigned int CountSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
 };
 
 } // namespace lar_content

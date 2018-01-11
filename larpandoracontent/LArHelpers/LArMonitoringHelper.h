@@ -9,9 +9,8 @@
 #define LAR_MONITORING_HELPER_H 1
 
 #include "Pandora/PandoraInternal.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include <unordered_map>
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 namespace lar_content
 {

@@ -180,32 +180,27 @@ bool EventWritingAlgorithm::PassMCParticleFilter() const
     const MCParticleList *pMCParticleList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
-    const CaloHitList *pCaloHitList = NULL;
+    const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
-    MCParticleVector mcPrimaryVector;                               // primary mc particles
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+    LArMCParticleHelper::ValidationParameters parameters;
+    LArMCParticleHelper::MCContributionMap mcParticlesToGoodHitsMap;
+    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcParticlesToGoodHitsMap);
 
-    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;            // [mc particles -> primary mc particle]
-    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
-
-    LArMCParticleHelper::CaloHitToMCMap hitToPrimaryMCMap;          // [hit -> primary mc particle]
-    LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;      // [primary mc particle -> true hit list]
-    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
+    if (!m_neutrinoInducedOnly)
+    {
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, mcParticlesToGoodHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcParticlesToGoodHitsMap);
+    }
 
     unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPhotons(0), nChargedPions(0);
 
+    MCParticleVector mcPrimaryVector;
+    for (const auto &mapEntry : mcParticlesToGoodHitsMap) mcPrimaryVector.push_back(mapEntry.first);
+    std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), LArMCParticleHelper::SortByMomentum);
+
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-        if (m_neutrinoInducedOnly && !LArMCParticleHelper::IsNeutrinoInduced(pMCPrimary))
-            continue;
-
-        LArMCParticleHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
-        const unsigned int nMCHitsTotal((mcToTrueHitListMap.end() != trueHitsIter) ? trueHitsIter->second.size() : 0);
-
-        if (nMCHitsTotal < m_matchingMinPrimaryHits)
-            continue;
-
         const unsigned int particleId(std::abs(pMCPrimary->GetParticleId()));
         if (NEUTRON != particleId) ++nNonNeutrons;
 
