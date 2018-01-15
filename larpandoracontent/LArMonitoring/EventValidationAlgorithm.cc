@@ -8,17 +8,10 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
-
-#include "larpandoracontent/LArObjects/LArMCParticle.h"
-#include "larpandoracontent/LArObjects/LArTrackPfo.h"
-
-#include <iomanip>
 
 using namespace pandora;
 
@@ -26,30 +19,13 @@ namespace lar_content
 {
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
-//    m_integrateOverRecoNeutrinos(false),
-//    m_useRecoNeutrinosOnly(true),
     m_useTrueNeutrinosOnly(false),
-//    m_primaryPfosOnly(true),
-//    m_collapseToPrimaryPfos(true),
-//    m_selectInputHits(true),
-//    m_minHitNeutrinoWeight(0.1f),
-//    m_minHitSharingFraction(0.9f),
-//    m_maxPhotonPropagation(2.5f),
     m_printAllToScreen(false),
     m_printMatchingToScreen(true),
-//    m_visualizeMatching(false),
-//    m_visualizeVertices(false),
-//    m_visualizeRemnants(false),
-//    m_visualizeGaps(false),
     m_writeToTree(false),
-//    m_matchingMinPrimaryHits(15),
-//    m_matchingMinHitsForGoodView(5),
-//    m_matchingMinPrimaryGoodViews(2),
-//    m_useSmallPrimaries(true),
     m_matchingMinSharedHits(5),
     m_matchingMinCompleteness(0.1f),
     m_matchingMinPurity(0.5f),
-//    m_vertexVisualizationDeltaR(1.f),
     m_fileIdentifier(0),
     m_eventNumber(0)
 {
@@ -88,8 +64,6 @@ StatusCode EventValidationAlgorithm::Run()
     (void) PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
 
     LArMCParticleHelper::PrimaryParameters parameters;
-    // TODO parameters.m_minHitSharingFraction = 0.f;
-
     LArMCParticleHelper::MCContributionMap mcParticleToHitsMap;
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcParticleToHitsMap);
 
@@ -115,13 +89,13 @@ StatusCode EventValidationAlgorithm::Run()
 
     // Print raw matching information to terminal
     if (m_printAllToScreen)
-        this->PrintOutput(mcParticleToHitsMap, pfoToHitsMap, mcParticleToPfoHitSharingMap);
+        this->PrintOutput(mcParticleToHitsMap, pfoToHitsMap, mcParticleToPfoHitSharingMap, false);
 
     LArMCParticleHelper::MCParticleToPfoHitSharingMap interpretedMCToPfoHitSharingMap;
     this->InterpretMCToPfoHitSharingMap(mcParticleToHitsMap, pfoToHitsMap, mcParticleToPfoHitSharingMap, interpretedMCToPfoHitSharingMap);
 
     if (m_printMatchingToScreen)
-        this->PrintOutput(mcParticleToHitsMap, pfoToHitsMap, interpretedMCToPfoHitSharingMap);
+        this->PrintOutput(mcParticleToHitsMap, pfoToHitsMap, interpretedMCToPfoHitSharingMap, true);
 
 //    if (m_writeToTree)
 //        this->WriteOutput(mcParticleToHitsMap, pfoToHitsMap, interpretedMCToPfoHitSharingMap);
@@ -131,8 +105,8 @@ StatusCode EventValidationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-    const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap) const
+void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const bool printCorrectness) const
 {
     std::cout << "---MATCHING-OUTPUT------------------------------------------------------------------------------" << std::endl;
     MCParticleVector mcPrimaryVector;
@@ -142,19 +116,26 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
     LArMonitoringHelper::GetOrderedPfoVector(pfoToHitsMap, primaryPfoVector);
 
     PfoToIdMap pfoToIdMap;
-    unsigned int primaryIndex(0), pfoIndex(0);
+    unsigned int primaryIndex(0), pfoIndex(0), nCorrectNu(0), nCorrectTB(0), nCorrectCR(0), nTotalNu(0), nTotalTB(0), nTotalCR(0),
+        nFakeNu(0), nSplitCR(0), nLostCR(0), nFakeCR(0);
 
     for (const Pfo *const pPrimaryPfo : primaryPfoVector)
         (void) pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, pfoIndex++));
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
+        const bool isBeamNeutrinoFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary));
+        const bool isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary));
+        const bool isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary));
+
+        if (isBeamNeutrinoFinalState) ++nTotalNu;
+        if (isBeamParticle) ++nTotalTB;
+        if (isCosmicRay) ++nTotalCR;
+
         const CaloHitList &mcPrimaryHitList(mcParticleToHitsMap.at(pMCPrimary));
 
-        std::cout << std::endl << "--Primary " << primaryIndex++
-                  << ", Nu " << LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) // TODO nu, tb, cr index (nuance if applicable)
-                  << ", TB " << LArMCParticleHelper::IsBeamParticle(pMCPrimary)
-                  << ", CR " << LArMCParticleHelper::IsCosmicRay(pMCPrimary)
+        std::cout << std::endl << "--Primary " << primaryIndex++ // TODO nu, tb, cr index (nuance if applicable)
+                  << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamParticle << ", CR " << isCosmicRay
                   << ", MCPDG " << pMCPrimary->GetParticleId()
                   << ", Energy " << pMCPrimary->GetEnergy()
                   << ", Dist. " << (pMCPrimary->GetEndpoint() - pMCPrimary->GetVertex()).GetMagnitude()
@@ -163,15 +144,20 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
                   << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList)
                   << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList) << ")" << std::endl;
 
+        unsigned int nNuMatches(0), nCRMatches(0);
+
         for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcParticleToPfoHitSharingMap.at(pMCPrimary))
         {
             const CaloHitList &sharedHitList(pfoToSharedHits.second);
             const CaloHitList &pfoHitList(pfoToHitsMap.at(pfoToSharedHits.first));
+            const bool isRecoNeutrinoFinalState(LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first));
+
+            if (isRecoNeutrinoFinalState) ++nNuMatches;
+            else ++nCRMatches;
 
             std::cout << "-MatchedPfo " << pfoToIdMap.at(pfoToSharedHits.first) // TODO nu, cr index
+                << ", Nu " << isRecoNeutrinoFinalState << ", CR " << !isRecoNeutrinoFinalState
                 << ", PDG " << pfoToSharedHits.first->GetParticleId()
-                << ", Nu " << LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first)
-                << ", CR " << !LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first)
                 << ", nMatchedHits " << sharedHitList.size()
                 << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList)
                 << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList)
@@ -181,6 +167,23 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
                 << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoHitList)
                 << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoHitList) << ")" << std::endl;
         }
+
+        if (isBeamNeutrinoFinalState && (nNuMatches == 1) && (nCRMatches == 0)) ++nCorrectNu;
+        else if (isBeamParticle && (nNuMatches == 1) && (nCRMatches == 0)) ++nCorrectTB;
+        else if (isCosmicRay && (nNuMatches == 0) && (nCRMatches == 1)) ++nCorrectCR;
+        else if (isCosmicRay && (nNuMatches > 0) && (nCRMatches == 0)) ++nFakeNu;
+        else if (isCosmicRay && (nNuMatches + nCRMatches > 1)) ++nSplitCR;
+        else if (isCosmicRay && (nNuMatches == 0) && (nCRMatches == 0)) ++nLostCR;
+        else if (!isCosmicRay && (nCRMatches > 0)) ++nFakeCR;
+    }
+
+    if (printCorrectness)
+    {
+        std::cout << std::endl << "---SUMMARY--------------------------------------------------------------------------------------" << std::endl
+                  << "#Correct Nu primaries: " << nCorrectNu << ", Nu correct? " << (nTotalNu == nCorrectNu) << std::endl
+                  << "#Correct TB particles: " << nCorrectTB << ", Fraction: " << (nTotalTB > 0 ? static_cast<float>(nCorrectTB) / static_cast<float>(nTotalTB) : 0.f) << std::endl
+                  << "#Correct Cosmic Rays : " << nCorrectCR << ", Fraction: " << (nTotalCR > 0 ? static_cast<float>(nCorrectCR) / static_cast<float>(nTotalCR) : 0.f) << std::endl
+                  << "#CR as fake Nu: " << nFakeNu << ", #Split CRs: " << nSplitCR << ", #Lost CRs: " << nLostCR << ", #Fake CRs " << nFakeCR << std::endl;
     }
 
     std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
@@ -226,9 +229,7 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCParticleVector &mcPr
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-//        if (!m_useSmallPrimaries && !this->IsGoodMCPrimary(simpleMCPrimary)) TODO
-//            continue;
-
+        // ATTN Used to have no constraints on input quality of mc primaries, then filter at this point
         if (interpretedMCToPfoHitSharingMap.count(pMCPrimary))
             continue;
 
@@ -266,9 +267,7 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCParticleVector &mc
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-//        if (!m_useSmallPrimaries && !this->IsGoodMCPrimary(simpleMCPrimary)) TODO
-//            continue;
-
+        // ATTN Used to have no constraints on input quality of mc primaries, then filter at this point
         for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
         {
             if (usedPfos.count(pfoToSharedHits.first))
@@ -326,32 +325,8 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
          "ClusterListNames", m_clusterListNames));
 
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "IntegrateOverRecoNeutrinos", m_integrateOverRecoNeutrinos));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "UseRecoNeutrinosOnly", m_useRecoNeutrinosOnly));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseTrueNeutrinosOnly", m_useTrueNeutrinosOnly));
-
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "PrimaryPfosOnly", m_primaryPfosOnly));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "CollapseToPrimaryPfos", m_collapseToPrimaryPfos));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "SelectInputHits", m_selectInputHits));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MinHitNeutrinoWeight", m_minHitNeutrinoWeight));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MinHitSharingFraction", m_minHitSharingFraction));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MaxPhotonPropagation", m_maxPhotonPropagation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PrintAllToScreen", m_printAllToScreen));
@@ -359,32 +334,8 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PrintMatchingToScreen", m_printMatchingToScreen));
 
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "VisualizeMatching", m_visualizeMatching));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "VisualizeVertices", m_visualizeVertices));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//         "VisualizeRemnants", m_visualizeRemnants));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "VisualizeGaps", m_visualizeGaps));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "WriteToTree", m_writeToTree));
-
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MatchingMinPrimaryHits", m_matchingMinPrimaryHits));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MatchingMinHitsForGoodView", m_matchingMinHitsForGoodView));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MatchingMinPrimaryGoodViews", m_matchingMinPrimaryGoodViews));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "UseSmallPrimaries", m_useSmallPrimaries));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MatchingMinSharedHits", m_matchingMinSharedHits));
@@ -394,9 +345,6 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MatchingMinPurity", m_matchingMinPurity));
-
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "VertexVisualizationDeltaR", m_vertexVisualizationDeltaR));
 
     if (m_writeToTree)
     {
