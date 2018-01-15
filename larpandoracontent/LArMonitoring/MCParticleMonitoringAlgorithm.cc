@@ -40,7 +40,7 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
     const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
-    LArMCParticleHelper::ValidationParameters parameters;
+    LArMCParticleHelper::PrimaryParameters parameters;
     parameters.m_minHitSharingFraction = 0.f;
 
     LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;

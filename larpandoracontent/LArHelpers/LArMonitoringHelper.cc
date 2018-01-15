@@ -54,10 +54,22 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::
         // Sort by number of hits descending
         std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const LArMCParticleHelper::MCParticleCaloHitListPair &a, const LArMCParticleHelper::MCParticleCaloHitListPair &b) -> bool
         {
+            // Neutrinos, then beam particles, then cosmic rays
+            const bool isANuFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(a.first)), isBNuFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(b.first));
+
+            if (isANuFinalState != isBNuFinalState)
+                return isANuFinalState;
+
+            const bool isABeamParticle(LArMCParticleHelper::IsBeamParticle(a.first)), isBBeamParticle(LArMCParticleHelper::IsBeamParticle(b.first));
+
+            if (isABeamParticle != isBBeamParticle)
+                return isABeamParticle;
+
+            // Then sort by numbers of true hits
             if (a.second.size() != b.second.size())
                 return (a.second.size() > b.second.size());
 
-            // ATTN default to normal MCParticle sorting to avoid tie-breakers
+            // Default to normal MCParticle sorting
             return LArMCParticleHelper::SortByMomentum(a.first, b.first);
         });
 
@@ -82,8 +94,8 @@ void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoCont
     // Sort by number of hits descending putting neutrino final states first
     std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(), [] (const LArMCParticleHelper::PfoCaloHitListPair &a, const LArMCParticleHelper::PfoCaloHitListPair &b) -> bool
     {
-        bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first));
-        bool isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
+        // Neutrinos before cosmic rays
+        const bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first)), isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
 
         if (isANuFinalState != isBNuFinalState)
             return isANuFinalState;
@@ -91,7 +103,7 @@ void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoCont
         if (a.second.size() != b.second.size())
             return (a.second.size() > b.second.size());
 
-        // ATTN fall back on using all hits as a tie-breaker
+        // Default to normal pfo sorting
         return LArPfoHelper::SortByNHits(a.first, b.first);
     });
 

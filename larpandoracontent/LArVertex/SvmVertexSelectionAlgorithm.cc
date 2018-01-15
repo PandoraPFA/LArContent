@@ -597,7 +597,7 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType(const VertexVector &
     LArMCParticleHelper::SelectTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
 
     std::string interactionType("UNKNOWN");
-    const LArMCParticleHelper::ValidationParameters parameters;
+    const LArMCParticleHelper::PrimaryParameters parameters;
 
     for (const Vertex *const pVertex : vertexVector)
     {

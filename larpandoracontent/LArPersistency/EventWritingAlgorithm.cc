@@ -183,7 +183,7 @@ bool EventWritingAlgorithm::PassMCParticleFilter() const
     const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
 
-    LArMCParticleHelper::ValidationParameters parameters;
+    LArMCParticleHelper::PrimaryParameters parameters;
     LArMCParticleHelper::MCContributionMap mcParticlesToGoodHitsMap;
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcParticlesToGoodHitsMap);
 

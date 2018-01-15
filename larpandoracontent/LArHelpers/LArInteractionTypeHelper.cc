@@ -17,7 +17,7 @@ namespace lar_content
 
 // TODO make this function use the new helpers
 LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteractionType(const LArMCParticle *const pLArMCNeutrino,
-    const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const LArMCParticleHelper::ValidationParameters &parameters)
+    const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const LArMCParticleHelper::PrimaryParameters &parameters)
 {
     LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
