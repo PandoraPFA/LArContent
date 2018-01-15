@@ -48,9 +48,10 @@ private:
      *  @param  mcParticleToHitsMap to mc particle to hits map
      *  @param  pfoToHitsMap to pfo to hits map
      *  @param  mcParticleToPfoHitSharingMap the mc particle to pfo hit sharing map
+     *  @param  printCorrectness print number of correct elements, and corresponding fraction
      */
     void PrintOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
-        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap) const;
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const bool printCorrectness) const;
 
     /**
      *  @brief  Apply an interpretative matching procedure to the comprehensive matches in the provided mc particle to pfo hit sharing map
