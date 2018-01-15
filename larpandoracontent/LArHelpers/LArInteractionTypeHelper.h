@@ -139,7 +139,7 @@ public:
      *  @return interaction type
      */
     static InteractionType GetInteractionType(const LArMCParticle *const pLArMCNeutrino, const pandora::MCParticleList *pMCParticleList,
-        const pandora::CaloHitList *pCaloHitList, const LArMCParticleHelper::ValidationParameters &parameters);
+        const pandora::CaloHitList *pCaloHitList, const LArMCParticleHelper::PrimaryParameters &parameters);
 
     /**
      *  @brief  Get a string representation of an interaction type

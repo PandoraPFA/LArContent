@@ -112,7 +112,7 @@ void CosmicRayTaggingMonitoringTool::CalculatePfoMetrics(const LArMCParticleHelp
         if (n2DHits != 0)
         {
             // Sum over all target/shared hits pairs
-            for (const LArMCParticleHelper::MCParticleIntPair &targetHitsShared : hitSharingMap.at(pPfo))
+            for (const LArMCParticleHelper::MCParticleCaloHitListPair &targetHitsShared : hitSharingMap.at(pPfo))
             {
                 bool foundTarget(false);
                 unsigned int nMCHits(std::numeric_limits<unsigned int>::max());
@@ -131,8 +131,8 @@ void CosmicRayTaggingMonitoringTool::CalculatePfoMetrics(const LArMCParticleHelp
                 if (!foundTarget)
                     continue;
 
-                significance += static_cast<float>(targetHitsShared.second) / static_cast<float>(nMCHits);
-                purity += static_cast<float>(targetHitsShared.second) / static_cast<float>(n2DHits);
+                significance += static_cast<float>(targetHitsShared.second.size()) / static_cast<float>(nMCHits);
+                purity += static_cast<float>(targetHitsShared.second.size()) / static_cast<float>(n2DHits);
             }
         }
 
@@ -150,12 +150,12 @@ void CosmicRayTaggingMonitoringTool::CalculatePfoMetrics(const LArMCParticleHelp
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayTaggingMonitoringTool::IsMainMCParticleMuon(const ParticleFlowObject *const pPfo) const
+bool CosmicRayTaggingMonitoringTool::IsMainMCParticleMuon(const ParticleFlowObject *const /*pPfo*/) const
 {
     bool isMuon(false);
     try
     {
-        isMuon = (std::abs(LArMCParticleHelper::GetMainMCParticle(pPfo)->GetParticleId()) == MU_MINUS);
+        isMuon = false;// TODO (std::abs(LArMCParticleHelper::GetMainMCParticle(pPfo)->GetParticleId()) == MU_MINUS);
     }
     catch (const StatusCodeException &)
     {

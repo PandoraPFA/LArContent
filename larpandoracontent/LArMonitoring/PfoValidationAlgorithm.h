@@ -28,9 +28,9 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string                                m_caloHitListName;          ///< Name of input calo hit list
-    std::string                                m_pfoListName;              ///< Name of input pfo list
-    LArMCParticleHelper::ValidationParameters  m_parameters;               ///< Parameters used to decide when an MCParticle is reconstructable
+    std::string                                 m_caloHitListName;          ///< Name of input calo hit list
+    std::string                                 m_pfoListName;              ///< Name of input pfo list
+    LArMCParticleHelper::PrimaryParameters      m_parameters;               ///< Parameters used to decide when an MCParticle is reconstructable
 };
 
 } // namespace lar_content

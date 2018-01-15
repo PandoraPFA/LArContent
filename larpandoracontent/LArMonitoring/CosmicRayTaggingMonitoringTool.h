@@ -108,12 +108,12 @@ private:
      */
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    LArMCParticleHelper::ValidationParameters  m_parameters;                 ///< Parameters used to decide when an MCParticle is reconstructable
-    unsigned int                               m_minHitsToConsiderTagging;   ///< The minimum number of hits to consider a Pfo for tagging
-    float                                      m_minPurity;                  ///< The minimum purity to consider a Pfo as "pure"
-    float                                      m_minImpurity;                ///< The minimum impurity to consider a Pfo as "impure"
-    float                                      m_minSignificance;            ///< The minimum significance to consider a Pfo as "significant"
-    std::string                                m_caloHitList2D;              ///< The 2D calo hit list
+    LArMCParticleHelper::PrimaryParameters      m_parameters;                 ///< Parameters used to decide when an MCParticle is reconstructable
+    unsigned int                                m_minHitsToConsiderTagging;   ///< The minimum number of hits to consider a Pfo for tagging
+    float                                       m_minPurity;                  ///< The minimum purity to consider a Pfo as "pure"
+    float                                       m_minImpurity;                ///< The minimum impurity to consider a Pfo as "impure"
+    float                                       m_minSignificance;            ///< The minimum significance to consider a Pfo as "significant"
+    std::string                                 m_caloHitList2D;              ///< The 2D calo hit list
 };
 
 } // namespace lar_content

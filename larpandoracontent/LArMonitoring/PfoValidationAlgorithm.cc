@@ -46,15 +46,11 @@ StatusCode PfoValidationAlgorithm::Run()
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamParticle, beamMCParticlesToGoodHitsMap);
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsCosmicRay, crMCParticlesToGoodHitsMap);
 
-    LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps;
-    mcParticlesToGoodHitsMaps.push_back(nuMCParticlesToGoodHitsMap);
-    mcParticlesToGoodHitsMaps.push_back(beamMCParticlesToGoodHitsMap);
-    mcParticlesToGoodHitsMaps.push_back(crMCParticlesToGoodHitsMap);
+    const LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps{nuMCParticlesToGoodHitsMap, beamMCParticlesToGoodHitsMap, crMCParticlesToGoodHitsMap};
 
     // Get the mappings detailing the hits shared between Pfos and reconstructable MCParticles
-    pandora::PfoList finalStatePfos;
+    PfoList finalStatePfos;
 
-    // TODO use helper function in LArMonitoringHelper, not sure if it currently give the right output
     for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
         if (LArPfoHelper::IsFinalState(pPfo))
