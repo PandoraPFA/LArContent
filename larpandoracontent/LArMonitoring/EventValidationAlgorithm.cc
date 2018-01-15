@@ -46,9 +46,9 @@ EventValidationAlgorithm::EventValidationAlgorithm() :
 //    m_matchingMinHitsForGoodView(5),
 //    m_matchingMinPrimaryGoodViews(2),
 //    m_useSmallPrimaries(true),
-//    m_matchingMinSharedHits(5),
-//    m_matchingMinCompleteness(0.1f),
-//    m_matchingMinPurity(0.5f),
+    m_matchingMinSharedHits(5),
+    m_matchingMinCompleteness(0.1f),
+    m_matchingMinPurity(0.5f),
 //    m_vertexVisualizationDeltaR(1.f),
     m_fileIdentifier(0),
     m_eventNumber(0)
@@ -88,7 +88,7 @@ StatusCode EventValidationAlgorithm::Run()
     (void) PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
 
     LArMCParticleHelper::PrimaryParameters parameters;
-    parameters.m_minHitSharingFraction = 0.f;
+    // TODO parameters.m_minHitSharingFraction = 0.f;
 
     LArMCParticleHelper::MCContributionMap mcParticleToHitsMap;
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcParticleToHitsMap);
@@ -118,17 +118,13 @@ StatusCode EventValidationAlgorithm::Run()
         this->PrintOutput(mcParticleToHitsMap, pfoToHitsMap, mcParticleToPfoHitSharingMap);
 
     LArMCParticleHelper::MCParticleToPfoHitSharingMap interpretedMCToPfoHitSharingMap;
-    this->InterpretMCToPfoHitSharingMap(mcParticleToHitsMap, mcParticleToPfoHitSharingMap, interpretedMCToPfoHitSharingMap);
+    this->InterpretMCToPfoHitSharingMap(mcParticleToHitsMap, pfoToHitsMap, mcParticleToPfoHitSharingMap, interpretedMCToPfoHitSharingMap);
 
     if (m_printMatchingToScreen)
         this->PrintOutput(mcParticleToHitsMap, pfoToHitsMap, interpretedMCToPfoHitSharingMap);
 
 //    if (m_writeToTree)
 //        this->WriteOutput(mcParticleToHitsMap, pfoToHitsMap, interpretedMCToPfoHitSharingMap);
-//#ifdef MONITORING
-//    if (m_visualizeMatching)
-//        this->VisualizeOutput(mcParticleToHitsMap, pfoToHitsMap, interpretedMCToPfoHitSharingMap);
-//#endif
 
     return STATUS_CODE_SUCCESS;
 }
@@ -139,8 +135,6 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
     const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap) const
 {
     std::cout << "---MATCHING-OUTPUT------------------------------------------------------------------------------" << std::endl;
-    // TODO print true neutrinos, vertex info
-
     MCParticleVector mcPrimaryVector;
     LArMonitoringHelper::GetOrderedMCParticleVector({mcParticleToHitsMap}, mcPrimaryVector);
 
@@ -158,7 +152,7 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
         const CaloHitList &mcPrimaryHitList(mcParticleToHitsMap.at(pMCPrimary));
 
         std::cout << std::endl << "--Primary " << primaryIndex++
-                  << ", Nu " << LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary)
+                  << ", Nu " << LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) // TODO nu, tb, cr index (nuance if applicable)
                   << ", TB " << LArMCParticleHelper::IsBeamParticle(pMCPrimary)
                   << ", CR " << LArMCParticleHelper::IsCosmicRay(pMCPrimary)
                   << ", MCPDG " << pMCPrimary->GetParticleId()
@@ -174,7 +168,7 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
             const CaloHitList &sharedHitList(pfoToSharedHits.second);
             const CaloHitList &pfoHitList(pfoToHitsMap.at(pfoToSharedHits.first));
 
-            std::cout << "-MatchedPfo " << pfoToIdMap.at(pfoToSharedHits.first)
+            std::cout << "-MatchedPfo " << pfoToIdMap.at(pfoToSharedHits.first) // TODO nu, cr index
                 << ", PDG " << pfoToSharedHits.first->GetParticleId()
                 << ", Nu " << LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first)
                 << ", CR " << !LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first)
@@ -194,15 +188,23 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+//void EventValidationAlgorithm::WriteOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
+//    const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap) const
+//{
+//}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void EventValidationAlgorithm::InterpretMCToPfoHitSharingMap(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
+    const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
+    LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
 {
     MCParticleVector mcPrimaryVector;
     LArMonitoringHelper::GetOrderedMCParticleVector({mcParticleToHitsMap}, mcPrimaryVector);
 
     PfoSet usedPfos;
-    while (this->GetStrongestPfoMatch(mcPrimaryVector, mcToPfoHitSharingMap, usedPfos, interpretedMCToPfoHitSharingMap)) {}
-    this->GetRemainingPfoMatches(mcPrimaryVector, mcToPfoHitSharingMap, usedPfos, interpretedMCToPfoHitSharingMap);
+    while (this->GetStrongestPfoMatch(mcPrimaryVector, mcParticleToHitsMap, pfoToHitsMap, mcToPfoHitSharingMap, usedPfos, interpretedMCToPfoHitSharingMap)) {}
+    this->GetRemainingPfoMatches(mcPrimaryVector, mcParticleToHitsMap, pfoToHitsMap, mcToPfoHitSharingMap, usedPfos, interpretedMCToPfoHitSharingMap);
 
     // Ensure all primaries have an entry, and sorting is as desired
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
@@ -215,7 +217,8 @@ void EventValidationAlgorithm::InterpretMCToPfoHitSharingMap(const LArMCParticle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
+bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
+    const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
     PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
 {
     const MCParticle *pBestMCParticle(nullptr);
@@ -234,8 +237,8 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCParticleVector &mcPr
             if (usedPfos.count(pfoToSharedHits.first))
                 continue;
 
-//            if (!this->IsGoodMatch(simpleMCPrimary, simpleMatchedPfo)) TODO
-//                continue;
+            if (!this->IsGoodMatch(mcParticleToHitsMap.at(pMCPrimary), pfoToHitsMap.at(pfoToSharedHits.first), pfoToSharedHits.second))
+                continue;
 
             if (pfoToSharedHits.second.size() > bestPfoHitPair.second.size())
             {
@@ -255,8 +258,9 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCParticleVector &mcPr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::GetRemainingPfoMatches(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
-    PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
+void EventValidationAlgorithm::GetRemainingPfoMatches(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
+    const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
+    const PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
 {
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
 
@@ -268,6 +272,10 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCParticleVector &mc
         for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
         {
             if (usedPfos.count(pfoToSharedHits.first))
+                continue;
+
+            // ATTN Didn't used to include this here, when handling below threshold matches
+            if (!this->IsGoodMatch(mcParticleToHitsMap.at(pMCPrimary), pfoToHitsMap.at(pfoToSharedHits.first), pfoToSharedHits.second))
                 continue;
 
             const LArMCParticleHelper::MCParticleCaloHitListPair mcParticleToHits(pMCPrimary, pfoToSharedHits.second);
@@ -299,155 +307,13 @@ void EventValidationAlgorithm::GetRemainingPfoMatches(const MCParticleVector &mc
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-//void EventValidationAlgorithm::WriteAllOutput(const MCParticleVector &mcNeutrinoVector, const PfoVector &recoNeutrinoVector,
-//    const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap, const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
-//{
-//#ifdef MONITORING
-//    int mcNeutrinoNuance(-1), mcNeutrinoPdg(0);
-//    float mcNeutrinoVtxX(-1.f), mcNeutrinoVtxY(-1.f), mcNeutrinoVtxZ(-1.f);
-//    float mcNeutrinoE(0.f), mcNeutrinoPX(0.f), mcNeutrinoPY(0.f), mcNeutrinoPZ(0.f);
-//    const int nMCNeutrinos(mcNeutrinoVector.size()), nRecoNeutrinos(recoNeutrinoVector.size()), nMCPrimaries(mcPrimaryMatchingMap.size());
-//// just get first(?) true neutrino with a nuance code; ought to have n true neutrinos, n true beam particles, n true crs
-//    if (!mcNeutrinoVector.empty())
-//    {
-//        const MCParticle *const pMCNeutrino = mcNeutrinoVector.front();
-//
-//        mcNeutrinoPdg = pMCNeutrino->GetParticleId();
-//        mcNeutrinoVtxX = pMCNeutrino->GetEndpoint().GetX();
-//        mcNeutrinoVtxY = pMCNeutrino->GetEndpoint().GetY();
-//        mcNeutrinoVtxZ = pMCNeutrino->GetEndpoint().GetZ();
-//
-//        mcNeutrinoE = pMCNeutrino->GetEnergy();
-//        mcNeutrinoPX = pMCNeutrino->GetMomentum().GetX();
-//        mcNeutrinoPY = pMCNeutrino->GetMomentum().GetY();
-//        mcNeutrinoPZ = pMCNeutrino->GetMomentum().GetZ();
-//
-//        const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino);
-//
-//        if (pLArMCNeutrino)
-//            mcNeutrinoNuance = pLArMCNeutrino->GetNuanceCode();
-//    }
-//
-//// TODO reco neutrino or beam particle vertices
-//
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber - 1));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCNeutrinos", nMCNeutrinos));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPdg", mcNeutrinoPdg));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoNuance", mcNeutrinoNuance));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nRecoNeutrinos", nRecoNeutrinos));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoPdg", recoNeutrinoPdg));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxX", mcNeutrinoVtxX));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxY", mcNeutrinoVtxY));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoVtxZ", mcNeutrinoVtxZ));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoE", mcNeutrinoE));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPX", mcNeutrinoPX));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPY", mcNeutrinoPY));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcNeutrinoPZ", mcNeutrinoPZ));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxX", recoNeutrinoVtxX));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxY", recoNeutrinoVtxY));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoVtxZ", recoNeutrinoVtxZ));
-//
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMCPrimaries", nMCPrimaries));
-//    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoNeutrinoNPrimaries", recoNeutrinoNPrimaries));
-//// TODO n beam particles, n nu primaries, n crs
-//
-//// now use new structures
-//    for (const MCPrimaryMatchingMap::value_type &mapValue : mcPrimaryMatchingMap)
-//    {
-//        const SimpleMCPrimary &simpleMCPrimary(mapValue.first);
-//
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryId", simpleMCPrimary.m_id));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPdg", simpleMCPrimary.m_pdgCode));
-//// origin: nu, beam ptcle or cr
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsTotal", simpleMCPrimary.m_nMCHitsTotal));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsU", simpleMCPrimary.m_nMCHitsU));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsV", simpleMCPrimary.m_nMCHitsV));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsW", simpleMCPrimary.m_nMCHitsW));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNGoodHitsTotal", simpleMCPrimary.m_nGoodMCHitsTotal));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNGoodHitsU", simpleMCPrimary.m_nGoodMCHitsU));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNGoodHitsV", simpleMCPrimary.m_nGoodMCHitsV));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNGoodHitsW", simpleMCPrimary.m_nGoodMCHitsW));
-//
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryE", simpleMCPrimary.m_energy));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPX", simpleMCPrimary.m_momentum.GetX()));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPY", simpleMCPrimary.m_momentum.GetY()));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPZ", simpleMCPrimary.m_momentum.GetZ()));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryVtxX", simpleMCPrimary.m_vertex.GetX()));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryVtxY", simpleMCPrimary.m_vertex.GetY()));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryVtxZ", simpleMCPrimary.m_vertex.GetZ()));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryEndX", simpleMCPrimary.m_endpoint.GetX()));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryEndY", simpleMCPrimary.m_endpoint.GetY()));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryEndZ", simpleMCPrimary.m_endpoint.GetZ()));
-//
-//        const int mcPrimaryNMatchedPfos(mapValue.second.size());
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNMatchedPfos", mcPrimaryNMatchedPfos));
-//
-//        IntVector pfoIdVector, pfoParentIdVector, pfoPdgVector, pfoNHitsTotalVector, pfoNHitsUVector, pfoNHitsVVector, pfoNHitsWVector,
-//            pfoNMatchedHitsTotalVector, pfoNMatchedHitsUVector, pfoNMatchedHitsVVector, pfoNMatchedHitsWVector;
-//        FloatVector pfoVtxXVector, pfoVtxYVector, pfoVtxZVector, pfoEndXVector, pfoEndYVector, pfoEndZVector,
-//            pfoVtxDirXVector, pfoVtxDirYVector, pfoVtxDirZVector, pfoEndDirXVector, pfoEndDirYVector, pfoEndDirZVector;
-//
-//        for (const SimpleMatchedPfo &simpleMatchedPfo : mapValue.second)
-//        {
-//            pfoIdVector.push_back(simpleMatchedPfo.m_id);
-//            pfoParentIdVector.push_back(simpleMatchedPfo.m_parentId);
-//            pfoPdgVector.push_back(simpleMatchedPfo.m_pdgCode);
-//            pfoNHitsTotalVector.push_back(simpleMatchedPfo.m_nPfoHitsTotal);
-//            pfoNHitsUVector.push_back(simpleMatchedPfo.m_nPfoHitsU);
-//            pfoNHitsVVector.push_back(simpleMatchedPfo.m_nPfoHitsV);
-//            pfoNHitsWVector.push_back(simpleMatchedPfo.m_nPfoHitsW);
-//            pfoNMatchedHitsTotalVector.push_back(simpleMatchedPfo.m_nMatchedHitsTotal);
-//            pfoNMatchedHitsUVector.push_back(simpleMatchedPfo.m_nMatchedHitsU);
-//            pfoNMatchedHitsVVector.push_back(simpleMatchedPfo.m_nMatchedHitsV);
-//            pfoNMatchedHitsWVector.push_back(simpleMatchedPfo.m_nMatchedHitsW);
-//
-//            pfoVtxXVector.push_back(simpleMatchedPfo.m_vertex.GetX());
-//            pfoVtxYVector.push_back(simpleMatchedPfo.m_vertex.GetY());
-//            pfoVtxZVector.push_back(simpleMatchedPfo.m_vertex.GetZ());
-//            pfoEndXVector.push_back(simpleMatchedPfo.m_endpoint.GetX());
-//            pfoEndYVector.push_back(simpleMatchedPfo.m_endpoint.GetY());
-//            pfoEndZVector.push_back(simpleMatchedPfo.m_endpoint.GetZ());
-//            pfoVtxDirXVector.push_back(simpleMatchedPfo.m_vertexDirection.GetX());
-//            pfoVtxDirYVector.push_back(simpleMatchedPfo.m_vertexDirection.GetY());
-//            pfoVtxDirZVector.push_back(simpleMatchedPfo.m_vertexDirection.GetZ());
-//            pfoEndDirXVector.push_back(simpleMatchedPfo.m_endDirection.GetX());
-//            pfoEndDirYVector.push_back(simpleMatchedPfo.m_endDirection.GetY());
-//            pfoEndDirZVector.push_back(simpleMatchedPfo.m_endDirection.GetZ());
-//        }
-//// TODO origin reco nu x, beam ptcl y or cr z
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoId", &pfoIdVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoParentId", &pfoParentIdVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoPdg", &pfoPdgVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNHitsTotal", &pfoNHitsTotalVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNHitsU", &pfoNHitsUVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNHitsV", &pfoNHitsVVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNHitsW", &pfoNHitsWVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNMatchedHitsTotal", &pfoNMatchedHitsTotalVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNMatchedHitsU", &pfoNMatchedHitsUVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNMatchedHitsV", &pfoNMatchedHitsVVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoNMatchedHitsW", &pfoNMatchedHitsWVector));
-//
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoVtxX", &pfoVtxXVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoVtxY", &pfoVtxYVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoVtxZ", &pfoVtxZVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoEndX", &pfoEndXVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoEndY", &pfoEndYVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoEndZ", &pfoEndZVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoVtxDirX", &pfoVtxDirXVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoVtxDirY", &pfoVtxDirYVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoVtxDirZ", &pfoVtxDirZVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoEndDirX", &pfoEndDirXVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoEndDirY", &pfoEndDirYVector));
-//        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "matchedPfoEndDirZ", &pfoEndDirZVector));
-//
-//        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-//    }
-//#else
-//    std::cout << "Monitoring functionality unavailable. nMCNeutrinos " << mcNeutrinoVector.size() << ", nRecoNeutrinos" << recoNeutrinoVector.size()
-//              << ", nMCPrimaries " << mcPrimaryMatchingMap.size() << ", nMCParticles " << mcToPrimaryMCMap.size() << std::endl;
-//#endif
-//}
+bool EventValidationAlgorithm::IsGoodMatch(const CaloHitList &trueHits, const CaloHitList &recoHits, const CaloHitList &sharedHits) const
+{
+    const float purity((recoHits.size() > 0) ? static_cast<float>(sharedHits.size()) / static_cast<float>(recoHits.size()) : 0.f);
+    const float completeness((trueHits.size() > 0) ? static_cast<float>(sharedHits.size()) / static_cast<float>(trueHits.size()) : 0.f);
+
+    return ((sharedHits.size() >= m_matchingMinSharedHits) && (purity >= m_matchingMinPurity) && (completeness >= m_matchingMinCompleteness));
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -519,16 +385,16 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 //
 //    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
 //        "UseSmallPrimaries", m_useSmallPrimaries));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MatchingMinSharedHits", m_matchingMinSharedHits));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MatchingMinCompleteness", m_matchingMinCompleteness));
-//
-//    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-//        "MatchingMinPurity", m_matchingMinPurity));
-//
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MatchingMinSharedHits", m_matchingMinSharedHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MatchingMinCompleteness", m_matchingMinCompleteness));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MatchingMinPurity", m_matchingMinPurity));
+
 //    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
 //        "VertexVisualizationDeltaR", m_vertexVisualizationDeltaR));
 

@@ -56,35 +56,53 @@ private:
      *  @brief  Apply an interpretative matching procedure to the comprehensive matches in the provided mc particle to pfo hit sharing map
      *
      *  @param  mcParticleToHitsMap the mc particle to hits map
+     *  @param  pfoToHitsMap to pfo to hits map
      *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
-    void InterpretMCToPfoHitSharingMap(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
-        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+    void InterpretMCToPfoHitSharingMap(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the strongest pfo match (most matched hits) between an available mc primary and an available pfo
      *
      *  @param  mcPrimaryVector the mc primary vector
+     *  @param  mcParticleToHitsMap the mc particle to hits map
+     *  @param  pfoToHitsMap to pfo to hits map
      *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
      *  @param  usedPfos the set of previously used pfos
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      *
      *  @return whether a strong match was identified
      */
-    bool GetStrongestPfoMatch(const pandora::MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
+    bool GetStrongestPfoMatch(const pandora::MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
+        const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
         pandora::PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the best matches for any pfos left-over after the strong matching procedure
      *
      *  @param  mcPrimaryVector the mc primary vector
+     *  @param  mcParticleToHitsMap the mc particle to hits map
+     *  @param  pfoToHitsMap to pfo to hits map
      *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
      *  @param  usedPfos the set of previously used pfos
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
-    void GetRemainingPfoMatches(const pandora::MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
-        pandora::PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+    void GetRemainingPfoMatches(const pandora::MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
+        const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
+        const pandora::PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+
+    /**
+     *  @brief  Whether a provided mc primary and pfo are deemed to be a good match
+     *
+     *  @param  trueHits the list of true hits
+     *  @param  recoHits the list of reco hits
+     *  @param  sharedHits the list of shared hits
+     *
+     *  @return boolean
+     */
+    bool IsGoodMatch(const pandora::CaloHitList &trueHits, const pandora::CaloHitList &recoHits, const pandora::CaloHitList &sharedHits) const;
 
 //    /**
 //     *  @brief  Write all the raw matching output to a tree
@@ -131,11 +149,11 @@ private:
 //    int                     m_matchingMinPrimaryHits;       ///< The minimum number of good mc primary hits used in matching scheme
 //    int                     m_matchingMinHitsForGoodView;   ///< The minimum number of good mc primary hits in given view to declare view to be good
 //    int                     m_matchingMinPrimaryGoodViews;  ///< The minimum number of good views for a mc primary
-//
+
 //    bool                    m_useSmallPrimaries;            ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
-//    int                     m_matchingMinSharedHits;        ///< The minimum number of shared hits used in matching scheme
-//    float                   m_matchingMinCompleteness;      ///< The minimum particle completeness to declare a match
-//    float                   m_matchingMinPurity;            ///< The minimum particle purity to declare a match
+    unsigned int            m_matchingMinSharedHits;        ///< The minimum number of shared hits used in matching scheme
+    float                   m_matchingMinCompleteness;      ///< The minimum particle completeness to declare a match
+    float                   m_matchingMinPurity;            ///< The minimum particle purity to declare a match
 //
 //    float                   m_vertexVisualizationDeltaR;    ///< The vertex visualization delta r value, defining good and bad vertex matches
 
