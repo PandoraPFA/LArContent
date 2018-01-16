@@ -275,9 +275,10 @@ public:
      *  @param  slidingFitHalfWindow  size of half window for sliding linear fit
      *  @param  layerPitch  size of pitch for sliding linear fit
      *  @param  trackStateVector  the output track trajectory
+     *  @param  pIndexVector lookup vector of spacepoint indices to store trajectory point sorting
      */
     static void GetSlidingFitTrajectory(const pandora::CartesianPointVector &pointVector, const pandora::CartesianVector &vertexPosition,
-        const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector);
+        const unsigned int layerWindow, const float layerPitch, LArTrackStateVector &trackStateVector, pandora::IntVector *const pIndexVector = nullptr);
 
     /**
      *  @brief  Apply 3D sliding fit to Pfo and return track trajectory
@@ -331,11 +332,12 @@ private:
      *  @param  pVertex the address of the input vertex
      *  @param  slidingFitHalfWindow  size of half window for sliding linear fit
      *  @param  layerPitch  size of pitch for sliding linear fit
-     *  @param  trackStateVector  the output track trajectory
+     *  @param  trackStateVector the output track trajectory
+     *  @param  pIndexVector lookup vector of spacepoint indices to store trajectory point sorting
      */
     template <typename T>
     static void SlidingFitTrajectoryImpl(const T *const pT, const pandora::CartesianVector &vertexPosition, const unsigned int layerWindow,
-        const float layerPitch, LArTrackStateVector &trackStateVector);
+        const float layerPitch, LArTrackStateVector &trackStateVector, pandora::IntVector *const pIndexVector = nullptr);
 
     /**
      *  @brief  TypeAdaptor
