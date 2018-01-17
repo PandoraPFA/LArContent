@@ -570,14 +570,17 @@ void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMa
 void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
     pandora::CaloHitList &reconstructableCaloHitList2D)
 {
-    // Collect all 2D calo hits
+    // Collect all 2D calo hits in pfo hierarchy
+    PfoList pfoList;
+    LArPfoHelper::GetAllDownstreamPfos(pPfo, pfoList);
+
     CaloHitList caloHitList2D;
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList2D);
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitList2D);
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitList2D);
-    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_U, caloHitList2D); // TODO check isolated usage throughout
-    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_V, caloHitList2D);
-    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_W, caloHitList2D);
+    LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_U, caloHitList2D);
+    LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_V, caloHitList2D);
+    LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_W, caloHitList2D);
+    LArPfoHelper::GetIsolatedCaloHits(pfoList, TPC_VIEW_U, caloHitList2D); // TODO check isolated usage throughout
+    LArPfoHelper::GetIsolatedCaloHits(pfoList, TPC_VIEW_V, caloHitList2D);
+    LArPfoHelper::GetIsolatedCaloHits(pfoList, TPC_VIEW_W, caloHitList2D);
 
     // Filter for only reconstructable hits
     for (const CaloHit *const pCaloHit : caloHitList2D)

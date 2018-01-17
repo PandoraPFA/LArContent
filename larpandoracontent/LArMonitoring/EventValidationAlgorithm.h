@@ -46,29 +46,33 @@ private:
      *  @brief  Print matching information in a provided mc particle to pfo hit sharing map
      *
      *  @param  mcParticleToHitsMap to mc particle to hits map
+     *  @param  goodMCParticleToHitsMap the good mc particle to hits map
      *  @param  pfoToHitsMap to pfo to hits map
      *  @param  mcParticleToPfoHitSharingMap the mc particle to pfo hit sharing map
      *  @param  printCorrectness print number of correct elements, and corresponding fraction
      */
-    void PrintOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
-        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const bool printCorrectness) const;
+    void PrintOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap,
+        const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const bool printCorrectness) const;
 
     /**
      *  @brief  Apply an interpretative matching procedure to the comprehensive matches in the provided mc particle to pfo hit sharing map
      *
      *  @param  mcParticleToHitsMap the mc particle to hits map
+     *  @param  goodMCParticleToHitsMap the good mc particle to hits map
      *  @param  pfoToHitsMap to pfo to hits map
      *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
-    void InterpretMCToPfoHitSharingMap(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
-        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+    void InterpretMCToPfoHitSharingMap(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap,
+        const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the strongest pfo match (most matched hits) between an available mc primary and an available pfo
      *
      *  @param  mcPrimaryVector the mc primary vector
      *  @param  mcParticleToHitsMap the mc particle to hits map
+     *  @param  goodMCParticleToHitsMap the good mc particle to hits map
      *  @param  pfoToHitsMap to pfo to hits map
      *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
      *  @param  usedPfos the set of previously used pfos
@@ -77,22 +81,25 @@ private:
      *  @return whether a strong match was identified
      */
     bool GetStrongestPfoMatch(const pandora::MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-        const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
-        pandora::PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+        const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, pandora::PfoSet &usedPfos,
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the best matches for any pfos left-over after the strong matching procedure
      *
      *  @param  mcPrimaryVector the mc primary vector
      *  @param  mcParticleToHitsMap the mc particle to hits map
+     *  @param  goodMCParticleToHitsMap the good mc particle to hits map
      *  @param  pfoToHitsMap to pfo to hits map
      *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
      *  @param  usedPfos the set of previously used pfos
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
     void GetRemainingPfoMatches(const pandora::MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-        const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
-        const pandora::PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+        const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, const pandora::PfoSet &usedPfos,
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Whether a provided mc primary and pfo are deemed to be a good match
@@ -124,14 +131,8 @@ private:
     std::string             m_mcParticleListName;           ///< Name of input MC particle list
     std::string             m_pfoListName;                  ///< Name of input Pfo list
 
-    pandora::StringVector   m_clusterListNames;             ///< Optional list of cluster list names to examine to find left-over, remnant clusters
-
-//    bool                    m_integrateOverRecoNeutrinos;   ///< Whether to consider particles from all reco neutrinos
-//    bool                    m_useRecoNeutrinosOnly;         ///< Whether to only consider pfos that are daughters of reco neutrinos
     bool                    m_useTrueNeutrinosOnly;         ///< Whether to consider only mc particles that were neutrino induced
-//    bool                    m_primaryPfosOnly;              ///< Whether to extract only primary Pfos - top-level pfos and top-level daughters of top-level neutrinos
-//    bool                    m_collapseToPrimaryPfos;        ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
-//
+
 //    bool                    m_selectInputHits;              ///< Whether to use only hits passing mc-based quality (is "reconstructable") checks
 //    float                   m_minHitNeutrinoWeight;         ///< Minimum fraction of energy deposited by neutrino-indiced products in a single hit
 //    float                   m_minHitSharingFraction;        ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
@@ -140,23 +141,12 @@ private:
     bool                    m_printAllToScreen;             ///< Whether to print all/raw matching details to screen
     bool                    m_printMatchingToScreen;        ///< Whether to print matching output to screen
 
-//    bool                    m_visualizeMatching;            ///< Whether to use Pandora monitoring to visualize matching output
-//    bool                    m_visualizeVertices;            ///< Whether to show vertices in visualization
-//    bool                    m_visualizeRemnants;            ///< Whether to show remnants in visualization
-//    bool                    m_visualizeGaps;                ///< Whether to show geometry (detector gaps) in visualization
-
     bool                    m_writeToTree;                  ///< Whether to write all/raw matching details to tree
 
-//    int                     m_matchingMinPrimaryHits;       ///< The minimum number of good mc primary hits used in matching scheme
-//    int                     m_matchingMinHitsForGoodView;   ///< The minimum number of good mc primary hits in given view to declare view to be good
-//    int                     m_matchingMinPrimaryGoodViews;  ///< The minimum number of good views for a mc primary
-
-//    bool                    m_useSmallPrimaries;            ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
+    bool                    m_useSmallPrimaries;            ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
     unsigned int            m_matchingMinSharedHits;        ///< The minimum number of shared hits used in matching scheme
     float                   m_matchingMinCompleteness;      ///< The minimum particle completeness to declare a match
     float                   m_matchingMinPurity;            ///< The minimum particle purity to declare a match
-//
-//    float                   m_vertexVisualizationDeltaR;    ///< The vertex visualization delta r value, defining good and bad vertex matches
 
     std::string             m_treeName;                     ///< Name of output tree
     std::string             m_fileName;                     ///< Name of output file
