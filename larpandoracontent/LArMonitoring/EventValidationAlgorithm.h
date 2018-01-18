@@ -38,67 +38,143 @@ public:
     ~EventValidationAlgorithm();
 
 private:
+    /**
+     *  @brief  ValidationInfo class
+     */
+    class ValidationInfo
+    {
+    public:
+        /**
+         *  @brief  Get the all mc particle to hits map
+         *
+         *  @return the all mc particle to hits map
+         */
+        const LArMCParticleHelper::MCContributionMap &GetAllMCParticleToHitsMap() const;
+
+        /**
+         *  @brief  Get the target mc particle to hits map
+         *
+         *  @return the target mc particle to hits map
+         */
+        const LArMCParticleHelper::MCContributionMap &GetTargetMCParticleToHitsMap() const;
+
+        /**
+         *  @brief  Get the pfo to hits map
+         *
+         *  @return the pfo to hits map
+         */
+        const LArMCParticleHelper::PfoContributionMap &GetPfoToHitsMap() const;
+
+        /**
+         *  @brief  Get the mc to pfo hit sharing map
+         *
+         *  @return the mc to pfo hit sharing map
+         */
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &GetMCToPfoHitSharingMap() const;
+
+        /**
+         *  @brief  Get the interpreted mc to pfo hit sharing map
+         *
+         *  @return the interpreted mc to pfo hit sharing map
+         */
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &GetInterpretedMCToPfoHitSharingMap() const;
+
+        /**
+         *  @brief  Set the all mc particle to hits map
+         *
+         *  @param  allMCParticleToHitsMap the all mc particle to hits map
+         */
+        void SetAllMCParticleToHitsMap(const LArMCParticleHelper::MCContributionMap &allMCParticleToHitsMap);
+
+        /**
+         *  @brief  Set the target mc particle to hits map
+         *
+         *  @param  targetMCParticleToHitsMap the target mc particle to hits map
+         */
+        void SetTargetMCParticleToHitsMap(const LArMCParticleHelper::MCContributionMap &targetMCParticleToHitsMap);
+
+        /**
+         *  @brief  Set the pfo to hits map
+         *
+         *  @param  pfoToHitsMap the pfo to hits map
+         */
+        void SetPfoToHitsMap(const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap);
+
+        /**
+         *  @brief  Set the mc to pfo hit sharing map
+         *
+         *  @param  mcToPfoHitSharingMap the mc to pfo hit sharing map
+         */
+        void SetMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap);
+
+        /**
+         *  @brief  Set the interpreted mc to pfo hit sharing map
+         *
+         *  @param  interpretedMCToPfoHitSharingMap the interpreted mc to pfo hit sharing map
+         */
+        void SetInterpretedMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap);
+
+    private:
+        LArMCParticleHelper::MCContributionMap              m_allMCParticleToHitsMap;               ///< The all mc particle to hits map
+        LArMCParticleHelper::MCContributionMap              m_targetMCParticleToHitsMap;            ///< The target mc particle to hits map
+        LArMCParticleHelper::PfoContributionMap             m_pfoToHitsMap;                         ///< The pfo to hits map
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap   m_mcToPfoHitSharingMap;                 ///< The mc to pfo hit sharing map
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap   m_interpretedMCToPfoHitSharingMap;      ///< The interpreted mc to pfo hit sharing map
+    };
+
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Fill the validation info containers
+     *
+     *  @param  pMCParticleList the address of the mc particle list
+     *  @param  pCaloHitList the address of the calo hit list
+     *  @param  pPfoList the address of the pfo list
+     *  @param  validationInfo to receive the validation info
+     */
+    void FillValidationInfo(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
+        const pandora::PfoList *const pPfoList, ValidationInfo &validationInfo) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject*, unsigned int> PfoToIdMap;
 
     /**
-     *  @brief  Print matching information in a provided mc particle to pfo hit sharing map
+     *  @brief  Print matching information in a provided validation info object
      *
-     *  @param  mcParticleToHitsMap to mc particle to hits map
-     *  @param  goodMCParticleToHitsMap the good mc particle to hits map
-     *  @param  pfoToHitsMap to pfo to hits map
-     *  @param  mcParticleToPfoHitSharingMap the mc particle to pfo hit sharing map
-     *  @param  printCorrectness print number of correct elements, and corresponding fraction
+     *  @param  validationInfo the validation info
+     *  @param  useInterpretedMatching whether to use the interpreted (rather than raw) matching information
      */
-    void PrintOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap,
-        const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const bool printCorrectness) const;
+    void PrintOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching) const;
 
     /**
-     *  @brief  Apply an interpretative matching procedure to the comprehensive matches in the provided mc particle to pfo hit sharing map
+     *  @brief  Apply an interpretative matching procedure to the comprehensive matches in the provided validation info object
      *
-     *  @param  mcParticleToHitsMap the mc particle to hits map
-     *  @param  goodMCParticleToHitsMap the good mc particle to hits map
-     *  @param  pfoToHitsMap to pfo to hits map
-     *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
+     *  @param  validationInfo the validation info
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
-    void InterpretMCToPfoHitSharingMap(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap,
-        const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap,
-        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+    void InterpretMatching(const ValidationInfo &validationInfo, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the strongest pfo match (most matched hits) between an available mc primary and an available pfo
      *
+     *  @param  validationInfo the validation info
      *  @param  mcPrimaryVector the mc primary vector
-     *  @param  mcParticleToHitsMap the mc particle to hits map
-     *  @param  goodMCParticleToHitsMap the good mc particle to hits map
-     *  @param  pfoToHitsMap to pfo to hits map
-     *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
      *  @param  usedPfos the set of previously used pfos
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      *
      *  @return whether a strong match was identified
      */
-    bool GetStrongestPfoMatch(const pandora::MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-        const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
-        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, pandora::PfoSet &usedPfos,
+    bool GetStrongestPfoMatch(const ValidationInfo &validationInfo, const pandora::MCParticleVector &mcPrimaryVector, pandora::PfoSet &usedPfos,
         LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the best matches for any pfos left-over after the strong matching procedure
      *
+     *  @param  validationInfo the validation info
      *  @param  mcPrimaryVector the mc primary vector
-     *  @param  mcParticleToHitsMap the mc particle to hits map
-     *  @param  goodMCParticleToHitsMap the good mc particle to hits map
-     *  @param  pfoToHitsMap to pfo to hits map
-     *  @param  mcToPfoHitSharingMap the input mc particle to pfo hit sharing map
      *  @param  usedPfos the set of previously used pfos
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
-    void GetRemainingPfoMatches(const pandora::MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-        const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
-        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, const pandora::PfoSet &usedPfos,
+    void GetRemainingPfoMatches(const ValidationInfo &validationInfo, const pandora::MCParticleVector &mcPrimaryVector, const pandora::PfoSet &usedPfos,
         LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
@@ -112,16 +188,13 @@ private:
      */
     bool IsGoodMatch(const pandora::CaloHitList &trueHits, const pandora::CaloHitList &recoHits, const pandora::CaloHitList &sharedHits) const;
 
-//    /**
-//     *  @brief  Write all the raw matching output to a tree
-//     *
-//     *  @param  mcNeutrinoVector the mc neutrino vector
-//     *  @param  recoNeutrinoVector the reco neutrino vector
-//     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
-//     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
-//     */
-//    void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
-//        const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap, const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+    /**
+     *  @brief  Write the matching output to a tree
+     *
+     *  @param  validationInfo the validation info
+     *  @param  useInterpretedMatching whether to use the interpreted (rather than raw) matching information
+     */
+    void WriteOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -133,10 +206,9 @@ private:
 
     bool                    m_useTrueNeutrinosOnly;         ///< Whether to consider only mc particles that were neutrino induced
 
-//    bool                    m_selectInputHits;              ///< Whether to use only hits passing mc-based quality (is "reconstructable") checks
-//    float                   m_minHitNeutrinoWeight;         ///< Minimum fraction of energy deposited by neutrino-indiced products in a single hit
-//    float                   m_minHitSharingFraction;        ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
-//    float                   m_maxPhotonPropagation;         ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
+    bool                    m_selectInputHits;              ///< Whether to use only hits passing mc-based quality (is "reconstructable") checks
+    float                   m_minHitSharingFraction;        ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
+    float                   m_maxPhotonPropagation;         ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
 
     bool                    m_printAllToScreen;             ///< Whether to print all/raw matching details to screen
     bool                    m_printMatchingToScreen;        ///< Whether to print matching output to screen
@@ -154,6 +226,77 @@ private:
     int                     m_fileIdentifier;               ///< The input file identifier
     int                     m_eventNumber;                  ///< The event number
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::MCContributionMap &EventValidationAlgorithm::ValidationInfo::GetAllMCParticleToHitsMap() const
+{
+    return m_allMCParticleToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::MCContributionMap &EventValidationAlgorithm::ValidationInfo::GetTargetMCParticleToHitsMap() const
+{
+    return m_targetMCParticleToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::PfoContributionMap &EventValidationAlgorithm::ValidationInfo::GetPfoToHitsMap() const
+{
+    return m_pfoToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::MCParticleToPfoHitSharingMap &EventValidationAlgorithm::ValidationInfo::GetMCToPfoHitSharingMap() const
+{
+    return m_mcToPfoHitSharingMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::MCParticleToPfoHitSharingMap &EventValidationAlgorithm::ValidationInfo::GetInterpretedMCToPfoHitSharingMap() const
+{
+    return m_interpretedMCToPfoHitSharingMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetAllMCParticleToHitsMap(const LArMCParticleHelper::MCContributionMap &allMCParticleToHitsMap)
+{
+    m_allMCParticleToHitsMap = allMCParticleToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetTargetMCParticleToHitsMap(const LArMCParticleHelper::MCContributionMap &targetMCParticleToHitsMap)
+{
+    m_targetMCParticleToHitsMap = targetMCParticleToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetPfoToHitsMap(const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap)
+{
+    m_pfoToHitsMap = pfoToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap)
+{
+    m_mcToPfoHitSharingMap = mcToPfoHitSharingMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetInterpretedMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap)
+{
+    m_interpretedMCToPfoHitSharingMap = interpretedMCToPfoHitSharingMap;
+}
 
 } // namespace lar_content
 

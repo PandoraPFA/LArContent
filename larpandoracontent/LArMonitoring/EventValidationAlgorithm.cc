@@ -20,6 +20,9 @@ namespace lar_content
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
     m_useTrueNeutrinosOnly(false),
+    m_selectInputHits(true),
+    m_minHitSharingFraction(0.9f),
+    m_maxPhotonPropagation(2.5f),
     m_printAllToScreen(false),
     m_printMatchingToScreen(true),
     m_writeToTree(false),
@@ -64,82 +67,101 @@ StatusCode EventValidationAlgorithm::Run()
     const PfoList *pPfoList = nullptr;
     (void) PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
 
-// TODO Get set/map of just good mc primaries too? Factor into separate function.
-    LArMCParticleHelper::PrimaryParameters parameters;
-    LArMCParticleHelper::MCContributionMap goodMCParticleToHitsMap;
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, goodMCParticleToHitsMap);
+    ValidationInfo validationInfo;
+    this->FillValidationInfo(pMCParticleList, pCaloHitList, pPfoList, validationInfo);
 
-    if (!m_useTrueNeutrinosOnly)
-    {
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, goodMCParticleToHitsMap);
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, goodMCParticleToHitsMap);
-    }
-
-    parameters.m_minPrimaryGoodHits = 0;
-    parameters.m_minHitsForGoodView = 0;
-    parameters.m_minHitSharingFraction = 0.f;
-    LArMCParticleHelper::MCContributionMap mcParticleToHitsMap;
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcParticleToHitsMap);
-
-    if (!m_useTrueNeutrinosOnly)
-    {
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, mcParticleToHitsMap);
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcParticleToHitsMap);
-    }
-
-    PfoList finalStatePfos;
-    for (const ParticleFlowObject *const pPfo : (pPfoList ? *pPfoList : PfoList()))
-    {
-        if (LArPfoHelper::IsFinalState(pPfo))
-            finalStatePfos.push_back(pPfo);
-    }
-
-    LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, mcParticleToHitsMap, pfoToHitsMap);
-
-    LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
-    LArMCParticleHelper::MCParticleToPfoHitSharingMap mcParticleToPfoHitSharingMap;
-    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(pfoToHitsMap, {mcParticleToHitsMap}, pfoToMCParticleHitSharingMap, mcParticleToPfoHitSharingMap);
-
-    // Print raw matching information to terminal
     if (m_printAllToScreen)
-        this->PrintOutput(mcParticleToHitsMap, goodMCParticleToHitsMap, pfoToHitsMap, mcParticleToPfoHitSharingMap, false);
-
-    LArMCParticleHelper::MCParticleToPfoHitSharingMap interpretedMCToPfoHitSharingMap;
-    this->InterpretMCToPfoHitSharingMap(mcParticleToHitsMap, goodMCParticleToHitsMap, pfoToHitsMap, mcParticleToPfoHitSharingMap, interpretedMCToPfoHitSharingMap);
+        this->PrintOutput(validationInfo, false);
 
     if (m_printMatchingToScreen)
-        this->PrintOutput(mcParticleToHitsMap, goodMCParticleToHitsMap, pfoToHitsMap, interpretedMCToPfoHitSharingMap, true);
+        this->PrintOutput(validationInfo, true);
 
-//    if (m_writeToTree)
-//        this->WriteOutput(mcParticleToHitsMap, pfoToHitsMap, interpretedMCToPfoHitSharingMap);
+    if (m_writeToTree)
+        this->WriteOutput(validationInfo, true);
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap, const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap,
-    const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const bool printCorrectness) const
+void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
+    const PfoList *const pPfoList, ValidationInfo &validationInfo) const
 {
-    std::cout << "---MATCHING-OUTPUT------------------------------------------------------------------------------" << std::endl;
+    if (pMCParticleList && pCaloHitList)
+    {
+        LArMCParticleHelper::PrimaryParameters parameters;
+
+        parameters.m_selectInputHits = m_selectInputHits;
+        parameters.m_minHitSharingFraction = m_minHitSharingFraction;
+        parameters.m_maxPhotonPropagation = m_maxPhotonPropagation;
+        LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, targetMCParticleToHitsMap);
+        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
+
+        parameters.m_minPrimaryGoodHits = 0;
+        parameters.m_minHitsForGoodView = 0;
+        parameters.m_minHitSharingFraction = 0.f;
+        LArMCParticleHelper::MCContributionMap allMCParticleToHitsMap;
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, allMCParticleToHitsMap);
+        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, allMCParticleToHitsMap);
+        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, allMCParticleToHitsMap);
+
+        validationInfo.SetTargetMCParticleToHitsMap(targetMCParticleToHitsMap);
+        validationInfo.SetAllMCParticleToHitsMap(allMCParticleToHitsMap);
+    }
+    
+    if (pPfoList)
+    {
+        PfoList finalStatePfos;
+        for (const ParticleFlowObject *const pPfo : *pPfoList)
+        {
+            if (LArPfoHelper::IsFinalState(pPfo))
+                finalStatePfos.push_back(pPfo);
+        }
+
+        LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
+        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
+        validationInfo.SetPfoToHitsMap(pfoToHitsMap);
+    }
+
+    LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCHitSharingMap;
+    LArMCParticleHelper::MCParticleToPfoHitSharingMap mcToPfoHitSharingMap;
+    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(validationInfo.GetPfoToHitsMap(), {validationInfo.GetAllMCParticleToHitsMap()}, pfoToMCHitSharingMap, mcToPfoHitSharingMap);
+    validationInfo.SetMCToPfoHitSharingMap(mcToPfoHitSharingMap);
+
+    LArMCParticleHelper::MCParticleToPfoHitSharingMap interpretedMCToPfoHitSharingMap;
+    this->InterpretMatching(validationInfo, interpretedMCToPfoHitSharingMap);
+    validationInfo.SetInterpretedMCToPfoHitSharingMap(interpretedMCToPfoHitSharingMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EventValidationAlgorithm::PrintOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching) const
+{
+    if (useInterpretedMatching) std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
+    else std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
+
     MCParticleVector mcPrimaryVector;
-    LArMonitoringHelper::GetOrderedMCParticleVector({mcParticleToHitsMap}, mcPrimaryVector);
+    LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetAllMCParticleToHitsMap()}, mcPrimaryVector);
 
     PfoVector primaryPfoVector;
-    LArMonitoringHelper::GetOrderedPfoVector(pfoToHitsMap, primaryPfoVector);
+    LArMonitoringHelper::GetOrderedPfoVector(validationInfo.GetPfoToHitsMap(), primaryPfoVector);
 
-    PfoToIdMap pfoToIdMap;
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(useInterpretedMatching ?
+        validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
+
     unsigned int primaryIndex(0), pfoIndex(0), nCorrectNu(0), nCorrectTB(0), nCorrectCR(0), nTotalNu(0), nTotalTB(0), nTotalCR(0),
         nFakeNu(0), nSplitCR(0), nLostCR(0), nFakeCR(0);
 
+    PfoToIdMap pfoToIdMap;
     for (const Pfo *const pPrimaryPfo : primaryPfoVector)
-        (void) pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, pfoIndex++));
+        pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, pfoIndex++));
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-        const bool hasMatch(mcParticleToPfoHitSharingMap.count(pMCPrimary) && !mcParticleToPfoHitSharingMap.at(pMCPrimary).empty());
-        const bool isTargetPrimary(goodMCParticleToHitsMap.count(pMCPrimary));
+        const bool hasMatch(mcToPfoHitSharingMap.count(pMCPrimary) && !mcToPfoHitSharingMap.at(pMCPrimary).empty());
+        const bool isTargetPrimary(validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary));
 
         if (!hasMatch && !isTargetPrimary)
             continue;
@@ -152,10 +174,10 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
         if (isTargetPrimary && isBeamParticle) ++nTotalTB;
         if (isTargetPrimary && isCosmicRay) ++nTotalCR;
 
-        const CaloHitList &mcPrimaryHitList(mcParticleToHitsMap.at(pMCPrimary));
+        const CaloHitList &mcPrimaryHitList(validationInfo.GetAllMCParticleToHitsMap().at(pMCPrimary));
 
         std::cout << std::endl << (!isTargetPrimary ? "(Non target) " : "")
-                  << "Primary " << primaryIndex++ // TODO nu, tb, cr index (nuance if applicable)
+                  << "Primary " << primaryIndex++
                   << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamParticle << ", CR " << isCosmicRay
                   << ", MCPDG " << pMCPrimary->GetParticleId()
                   << ", Energy " << pMCPrimary->GetEnergy()
@@ -167,10 +189,10 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
 
         unsigned int nNuMatches(0), nCRMatches(0);
 
-        for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcParticleToPfoHitSharingMap.at(pMCPrimary))
+        for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
         {
             const CaloHitList &sharedHitList(pfoToSharedHits.second);
-            const CaloHitList &pfoHitList(pfoToHitsMap.at(pfoToSharedHits.first));
+            const CaloHitList &pfoHitList(validationInfo.GetPfoToHitsMap().at(pfoToSharedHits.first));
 
             const bool isRecoNeutrinoFinalState(LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first));
             const bool isGoodMatch(this->IsGoodMatch(mcPrimaryHitList, pfoHitList, sharedHitList));
@@ -179,7 +201,7 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
             else if (isGoodMatch) ++nCRMatches;
 
             std::cout << "-" << (!isGoodMatch ? "(Below threshold) " : "")
-                      << "MatchedPfo " << pfoToIdMap.at(pfoToSharedHits.first) // TODO nu, cr index
+                      << "MatchedPfo " << pfoToIdMap.at(pfoToSharedHits.first)
                       << ", Nu " << isRecoNeutrinoFinalState << ", CR " << !isRecoNeutrinoFinalState
                       << ", PDG " << pfoToSharedHits.first->GetParticleId()
                       << ", nMatchedHits " << sharedHitList.size()
@@ -201,37 +223,34 @@ void EventValidationAlgorithm::PrintOutput(const LArMCParticleHelper::MCContribu
         else if (isTargetPrimary && !isCosmicRay && (nCRMatches > 0)) ++nFakeCR;
     }
 
-    if (printCorrectness)
+    if (useInterpretedMatching)
     {
         std::cout << std::endl << "---SUMMARY--------------------------------------------------------------------------------------" << std::endl;
-        if (nTotalNu > 0) std::cout << "#Correct target Nu primaries: " << nCorrectNu << ", Nu correct? " << (nTotalNu == nCorrectNu) << std::endl;
-        if (nTotalTB > 0) std::cout << "#Correct target TB particles: " << nCorrectTB << ", Fraction: " << (nTotalTB > 0 ? static_cast<float>(nCorrectTB) / static_cast<float>(nTotalTB) : 0.f) << std::endl;
-        if (nTotalCR > 0) std::cout << "#Correct target Cosmic Rays : " << nCorrectCR << ", Fraction: " << (nTotalCR > 0 ? static_cast<float>(nCorrectCR) / static_cast<float>(nTotalCR) : 0.f) << std::endl;
+        if (nTotalNu > 0) std::cout << "#Correct target Nu primaries: " << nCorrectNu << "/" << nTotalNu << ", Nu correct? " << (nTotalNu == nCorrectNu) << std::endl;
+        if (nTotalTB > 0) std::cout << "#Correct target TB particles: " << nCorrectTB << "/" << nTotalTB << ", Fraction: " << (nTotalTB > 0 ? static_cast<float>(nCorrectTB) / static_cast<float>(nTotalTB) : 0.f) << std::endl;
+        if (nTotalCR > 0) std::cout << "#Correct target Cosmic Rays : " << nCorrectCR << "/" << nTotalCR << ", Fraction: " << (nTotalCR > 0 ? static_cast<float>(nCorrectCR) / static_cast<float>(nTotalCR) : 0.f) << std::endl;
         if ((nTotalCR > 0) || (nFakeCR > 0)) std::cout << "#CR as fake Nu: " << nFakeNu << ", #Split CRs: " << nSplitCR << ", #Lost CRs: " << nLostCR << ", #Fake CRs " << nFakeCR << std::endl;;
     }
 
-    std::cout << "------------------------------------------------------------------------------------------------" << std::endl;
+    std::cout << "------------------------------------------------------------------------------------------------" << std::endl << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-//void EventValidationAlgorithm::WriteOutput(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-//    const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap) const
-//{
-//}
+void EventValidationAlgorithm::WriteOutput(const ValidationInfo &/*validationInfo*/, const bool /*useInterpretedMatching*/) const
+{
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::InterpretMCToPfoHitSharingMap(const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-    const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
+void EventValidationAlgorithm::InterpretMatching(const ValidationInfo &validationInfo, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
 {
     MCParticleVector mcPrimaryVector;
-    LArMonitoringHelper::GetOrderedMCParticleVector({mcParticleToHitsMap}, mcPrimaryVector);
+    LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetAllMCParticleToHitsMap()}, mcPrimaryVector);
 
     PfoSet usedPfos;
-    while (this->GetStrongestPfoMatch(mcPrimaryVector, mcParticleToHitsMap, goodMCParticleToHitsMap, pfoToHitsMap, mcToPfoHitSharingMap, usedPfos, interpretedMCToPfoHitSharingMap)) {}
-    this->GetRemainingPfoMatches(mcPrimaryVector, mcParticleToHitsMap, goodMCParticleToHitsMap, pfoToHitsMap, mcToPfoHitSharingMap, usedPfos, interpretedMCToPfoHitSharingMap);
+    while (this->GetStrongestPfoMatch(validationInfo, mcPrimaryVector, usedPfos, interpretedMCToPfoHitSharingMap)) {}
+    this->GetRemainingPfoMatches(validationInfo, mcPrimaryVector, usedPfos, interpretedMCToPfoHitSharingMap);
 
     // Ensure all primaries have an entry, and sorting is as desired
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
@@ -244,9 +263,8 @@ void EventValidationAlgorithm::InterpretMCToPfoHitSharingMap(const LArMCParticle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcParticleToHitsMap,
-    const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap,
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
+bool EventValidationAlgorithm::GetStrongestPfoMatch(const ValidationInfo &validationInfo, const MCParticleVector &mcPrimaryVector,
+    PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
 {
     const MCParticle *pBestMCParticle(nullptr);
     LArMCParticleHelper::PfoCaloHitListPair bestPfoHitPair(nullptr, CaloHitList());
@@ -256,15 +274,15 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCParticleVector &mcPr
         if (interpretedMCToPfoHitSharingMap.count(pMCPrimary))
             continue;
 
-        if (!m_useSmallPrimaries && !goodMCParticleToHitsMap.count(pMCPrimary))
+        if (!m_useSmallPrimaries && !validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary))
             continue;
 
-        for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
+        for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : validationInfo.GetMCToPfoHitSharingMap().at(pMCPrimary))
         {
             if (usedPfos.count(pfoToSharedHits.first))
                 continue;
 
-            if (!this->IsGoodMatch(mcParticleToHitsMap.at(pMCPrimary), pfoToHitsMap.at(pfoToSharedHits.first), pfoToSharedHits.second))
+            if (!this->IsGoodMatch(validationInfo.GetAllMCParticleToHitsMap().at(pMCPrimary), validationInfo.GetPfoToHitsMap().at(pfoToSharedHits.first), pfoToSharedHits.second))
                 continue;
 
             if (pfoToSharedHits.second.size() > bestPfoHitPair.second.size())
@@ -285,18 +303,17 @@ bool EventValidationAlgorithm::GetStrongestPfoMatch(const MCParticleVector &mcPr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::GetRemainingPfoMatches(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &/*mcParticleToHitsMap*/,
-    const LArMCParticleHelper::MCContributionMap &goodMCParticleToHitsMap, const LArMCParticleHelper::PfoContributionMap &/*pfoToHitsMap*/,
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap, const PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
+void EventValidationAlgorithm::GetRemainingPfoMatches(const ValidationInfo &validationInfo, const MCParticleVector &mcPrimaryVector,
+    const PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const
 {
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-        if (!m_useSmallPrimaries && !goodMCParticleToHitsMap.count(pMCPrimary))
+        if (!m_useSmallPrimaries && !validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary))
             continue;
 
-        for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
+        for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : validationInfo.GetMCToPfoHitSharingMap().at(pMCPrimary))
         {
             if (usedPfos.count(pfoToSharedHits.first))
                 continue;
@@ -348,6 +365,15 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseTrueNeutrinosOnly", m_useTrueNeutrinosOnly));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectInputHits", m_selectInputHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinHitSharingFraction", m_minHitSharingFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxPhotonPropagation", m_maxPhotonPropagation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PrintAllToScreen", m_printAllToScreen));
