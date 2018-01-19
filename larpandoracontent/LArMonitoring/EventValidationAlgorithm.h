@@ -189,12 +189,11 @@ private:
     bool IsGoodMatch(const pandora::CaloHitList &trueHits, const pandora::CaloHitList &recoHits, const pandora::CaloHitList &sharedHits) const;
 
     /**
-     *  @brief  Write the matching output to a tree
+     *  @brief  Write the interpreset matching output to a tree
      *
      *  @param  validationInfo the validation info
-     *  @param  useInterpretedMatching whether to use the interpreted (rather than raw) matching information
      */
-    void WriteOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching) const;
+    void WriteInterpretedOutput(const ValidationInfo &validationInfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
