@@ -158,10 +158,11 @@ void EventValidationAlgorithm::PrintOutput(const ValidationInfo &validationInfo,
     for (const Pfo *const pPrimaryPfo : primaryPfoVector)
         pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, pfoIndex++));
 
-    // TODO reco neutrino ids, nuance codes
+    // TODO reco neutrino ids
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
+        const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
         const bool hasMatch(mcToPfoHitSharingMap.count(pMCPrimary) && !mcToPfoHitSharingMap.at(pMCPrimary).empty());
         const bool isTargetPrimary(validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary));
 
@@ -179,7 +180,7 @@ void EventValidationAlgorithm::PrintOutput(const ValidationInfo &validationInfo,
         const CaloHitList &mcPrimaryHitList(validationInfo.GetAllMCParticleToHitsMap().at(pMCPrimary));
 
         std::cout << std::endl << (!isTargetPrimary ? "(Non target) " : "")
-                  << "Primary " << primaryIndex++
+                  << "Primary " << primaryIndex++ << ", nuance " << mcNuanceCode
                   << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamParticle << ", CR " << isCosmicRay
                   << ", MCPDG " << pMCPrimary->GetParticleId()
                   << ", Energy " << pMCPrimary->GetEnergy()
@@ -253,9 +254,9 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
         if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary)) ++nNeutrinoPrimaries;
 
-    // TODO reco neutrino ids, nuance codes
+    // TODO reco neutrino ids
 
-    int mcPrimaryIndex(0), mcNuanceCode(-1), nNuMatches(0), nCRMatches(0);
+    int mcPrimaryIndex(0), nNuMatches(0), nCRMatches(0);
     IntVector nMCHitsTotal, nMCHitsU, nMCHitsV, nMCHitsW, mcPrimaryPdg;
     FloatVector mcPrimaryE, mcPrimaryPX, mcPrimaryPY, mcPrimaryPZ;
     FloatVector mcPrimaryVtxX, mcPrimaryVtxY, mcPrimaryVtxZ, mcPrimaryEndX, mcPrimaryEndY, mcPrimaryEndZ;
@@ -265,6 +266,8 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
         const bool isLastNeutrinoPrimary(++mcPrimaryIndex == nNeutrinoPrimaries);
+
+        const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
         const int isBeamNeutrinoFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) ? 1 : 0);
         const int isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary) ? 1 : 0);
         const int isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary) ? 1 : 0);
