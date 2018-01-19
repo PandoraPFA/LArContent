@@ -155,7 +155,7 @@ bool CosmicRayTaggingMonitoringTool::IsMainMCParticleMuon(const ParticleFlowObje
     bool isMuon(false);
     try
     {
-        isMuon = false;// TODO (std::abs(LArMCParticleHelper::GetMainMCParticle(pPfo)->GetParticleId()) == MU_MINUS);
+        isMuon = false;// TODO Local treatment is being developed, specific to this tool (std::abs(LArMCParticleHelper::GetMainMCParticle(pPfo)->GetParticleId()) == MU_MINUS);
     }
     catch (const StatusCodeException &)
     {

@@ -137,7 +137,7 @@ void CheatingNeutrinoCreationAlgorithm::GetMCPrimaryMap(LArMCParticleHelper::MCR
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingNeutrinoCreationAlgorithm::GetMCParticleToDaughterPfoMap(const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+void CheatingNeutrinoCreationAlgorithm::GetMCParticleToDaughterPfoMap(const LArMCParticleHelper::MCRelationMap &/*mcPrimaryMap*/,
     MCParticleToPfoMap &mcParticleToPfoMap) const
 {
     for (const std::string &daughterPfoListName : m_daughterPfoListNames)
@@ -148,8 +148,10 @@ void CheatingNeutrinoCreationAlgorithm::GetMCParticleToDaughterPfoMap(const LArM
         {
             for (const ParticleFlowObject *const pDaughterPfo : *pDaughterPfoList)
             {
-                const MCParticle *const pMCParticle(!m_collapseToPrimaryMCParticles ? LArMCParticleHelper::GetMainMCParticle(pDaughterPfo) :
-                    LArMCParticleHelper::GetMainMCPrimary(pDaughterPfo, mcPrimaryMap));
+                // TODO - new implementation of GetMainMCParticle
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+                const MCParticle *const pMCParticle(nullptr);// !m_collapseToPrimaryMCParticles ? LArMCParticleHelper::GetMainMCParticle(pDaughterPfo) :
+                    //LArMCParticleHelper::GetMainMCPrimary(pDaughterPfo, mcPrimaryMap));
 
                 if (!mcParticleToPfoMap.insert(MCParticleToPfoMap::value_type(pMCParticle, pDaughterPfo)).second)
                     throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
