@@ -415,38 +415,18 @@ void ThreeDVertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &fe
 
     const Vertex *const nuVertex(pVertexList->front());
     //find the particle vertex
-    float ratio(-1.f);
+   float vertexDistance(-1.f);
     try
     {
         const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
         const CartesianVector nuPosition(nuVertex->GetPosition()), pfoPosition(pVertex->GetPosition());
-
-        float vertexDistance(std::sqrt((nuPosition - pfoPosition).GetMagnitudeSquared()));
-
-        try
-        {
-            ClusterList clusterList;
-            LArPfoHelper::GetThreeDClusterList(pInputPfo, clusterList);
-            if (1 == clusterList.size())
-            {
-                const Cluster *const pCluster(clusterList.front());
-                const ThreeDSlidingFitResult sliding3DFitResult(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-                const TwoDSlidingFitResult slidingFitResult(sliding3DFitResult.GetFirstFitResult());
-                const float straightLineLength = (slidingFitResult.GetGlobalMaxLayerPosition() - slidingFitResult.GetGlobalMinLayerPosition()).GetMagnitude();
-                if (straightLineLength > std::numeric_limits<double>::epsilon())
-                    ratio = vertexDistance / straightLineLength;
-            }
-        }
-        catch (const StatusCodeException &)
-        {
-            ratio = -1.f;
-        }
     }
     catch (const StatusCodeException &)
     {
-        ratio = -1.f;
+        vertexDistance = -1.f;
     }
-    featureVector.push_back(ratio);
+	
+    featureVector.push_back(vertexDistance);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
