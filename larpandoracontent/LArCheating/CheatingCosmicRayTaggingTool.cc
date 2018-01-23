@@ -37,7 +37,7 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
     {
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);
-        const float neutrinoFraction(LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
+        const float neutrinoFraction(0.f);// TODO LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
 
         if (neutrinoFraction > m_minNeutrinoFraction)
             ambiguousParentPfos.push_back(pParentCosmicRayPfo);

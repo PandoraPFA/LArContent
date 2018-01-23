@@ -160,7 +160,7 @@ bool EventWritingAlgorithm::PassNuanceCodeFilter() const
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
     MCParticleVector mcNeutrinoList;
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoList);
+    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcNeutrinoList);
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
@@ -227,8 +227,8 @@ bool EventWritingAlgorithm::PassNeutrinoVertexFilter() const
     const MCParticleList *pMCParticleList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
-    MCParticleVector mcNeutrinoVector;                              // true neutrinos
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, mcNeutrinoVector);
+    MCParticleVector mcNeutrinoVector;
+    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
     {

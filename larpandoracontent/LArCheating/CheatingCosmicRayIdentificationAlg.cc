@@ -47,7 +47,7 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
-        const float neutrinoFraction(LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
+        const float neutrinoFraction(0.f); // TODO LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
 
         if (neutrinoFraction < m_maxNeutrinoFraction)
             outputPfoList.push_back(pPfo);

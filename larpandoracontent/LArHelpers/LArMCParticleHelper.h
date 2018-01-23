@@ -66,22 +66,24 @@ public:
     };
 
     /**
-     *  @brief  Whether a mc particle is a final-state particle from a neutrino or antineutrino interaction
-     *
-     *  @param  pMCParticle the input mc particle
-     *
-     *  @return boolean
+     *  @brief  Returns true if passed a primary neutrino final state MCParticle
      */
-    static bool IsNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
+    static bool IsBeamNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
 
     /**
-     *  @brief  Whether a mc particle is produced by the interation of a neutrino or antineutrino
-     *
-     *  @param  pMCParticle the input mc particle
-     *
-     *  @return boolean
+     *  @brief  Returns true if passed a primary beam MCParticle
      */
-    static bool IsNeutrinoInduced(const pandora::MCParticle *const pMCParticle);
+    static bool IsBeamParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Return true if passed a primary cosmic ray MCParticle
+     */
+    static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get the nuance code of an MCParticle
+     */
+    static unsigned int GetNuanceCode(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Whether a mc particle is a neutrino or antineutrino
@@ -91,6 +93,15 @@ public:
      *  @return boolean
      */
     static bool IsNeutrino(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Whether a provided mc particle matches the implemented definition of being primary
+     *
+     *  @param  pMCParticle the address of the mc particle
+     *
+     *  @return boolean
+     */
+    static bool IsPrimary(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Whether a mc particle is visible (i.e. long-lived charged particle)
@@ -119,90 +130,6 @@ public:
     static const pandora::MCParticle *GetPrimaryMCParticle(const pandora::MCParticle *const pMCParticle);
 
     /**
-     *  @brief  Get the parent mc particle
-     *
-     *  @param  pMCParticle the input mc particle
-     *
-     *  @return address of the parent mc particle
-     */
-    static const pandora::MCParticle *GetParentMCParticle(const pandora::MCParticle *const pMCParticle);
-
-     /**
-     *  @brief  Get parent neutrino or antineutrino
-     *
-     *  @param  pMCParticle the input mc particle
-     *
-     *  @return address of primary neutrino mc particle
-     */
-    static const pandora::MCParticle *GetParentNeutrino(const pandora::MCParticle *const pMCParticle);
-
-    /**
-     *  @brief  Get parent neutrino or antineutrino pdg code
-     *
-     *  @param  pMCParticle the input mc particle
-     *
-     *  @return pdg code of neutrino (or zero, otherwise)
-     */
-    static int GetParentNeutrinoId(const pandora::MCParticle *const pMCParticle);
-
-    /**
-     *  @brief  Whether a cluster is the product of a neutrino interaction
-     *
-     *  @param  pCluster the input cluster
-     *  @param  minFraction minimum threshold for the combined fraction of neutrino-induced particles associated with the cluster
-     *
-     *  @return boolean
-     */
-    static bool IsNeutrinoInduced(const pandora::Cluster *const pCluster, const float minFraction = 0.f);
-
-    /**
-     *  @brief  Whether a hit is the product of a neutrino interaction
-     *
-     *  @param  pCaloHit the input calo hit
-     *  @param  minFraction minimum threshold for the combined fraction of neutrino-induced particles associated with the hit
-     *
-     *  @return boolean
-     */
-    static bool IsNeutrinoInduced(const pandora::CaloHit *const pCaloHit, const float minFraction = 0.f);
-
-    /**
-     *  @brief  Calculate the fractional weight of neutrino-induced particles associated with a given object
-     *
-     *  @param  pT the input object
-     *
-     *  @return the fractional weight of neutrino-induced particles associated with the object
-     */
-    template <typename T>
-    static float GetNeutrinoFraction(const T *const pT);
-
-    /**
-     *  @brief  Calculate the weight of neutrino-induced particles (and, separately, of all particles) associated with a given object
-     *
-     *  @param  pT the input object
-     *  @param  neutrinoWeight to receive the neutrino weight
-     *  @param  totalWeight to receive the total weight
-     */
-    template <typename T>
-    static void GetNeutrinoWeight(const T *const pT, float &neutrinoWeight, float &totalWeight);
-
-    /**
-     *  @brief  Whether a provided mc particle matches the implemented definition of being primary
-     *
-     *  @param  pMCParticle the address of the mc particle
-     *
-     *  @return boolean
-     */
-    static bool IsPrimary(const pandora::MCParticle *const pMCParticle);
-
-    /**
-     *  @brief  Get mapping from individual mc particles (in a provided list) and their primary parent mc particles
-     *
-     *  @param  pMCParticleList the input mc particle list
-     *  @param  mcPrimaryMap the output mapping between mc particles and their parents
-     */
-    static void GetMCPrimaryMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap);
-
-    /**
      *  @brief  Get vector of primary MC particles from an input list of MC particles
      *
      *  @param  pMCParticleList the input mc particle list
@@ -211,12 +138,21 @@ public:
     static void GetPrimaryMCParticleList(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &mcPrimaryVector);
 
     /**
-     *  @brief  Get vector of primary neutrinos from an input list of MC particles
+     *  @brief  Get the parent mc particle
+     *
+     *  @param  pMCParticle the input mc particle
+     *
+     *  @return address of the parent mc particle
+     */
+    static const pandora::MCParticle *GetParentMCParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get mapping from individual mc particles (in a provided list) and their primary parent mc particles
      *
      *  @param  pMCParticleList the input mc particle list
-     *  @param  mcNeutrinoVector the output mc particle vector
+     *  @param  mcPrimaryMap the output mapping between mc particles and their parents
      */
-    static void GetNeutrinoMCParticleList(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &mcNeutrinoVector);
+    static void GetMCPrimaryMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap);
 
     /**
      *  @brief  Sort mc particles by their momentum
@@ -238,14 +174,6 @@ public:
         CaloHitToMCMap &hitToMCMap, MCContributionMap &mcToTrueHitListMap);
 
     /**
-     *  @brief  Select a subset of true neutrinos representing those that should be used in performance metrics
-     *
-     *  @param  pAllMCParticleList address of the input mc particle list
-     *  @param  selectedMCNeutrinoVector to receive the populated selected true neutrino vector
-     */
-    static void SelectTrueNeutrinos(const pandora::MCParticleList *const pAllMCParticleList, pandora::MCParticleVector &selectedMCNeutrinoVector);
-
-    /**
      *  @brief  Select primary, reconstructable mc particles that match given criteria.
      *
      *  @param  pMCParticleList the address of the list of MCParticles
@@ -256,26 +184,6 @@ public:
      */
     static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList,
         const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap);
-
-    /**
-     *  @brief  Returns true if passed a primary neutrino final state MCParticle
-     */
-    static bool IsBeamNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
-
-    /**
-     *  @brief  Returns true if passed a primary beam MCParticle
-     */
-    static bool IsBeamParticle(const pandora::MCParticle *const pMCParticle);
-
-    /**
-     *  @brief  Return true if passed a primary cosmic ray MCParticle
-     */
-    static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
-
-    /**
-     *  @brief  Get the nuance code of an MCParticle
-     */
-    static unsigned int GetNuanceCode(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
