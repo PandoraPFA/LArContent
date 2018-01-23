@@ -39,8 +39,8 @@ void CheatingNeutrinoIdTool::SelectOutputPfos(const SliceHypotheses &nuSliceHypo
             PfoList downstreamPfos;
             LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
 
-            float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
-            LArMCParticleHelper::GetNeutrinoWeight(&downstreamPfos, thisNeutrinoWeight, thisTotalWeight);
+            float thisNeutrinoWeight(0.f);//, thisTotalWeight(0.f);
+            // TODO LArMCParticleHelper::GetNeutrinoWeight(&downstreamPfos, thisNeutrinoWeight, thisTotalWeight);
             neutrinoWeight += thisNeutrinoWeight;
         }
 

@@ -61,7 +61,7 @@ void CheatingNeutrinoCreationAlgorithm::GetMCNeutrinoVector(MCParticleVector &mc
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
     MCParticleVector allMCNeutrinoVector;
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pMCParticleList, allMCNeutrinoVector);
+    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, allMCNeutrinoVector);
 
     for (const MCParticle *const pMCNeutrino : allMCNeutrinoVector)
     {

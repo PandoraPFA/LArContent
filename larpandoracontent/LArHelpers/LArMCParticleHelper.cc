@@ -41,26 +41,61 @@ LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::IsNeutrinoFinalState(const MCParticle *const pMCParticle)
+bool LArMCParticleHelper::IsBeamNeutrinoFinalState(const MCParticle *const pMCParticle)
 {
-    return (LArMCParticleHelper::IsNeutrinoInduced(pMCParticle) && LArMCParticleHelper::IsPrimary(pMCParticle));
+    const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && LArMCParticleHelper::IsNeutrino(pParentMCParticle));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::IsNeutrinoInduced(const MCParticle *const pMCParticle)
+bool LArMCParticleHelper::IsBeamParticle(const MCParticle *const pMCParticle)
 {
-    return (LArMCParticleHelper::GetParentNeutrinoId(pMCParticle) != 0);
+    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && ((nuance == 2000) || (nuance == 2001)));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
+{
+    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && ((nuance == 3000) || ((nuance == 0) && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int LArMCParticleHelper::GetNuanceCode(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pMCParticle));
+    if (pLArMCParticle)
+        return pLArMCParticle->GetNuanceCode();
+
+    std::cout << "LArMCParticleHelper::GetNuanceCode - Error: Can't cast to LArMCParticle" << std::endl;
+    throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArMCParticleHelper::IsNeutrino(const MCParticle *const pMCParticle)
 {
-    const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
+    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+    if ((nuance == 0) || (nuance == 2000) || (nuance == 2001) || (nuance == 3000))
+        return false;
 
-    if ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId))
-        return true;
+    const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
+    return ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
+{
+    try
+    {
+        return (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle);
+    }
+    catch (const StatusCodeException &) {}
 
     return false;
 }
@@ -78,7 +113,6 @@ bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
         (NEUTRON == absoluteParticleId))
         return true;
 
-    // TODO: What about ions or neutrons? Neutrons currently included - they are parents of what would otherwise be large numbers of primary photons
     return false;
 }
 
@@ -86,12 +120,9 @@ bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
 
 void LArMCParticleHelper::GetTrueNeutrinos(const MCParticleList *const pMCParticleList, MCParticleVector &trueNeutrinos)
 {
-    if (!pMCParticleList)
-        return;
-
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        if (pMCParticle->GetParentList().empty() && LArMCParticleHelper::IsNeutrino(pMCParticle))
+        if (LArMCParticleHelper::IsNeutrino(pMCParticle))
             trueNeutrinos.push_back(pMCParticle);
     }
 
@@ -113,6 +144,19 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
     }
 
     return pParentMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcPrimaryVector)
+{
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
+    {
+        if (LArMCParticleHelper::IsPrimary(pMCParticle))
+            mcPrimaryVector.push_back(pMCParticle);
+    }
+
+    std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,149 +192,6 @@ const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle *LArMCParticleHelper::GetParentNeutrino(const MCParticle *const pMCParticle)
-{
-    const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
-
-    if (!LArMCParticleHelper::IsNeutrino(pParentMCParticle))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    return pParentMCParticle;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-int LArMCParticleHelper::GetParentNeutrinoId(const MCParticle *const pMCParticle)
-{
-    try
-    {
-        const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentNeutrino(pMCParticle);
-        return pParentMCParticle->GetParticleId();
-    }
-    catch (const StatusCodeException &)
-    {
-        return 0;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsNeutrinoInduced(const Cluster *const pCluster, const float minFraction)
-{
-    return (LArMCParticleHelper::GetNeutrinoFraction(pCluster) > minFraction);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsNeutrinoInduced(const CaloHit *const pCaloHit, const float minFraction)
-{
-    return (LArMCParticleHelper::GetNeutrinoFraction(pCaloHit) > minFraction);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-float LArMCParticleHelper::GetNeutrinoFraction(const T *const pT)
-{
-    float neutrinoWeight(0.f), totalWeight(0.f);
-    LArMCParticleHelper::GetNeutrinoWeight(pT, neutrinoWeight, totalWeight);
-
-    if (totalWeight > std::numeric_limits<float>::epsilon())
-        return (neutrinoWeight / totalWeight);
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <>
-void LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit, float &neutrinoWeight, float &totalWeight)
-{
-    neutrinoWeight = 0.f; totalWeight = 0.f;
-    const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
-
-    if (hitMCParticleWeightMap.empty())
-        return;
-
-    MCParticleList mcParticleList;
-    for (const auto &mapEntry : hitMCParticleWeightMap) mcParticleList.push_back(mapEntry.first);
-    mcParticleList.sort(LArMCParticleHelper::SortByMomentum);
-
-    for (const MCParticle *const pMCParticle : mcParticleList)
-    {
-        const float weight(hitMCParticleWeightMap.at(pMCParticle));
-
-        if (LArMCParticleHelper::IsNeutrinoInduced(pMCParticle))
-            neutrinoWeight += weight;
-
-        totalWeight += weight;
-    }
-
-    // ATTN normalise arbitrary input weights at this point
-    if (totalWeight > std::numeric_limits<float>::epsilon())
-    {
-        neutrinoWeight *= 1.f / totalWeight;
-        totalWeight = 1.f;
-    }
-    else
-    {
-        neutrinoWeight = 0.f;
-        totalWeight = 0.f;
-    }
-}
-
-template <>
-void LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster, float &neutrinoWeight, float &totalWeight)
-{
-    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-
-    if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    CaloHitList caloHitList;
-    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-    LArMCParticleHelper::GetNeutrinoWeight(&caloHitList, neutrinoWeight, totalWeight);
-}
-
-template <>
-void LArMCParticleHelper::GetNeutrinoWeight(const ParticleFlowObject *const pPfo, float &neutrinoWeight, float &totalWeight)
-{
-    ClusterList twoDClusters;
-    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusters);
-    LArMCParticleHelper::GetNeutrinoWeight(&twoDClusters, neutrinoWeight, totalWeight);
-}
-
-template <typename T>
-void LArMCParticleHelper::GetNeutrinoWeight(const T *const pT, float &neutrinoWeight, float &totalWeight)
-{
-    neutrinoWeight = 0.f; totalWeight = 0.f;
-
-    for (const auto *const pValueT : *pT)
-    {
-        float thisNeutrinoWeight = 0.f, thisTotalWeight = 0.f;
-        LArMCParticleHelper::GetNeutrinoWeight(pValueT, thisNeutrinoWeight, thisTotalWeight);
-        neutrinoWeight += thisNeutrinoWeight;
-        totalWeight += thisTotalWeight;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
-{
-    try
-    {
-        const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
-        return (pPrimaryMCParticle == pMCParticle);
-    }
-    catch (const StatusCodeException &)
-    {
-        return 0;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap)
 {
     for (const MCParticle *const pMCParticle : *pMCParticleList)
@@ -300,36 +201,8 @@ void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticl
             const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
             mcPrimaryMap[pMCParticle] = pPrimaryMCParticle;
         }
-        catch (const StatusCodeException &)
-        {
-        }
+        catch (const StatusCodeException &) {}
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcPrimaryVector)
-{
-    for (const MCParticle *const pMCParticle : *pMCParticleList)
-    {
-        if (LArMCParticleHelper::IsPrimary(pMCParticle))
-            mcPrimaryVector.push_back(pMCParticle);
-    }
-
-    std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), LArMCParticleHelper::SortByMomentum);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMCParticleHelper::GetNeutrinoMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcNeutrinoVector)
-{
-    for (const MCParticle *const pMCParticle : *pMCParticleList)
-    {
-        if (LArMCParticleHelper::IsNeutrino(pMCParticle) && pMCParticle->GetParentList().empty())
-            mcNeutrinoVector.push_back(pMCParticle);
-    }
-
-    std::sort(mcNeutrinoVector.begin(), mcNeutrinoVector.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -394,23 +267,6 @@ void LArMCParticleHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::SelectTrueNeutrinos(const MCParticleList *const pAllMCParticleList, MCParticleVector &selectedMCNeutrinoVector)
-{
-    MCParticleVector allMCNeutrinoVector;
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pAllMCParticleList, allMCNeutrinoVector);
-
-    for (const MCParticle *const pMCNeutrino : allMCNeutrinoVector)
-    {
-        // ATTN Now demand that input mc neutrinos LArMCParticles, with addition of interaction type
-        const LArMCParticle *const pLArMCNeutrino(dynamic_cast<const LArMCParticle*>(pMCNeutrino));
-
-        if (pLArMCNeutrino && (0 != pLArMCNeutrino->GetNuanceCode()))
-            selectedMCNeutrinoVector.push_back(pMCNeutrino);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const PrimaryParameters &parameters,
     std::function<bool(const MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap)
 {
@@ -437,51 +293,6 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
 
     // Ensure the MCParticles have enough "good" hits to be reconstructed
     LArMCParticleHelper::SelectParticlesByHitCount(candidateTargets, mcToTrueHitListMap, mcToPrimaryMCMap, parameters, selectedMCParticlesToHitsMap);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsBeamNeutrinoFinalState(const MCParticle *const pMCParticle)
-{
-    try
-    {
-        const MCParticle *const pMCNeutrino(LArMCParticleHelper::GetParentNeutrino(pMCParticle));
-        const int nuance(LArMCParticleHelper::GetNuanceCode(pMCNeutrino));
-        return (LArMCParticleHelper::IsNeutrinoFinalState(pMCParticle) && nuance != 0 && nuance != 2000 && nuance != 3000);
-    }
-    catch (const StatusCodeException &) {}
-
-    return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsBeamParticle(const MCParticle *const pMCParticle)
-{
-    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
-    return (LArMCParticleHelper::IsPrimary(pMCParticle) && nuance == 2000);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
-{
-    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
-    return (LArMCParticleHelper::IsPrimary(pMCParticle) && ((nuance == 0 && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle)) || nuance == 3000));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-unsigned int LArMCParticleHelper::GetNuanceCode(const MCParticle *const pMCParticle)
-{
-    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pMCParticle));
-    if (!pLArMCParticle)
-    {
-        std::cout << "LArMCParticleHelper::GetNuanceCode - Error: Can't cast to LArMCParticle" << std::endl;
-        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-    }
-
-    return pLArMCParticle->GetNuanceCode();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -783,18 +594,5 @@ CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, cons
 
     return sharedHits;
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template float LArMCParticleHelper::GetNeutrinoFraction(const CaloHit *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const Cluster *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const ParticleFlowObject *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const CaloHitList *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const ClusterList *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const PfoList *const);
-
-template void LArMCParticleHelper::GetNeutrinoWeight(const CaloHitList *const, float &, float &);
-template void LArMCParticleHelper::GetNeutrinoWeight(const ClusterList *const, float &, float &);
-template void LArMCParticleHelper::GetNeutrinoWeight(const PfoList *const, float &, float &);
 
 } // namespace lar_content
