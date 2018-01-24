@@ -420,6 +420,7 @@ void ThreeDVertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &fe
     {
         const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
         const CartesianVector nuPosition(nuVertex->GetPosition()), pfoPosition(pVertex->GetPosition());
+	vertexDistance = std::sqrt((nuPosition - pfoPosition).GetMagnitudeSquared());
     }
     catch (const StatusCodeException &)
     {
