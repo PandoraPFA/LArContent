@@ -10,7 +10,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
@@ -121,19 +121,19 @@ StatusCode EventValidationAlgorithm::Run()
     LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, m_selectInputHits, m_maxPhotonPropagation);
 
     // Obtain maps: [hit -> primary mc particle], [primary mc particle -> list of hits]
-    LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;
-    LArMonitoringHelper::MCContributionMap mcToTrueHitListMap;
+    LArMCParticleHelper::CaloHitToMCMap hitToPrimaryMCMap;
+    LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
 
     // Obtain maps: [hit -> pfo], [pfo -> list of hits]
-    LArMonitoringHelper::CaloHitToPfoMap hitToPfoMap;
-    LArMonitoringHelper::PfoContributionMap pfoToHitListMap;
+    LArMCParticleHelper::CaloHitToPfoMap hitToPfoMap;
+    LArMCParticleHelper::PfoContributionMap pfoToHitListMap;
     LArMonitoringHelper::GetPfoToCaloHitMatches(&selectedCaloHitList, pfoList, m_collapseToPrimaryPfos, hitToPfoMap, pfoToHitListMap);
 
     // Obtain maps: [mc particle -> best matched pfo], [mc particle -> list of hits included in best pfo], [mc particle -> all matched pfos (and matched hits)]
-    LArMonitoringHelper::MCToPfoMap mcToBestPfoMap;
-    LArMonitoringHelper::MCContributionMap mcToBestPfoHitsMap;
-    LArMonitoringHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap;
+    LArMCParticleHelper::MCToPfoMap mcToBestPfoMap;
+    LArMCParticleHelper::MCContributionMap mcToBestPfoHitsMap;
+    LArMCParticleHelper::MCToPfoMatchingMap mcToFullPfoMatchingMap;
     LArMonitoringHelper::GetMCParticleToPfoMatches(&selectedCaloHitList, pfoToHitListMap, hitToPrimaryMCMap, mcToBestPfoMap, mcToBestPfoHitsMap, mcToFullPfoMatchingMap);
 
     // Remove shared hits where target particle deposits below threshold energy fraction
@@ -141,8 +141,8 @@ StatusCode EventValidationAlgorithm::Run()
     LArMCParticleHelper::SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList, m_selectInputHits, m_minHitSharingFraction);
 
     // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
-    LArMonitoringHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
-    LArMonitoringHelper::MCContributionMap mcToGoodTrueHitListMap;
+    LArMCParticleHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
+    LArMCParticleHelper::MCContributionMap mcToGoodTrueHitListMap;
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
 
     // Obtain vector: simple mc primaries
@@ -218,8 +218,8 @@ void EventValidationAlgorithm::SelectRecoNeutrinos(const PfoList &allRecoParticl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mcPrimaryVector, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
-    const LArMonitoringHelper::MCContributionMap &mcToGoodTrueHitListMap, const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap,
+void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap,
+    const LArMCParticleHelper::MCContributionMap &mcToGoodTrueHitListMap, const LArMCParticleHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap,
     SimpleMCPrimaryList &simpleMCPrimaryList) const
 {
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
@@ -236,7 +236,7 @@ void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mc
         simpleMCPrimary.m_vertex = pMCPrimary->GetVertex();
         simpleMCPrimary.m_endpoint = pMCPrimary->GetEndpoint();
 
-        LArMonitoringHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
+        LArMCParticleHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
 
         if (mcToTrueHitListMap.end() != trueHitsIter)
         {
@@ -247,7 +247,7 @@ void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mc
             simpleMCPrimary.m_nMCHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList);
         }
 
-        LArMonitoringHelper::MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCPrimary);
+        LArMCParticleHelper::MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCPrimary);
 
         if (mcToGoodTrueHitListMap.end() != goodTrueHitsIter)
         {
@@ -258,7 +258,7 @@ void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mc
             simpleMCPrimary.m_nGoodMCHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList);
         }
 
-        LArMonitoringHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(pMCPrimary);
+        LArMCParticleHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(pMCPrimary);
 
         if (mcToFullPfoMatchingMap.end() != matchedPfoIter)
             simpleMCPrimary.m_nMatchedPfos = matchedPfoIter->second.size();
@@ -276,18 +276,18 @@ void EventValidationAlgorithm::GetSimpleMCPrimaryList(const MCParticleVector &mc
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EventValidationAlgorithm::GetMCPrimaryMatchingMap(const SimpleMCPrimaryList &simpleMCPrimaryList, const PfoIdMap &pfoIdMap,
-    const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, const LArMonitoringHelper::PfoContributionMap &pfoToHitListMap,
+    const LArMCParticleHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, const LArMCParticleHelper::PfoContributionMap &pfoToHitListMap,
     MCPrimaryMatchingMap &mcPrimaryMatchingMap) const
 {
     for (const SimpleMCPrimary &simpleMCPrimary : simpleMCPrimaryList)
     {
         // First loop over unordered list of matched pfos
         SimpleMatchedPfoList simpleMatchedPfoList;
-        LArMonitoringHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(simpleMCPrimary.m_pPandoraAddress);
+        LArMCParticleHelper::MCToPfoMatchingMap::const_iterator matchedPfoIter = mcToFullPfoMatchingMap.find(simpleMCPrimary.m_pPandoraAddress);
 
         if (mcToFullPfoMatchingMap.end() != matchedPfoIter)
         {
-            for (const LArMonitoringHelper::PfoContributionMap::value_type contribution : matchedPfoIter->second)
+            for (const LArMCParticleHelper::PfoContributionMap::value_type contribution : matchedPfoIter->second)
             {
                 const ParticleFlowObject *const pMatchedPfo(contribution.first);
                 const CaloHitList &matchedCaloHitList(contribution.second);
@@ -309,7 +309,7 @@ void EventValidationAlgorithm::GetMCPrimaryMatchingMap(const SimpleMCPrimaryList
                 simpleMatchedPfo.m_nMatchedHitsV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, matchedCaloHitList);
                 simpleMatchedPfo.m_nMatchedHitsW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, matchedCaloHitList);
 
-                LArMonitoringHelper::PfoContributionMap::const_iterator pfoHitsIter = pfoToHitListMap.find(pMatchedPfo);
+                LArMCParticleHelper::PfoContributionMap::const_iterator pfoHitsIter = pfoToHitListMap.find(pMatchedPfo);
 
                 if (pfoToHitListMap.end() == pfoHitsIter)
                     throw StatusCodeException(STATUS_CODE_FAILURE);

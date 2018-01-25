@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 namespace lar_content
 {
@@ -73,7 +73,7 @@ private:
      *  @param  mcToTrueHitListMap the mc to true hit list map
      *  @param  simpleMCParticleList to receive the populated simple mc particle list
      */
-    void GetSimpleMCParticleList(const pandora::MCParticleVector &mcParticleList, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
+    void GetSimpleMCParticleList(const pandora::MCParticleVector &mcParticleList, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap,
         SimpleMCParticleList &simpleMCParticleList) const;
 
     /**

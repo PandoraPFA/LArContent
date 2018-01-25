@@ -10,7 +10,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
@@ -46,8 +46,8 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
     LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
     LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
 
-    LArMonitoringHelper::CaloHitToMCMap hitToPrimaryMCMap;
-    LArMonitoringHelper::MCContributionMap mcPrimaryToTrueHitListMap;
+    LArMCParticleHelper::CaloHitToMCMap hitToPrimaryMCMap;
+    LArMCParticleHelper::MCContributionMap mcPrimaryToTrueHitListMap;
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcPrimaryToTrueHitListMap);
 
     SimpleMCParticleList simpleMCPrimaryList;
@@ -59,8 +59,8 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
     LArMCParticleHelper::MCRelationMap mcParticleToSelfMap;
     for (const MCParticle *const pMCParticle : mcParticleVector) mcParticleToSelfMap[pMCParticle] = pMCParticle;
 
-    LArMonitoringHelper::CaloHitToMCMap hitToMCMap;
-    LArMonitoringHelper::MCContributionMap mcToTrueHitListMap;
+    LArMCParticleHelper::CaloHitToMCMap hitToMCMap;
+    LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
     LArMonitoringHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcParticleToSelfMap, hitToMCMap, mcToTrueHitListMap);    
 
     SimpleMCParticleList simpleMCParticleList;
@@ -79,7 +79,7 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MCParticleMonitoringAlgorithm::GetSimpleMCParticleList(const MCParticleVector &mcPrimaryVector, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
+void MCParticleMonitoringAlgorithm::GetSimpleMCParticleList(const MCParticleVector &mcPrimaryVector, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap,
     SimpleMCParticleList &simpleMCParticleList) const
 {
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
@@ -96,7 +96,7 @@ void MCParticleMonitoringAlgorithm::GetSimpleMCParticleList(const MCParticleVect
         simpleMCParticle.m_vertex = pMCPrimary->GetVertex();
         simpleMCParticle.m_endpoint = pMCPrimary->GetEndpoint();
 
-        LArMonitoringHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
+        LArMCParticleHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCPrimary);
 
         if (mcToTrueHitListMap.end() != trueHitsIter)
         {

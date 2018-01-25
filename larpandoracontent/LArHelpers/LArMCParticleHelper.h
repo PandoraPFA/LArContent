@@ -11,9 +11,9 @@
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
-#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
 #include <unordered_map>
+#include <functional>
 
 namespace lar_content
 {
@@ -24,6 +24,48 @@ namespace lar_content
 class LArMCParticleHelper
 {
 public:
+    typedef std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
+
+    typedef std::unordered_map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCToPfoMap;
+
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::MCParticle*> CaloHitToMCMap;
+    typedef std::unordered_map<const pandora::CaloHit*, const pandora::ParticleFlowObject*> CaloHitToPfoMap;
+
+    typedef std::unordered_map<const pandora::MCParticle*, pandora::CaloHitList> MCContributionMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, pandora::CaloHitList> PfoContributionMap;
+
+    typedef std::unordered_map<const pandora::MCParticle*, PfoContributionMap> MCToPfoMatchingMap;
+
+    typedef std::pair<const pandora::MCParticle*, pandora::CaloHitList > MCParticleCaloHitListPair;
+    typedef std::pair<const pandora::ParticleFlowObject*, pandora::CaloHitList > PfoCaloHitListPair;
+
+    typedef std::pair<const pandora::MCParticle*, unsigned int > MCParticleIntPair;
+    typedef std::pair<const pandora::ParticleFlowObject*, unsigned int > PfoIntPair;
+    typedef std::map<const pandora::ParticleFlowObject*, std::vector<MCParticleIntPair> > PfoToMCParticleHitSharingMap;
+    typedef std::map<const pandora::MCParticle*, std::vector<PfoIntPair> > MCParticleToPfoHitSharingMap;
+    typedef std::vector<MCContributionMap> MCContributionMapVector; 
+
+    /**
+     *  @brief   ValidationParameters class
+     */
+    class ValidationParameters
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         */
+        ValidationParameters();
+
+        unsigned int  m_minPrimaryGoodHits;       ///< the minimum number of primary good Hits
+        unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
+        unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
+        bool          m_selectInputHits;          ///< whether to select input hits
+        float         m_maxPhotonPropagation;     ///< the maximum photon propagation length
+        float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
+    };
+
+    // -------------------------------------------------------------------------------------------------------------------------------------
+
     /**
      *  @brief   InteractionType enum
      */
@@ -149,8 +191,6 @@ public:
     template <typename T>
     static void GetNeutrinoWeight(const T *const pT, float &neutrinoWeight, float &totalWeight);
 
-    typedef std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
-
     /**
      *  @brief  Whether a provided mc particle matches the implemented definition of being primary
      *
@@ -228,7 +268,7 @@ public:
      *  @param  selectInputHits whether to select input hits
      *  @param  maxPhotonPropagation the maximum photon propagation length
      */
-    static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
+    static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
         pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float maxPhotonPropagation);
 
     /**
@@ -242,8 +282,108 @@ public:
      *  @param  minHitSharingFraction the minimum Hit sharing fraction
      *
      */
-    static void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap,
+    static void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
         pandora::CaloHitList &selectedGoodCaloHitList, const bool selectInputHits, const float minHitSharingFraction);
+
+    /**
+     *  @brief  Select mc particles matching given criteria from an input list
+     *
+     *  @param  inputMCParticles input vector of MCParticles
+     *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
+     *  @param  selectedParticles the output vector of particles selected
+     */
+    static void SelectParticlesMatchingCriteria(const pandora::MCParticleVector &inputMCParticles, std::function<bool(const pandora::MCParticle *const)> fCriteria,
+        pandora::MCParticleVector &selectedParticles);
+
+    /**
+     *  @brief  Select primary, reconstructable mc particles that match given criteria.
+     *
+     *  @param  pMCParticleList the address of the list of MCParticles
+     *  @param  pCaloHitList the address of the list of CaloHits
+     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
+     *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
+     *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
+     */
+    static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, const ValidationParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToGoodHitsMap);
+
+    /** 
+     *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable 
+     *
+     *  @param  candidateTargets candidate recontructable MCParticles
+     *  @param  mcToGoodTrueHitListMap mapping from candidates reconstructable MCParticles to their good hits
+     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
+     *  @param  selectedMCParticlesToGoodHitsMap the output mapping from selected mcparticles to their good hits
+     */
+    static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const MCContributionMap &mcToGoodTrueHitListMap, 
+    const ValidationParameters &parameters, MCContributionMap &selectedMCParticlesToGoodHitsMap);
+
+    /**
+     *  @brief  Returns true if passed a primary neutrino final state MCParticle
+     */
+    static bool IsBeamNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Returns true if passed a primary beam MCParticle
+     */
+    static bool IsBeamParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Return true if passed a primary cosmic ray MCParticle
+     */
+    static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get the nuance code of an MCParticle
+     */
+    static unsigned int GetNuanceCode(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pfoList the input list of Pfos
+     *  @param  selectedMCParticleToGoodHitsMap the input mapping from selected reconstructable MCParticles to their good hits
+     *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     */
+    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToGoodHitsMap, PfoContributionMap &pfoToReconstructable2DHitsMap);
+    
+    /**
+     *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pfoList the input list of Pfos
+     *  @param  selectedMCParticleToGoodHitsMaps the input vector of mappings from selected reconstructable MCParticles to their good hits
+     *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     */
+    static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoContributionMap &pfoToReconstructable2DHitsMap);
+
+    /**
+     *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pPfo the input pfo
+     *  @param  selectedMCParticleToGoodHitsMaps the input mappings from selected reconstructable MCParticles to their good hits
+     *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
+     */
+    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D);
+
+    /**
+     *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
+     *                                reconstructable MCParticle -> pair (Pfo, number of reconstructable 2D hits shared with MCParticle)
+     *
+     *  @param  pfoToReconstructable2DHitsMap the input mapping from Pfos to reconstructable 2D hits
+     *  @param  selectedMCParticleToGoodHitsMaps the input mappings from selected reconstructable MCParticles to good hits
+     *  @param  pfoToMCParticleHitSharingMap the output mapping from Pfos to selected reconstructable MCParticles and the number hits shared
+     *  @param  mcParticleToPfoHitSharingMap the output mapping from selected reconstructable MCParticles to Pfos and the number hits shared
+     */
+    static void GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToGoodHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
+
+    /**
+     *  @brief  Count the number of hits in the intersection of two hit lists
+     *
+     *  @param  hitListA an input hit list
+     *  @param  hitListB another input hit list
+     *
+     *  @return The number of hits that are found in both hitListA and hitListB
+     */
+    static unsigned int CountSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
 
     /**
      *  @brief  Get the interaction type of an event
