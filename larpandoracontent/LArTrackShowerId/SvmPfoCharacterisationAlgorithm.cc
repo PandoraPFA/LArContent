@@ -5,10 +5,6 @@
  * 
  *  $Log: $
  */
-#ifdef CETLIB_AVAILABLE
-#include "cetlib/search_path.h"
-#endif
-
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
@@ -78,9 +74,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     //charge related features are only calculated using hits in W view
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
-
-    PfoCharacterisationFeatureTool::FeatureToolVector featureToolVector(wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
-    const SupportVectorMachine::DoubleVector featureVector(LArSvmHelper::CalculateFeatures(featureToolVector, this, pPfo));
+    const SupportVectorMachine::DoubleVector featureVector(LArSvmHelper::CalculateFeatures((wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD), this, pPfo));
 
     if (m_trainingSetMode)
     {
@@ -91,7 +85,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
         {
             const MCParticle *const pMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
             isTrueTrack = ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())));
-            isMainMCParticleSet = pMCParticle->GetParticleId();
+            isMainMCParticleSet = (pMCParticle->GetParticleId() != 0);
         }
         catch (const StatusCodeException &) {}
 

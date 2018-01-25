@@ -191,7 +191,7 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    void Divide3DCaloHitList(const pandora::Algorithm *const pAlgorithm, pandora::CaloHitList threeDCaloHitList,
+    void Divide3DCaloHitList(const pandora::Algorithm *const pAlgorithm, pandora::CaloHitList &threeDCaloHitList,
         pandora::CartesianPointVector &pointVectorStart, pandora::CartesianPointVector &pointVectorEnd);
 
     float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary, const pandora::CartesianVector &eigenValues) const;
@@ -231,7 +231,10 @@ public:
      */
     ThreeDChargeFeatureTool();
 
-	class VertexComparator
+    /**
+     *  @brief  VertexComparator class for comparison of two points wrt neutrino vertex position
+     */
+    class VertexComparator
     {
     public:
         /**
@@ -240,7 +243,7 @@ public:
         VertexComparator(const pandora::CartesianVector vertexPosition2D);
 
         /**
-		 *  @brief  operator <
+         *  @brief  operator <
          *
          *  @param  rhs object for comparison
          *

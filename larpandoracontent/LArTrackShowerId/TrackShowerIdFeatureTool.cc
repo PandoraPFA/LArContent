@@ -46,7 +46,7 @@ void TwoDShowerFitFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVe
     {
         const TwoDSlidingFitResult slidingFitResultLarge(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         const float straightLineLength = (slidingFitResultLarge.GetGlobalMaxLayerPosition() - slidingFitResultLarge.GetGlobalMinLayerPosition()).GetMagnitude();
-        if (straightLineLength > std::numeric_limits<double>::epsilon())
+        if (straightLineLength > std::numeric_limits<float>::epsilon())
             ratio = (CutClusterCharacterisationAlgorithm::GetShowerFitWidth(pAlgorithm, pCluster, m_slidingShowerFitWindow))/straightLineLength;
     }
     catch (const StatusCodeException &)
@@ -90,7 +90,7 @@ const pandora::Cluster * const pCluster)
     float dTdLWidth(-1.f), straightLineLengthLarge(-1.f), diffWithStraightLineMean(-1.f), diffWithStraightLineSigma(-1.f), maxFitGapLength(-1.f), rmsSlidingLinearFit(-1.f);
     this->CalculateVariablesSlidingLinearFit(pCluster, straightLineLengthLarge, diffWithStraightLineMean, diffWithStraightLineSigma, dTdLWidth, maxFitGapLength, rmsSlidingLinearFit);
 
-    if (straightLineLengthLarge > std::numeric_limits<double>::epsilon())
+    if (straightLineLengthLarge > std::numeric_limits<float>::epsilon())
     {
         diffWithStraightLineMean  /= straightLineLengthLarge;
         diffWithStraightLineSigma /= straightLineLengthLarge;
@@ -130,7 +130,7 @@ void TwoDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora:
 
         for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
         {
-            const LayerFitResult layerFitResult(mapEntry.second);
+            const LayerFitResult &layerFitResult(mapEntry.second);
             rmsSlidingLinearFit += layerFitResult.GetRms();
 
             CartesianVector thisFitPosition(0.f, 0.f, 0.f);
@@ -226,7 +226,7 @@ void TwoDVertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &feat
     {
         const TwoDSlidingFitResult slidingFitResultLarge(pCluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         straightLineLength = (slidingFitResultLarge.GetGlobalMaxLayerPosition() - slidingFitResultLarge.GetGlobalMinLayerPosition()).GetMagnitude();
-        if (straightLineLength > std::numeric_limits<double>::epsilon())
+        if (straightLineLength > std::numeric_limits<float>::epsilon())
             ratio = (CutClusterCharacterisationAlgorithm::GetVertexDistance(pAlgorithm, pCluster))/straightLineLength;
     }
     catch (const StatusCodeException &)
@@ -274,7 +274,7 @@ const pandora::ParticleFlowObject *const pInputPfo)
 
         this->CalculateVariablesSlidingLinearFit(pCluster, straightLineLengthLargeCluster, diffWithStraightLineMeanCluster, maxFitGapLengthCluster, rmsSlidingLinearFitCluster);
 
-        if (straightLineLengthLargeCluster > std::numeric_limits<double>::epsilon())
+        if (straightLineLengthLargeCluster > std::numeric_limits<float>::epsilon())
         {
             diffWithStraightLineMeanCluster  /= straightLineLengthLargeCluster;
             maxFitGapLengthCluster           /= straightLineLengthLargeCluster;
@@ -286,9 +286,9 @@ const pandora::ParticleFlowObject *const pInputPfo)
         rmsSlidingLinearFit        += rmsSlidingLinearFitCluster;
     }
 
-    const float nClusters(static_cast<float>(clusterList.size()));
-    if (nClusters > std::numeric_limits<double>::epsilon())
+    if (!clusterList.empty())
     {
+        const float nClusters(static_cast<float>(clusterList.size()));  
         diffWithStraightLineMean   /= nClusters;
         maxFitGapLength            /= nClusters;
         rmsSlidingLinearFit        /= nClusters;
@@ -324,7 +324,7 @@ void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandor
 
         for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
         {
-            const LayerFitResult layerFitResult(mapEntry.second);
+            const LayerFitResult &layerFitResult(mapEntry.second);
             rmsSlidingLinearFit += layerFitResult.GetRms();
 
             CartesianVector thisFitPosition(0.f, 0.f, 0.f);
@@ -420,7 +420,7 @@ void ThreeDVertexDistanceFeatureTool::Run(SupportVectorMachine::DoubleVector &fe
     {
         const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
         const CartesianVector nuPosition(nuVertex->GetPosition()), pfoPosition(pVertex->GetPosition());
-        vertexDistance = std::sqrt((nuPosition - pfoPosition).GetMagnitudeSquared());
+        vertexDistance = (nuPosition - pfoPosition).GetMagnitude();
     }
     catch (const StatusCodeException &)
     {
@@ -477,16 +477,16 @@ void ThreeDOpeningAngleFeatureTool::Run(SupportVectorMachine::DoubleVector &feat
     LArPcaHelper::RunPca(pointVectorStart, centroidStart, eigenValuesStart, eigenVecsStart);
     LArPcaHelper::RunPca(pointVectorEnd, centroidEnd, eigenValuesEnd, eigenVecsEnd);
 
-    float openingAngle(this->OpeningAngle(eigenVecsStart.at(0), eigenVecsStart.at(1), eigenValuesStart));
-    float closingAngle(this->OpeningAngle(eigenVecsEnd.at(0), eigenVecsEnd.at(1), eigenValuesEnd));
+    const float openingAngle(this->OpeningAngle(eigenVecsStart.at(0), eigenVecsStart.at(1), eigenValuesStart));
+    const float closingAngle(this->OpeningAngle(eigenVecsEnd.at(0), eigenVecsEnd.at(1), eigenValuesEnd));
 
-    featureVector.push_back(std::abs(openingAngle-closingAngle));
+    featureVector.push_back(std::fabs(openingAngle-closingAngle));
 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const pAlgorithm, CaloHitList threeDCaloHitList, CartesianPointVector &pointVectorStart, CartesianPointVector &pointVectorEnd)
+void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const pAlgorithm, CaloHitList &threeDCaloHitList, CartesianPointVector &pointVectorStart, CartesianPointVector &pointVectorEnd)
 {
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
@@ -617,15 +617,6 @@ ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-/*bool ThreeDChargeFeatureTool::SortByDistanceToVertex(const CaloHit *const left, const CaloHit *const right, const CartesianVector &nuVertex2D)
-{
-    float distanceL((left->GetPositionVector()-nuVertex2D).GetMagnitudeSquared());
-    float distanceR((right->GetPositionVector()-nuVertex2D).GetMagnitudeSquared());
-    return distanceL < distanceR;
-}*/
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDChargeFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
@@ -641,10 +632,10 @@ void ThreeDChargeFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVec
         this->CalculateChargeVariables(pAlgorithm, pCluster, totalCharge, chargeSigma, chargeMean, endCharge, m_endChargeFraction);
     }
 
-    if (chargeMean > std::numeric_limits<double>::epsilon())
+    if (chargeMean > std::numeric_limits<float>::epsilon())
         chargeSigma /= chargeMean;
 
-    if (totalCharge > std::numeric_limits<double>::epsilon())
+    if (totalCharge > std::numeric_limits<float>::epsilon())
         endCharge /= totalCharge;
 
     featureVector.push_back(chargeSigma);
@@ -725,8 +716,7 @@ void ThreeDChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *c
 
     //TODO: might give problems if vertex in the middle of the cluster ?
     std::sort(clusterCaloHitVector.begin(), clusterCaloHitVector.end(), VertexComparator(vertexPosition2D));
-    CaloHitList orderedCaloHitList(clusterCaloHitVector.begin(),clusterCaloHitVector.end());
-    caloHitList = orderedCaloHitList;
+    caloHitList.insert(caloHitList.end(), clusterCaloHitVector.begin(), clusterCaloHitVector.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

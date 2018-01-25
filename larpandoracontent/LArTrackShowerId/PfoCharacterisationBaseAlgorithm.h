@@ -33,7 +33,7 @@ protected:
     pandora::StatusCode Run();
 
     /**
-     *  @brief  Whether pfo is identified as a clear track using its three clsuters
+     *  @brief  Whether pfo is identified as a clear track using its three clusters
      *
      *  @param  pPfo address of the relevant pfo
      *
