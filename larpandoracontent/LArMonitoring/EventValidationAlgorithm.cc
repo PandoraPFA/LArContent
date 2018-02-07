@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -273,6 +274,7 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
         if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary)) ++nNeutrinoPrimaries;
 
     PfoSet recoNeutrinos;
+    MCParticleList associatedMCPrimaries;
 
     int mcPrimaryIndex(0), nNuMatches(0), nNuSplits(0), nCRMatches(0);
     IntVector nMCHitsTotal, nMCHitsU, nMCHitsV, nMCHitsW, mcPrimaryPdg;
@@ -283,8 +285,9 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-        const bool isLastNeutrinoPrimary(++mcPrimaryIndex == nNeutrinoPrimaries);
+        associatedMCPrimaries.push_back(pMCPrimary);
 
+        const bool isLastNeutrinoPrimary(++mcPrimaryIndex == nNeutrinoPrimaries);
         const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
         const int isBeamNeutrinoFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) ? 1 : 0);
         const int isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary) ? 1 : 0);
@@ -396,7 +399,11 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
 
         if (isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
         {
+            const int interactionType(static_cast<int>(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries)));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "interactionType", interactionType));
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
+
+            associatedMCPrimaries.clear();
             nNuMatches = 0; nCRMatches = 0;
             nMCHitsTotal.clear(); nMCHitsU.clear(); nMCHitsV.clear(); nMCHitsW.clear(); mcPrimaryPdg.clear();
             mcPrimaryE.clear(); mcPrimaryPX.clear(); mcPrimaryPY.clear(); mcPrimaryPZ.clear();

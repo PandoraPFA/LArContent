@@ -310,11 +310,9 @@ private:
     /**
      *  @brief  Get the interaction type string
      *
-     *  @param  vertexVector the vector of all vertices
-     *
      *  @return the interaction type string
      */
-    std::string GetInteractionType(const pandora::VertexVector &vertexVector) const;
+    std::string GetInteractionType() const;
 
     /**
      *  @brief  Produce a set of training examples for a binary classifier
