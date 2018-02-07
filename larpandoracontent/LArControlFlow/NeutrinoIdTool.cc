@@ -54,10 +54,20 @@ void NeutrinoIdTool::SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, c
             passesTrainingSelection = false;
     }
 
+    //unsigned int mostProbableSliceIndex(std::numeric_limits<unsigned int>::max());
+    //float highestProbability(-std::numeric_limits<float>::max());
+    //bool isFirstSlice(true);
+
+    for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)                                
+    {
+        //const PfoList &nuPfos(nuSliceHypotheses.at(sliceIndex));
+        //const PfoList &crPfos(crSliceHypotheses.at(sliceIndex));
+
+        //SliceFeatures features;
+    }
+
     (void) bestSliceIndex;
     (void) passesTrainingSelection;
-    (void) nuSliceHypotheses;
-    (void) crSliceHypotheses;
     (void) selectedPfos;
 }
 
@@ -152,6 +162,16 @@ int NeutrinoIdTool::GetNuanceCode(const MasterAlgorithm *const pAlgorithm) const
     }
 
     return LArMCParticleHelper::GetNuanceCode(trueNeutrinos.front());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoList &crPfos) : 
+    m_variable(123.0f)
+{
+    (void) nuPfos;
+    (void) crPfos;
 }
 
 /*

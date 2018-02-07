@@ -10,9 +10,7 @@
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-
-#include "Pandora/PdgTable.h"
+#include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
 
 namespace lar_content
 {
@@ -38,6 +36,35 @@ public:
     void SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
+    /**
+     *  @brief  Slice features class
+     */
+    class SliceFeatures
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         */
+        SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos);
+
+        /**
+         *  @brief  Output a training example to the file for this slice
+         */
+        //void ProduceTrainingExample(bool isBestSlice) const;
+
+        /**
+         *  @brief  Use the SVM to get the probability that this slice contains the neutrino event 
+         */
+        //float GetProbability() const;
+    private:
+        /**
+         *  @brief  Get the feature vector for the SVM
+         */
+        //SupportVectorMachine::DoubleVector GetFeatureVector() const;
+
+        float m_variable;  ///< Placeholder while testing
+    };
+
     /**
      *  @brief  Get the slice with the most neutrino induced hits
      */
