@@ -32,19 +32,30 @@ NeutrinoIdTool::NeutrinoIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoIdTool::SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+void NeutrinoIdTool::SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    //bool passesTrainingSelection(true);
-    //unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
+    bool passesTrainingSelection(true);
+    unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
 
     if (m_useTrainingMode)
     {
         // Find the best slice and check to see if it passes the selection cuts
+        float purity(-std::numeric_limits<float>::max());
+        float completeness(-std::numeric_limits<float>::max());
+        bestSliceIndex = this->GetBestSliceIndex(nuSliceHypotheses, crSliceHypotheses, purity, completeness);
+        
+        if (purity < m_minPurity || completeness < m_minCompleteness)
+            passesTrainingSelection = false;
+
+        if (m_selectNuanceCode && (this->GetNuanceCode(pAlgorithm) != m_nuance))
+            passesTrainingSelection = false;
     }
 
+    (void) bestSliceIndex;
+    (void) passesTrainingSelection;
     (void) nuSliceHypotheses;
     (void) crSliceHypotheses;
     (void) selectedPfos;
@@ -122,6 +133,25 @@ unsigned int NeutrinoIdTool::CountNeutrinoInducedHits(const CaloHitList &hitList
     }
 
     return nNuHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int NeutrinoIdTool::GetNuanceCode(const MasterAlgorithm *const pAlgorithm) const
+{
+    const MCParticleList *pMCParticleList = nullptr;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pMCParticleList));
+
+    MCParticleVector trueNeutrinos;
+    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, trueNeutrinos);
+
+    if (trueNeutrinos.size() != 1)
+    {
+        std::cout << "NeutrinoIdTool::GetNuanceCode - Error: number of true neutrinos in event must be exactly one" << std::endl;    
+        throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
+    }
+
+    return LArMCParticleHelper::GetNuanceCode(trueNeutrinos.front());
 }
 
 /*
