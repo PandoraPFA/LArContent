@@ -15,55 +15,42 @@ using namespace pandora;
 namespace lar_content
 {
 
-// TODO make this function use the new helpers
-LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteractionType(const LArMCParticle *const pLArMCNeutrino,
-    const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const LArMCParticleHelper::PrimaryParameters &parameters)
+LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteractionType(const MCParticleList &mcPrimaryList)
 {
-    LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
+    if (mcPrimaryList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    MCParticleList mcParticleList;
-    for (const auto &mapEntry : nuMCParticlesToGoodHitsMap) mcParticleList.push_back(mapEntry.first);
-    mcParticleList.sort(LArMCParticleHelper::SortByMomentum);
+    if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsBeamParticle(mcPrimaryList.front())) return BEAM_PARTICLE;
+    if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsCosmicRay(mcPrimaryList.front())) return COSMIC_RAY;
 
-    unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPiMinus(0), nNeutrons(0), nPhotons(0);
+    const MCParticle *pMCNeutrino(nullptr);
 
-    for (const MCParticle *const pMCPrimary : mcParticleList)
+    for (const MCParticle *const pMCPrimary : mcPrimaryList)
     {
-        LArMCParticleHelper::MCContributionMap::const_iterator goodTrueHitsIter = nuMCParticlesToGoodHitsMap.find(pMCPrimary);
+        if (!LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) || (pMCNeutrino && (pMCNeutrino != LArMCParticleHelper::GetParentMCParticle(pMCPrimary))))
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        if (nuMCParticlesToGoodHitsMap.end() != goodTrueHitsIter)
-        {
-            const CaloHitList &caloHitList(goodTrueHitsIter->second);
-            if (caloHitList.size() < parameters.m_minPrimaryGoodHits)
-                continue;
+        pMCNeutrino = LArMCParticleHelper::GetParentMCParticle(pMCPrimary);
+    }
 
-            unsigned int nGoodViews(0);
-            if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList) >= parameters.m_minHitsForGoodView)
-                ++nGoodViews;
+    if (!pMCNeutrino)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList) >= parameters.m_minHitsForGoodView)
-                ++nGoodViews;
+    const int nuanceCode(LArMCParticleHelper::GetNuanceCode(pMCNeutrino));
+    unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPiMinus(0), nPhotons(0);
 
-            if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) >= parameters.m_minHitsForGoodView)
-                ++nGoodViews;
-
-            if (nGoodViews < parameters.m_minPrimaryGoodViews)
-                continue;
-        }
-
+    for (const MCParticle *const pMCPrimary : mcPrimaryList)
+    {
         if (2112 != pMCPrimary->GetParticleId()) ++nNonNeutrons;
-
         if (13 == pMCPrimary->GetParticleId()) ++nMuons;
         if (11 == pMCPrimary->GetParticleId()) ++nElectrons;
         else if (2212 == pMCPrimary->GetParticleId()) ++nProtons;
         else if (22 == pMCPrimary->GetParticleId()) ++nPhotons;
         else if (211 == pMCPrimary->GetParticleId()) ++nPiPlus;
         else if (-211 == pMCPrimary->GetParticleId()) ++nPiMinus;
-        else if (2112 == pMCPrimary->GetParticleId()) ++nNeutrons;
     }
 
-    if (1001 == pLArMCNeutrino->GetNuanceCode())
+    if (1001 == nuanceCode)
     {
         if ((1 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons)) return CCQEL_MU;
         if ((2 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons)) return CCQEL_MU_P;
@@ -80,7 +67,7 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if ((6 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons)) return CCQEL_E_P_P_P_P_P;
     }
 
-    if (1002 == pLArMCNeutrino->GetNuanceCode())
+    if (1002 == nuanceCode)
     {
         if ((1 == nNonNeutrons) && (1 == nProtons)) return NCQEL_P;
         if ((2 == nNonNeutrons) && (2 == nProtons)) return NCQEL_P_P;
@@ -89,7 +76,7 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if ((5 == nNonNeutrons) && (5 == nProtons)) return NCQEL_P_P_P_P_P;
     }
 
-    if ((pLArMCNeutrino->GetNuanceCode() >= 1003) && (pLArMCNeutrino->GetNuanceCode() <= 1005))
+    if ((nuanceCode >= 1003) && (nuanceCode <= 1005))
     {
         if ((1 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons)) return CCRES_MU;
         if ((2 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons)) return CCRES_MU_P;
@@ -148,7 +135,7 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if ((8 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons) && (2 == nPhotons)) return CCRES_E_P_P_P_P_P_PIZERO;
     }
 
-    if ((pLArMCNeutrino->GetNuanceCode() >= 1006) && (pLArMCNeutrino->GetNuanceCode() <= 1009))
+    if ((nuanceCode >= 1006) && (nuanceCode <= 1009))
     {
         if ((1 == nNonNeutrons) && (1 == nProtons)) return NCRES_P;
         if ((2 == nNonNeutrons) && (2 == nProtons)) return NCRES_P_P;
@@ -185,10 +172,10 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if ((7 == nNonNeutrons) && (5 == nProtons) && (2 == nPhotons)) return NCRES_P_P_P_P_P_PIZERO;
     }
 
-    if (pLArMCNeutrino->GetNuanceCode() == 1091) return CCDIS;
-    if (pLArMCNeutrino->GetNuanceCode() == 1092) return NCDIS;
-    if (pLArMCNeutrino->GetNuanceCode() == 1096) return NCCOH;
-    if (pLArMCNeutrino->GetNuanceCode() == 1097) return CCCOH;
+    if (nuanceCode == 1091) return CCDIS;
+    if (nuanceCode == 1092) return NCDIS;
+    if (nuanceCode == 1096) return NCCOH;
+    if (nuanceCode == 1097) return CCCOH;
 
     return OTHER_INTERACTION;
 }
@@ -297,6 +284,8 @@ std::string LArInteractionTypeHelper::ToString(const InteractionType interaction
     case NCDIS: return "NCDIS";
     case CCCOH: return "CCCOH";
     case NCCOH: return "NCCOH";
+    case COSMIC_RAY: return "COSMIC_RAY";
+    case BEAM_PARTICLE: return "BEAM_PARTICLE";
     case OTHER_INTERACTION: return "OTHER_INTERACTION";
     case ALL_INTERACTIONS: return "ALL_INTERACTIONS";
     default: return "UNKNOWN";

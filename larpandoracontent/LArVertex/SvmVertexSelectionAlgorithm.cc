@@ -532,7 +532,7 @@ void SvmVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &vertex
     std::mt19937 generator(device());
     std::bernoulli_distribution coinFlip(0.5);
 
-    std::string interactionType(this->GetInteractionType(vertexVector));
+    const std::string interactionType(this->GetInteractionType());
 
     // Produce training examples for the vertices representing regions.
     const Vertex *const pBestRegionVertex(this->ProduceTrainingExamples(bestRegionVertices, vertexFeatureInfoMap, coinFlip, generator,
@@ -583,7 +583,7 @@ void SvmVertexSelectionAlgorithm::CalculateRPhiScores(VertexVector &vertexVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::string SvmVertexSelectionAlgorithm::GetInteractionType(const VertexVector &vertexVector) const
+std::string SvmVertexSelectionAlgorithm::GetInteractionType() const
 {
     // Extract input collections
     const MCParticleList *pMCParticleList(nullptr);
@@ -592,38 +592,17 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType(const VertexVector &
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
-    // Obtain vector: true neutrinos
-    MCParticleVector mcNeutrinoVector;
-    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
+    // ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
+    LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
+        LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
 
-    std::string interactionType("UNKNOWN");
-    const LArMCParticleHelper::PrimaryParameters parameters;
+    MCParticleList mcPrimaryList;
+    for (const auto &mapEntry : nuMCParticlesToGoodHitsMap) mcPrimaryList.push_back(mapEntry.first);
+    mcPrimaryList.sort(LArMCParticleHelper::SortByMomentum);
 
-    for (const Vertex *const pVertex : vertexVector)
-    {
-        float mcVertexDr(std::numeric_limits<float>::max());
-
-        for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
-        {
-            const CartesianVector mcNeutrinoPosition(pMCNeutrino->GetEndpoint().GetX() + m_mcVertexXCorrection, pMCNeutrino->GetEndpoint().GetY(),
-                pMCNeutrino->GetEndpoint().GetZ());
-
-            const float dr((mcNeutrinoPosition - pVertex->GetPosition()).GetMagnitude());
-
-            if (dr < mcVertexDr)
-            {
-                if (const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino))
-                {
-                    interactionType = LArInteractionTypeHelper::ToString(LArInteractionTypeHelper::GetInteractionType(pLArMCNeutrino,
-                        pMCParticleList, pCaloHitList, parameters));
-                }
-
-                mcVertexDr = dr;
-            }
-        }
-    }
-
-    return interactionType;
+    const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(mcPrimaryList));
+    return LArInteractionTypeHelper::ToString(interactionType);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

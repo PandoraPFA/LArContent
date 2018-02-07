@@ -124,6 +124,8 @@ public:
         NCDIS,
         CCCOH,
         NCCOH,
+        COSMIC_RAY,
+        BEAM_PARTICLE,
         OTHER_INTERACTION,
         ALL_INTERACTIONS
     };
@@ -131,15 +133,12 @@ public:
     /**
      *  @brief  Get the interaction type of an event
      *
-     *  @param  pLArMCNeutrino the address of the LArMCParticle object
-     *  @param  pMCParticleList the address of the list of MCParticles
-     *  @param  pCaloHitList the address of the list of CaloHits
-     *  @param  parameters the parameters
+     *  @param  nuanceCode the nuance code
+     *  @param  mcPrimaryList the list of primary mc particles
      *
      *  @return interaction type
      */
-    static InteractionType GetInteractionType(const LArMCParticle *const pLArMCNeutrino, const pandora::MCParticleList *pMCParticleList,
-        const pandora::CaloHitList *pCaloHitList, const LArMCParticleHelper::PrimaryParameters &parameters);
+    static InteractionType GetInteractionType(const pandora::MCParticleList &mcPrimaryList);
 
     /**
      *  @brief  Get a string representation of an interaction type
