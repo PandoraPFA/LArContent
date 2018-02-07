@@ -35,7 +35,7 @@ public:
      */
     NeutrinoIdTool();
 
-    void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
+    void SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
     /**
@@ -52,6 +52,11 @@ private:
      *  @brief  Count the number of neutrino induced hits in a given list
      */
     unsigned int CountNeutrinoInducedHits(const pandora::CaloHitList &hitList) const;
+
+    /**
+     *  @brief  Use the current MCParticle list to get the nuance code of the neutrino in the event
+     */
+    int GetNuanceCode(const MasterAlgorithm *const pAlgorithm) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
