@@ -358,11 +358,12 @@ public:
     /**
      *  @brief  Select which reconstruction hypotheses to use; neutrino outcomes or cosmic-ray muon outcomes for each slice
      *
+     *  @param  pAlgorithm the address of the master instance, used to access MCParticles when in training mode
      *  @param  nuSliceHypotheses the parent pfos representing the neutrino outcome for each slice
      *  @param  crSliceHypotheses the parent pfos representing the cosmic-ray muon outcome for each slice
      *  @param  sliceNuPfos to receive the list of selected pfos
      */
-    virtual void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
+    virtual void SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
         pandora::PfoList &selectedPfos) = 0;
 };
 
