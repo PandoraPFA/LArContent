@@ -48,6 +48,11 @@ private:
      */
     void Collect2DHits(const pandora::PfoList &pfos, pandora::CaloHitList &hitList) const;
 
+    /**
+     *  @brief  Count the number of neutrino induced hits in a given list
+     */
+    unsigned int CountNeutrinoInducedHits(const pandora::CaloHitList &hitList) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     // Training

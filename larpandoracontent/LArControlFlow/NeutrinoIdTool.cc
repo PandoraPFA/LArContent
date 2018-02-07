@@ -54,13 +54,14 @@ void NeutrinoIdTool::SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, 
 
 unsigned int NeutrinoIdTool::GetBestSliceIndex(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, float &purity, float &completeness) const
 {
-    (void) purity;
-    (void) completeness;
-
     unsigned int bestSliceIndex(0);
-    //unsigned int nNuHitsInBestSlice(0);
-    //unsigned int nHitsInBestSlice(0);
-    //unsigned int nNuHitsTotal(0);
+    unsigned int nNuHitsInBestSlice(0);
+    unsigned int nHitsInBestSlice(0);
+    unsigned int nNuHitsTotal(0);
+   
+    // ATTN for events with no neutrino induced hits, default neutrino purity and completeness to zero
+    purity = 0;
+    completeness = 0;
 
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
@@ -68,8 +69,23 @@ unsigned int NeutrinoIdTool::GetBestSliceIndex(const SliceHypotheses &nuSliceHyp
         this->Collect2DHits(nuSliceHypotheses.at(sliceIndex), reconstructedHits);
         this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedHits);
 
-        // const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedHits));
+        const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedHits));
+        nNuHitsTotal += nNuHits;
+        
+        // TODO may need to be careful with reproducibility here?
+        if (nNuHits > nNuHitsInBestSlice)
+        {
+            nNuHitsInBestSlice = nNuHits;
+            nHitsInBestSlice = reconstructedHits.size();
+            bestSliceIndex = sliceIndex; 
+        }
     }
+
+    if (nHitsInBestSlice > 0)
+        purity = static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nHitsInBestSlice);
+
+    if (nNuHitsTotal > 0)
+        completeness = static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nNuHitsTotal);
 
     return bestSliceIndex;
 }
@@ -96,7 +112,6 @@ void NeutrinoIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &hitList) co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-/*
 unsigned int NeutrinoIdTool::CountNeutrinoInducedHits(const CaloHitList &hitList) const
 {
     unsigned int nNuHits(0);
@@ -105,8 +120,9 @@ unsigned int NeutrinoIdTool::CountNeutrinoInducedHits(const CaloHitList &hitList
         if (LArMCParticleHelper::IsNeutrino(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit))))
             nNuHits++;
     }
+
+    return nNuHits;
 }
-*/
 
 /*
 
