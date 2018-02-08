@@ -45,24 +45,36 @@ private:
         /**
          *  @brief  Constructor
          */
-        SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos);
+        SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const NeutrinoIdTool *const pTool);
 
         /**
-         *  @brief  Output a training example to the file for this slice
+         *  @brief  Check if all features were calculable
          */
-        //void ProduceTrainingExample(bool isBestSlice) const;
+        bool IsFeatureVectorAvailable() const;
 
-        /**
-         *  @brief  Use the SVM to get the probability that this slice contains the neutrino event 
-         */
-        //float GetProbability() const;
-    private:
         /**
          *  @brief  Get the feature vector for the SVM
          */
-        //SupportVectorMachine::DoubleVector GetFeatureVector() const;
+        SupportVectorMachine::DoubleVector GetFeatureVector() const;
+    private:
+        /**
+         *  @brief  Get the recontructed neutrino the input list of neutrino Pfos
+         */
+        const pandora::ParticleFlowObject *GetNeutrino(const pandora::PfoList &nuPfos);
 
-        float m_variable;  ///< Placeholder while testing
+        /**
+         *  @brief  Get the 3D space points in a given pfo
+         */
+        void GetSpacePoints(const pandora::ParticleFlowObject *const pPfo, pandora::CartesianPointVector &spacePoints) const;
+
+        /**
+         *  @brief  Use a sliding fit to get the direction of a collection of spacepoint near a vertex position
+         */
+        pandora::CartesianVector GetDirectionFromVertex(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex) const;
+
+        bool                               m_isAvailable;    ///< Is the feature vector available
+        SupportVectorMachine::DoubleVector m_featureVector;  ///< The SVM feature vector
+        const NeutrinoIdTool *const        m_pTool;          ///< The tool that owns this
     };
 
     /**
@@ -88,15 +100,15 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     // Training
-    bool         m_useTrainingMode;     // Should use training mode. If true, training examples will be written to the output file
-    std::string  m_trainingOutputFile;  // Output file name for training examples
-    bool         m_selectNuanceCode;    // Should select training events by nuance code
-    int          m_nuance;              // Nuance code to select for training
-    float        m_minPurity;           // Minimum purity of the best slice to use event for training
-    float        m_minCompleteness;     // Minimum completeness of the best slice to use event for training
+    bool         m_useTrainingMode;      ///< Should use training mode. If true, training examples will be written to the output file
+    std::string  m_trainingOutputFile;   ///< Output file name for training examples
+    bool         m_selectNuanceCode;     ///< Should select training events by nuance code
+    int          m_nuance;               ///< Nuance code to select for training
+    float        m_minPurity;            ///< Minimum purity of the best slice to use event for training
+    float        m_minCompleteness;      ///< Minimum completeness of the best slice to use event for training
 
     // Classification
-    float        m_minProbability;      // Minimum probability required to classify a slice as the neutrino
+    float        m_minProbability;       ///< Minimum probability required to classify a slice as the neutrino
 };
 
 } // namespace lar_content
