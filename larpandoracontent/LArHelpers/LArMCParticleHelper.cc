@@ -207,6 +207,46 @@ void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const MCParticle *LArMCParticleHelper::GetMainMCParticle(const ParticleFlowObject *const pPfo)
+{
+    ClusterList clusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+    return MCParticleHelper::GetMainMCParticle(&clusterList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const MCParticle *LArMCParticleHelper::GetMainMCPrimary(const ParticleFlowObject *const pPfo, const MCRelationMap &mcPrimaryMap)
+{
+    // TODO This needs to consider all hits, linking all MCParticles back to relevant primaries
+    ClusterList clusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+    const MCParticle *pMainMCPrimary(nullptr);
+
+    for (const Cluster *const pCluster : clusterList)
+    {
+        MCRelationMap::const_iterator primaryIter(mcPrimaryMap.find(MCParticleHelper::GetMainMCParticle(pCluster)));
+
+        if (mcPrimaryMap.end() == primaryIter)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        const MCParticle *const pThisMainMCPrimary(primaryIter->second);
+
+        if (pMainMCPrimary && (pThisMainMCPrimary != pMainMCPrimary))
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        if (!pMainMCPrimary)
+            pMainMCPrimary = pThisMainMCPrimary;
+    }
+
+    if (!pMainMCPrimary)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return pMainMCPrimary;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArMCParticleHelper::SortByMomentum(const MCParticle *const pLhs, const MCParticle *const pRhs)
 {
     // Sort by momentum (prefer higher momentum)

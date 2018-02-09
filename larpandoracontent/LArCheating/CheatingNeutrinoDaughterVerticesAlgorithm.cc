@@ -90,13 +90,10 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessRecoNeutrinos(const PfoLi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessDaughterPfo(const ParticleFlowObject *const pDaughterPfo,
-    const LArMCParticleHelper::MCRelationMap &/*mcPrimaryMap*/) const
+    const LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const
 {
-    // TODO - new implementation of GetMainMCParticle
-    throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    const MCParticle *const pMCParticle(nullptr); // !m_collapseToPrimaryMCParticles ? LArMCParticleHelper::GetMainMCParticle(pDaughterPfo) :
-        //LArMCParticleHelper::GetMainMCPrimary(pDaughterPfo, mcPrimaryMap));
+    const MCParticle *const pMCParticle(!m_collapseToPrimaryMCParticles ? LArMCParticleHelper::GetMainMCParticle(pDaughterPfo) :
+        LArMCParticleHelper::GetMainMCPrimary(pDaughterPfo, mcPrimaryMap));
 
     const VertexList *pVertexList(nullptr); std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
