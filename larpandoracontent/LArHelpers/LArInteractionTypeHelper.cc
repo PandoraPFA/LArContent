@@ -42,9 +42,9 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
     for (const MCParticle *const pMCPrimary : mcPrimaryList)
     {
         if (2112 != pMCPrimary->GetParticleId()) ++nNonNeutrons;
-        if (13 == pMCPrimary->GetParticleId()) ++nMuons;
-        if (11 == pMCPrimary->GetParticleId()) ++nElectrons;
-        else if (2212 == pMCPrimary->GetParticleId()) ++nProtons;
+        if (13 == std::fabs(pMCPrimary->GetParticleId())) ++nMuons;
+        if (11 == std::fabs(pMCPrimary->GetParticleId())) ++nElectrons;
+        else if (2212 == std::fabs(pMCPrimary->GetParticleId())) ++nProtons;
         else if (22 == pMCPrimary->GetParticleId()) ++nPhotons;
         else if (211 == pMCPrimary->GetParticleId()) ++nPiPlus;
         else if (-211 == pMCPrimary->GetParticleId()) ++nPiMinus;
