@@ -72,6 +72,11 @@ private:
          */
         pandora::CartesianVector GetDirectionFromVertex(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex) const;
 
+        /**
+         *  @brief  Count the number of spacepoints within a given radius of a vertex point
+         */
+        unsigned int GetNPointsInSphere(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex, float radius) const;
+
         bool                               m_isAvailable;    ///< Is the feature vector available
         SupportVectorMachine::DoubleVector m_featureVector;  ///< The SVM feature vector
         const NeutrinoIdTool *const        m_pTool;          ///< The tool that owns this
@@ -80,7 +85,12 @@ private:
     /**
      *  @brief  Get the slice with the most neutrino induced hits
      */
-    unsigned int GetBestSliceIndex(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, float &purity, float &completeness) const;
+    bool GetBestSliceIndex(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const;
+
+    /**
+     *  @brief  Determine if the event passes the selection cuts for training
+     */
+    bool PassesQualityCuts(const MasterAlgorithm *const pAlgorithm, const float purity, const float completeness) const;
 
     /**
      *  @brief  Collect all 2D hits in a supplied list of Pfos and push them on to an existing hit list, check so not to double count

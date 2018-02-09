@@ -38,37 +38,20 @@ void NeutrinoIdTool::SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, c
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    bool passesTrainingSelection(true);
+    if (nuSliceHypotheses.size() == 0) return;
+
+    // If using training mode, find the slice with the most neutrino induced hits and see if the event passes the training selection cuts
     unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
-
-    if (m_useTrainingMode)
-    {
-        // TODO put all of this into a separate function
-        // Find the best slice and check to see if it passes the selection cuts
-        float purity(-std::numeric_limits<float>::max());
-        float completeness(-std::numeric_limits<float>::max());
-        bestSliceIndex = this->GetBestSliceIndex(nuSliceHypotheses, crSliceHypotheses, purity, completeness);
-        
-        if (purity < m_minPurity || completeness < m_minCompleteness)
-            passesTrainingSelection = false;
-
-        if (m_selectNuanceCode && (this->GetNuanceCode(pAlgorithm) != m_nuance))
-            passesTrainingSelection = false;
-    }
+    const bool passesTrainingSelection(m_useTrainingMode ? this->GetBestSliceIndex(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, bestSliceIndex) : false);
 
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)                                
     {
         SliceFeatures features(nuSliceHypotheses.at(sliceIndex), crSliceHypotheses.at(sliceIndex), this);
+        if (!features.IsFeatureVectorAvailable()) continue;
 
-        if (features.IsFeatureVectorAvailable())
-        {
-            if (m_useTrainingMode && passesTrainingSelection)
-                LArSvmHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, features.GetFeatureVector());
-        }
-        else
-        {
-            std::cout << "Can't use slice " << sliceIndex << ", one or more features are incalculable" << std::endl;
-        }
+        if (m_useTrainingMode && passesTrainingSelection)
+            LArSvmHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, features.GetFeatureVector());
+
         // TODO Use trained SVM to calculate neutrino probability
     }
 
@@ -79,17 +62,12 @@ void NeutrinoIdTool::SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int NeutrinoIdTool::GetBestSliceIndex(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, float &purity, float &completeness) const
+bool NeutrinoIdTool::GetBestSliceIndex(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const
 {
-    unsigned int bestSliceIndex(0);
-    unsigned int nNuHitsInBestSlice(0);
     unsigned int nHitsInBestSlice(0);
+    unsigned int nNuHitsInBestSlice(0);
     unsigned int nuNHitsTotal(0);
    
-    // ATTN for events with no neutrino induced hits, default neutrino purity and completeness to zero
-    purity = 0;
-    completeness = 0;
-
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
         CaloHitList reconstructedHits;
@@ -108,13 +86,30 @@ unsigned int NeutrinoIdTool::GetBestSliceIndex(const SliceHypotheses &nuSliceHyp
         }
     }
 
+    // ATTN for events with no neutrino induced hits, default neutrino purity and completeness to zero
+    float purity(0);
+    float completeness(0);
+
     if (nHitsInBestSlice > 0)
         purity = static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nHitsInBestSlice);
 
     if (nuNHitsTotal > 0)
         completeness = static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nuNHitsTotal);
 
-    return bestSliceIndex;
+    return this->PassesQualityCuts(pAlgorithm, purity, completeness);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool NeutrinoIdTool::PassesQualityCuts(const MasterAlgorithm *const pAlgorithm, const float purity, const float completeness) const
+{
+    if (purity < m_minPurity || completeness < m_minCompleteness)
+        return false;
+
+    if (m_selectNuanceCode && (this->GetNuanceCode(pAlgorithm) != m_nuance))
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,27 +184,32 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
     // Neutrino features
     const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
     CartesianVector nuWeightedDirTotal(0, 0, 0);
+    unsigned int nuNHitsUsedTotal(0);
     unsigned int nuNHitsTotal(0);
+    CartesianPointVector nuAllSpacePoints;
     for (const ParticleFlowObject *const pPfo : nuFinalStates)
     {
         CartesianPointVector spacePoints;
         this->GetSpacePoints(pPfo, spacePoints);
 
+        nuAllSpacePoints.insert(nuAllSpacePoints.end(), spacePoints.begin(), spacePoints.end());
+        nuNHitsTotal += spacePoints.size();
+
         // TODO make this number configurable
         if (spacePoints.size() < 5) continue;
 
-        nuNHitsTotal += spacePoints.size();
-
         CartesianVector dir(this->GetDirectionFromVertex(spacePoints, nuVertex));
         nuWeightedDirTotal += dir * static_cast<float>(spacePoints.size());
+        nuNHitsUsedTotal += spacePoints.size();
     }
 
-    if (nuNHitsTotal == 0) return;
-    CartesianVector nuWeightedDir(nuWeightedDirTotal * (1.f / static_cast<float>(nuNHitsTotal)));
+    if (nuNHitsUsedTotal == 0) return;
+    CartesianVector nuWeightedDir(nuWeightedDirTotal * (1.f / static_cast<float>(nuNHitsUsedTotal)));
 
     float nuNFinalStatePfos(static_cast<float>(nuFinalStates.size()));
     float nuVertexY(nuVertex.GetY());
     float nuWeightedDirZ(nuWeightedDir.GetZ());
+    float nuNSpacePointsInSphere(static_cast<float>(this->GetNPointsInSphere(nuAllSpacePoints, nuVertex, 10))); // TODO Make this configurable
     
     // Cosmic-ray features
     unsigned int nCRHitsMax(0);
@@ -233,7 +233,9 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
         }
     }
 
+    if (nCRHitsMax == 0) return;
     if (nCRHitsTotal == 0) return;
+
     float crFracHitsInLongestTrack = static_cast<float>(nCRHitsMax)/static_cast<float>(nCRHitsTotal);
 
     // Push the features to the feature vector
@@ -241,6 +243,7 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
     m_featureVector.push_back(nuNHitsTotal);
     m_featureVector.push_back(nuVertexY);
     m_featureVector.push_back(nuWeightedDirZ);
+    m_featureVector.push_back(nuNSpacePointsInSphere);
     m_featureVector.push_back(crLongestTrackDirY);
     m_featureVector.push_back(crFracHitsInLongestTrack);
 
@@ -316,6 +319,17 @@ CartesianVector NeutrinoIdTool::SliceFeatures::GetDirectionFromVertex(const Cart
 
     const bool shouldFlip((endPoint - startPoint).GetUnitVector().GetDotProduct(startDir) < 0);
     return (shouldFlip ? startDir*(-1) : startDir);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int NeutrinoIdTool::SliceFeatures::GetNPointsInSphere(const CartesianPointVector &spacePoints, const CartesianVector &vertex, float radius) const
+{
+    unsigned int nPointsInSphere(0);
+    for (const CartesianVector &point : spacePoints)
+        if ((point - vertex).GetMagnitudeSquared() <= radius*radius) nPointsInSphere++;
+
+    return nPointsInSphere;
 }
 
 /*
