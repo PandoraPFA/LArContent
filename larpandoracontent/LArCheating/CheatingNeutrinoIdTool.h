@@ -22,6 +22,24 @@ public:
     void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
+    /**
+     *  @brief  Get the neutrino weight for a CaloHit
+     *
+     *  @param  pCaloHit address of the CaloHit
+     *  @param  neutrinoWeight the neutrino weight
+     *  @param  totalWeight the total weight
+     */
+    void GetNeutrinoWeight(const pandora::CaloHit *const pCaloHit, float &neutrinoWeight, float &totalWeight) const;
+
+    /**
+     *  @brief  Get the neutrino weight for a list of PFOs
+     *
+     *  @param  pPfoList address of the PFO list
+     *  @param  neutrinoWeight the neutrino weight
+     *  @param  totalWeight the total weight
+     */
+    void GetNeutrinoWeight(const pandora::PfoList *const pPfoList, float &neutrinoWeight, float &totalWeight) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
