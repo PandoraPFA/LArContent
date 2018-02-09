@@ -155,6 +155,25 @@ public:
     static void GetMCPrimaryMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap);
 
     /**
+     *  @brief  Find the mc particle making the largest contribution to 2D clusters in a specified pfo
+     *
+     *  @param  pPfo address of the pfo to examine
+     *
+     *  @return address of the main mc particle
+     */
+    static const pandora::MCParticle *GetMainMCParticle(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Find the primary mc particle making the largest contribution to 2D clusters in a specified pfo
+     *
+     *  @param  pPfo address of the pfo to examine
+     *  @param  mcPrimaryMap the provided mapping between mc particles and their parents
+     *
+     *  @return address of the main mc primary
+     */
+    static const pandora::MCParticle *GetMainMCPrimary(const pandora::ParticleFlowObject *const pPfo, const MCRelationMap &mcPrimaryMap);
+
+    /**
      *  @brief  Sort mc particles by their momentum
      *
      *  @param  pLhs address of first mc particle
