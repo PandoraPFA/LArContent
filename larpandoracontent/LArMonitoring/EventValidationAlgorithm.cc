@@ -236,6 +236,9 @@ void EventValidationAlgorithm::PrintOutput(const ValidationInfo &validationInfo,
                       << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoHitList) << ")" << std::endl;
         }
 
+        if (mcToPfoHitSharingMap.at(pMCPrimary).empty())
+            std::cout << "-No matched Pfo" << std::endl;
+
         if (isTargetPrimary && isBeamNeutrinoFinalState && (nNuMatches == 1) && (nCRMatches == 0)) ++nCorrectNu;
         else if (isTargetPrimary && isBeamParticle && (nNuMatches == 1) && (nCRMatches == 0)) ++nCorrectTB;
         else if (isTargetPrimary && isCosmicRay && (nNuMatches == 0) && (nCRMatches == 1)) ++nCorrectCR;
@@ -366,6 +369,13 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
             }
 
             if (!isRecoNeutrinoFinalState && isGoodMatch) ++nCRMatches;
+        }
+
+        if (mcToPfoHitSharingMap.at(pMCPrimary).empty())
+        {
+            bestMatchPfoNHitsTotal.push_back(0); bestMatchPfoNHitsU.push_back(0); bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0);
+            bestMatchPfoPdg.push_back(0); bestMatchPfoIsRecoNu.push_back(0); bestMatchPfoNSharedHitsTotal.push_back(0); bestMatchPfoNSharedHitsU.push_back(0);
+            bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
         }
 
         nMatchedPfos.push_back(nGoodMatches);
