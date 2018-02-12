@@ -78,6 +78,13 @@ bool CutPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool CutPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowObject *const /*pPfo*/) const
+{
+	throw StatusCodeException(STATUS_CODE_FAILURE);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode CutPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
