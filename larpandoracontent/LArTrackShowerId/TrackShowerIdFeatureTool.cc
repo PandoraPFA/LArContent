@@ -571,34 +571,35 @@ void ThreeDPCAFeatureTool::Run(SupportVectorMachine::DoubleVector &featureVector
      if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-        // Need the 3D cluster and hits to calculate PCA components
-        ClusterList threeDClusterList;
-        LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
+    // Need the 3D cluster and hits to calculate PCA components
+    ClusterList threeDClusterList;
+    LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
 
-        if (threeDClusterList.empty())
-            return;
+    if (threeDClusterList.empty())
+        return;
 
-        CaloHitList threeDCaloHitList;
-        LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
+    CaloHitList threeDCaloHitList;
+    LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
-        if (threeDCaloHitList.empty())
-            return;
+    if (threeDCaloHitList.empty())
+        return;
 
-        // Run the PCA analysis
-        CartesianVector centroid(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenVectors eigenVecs;
-        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-        LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
-        const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
+    // Run the PCA analysis
+    CartesianVector centroid(0.f, 0.f, 0.f);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
+    const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
 
-        float pca1(-1.f), pca2(-1.f);
-        if (principalEigenvalue > std::numeric_limits<float>::epsilon())
-        {
-            pca1 = secondaryEigenvalue/principalEigenvalue;
-            pca2 = tertiaryEigenvalue/principalEigenvalue;
-        }
-        featureVector.push_back(pca1);
-        featureVector.push_back(pca2);
+    float pca1(-1.f), pca2(-1.f);
+    if (principalEigenvalue > std::numeric_limits<float>::epsilon())
+    {
+        pca1 = secondaryEigenvalue/principalEigenvalue;
+        pca2 = tertiaryEigenvalue/principalEigenvalue;
+    }
+
+    featureVector.push_back(pca1);
+    featureVector.push_back(pca2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
