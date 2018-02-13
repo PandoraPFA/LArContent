@@ -14,6 +14,8 @@
 
 #include "larpandoracontent/LArMonitoring/EventValidationAlgorithm.h"
 
+#include <sstream>
+
 using namespace pandora;
 
 namespace lar_content
@@ -143,61 +145,68 @@ void EventValidationAlgorithm::PrintOutput(const ValidationInfo &validationInfo,
     if (useInterpretedMatching) std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
     else std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
 
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(useInterpretedMatching ?
+        validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
+
     MCParticleVector mcPrimaryVector;
-    LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetAllMCParticleToHitsMap()}, mcPrimaryVector);
+    LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetTargetMCParticleToHitsMap()}, mcPrimaryVector);
+
+    int nNeutrinoPrimaries(0);
+    for (const MCParticle *const pMCPrimary : mcPrimaryVector)
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) && validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary)) ++nNeutrinoPrimaries;
 
     PfoVector primaryPfoVector;
     LArMonitoringHelper::GetOrderedPfoVector(validationInfo.GetPfoToHitsMap(), primaryPfoVector);
 
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(useInterpretedMatching ?
-        validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
-
-    unsigned int primaryIndex(0), pfoIndex(0), neutrinoPfoIndex(0), nCorrectNu(0), nCorrectTB(0), nCorrectCR(0), nTotalNu(0), nTotalTB(0),
-        nTotalCR(0), nFakeNu(0), nNuSplits(0), nSplitCR(0), nLostCR(0), nFakeCR(0);
-
+    int pfoIndex(0), neutrinoPfoIndex(0);
     PfoToIdMap pfoToIdMap, neutrinoPfoToIdMap;
     for (const Pfo *const pPrimaryPfo : primaryPfoVector)
     {
-        pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, pfoIndex++));
+        pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, ++pfoIndex));
         const Pfo *const pRecoNeutrino(LArPfoHelper::IsNeutrinoFinalState(pPrimaryPfo) ? LArPfoHelper::GetParentNeutrino(pPrimaryPfo) : nullptr);
 
         if (pRecoNeutrino && !neutrinoPfoToIdMap.count(pRecoNeutrino))
-            neutrinoPfoToIdMap.insert(PfoToIdMap::value_type(pRecoNeutrino, neutrinoPfoIndex++));
+            neutrinoPfoToIdMap.insert(PfoToIdMap::value_type(pRecoNeutrino, ++neutrinoPfoIndex));
     }
 
-    std::set<unsigned int> neutrinoPfoIdSet;
+    PfoSet recoNeutrinos;
+    MCParticleList associatedMCPrimaries;
+
+    int nCorrectNu(0), nTotalNu(0), nCorrectTB(0), nTotalTB(0), nCorrectCR(0), nTotalCR(0), nFakeNu(0), nFakeCR(0), nSplitNu(0), nSplitCR(0), nLost(0);
+    int mcPrimaryIndex(0), nTargetMatches(0), nTargetNuMatches(0), nTargetCRMatches(0), nTargetGoodNuMatches(0), nTargetNuSplits(0);
+    std::stringstream targetSS;
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
-        const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
         const bool hasMatch(mcToPfoHitSharingMap.count(pMCPrimary) && !mcToPfoHitSharingMap.at(pMCPrimary).empty());
         const bool isTargetPrimary(validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary));
 
         if (!hasMatch && !isTargetPrimary)
             continue;
 
+        associatedMCPrimaries.push_back(pMCPrimary);
+        const int nTargetPrimaries(associatedMCPrimaries.size());
+        const bool isLastNeutrinoPrimary(++mcPrimaryIndex == nNeutrinoPrimaries);
+
+        const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
         const bool isBeamNeutrinoFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary));
         const bool isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary));
         const bool isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary));
 
-        if (isTargetPrimary && isBeamNeutrinoFinalState) ++nTotalNu;
-        if (isTargetPrimary && isBeamParticle) ++nTotalTB;
-        if (isTargetPrimary && isCosmicRay) ++nTotalCR;
-
         const CaloHitList &mcPrimaryHitList(validationInfo.GetAllMCParticleToHitsMap().at(pMCPrimary));
 
-        std::cout << std::endl << (!isTargetPrimary ? "(Non target) " : "")
-                  << "Primary " << primaryIndex++ << ", nuance " << mcNuanceCode
-                  << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamParticle << ", CR " << isCosmicRay
-                  << ", MCPDG " << pMCPrimary->GetParticleId()
-                  << ", Energy " << pMCPrimary->GetEnergy()
-                  << ", Dist. " << (pMCPrimary->GetEndpoint() - pMCPrimary->GetVertex()).GetMagnitude()
-                  << ", nMCHits " << mcPrimaryHitList.size()
-                  << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, mcPrimaryHitList)
-                  << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList)
-                  << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList) << ")" << std::endl;
-
-        unsigned int nNuMatches(0), nCRMatches(0);
+        targetSS << (!isTargetPrimary ? "(Non target) " : "")
+                 << "Primary " << mcPrimaryIndex
+                 << ", Nu " << isBeamNeutrinoFinalState
+                 << ", TB " << isBeamParticle
+                 << ", CR " << isCosmicRay
+                 << ", MCPDG " << pMCPrimary->GetParticleId()
+                 << ", Energy " << pMCPrimary->GetEnergy()
+                 << ", Dist. " << (pMCPrimary->GetEndpoint() - pMCPrimary->GetVertex()).GetMagnitude()
+                 << ", nMCHits " << mcPrimaryHitList.size()
+                 << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, mcPrimaryHitList)
+                 << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList)
+                 << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList) << ")" << std::endl;
 
         for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
         {
@@ -206,55 +215,101 @@ void EventValidationAlgorithm::PrintOutput(const ValidationInfo &validationInfo,
 
             const bool isRecoNeutrinoFinalState(LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first));
             const bool isGoodMatch(this->IsGoodMatch(mcPrimaryHitList, pfoHitList, sharedHitList));
-            unsigned int neutrinoId(0);
+
+            if (isGoodMatch) ++nTargetMatches;
 
             if (isRecoNeutrinoFinalState)
             {
-                neutrinoId = neutrinoPfoToIdMap.at(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first));
-                const bool isSplitRecoNeutrino(!neutrinoPfoIdSet.empty() && !neutrinoPfoIdSet.count(neutrinoId));
-                neutrinoPfoIdSet.insert(neutrinoId);
+                const Pfo *const pRecoNeutrino(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first));
+                const bool isSplitRecoNeutrino(!recoNeutrinos.empty() && !recoNeutrinos.count(pRecoNeutrino));
+                recoNeutrinos.insert(pRecoNeutrino);
 
-                if (!isSplitRecoNeutrino && isGoodMatch) ++nNuMatches;
-                if (isSplitRecoNeutrino && isBeamNeutrinoFinalState && isGoodMatch) ++nNuSplits;
+                if (!isSplitRecoNeutrino && isGoodMatch) ++nTargetGoodNuMatches;
+                if (isSplitRecoNeutrino && isBeamNeutrinoFinalState && isGoodMatch) ++nTargetNuSplits;
             }
 
-            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nCRMatches;
+            if (isRecoNeutrinoFinalState && isGoodMatch) ++nTargetNuMatches;
+            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nTargetCRMatches;
 
-            std::cout << "-" << (!isGoodMatch ? "(Below threshold) " : "")
-                      << "MatchedPfo " << pfoToIdMap.at(pfoToSharedHits.first)
-                      << ", Nu " << isRecoNeutrinoFinalState;
-            if (isRecoNeutrinoFinalState) std::cout << " [NuId: " << neutrinoId << "]";
-            std::cout << ", CR " << !isRecoNeutrinoFinalState
-                      << ", PDG " << pfoToSharedHits.first->GetParticleId()
-                      << ", nMatchedHits " << sharedHitList.size()
-                      << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList)
-                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList)
-                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList) << ")"
-                      << ", nPfoHits " << pfoHitList.size()
-                      << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoHitList)
-                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoHitList)
-                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoHitList) << ")" << std::endl;
+            targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "")
+                     << "MatchedPfo " << pfoToIdMap.at(pfoToSharedHits.first)
+                     << ", Nu " << isRecoNeutrinoFinalState;
+            if (isRecoNeutrinoFinalState) targetSS << " [NuId: " << neutrinoPfoToIdMap.at(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first)) << "]";
+            targetSS << ", CR " << !isRecoNeutrinoFinalState
+                     << ", PDG " << pfoToSharedHits.first->GetParticleId()
+                     << ", nMatchedHits " << sharedHitList.size()
+                     << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList)
+                     << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList)
+                     << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList) << ")"
+                     << ", nPfoHits " << pfoHitList.size()
+                     << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoHitList)
+                     << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoHitList)
+                     << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoHitList) << ")" << std::endl;
         }
 
         if (mcToPfoHitSharingMap.at(pMCPrimary).empty())
-            std::cout << "-No matched Pfo" << std::endl;
+            targetSS << "-No matched Pfo" << std::endl;
 
-        if (isTargetPrimary && isBeamNeutrinoFinalState && (nNuMatches == 1) && (nCRMatches == 0)) ++nCorrectNu;
-        else if (isTargetPrimary && isBeamParticle && (nNuMatches == 1) && (nCRMatches == 0)) ++nCorrectTB;
-        else if (isTargetPrimary && isCosmicRay && (nNuMatches == 0) && (nCRMatches == 1)) ++nCorrectCR;
-        else if (isTargetPrimary && isCosmicRay && (nNuMatches > 0) && (nCRMatches == 0)) ++nFakeNu;
-        else if (isTargetPrimary && isCosmicRay && (nNuMatches + nCRMatches > 1)) ++nSplitCR;
-        else if (isTargetPrimary && isCosmicRay && (nNuMatches == 0) && (nCRMatches == 0)) ++nLostCR;
-        else if (isTargetPrimary && !isCosmicRay && (nCRMatches > 0)) ++nFakeCR;
+        if (isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
+        {
+            const std::string interactionType(LArInteractionTypeHelper::ToString(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries)));
+            const bool isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0));
+            const bool isCorrectTB(isBeamParticle && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == 1) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0));
+            const bool isCorrectCR(isCosmicRay && (nTargetNuMatches == 0) && (nTargetCRMatches == 1));
+            const bool isFakeNu(isCosmicRay && (nTargetNuMatches > 0));
+            const bool isFakeCR(!isCosmicRay && (nTargetCRMatches > 0));
+            const bool isSplitNu(!isCosmicRay && ((nTargetNuMatches > nTargetPrimaries) || (nTargetNuSplits > 0)));
+            const bool isSplitCR(isCosmicRay && (nTargetCRMatches > 1));
+            const bool isLost(nTargetMatches == 0);
+
+            std::stringstream outcomeSS;
+            std::cout << interactionType << " (Nuance " << mcNuanceCode << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamParticle << ", CR " << isCosmicRay << ")" << std::endl;
+
+            if (isLastNeutrinoPrimary) ++nTotalNu;
+            if (isBeamParticle) ++nTotalTB;
+            if (isCosmicRay) ++nTotalCR;
+            if (isCorrectNu) ++nCorrectNu;
+            if (isCorrectTB) ++nCorrectTB;
+            if (isCorrectCR) ++nCorrectCR;
+            if (isFakeNu) ++nFakeNu;
+            if (isFakeCR) ++nFakeCR;
+            if (isSplitNu) ++nSplitNu;
+            if (isSplitCR) ++nSplitCR;
+            if (isLost) ++nLost;
+
+            if (isCorrectNu) outcomeSS << "IsCorrectNu ";
+            if (isCorrectTB) outcomeSS << "IsCorrectTB ";
+            if (isCorrectCR) outcomeSS << "IsCorrectCR ";
+            if (isFakeNu) outcomeSS << "IsFakeNu ";
+            if (isFakeCR) outcomeSS << "IsFakeCR ";
+            if (isSplitNu) outcomeSS << "isSplitNu ";
+            if (isSplitCR) outcomeSS << "IsSplitCR ";
+            if (isLost) outcomeSS << "IsLost ";
+            if (nTargetNuMatches > 0) outcomeSS << "(NNuMatches: " << nTargetNuMatches << ") ";
+            if (nTargetNuSplits > 0) outcomeSS << "(NNuSplits: " << nTargetNuSplits << ") ";
+            if (nTargetCRMatches > 0) outcomeSS << "(NCRMatches: " << nTargetCRMatches << ") ";
+            std::cout << outcomeSS.str() << std::endl << targetSS.str() << std::endl;
+            
+            nTargetMatches = 0; nTargetNuMatches = 0; nTargetCRMatches = 0; nTargetGoodNuMatches = 0; nTargetNuSplits = 0;
+            recoNeutrinos.clear(); associatedMCPrimaries.clear();
+            targetSS.str(std::string()); targetSS.clear();
+        }
     }
 
     if (useInterpretedMatching)
     {
-        std::cout << std::endl << "---SUMMARY--------------------------------------------------------------------------------------" << std::endl;
-        if (nTotalNu > 0) std::cout << "#Correct target Nu primaries: " << nCorrectNu << "/" << nTotalNu << ", #Split Nu primaries " << nNuSplits << ", Nu correct? " << (nTotalNu == nCorrectNu) << std::endl;
-        if (nTotalTB > 0) std::cout << "#Correct target TB particles: " << nCorrectTB << "/" << nTotalTB << ", Fraction: " << (nTotalTB > 0 ? static_cast<float>(nCorrectTB) / static_cast<float>(nTotalTB) : 0.f) << std::endl;
-        if (nTotalCR > 0) std::cout << "#Correct target Cosmic Rays : " << nCorrectCR << "/" << nTotalCR << ", Fraction: " << (nTotalCR > 0 ? static_cast<float>(nCorrectCR) / static_cast<float>(nTotalCR) : 0.f) << std::endl;
-        if ((nTotalCR > 0) || (nFakeCR > 0)) std::cout << "#CR as fake Nu: " << nFakeNu << ", #Split CRs: " << nSplitCR << ", #Lost CRs: " << nLostCR << ", #Fake CRs " << nFakeCR << std::endl;;
+        std::stringstream summarySS;
+        summarySS << "---SUMMARY--------------------------------------------------------------------------------------" << std::endl;
+        if (nTotalNu > 0) summarySS << "#CorrectNu: " << nCorrectNu << "/" << nTotalNu << ", Fraction: " << (nTotalNu > 0 ? static_cast<float>(nCorrectNu) / static_cast<float>(nTotalNu) : 0.f) << std::endl;
+        if (nTotalTB > 0) summarySS << "#CorrectTB: " << nCorrectTB << "/" << nTotalTB << ", Fraction: " << (nTotalTB > 0 ? static_cast<float>(nCorrectTB) / static_cast<float>(nTotalTB) : 0.f) << std::endl;
+        if (nTotalCR > 0) summarySS << "#CorrectCR: " << nCorrectCR << "/" << nTotalCR << ", Fraction: " << (nTotalCR > 0 ? static_cast<float>(nCorrectCR) / static_cast<float>(nTotalCR) : 0.f) << std::endl;
+        if (nFakeNu > 0) summarySS << "#FakeNu: " << nFakeNu << " ";
+        if (nFakeCR > 0) summarySS << "#FakeCR: " << nFakeCR << " ";
+        if (nSplitNu > 0) summarySS << "#SplitNu: " << nSplitNu << " ";
+        if (nSplitCR > 0) summarySS << "#SplitCR: " << nSplitCR << " ";
+        if (nLost > 0) summarySS << "#Lost: " << nLost << " ";
+        if (nFakeNu || nFakeCR || nSplitNu || nSplitCR || nLost) summarySS << std::endl;
+        std::cout << summarySS.str();
     }
 
     std::cout << "------------------------------------------------------------------------------------------------" << std::endl << std::endl;
@@ -267,30 +322,46 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber - 1));
 
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(validationInfo.GetInterpretedMCToPfoHitSharingMap());
+
     MCParticleVector mcPrimaryVector;
     LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetTargetMCParticleToHitsMap()}, mcPrimaryVector);
 
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(validationInfo.GetInterpretedMCToPfoHitSharingMap());
-
     int nNeutrinoPrimaries(0);
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
-        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary)) ++nNeutrinoPrimaries;
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) && validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary)) ++nNeutrinoPrimaries;
+
+    PfoVector primaryPfoVector;
+    LArMonitoringHelper::GetOrderedPfoVector(validationInfo.GetPfoToHitsMap(), primaryPfoVector);
+
+    int pfoIndex(0), neutrinoPfoIndex(0);
+    PfoToIdMap pfoToIdMap, neutrinoPfoToIdMap;
+    for (const Pfo *const pPrimaryPfo : primaryPfoVector)
+    {
+        pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, ++pfoIndex));
+        const Pfo *const pRecoNeutrino(LArPfoHelper::IsNeutrinoFinalState(pPrimaryPfo) ? LArPfoHelper::GetParentNeutrino(pPrimaryPfo) : nullptr);
+
+        if (pRecoNeutrino && !neutrinoPfoToIdMap.count(pRecoNeutrino))
+            neutrinoPfoToIdMap.insert(PfoToIdMap::value_type(pRecoNeutrino, ++neutrinoPfoIndex));
+    }
 
     PfoSet recoNeutrinos;
     MCParticleList associatedMCPrimaries;
 
-    int mcPrimaryIndex(0), nNuMatches(0), nNuSplits(0), nCRMatches(0);
+    int mcPrimaryIndex(0), nTargetMatches(0), nTargetNuMatches(0), nTargetCRMatches(0), nTargetGoodNuMatches(0), nTargetNuSplits(0);
     IntVector nMCHitsTotal, nMCHitsU, nMCHitsV, nMCHitsW, mcPrimaryPdg;
     FloatVector mcPrimaryE, mcPrimaryPX, mcPrimaryPY, mcPrimaryPZ;
     FloatVector mcPrimaryVtxX, mcPrimaryVtxY, mcPrimaryVtxZ, mcPrimaryEndX, mcPrimaryEndY, mcPrimaryEndZ;
-    IntVector nMatchedPfos, bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW, bestMatchPfoPdg, bestMatchPfoIsRecoNu;
+    IntVector nPrimaryMatchedPfos, nPrimaryMatchedNuPfos, nPrimaryMatchedCRPfos, bestMatchPfoIsRecoNu;
+    IntVector bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW, bestMatchPfoPdg;
     IntVector bestMatchPfoNSharedHitsTotal, bestMatchPfoNSharedHitsU, bestMatchPfoNSharedHitsV, bestMatchPfoNSharedHitsW;
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
         associatedMCPrimaries.push_back(pMCPrimary);
-
+        const int nTargetPrimaries(associatedMCPrimaries.size());
         const bool isLastNeutrinoPrimary(++mcPrimaryIndex == nNeutrinoPrimaries);
+
         const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
         const int isBeamNeutrinoFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) ? 1 : 0);
         const int isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary) ? 1 : 0);
@@ -311,7 +382,7 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
         mcPrimaryEndX.push_back(pMCPrimary->GetEndpoint().GetX());
         mcPrimaryEndY.push_back(pMCPrimary->GetEndpoint().GetY());
         mcPrimaryEndZ.push_back(pMCPrimary->GetEndpoint().GetZ());
-        const int nTargetPrimaries(mcPrimaryPdg.size());
+
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetPrimaries", nTargetPrimaries));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPdg", &mcPrimaryPdg));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryE", &mcPrimaryE));
@@ -331,7 +402,7 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
         nMCHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList));
         nMCHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList));
 
-        int matchIndex(0), nGoodMatches(0);
+        int matchIndex(0), nPrimaryMatches(0), nPrimaryNuMatches(0), nPrimaryCRMatches(0), nPrimaryGoodNuMatches(0), nPrimaryNuSplits(0);
 
         for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
         {
@@ -356,7 +427,7 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
                 bestMatchPfoNSharedHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList));
             }
 
-            if (isGoodMatch) ++nGoodMatches;
+            if (isGoodMatch) ++nPrimaryMatches;
 
             if (isRecoNeutrinoFinalState)
             {
@@ -364,11 +435,12 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
                 const bool isSplitRecoNeutrino(!recoNeutrinos.empty() && !recoNeutrinos.count(pRecoNeutrino));
                 recoNeutrinos.insert(pRecoNeutrino);
 
-                if (!isSplitRecoNeutrino && isGoodMatch) ++nNuMatches;
-                if (isSplitRecoNeutrino && isBeamNeutrinoFinalState && isGoodMatch) ++nNuSplits;
+                if (!isSplitRecoNeutrino && isGoodMatch) ++nPrimaryGoodNuMatches;
+                if (isSplitRecoNeutrino && isBeamNeutrinoFinalState && isGoodMatch) ++nPrimaryNuSplits;
             }
 
-            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nCRMatches;
+            if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
+            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
         }
 
         if (mcToPfoHitSharingMap.at(pMCPrimary).empty())
@@ -378,12 +450,16 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
             bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
         }
 
-        nMatchedPfos.push_back(nGoodMatches);
+        nPrimaryMatchedPfos.push_back(nPrimaryMatches);
+        nPrimaryMatchedNuPfos.push_back(nPrimaryNuMatches);
+        nPrimaryMatchedCRPfos.push_back(nPrimaryCRMatches);
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsTotal", &nMCHitsTotal));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsU", &nMCHitsU));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsV", &nMCHitsV));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryNHitsW", &nMCHitsW));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nMatchedPfos", &nMatchedPfos));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPrimaryMatchedPfos", &nPrimaryMatchedPfos));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPrimaryMatchedNuPfos", &nPrimaryMatchedNuPfos));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPrimaryMatchedCRPfos", &nPrimaryMatchedCRPfos));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNHitsTotal", &bestMatchPfoNHitsTotal));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNHitsU", &bestMatchPfoNHitsU));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNHitsV", &bestMatchPfoNHitsV));
@@ -395,38 +471,44 @@ void EventValidationAlgorithm::WriteInterpretedOutput(const ValidationInfo &vali
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsV", &bestMatchPfoNSharedHitsV));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsW", &bestMatchPfoNSharedHitsW));
 
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nNuMatches", nNuMatches));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nNuSplits", nNuSplits));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nCRMatches", nCRMatches));
-
-        const int isCorrectNu((isBeamNeutrinoFinalState && (nNuMatches == nNeutrinoPrimaries) && (nCRMatches == 0) && (nNuSplits == 0)) ? 1 : 0);
-        const int isCorrectTB((isBeamParticle && (nNuMatches == 1) && (nCRMatches == 0)) ? 1 : 0);
-        const int isCorrectCR((isCosmicRay && (nNuMatches == 0) && (nCRMatches == 1)) ? 1 : 0);
-        const int isFakeNu((isCosmicRay && (nNuMatches > 0) && (nCRMatches == 0)) ? 1 : 0);
-        const int isSplitCR((isCosmicRay && (nNuMatches + nCRMatches > 1)) ? 1 : 0);
-        const int isLostCR((isCosmicRay && (nNuMatches == 0) && (nCRMatches == 0)) ? 1 : 0);
-        const int isFakeCR((!isCosmicRay && (nCRMatches > 0)) ? 1 : 0);
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectNu", isCorrectNu));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectTB", isCorrectTB));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectCR", isCorrectCR));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isFakeNu", isFakeNu));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitCR", isSplitCR));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isLostCR", isLostCR));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isFakeCR", isFakeCR));
+        nTargetMatches += nPrimaryMatches;
+        nTargetNuMatches += nPrimaryNuMatches;
+        nTargetCRMatches += nPrimaryCRMatches;
+        nTargetGoodNuMatches += nPrimaryGoodNuMatches;
+        nTargetNuSplits += nPrimaryNuSplits;
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuMatches", nTargetNuMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetCRMatches", nTargetCRMatches));
 
         if (isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
         {
             const int interactionType(static_cast<int>(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries)));
+            const int isCorrectNu((isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0)) ? 1 : 0);
+            const int isCorrectTB((isBeamParticle && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == 1) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0)) ? 1 : 0);
+            const int isCorrectCR((isCosmicRay && (nTargetNuMatches == 0) && (nTargetCRMatches == 1)) ? 1 : 0);
+            const int isFakeNu((isCosmicRay && (nTargetNuMatches > 0)) ? 1 : 0);
+            const int isFakeCR((!isCosmicRay && (nTargetCRMatches > 0)) ? 1 : 0);
+            const int isSplitNu((!isCosmicRay && ((nTargetNuMatches > nTargetPrimaries) || (nTargetNuSplits > 0))) ? 1 : 0);
+            const int isSplitCR((isCosmicRay && (nTargetCRMatches > 1)) ? 1 : 0);
+            const int isLost((nTargetMatches == 0) ? 1 : 0);
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "interactionType", interactionType));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectNu", isCorrectNu));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectTB", isCorrectTB));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectCR", isCorrectCR));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isFakeNu", isFakeNu));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isFakeCR", isFakeCR));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitNu", isSplitNu));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitCR", isSplitCR));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isLost", isLost));
             PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 
-            associatedMCPrimaries.clear();
-            nNuMatches = 0; nCRMatches = 0;
+            recoNeutrinos.clear(); associatedMCPrimaries.clear();
+            nTargetMatches = 0; nTargetNuMatches = 0; nTargetCRMatches = 0; nTargetGoodNuMatches = 0; nTargetNuSplits = 0;
             nMCHitsTotal.clear(); nMCHitsU.clear(); nMCHitsV.clear(); nMCHitsW.clear(); mcPrimaryPdg.clear();
             mcPrimaryE.clear(); mcPrimaryPX.clear(); mcPrimaryPY.clear(); mcPrimaryPZ.clear();
             mcPrimaryVtxX.clear(); mcPrimaryVtxY.clear(); mcPrimaryVtxZ.clear(); mcPrimaryEndX.clear(); mcPrimaryEndY.clear(); mcPrimaryEndZ.clear();
-            nMatchedPfos.clear(); bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear(); bestMatchPfoPdg.clear();
-            bestMatchPfoIsRecoNu.clear(); bestMatchPfoNSharedHitsTotal.clear(); bestMatchPfoNSharedHitsU.clear(); bestMatchPfoNSharedHitsV.clear(); bestMatchPfoNSharedHitsW.clear();
+            nPrimaryMatchedPfos.clear(); nPrimaryMatchedNuPfos.clear(); nPrimaryMatchedCRPfos.clear(); bestMatchPfoIsRecoNu.clear();
+            bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear(); bestMatchPfoPdg.clear();
+            bestMatchPfoNSharedHitsTotal.clear(); bestMatchPfoNSharedHitsU.clear(); bestMatchPfoNSharedHitsV.clear(); bestMatchPfoNSharedHitsW.clear();
         }
     }
 }
