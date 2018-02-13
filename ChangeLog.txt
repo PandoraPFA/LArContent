@@ -1,4 +1,24 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_10_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added SVM Pfo characterisation using 3D information.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_09_03, v03_09_04
+--------------------------------------------------------------------------------------------------------------------------------------------
+Changes to the in-LArSoft build mechanics, from the LArSoft team.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_09_02
+--------------------------------------------------------------------------------------------------------------------------------------------
+Ensured compliance of output track products, including ordering of associated trajectory points.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_09_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added support for use with CartesianVector only (i.e. no CaloHits) input to LArPfoHelper::SortByHitProjection.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_09_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Replaced parent algorithms with new master algorithm, which uses Pandora worker instances, rather than purely daughter algorithms and tools.
@@ -12,6 +32,7 @@ Used LArFileHelper to access worker PandoraSetting files or SVM data files, remo
 Adopted use of LArTPC volume ids, stored in derived LArCaloHit class.
 Applied x0 shift to Pfo hits and vertices, using vertex x0 value in cosmic-ray tagging.
 Added option to visualize reconstruction status at a number of key stages.
+Added frst version of beam particle identification logic.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_08_00
