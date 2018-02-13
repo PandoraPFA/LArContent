@@ -20,8 +20,34 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
     if (mcPrimaryList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsBeamParticle(mcPrimaryList.front())) return BEAM_PARTICLE;
-    if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsCosmicRay(mcPrimaryList.front())) return COSMIC_RAY;
+    unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPiMinus(0), nPhotons(0);
+
+    for (const MCParticle *const pMCPrimary : mcPrimaryList)
+    {
+        if (2112 != pMCPrimary->GetParticleId()) ++nNonNeutrons;
+        if (13 == std::fabs(pMCPrimary->GetParticleId())) ++nMuons;
+        if (11 == std::fabs(pMCPrimary->GetParticleId())) ++nElectrons;
+        else if (2212 == std::fabs(pMCPrimary->GetParticleId())) ++nProtons;
+        else if (22 == pMCPrimary->GetParticleId()) ++nPhotons;
+        else if (211 == pMCPrimary->GetParticleId()) ++nPiPlus;
+        else if (-211 == pMCPrimary->GetParticleId()) ++nPiMinus;
+    }
+
+    if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsCosmicRay(mcPrimaryList.front()))
+    {
+        if (1 == nMuons) return COSMIC_RAY_MU;
+        if (1 == nProtons) return COSMIC_RAY_P;
+        if (1 == nElectrons) return COSMIC_RAY_E;
+        if (1 == nPhotons) return COSMIC_RAY_PHOTON;
+    }
+
+    if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsBeamParticle(mcPrimaryList.front()))
+    {
+        if (1 == nMuons) return BEAM_PARTICLE_MU;
+        if (1 == nProtons) return BEAM_PARTICLE_P;
+        if (1 == nElectrons) return BEAM_PARTICLE_E;
+        if (1 == nPhotons) return BEAM_PARTICLE_PHOTON;
+    }
 
     const MCParticle *pMCNeutrino(nullptr);
 
@@ -36,21 +62,9 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
     if (!pMCNeutrino)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const int nuanceCode(LArMCParticleHelper::GetNuanceCode(pMCNeutrino));
-    unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPiMinus(0), nPhotons(0);
+    const int nuNuanceCode(LArMCParticleHelper::GetNuanceCode(pMCNeutrino));
 
-    for (const MCParticle *const pMCPrimary : mcPrimaryList)
-    {
-        if (2112 != pMCPrimary->GetParticleId()) ++nNonNeutrons;
-        if (13 == std::fabs(pMCPrimary->GetParticleId())) ++nMuons;
-        if (11 == std::fabs(pMCPrimary->GetParticleId())) ++nElectrons;
-        else if (2212 == std::fabs(pMCPrimary->GetParticleId())) ++nProtons;
-        else if (22 == pMCPrimary->GetParticleId()) ++nPhotons;
-        else if (211 == pMCPrimary->GetParticleId()) ++nPiPlus;
-        else if (-211 == pMCPrimary->GetParticleId()) ++nPiMinus;
-    }
-
-    if (1001 == nuanceCode)
+    if (1001 == nuNuanceCode)
     {
         if ((1 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons)) return CCQEL_MU;
         if ((2 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons)) return CCQEL_MU_P;
@@ -67,7 +81,7 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if ((6 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons)) return CCQEL_E_P_P_P_P_P;
     }
 
-    if (1002 == nuanceCode)
+    if (1002 == nuNuanceCode)
     {
         if ((1 == nNonNeutrons) && (1 == nProtons)) return NCQEL_P;
         if ((2 == nNonNeutrons) && (2 == nProtons)) return NCQEL_P_P;
@@ -76,7 +90,7 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if ((5 == nNonNeutrons) && (5 == nProtons)) return NCQEL_P_P_P_P_P;
     }
 
-    if ((nuanceCode >= 1003) && (nuanceCode <= 1005))
+    if ((nuNuanceCode >= 1003) && (nuNuanceCode <= 1005))
     {
         if ((1 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons)) return CCRES_MU;
         if ((2 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons)) return CCRES_MU_P;
@@ -135,7 +149,7 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if ((8 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons) && (2 == nPhotons)) return CCRES_E_P_P_P_P_P_PIZERO;
     }
 
-    if ((nuanceCode >= 1006) && (nuanceCode <= 1009))
+    if ((nuNuanceCode >= 1006) && (nuNuanceCode <= 1009))
     {
         if ((1 == nNonNeutrons) && (1 == nProtons)) return NCRES_P;
         if ((2 == nNonNeutrons) && (2 == nProtons)) return NCRES_P_P;
@@ -172,10 +186,76 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if ((7 == nNonNeutrons) && (5 == nProtons) && (2 == nPhotons)) return NCRES_P_P_P_P_P_PIZERO;
     }
 
-    if (nuanceCode == 1091) return CCDIS;
-    if (nuanceCode == 1092) return NCDIS;
-    if (nuanceCode == 1096) return NCCOH;
-    if (nuanceCode == 1097) return CCCOH;
+    if (1091 == nuNuanceCode)
+    {
+        if ((1 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons)) return CCDIS_MU;
+        if ((2 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons)) return CCDIS_MU_P;
+        if ((3 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons)) return CCDIS_MU_P_P;
+        if ((4 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons)) return CCDIS_MU_P_P_P;
+        if ((5 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons)) return CCDIS_MU_P_P_P_P;
+        if ((6 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons)) return CCDIS_MU_P_P_P_P_P;
+
+        if ((2 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons) && (1 == nPiPlus)) return CCDIS_MU_PIPLUS;
+        if ((3 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons) && (1 == nPiPlus)) return CCDIS_MU_P_PIPLUS;
+        if ((4 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons) && (1 == nPiPlus)) return CCDIS_MU_P_P_PIPLUS;
+        if ((5 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons) && (1 == nPiPlus)) return CCDIS_MU_P_P_P_PIPLUS;
+        if ((6 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons) && (1 == nPiPlus)) return CCDIS_MU_P_P_P_P_PIPLUS;
+        if ((7 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons) && (1 == nPiPlus)) return CCDIS_MU_P_P_P_P_P_PIPLUS;
+
+        if ((2 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons) && (1 == nPhotons)) return CCDIS_MU_PHOTON;
+        if ((3 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons) && (1 == nPhotons)) return CCDIS_MU_P_PHOTON;
+        if ((4 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons) && (1 == nPhotons)) return CCDIS_MU_P_P_PHOTON;
+        if ((5 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons) && (1 == nPhotons)) return CCDIS_MU_P_P_P_PHOTON;
+        if ((6 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons) && (1 == nPhotons)) return CCDIS_MU_P_P_P_P_PHOTON;
+        if ((7 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons) && (1 == nPhotons)) return CCDIS_MU_P_P_P_P_P_PHOTON;
+
+        if ((3 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons) && (2 == nPhotons)) return CCDIS_MU_PIZERO;
+        if ((4 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons) && (2 == nPhotons)) return CCDIS_MU_P_PIZERO;
+        if ((5 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons) && (2 == nPhotons)) return CCDIS_MU_P_P_PIZERO;
+        if ((6 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons) && (2 == nPhotons)) return CCDIS_MU_P_P_P_PIZERO;
+        if ((7 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons) && (2 == nPhotons)) return CCDIS_MU_P_P_P_P_PIZERO;
+        if ((8 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons) && (2 == nPhotons)) return CCDIS_MU_P_P_P_P_P_PIZERO;
+    }
+
+    if (1092 == nuNuanceCode)
+    {
+        if ((1 == nNonNeutrons) && (1 == nProtons)) return NCDIS_P;
+        if ((2 == nNonNeutrons) && (2 == nProtons)) return NCDIS_P_P;
+        if ((3 == nNonNeutrons) && (3 == nProtons)) return NCDIS_P_P_P;
+        if ((4 == nNonNeutrons) && (4 == nProtons)) return NCDIS_P_P_P_P;
+        if ((5 == nNonNeutrons) && (5 == nProtons)) return NCDIS_P_P_P_P_P;
+
+        if ((1 == nNonNeutrons) && (0 == nProtons) && (1 == nPiPlus)) return NCDIS_PIPLUS;
+        if ((2 == nNonNeutrons) && (1 == nProtons) && (1 == nPiPlus)) return NCDIS_P_PIPLUS;
+        if ((3 == nNonNeutrons) && (2 == nProtons) && (1 == nPiPlus)) return NCDIS_P_P_PIPLUS;
+        if ((4 == nNonNeutrons) && (3 == nProtons) && (1 == nPiPlus)) return NCDIS_P_P_P_PIPLUS;
+        if ((5 == nNonNeutrons) && (4 == nProtons) && (1 == nPiPlus)) return NCDIS_P_P_P_P_PIPLUS;
+        if ((6 == nNonNeutrons) && (5 == nProtons) && (1 == nPiPlus)) return NCDIS_P_P_P_P_P_PIPLUS;
+
+        if ((1 == nNonNeutrons) && (0 == nProtons) && (1 == nPiMinus)) return NCDIS_PIMINUS;
+        if ((2 == nNonNeutrons) && (1 == nProtons) && (1 == nPiMinus)) return NCDIS_P_PIMINUS;
+        if ((3 == nNonNeutrons) && (2 == nProtons) && (1 == nPiMinus)) return NCDIS_P_P_PIMINUS;
+        if ((4 == nNonNeutrons) && (3 == nProtons) && (1 == nPiMinus)) return NCDIS_P_P_P_PIMINUS;
+        if ((5 == nNonNeutrons) && (4 == nProtons) && (1 == nPiMinus)) return NCDIS_P_P_P_P_PIMINUS;
+        if ((6 == nNonNeutrons) && (5 == nProtons) && (1 == nPiMinus)) return NCDIS_P_P_P_P_P_PIMINUS;
+
+        if ((1 == nNonNeutrons) && (0 == nProtons) && (1 == nPhotons)) return NCDIS_PHOTON;
+        if ((2 == nNonNeutrons) && (1 == nProtons) && (1 == nPhotons)) return NCDIS_P_PHOTON;
+        if ((3 == nNonNeutrons) && (2 == nProtons) && (1 == nPhotons)) return NCDIS_P_P_PHOTON;
+        if ((4 == nNonNeutrons) && (3 == nProtons) && (1 == nPhotons)) return NCDIS_P_P_P_PHOTON;
+        if ((5 == nNonNeutrons) && (4 == nProtons) && (1 == nPhotons)) return NCDIS_P_P_P_P_PHOTON;
+        if ((6 == nNonNeutrons) && (5 == nProtons) && (1 == nPhotons)) return NCDIS_P_P_P_P_P_PHOTON;
+
+        if ((2 == nNonNeutrons) && (0 == nProtons) && (2 == nPhotons)) return NCDIS_PIZERO;
+        if ((3 == nNonNeutrons) && (1 == nProtons) && (2 == nPhotons)) return NCDIS_P_PIZERO;
+        if ((4 == nNonNeutrons) && (2 == nProtons) && (2 == nPhotons)) return NCDIS_P_P_PIZERO;
+        if ((5 == nNonNeutrons) && (3 == nProtons) && (2 == nPhotons)) return NCDIS_P_P_P_PIZERO;
+        if ((6 == nNonNeutrons) && (4 == nProtons) && (2 == nPhotons)) return NCDIS_P_P_P_P_PIZERO;
+        if ((7 == nNonNeutrons) && (5 == nProtons) && (2 == nPhotons)) return NCDIS_P_P_P_P_P_PIZERO;
+    }
+
+    if (1096 == nuNuanceCode) return NCCOH;
+    if (1097 == nuNuanceCode) return CCCOH;
 
     return OTHER_INTERACTION;
 }
@@ -280,12 +360,69 @@ std::string LArInteractionTypeHelper::ToString(const InteractionType interaction
     case NCRES_P_P_P_PIZERO: return "NCRES_P_P_P_PIZERO";
     case NCRES_P_P_P_P_PIZERO: return "NCRES_P_P_P_P_PIZERO";
     case NCRES_P_P_P_P_P_PIZERO: return "NCRES_P_P_P_P_P_PIZERO";
-    case CCDIS: return "CCDIS";
-    case NCDIS: return "NCDIS";
+    case CCDIS_MU: return "CCDIS_MU";
+    case CCDIS_MU_P: return "CCDIS_MU_P";
+    case CCDIS_MU_P_P: return "CCDIS_MU_P_P";
+    case CCDIS_MU_P_P_P: return "CCDIS_MU_P_P_P";
+    case CCDIS_MU_P_P_P_P: return "CCDIS_MU_P_P_P_P";
+    case CCDIS_MU_P_P_P_P_P: return "CCDIS_MU_P_P_P_P_P";
+    case CCDIS_MU_PIPLUS: return "CCDIS_MU_PIPLUS";
+    case CCDIS_MU_P_PIPLUS: return "CCDIS_MU_P_PIPLUS";
+    case CCDIS_MU_P_P_PIPLUS: return "CCDIS_MU_P_P_PIPLUS";
+    case CCDIS_MU_P_P_P_PIPLUS: return "CCDIS_MU_P_P_P_PIPLUS";
+    case CCDIS_MU_P_P_P_P_PIPLUS: return "CCDIS_MU_P_P_P_P_PIPLUS";
+    case CCDIS_MU_P_P_P_P_P_PIPLUS: return "CCDIS_MU_P_P_P_P_P_PIPLUS";
+    case CCDIS_MU_PHOTON: return "CCDIS_MU_PHOTON";
+    case CCDIS_MU_P_PHOTON: return "CCDIS_MU_P_PHOTON";
+    case CCDIS_MU_P_P_PHOTON: return "CCDIS_MU_P_P_PHOTON";
+    case CCDIS_MU_P_P_P_PHOTON: return "CCDIS_MU_P_P_P_PHOTON";
+    case CCDIS_MU_P_P_P_P_PHOTON: return "CCDIS_MU_P_P_P_P_PHOTON";
+    case CCDIS_MU_P_P_P_P_P_PHOTON: return "CCDIS_MU_P_P_P_P_P_PHOTON";
+    case CCDIS_MU_PIZERO: return "CCDIS_MU_PIZERO";
+    case CCDIS_MU_P_PIZERO: return "CCDIS_MU_P_PIZERO";
+    case CCDIS_MU_P_P_PIZERO: return "CCDIS_MU_P_P_PIZERO";
+    case CCDIS_MU_P_P_P_PIZERO: return "CCDIS_MU_P_P_P_PIZERO";
+    case CCDIS_MU_P_P_P_P_PIZERO: return "CCDIS_MU_P_P_P_P_PIZERO";
+    case CCDIS_MU_P_P_P_P_P_PIZERO: return "CCDIS_MU_P_P_P_P_P_PIZERO";
+    case NCDIS_P: return "NCDIS_P";
+    case NCDIS_P_P: return "NCDIS_P_P";
+    case NCDIS_P_P_P: return "NCDIS_P_P_P";
+    case NCDIS_P_P_P_P: return "NCDIS_P_P_P_P";
+    case NCDIS_P_P_P_P_P: return "NCDIS_P_P_P_P_P";
+    case NCDIS_PIPLUS: return "NCDIS_PIPLUS";
+    case NCDIS_P_PIPLUS: return "NCDIS_P_PIPLUS";
+    case NCDIS_P_P_PIPLUS: return "NCDIS_P_P_PIPLUS";
+    case NCDIS_P_P_P_PIPLUS: return "NCDIS_P_P_P_PIPLUS";
+    case NCDIS_P_P_P_P_PIPLUS: return "NCDIS_P_P_P_P_PIPLUS";
+    case NCDIS_P_P_P_P_P_PIPLUS: return "NCDIS_P_P_P_P_P_PIPLUS";
+    case NCDIS_PIMINUS: return "NCDIS_PIMINUS";
+    case NCDIS_P_PIMINUS: return "NCDIS_P_PIMINUS";
+    case NCDIS_P_P_PIMINUS: return "NCDIS_P_P_PIMINUS";
+    case NCDIS_P_P_P_PIMINUS: return "NCDIS_P_P_P_PIMINUS";
+    case NCDIS_P_P_P_P_PIMINUS: return "NCDIS_P_P_P_P_PIMINUS";
+    case NCDIS_P_P_P_P_P_PIMINUS: return "NCDIS_P_P_P_P_P_PIMINUS";
+    case NCDIS_PHOTON: return "NCDIS_PHOTON";
+    case NCDIS_P_PHOTON: return "NCDIS_P_PHOTON";
+    case NCDIS_P_P_PHOTON: return "NCDIS_P_P_PHOTON";
+    case NCDIS_P_P_P_PHOTON: return "NCDIS_P_P_P_PHOTON";
+    case NCDIS_P_P_P_P_PHOTON: return "NCDIS_P_P_P_P_PHOTON";
+    case NCDIS_P_P_P_P_P_PHOTON: return "NCDIS_P_P_P_P_P_PHOTON";
+    case NCDIS_PIZERO: return "NCDIS_PIZERO";
+    case NCDIS_P_PIZERO: return "NCDIS_P_PIZERO";
+    case NCDIS_P_P_PIZERO: return "NCDIS_P_P_PIZERO";
+    case NCDIS_P_P_P_PIZERO: return "NCDIS_P_P_P_PIZERO";
+    case NCDIS_P_P_P_P_PIZERO: return "NCDIS_P_P_P_P_PIZERO";
+    case NCDIS_P_P_P_P_P_PIZERO: return "NCDIS_P_P_P_P_P_PIZERO";
     case CCCOH: return "CCCOH";
     case NCCOH: return "NCCOH";
-    case COSMIC_RAY: return "COSMIC_RAY";
-    case BEAM_PARTICLE: return "BEAM_PARTICLE";
+    case COSMIC_RAY_MU: return "COSMIC_RAY_MU";
+    case COSMIC_RAY_P: return "COSMIC_RAY_P";
+    case COSMIC_RAY_E: return "COSMIC_RAY_E";
+    case COSMIC_RAY_PHOTON: return "COSMIC_RAY_PHOTON";
+    case BEAM_PARTICLE_MU: return "BEAM_PARTICLE_MU";
+    case BEAM_PARTICLE_P: return "BEAM_PARTICLE_P";
+    case BEAM_PARTICLE_E: return "BEAM_PARTICLE_E";
+    case BEAM_PARTICLE_PHOTON: return "BEAM_PARTICLE_PHOTON";
     case OTHER_INTERACTION: return "OTHER_INTERACTION";
     case ALL_INTERACTIONS: return "ALL_INTERACTIONS";
     default: return "UNKNOWN";
