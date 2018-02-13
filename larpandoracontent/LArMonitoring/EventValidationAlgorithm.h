@@ -138,12 +138,14 @@ private:
     typedef std::unordered_map<const pandora::ParticleFlowObject*, unsigned int> PfoToIdMap;
 
     /**
-     *  @brief  Print matching information in a provided validation info object
+     *  @brief  Print matching information in a provided validation info object, and write information to tree if configured to do so
      *
      *  @param  validationInfo the validation info
      *  @param  useInterpretedMatching whether to use the interpreted (rather than raw) matching information
+     *  @param  printToScreen whether to print the information to screen
+     *  @param  fillTree whether to write the information to tree
      */
-    void PrintOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching) const;
+    void ProcessOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const;
 
     /**
      *  @brief  Apply an interpretative matching procedure to the comprehensive matches in the provided validation info object
@@ -187,13 +189,6 @@ private:
      *  @return boolean
      */
     bool IsGoodMatch(const pandora::CaloHitList &trueHits, const pandora::CaloHitList &recoHits, const pandora::CaloHitList &sharedHits) const;
-
-    /**
-     *  @brief  Write the interpreset matching output to a tree
-     *
-     *  @param  validationInfo the validation info
-     */
-    void WriteInterpretedOutput(const ValidationInfo &validationInfo) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
