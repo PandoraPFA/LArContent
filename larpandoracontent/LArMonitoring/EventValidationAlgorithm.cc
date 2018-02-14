@@ -74,13 +74,13 @@ StatusCode EventValidationAlgorithm::Run()
     this->FillValidationInfo(pMCParticleList, pCaloHitList, pPfoList, validationInfo);
 
     if (m_printAllToScreen)
-        this->ProcessOutput(validationInfo, false, true, false); // TODO replace with three inline functions
+        this->PrintAllMatches(validationInfo);
 
     if (m_printMatchingToScreen)
-        this->ProcessOutput(validationInfo, true, true, false);
+        this->PrintInterpretedMatches(validationInfo);
 
     if (m_writeToTree)
-        this->ProcessOutput(validationInfo, true, false, true);
+        this->WriteInterpretedMatches(validationInfo);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -174,11 +174,12 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
 
     int nCorrectNu(0), nTotalNu(0), nCorrectTB(0), nTotalTB(0), nCorrectCR(0), nTotalCR(0), nFakeNu(0), nFakeCR(0), nSplitNu(0), nSplitCR(0), nLost(0);
     int mcPrimaryIndex(0), nTargetMatches(0), nTargetNuMatches(0), nTargetCRMatches(0), nTargetGoodNuMatches(0), nTargetNuSplits(0);
-    IntVector nMCHitsTotal, nMCHitsU, nMCHitsV, nMCHitsW, mcPrimaryPdg;
+    IntVector mcPrimaryId, mcPrimaryPdg, nMCHitsTotal, nMCHitsU, nMCHitsV, nMCHitsW;
     FloatVector mcPrimaryE, mcPrimaryPX, mcPrimaryPY, mcPrimaryPZ;
     FloatVector mcPrimaryVtxX, mcPrimaryVtxY, mcPrimaryVtxZ, mcPrimaryEndX, mcPrimaryEndY, mcPrimaryEndZ;
-    IntVector nPrimaryMatchedPfos, nPrimaryMatchedNuPfos, nPrimaryMatchedCRPfos, bestMatchPfoIsRecoNu;
-    IntVector bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW, bestMatchPfoPdg;
+    IntVector nPrimaryMatchedPfos, nPrimaryMatchedNuPfos, nPrimaryMatchedCRPfos;
+    IntVector bestMatchPfoId, bestMatchPfoPdg, bestMatchPfoIsRecoNu, bestMatchPfoRecoNuId;
+    IntVector bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW;
     IntVector bestMatchPfoNSharedHitsTotal, bestMatchPfoNSharedHitsU, bestMatchPfoNSharedHitsV, bestMatchPfoNSharedHitsW;
 
     std::stringstream targetSS;
@@ -202,7 +203,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         const int isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary));
 
         targetSS << (!isTargetPrimary ? "(Non target) " : "")
-                 << "Primary " << mcPrimaryIndex
+                 << "PrimaryId " << mcPrimaryIndex
                  << ", Nu " << isBeamNeutrinoFinalState
                  << ", TB " << isBeamParticle
                  << ", CR " << isCosmicRay
@@ -214,6 +215,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                  << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList)
                  << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList) << ")" << std::endl;
 
+        mcPrimaryId.push_back(mcPrimaryIndex);
         mcPrimaryPdg.push_back(pMCPrimary->GetParticleId());
         mcPrimaryE.push_back(pMCPrimary->GetEnergy());
         mcPrimaryPX.push_back(pMCPrimary->GetMomentum().GetX());
@@ -240,38 +242,43 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             const bool isRecoNeutrinoFinalState(LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first));
             const bool isGoodMatch(this->IsGoodMatch(mcPrimaryHitList, pfoHitList, sharedHitList));
 
+            const int pfoId(pfoToIdMap.at(pfoToSharedHits.first));
+            const int recoNuId(isRecoNeutrinoFinalState ? neutrinoPfoToIdMap.at(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first)) : -1);
+
             if (0 == matchIndex++)
             {
+                bestMatchPfoId.push_back(pfoId);
+                bestMatchPfoPdg.push_back(pfoToSharedHits.first->GetParticleId());
+                bestMatchPfoIsRecoNu.push_back(isRecoNeutrinoFinalState ? 1 : 0);
+                bestMatchPfoRecoNuId.push_back(recoNuId);
                 bestMatchPfoNHitsTotal.push_back(pfoHitList.size());
                 bestMatchPfoNHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoHitList));
                 bestMatchPfoNHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoHitList));
                 bestMatchPfoNHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoHitList));
-                bestMatchPfoPdg.push_back(pfoToSharedHits.first->GetParticleId());
-                bestMatchPfoIsRecoNu.push_back(isRecoNeutrinoFinalState ? 1 : 0);
                 bestMatchPfoNSharedHitsTotal.push_back(sharedHitList.size());
                 bestMatchPfoNSharedHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList));
                 bestMatchPfoNSharedHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList));
                 bestMatchPfoNSharedHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList));
             }
 
-            if (isGoodMatch) ++nTargetMatches;
+            if (isGoodMatch) ++nPrimaryMatches;
 
             if (isRecoNeutrinoFinalState)
             {
                 const Pfo *const pRecoNeutrino(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first));
                 const bool isSplitRecoNeutrino(!recoNeutrinos.empty() && !recoNeutrinos.count(pRecoNeutrino));
-                if (!isSplitRecoNeutrino && isGoodMatch) ++nTargetGoodNuMatches;
-                if (isSplitRecoNeutrino && isBeamNeutrinoFinalState && isGoodMatch) ++nTargetNuSplits;
+                if (!isSplitRecoNeutrino && isGoodMatch) ++nPrimaryGoodNuMatches;
+                if (isSplitRecoNeutrino && isBeamNeutrinoFinalState && isGoodMatch) ++nPrimaryNuSplits;
                 recoNeutrinos.insert(pRecoNeutrino);
             }
 
-            if (isRecoNeutrinoFinalState && isGoodMatch) ++nTargetNuMatches;
-            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nTargetCRMatches;
+            if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
+            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
 
             targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "")
-                     << "MatchedPfo " << pfoToIdMap.at(pfoToSharedHits.first)
+                     << "MatchedPfoId " << pfoId
                      << ", Nu " << isRecoNeutrinoFinalState;
-            if (isRecoNeutrinoFinalState) targetSS << " [NuId: " << neutrinoPfoToIdMap.at(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first)) << "]";
+            if (isRecoNeutrinoFinalState) targetSS << " [NuId: " << recoNuId << "]";
             targetSS << ", CR " << !isRecoNeutrinoFinalState
                      << ", PDG " << pfoToSharedHits.first->GetParticleId()
                      << ", nMatchedHits " << sharedHitList.size()
@@ -287,9 +294,9 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         if (mcToPfoHitSharingMap.at(pMCPrimary).empty())
         {
             targetSS << "-No matched Pfo" << std::endl;
+            bestMatchPfoId.push_back(-1); bestMatchPfoPdg.push_back(0); bestMatchPfoIsRecoNu.push_back(0); bestMatchPfoRecoNuId.push_back(-1);
             bestMatchPfoNHitsTotal.push_back(0); bestMatchPfoNHitsU.push_back(0); bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0);
-            bestMatchPfoPdg.push_back(0); bestMatchPfoIsRecoNu.push_back(0); bestMatchPfoNSharedHitsTotal.push_back(0); bestMatchPfoNSharedHitsU.push_back(0);
-            bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
+            bestMatchPfoNSharedHitsTotal.push_back(0); bestMatchPfoNSharedHitsU.push_back(0); bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
         }
 
         nPrimaryMatchedPfos.push_back(nPrimaryMatches);
@@ -310,6 +317,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isBeamParticle", isBeamParticle));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCosmicRay", isCosmicRay));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetPrimaries", nTargetPrimaries));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryId", &mcPrimaryId));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPdg", &mcPrimaryPdg));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryE", &mcPrimaryE));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcPrimaryPX", &mcPrimaryPX));
@@ -328,12 +336,14 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPrimaryMatchedPfos", &nPrimaryMatchedPfos));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPrimaryMatchedNuPfos", &nPrimaryMatchedNuPfos));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nPrimaryMatchedCRPfos", &nPrimaryMatchedCRPfos));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoId", &bestMatchPfoId));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoPdg", &bestMatchPfoPdg));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoIsRecoNu", &bestMatchPfoIsRecoNu));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoRecoNuId", &bestMatchPfoRecoNuId));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNHitsTotal", &bestMatchPfoNHitsTotal));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNHitsU", &bestMatchPfoNHitsU));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNHitsV", &bestMatchPfoNHitsV));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNHitsW", &bestMatchPfoNHitsW));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoPdg", &bestMatchPfoPdg));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoIsRecoNu", &bestMatchPfoIsRecoNu));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsTotal", &bestMatchPfoNSharedHitsTotal));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsU", &bestMatchPfoNSharedHitsU));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsV", &bestMatchPfoNSharedHitsV));
@@ -403,11 +413,12 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             targetSS.str(std::string()); targetSS.clear();
             recoNeutrinos.clear(); associatedMCPrimaries.clear();
             nTargetMatches = 0; nTargetNuMatches = 0; nTargetCRMatches = 0; nTargetGoodNuMatches = 0; nTargetNuSplits = 0;
-            nMCHitsTotal.clear(); nMCHitsU.clear(); nMCHitsV.clear(); nMCHitsW.clear(); mcPrimaryPdg.clear();
+            mcPrimaryId.clear(); mcPrimaryPdg.clear(); nMCHitsTotal.clear(); nMCHitsU.clear(); nMCHitsV.clear(); nMCHitsW.clear();
             mcPrimaryE.clear(); mcPrimaryPX.clear(); mcPrimaryPY.clear(); mcPrimaryPZ.clear();
             mcPrimaryVtxX.clear(); mcPrimaryVtxY.clear(); mcPrimaryVtxZ.clear(); mcPrimaryEndX.clear(); mcPrimaryEndY.clear(); mcPrimaryEndZ.clear();
-            nPrimaryMatchedPfos.clear(); nPrimaryMatchedNuPfos.clear(); nPrimaryMatchedCRPfos.clear(); bestMatchPfoIsRecoNu.clear();
-            bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear(); bestMatchPfoPdg.clear();
+            nPrimaryMatchedPfos.clear(); nPrimaryMatchedNuPfos.clear(); nPrimaryMatchedCRPfos.clear();
+            bestMatchPfoId.clear(); bestMatchPfoPdg.clear(); bestMatchPfoIsRecoNu.clear(); bestMatchPfoRecoNuId.clear();
+            bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear();
             bestMatchPfoNSharedHitsTotal.clear(); bestMatchPfoNSharedHitsU.clear(); bestMatchPfoNSharedHitsV.clear(); bestMatchPfoNSharedHitsW.clear();
         }
     }
