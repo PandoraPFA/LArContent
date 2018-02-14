@@ -138,6 +138,27 @@ private:
     typedef std::unordered_map<const pandora::ParticleFlowObject*, unsigned int> PfoToIdMap;
 
     /**
+     *  @brief  Print all/raw matching information to screen
+     *
+     *  @param  validationInfo the validation info
+     */
+    void PrintAllMatches(const ValidationInfo &validationInfo) const;
+
+    /**
+     *  @brief  Print interpreted matching information to screen
+     *
+     *  @param  validationInfo the validation info
+     */
+    void PrintInterpretedMatches(const ValidationInfo &validationInfo) const;
+
+    /**
+     *  @brief  Write interpreted matching information to tree
+     *
+     *  @param  validationInfo the validation info
+     */
+    void WriteInterpretedMatches(const ValidationInfo &validationInfo) const;
+
+    /**
      *  @brief  Print matching information in a provided validation info object, and write information to tree if configured to do so
      *
      *  @param  validationInfo the validation info
@@ -290,6 +311,28 @@ inline void EventValidationAlgorithm::ValidationInfo::SetMCToPfoHitSharingMap(co
 inline void EventValidationAlgorithm::ValidationInfo::SetInterpretedMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap)
 {
     m_interpretedMCToPfoHitSharingMap = interpretedMCToPfoHitSharingMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::PrintAllMatches(const ValidationInfo &validationInfo) const
+{
+    return this->ProcessOutput(validationInfo, false, true, false);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::PrintInterpretedMatches(const ValidationInfo &validationInfo) const
+{
+    return this->ProcessOutput(validationInfo, true, true, false);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::WriteInterpretedMatches(const ValidationInfo &validationInfo) const
+{
+    return this->ProcessOutput(validationInfo, true, false, true);
 }
 
 } // namespace lar_content
