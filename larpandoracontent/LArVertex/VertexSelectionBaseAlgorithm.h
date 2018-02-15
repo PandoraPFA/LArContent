@@ -10,8 +10,9 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
+#include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 namespace lar_content
@@ -225,7 +226,7 @@ public:
     typedef std::map<pandora::HitType, const ShowerClusterList>                   ShowerClusterListMap;  ///< Map of shower cluster lists for passing to tools
     typedef std::map<pandora::HitType, const std::reference_wrapper<HitKDTree2D> > KDTreeMap;             ///< Map array of hit kd trees for passing to tools
 
-    typedef SvmFeatureTool<const VertexSelectionBaseAlgorithm *const, const pandora::Vertex * const, const SlidingFitDataListMap &,
+    typedef MvaFeatureTool<const VertexSelectionBaseAlgorithm *const, const pandora::Vertex * const, const SlidingFitDataListMap &,
         const ClusterListMap &, const KDTreeMap &, const ShowerClusterListMap &, const float, float &>  VertexFeatureTool; ///< The base type for the vertex feature tools
 
 protected:
