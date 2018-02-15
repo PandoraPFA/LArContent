@@ -1,26 +1,57 @@
 /**
- *  @file   larpandoracontent/include/LArHelpers/LArSvmHelper.h
+ *  @file   larpandoracontent/include/LArHelpers/LArMvaHelper.h
  *
- *  @brief  Header file for the lar svm helper class.
+ *  @brief  Header file for the lar mva helper class.
  *
  *  $Log: $
  */
-#ifndef LAR_SVM_HELPER_H
-#define LAR_SVM_HELPER_H 1
-
-#include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
+#ifndef LAR_MVA_HELPER_H
+#define LAR_MVA_HELPER_H 1
 
 #include <fstream>
 #include <chrono>
 #include <ctime>
 
+class AdaBoostDecisionTree;
+class SupportVectorMachine;
+
 namespace lar_content
 {
 
+typedef std::vector<double> DoubleVector; 
+
 /**
- *  @brief  LArSvmHelper class
+ *  @brief  MvaFeatureTool class template
  */
-class LArSvmHelper
+template <typename ...Ts>
+class MvaFeatureTool : public pandora::AlgorithmTool
+{
+public:
+    typedef std::vector<MvaFeatureTool<Ts...> *> FeatureToolVector;
+
+    /**
+     *  @brief  Default constructor.
+     */
+    MvaFeatureTool() = default;
+
+    /**
+     *  @brief  Run the algorithm tool
+     *
+     *  @param  featureVector the vector of features to append
+     *  @param  args arguments to pass to the tool
+     */
+    virtual void Run(DoubleVector &featureVector, Ts... args) = 0;
+};
+
+template <typename ...Ts>
+using MvaFeatureToolVector = std::vector<MvaFeatureTool<Ts...> *>;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  LArMvaHelper class
+ */
+class LArMvaHelper
 {
 public:
     /**
@@ -35,37 +66,37 @@ public:
     static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists);
 
     /**
-     *  @brief  Use the trained svm to predict the boolean class of an example
+     *  @brief  Use the trained classifier to predict the boolean class of an example
      *
-     *  @param  sVMachine the support vector machine
+     *  @param  classifier applied in the mva 
      *  @param  featureLists the lists of features
      *
      *  @return the predicted boolean class of the example
      */
-    template <typename ...TLISTS>
-    static bool Classify(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists);
+    template <typename Classifier, typename ...TLISTS>
+    static bool Classify(const Classifier &classifier, TLISTS &&... featureLists);
 
     /**
-     *  @brief  Use the trained svm to calculate the classification score of an example (>0 means boolean class true)
+     *  @brief  Use the trained classifer to calculate the classification score of an example (>0 means boolean class true)
      *
-     *  @param  sVMachine the support vector machine
+     *  @param  classifier applied in the mva
      *  @param  featureLists the lists of features
      *
      *  @return the classification score
      */
-    template <typename ...TLISTS>
-    static double CalculateClassificationScore(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists);
+    template <typename Classifier, typename ...TLISTS>
+    static double CalculateClassificationScore(const Classifier &classifier, TLISTS &&... featureLists);
     
     /**
-     *  @brief  Use the trained svm to calculate a classification probability for an example
+     *  @brief  Use the trained mva to calculate a classification probability for an example
      *
-     *  @param  sVMachine the support vector machine
+     *  @param  classifier applied in the mva
      *  @param  featureLists the lists of features
      *
      *  @return the classification probability
      */
-    template <typename ...TLISTS>
-    static double CalculateProbability(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists);
+    template <typename Classifier, typename ...TLISTS>
+    static double CalculateProbability(const Classifier &classifier, TLISTS &&... featureLists);
 
     /**
      *  @brief  Calculate the features in a given feature tool vector
@@ -76,7 +107,7 @@ public:
      *  @return the vector of features
      */
     template <typename ...Ts, typename ...TARGS>
-    static SupportVectorMachine::DoubleVector CalculateFeatures(const SvmFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
+    static DoubleVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
@@ -87,7 +118,7 @@ public:
      *  @return the vector of features
      */
     template <typename T, typename ...Ts, typename ...TARGS>
-    static SupportVectorMachine::DoubleVector CalculateFeaturesOfType(const SvmFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
+    static DoubleVector CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
      *  @brief  Add a feature tool to a vector of feature tools
@@ -98,7 +129,7 @@ public:
      *  @return success
      */
     template <typename ...Ts>
-    static pandora::StatusCode AddFeatureToolToVector(pandora::AlgorithmTool *const pFeatureTool, SvmFeatureToolVector<Ts...> &featureToolVector);
+    static pandora::StatusCode AddFeatureToolToVector(pandora::AlgorithmTool *const pFeatureTool, MvaFeatureToolVector<Ts...> &featureToolVector);
 
 private:
     /**
@@ -149,25 +180,25 @@ private:
      *  @return the concatenated vector of features
      */
     template <typename TLIST, typename ...TLISTS>
-    static SupportVectorMachine::DoubleVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
+    static DoubleVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
 
     /**
      *  @brief  Recursively concatenate vectors of features (terminating method)
      */
-    static SupportVectorMachine::DoubleVector ConcatenateFeatureLists();
+    static DoubleVector ConcatenateFeatureLists();
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename ...TLISTS>
-pandora::StatusCode LArSvmHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists)
+pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists)
 {
     std::ofstream outfile;
     outfile.open(trainingOutputFile, std::ios_base::app); // always append to the output file
 
     if (!outfile.is_open())
     {
-        std::cout << "LArSvmHelper: could not open file for training examples at " << trainingOutputFile << std::endl;
+        std::cout << "LArMvaHelper: could not open file for training examples at " << trainingOutputFile << std::endl;
         return pandora::STATUS_CODE_FAILURE;
     }
 
@@ -182,36 +213,36 @@ pandora::StatusCode LArSvmHelper::ProduceTrainingExample(const std::string &trai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...TLISTS>
-bool LArSvmHelper::Classify(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists)
+template <typename Classifier, typename ...TLISTS>
+bool LArMvaHelper::Classify(const Classifier &classifier, TLISTS &&... featureLists)
 {
-    return sVMachine.Classify(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return classifier.Classify(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...TLISTS>
-double LArSvmHelper::CalculateClassificationScore(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists)
+template <typename Classifier, typename ...TLISTS>
+double LArMvaHelper::CalculateClassificationScore(const Classifier &classifier, TLISTS &&... featureLists)
 {
-    return sVMachine.CalculateClassificationScore(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return classifier.CalculateClassificationScore(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...TLISTS>
-double LArSvmHelper::CalculateProbability(const SupportVectorMachine &sVMachine, TLISTS &&... featureLists)
+template <typename Classifier, typename ...TLISTS>
+double LArMvaHelper::CalculateProbability(const Classifier &classifier, TLISTS &&... featureLists)
 {
-    return sVMachine.CalculateProbability(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return classifier.CalculateProbability(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename ...Ts, typename ...TARGS>
-SupportVectorMachine::DoubleVector LArSvmHelper::CalculateFeatures(const SvmFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
+DoubleVector LArMvaHelper::CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
-    SupportVectorMachine::DoubleVector featureVector;
+    DoubleVector featureVector;
 
-    for (SvmFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
+    for (MvaFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
         pFeatureTool->Run(featureVector, std::forward<TARGS>(args)...);
 
     return featureVector;
@@ -220,12 +251,12 @@ SupportVectorMachine::DoubleVector LArSvmHelper::CalculateFeatures(const SvmFeat
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T, typename ...Ts, typename ...TARGS>
-SupportVectorMachine::DoubleVector LArSvmHelper::CalculateFeaturesOfType(const SvmFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
+DoubleVector LArMvaHelper::CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
     using TD = typename std::decay<T>::type;
-    SupportVectorMachine::DoubleVector featureVector;
+    DoubleVector featureVector;
 
-    for (SvmFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
+    for (MvaFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
     {
         if (TD *const pCastFeatureTool = dynamic_cast<TD *const>(pFeatureTool))
             pCastFeatureTool->Run(featureVector, std::forward<TARGS>(args)...);
@@ -237,9 +268,9 @@ SupportVectorMachine::DoubleVector LArSvmHelper::CalculateFeaturesOfType(const S
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename ...Ts>
-pandora::StatusCode LArSvmHelper::AddFeatureToolToVector(pandora::AlgorithmTool *const pFeatureTool, SvmFeatureToolVector<Ts...> &featureToolVector)
+pandora::StatusCode LArMvaHelper::AddFeatureToolToVector(pandora::AlgorithmTool *const pFeatureTool, MvaFeatureToolVector<Ts...> &featureToolVector)
 {
-    if (SvmFeatureTool<Ts...> *const pCastFeatureTool = dynamic_cast<SvmFeatureTool<Ts...> *const>(pFeatureTool))
+    if (MvaFeatureTool<Ts...> *const pCastFeatureTool = dynamic_cast<MvaFeatureTool<Ts...> *const>(pFeatureTool))
     {
         featureToolVector.push_back(pCastFeatureTool);
         return pandora::STATUS_CODE_SUCCESS;
@@ -250,7 +281,7 @@ pandora::StatusCode LArSvmHelper::AddFeatureToolToVector(pandora::AlgorithmTool 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::string LArSvmHelper::GetTimestampString()
+inline std::string LArMvaHelper::GetTimestampString()
 {
     std::time_t timestampNow = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
@@ -271,10 +302,10 @@ inline std::string LArSvmHelper::GetTimestampString()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TLIST, typename ...TLISTS>
-inline pandora::StatusCode LArSvmHelper::WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists)
+inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists)
 {
-    static_assert(std::is_same<typename std::decay<TLIST>::type, SupportVectorMachine::DoubleVector>::value,
-        "LArSvmHelper: Could not write training set example because a passed parameter was not a vector of doubles");
+    static_assert(std::is_same<typename std::decay<TLIST>::type, DoubleVector>::value,
+        "LArMvaHelper: Could not write training set example because a passed parameter was not a vector of doubles");
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, WriteFeaturesToFileImpl(outfile, delimiter, featureList));
     return WriteFeaturesToFile(outfile, delimiter, featureLists...);
@@ -282,7 +313,7 @@ inline pandora::StatusCode LArSvmHelper::WriteFeaturesToFile(std::ofstream &outf
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArSvmHelper::WriteFeaturesToFile(std::ofstream &, const std::string &)
+inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(std::ofstream &, const std::string &)
 {
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -290,7 +321,7 @@ inline pandora::StatusCode LArSvmHelper::WriteFeaturesToFile(std::ofstream &, co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TLIST>
-pandora::StatusCode LArSvmHelper::WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList)
+pandora::StatusCode LArMvaHelper::WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList)
 {
     for (const double feature : featureList)
         outfile << feature << delimiter;
@@ -301,17 +332,17 @@ pandora::StatusCode LArSvmHelper::WriteFeaturesToFileImpl(std::ofstream &outfile
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TLIST, typename ...TLISTS>
-SupportVectorMachine::DoubleVector LArSvmHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
+DoubleVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
 {
-    static_assert(std::is_same<typename std::decay<TLIST>::type, SupportVectorMachine::DoubleVector>::value,
-        "LArSvmHelper: Could not concatenate feature lists because one or more lists was not a vector of doubles");
+    static_assert(std::is_same<typename std::decay<TLIST>::type, DoubleVector>::value,
+        "LArMvaHelper: Could not concatenate feature lists because one or more lists was not a vector of doubles");
 
-    SupportVectorMachine::DoubleVector featureVector;
+    DoubleVector featureVector;
 
     for (const double feature : featureList)
         featureVector.push_back(feature);
 
-    SupportVectorMachine::DoubleVector newFeatureVector = ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...);
+    DoubleVector newFeatureVector = ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...);
     featureVector.insert(featureVector.end(), newFeatureVector.begin(), newFeatureVector.end());
 
     return featureVector;
@@ -319,11 +350,11 @@ SupportVectorMachine::DoubleVector LArSvmHelper::ConcatenateFeatureLists(TLIST &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SupportVectorMachine::DoubleVector LArSvmHelper::ConcatenateFeatureLists()
+inline DoubleVector LArMvaHelper::ConcatenateFeatureLists()
 {
-    return SupportVectorMachine::DoubleVector();
+    return DoubleVector();
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_SVM_HELPER_H
+#endif // #ifndef LAR_MVA_HELPER_H

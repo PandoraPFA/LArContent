@@ -11,41 +11,16 @@
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
+
 #include <functional>
 #include <map>
 #include <vector>
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 namespace lar_content
 {
-
-/**
- *  @brief  SvmFeatureTool class template
- */
-template <typename ...Ts>
-class SvmFeatureTool : public pandora::AlgorithmTool
-{
-public:
-    typedef std::vector<double> DoubleVector;
-    typedef std::vector<SvmFeatureTool<Ts...> *> FeatureToolVector;
-
-    /**
-     *  @brief  Default constructor.
-     */
-    SvmFeatureTool() = default;
-
-    /**
-     *  @brief  Run the algorithm tool
-     *
-     *  @param  featureVector the vector of features to append
-     *  @param  args arguments to pass to the tool
-     */
-    virtual void Run(DoubleVector &featureVector, Ts... args) = 0;
-};
-
-template <typename ...Ts>
-using SvmFeatureToolVector = std::vector<SvmFeatureTool<Ts...> *>;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  SupportVectorMachine class
@@ -53,7 +28,6 @@ using SvmFeatureToolVector = std::vector<SvmFeatureTool<Ts...> *>;
 class SupportVectorMachine
 {
 public:
-    typedef std::vector<double> DoubleVector;
     typedef std::function<double(const DoubleVector &, const DoubleVector &, const double)> KernelFunction;
 
     /**
@@ -146,8 +120,8 @@ private:
          */
         SupportVectorInfo(const double yAlpha, DoubleVector supportVector);
 
-        double       m_yAlpha;        ///< The alpha-value multiplied by the y-value for the support vector
-        DoubleVector m_supportVector; ///< The support vector
+        double                  m_yAlpha;        ///< The alpha-value multiplied by the y-value for the support vector
+        DoubleVector            m_supportVector; ///< The support vector
     };
 
     /**
