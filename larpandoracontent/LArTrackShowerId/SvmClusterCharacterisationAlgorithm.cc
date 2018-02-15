@@ -9,7 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
-#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
 #include "larpandoracontent/LArTrackShowerId/SvmClusterCharacterisationAlgorithm.h"
 
@@ -33,7 +33,7 @@ bool SvmClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pClu
     if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
         return false;
 
-    SupportVectorMachine::DoubleVector featureVector(LArSvmHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
+    DoubleVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
 
     if (m_ratioVariables)
     {
@@ -58,11 +58,11 @@ bool SvmClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pClu
         }
         catch (const StatusCodeException &) {}
 
-        LArSvmHelper::ProduceTrainingExample(m_trainingOutputFile, isTrueTrack, featureVector);
+        LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, isTrueTrack, featureVector);
         return isTrueTrack;
     }
 
-    return LArSvmHelper::Classify(m_supportVectorMachine, featureVector);
+    return LArMvaHelper::Classify(m_supportVectorMachine, featureVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -107,7 +107,7 @@ StatusCode SvmClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle x
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
 
     for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
 
     return ClusterCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);
 }
