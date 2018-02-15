@@ -13,7 +13,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
 #include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
@@ -94,7 +94,7 @@ void SvmVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexV
     // Calculate the event feature list and the vertex feature map.
     EventFeatureInfo eventFeatureInfo(this->CalculateEventFeatures(clustersU, clustersV, clustersW, vertexVector));
 
-    SupportVectorMachine::DoubleVector eventFeatureList;
+    DoubleVector eventFeatureList;
     this->AddEventFeaturesToVector(eventFeatureInfo, eventFeatureList);
 
     VertexFeatureInfoMap vertexFeatureInfoMap;
@@ -430,7 +430,7 @@ inline float SvmVertexSelectionAlgorithm::GetCoordinateSpan(const InputFloat &mi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SvmVertexSelectionAlgorithm::AddEventFeaturesToVector(const EventFeatureInfo &eventFeatureInfo,
-    SupportVectorMachine::DoubleVector &featureVector) const
+    DoubleVector &featureVector) const
 {
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventShoweryness));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventEnergy));
@@ -451,19 +451,19 @@ void SvmVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamConstan
 
     const double beamDeweighting(this->GetBeamDeweightingScore(beamConstants, pVertex));
 
-    const double energyKick(LArSvmHelper::CalculateFeaturesOfType<EnergyKickFeatureTool>(m_featureToolVector, this, pVertex,
+    const double energyKick(LArMvaHelper::CalculateFeaturesOfType<EnergyKickFeatureTool>(m_featureToolVector, this, pVertex,
         slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0));
 
-    const double localAsymmetry(LArSvmHelper::CalculateFeaturesOfType<LocalAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
+    const double localAsymmetry(LArMvaHelper::CalculateFeaturesOfType<LocalAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
         slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0));
 
-    const double globalAsymmetry(LArSvmHelper::CalculateFeaturesOfType<GlobalAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
+    const double globalAsymmetry(LArMvaHelper::CalculateFeaturesOfType<GlobalAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
         slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0));
 
-    const double showerAsymmetry(LArSvmHelper::CalculateFeaturesOfType<ShowerAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
+    const double showerAsymmetry(LArMvaHelper::CalculateFeaturesOfType<ShowerAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
         slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0));
 
-    //const double rPhiFeature(LArSvmHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
+    //const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
     //    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0));
 
     VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry);
@@ -522,7 +522,7 @@ void SvmVertexSelectionAlgorithm::GetBestRegionVertices(VertexScoreList &initial
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SvmVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &vertexVector, const VertexVector &bestRegionVertices,
-    VertexFeatureInfoMap &vertexFeatureInfoMap, const SupportVectorMachine::DoubleVector &eventFeatureList, const KDTreeMap &kdTreeMap) const
+    VertexFeatureInfoMap &vertexFeatureInfoMap, const DoubleVector &eventFeatureList, const KDTreeMap &kdTreeMap) const
 {
     if (vertexVector.empty())
         return;
@@ -569,7 +569,7 @@ void SvmVertexSelectionAlgorithm::CalculateRPhiScores(VertexVector &vertexVector
     for (auto iter = vertexVector.begin(); iter != vertexVector.end(); /* no increment */)
     {
         VertexFeatureInfo &vertexFeatureInfo = vertexFeatureInfoMap.at(*iter);
-        vertexFeatureInfo.m_rPhiFeature = static_cast<float>(LArSvmHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, *iter,
+        vertexFeatureInfo.m_rPhiFeature = static_cast<float>(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, *iter,
             SlidingFitDataListMap(), ClusterListMap(), kdTreeMap, ShowerClusterListMap(), vertexFeatureInfo.m_beamDeweighting,
             bestFastScore).at(0));
 
@@ -609,13 +609,13 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType() const
 
 const pandora::Vertex * SvmVertexSelectionAlgorithm::ProduceTrainingExamples(const VertexVector &vertexVector,
     const VertexFeatureInfoMap &vertexFeatureInfoMap, std::bernoulli_distribution &coinFlip, std::mt19937 &generator,
-    const std::string &interactionType, const std::string &trainingOutputFile, const SupportVectorMachine::DoubleVector &eventFeatureList,
+    const std::string &interactionType, const std::string &trainingOutputFile, const DoubleVector &eventFeatureList,
     const float maxRadius, const bool useRPhi) const
 {
     const Vertex *pBestVertex(nullptr);
     float bestVertexDr(std::numeric_limits<float>::max());
 
-    SupportVectorMachine::DoubleVector bestVertexFeatureList;
+    DoubleVector bestVertexFeatureList;
     this->GetBestVertex(vertexVector, pBestVertex, bestVertexDr);
 
     VertexFeatureInfo bestVertexFeatureInfo(vertexFeatureInfoMap.at(pBestVertex));
@@ -626,7 +626,7 @@ const pandora::Vertex * SvmVertexSelectionAlgorithm::ProduceTrainingExamples(con
         if (pVertex == pBestVertex)
             continue;
 
-        SupportVectorMachine::DoubleVector featureList;
+        DoubleVector featureList;
         VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
         this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
 
@@ -634,13 +634,13 @@ const pandora::Vertex * SvmVertexSelectionAlgorithm::ProduceTrainingExamples(con
         {
             if (coinFlip(generator))
             {
-                LArSvmHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList,
+                LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList,
                     bestVertexFeatureList, featureList);
             }
 
             else
             {
-                LArSvmHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList, featureList,
+                LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList, featureList,
                     bestVertexFeatureList);
             }
         }
@@ -685,7 +685,7 @@ void SvmVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVector
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SvmVertexSelectionAlgorithm::AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo,
-    SupportVectorMachine::DoubleVector &featureVector, const bool useRPhi) const
+    DoubleVector &featureVector, const bool useRPhi) const
 {
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_beamDeweighting));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_energyKick));
@@ -700,10 +700,10 @@ void SvmVertexSelectionAlgorithm::AddVertexFeaturesToVector(const VertexFeatureI
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const pandora::Vertex * SvmVertexSelectionAlgorithm::CompareVertices(const VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
-    const SupportVectorMachine::DoubleVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const
+    const DoubleVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const
 {
     const Vertex *pBestVertex(vertexVector.front());
-    SupportVectorMachine::DoubleVector chosenFeatureList;
+    DoubleVector chosenFeatureList;
 
     VertexFeatureInfo chosenVertexFeatureInfo(vertexFeatureInfoMap.at(pBestVertex));
     this->AddVertexFeaturesToVector(chosenVertexFeatureInfo, chosenFeatureList, useRPhi);
@@ -713,11 +713,11 @@ const pandora::Vertex * SvmVertexSelectionAlgorithm::CompareVertices(const Verte
         if (pVertex == pBestVertex)
             continue;
 
-        SupportVectorMachine::DoubleVector featureList;
+        DoubleVector featureList;
         VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
         this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
 
-        if (LArSvmHelper::Classify(supportVectorMachine, eventFeatureList, featureList, chosenFeatureList))
+        if (LArMvaHelper::Classify(supportVectorMachine, eventFeatureList, featureList, chosenFeatureList))
         {
             pBestVertex = pVertex;
             chosenFeatureList = featureList;
@@ -756,7 +756,7 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
 
     for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));

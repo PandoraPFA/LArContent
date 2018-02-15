@@ -106,7 +106,7 @@ protected:
 private:
     typedef std::pair<pandora::CartesianVector, pandora::CartesianVector> ClusterEndPoints;
     typedef std::map<const pandora::Cluster *const, ClusterEndPoints> ClusterEndPointsMap;
-    typedef std::vector<SupportVectorMachine::DoubleVector> FeatureListVector;
+    typedef std::vector<DoubleVector> FeatureListVector;
     typedef std::vector<pandora::VertexVector> VectorOfVertexVectors;
 
     /**
@@ -251,7 +251,7 @@ private:
      *  @param  eventFeatureInfo the event feature info
      *  @param  featureVector the vector of doubles to append
      */
-    void AddEventFeaturesToVector(const EventFeatureInfo &eventFeatureInfo, SupportVectorMachine::DoubleVector &featureVector) const;
+    void AddEventFeaturesToVector(const EventFeatureInfo &eventFeatureInfo, DoubleVector &featureVector) const;
 
     /**
      *  @brief  Populate the vertex feature info map for a given vertex
@@ -296,7 +296,7 @@ private:
      *  @param  kdTreeMap
      */
     void ProduceTrainingSets(const pandora::VertexVector &vertexVector, const pandora::VertexVector &bestRegionVertices,
-        VertexFeatureInfoMap &vertexFeatureInfoMap, const SupportVectorMachine::DoubleVector &eventFeatureList,const KDTreeMap &kdTreeMap) const;
+        VertexFeatureInfoMap &vertexFeatureInfoMap, const DoubleVector &eventFeatureList,const KDTreeMap &kdTreeMap) const;
 
     /**
      *  @brief  Calculate the r/phi scores for the vertices in a vector, possibly erasing those that fail the fast score test
@@ -331,7 +331,7 @@ private:
      */
     const pandora::Vertex * ProduceTrainingExamples(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
         std::bernoulli_distribution &coinFlip, std::mt19937 &generator, const std::string &interactionType, const std::string &trainingOutputFile,
-        const SupportVectorMachine::DoubleVector &eventFeatureList, const float maxRadius, const bool useRPhi) const;
+        const DoubleVector &eventFeatureList, const float maxRadius, const bool useRPhi) const;
 
     /**
      *  @brief  Use the MC information to get the best vertex from a list
@@ -349,7 +349,7 @@ private:
      *  @param  featureVector the vector of floats to append
      *  @param  useRPhi whether to include the r/phi feature
      */
-    void AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo, SupportVectorMachine::DoubleVector &featureVector, const bool useRPhi) const;
+    void AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo, DoubleVector &featureVector, const bool useRPhi) const;
 
     /**
      *  @brief  Used a binary classifier to compare a set of vertices and pick the best one
@@ -363,7 +363,7 @@ private:
      *  @return address of the best vertex
      */
     const pandora::Vertex * CompareVertices(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
-        const SupportVectorMachine::DoubleVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const;
+        const DoubleVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const;
 
     /**
      *  @brief  Populate the final vertex score list using the r/phi score to find the best vertex in the vicinity
