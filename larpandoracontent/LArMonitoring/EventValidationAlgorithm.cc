@@ -173,7 +173,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
     MCParticleList associatedMCPrimaries;
 
     int nCorrectNu(0), nTotalNu(0), nCorrectTB(0), nTotalTB(0), nCorrectCR(0), nTotalCR(0), nFakeNu(0), nFakeCR(0), nSplitNu(0), nSplitCR(0), nLost(0);
-    int mcPrimaryIndex(0), nTargetMatches(0), nTargetNuMatches(0), nTargetCRMatches(0), nTargetGoodNuMatches(0), nTargetNuSplits(0);
+    int mcPrimaryIndex(0), nTargetMatches(0), nTargetNuMatches(0), nTargetCRMatches(0), nTargetGoodNuMatches(0), nTargetNuSplits(0), nTargetNuLosses(0);
     IntVector mcPrimaryId, mcPrimaryPdg, nMCHitsTotal, nMCHitsU, nMCHitsV, nMCHitsW;
     FloatVector mcPrimaryE, mcPrimaryPX, mcPrimaryPY, mcPrimaryPZ;
     FloatVector mcPrimaryVtxX, mcPrimaryVtxY, mcPrimaryVtxZ, mcPrimaryEndX, mcPrimaryEndY, mcPrimaryEndZ;
@@ -320,6 +320,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         nTargetCRMatches += nPrimaryCRMatches;
         nTargetGoodNuMatches += nPrimaryGoodNuMatches;
         nTargetNuSplits += nPrimaryNuSplits;
+        if (0 == nPrimaryMatches) ++nTargetNuLosses;
 
         if (fillTree)
         {
@@ -372,14 +373,17 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetCRMatches", nTargetCRMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetGoodNuMatches", nTargetGoodNuMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuSplits", nTargetNuSplits));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuLosses", nTargetNuLosses));
         }
 
         if (isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
         {
             const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
             const int interactionTypeInt(static_cast<int>(interactionType));
-            const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0));
-            const int isCorrectTB(isBeamParticle && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == 1) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0));
+
+            // ATTN Some redundancy introduced to contributing variables
+            const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
+            const int isCorrectTB(isBeamParticle && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == 1) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
             const int isCorrectCR(isCosmicRay && (nTargetNuMatches == 0) && (nTargetCRMatches == 1));
             const int isFakeNu(isCosmicRay && (nTargetNuMatches > 0));
             const int isFakeCR(!isCosmicRay && (nTargetCRMatches > 0));
@@ -411,6 +415,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             if (isSplitCR) outcomeSS << "IsSplitCR ";
             if (isLost) outcomeSS << "IsLost ";
             if (nTargetNuMatches > 0) outcomeSS << "(NNuMatches: " << nTargetNuMatches << ") ";
+            if (nTargetNuLosses > 0) outcomeSS << "(NNuLosses: " << nTargetNuLosses << ") ";
             if (nTargetNuSplits > 0) outcomeSS << "(NNuSplits: " << nTargetNuSplits << ") ";
             if (nTargetCRMatches > 0) outcomeSS << "(NCRMatches: " << nTargetCRMatches << ") ";
             if (printToScreen) std::cout << outcomeSS.str() << std::endl << targetSS.str() << std::endl;
@@ -431,7 +436,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
 
             targetSS.str(std::string()); targetSS.clear();
             recoNeutrinos.clear(); associatedMCPrimaries.clear();
-            nTargetMatches = 0; nTargetNuMatches = 0; nTargetCRMatches = 0; nTargetGoodNuMatches = 0; nTargetNuSplits = 0;
+            nTargetMatches = 0; nTargetNuMatches = 0; nTargetCRMatches = 0; nTargetGoodNuMatches = 0; nTargetNuSplits = 0; nTargetNuLosses = 0;
             mcPrimaryId.clear(); mcPrimaryPdg.clear(); nMCHitsTotal.clear(); nMCHitsU.clear(); nMCHitsV.clear(); nMCHitsW.clear();
             mcPrimaryE.clear(); mcPrimaryPX.clear(); mcPrimaryPY.clear(); mcPrimaryPZ.clear();
             mcPrimaryVtxX.clear(); mcPrimaryVtxY.clear(); mcPrimaryVtxZ.clear(); mcPrimaryEndX.clear(); mcPrimaryEndY.clear(); mcPrimaryEndZ.clear();
