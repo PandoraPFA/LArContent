@@ -24,22 +24,8 @@ CheatingClusterCreationAlgorithm::CheatingClusterCreationAlgorithm() :
 
 StatusCode CheatingClusterCreationAlgorithm::Run()
 {
-    LArMCParticleHelper::MCRelationMap mcPrimaryMap;
-
-    if (m_collapseToPrimaryMCParticles)
-    {
-        const MCParticleList *pMCParticleList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
-
-        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
-    }
-
-    const CaloHitList *pCaloHitList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
-
     MCParticleToHitListMap mcParticleToHitListMap;
-    this->GetMCParticleToHitListMap(pCaloHitList, mcPrimaryMap, mcParticleToHitListMap);
-
+    this->GetMCParticleToHitListMap(mcParticleToHitListMap);
     this->CreateClusters(mcParticleToHitListMap);
 
     return STATUS_CODE_SUCCESS;
@@ -47,9 +33,21 @@ StatusCode CheatingClusterCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingClusterCreationAlgorithm::GetMCParticleToHitListMap(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
-    MCParticleToHitListMap &mcParticleToHitListMap) const
+void CheatingClusterCreationAlgorithm::GetMCParticleToHitListMap(MCParticleToHitListMap &mcParticleToHitListMap) const
 {
+    LArMCParticleHelper::MCRelationMap mcPrimaryMap;
+
+    if (m_collapseToPrimaryMCParticles)
+    {
+        const MCParticleList *pMCParticleList(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
+    }
+
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
+
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         try
