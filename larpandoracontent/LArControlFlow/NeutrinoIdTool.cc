@@ -15,6 +15,9 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArSvmHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
+#include "larpandoracontent/LArHelpers/LArFileHelper.h"
+
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 using namespace pandora;
@@ -27,7 +30,9 @@ NeutrinoIdTool::NeutrinoIdTool() :
     m_selectNuanceCode(false),
     m_minPurity(0.9f),
     m_minCompleteness(0.9f),
-    m_minProbability(0.5f)
+    m_minProbability(0.5f),
+    m_maxNeutrinos(std::numeric_limits<unsigned int>::max()),
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
 
@@ -38,27 +43,40 @@ void NeutrinoIdTool::SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, c
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    if (nuSliceHypotheses.size() == 0) return;
+    const unsigned int nSlices(nuSliceHypotheses.size());
+    if (nSlices == 0) return;
 
-    // If using training mode, find the slice with the most neutrino induced hits and see if the event passes the training selection cuts
-    // ATTN if not using training mode then these variables are unused.
-    unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
-    const bool passesTrainingSelection(m_useTrainingMode ? this->GetBestSliceIndex(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, bestSliceIndex) : false);
+    SliceFeaturesVector sliceFeaturesVector;
+    this->GetSliceFeatures(this, nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector);
 
-    for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)                                
+    if (m_useTrainingMode)
     {
-        SliceFeatures features(nuSliceHypotheses.at(sliceIndex), crSliceHypotheses.at(sliceIndex), this);
-        if (!features.IsFeatureVectorAvailable()) continue;
+        // ATTN in training mode, just return everything as a cosmic-ray
+        this->SelectAllPfos(crSliceHypotheses, selectedPfos);
 
-        if (m_useTrainingMode && passesTrainingSelection)
+        unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
+        if (!this->GetBestSliceIndex(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, bestSliceIndex)) return;
+
+        for (unsigned int sliceIndex = 0; sliceIndex < nSlices; ++sliceIndex)
+        {
+            const SliceFeatures &features(sliceFeaturesVector.at(sliceIndex));
+            if (!features.IsFeatureVectorAvailable()) continue;
+
             LArSvmHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, features.GetFeatureVector());
+        }
 
-        // TODO Use trained SVM to calculate neutrino probability
+        return;
     }
 
-    
-    // TODO Fill the selected Pfos based on the SVM probabilities
-    (void) selectedPfos;
+    this->SelectPfosByProbability(nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector, selectedPfos);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoIdTool::GetSliceFeatures(const NeutrinoIdTool *const pTool, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const
+{
+    for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+        sliceFeaturesVector.push_back(SliceFeatures(nuSliceHypotheses.at(sliceIndex), crSliceHypotheses.at(sliceIndex), pTool));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -71,8 +89,13 @@ bool NeutrinoIdTool::GetBestSliceIndex(const MasterAlgorithm *const pAlgorithm, 
    
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
+        if (nuSliceHypotheses.at(sliceIndex).size() != 1)
+            throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
+
+        const PfoList &nuFinalStates(nuSliceHypotheses.at(sliceIndex).front()->GetDaughterPfoList());
+
         CaloHitList reconstructedHits;
-        this->Collect2DHits(nuSliceHypotheses.at(sliceIndex), reconstructedHits);
+        this->Collect2DHits(nuFinalStates, reconstructedHits);
         this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedHits);
 
         const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedHits));
@@ -104,11 +127,8 @@ bool NeutrinoIdTool::GetBestSliceIndex(const MasterAlgorithm *const pAlgorithm, 
 
 bool NeutrinoIdTool::PassesQualityCuts(const MasterAlgorithm *const pAlgorithm, const float purity, const float completeness) const
 {
-    if (purity < m_minPurity || completeness < m_minCompleteness)
-        return false;
-
-    if (m_selectNuanceCode && (this->GetNuanceCode(pAlgorithm) != m_nuance))
-        return false;
+    if (purity < m_minPurity || completeness < m_minCompleteness) return false;
+    if (m_selectNuanceCode && (this->GetNuanceCode(pAlgorithm) != m_nuance)) return false;
 
     return true;
 }
@@ -173,6 +193,61 @@ int NeutrinoIdTool::GetNuanceCode(const MasterAlgorithm *const pAlgorithm) const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoIdTool::SelectAllPfos(const SliceHypotheses &hypotheses, PfoList &selectedPfos) const
+{
+    for (const PfoList &pfos : hypotheses)
+        this->SelectPfos(pfos, selectedPfos);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+void NeutrinoIdTool::SelectPfosByProbability(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos) const
+{
+    // Calculate the probability of each slice that passes the minimum probability cut
+    std::vector<UintFloatPair> sliceIndexProbabilityPairs;
+    for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+    {
+        const float nuProbability(sliceFeaturesVector.at(sliceIndex).GetNeutrinoProbability(m_supportVectorMachine));
+
+        if (nuProbability < m_minProbability)
+        {
+            this->SelectPfos(crSliceHypotheses.at(sliceIndex), selectedPfos);
+            continue;
+        }
+
+        sliceIndexProbabilityPairs.push_back(UintFloatPair(sliceIndex, nuProbability));
+    }
+
+    // Sort the slices by probability
+    std::sort(sliceIndexProbabilityPairs.begin(), sliceIndexProbabilityPairs.end(), [] (const UintFloatPair &a, const UintFloatPair &b) 
+    {
+        return (a.second > b.second);
+    });
+
+    // Select the first m_maxNeutrinos as neutrinos, and the rest as cosmic
+    unsigned int nNuSlices(0);
+    for (const UintFloatPair &slice : sliceIndexProbabilityPairs)
+    {
+        if (nNuSlices < m_maxNeutrinos)
+        {
+            this->SelectPfos(nuSliceHypotheses.at(slice.first), selectedPfos);
+            nNuSlices++;
+            continue;
+        }
+        
+        this->SelectPfos(crSliceHypotheses.at(slice.first), selectedPfos);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoIdTool::SelectPfos(const PfoList &pfos, PfoList &selectedPfos) const
+{
+    selectedPfos.insert(selectedPfos.end(), pfos.begin(), pfos.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 // TODO think about how to make this function cleaner when features are more established
@@ -181,9 +256,9 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
 {
     const ParticleFlowObject *const pNeutrino(this->GetNeutrino(nuPfos));
     const CartesianVector nuVertex(LArPfoHelper::GetVertex(pNeutrino)->GetPosition());
+    const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
 
     // Neutrino features
-    const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
     CartesianVector nuWeightedDirTotal(0, 0, 0);
     unsigned int nuNHitsUsedTotal(0);
     unsigned int nuNHitsTotal(0);
@@ -196,7 +271,6 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
         nuAllSpacePoints.insert(nuAllSpacePoints.end(), spacePoints.begin(), spacePoints.end());
         nuNHitsTotal += spacePoints.size();
 
-        // TODO make this number configurable
         if (spacePoints.size() < 5) continue;
 
         CartesianVector dir(this->GetDirectionFromVertex(spacePoints, nuVertex));
@@ -207,16 +281,35 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
     if (nuNHitsUsedTotal == 0) return;
     CartesianVector nuWeightedDir(nuWeightedDirTotal * (1.f / static_cast<float>(nuNHitsUsedTotal)));
 
+    CartesianPointVector pointsInSphere;
+    this->GetPointsInSphere(nuAllSpacePoints, nuVertex, 10, pointsInSphere);
+
+    CartesianVector centroid(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    LArPcaHelper::EigenValues eigenValues(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    LArPcaHelper::EigenVectors eigenVectors;
+
+    try
+    {
+        LArPcaHelper::RunPca(pointsInSphere, centroid, eigenValues, eigenVectors);
+    }
+    catch (StatusCodeException &)
+    {
+        return;
+    }
+
+
     float nuNFinalStatePfos(static_cast<float>(nuFinalStates.size()));
     float nuVertexY(nuVertex.GetY());
     float nuWeightedDirZ(nuWeightedDir.GetZ());
-    float nuNSpacePointsInSphere(static_cast<float>(this->GetNPointsInSphere(nuAllSpacePoints, nuVertex, 10))); // TODO Make this configurable
-    
+    float nuNSpacePointsInSphere(static_cast<float>(pointsInSphere.size()));
+    float nuEigenRatioInSphere(eigenValues.GetY() / eigenValues.GetX());
+
     // Cosmic-ray features
     unsigned int nCRHitsMax(0);
     unsigned int nCRHitsTotal(0);
     float crLongestTrackDirY(std::numeric_limits<float>::max());
-    CartesianVector ceiling(0, std::numeric_limits<float>::max(), 0);
+    float crLongestTrackDeflection(-std::numeric_limits<float>::max());
+
     for (const ParticleFlowObject *const pPfo : crPfos)
     {
         CartesianPointVector spacePoints;                                                                                                    
@@ -224,13 +317,16 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
         
         nCRHitsTotal += spacePoints.size();
         
-        // TODO make this number configurable
         if (spacePoints.size() < 5) continue;
         
         if (spacePoints.size() > nCRHitsMax)
         {
             nCRHitsMax = spacePoints.size();
-            crLongestTrackDirY = this->GetDirectionFromVertex(spacePoints, ceiling).GetY();
+            const CartesianVector upperDir(this->GetUpperDirection(spacePoints));
+            const CartesianVector lowerDir(this->GetLowerDirection(spacePoints));
+
+            crLongestTrackDirY = upperDir.GetY();
+            crLongestTrackDeflection = 1 - upperDir.GetDotProduct(lowerDir * (-1));
         }
     }
 
@@ -245,8 +341,11 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
     m_featureVector.push_back(nuVertexY);
     m_featureVector.push_back(nuWeightedDirZ);
     m_featureVector.push_back(nuNSpacePointsInSphere);
+    m_featureVector.push_back(nuEigenRatioInSphere);
     m_featureVector.push_back(crLongestTrackDirY);
+    m_featureVector.push_back(crLongestTrackDeflection);
     m_featureVector.push_back(crFracHitsInLongestTrack);
+    m_featureVector.push_back(nCRHitsMax);
 
     m_isAvailable = true;
 }
@@ -266,6 +365,16 @@ SupportVectorMachine::DoubleVector NeutrinoIdTool::SliceFeatures::GetFeatureVect
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return m_featureVector;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+        
+float NeutrinoIdTool::SliceFeatures::GetNeutrinoProbability(const SupportVectorMachine &supportVectorMachine) const
+{
+    // ATTN if one or more of the features can not be calculated, then default to calling the slice a cosmic ray
+    if (!this->IsFeatureVectorAvailable()) return 0.f;
+
+    return LArSvmHelper::CalculateProbability(supportVectorMachine, this->GetFeatureVector());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -289,8 +398,7 @@ void NeutrinoIdTool::SliceFeatures::GetSpacePoints(const ParticleFlowObject *con
     if (clusters3D.size() > 1)
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
                                                                                                                           
-    if (clusters3D.size() == 0)
-        return;
+    if (clusters3D.size() == 0) return;
 
     CaloHitList caloHits;
     clusters3D.front()->GetOrderedCaloHitList().FillCaloHitList(caloHits);
@@ -303,34 +411,64 @@ void NeutrinoIdTool::SliceFeatures::GetSpacePoints(const ParticleFlowObject *con
 
 CartesianVector NeutrinoIdTool::SliceFeatures::GetDirectionFromVertex(const CartesianPointVector &spacePoints, const CartesianVector &vertex) const
 {
-    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
-    const LArTPC *const pFirstLArTPC(m_pTool->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
-    const float layerPitch(pFirstLArTPC->GetWirePitchW());
-
-    const ThreeDSlidingFitResult fit(&spacePoints, 5, layerPitch);                                                                   
-    const CartesianVector endMin(fit.GetGlobalMinLayerPosition());                                                                         
-    const CartesianVector endMax(fit.GetGlobalMaxLayerPosition());                                                                         
-    const CartesianVector dirMin(fit.GetGlobalMinLayerDirection());                                                                        
-    const CartesianVector dirMax(fit.GetGlobalMaxLayerDirection());     
-
-    const bool isMinStart((endMin - vertex).GetMagnitude() < (endMax - vertex).GetMagnitude());
-    const CartesianVector startPoint(isMinStart ? endMin : endMax);
-    const CartesianVector endPoint(isMinStart ? endMax : endMin);
-    const CartesianVector startDir(isMinStart ? dirMin : dirMax);
-
-    const bool shouldFlip((endPoint - startPoint).GetUnitVector().GetDotProduct(startDir) < 0);
-    return (shouldFlip ? startDir*(-1) : startDir);
+    return this->GetDirection(spacePoints, [&] (const CartesianVector &pointA, const CartesianVector &pointB)
+    {
+        return ((pointA - vertex).GetMagnitude() < (pointB - vertex).GetMagnitude());
+    });
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int NeutrinoIdTool::SliceFeatures::GetNPointsInSphere(const CartesianPointVector &spacePoints, const CartesianVector &vertex, float radius) const
+CartesianVector NeutrinoIdTool::SliceFeatures::GetUpperDirection(const CartesianPointVector &spacePoints) const
 {
-    unsigned int nPointsInSphere(0);
-    for (const CartesianVector &point : spacePoints)
-        if ((point - vertex).GetMagnitudeSquared() <= radius*radius) nPointsInSphere++;
+    return this->GetDirection(spacePoints, [&] (const CartesianVector &pointA, const CartesianVector &pointB)
+    {
+        return (pointA.GetY() > pointB.GetY());
+    });
+}
 
-    return nPointsInSphere;
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector NeutrinoIdTool::SliceFeatures::GetLowerDirection(const CartesianPointVector &spacePoints) const
+{
+    return this->GetDirection(spacePoints, [&] (const CartesianVector &pointA, const CartesianVector &pointB)
+    {
+        return (pointA.GetY() < pointB.GetY());
+    });
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector NeutrinoIdTool::SliceFeatures::GetDirection(const CartesianPointVector &spacePoints, std::function<bool(const CartesianVector &pointA, const CartesianVector &pointB)> fShouldChooseA) const
+{
+    // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin                        
+    const LArTPC *const pFirstLArTPC(m_pTool->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);                                   
+    const float layerPitch(pFirstLArTPC->GetWirePitchW());                                                                                   
+                                                                                                                                             
+    const ThreeDSlidingFitResult fit(&spacePoints, 5, layerPitch);                                                                           
+    const CartesianVector endMin(fit.GetGlobalMinLayerPosition());                                                                           
+    const CartesianVector endMax(fit.GetGlobalMaxLayerPosition());                                                                           
+    const CartesianVector dirMin(fit.GetGlobalMinLayerDirection());                                                                          
+    const CartesianVector dirMax(fit.GetGlobalMaxLayerDirection());                                                                          
+                                                                                                                                             
+    const bool isMinStart(fShouldChooseA(endMin, endMax));
+    const CartesianVector startPoint(isMinStart ? endMin : endMax);                                                                          
+    const CartesianVector endPoint(isMinStart ? endMax : endMin);                                                                            
+    const CartesianVector startDir(isMinStart ? dirMin : dirMax);                                                                            
+                                                                                                                                             
+    const bool shouldFlip((endPoint - startPoint).GetUnitVector().GetDotProduct(startDir) < 0);                                              
+    return (shouldFlip ? startDir*(-1) : startDir); 
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoIdTool::SliceFeatures::GetPointsInSphere(const CartesianPointVector &spacePoints, const CartesianVector &vertex, const float radius, CartesianPointVector &spacePointsInSphere) const
+{
+    for (const CartesianVector &point : spacePoints)
+    {
+        if ((point - vertex).GetMagnitudeSquared() <= radius*radius)
+            spacePointsInSphere.push_back(point); 
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -363,6 +501,26 @@ StatusCode NeutrinoIdTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinimumNeutrinoProbability", m_minProbability));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaximumNeutrinos", m_maxNeutrinos));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
+        
+    if (!m_useTrainingMode)
+    {
+        std::string svmName;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+            "SvmName", svmName));
+        
+        std::string svmFileName;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+            "SvmFileName", svmFileName));
+
+        const std::string fullSvmFileName(LArFileHelper::FindFileInPath(svmFileName, m_filePathEnvironmentVariable));
+        m_supportVectorMachine.Initialize(fullSvmFileName, svmName);
+    }
     
     return STATUS_CODE_SUCCESS;
 }
