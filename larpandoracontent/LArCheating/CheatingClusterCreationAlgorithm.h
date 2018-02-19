@@ -37,12 +37,9 @@ private:
     /**
      *  @brief  Create map between each (primary) MC particle and associated calo hits
      *
-     *  @param  pCaloHitList the input calo hit list
-     *  @param  mcPrimaryMap the mapping between mc particles and their parents
      *  @param  mcParticleToHitListMap to receive the mc particle to hit list map
      */
-    void GetMCParticleToHitListMap(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
-        MCParticleToHitListMap &mcParticleToHitListMap) const;
+    void GetMCParticleToHitListMap(MCParticleToHitListMap &mcParticleToHitListMap) const;
 
     /**
      *  @brief  Simple mc particle collection, using main mc particle associated with each calo hit

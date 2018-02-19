@@ -12,6 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoIdTool.h"
 
 using namespace pandora;
 
@@ -47,9 +48,11 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
-        const float neutrinoFraction(0.f); // TODO LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
 
-        if (neutrinoFraction < m_maxNeutrinoFraction)
+        float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
+        CheatingNeutrinoIdTool::GetNeutrinoWeight(&downstreamPfos, true, thisNeutrinoWeight, thisTotalWeight);
+
+        if ((thisTotalWeight < std::numeric_limits<float>::epsilon()) || ((thisNeutrinoWeight / thisTotalWeight) < m_maxNeutrinoFraction))
             outputPfoList.push_back(pPfo);
     }
 

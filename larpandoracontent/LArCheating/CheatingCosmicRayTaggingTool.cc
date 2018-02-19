@@ -12,6 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArCheating/CheatingCosmicRayTaggingTool.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoIdTool.h"
 
 using namespace pandora;
 
@@ -36,9 +37,11 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
     {
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);
-        const float neutrinoFraction(0.f);// TODO LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
 
-        if (neutrinoFraction > m_minNeutrinoFraction)
+        float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
+        CheatingNeutrinoIdTool::GetNeutrinoWeight(&downstreamPfos, false, thisNeutrinoWeight, thisTotalWeight);
+
+        if ((thisTotalWeight > 0.f) && ((thisNeutrinoWeight / thisTotalWeight) > m_minNeutrinoFraction))
             ambiguousParentPfos.push_back(pParentCosmicRayPfo);
     }
 
