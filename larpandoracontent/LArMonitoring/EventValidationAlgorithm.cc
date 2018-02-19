@@ -116,8 +116,11 @@ void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pM
     
     if (pPfoList)
     {
+        PfoList allConnectedPfos;
+        LArPfoHelper::GetAllConnectedPfos(*pPfoList, allConnectedPfos);
+
         PfoList finalStatePfos;
-        for (const ParticleFlowObject *const pPfo : *pPfoList)
+        for (const ParticleFlowObject *const pPfo : allConnectedPfos)
         {
             if (LArPfoHelper::IsFinalState(pPfo))
                 finalStatePfos.push_back(pPfo);
