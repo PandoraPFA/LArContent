@@ -38,7 +38,7 @@ NeutrinoIdTool::NeutrinoIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoIdTool::SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+void NeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -81,7 +81,7 @@ void NeutrinoIdTool::GetSliceFeatures(const NeutrinoIdTool *const pTool, const S
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool NeutrinoIdTool::GetBestSliceIndex(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const
+bool NeutrinoIdTool::GetBestSliceIndex(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const
 {
     unsigned int nHitsInBestSlice(0);
     unsigned int nNuHitsInBestSlice(0);
@@ -125,7 +125,7 @@ bool NeutrinoIdTool::GetBestSliceIndex(const MasterAlgorithm *const pAlgorithm, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool NeutrinoIdTool::PassesQualityCuts(const MasterAlgorithm *const pAlgorithm, const float purity, const float completeness) const
+bool NeutrinoIdTool::PassesQualityCuts(const Algorithm *const pAlgorithm, const float purity, const float completeness) const
 {
     if (purity < m_minPurity || completeness < m_minCompleteness) return false;
     if (m_selectNuanceCode && (this->GetNuanceCode(pAlgorithm) != m_nuance)) return false;
@@ -175,7 +175,7 @@ unsigned int NeutrinoIdTool::CountNeutrinoInducedHits(const CaloHitList &hitList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int NeutrinoIdTool::GetNuanceCode(const MasterAlgorithm *const pAlgorithm) const
+int NeutrinoIdTool::GetNuanceCode(const Algorithm *const pAlgorithm) const
 {
     const MCParticleList *pMCParticleList = nullptr;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pMCParticleList));
