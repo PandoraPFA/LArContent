@@ -53,6 +53,14 @@ void LArPfoHelper::GetCaloHits(const ParticleFlowObject *const pPfo, const HitTy
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetIsolatedCaloHits(const PfoList &pfoList, const HitType &hitType, CaloHitList &caloHitList)
+{
+    for (const ParticleFlowObject *const pPfo : pfoList)
+        LArPfoHelper::GetIsolatedCaloHits(pPfo, hitType, caloHitList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetIsolatedCaloHits(const ParticleFlowObject *const pPfo, const HitType &hitType, CaloHitList &caloHitList)
 {
     ClusterList clusterList;

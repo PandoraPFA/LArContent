@@ -82,7 +82,7 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessRecoNeutrinos(const PfoLi
             {
                 this->ProcessDaughterPfo(pDaughterPfo, mcPrimaryMap);
             }
-            catch (StatusCodeException &) {}
+            catch (const StatusCodeException &) {}
         }
     }
 }
@@ -92,8 +92,17 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessRecoNeutrinos(const PfoLi
 void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessDaughterPfo(const ParticleFlowObject *const pDaughterPfo,
     const LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const
 {
-    const MCParticle *const pMCParticle(!m_collapseToPrimaryMCParticles ? LArMCParticleHelper::GetMainMCParticle(pDaughterPfo) :
-        LArMCParticleHelper::GetMainMCPrimary(pDaughterPfo, mcPrimaryMap));
+    const MCParticle *pMCParticle(LArMCParticleHelper::GetMainMCParticle(pDaughterPfo));
+
+    if (m_collapseToPrimaryMCParticles)
+    {
+        LArMCParticleHelper::MCRelationMap::const_iterator primaryIter = mcPrimaryMap.find(pMCParticle);
+
+        if (mcPrimaryMap.end() == primaryIter)
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+        pMCParticle = primaryIter->second;
+    }
 
     const VertexList *pVertexList(nullptr); std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));

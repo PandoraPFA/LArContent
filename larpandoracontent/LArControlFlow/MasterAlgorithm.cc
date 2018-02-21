@@ -331,7 +331,7 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(PfoList &clearCosmicRayPfos, PfoLis
     }
 
     for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
-        pCosmicRayTaggingTool->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos);
+        pCosmicRayTaggingTool->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos, this);
 
     for (const Pfo *const pPfo : parentCosmicRayPfos)
     {
@@ -481,7 +481,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
 StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses) const
 {
     if (m_printOverallRecoStatus)
-        std::cout << "Select best slice hypotheses" << std::endl;    
+        std::cout << "Select best slice hypotheses" << std::endl;
 
     PfoList selectedSlicePfos;
 

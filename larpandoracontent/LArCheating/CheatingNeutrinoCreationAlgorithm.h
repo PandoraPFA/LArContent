@@ -54,22 +54,14 @@ private:
      */
     void AddNeutrinoVertex(const pandora::MCParticle *const pMCNeutrino, const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
 
-    /**
-     *  @brief  Get the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
-     * 
-     *  @param  mcPrimaryMap to receive the mapping from mc particle to primary
-     */
-    void GetMCPrimaryMap(LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const;
-
     typedef std::unordered_map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCParticleToPfoMap;
 
     /**
      *  @brief  Extract candidate daughter pfos from external lists and populate a map from main mc particle (or primary) to pfo
      * 
-     *  @param  mcPrimaryMap the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
      *  @param  mcParticleToPfoMap to receive the mc particle to pfo map
      */
-    void GetMCParticleToDaughterPfoMap(const LArMCParticleHelper::MCRelationMap &mcPrimaryMap, MCParticleToPfoMap &mcParticleToPfoMap) const;
+    void GetMCParticleToDaughterPfoMap(MCParticleToPfoMap &mcParticleToPfoMap) const;
 
     /**
      *  @brief  Use information from mc particles and the mc particle to pfo map to fully-reconstruct the daughter pfo hierarchy

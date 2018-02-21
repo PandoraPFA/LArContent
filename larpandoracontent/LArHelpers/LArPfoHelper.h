@@ -52,6 +52,15 @@ public:
     static void GetCaloHits(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::CaloHitList &caloHitList);
 
     /**
+     *  @brief  Get a list of isolated calo hits of a particular hit type from a list of pfos
+     *
+     *  @param  pfoList the input list of Pfos
+     *  @param  hitType the cluster hit type
+     *  @param  caloHitList the output list of calo hits
+     */
+    static void GetIsolatedCaloHits(const pandora::PfoList &pfoList, const pandora::HitType &hitType, pandora::CaloHitList &caloHitList);
+
+    /**
      *  @brief  Get a list of isolated calo hits of a particular hit type from a given pfo
      *
      *  @param  pPfo the input Pfo

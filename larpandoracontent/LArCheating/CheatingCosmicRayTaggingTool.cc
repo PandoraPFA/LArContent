@@ -8,11 +8,11 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-    #include "larpandoracontent/LArHelpers/LArClusterHelper.h" // TODO
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArCheating/CheatingCosmicRayTaggingTool.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoIdTool.h"
 
 using namespace pandora;
 
@@ -26,20 +26,22 @@ CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos)
+void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos, PfoList &ambiguousPfos, const MasterAlgorithm *const /*pAlgorithm*/)
 {
     if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    PfoList ambiguousParentPfos;                                                                                                            
-                                                                                                                                            
-    for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)                                                                        
+    PfoList ambiguousParentPfos;
+
+    for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)
     {
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);
-        const float neutrinoFraction(LArMCParticleHelper::GetNeutrinoFraction(&downstreamPfos));
 
-        if (neutrinoFraction > m_minNeutrinoFraction)
+        float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
+        CheatingNeutrinoIdTool::GetNeutrinoWeight(&downstreamPfos, false, thisNeutrinoWeight, thisTotalWeight);
+
+        if ((thisTotalWeight > 0.f) && ((thisNeutrinoWeight / thisTotalWeight) > m_minNeutrinoFraction))
             ambiguousParentPfos.push_back(pParentCosmicRayPfo);
     }
 

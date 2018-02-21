@@ -8,15 +8,16 @@
 
 #include "Helpers/MCParticleHelper.h"
 
-#include "Objects/MCParticle.h"
 #include "Objects/CaloHit.h"
 #include "Objects/Cluster.h"
+#include "Objects/MCParticle.h"
 
 #include "Pandora/PdgTable.h"
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include <algorithm>
@@ -27,26 +28,74 @@ namespace lar_content
 
 using namespace pandora;
 
-bool LArMCParticleHelper::IsNeutrinoFinalState(const MCParticle *const pMCParticle)
+LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
+    m_minPrimaryGoodHits(15),
+    m_minHitsForGoodView(5),
+    m_minPrimaryGoodViews(2),
+    m_selectInputHits(true),
+    m_maxPhotonPropagation(2.5f),
+    m_minHitSharingFraction(0.9f)
 {
-    return ((pMCParticle->GetParentList().size() == 1) && (LArMCParticleHelper::IsNeutrino(*(pMCParticle->GetParentList().begin()))));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsBeamNeutrinoFinalState(const MCParticle *const pMCParticle)
+{
+    const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && LArMCParticleHelper::IsNeutrino(pParentMCParticle));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::IsNeutrinoInduced(const MCParticle *const pMCParticle)
+bool LArMCParticleHelper::IsBeamParticle(const MCParticle *const pMCParticle)
 {
-    return (LArMCParticleHelper::GetParentNeutrinoId(pMCParticle) != 0);
+    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && ((nuance == 2000) || (nuance == 2001)));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
+{
+    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && ((nuance == 3000) || ((nuance == 0) && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int LArMCParticleHelper::GetNuanceCode(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pMCParticle));
+    if (pLArMCParticle)
+        return pLArMCParticle->GetNuanceCode();
+
+    std::cout << "LArMCParticleHelper::GetNuanceCode - Error: Can't cast to LArMCParticle" << std::endl;
+    throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArMCParticleHelper::IsNeutrino(const MCParticle *const pMCParticle)
 {
-    const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
+    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+    if ((nuance == 0) || (nuance == 2000) || (nuance == 2001) || (nuance == 3000))
+        return false;
 
-    if ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId))
-        return true;
+    const int absoluteParticleId(std::abs(pMCParticle->GetParticleId()));
+    return ((NU_E == absoluteParticleId) || (NU_MU == absoluteParticleId) || (NU_TAU == absoluteParticleId));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
+{
+    try
+    {
+        return (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle);
+    }
+    catch (const StatusCodeException &) {}
 
     return false;
 }
@@ -64,7 +113,6 @@ bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
         (NEUTRON == absoluteParticleId))
         return true;
 
-    // TODO: What about ions or neutrons? Neutrons currently included - they are parents of what would otherwise be large numbers of primary photons
     return false;
 }
 
@@ -72,12 +120,9 @@ bool LArMCParticleHelper::IsVisible(const MCParticle *const pMCParticle)
 
 void LArMCParticleHelper::GetTrueNeutrinos(const MCParticleList *const pMCParticleList, MCParticleVector &trueNeutrinos)
 {
-    if (!pMCParticleList)
-        return;
-
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        if (pMCParticle->GetParentList().empty() && LArMCParticleHelper::IsNeutrino(pMCParticle))
+        if (LArMCParticleHelper::IsNeutrino(pMCParticle))
             trueNeutrinos.push_back(pMCParticle);
     }
 
@@ -99,6 +144,19 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
     }
 
     return pParentMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcPrimaryVector)
+{
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
+    {
+        if (LArMCParticleHelper::IsPrimary(pMCParticle))
+            mcPrimaryVector.push_back(pMCParticle);
+    }
+
+    std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -134,149 +192,6 @@ const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const MCParticle *LArMCParticleHelper::GetParentNeutrino(const MCParticle *const pMCParticle)
-{
-    const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentMCParticle(pMCParticle);
-
-    if (!LArMCParticleHelper::IsNeutrino(pParentMCParticle))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    return pParentMCParticle;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-int LArMCParticleHelper::GetParentNeutrinoId(const MCParticle *const pMCParticle)
-{
-    try
-    {
-        const MCParticle *const pParentMCParticle = LArMCParticleHelper::GetParentNeutrino(pMCParticle);
-        return pParentMCParticle->GetParticleId();
-    }
-    catch (const StatusCodeException &)
-    {
-        return 0;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsNeutrinoInduced(const Cluster *const pCluster, const float minFraction)
-{
-    return (LArMCParticleHelper::GetNeutrinoFraction(pCluster) > minFraction);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsNeutrinoInduced(const CaloHit *const pCaloHit, const float minFraction)
-{
-    return (LArMCParticleHelper::GetNeutrinoFraction(pCaloHit) > minFraction);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-float LArMCParticleHelper::GetNeutrinoFraction(const T *const pT)
-{
-    float neutrinoWeight(0.f), totalWeight(0.f);
-    LArMCParticleHelper::GetNeutrinoWeight(pT, neutrinoWeight, totalWeight);
-
-    if (totalWeight > std::numeric_limits<float>::epsilon())
-        return (neutrinoWeight / totalWeight);
-
-    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <>
-void LArMCParticleHelper::GetNeutrinoWeight(const CaloHit *const pCaloHit, float &neutrinoWeight, float &totalWeight)
-{
-    neutrinoWeight = 0.f; totalWeight = 0.f;
-    const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
-
-    if (hitMCParticleWeightMap.empty())
-        return;
-
-    MCParticleList mcParticleList;
-    for (const auto &mapEntry : hitMCParticleWeightMap) mcParticleList.push_back(mapEntry.first);
-    mcParticleList.sort(LArMCParticleHelper::SortByMomentum);
-
-    for (const MCParticle *const pMCParticle : mcParticleList)
-    {
-        const float weight(hitMCParticleWeightMap.at(pMCParticle));
-
-        if (LArMCParticleHelper::IsNeutrinoInduced(pMCParticle))
-            neutrinoWeight += weight;
-
-        totalWeight += weight;
-    }
-
-    // ATTN normalise arbitrary input weights at this point
-    if (totalWeight > std::numeric_limits<float>::epsilon())
-    {
-        neutrinoWeight *= 1.f / totalWeight;
-        totalWeight = 1.f;
-    }
-    else
-    {
-        neutrinoWeight = 0.f;
-        totalWeight = 0.f;
-    }
-}
-
-template <>
-void LArMCParticleHelper::GetNeutrinoWeight(const Cluster *const pCluster, float &neutrinoWeight, float &totalWeight)
-{
-    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-
-    if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    CaloHitList caloHitList;
-    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-    LArMCParticleHelper::GetNeutrinoWeight(&caloHitList, neutrinoWeight, totalWeight);
-}
-
-template <>
-void LArMCParticleHelper::GetNeutrinoWeight(const ParticleFlowObject *const pPfo, float &neutrinoWeight, float &totalWeight)
-{
-    ClusterList twoDClusters;
-    LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusters);
-    LArMCParticleHelper::GetNeutrinoWeight(&twoDClusters, neutrinoWeight, totalWeight);
-}
-
-template <typename T>
-void LArMCParticleHelper::GetNeutrinoWeight(const T *const pT, float &neutrinoWeight, float &totalWeight)
-{
-    neutrinoWeight = 0.f; totalWeight = 0.f;
-
-    for (const auto *const pValueT : *pT)
-    {
-        float thisNeutrinoWeight = 0.f, thisTotalWeight = 0.f;
-        LArMCParticleHelper::GetNeutrinoWeight(pValueT, thisNeutrinoWeight, thisTotalWeight);
-        neutrinoWeight += thisNeutrinoWeight;
-        totalWeight += thisTotalWeight;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool LArMCParticleHelper::IsPrimary(const pandora::MCParticle *const pMCParticle)
-{
-    try
-    {
-        const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
-        return (pPrimaryMCParticle == pMCParticle);
-    }
-    catch (const StatusCodeException &)
-    {
-        return 0;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap)
 {
     for (const MCParticle *const pMCParticle : *pMCParticleList)
@@ -286,36 +201,8 @@ void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticl
             const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
             mcPrimaryMap[pMCParticle] = pPrimaryMCParticle;
         }
-        catch (const StatusCodeException &)
-        {
-        }
+        catch (const StatusCodeException &) {}
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMCParticleHelper::GetPrimaryMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcPrimaryVector)
-{
-    for (const MCParticle *const pMCParticle : *pMCParticleList)
-    {
-        if (LArMCParticleHelper::IsPrimary(pMCParticle))
-            mcPrimaryVector.push_back(pMCParticle);
-    }
-
-    std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), LArMCParticleHelper::SortByMomentum);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMCParticleHelper::GetNeutrinoMCParticleList(const MCParticleList *const pMCParticleList, MCParticleVector &mcNeutrinoVector)
-{
-    for (const MCParticle *const pMCParticle : *pMCParticleList)
-    {
-        if (LArMCParticleHelper::IsNeutrino(pMCParticle) && pMCParticle->GetParentList().empty())
-            mcNeutrinoVector.push_back(pMCParticle);
-    }
-
-    std::sort(mcNeutrinoVector.begin(), mcNeutrinoVector.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -324,53 +211,7 @@ const MCParticle *LArMCParticleHelper::GetMainMCParticle(const ParticleFlowObjec
 {
     ClusterList clusterList;
     LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
-    const MCParticle *pMainMCParticle(nullptr);
-
-    for (const Cluster *const pCluster : clusterList)
-    {
-        const MCParticle *const pThisMainMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
-
-        if (pMainMCParticle && (pThisMainMCParticle != pMainMCParticle))
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-        if (!pMainMCParticle)
-            pMainMCParticle = pThisMainMCParticle;
-    }
-
-    if (!pMainMCParticle)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    return pMainMCParticle;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const MCParticle *LArMCParticleHelper::GetMainMCPrimary(const ParticleFlowObject *const pPfo, const MCRelationMap &mcPrimaryMap)
-{
-    ClusterList clusterList;
-    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
-    const MCParticle *pMainMCPrimary(nullptr);
-
-    for (const Cluster *const pCluster : clusterList)
-    {
-        MCRelationMap::const_iterator primaryIter(mcPrimaryMap.find(MCParticleHelper::GetMainMCParticle(pCluster)));
-
-        if (mcPrimaryMap.end() == primaryIter)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        const MCParticle *const pThisMainMCPrimary(primaryIter->second);
-
-        if (pMainMCPrimary && (pThisMainMCPrimary != pMainMCPrimary))
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-        if (!pMainMCPrimary)
-            pMainMCPrimary = pThisMainMCPrimary;
-    }
-
-    if (!pMainMCPrimary)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-    return pMainMCPrimary;
+    return MCParticleHelper::GetMainMCParticle(&clusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -401,18 +242,186 @@ bool LArMCParticleHelper::SortByMomentum(const MCParticle *const pLhs, const MCP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::SelectTrueNeutrinos(const MCParticleList *const pAllMCParticleList, MCParticleVector &selectedMCNeutrinoVector)
+void LArMCParticleHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
+    CaloHitToMCMap &hitToMCMap, MCContributionMap &mcToTrueHitListMap)
 {
-    MCParticleVector allMCNeutrinoVector;
-    LArMCParticleHelper::GetNeutrinoMCParticleList(pAllMCParticleList, allMCNeutrinoVector);
-
-    for (const MCParticle *const pMCNeutrino : allMCNeutrinoVector)
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
-        // ATTN Now demand that input mc neutrinos LArMCParticles, with addition of interaction type
-        const LArMCParticle *const pLArMCNeutrino(dynamic_cast<const LArMCParticle*>(pMCNeutrino));
+        try
+        {
+            const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+            const MCParticle *pPrimaryParticle(pHitParticle);
 
-        if (pLArMCNeutrino && (0 != pLArMCNeutrino->GetNuanceCode()))
-            selectedMCNeutrinoVector.push_back(pMCNeutrino);
+            // ATTN Do not map back to mc primaries if mc to primary mc map not provided
+            if (!mcToPrimaryMCMap.empty())
+            {
+                MCRelationMap::const_iterator mcIter = mcToPrimaryMCMap.find(pHitParticle);
+
+                if (mcToPrimaryMCMap.end() == mcIter)
+                    continue;
+
+                pPrimaryParticle = mcIter->second;
+            }
+
+            mcToTrueHitListMap[pPrimaryParticle].push_back(pCaloHit);
+            hitToMCMap[pCaloHit] = pPrimaryParticle;
+        }
+        catch (StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const PrimaryParameters &parameters,
+    std::function<bool(const MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap)
+{
+    // Obtain map: [mc particle -> primary mc particle]
+    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+
+    // Remove non-reconstructable hits, e.g. those downstream of a neutron
+    CaloHitList selectedCaloHitList;
+    LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
+
+    // Obtain maps: [hit -> primary mc particle], [primary mc particle -> list of hits]
+    CaloHitToMCMap hitToPrimaryMCMap;
+    MCContributionMap mcToTrueHitListMap;
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
+
+    // Obtain vector: primary mc particles
+    MCParticleVector mcPrimaryVector;
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+
+    // Select MCParticles matching criteria
+    MCParticleVector candidateTargets;
+    LArMCParticleHelper::SelectParticlesMatchingCriteria(mcPrimaryVector, fCriteria, candidateTargets);
+
+    // Ensure the MCParticles have enough "good" hits to be reconstructed
+    LArMCParticleHelper::SelectParticlesByHitCount(candidateTargets, mcToTrueHitListMap, mcToPrimaryMCMap, parameters, selectedMCParticlesToHitsMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap,
+    PfoContributionMap &pfoToReconstructable2DHitsMap)
+{
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(pfoList, MCContributionMapVector({selectedMCParticleToHitsMap}), pfoToReconstructable2DHitsMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps,
+    PfoContributionMap &pfoToReconstructable2DHitsMap)
+{
+    for (const ParticleFlowObject *const pPfo : pfoList)
+    {
+        CaloHitList pfoHitList;
+        LArMCParticleHelper::CollectReconstructable2DHits(pPfo, selectedMCParticleToHitsMaps, pfoHitList);
+
+        if (!pfoToReconstructable2DHitsMap.insert(PfoContributionMap::value_type(pPfo, pfoHitList)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToHitsMaps,
+    PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
+{
+    PfoVector sortedPfos;
+    for (const auto &mapEntry : pfoToReconstructable2DHitsMap) sortedPfos.push_back(mapEntry.first);
+    std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
+
+    for (const ParticleFlowObject *const pPfo : sortedPfos)
+    {
+        for (const MCContributionMap &mcParticleToHitsMap : selectedMCParticleToHitsMaps)
+        {
+            MCParticleVector sortedMCParticles;
+            for (const auto &mapEntry : mcParticleToHitsMap) sortedMCParticles.push_back(mapEntry.first);
+            std::sort(sortedMCParticles.begin(), sortedMCParticles.end(), PointerLessThan<MCParticle>());
+
+            for (const MCParticle *const pMCParticle : sortedMCParticles)
+            {
+                // Add map entries for this Pfo & MCParticle if required
+                if (pfoToMCParticleHitSharingMap.find(pPfo) == pfoToMCParticleHitSharingMap.end())
+                    if (!pfoToMCParticleHitSharingMap.insert(PfoToMCParticleHitSharingMap::value_type(pPfo, MCParticleToSharedHitsVector())).second)
+                        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT); // ATTN maybe overkill
+
+                if (mcParticleToPfoHitSharingMap.find(pMCParticle) == mcParticleToPfoHitSharingMap.end())
+                    if (!mcParticleToPfoHitSharingMap.insert(MCParticleToPfoHitSharingMap::value_type(pMCParticle, PfoToSharedHitsVector())).second)
+                        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+                // Check this Pfo & MCParticle pairing hasn't already been checked
+                MCParticleToSharedHitsVector &mcHitPairs(pfoToMCParticleHitSharingMap.at(pPfo));
+                PfoToSharedHitsVector &pfoHitPairs(mcParticleToPfoHitSharingMap.at(pMCParticle));
+
+                if (std::any_of(mcHitPairs.begin(), mcHitPairs.end(), [&] (const MCParticleCaloHitListPair &pair) { return (pair.first == pMCParticle); }))
+                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+                if (std::any_of(pfoHitPairs.begin(), pfoHitPairs.end(), [&] (const PfoCaloHitListPair &pair) { return (pair.first == pPfo); }))
+                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+                // Add records to maps if there are any shared hits
+                const CaloHitList sharedHits(LArMCParticleHelper::GetSharedHits(pfoToReconstructable2DHitsMap.at(pPfo), mcParticleToHitsMap.at(pMCParticle)));
+
+                if (!sharedHits.empty())
+                {
+                    mcHitPairs.push_back(MCParticleCaloHitListPair(pMCParticle, sharedHits));
+                    pfoHitPairs.push_back(PfoCaloHitListPair(pPfo, sharedHits));
+
+                    std::sort(mcHitPairs.begin(), mcHitPairs.end(), [] (const MCParticleCaloHitListPair &a, const MCParticleCaloHitListPair &b) -> bool {
+                        return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size() : LArMCParticleHelper::SortByMomentum(a.first, b.first)); });
+
+                    std::sort(pfoHitPairs.begin(), pfoHitPairs.end(), [] (const PfoCaloHitListPair &a, const PfoCaloHitListPair &b) -> bool {
+                        return ((a.second.size() != b.second.size()) ? a.second.size() > b.second.size() : LArPfoHelper::SortByNHits(a.first, b.first)); });
+                }
+            }
+        }
+    }
+}
+
+// private
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
+    pandora::CaloHitList &reconstructableCaloHitList2D)
+{
+    // Collect all 2D calo hits in pfo hierarchy
+    PfoList pfoList;
+    LArPfoHelper::GetAllDownstreamPfos(pPfo, pfoList);
+
+    CaloHitList caloHitList2D;
+    LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_U, caloHitList2D);
+    LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_V, caloHitList2D);
+    LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_W, caloHitList2D);
+    LArPfoHelper::GetIsolatedCaloHits(pfoList, TPC_VIEW_U, caloHitList2D); // TODO check isolated usage throughout
+    LArPfoHelper::GetIsolatedCaloHits(pfoList, TPC_VIEW_V, caloHitList2D);
+    LArPfoHelper::GetIsolatedCaloHits(pfoList, TPC_VIEW_W, caloHitList2D);
+
+    // Filter for only reconstructable hits
+    for (const CaloHit *const pCaloHit : caloHitList2D)
+    {
+        bool isTargetHit(false);
+        for (const MCContributionMap &mcParticleToHitsMap : selectedMCParticleToHitsMaps)
+        {
+            // ATTN This map is unordered, but this does not impact search for specific target hit
+            for (const MCContributionMap::value_type &mapEntry : mcParticleToHitsMap)
+            {
+                if (std::find(mapEntry.second.begin(), mapEntry.second.end(), pCaloHit) != mapEntry.second.end())
+                {
+                    isTargetHit = true;
+                    break;
+                }
+            }
+            if (isTargetHit) break;
+        }
+
+        if (isTargetHit)
+            reconstructableCaloHitList2D.push_back(pCaloHit);
     }
 }
 
@@ -505,309 +514,52 @@ void LArMCParticleHelper::SelectGoodCaloHits(const CaloHitList *const pSelectedC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArMCParticleHelper::InteractionType LArMCParticleHelper::GetInteractionType(const LArMCParticle *const pLArMCNeutrino, const MCParticleList *pMCParticleList,
-    const CaloHitList *pCaloHitList, const unsigned int minPrimaryGoodHits, const unsigned int minHitsForGoodView, const unsigned int minPrimaryGoodViews, const bool selectInputHits,
-    const float maxPhotonPropagation, const float minHitSharingFraction)
+void LArMCParticleHelper::SelectParticlesMatchingCriteria(const MCParticleVector &inputMCParticles, std::function<bool(const MCParticle *const)> fCriteria,
+    MCParticleVector &selectedParticles)
 {
-    // Obtain vector: true neutrinos
-    MCParticleVector mcNeutrinoVector;
-    LArMCParticleHelper::SelectTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
-
-    // Obtain map: [mc particle -> primary mc particle]
-    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
-    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
-
-    // Remove non-reconstructable hits, e.g. those downstream of a neutron
-    CaloHitList selectedCaloHitList;
-    LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, selectInputHits, maxPhotonPropagation);
-
-    // Remove shared hits where target particle deposits below threshold energy fraction
-    CaloHitList goodCaloHitList;
-    LArMCParticleHelper::SelectGoodCaloHits(&selectedCaloHitList, mcToPrimaryMCMap, goodCaloHitList, selectInputHits, minHitSharingFraction);
-
-    // Obtain maps: [good hit -> primary mc particle], [primary mc particle -> list of good hits]
-    LArMonitoringHelper::CaloHitToMCMap goodHitToPrimaryMCMap;
-    LArMonitoringHelper::MCContributionMap mcToGoodTrueHitListMap;
-    LArMonitoringHelper::GetMCParticleToCaloHitMatches(&goodCaloHitList, mcToPrimaryMCMap, goodHitToPrimaryMCMap, mcToGoodTrueHitListMap);
-
-    // Obtain vector: primary mc particles
-    MCParticleVector mcPrimaryVector;
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
-
-    unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPiMinus(0), nNeutrons(0), nPhotons(0);
-
-    for (const MCParticle * const pMCPrimary : mcPrimaryVector)
+    for (const MCParticle *const pMCParticle : inputMCParticles)
     {
-        LArMonitoringHelper::MCContributionMap::const_iterator goodTrueHitsIter = mcToGoodTrueHitListMap.find(pMCPrimary);
-
-        if (mcToGoodTrueHitListMap.end() != goodTrueHitsIter)
-        {
-            const CaloHitList &caloHitList(goodTrueHitsIter->second);
-            if (caloHitList.size() < minPrimaryGoodHits)
-                continue;
-
-            unsigned int nGoodViews(0);
-            if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, caloHitList) >= minHitsForGoodView)
-                ++nGoodViews;
-
-            if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, caloHitList) >= minHitsForGoodView)
-                ++nGoodViews;
-
-            if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, caloHitList) >= minHitsForGoodView)
-                ++nGoodViews;
-
-            if (nGoodViews < minPrimaryGoodViews)
-                continue;
-        }
-
-        if (2112 != pMCPrimary->GetParticleId()) ++nNonNeutrons;
-
-        if (13 == pMCPrimary->GetParticleId()) ++nMuons;
-        if (11 == pMCPrimary->GetParticleId()) ++nElectrons;
-        else if (2212 == pMCPrimary->GetParticleId()) ++nProtons;
-        else if (22 == pMCPrimary->GetParticleId()) ++nPhotons;
-        else if (211 == pMCPrimary->GetParticleId()) ++nPiPlus;
-        else if (-211 == pMCPrimary->GetParticleId()) ++nPiMinus;
-        else if (2112 == pMCPrimary->GetParticleId()) ++nNeutrons;
+        if (fCriteria(pMCParticle))
+            selectedParticles.push_back(pMCParticle);
     }
-
-    if (1001 == pLArMCNeutrino->GetNuanceCode())
-    {
-        if ((1 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons)) return CCQEL_MU;
-        if ((2 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons)) return CCQEL_MU_P;
-        if ((3 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons)) return CCQEL_MU_P_P;
-        if ((4 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons)) return CCQEL_MU_P_P_P;
-        if ((5 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons)) return CCQEL_MU_P_P_P_P;
-        if ((6 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons)) return CCQEL_MU_P_P_P_P_P;
-
-        if ((1 == nNonNeutrons) && (1 == nElectrons) && (0 == nProtons)) return CCQEL_E;
-        if ((2 == nNonNeutrons) && (1 == nElectrons) && (1 == nProtons)) return CCQEL_E_P;
-        if ((3 == nNonNeutrons) && (1 == nElectrons) && (2 == nProtons)) return CCQEL_E_P_P;
-        if ((4 == nNonNeutrons) && (1 == nElectrons) && (3 == nProtons)) return CCQEL_E_P_P_P;
-        if ((5 == nNonNeutrons) && (1 == nElectrons) && (4 == nProtons)) return CCQEL_E_P_P_P_P;
-        if ((6 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons)) return CCQEL_E_P_P_P_P_P;
-    }
-
-    if (1002 == pLArMCNeutrino->GetNuanceCode())
-    {
-        if ((1 == nNonNeutrons) && (1 == nProtons)) return NCQEL_P;
-        if ((2 == nNonNeutrons) && (2 == nProtons)) return NCQEL_P_P;
-        if ((3 == nNonNeutrons) && (3 == nProtons)) return NCQEL_P_P_P;
-        if ((4 == nNonNeutrons) && (4 == nProtons)) return NCQEL_P_P_P_P;
-        if ((5 == nNonNeutrons) && (5 == nProtons)) return NCQEL_P_P_P_P_P;
-    }
-
-    if ((pLArMCNeutrino->GetNuanceCode() >= 1003) && (pLArMCNeutrino->GetNuanceCode() <= 1005))
-    {
-        if ((1 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons)) return CCRES_MU;
-        if ((2 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons)) return CCRES_MU_P;
-        if ((3 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons)) return CCRES_MU_P_P;
-        if ((4 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons)) return CCRES_MU_P_P_P;
-        if ((5 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons)) return CCRES_MU_P_P_P_P;
-        if ((6 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons)) return CCRES_MU_P_P_P_P_P;
-
-        if ((2 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons) && (1 == nPiPlus)) return CCRES_MU_PIPLUS;
-        if ((3 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons) && (1 == nPiPlus)) return CCRES_MU_P_PIPLUS;
-        if ((4 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons) && (1 == nPiPlus)) return CCRES_MU_P_P_PIPLUS;
-        if ((5 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons) && (1 == nPiPlus)) return CCRES_MU_P_P_P_PIPLUS;
-        if ((6 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons) && (1 == nPiPlus)) return CCRES_MU_P_P_P_P_PIPLUS;
-        if ((7 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons) && (1 == nPiPlus)) return CCRES_MU_P_P_P_P_P_PIPLUS;
-
-        if ((2 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons) && (1 == nPhotons)) return CCRES_MU_PHOTON;
-        if ((3 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons) && (1 == nPhotons)) return CCRES_MU_P_PHOTON;
-        if ((4 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons) && (1 == nPhotons)) return CCRES_MU_P_P_PHOTON;
-        if ((5 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons) && (1 == nPhotons)) return CCRES_MU_P_P_P_PHOTON;
-        if ((6 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons) && (1 == nPhotons)) return CCRES_MU_P_P_P_P_PHOTON;
-        if ((7 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons) && (1 == nPhotons)) return CCRES_MU_P_P_P_P_P_PHOTON;
-
-        if ((3 == nNonNeutrons) && (1 == nMuons) && (0 == nProtons) && (2 == nPhotons)) return CCRES_MU_PIZERO;
-        if ((4 == nNonNeutrons) && (1 == nMuons) && (1 == nProtons) && (2 == nPhotons)) return CCRES_MU_P_PIZERO;
-        if ((5 == nNonNeutrons) && (1 == nMuons) && (2 == nProtons) && (2 == nPhotons)) return CCRES_MU_P_P_PIZERO;
-        if ((6 == nNonNeutrons) && (1 == nMuons) && (3 == nProtons) && (2 == nPhotons)) return CCRES_MU_P_P_P_PIZERO;
-        if ((7 == nNonNeutrons) && (1 == nMuons) && (4 == nProtons) && (2 == nPhotons)) return CCRES_MU_P_P_P_P_PIZERO;
-        if ((8 == nNonNeutrons) && (1 == nMuons) && (5 == nProtons) && (2 == nPhotons)) return CCRES_MU_P_P_P_P_P_PIZERO;
-
-        if ((1 == nNonNeutrons) && (1 == nElectrons) && (0 == nProtons)) return CCRES_E;
-        if ((2 == nNonNeutrons) && (1 == nElectrons) && (1 == nProtons)) return CCRES_E_P;
-        if ((3 == nNonNeutrons) && (1 == nElectrons) && (2 == nProtons)) return CCRES_E_P_P;
-        if ((4 == nNonNeutrons) && (1 == nElectrons) && (3 == nProtons)) return CCRES_E_P_P_P;
-        if ((5 == nNonNeutrons) && (1 == nElectrons) && (4 == nProtons)) return CCRES_E_P_P_P_P;
-        if ((6 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons)) return CCRES_E_P_P_P_P_P;
-
-        if ((2 == nNonNeutrons) && (1 == nElectrons) && (0 == nProtons) && (1 == nPiPlus)) return CCRES_E_PIPLUS;
-        if ((3 == nNonNeutrons) && (1 == nElectrons) && (1 == nProtons) && (1 == nPiPlus)) return CCRES_E_P_PIPLUS;
-        if ((4 == nNonNeutrons) && (1 == nElectrons) && (2 == nProtons) && (1 == nPiPlus)) return CCRES_E_P_P_PIPLUS;
-        if ((5 == nNonNeutrons) && (1 == nElectrons) && (3 == nProtons) && (1 == nPiPlus)) return CCRES_E_P_P_P_PIPLUS;
-        if ((6 == nNonNeutrons) && (1 == nElectrons) && (4 == nProtons) && (1 == nPiPlus)) return CCRES_E_P_P_P_P_PIPLUS;
-        if ((7 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons) && (1 == nPiPlus)) return CCRES_E_P_P_P_P_P_PIPLUS;
-
-        if ((2 == nNonNeutrons) && (1 == nElectrons) && (0 == nProtons) && (1 == nPhotons)) return CCRES_E_PHOTON;
-        if ((3 == nNonNeutrons) && (1 == nElectrons) && (1 == nProtons) && (1 == nPhotons)) return CCRES_E_P_PHOTON;
-        if ((4 == nNonNeutrons) && (1 == nElectrons) && (2 == nProtons) && (1 == nPhotons)) return CCRES_E_P_P_PHOTON;
-        if ((5 == nNonNeutrons) && (1 == nElectrons) && (3 == nProtons) && (1 == nPhotons)) return CCRES_E_P_P_P_PHOTON;
-        if ((6 == nNonNeutrons) && (1 == nElectrons) && (4 == nProtons) && (1 == nPhotons)) return CCRES_E_P_P_P_P_PHOTON;
-        if ((7 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons) && (1 == nPhotons)) return CCRES_E_P_P_P_P_P_PHOTON;
-
-        if ((3 == nNonNeutrons) && (1 == nElectrons) && (0 == nProtons) && (2 == nPhotons)) return CCRES_E_PIZERO;
-        if ((4 == nNonNeutrons) && (1 == nElectrons) && (1 == nProtons) && (2 == nPhotons)) return CCRES_E_P_PIZERO;
-        if ((5 == nNonNeutrons) && (1 == nElectrons) && (2 == nProtons) && (2 == nPhotons)) return CCRES_E_P_P_PIZERO;
-        if ((6 == nNonNeutrons) && (1 == nElectrons) && (3 == nProtons) && (2 == nPhotons)) return CCRES_E_P_P_P_PIZERO;
-        if ((7 == nNonNeutrons) && (1 == nElectrons) && (4 == nProtons) && (2 == nPhotons)) return CCRES_E_P_P_P_P_PIZERO;
-        if ((8 == nNonNeutrons) && (1 == nElectrons) && (5 == nProtons) && (2 == nPhotons)) return CCRES_E_P_P_P_P_P_PIZERO;
-    }
-
-    if ((pLArMCNeutrino->GetNuanceCode() >= 1006) && (pLArMCNeutrino->GetNuanceCode() <= 1009))
-    {
-        if ((1 == nNonNeutrons) && (1 == nProtons)) return NCRES_P;
-        if ((2 == nNonNeutrons) && (2 == nProtons)) return NCRES_P_P;
-        if ((3 == nNonNeutrons) && (3 == nProtons)) return NCRES_P_P_P;
-        if ((4 == nNonNeutrons) && (4 == nProtons)) return NCRES_P_P_P_P;
-        if ((5 == nNonNeutrons) && (5 == nProtons)) return NCRES_P_P_P_P_P;
-
-        if ((1 == nNonNeutrons) && (0 == nProtons) && (1 == nPiPlus)) return NCRES_PIPLUS;
-        if ((2 == nNonNeutrons) && (1 == nProtons) && (1 == nPiPlus)) return NCRES_P_PIPLUS;
-        if ((3 == nNonNeutrons) && (2 == nProtons) && (1 == nPiPlus)) return NCRES_P_P_PIPLUS;
-        if ((4 == nNonNeutrons) && (3 == nProtons) && (1 == nPiPlus)) return NCRES_P_P_P_PIPLUS;
-        if ((5 == nNonNeutrons) && (4 == nProtons) && (1 == nPiPlus)) return NCRES_P_P_P_P_PIPLUS;
-        if ((6 == nNonNeutrons) && (5 == nProtons) && (1 == nPiPlus)) return NCRES_P_P_P_P_P_PIPLUS;
-
-        if ((1 == nNonNeutrons) && (0 == nProtons) && (1 == nPiMinus)) return NCRES_PIMINUS;
-        if ((2 == nNonNeutrons) && (1 == nProtons) && (1 == nPiMinus)) return NCRES_P_PIMINUS;
-        if ((3 == nNonNeutrons) && (2 == nProtons) && (1 == nPiMinus)) return NCRES_P_P_PIMINUS;
-        if ((4 == nNonNeutrons) && (3 == nProtons) && (1 == nPiMinus)) return NCRES_P_P_P_PIMINUS;
-        if ((5 == nNonNeutrons) && (4 == nProtons) && (1 == nPiMinus)) return NCRES_P_P_P_P_PIMINUS;
-        if ((6 == nNonNeutrons) && (5 == nProtons) && (1 == nPiMinus)) return NCRES_P_P_P_P_P_PIMINUS;
-
-        if ((1 == nNonNeutrons) && (0 == nProtons) && (1 == nPhotons)) return NCRES_PHOTON;
-        if ((2 == nNonNeutrons) && (1 == nProtons) && (1 == nPhotons)) return NCRES_P_PHOTON;
-        if ((3 == nNonNeutrons) && (2 == nProtons) && (1 == nPhotons)) return NCRES_P_P_PHOTON;
-        if ((4 == nNonNeutrons) && (3 == nProtons) && (1 == nPhotons)) return NCRES_P_P_P_PHOTON;
-        if ((5 == nNonNeutrons) && (4 == nProtons) && (1 == nPhotons)) return NCRES_P_P_P_P_PHOTON;
-        if ((6 == nNonNeutrons) && (5 == nProtons) && (1 == nPhotons)) return NCRES_P_P_P_P_P_PHOTON;
-
-        if ((2 == nNonNeutrons) && (0 == nProtons) && (2 == nPhotons)) return NCRES_PIZERO;
-        if ((3 == nNonNeutrons) && (1 == nProtons) && (2 == nPhotons)) return NCRES_P_PIZERO;
-        if ((4 == nNonNeutrons) && (2 == nProtons) && (2 == nPhotons)) return NCRES_P_P_PIZERO;
-        if ((5 == nNonNeutrons) && (3 == nProtons) && (2 == nPhotons)) return NCRES_P_P_P_PIZERO;
-        if ((6 == nNonNeutrons) && (4 == nProtons) && (2 == nPhotons)) return NCRES_P_P_P_P_PIZERO;
-        if ((7 == nNonNeutrons) && (5 == nProtons) && (2 == nPhotons)) return NCRES_P_P_P_P_P_PIZERO;
-    }
-
-    if (pLArMCNeutrino->GetNuanceCode() == 1091) return CCDIS;
-    if (pLArMCNeutrino->GetNuanceCode() == 1092) return NCDIS;
-    if (pLArMCNeutrino->GetNuanceCode() == 1096) return NCCOH;
-    if (pLArMCNeutrino->GetNuanceCode() == 1097) return CCCOH;
-
-    return OTHER_INTERACTION;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::string LArMCParticleHelper::ToString(const InteractionType interactionType)
+void LArMCParticleHelper::SelectParticlesByHitCount(const MCParticleVector &candidateTargets, const MCContributionMap &mcToTrueHitListMap,
+    const MCRelationMap &mcToPrimaryMCMap, const PrimaryParameters &parameters, MCContributionMap &selectedMCParticlesToHitsMap)
 {
-    switch (interactionType)
+    // Apply restrictions on the number of good hits associated with the MCParticles
+    for (const MCParticle * const pMCTarget : candidateTargets)
     {
-    case CCQEL_MU: return "CCQEL_MU";
-    case CCQEL_MU_P: return "CCQEL_MU_P";
-    case CCQEL_MU_P_P: return "CCQEL_MU_P_P";
-    case CCQEL_MU_P_P_P: return "CCQEL_MU_P_P_P";
-    case CCQEL_MU_P_P_P_P: return "CCQEL_MU_P_P_P_P";
-    case CCQEL_MU_P_P_P_P_P: return "CCQEL_MU_P_P_P_P_P";
-    case CCQEL_E: return "CCQEL_E";
-    case CCQEL_E_P: return "CCQEL_E_P";
-    case CCQEL_E_P_P: return "CCQEL_E_P_P";
-    case CCQEL_E_P_P_P: return "CCQEL_E_P_P_P";
-    case CCQEL_E_P_P_P_P: return "CCQEL_E_P_P_P_P";
-    case CCQEL_E_P_P_P_P_P: return "CCQEL_E_P_P_P_P_P";
-    case NCQEL_P: return "NCQEL_P";
-    case NCQEL_P_P: return "NCQEL_P_P";
-    case NCQEL_P_P_P: return "NCQEL_P_P_P";
-    case NCQEL_P_P_P_P: return "NCQEL_P_P_P_P";
-    case NCQEL_P_P_P_P_P: return "NCQEL_P_P_P_P_P";
-    case CCRES_MU: return "CCRES_MU";
-    case CCRES_MU_P: return "CCRES_MU_P";
-    case CCRES_MU_P_P: return "CCRES_MU_P_P";
-    case CCRES_MU_P_P_P: return "CCRES_MU_P_P_P";
-    case CCRES_MU_P_P_P_P: return "CCRES_MU_P_P_P_P";
-    case CCRES_MU_P_P_P_P_P: return "CCRES_MU_P_P_P_P_P";
-    case CCRES_MU_PIPLUS: return "CCRES_MU_PIPLUS";
-    case CCRES_MU_P_PIPLUS: return "CCRES_MU_P_PIPLUS";
-    case CCRES_MU_P_P_PIPLUS: return "CCRES_MU_P_P_PIPLUS";
-    case CCRES_MU_P_P_P_PIPLUS: return "CCRES_MU_P_P_P_PIPLUS";
-    case CCRES_MU_P_P_P_P_PIPLUS: return "CCRES_MU_P_P_P_P_PIPLUS";
-    case CCRES_MU_P_P_P_P_P_PIPLUS: return "CCRES_MU_P_P_P_P_P_PIPLUS";
-    case CCRES_MU_PHOTON: return "CCRES_MU_PHOTON";
-    case CCRES_MU_P_PHOTON: return "CCRES_MU_P_PHOTON";
-    case CCRES_MU_P_P_PHOTON: return "CCRES_MU_P_P_PHOTON";
-    case CCRES_MU_P_P_P_PHOTON: return "CCRES_MU_P_P_P_PHOTON";
-    case CCRES_MU_P_P_P_P_PHOTON: return "CCRES_MU_P_P_P_P_PHOTON";
-    case CCRES_MU_P_P_P_P_P_PHOTON: return "CCRES_MU_P_P_P_P_P_PHOTON";
-    case CCRES_MU_PIZERO: return "CCRES_MU_PIZERO";
-    case CCRES_MU_P_PIZERO: return "CCRES_MU_P_PIZERO";
-    case CCRES_MU_P_P_PIZERO: return "CCRES_MU_P_P_PIZERO";
-    case CCRES_MU_P_P_P_PIZERO: return "CCRES_MU_P_P_P_PIZERO";
-    case CCRES_MU_P_P_P_P_PIZERO: return "CCRES_MU_P_P_P_P_PIZERO";
-    case CCRES_MU_P_P_P_P_P_PIZERO: return "CCRES_MU_P_P_P_P_P_PIZERO";
-    case CCRES_E: return "CCRES_E";
-    case CCRES_E_P: return "CCRES_E_P";
-    case CCRES_E_P_P: return "CCRES_E_P_P";
-    case CCRES_E_P_P_P: return "CCRES_E_P_P_P";
-    case CCRES_E_P_P_P_P: return "CCRES_E_P_P_P_P";
-    case CCRES_E_P_P_P_P_P: return "CCRES_E_P_P_P_P_P";
-    case CCRES_E_PIPLUS: return "CCRES_E_PIPLUS";
-    case CCRES_E_P_PIPLUS: return "CCRES_E_P_PIPLUS";
-    case CCRES_E_P_P_PIPLUS: return "CCRES_E_P_P_PIPLUS";
-    case CCRES_E_P_P_P_PIPLUS: return "CCRES_E_P_P_P_PIPLUS";
-    case CCRES_E_P_P_P_P_PIPLUS: return "CCRES_E_P_P_P_P_PIPLUS";
-    case CCRES_E_P_P_P_P_P_PIPLUS: return "CCRES_E_P_P_P_P_P_PIPLUS";
-    case CCRES_E_PHOTON: return "CCRES_E_PHOTON";
-    case CCRES_E_P_PHOTON: return "CCRES_E_P_PHOTON";
-    case CCRES_E_P_P_PHOTON: return "CCRES_E_P_P_PHOTON";
-    case CCRES_E_P_P_P_PHOTON: return "CCRES_E_P_P_P_PHOTON";
-    case CCRES_E_P_P_P_P_PHOTON: return "CCRES_E_P_P_P_P_PHOTON";
-    case CCRES_E_P_P_P_P_P_PHOTON: return "CCRES_E_P_P_P_P_P_PHOTON";
-    case CCRES_E_PIZERO: return "CCRES_E_PIZERO";
-    case CCRES_E_P_PIZERO: return "CCRES_E_P_PIZERO";
-    case CCRES_E_P_P_PIZERO: return "CCRES_E_P_P_PIZERO";
-    case CCRES_E_P_P_P_PIZERO: return "CCRES_E_P_P_P_PIZERO";
-    case CCRES_E_P_P_P_P_PIZERO: return "CCRES_E_P_P_P_P_PIZERO";
-    case CCRES_E_P_P_P_P_P_PIZERO: return "CCRES_E_P_P_P_P_P_PIZERO";
-    case NCRES_P: return "NCRES_P";
-    case NCRES_P_P: return "NCRES_P_P";
-    case NCRES_P_P_P: return "NCRES_P_P_P";
-    case NCRES_P_P_P_P: return "NCRES_P_P_P_P";
-    case NCRES_P_P_P_P_P: return "NCRES_P_P_P_P_P";
-    case NCRES_PIPLUS: return "NCRES_PIPLUS";
-    case NCRES_P_PIPLUS: return "NCRES_P_PIPLUS";
-    case NCRES_P_P_PIPLUS: return "NCRES_P_P_PIPLUS";
-    case NCRES_P_P_P_PIPLUS: return "NCRES_P_P_P_PIPLUS";
-    case NCRES_P_P_P_P_PIPLUS: return "NCRES_P_P_P_P_PIPLUS";
-    case NCRES_P_P_P_P_P_PIPLUS: return "NCRES_P_P_P_P_P_PIPLUS";
-    case NCRES_PIMINUS: return "NCRES_PIMINUS";
-    case NCRES_P_PIMINUS: return "NCRES_P_PIMINUS";
-    case NCRES_P_P_PIMINUS: return "NCRES_P_P_PIMINUS";
-    case NCRES_P_P_P_PIMINUS: return "NCRES_P_P_P_PIMINUS";
-    case NCRES_P_P_P_P_PIMINUS: return "NCRES_P_P_P_P_PIMINUS";
-    case NCRES_P_P_P_P_P_PIMINUS: return "NCRES_P_P_P_P_P_PIMINUS";
-    case NCRES_PHOTON: return "NCRES_PHOTON";
-    case NCRES_P_PHOTON: return "NCRES_P_PHOTON";
-    case NCRES_P_P_PHOTON: return "NCRES_P_P_PHOTON";
-    case NCRES_P_P_P_PHOTON: return "NCRES_P_P_P_PHOTON";
-    case NCRES_P_P_P_P_PHOTON: return "NCRES_P_P_P_P_PHOTON";
-    case NCRES_P_P_P_P_P_PHOTON: return "NCRES_P_P_P_P_P_PHOTON";
-    case NCRES_PIZERO: return "NCRES_PIZERO";
-    case NCRES_P_PIZERO: return "NCRES_P_PIZERO";
-    case NCRES_P_P_PIZERO: return "NCRES_P_P_PIZERO";
-    case NCRES_P_P_P_PIZERO: return "NCRES_P_P_P_PIZERO";
-    case NCRES_P_P_P_P_PIZERO: return "NCRES_P_P_P_P_PIZERO";
-    case NCRES_P_P_P_P_P_PIZERO: return "NCRES_P_P_P_P_P_PIZERO";
-    case CCDIS: return "CCDIS";
-    case NCDIS: return "NCDIS";
-    case CCCOH: return "CCCOH";
-    case NCCOH: return "NCCOH";
-    case OTHER_INTERACTION: return "OTHER_INTERACTION";
-    case ALL_INTERACTIONS: return "ALL_INTERACTIONS";
-    default: return "UNKNOWN";
+        MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCTarget);
+        if (mcToTrueHitListMap.end() == trueHitsIter)
+            continue;
+
+        const CaloHitList &caloHitList(trueHitsIter->second);
+
+        // Remove shared hits where target particle deposits below threshold energy fraction
+        CaloHitList goodCaloHitList;
+        LArMCParticleHelper::SelectGoodCaloHits(&caloHitList, mcToPrimaryMCMap, goodCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction);
+
+        if (goodCaloHitList.size() < parameters.m_minPrimaryGoodHits)
+            continue;
+
+        unsigned int nGoodViews(0);
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, goodCaloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, goodCaloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, goodCaloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (nGoodViews < parameters.m_minPrimaryGoodViews)
+            continue;
+
+        if (!selectedMCParticlesToHitsMap.insert(MCContributionMap::value_type(pMCTarget, caloHitList)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
 }
 
@@ -838,17 +590,18 @@ bool LArMCParticleHelper::PassMCParticleChecks(const MCParticle *const pOriginal
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
-template float LArMCParticleHelper::GetNeutrinoFraction(const CaloHit *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const Cluster *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const ParticleFlowObject *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const CaloHitList *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const ClusterList *const);
-template float LArMCParticleHelper::GetNeutrinoFraction(const PfoList *const);
+CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, const CaloHitList &hitListB)
+{
+    CaloHitList sharedHits;
 
-template void LArMCParticleHelper::GetNeutrinoWeight(const CaloHitList *const, float &, float &);
-template void LArMCParticleHelper::GetNeutrinoWeight(const ClusterList *const, float &, float &);
-template void LArMCParticleHelper::GetNeutrinoWeight(const PfoList *const, float &, float &);
+    for (const CaloHit *const pCaloHit : hitListA)
+    {
+        if (std::find(hitListB.begin(), hitListB.end(), pCaloHit) != hitListB.end())
+            sharedHits.push_back(pCaloHit);
+    }
+
+    return sharedHits;
+}
 
 } // namespace lar_content

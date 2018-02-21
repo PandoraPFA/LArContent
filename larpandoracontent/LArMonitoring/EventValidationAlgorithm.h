@@ -10,15 +10,13 @@
 
 #include "Pandora/Algorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #ifdef MONITORING
 #include "PandoraMonitoringApi.h"
 #endif
 
 #include <map>
-#include <set>
-#include <vector>
 
 namespace lar_content
 {
@@ -41,324 +39,179 @@ public:
 
 private:
     /**
-     *  @brief SimpleMCPrimary class
+     *  @brief  ValidationInfo class
      */
-    class SimpleMCPrimary
+    class ValidationInfo
     {
     public:
         /**
-         *  @brief  Constructor
-         */
-        SimpleMCPrimary();
-
-        /**
-         *  @brief  operator <
+         *  @brief  Get the all mc particle to hits map
          *
-         *  @param  rhs object for comparison
+         *  @return the all mc particle to hits map
+         */
+        const LArMCParticleHelper::MCContributionMap &GetAllMCParticleToHitsMap() const;
+
+        /**
+         *  @brief  Get the target mc particle to hits map
          *
-         *  @return boolean
+         *  @return the target mc particle to hits map
          */
-        bool operator<(const SimpleMCPrimary &rhs) const;
+        const LArMCParticleHelper::MCContributionMap &GetTargetMCParticleToHitsMap() const;
 
-        int                                 m_id;                       ///< The unique identifier
-        int                                 m_pdgCode;                  ///< The pdg code
-        int                                 m_nMCHitsTotal;             ///< The total number of mc hits
-        int                                 m_nMCHitsU;                 ///< The number of u mc hits
-        int                                 m_nMCHitsV;                 ///< The number of v mc hits
-        int                                 m_nMCHitsW;                 ///< The number of w mc hits
-        int                                 m_nGoodMCHitsTotal;         ///< The total number of good mc hits
-        int                                 m_nGoodMCHitsU;             ///< The number of good u mc hits
-        int                                 m_nGoodMCHitsV;             ///< The number of good v mc hits
-        int                                 m_nGoodMCHitsW;             ///< The number of good w mc hits
-        float                               m_energy;                   ///< The energy
-        pandora::CartesianVector            m_momentum;                 ///< The momentum (presumably at the vertex)
-        pandora::CartesianVector            m_vertex;                   ///< The vertex
-        pandora::CartesianVector            m_endpoint;                 ///< The endpoint
-        int                                 m_nMatchedPfos;             ///< The number of matched pfos
-        const pandora::MCParticle          *m_pPandoraAddress;          ///< The address of the Pandora mc primary
-    };
-
-    typedef std::vector<SimpleMCPrimary> SimpleMCPrimaryList;
-
-    /**
-     *  @brief SimpleMatchedPfo class
-     */
-    class SimpleMatchedPfo
-    {
-    public:
         /**
-         *  @brief  Constructor
+         *  @brief  Get the pfo to hits map
+         *
+         *  @return the pfo to hits map
          */
-        SimpleMatchedPfo();
+        const LArMCParticleHelper::PfoContributionMap &GetPfoToHitsMap() const;
 
-        int                                 m_id;                       ///< The unique identifier
-        int                                 m_parentId;                 ///< The unique identifier of the parent pfo (-1 if no parent set)
-        int                                 m_pdgCode;                  ///< The pdg code
-        int                                 m_nPfoHitsTotal;            ///< The total number of pfo hits
-        int                                 m_nPfoHitsU;                ///< The number of u pfo hits
-        int                                 m_nPfoHitsV;                ///< The number of v pfo hits
-        int                                 m_nPfoHitsW;                ///< The number of w pfo hits
-        int                                 m_nMatchedHitsTotal;        ///< The total number of matched hits
-        int                                 m_nMatchedHitsU;            ///< The number of u matched hits
-        int                                 m_nMatchedHitsV;            ///< The number of v matched hits
-        int                                 m_nMatchedHitsW;            ///< The number of w matched hits
-        pandora::CartesianVector            m_vertex;                   ///< The vertex (currently only filled for track pfos)
-        pandora::CartesianVector            m_endpoint;                 ///< The endpoint (currently only filled for track pfos)
-        pandora::CartesianVector            m_vertexDirection;          ///< The vertex direction (currently only filled for track pfos)
-        pandora::CartesianVector            m_endDirection;             ///< The endpoint direction (currently only filled for track pfos)
-        const pandora::ParticleFlowObject  *m_pPandoraAddress;          ///< The address of the Pandora mc primary
-    };
-
-    typedef std::vector<SimpleMatchedPfo> SimpleMatchedPfoList;
-
-    /**
-     * @brief   MatchingDetails class
-     */
-    class MatchingDetails
-    {
-    public:
         /**
-         *  @brief  Default constructor
+         *  @brief  Get the mc to pfo hit sharing map
+         *
+         *  @return the mc to pfo hit sharing map
          */
-        MatchingDetails();
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &GetMCToPfoHitSharingMap() const;
 
-        int                                 m_matchedPrimaryId;         ///< The total number of occurences
-        int                                 m_nMatchedHits;             ///< The number of times the primary has 0 pfo matches
+        /**
+         *  @brief  Get the interpreted mc to pfo hit sharing map
+         *
+         *  @return the interpreted mc to pfo hit sharing map
+         */
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &GetInterpretedMCToPfoHitSharingMap() const;
+
+        /**
+         *  @brief  Set the all mc particle to hits map
+         *
+         *  @param  allMCParticleToHitsMap the all mc particle to hits map
+         */
+        void SetAllMCParticleToHitsMap(const LArMCParticleHelper::MCContributionMap &allMCParticleToHitsMap);
+
+        /**
+         *  @brief  Set the target mc particle to hits map
+         *
+         *  @param  targetMCParticleToHitsMap the target mc particle to hits map
+         */
+        void SetTargetMCParticleToHitsMap(const LArMCParticleHelper::MCContributionMap &targetMCParticleToHitsMap);
+
+        /**
+         *  @brief  Set the pfo to hits map
+         *
+         *  @param  pfoToHitsMap the pfo to hits map
+         */
+        void SetPfoToHitsMap(const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap);
+
+        /**
+         *  @brief  Set the mc to pfo hit sharing map
+         *
+         *  @param  mcToPfoHitSharingMap the mc to pfo hit sharing map
+         */
+        void SetMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap);
+
+        /**
+         *  @brief  Set the interpreted mc to pfo hit sharing map
+         *
+         *  @param  interpretedMCToPfoHitSharingMap the interpreted mc to pfo hit sharing map
+         */
+        void SetInterpretedMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap);
+
+    private:
+        LArMCParticleHelper::MCContributionMap              m_allMCParticleToHitsMap;               ///< The all mc particle to hits map
+        LArMCParticleHelper::MCContributionMap              m_targetMCParticleToHitsMap;            ///< The target mc particle to hits map
+        LArMCParticleHelper::PfoContributionMap             m_pfoToHitsMap;                         ///< The pfo to hits map
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap   m_mcToPfoHitSharingMap;                 ///< The mc to pfo hit sharing map
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap   m_interpretedMCToPfoHitSharingMap;      ///< The interpreted mc to pfo hit sharing map
     };
-
-    typedef std::map<int, MatchingDetails> MatchingDetailsMap;
 
     pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Select a subset of reco neutrinos representing those that should be used in performance metrics (which will then
-     *          integrate over all neutrino daughter particles, regardless of neutrino origin)
+     *  @brief  Fill the validation info containers
      *
-     *  @param  allRecoParticleList the list of all reco particles
-     *  @param  selectedRecoNeutrinoList to receive the populated selected reco neutrino list
+     *  @param  pMCParticleList the address of the mc particle list
+     *  @param  pCaloHitList the address of the calo hit list
+     *  @param  pPfoList the address of the pfo list
+     *  @param  validationInfo to receive the validation info
      */
-    void SelectRecoNeutrinos(const pandora::PfoList &allRecoParticleList, pandora::PfoList &selectedRecoNeutrinoList) const;
+    void FillValidationInfo(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
+        const pandora::PfoList *const pPfoList, ValidationInfo &validationInfo) const;
+
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, unsigned int> PfoToIdMap;
 
     /**
-     *  @brief  Extract details of each mc primary (ordered by number of true hits)
+     *  @brief  Print all/raw matching information to screen
      *
-     *  @param  mcPrimaryList the mc primary list
-     *  @param  mcToTrueHitListMap the mc to true hit list map
-     *  @param  mcToGoodTrueHitListMap the mc to good true hit list map (vetoes hits with significant energy sharing)
-     *  @param  mcToFullPfoMatchingMap the mc to full pfo matching map (to record number of matched pfos)
-     *  @param  simpleMCPrimaryList to receive the populated simple mc primary list
+     *  @param  validationInfo the validation info
      */
-    void GetSimpleMCPrimaryList(const pandora::MCParticleVector &mcPrimaryList, const LArMonitoringHelper::MCContributionMap &mcToTrueHitListMap,
-        const LArMonitoringHelper::MCContributionMap &mcToGoodTrueHitListMap, const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap,
-        SimpleMCPrimaryList &simpleMCPrimaryList) const;
-
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, int> PfoIdMap;
-    typedef std::map<SimpleMCPrimary, SimpleMatchedPfoList> MCPrimaryMatchingMap; // SimpleMCPrimary has a defined operator<
+    void PrintAllMatches(const ValidationInfo &validationInfo) const;
 
     /**
-     *  @brief  Obtain a sorted list of matched pfos for each mc primary
+     *  @brief  Print interpreted matching information to screen
      *
-     *  @param  simpleMCPrimaryList the simple mc primary list
-     *  @param  pfoIdMap the pfo id map
-     *  @param  mcToFullPfoMatchingMap the mc to full pfo matching map
-     *  @param  pfoToHitListMap the pfo to hit list map
-     *  @param  mcPrimaryMatchingMap to receive the populated mc primary matching map
+     *  @param  validationInfo the validation info
      */
-    void GetMCPrimaryMatchingMap(const SimpleMCPrimaryList &simpleMCPrimaryList, const PfoIdMap &pfoIdMap,
-        const LArMonitoringHelper::MCToPfoMatchingMap &mcToFullPfoMatchingMap, const LArMonitoringHelper::PfoContributionMap &pfoToHitListMap,
-        MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+    void PrintInterpretedMatches(const ValidationInfo &validationInfo) const;
 
     /**
-     *  @brief  Print all the raw matching output to screen
+     *  @brief  Write interpreted matching information to tree
      *
-     *  @param  mcNeutrinoVector the mc neutrino vector
-     *  @param  recoNeutrinoVector the reco neutrino vector
-     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
-     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     *  @param  validationInfo the validation info
      */
-    void PrintAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
-        const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap, const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+    void WriteInterpretedMatches(const ValidationInfo &validationInfo) const;
 
     /**
-     *  @brief  Write all the raw matching output to a tree
+     *  @brief  Print matching information in a provided validation info object, and write information to tree if configured to do so
      *
-     *  @param  mcNeutrinoVector the mc neutrino vector
-     *  @param  recoNeutrinoVector the reco neutrino vector
-     *  @param  mcToPrimaryMCMap the mc particle to primary mc particle map
-     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
+     *  @param  validationInfo the validation info
+     *  @param  useInterpretedMatching whether to use the interpreted (rather than raw) matching information
+     *  @param  printToScreen whether to print the information to screen
+     *  @param  fillTree whether to write the information to tree
      */
-    void WriteAllOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
-        const LArMCParticleHelper::MCRelationMap &mcToPrimaryMCMap, const MCPrimaryMatchingMap &mcPrimaryMatchingMap) const;
+    void ProcessOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const;
 
     /**
-     *  @brief  Get hits, downstream from a neutrino pfo, that are truly neutrino induced (and those that are not)
+     *  @brief  Apply an interpretative matching procedure to the comprehensive matches in the provided validation info object
      *
-     *  @param  pNeutrinoPfo address of the neutrino pfo
-     *  @param  neutrinoInducedHits to receive the list of neutrino-induced downstream hits
-     *  @param  otherHits to receive the list of downstream hits with non-neutrino origin
+     *  @param  validationInfo the validation info
+     *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
-    void GetNeutrinoHitOrigins(const pandora::Pfo *const pNeutrinoPfo, pandora::CaloHitList &neutrinoInducedHits, pandora::CaloHitList &otherHits) const;
-
-    /**
-     *  @brief  Get hits, from entire event, that are truly neutrino induced (and those that are not)
-     *
-     *  @param  neutrinoInducedHits to receive the list of neutrino-induced hits
-     *  @param  otherHits to receive the list of hits with non-neutrino origin
-     */
-    void GetEventHitOrigins(pandora::CaloHitList &neutrinoInducedHits, pandora::CaloHitList &otherHits) const;
-
-    /**
-     *  @brief  Apply a well-defined matching procedure to the comprehensive matches in the provided mc primary matching map
-     *
-     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
-     *  @param  matchingDetailsMap the matching details map, to be populated
-     */
-    void PerformMatching(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, MatchingDetailsMap &matchingDetailsMap) const;
-
-    typedef std::set<int> IntSet;
+    void InterpretMatching(const ValidationInfo &validationInfo, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the strongest pfo match (most matched hits) between an available mc primary and an available pfo
      *
-     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
-     *  @param  usedMCIds the list of mc primary ids with an existing match
-     *  @param  usedPfoIds the list of pfo ids with an existing match
-     *  @param  matchingDetailsMap the matching details map, to be populated
+     *  @param  validationInfo the validation info
+     *  @param  mcPrimaryVector the mc primary vector
+     *  @param  usedPfos the set of previously used pfos
+     *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
+     *
+     *  @return whether a strong match was identified
      */
-    bool GetStrongestPfoMatch(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, IntSet &usedMCIds, IntSet &usedPfoIds, MatchingDetailsMap &matchingDetailsMap) const;
+    bool GetStrongestPfoMatch(const ValidationInfo &validationInfo, const pandora::MCParticleVector &mcPrimaryVector, pandora::PfoSet &usedPfos,
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the best matches for any pfos left-over after the strong matching procedure
      *
-     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
-     *  @param  usedPfoIds the list of pfo ids with an existing match
-     *  @param  matchingDetailsMap the matching details map, to be populated
+     *  @param  validationInfo the validation info
+     *  @param  mcPrimaryVector the mc primary vector
+     *  @param  usedPfos the set of previously used pfos
+     *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
-    void GetRemainingPfoMatches(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const IntSet &usedPfoIds, MatchingDetailsMap &matchingDetailsMap) const;
-
-    /**
-     *  @brief  Print the results of the matching procedure
-     *
-     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
-     *  @param  matchingDetailsMap the matching details map
-     */
-    void PrintMatchingOutput(const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
-
-#ifdef MONITORING
-    /**
-     *  @brief  Use Pandora monitoring to visualize results of the matching procedure
-     *
-     *  @param  mcNeutrinoVector the mc neutrino vector
-     *  @param  recoNeutrinoVector the reco neutrino vector
-     *  @param  mcPrimaryMatchingMap the input/raw mc primary matching map
-     *  @param  matchingDetailsMap the matching details map
-     */
-    void VisualizeMatchingOutput(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector,
-        const MCPrimaryMatchingMap &mcPrimaryMatchingMap, const MatchingDetailsMap &matchingDetailsMap) const;
-
-    /**
-     *  @brief  Use Pandora monitoring to visualize vertex matches
-     *
-     *  @param  mcNeutrinoVector the mc neutrino vector
-     *  @param  recoNeutrinoVector the reco neutrino vector
-     *  @param  hitType the hitType to visualize (used for projections of 3D vertex positions)
-     */
-    void VisualizeVertexMatches(const pandora::MCParticleVector &mcNeutrinoVector, const pandora::PfoVector &recoNeutrinoVector, const pandora::HitType hitType) const;
-
-    /**
-     *  @brief  Get name and color details for a given simple mc primary
-     *
-     *  @param  simpleMCPrimary the simple mc primary
-     *  @param  mcPrimaryMatchingMap the mc primary matching map
-     *  @param  name to receive the mc primary name
-     *  @param  colorto receive the mc primary color
-     */
-    void GetPrimaryDetails(const SimpleMCPrimary &simpleMCPrimary, const MCPrimaryMatchingMap &mcPrimaryMatchingMap, std::string &name, Color &color) const;
-
-    /**
-     *  @brief  Use Pandora monitoring to visualize particles of non-neutrino origin included as daughters of the neutrino
-     *
-     *  @param  recoNeutrinoVector the reco neutrino vector
-     *  @param  allPrimaryMatchedPfos the set of all primary matched pfos
-     *  @param  hitType the hitType to visualize
-     */
-    void VisualizeContaminants(const pandora::PfoVector &recoNeutrinoVector, const pandora::PfoSet &allPrimaryMatchedPfos, const pandora::HitType hitType) const;
-
-    /**
-     *  @brief  Use Pandora monitoring to visualize left over hits and clusters
-     *
-     *  @param  hitType the hitType to visualize, will examine all remnants of given hit type in provided hit and cluster list name(s)
-     */
-    void VisualizeRemnants(const pandora::HitType hitType) const;
-#endif
-    /**
-     *  @brief  Whether a provided mc primary passes selection, based on number of "good" hits
-     *
-     *  @param  simpleMCPrimary the simple mc primary
-     *
-     *  @return boolean
-     */
-    bool IsGoodMCPrimary(const SimpleMCPrimary &simpleMCPrimary) const;
-
-    /**
-     *  @brief  Whether a provided mc primary has a match, of any quality (use simple matched pfo list and information in matching details map)
-     *
-     *  @param  simpleMCPrimary the simple mc primary
-     *  @param  simpleMatchedPfoList the list of simple matched pfos
-     *  @param  matchingDetailsMap the matching details map
-     *
-     *  @return boolean
-     */
-    bool HasMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfoList &simpleMatchedPfoList, const MatchingDetailsMap &matchingDetailsMap) const;
+    void GetRemainingPfoMatches(const ValidationInfo &validationInfo, const pandora::MCParticleVector &mcPrimaryVector, const pandora::PfoSet &usedPfos,
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Whether a provided mc primary and pfo are deemed to be a good match
      *
-     *  @param  simpleMCPrimary the simple mc primary
-     *  @param  simpleMatchedPfo the simple matched pfo
+     *  @param  trueHits the list of true hits
+     *  @param  recoHits the list of reco hits
+     *  @param  sharedHits the list of shared hits
      *
      *  @return boolean
      */
-    bool IsGoodMatch(const SimpleMCPrimary &simpleMCPrimary, const SimpleMatchedPfo &simpleMatchedPfo) const;
+    bool IsGoodMatch(const pandora::CaloHitList &trueHits, const pandora::CaloHitList &recoHits, const pandora::CaloHitList &sharedHits) const;
 
-    /**
-     *  @brief  Get a mapping from pfo to unique (on an event-by-event basis) identifier
-     *
-     *  @param  pfoList the input pfo list
-     *  @param  pfoIdMap to receive the pfo id map
-     */
-    void GetPfoIdMap(const pandora::PfoList &pfoList, PfoIdMap &pfoIdMap) const;
-
-    /**
-     *  @brief  Sort simple mc primaries by number of mc hits
-     *
-     *  @param  lhs the left-hand side
-     *  @param  rhs the right-hand side
-     *
-     *  @return boolean
-     */
-    static bool SortSimpleMCPrimaries(const SimpleMCPrimary &lhs, const SimpleMCPrimary &rhs);
-
-    /**
-     *  @brief  Sort simple matched pfos by number of matched hits
-     *
-     *  @param  lhs the left-hand side
-     *  @param  rhs the right-hand side
-     *
-     *  @return boolean
-     */
-    static bool SortSimpleMatchedPfos(const SimpleMatchedPfo &lhs, const SimpleMatchedPfo &rhs);
-
-    /**
-     *  @brief  Sort reco neutrinos by number of hits in their largest daughter particle
-     *
-     *  @param  pLhs address the left-hand side instance
-     *  @param  pRhs address the right-hand side instance
-     *
-     *  @return boolean
-     */
-    static bool SortRecoNeutrinos(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<pandora::HitType> HitTypeVector;
 
@@ -366,39 +219,21 @@ private:
     std::string             m_mcParticleListName;           ///< Name of input MC particle list
     std::string             m_pfoListName;                  ///< Name of input Pfo list
 
-    pandora::StringVector   m_clusterListNames;             ///< Optional list of cluster list names to examine to find left-over, remnant clusters
-
-    bool                    m_integrateOverRecoNeutrinos;   ///< Whether to consider particles from all reco neutrinos
-    bool                    m_useRecoNeutrinosOnly;         ///< Whether to only consider pfos that are daughters of reco neutrinos
     bool                    m_useTrueNeutrinosOnly;         ///< Whether to consider only mc particles that were neutrino induced
-    bool                    m_primaryPfosOnly;              ///< Whether to extract only primary Pfos - top-level pfos and top-level daughters of top-level neutrinos
-    bool                    m_collapseToPrimaryPfos;        ///< Whether to collapse hits associated with daughter pfos back to the primary pfo
 
     bool                    m_selectInputHits;              ///< Whether to use only hits passing mc-based quality (is "reconstructable") checks
-    float                   m_minHitNeutrinoWeight;         ///< Minimum fraction of energy deposited by neutrino-indiced products in a single hit
     float                   m_minHitSharingFraction;        ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
     float                   m_maxPhotonPropagation;         ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
 
     bool                    m_printAllToScreen;             ///< Whether to print all/raw matching details to screen
     bool                    m_printMatchingToScreen;        ///< Whether to print matching output to screen
 
-    bool                    m_visualizeMatching;            ///< Whether to use Pandora monitoring to visualize matching output
-    bool                    m_visualizeVertices;            ///< Whether to show vertices in visualization
-    bool                    m_visualizeRemnants;            ///< Whether to show remnants in visualization
-    bool                    m_visualizeGaps;                ///< Whether to show geometry (detector gaps) in visualization
-
     bool                    m_writeToTree;                  ///< Whether to write all/raw matching details to tree
 
-    int                     m_matchingMinPrimaryHits;       ///< The minimum number of good mc primary hits used in matching scheme
-    int                     m_matchingMinHitsForGoodView;   ///< The minimum number of good mc primary hits in given view to declare view to be good
-    int                     m_matchingMinPrimaryGoodViews;  ///< The minimum number of good views for a mc primary
-
     bool                    m_useSmallPrimaries;            ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
-    int                     m_matchingMinSharedHits;        ///< The minimum number of shared hits used in matching scheme
+    unsigned int            m_matchingMinSharedHits;        ///< The minimum number of shared hits used in matching scheme
     float                   m_matchingMinCompleteness;      ///< The minimum particle completeness to declare a match
     float                   m_matchingMinPurity;            ///< The minimum particle purity to declare a match
-
-    float                   m_vertexVisualizationDeltaR;    ///< The vertex visualization delta r value, defining good and bad vertex matches
 
     std::string             m_treeName;                     ///< Name of output tree
     std::string             m_fileName;                     ///< Name of output file
@@ -406,6 +241,99 @@ private:
     int                     m_fileIdentifier;               ///< The input file identifier
     int                     m_eventNumber;                  ///< The event number
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::MCContributionMap &EventValidationAlgorithm::ValidationInfo::GetAllMCParticleToHitsMap() const
+{
+    return m_allMCParticleToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::MCContributionMap &EventValidationAlgorithm::ValidationInfo::GetTargetMCParticleToHitsMap() const
+{
+    return m_targetMCParticleToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::PfoContributionMap &EventValidationAlgorithm::ValidationInfo::GetPfoToHitsMap() const
+{
+    return m_pfoToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::MCParticleToPfoHitSharingMap &EventValidationAlgorithm::ValidationInfo::GetMCToPfoHitSharingMap() const
+{
+    return m_mcToPfoHitSharingMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArMCParticleHelper::MCParticleToPfoHitSharingMap &EventValidationAlgorithm::ValidationInfo::GetInterpretedMCToPfoHitSharingMap() const
+{
+    return m_interpretedMCToPfoHitSharingMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetAllMCParticleToHitsMap(const LArMCParticleHelper::MCContributionMap &allMCParticleToHitsMap)
+{
+    m_allMCParticleToHitsMap = allMCParticleToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetTargetMCParticleToHitsMap(const LArMCParticleHelper::MCContributionMap &targetMCParticleToHitsMap)
+{
+    m_targetMCParticleToHitsMap = targetMCParticleToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetPfoToHitsMap(const LArMCParticleHelper::PfoContributionMap &pfoToHitsMap)
+{
+    m_pfoToHitsMap = pfoToHitsMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap)
+{
+    m_mcToPfoHitSharingMap = mcToPfoHitSharingMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::ValidationInfo::SetInterpretedMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap)
+{
+    m_interpretedMCToPfoHitSharingMap = interpretedMCToPfoHitSharingMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::PrintAllMatches(const ValidationInfo &validationInfo) const
+{
+    return this->ProcessOutput(validationInfo, false, true, false);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::PrintInterpretedMatches(const ValidationInfo &validationInfo) const
+{
+    return this->ProcessOutput(validationInfo, true, true, false);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void EventValidationAlgorithm::WriteInterpretedMatches(const ValidationInfo &validationInfo) const
+{
+    return this->ProcessOutput(validationInfo, true, false, true);
+}
 
 } // namespace lar_content
 
