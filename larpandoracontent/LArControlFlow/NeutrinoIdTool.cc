@@ -30,8 +30,8 @@ NeutrinoIdTool::NeutrinoIdTool() :
     m_selectNuanceCode(false),
     m_minPurity(0.9f),
     m_minCompleteness(0.9f),
-    m_minProbability(0.5f),
-    m_maxNeutrinos(std::numeric_limits<unsigned int>::max()),
+    m_minProbability(0.0f),
+    m_maxNeutrinos(1),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
