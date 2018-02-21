@@ -13,8 +13,6 @@
 #include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "PandoraMonitoringApi.h"
-
 #include <unordered_map>
 
 namespace lar_content

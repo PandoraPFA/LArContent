@@ -204,10 +204,10 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         const int isBeamNeutrinoFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary));
         const int isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary));
         const int isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary));
-
+#ifdef MONITORING
         const CartesianVector &targetVertex(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)->GetVertex());
         const float targetVertexX(targetVertex.GetX()), targetVertexY(targetVertex.GetY()), targetVertexZ(targetVertex.GetZ());
-
+#endif
         targetSS << (!isTargetPrimary ? "(Non target) " : "")
                  << "PrimaryId " << mcPrimaryIndex
                  << ", Nu " << isBeamNeutrinoFinalState
@@ -239,8 +239,9 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         nMCHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList));
 
         int matchIndex(0), nPrimaryMatches(0), nPrimaryNuMatches(0), nPrimaryCRMatches(0), nPrimaryGoodNuMatches(0), nPrimaryNuSplits(0);
+#ifdef MONITORING
         float recoVertexX(std::numeric_limits<float>::max()), recoVertexY(std::numeric_limits<float>::max()), recoVertexZ(std::numeric_limits<float>::max());
-
+#endif
         for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
         {
             const CaloHitList &sharedHitList(pfoToSharedHits.second);
@@ -266,7 +267,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 bestMatchPfoNSharedHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList));
                 bestMatchPfoNSharedHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList));
                 bestMatchPfoNSharedHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList));
-
+#ifdef MONITORING
                 try
                 {
                     const Vertex *const pRecoVertex(LArPfoHelper::GetVertex(isRecoNeutrinoFinalState ? LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first) : pfoToSharedHits.first));
@@ -275,6 +276,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                     recoVertexZ = pRecoVertex->GetPosition().GetZ();
                 }
                 catch (const StatusCodeException &) {}
+#endif
             }
 
             if (isGoodMatch) ++nPrimaryMatches;
@@ -382,8 +384,9 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         if (isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
         {
             const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
+#ifdef MONITORING
             const int interactionTypeInt(static_cast<int>(interactionType));
-
+#endif
             // ATTN Some redundancy introduced to contributing variables
             const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
             const int isCorrectTB(isBeamParticle && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == 1) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
