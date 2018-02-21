@@ -35,7 +35,7 @@ public:
      */
     NeutrinoIdTool();
 
-    void SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
+    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
     class SliceFeatures;
@@ -155,7 +155,7 @@ private:
      *
      *  @return does the best slice pass the quality cuts for training?
      */
-    bool GetBestSliceIndex(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const;
+    bool GetBestSliceIndex(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const;
 
     /**
      *  @brief  Determine if the event passes the selection cuts for training
@@ -164,7 +164,7 @@ private:
      *  @param  purity purity of best slice
      *  @param  completeness completeness of best slice
      */
-    bool PassesQualityCuts(const MasterAlgorithm *const pAlgorithm, const float purity, const float completeness) const;
+    bool PassesQualityCuts(const pandora::Algorithm *const pAlgorithm, const float purity, const float completeness) const;
 
     /**
      *  @brief  Collect all 2D hits in a supplied list of Pfos and push them on to an existing hit list, check so not to double count
@@ -186,7 +186,7 @@ private:
      *
      *  @param  pAlgorithm address of the master algorithm
      */
-    int GetNuanceCode(const MasterAlgorithm *const pAlgorithm) const;
+    int GetNuanceCode(const pandora::Algorithm *const pAlgorithm) const;
 
     /**
      *  @brief  Select all pfos under the same hypothesis

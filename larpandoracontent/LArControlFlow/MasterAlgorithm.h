@@ -363,7 +363,7 @@ public:
      *  @param  crSliceHypotheses the parent pfos representing the cosmic-ray muon outcome for each slice
      *  @param  sliceNuPfos to receive the list of selected pfos
      */
-    virtual void SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
+    virtual void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
         pandora::PfoList &selectedPfos) = 0;
 };
 

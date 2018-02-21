@@ -19,7 +19,7 @@ namespace lar_content
 class CheatingNeutrinoIdTool : public SliceIdBaseTool
 {
 public:
-    void SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
+    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
     /**

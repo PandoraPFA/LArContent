@@ -19,10 +19,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-void CheatingNeutrinoIdTool::SelectOutputPfos(const MasterAlgorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+void CheatingNeutrinoIdTool::SelectOutputPfos(const Algorithm *const /*pAlgorithm*/, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
-    (void) pAlgorithm;
-
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
