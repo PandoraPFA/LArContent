@@ -89,14 +89,14 @@ bool NeutrinoIdTool::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, cons
    
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
-        if (nuSliceHypotheses.at(sliceIndex).size() != 1)
-            throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
-
-        const PfoList &nuFinalStates(nuSliceHypotheses.at(sliceIndex).front()->GetDaughterPfoList());
-
         CaloHitList reconstructedHits;
-        this->Collect2DHits(nuFinalStates, reconstructedHits);
         this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedHits);
+
+        if (nuSliceHypotheses.at(sliceIndex).size() == 1)
+        {
+            const PfoList &nuFinalStates(nuSliceHypotheses.at(sliceIndex).front()->GetDaughterPfoList());
+            this->Collect2DHits(nuFinalStates, reconstructedHits);
+        }
 
         const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedHits));
         nuNHitsTotal += nNuHits;
