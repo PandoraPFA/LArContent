@@ -20,12 +20,12 @@ namespace lar_content
 /**
  *  @brief  NeutrinoIdTool class
  *
- *  Compares the neutrino and cosmic hypotheses of all of the slices in the event. Uses an SVM to calculate the probability of each slice 
- *  containing a neutrino interaction. The N slices with the highest probabilities are identified as a neutrino (if sufficiently probable)
- *  all other slices are deemed cosmogenic.
+ *          Compares the neutrino and cosmic hypotheses of all of the slices in the event. Uses an SVM to calculate the probability of each slice 
+ *          containing a neutrino interaction. The N slices with the highest probabilities are identified as a neutrino (if sufficiently probable)
+ *          all other slices are deemed cosmogenic.
  *
- *  If training mode is switched on, then the tool will write SVM training exmples to the specified output file. The events selected for 
- *  training must pass (user congigurable) slicing quality cuts. Users may also select events based on their interaction type (nuance code).
+ *          If training mode is switched on, then the tool will write SVM training exmples to the specified output file. The events selected for 
+ *          training must pass (user configurable) slicing quality cuts. Users may also select events based on their interaction type (nuance code).
  */
 class NeutrinoIdTool : public SliceIdBaseTool
 {
@@ -38,11 +38,6 @@ public:
     void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
-    class SliceFeatures;
-
-    typedef std::pair<unsigned int, float> UintFloatPair;
-    typedef std::vector<SliceFeatures> SliceFeaturesVector;
-
     /**
      *  @brief  Slice features class
      */
@@ -60,20 +55,27 @@ private:
 
         /**
          *  @brief  Check if all features were calculable
+         *
+         *  @return true if the feature vector is available
          */
         bool IsFeatureVectorAvailable() const;
 
         /**
          *  @brief  Get the feature vector for the SVM
+         *
+         *  @param  featuresVector empty feature vector to populate
          */
-        SupportVectorMachine::DoubleVector GetFeatureVector() const;
+        void GetFeatureVector(SupportVectorMachine::DoubleVector &featureVector) const;
         
         /**
          *  @brief  Get the probability that this slice contains a neutrino interaction
          *
          *  @param  supportVectorMachine the SVM used to calculate the probability
+         *
+         *  @return the probability that the slice contains a neutrino interaction
          */
         float GetNeutrinoProbability(const SupportVectorMachine &supportVectorMachine) const;
+
     private:
         /**
          *  @brief  Get the recontructed neutrino the input list of neutrino Pfos
@@ -95,6 +97,8 @@ private:
          *
          *  @param  spacePoints the input spacepoints to fit
          *  @param  fShouldChooseA a function that when given two fitted endpoints A and B, will return true if A is the endpoint at which to calculate the direction
+         *
+         *  @return the direction of the input spacepoints 
          */
         pandora::CartesianVector GetDirection(const pandora::CartesianPointVector &spacePoints, std::function<bool(const pandora::CartesianVector &pointA, const pandora::CartesianVector &pointB)> fShouldChooseA) const;
 
@@ -103,6 +107,8 @@ private:
          *
          *  @param  spacePoints the input spacepoints to fit
          *  @param  vertex the position from which the fitted direction should be calculated
+         *
+         *  @return the direction of the input space points from the vertex supplied
          */
         pandora::CartesianVector GetDirectionFromVertex(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex) const;
         
@@ -110,6 +116,8 @@ private:
          *  @brief  Use a sliding fit to get the upper direction of a collection of spacepoints
          *
          *  @param  spacePoints the input spacepoints to fit
+         *
+         *  @return the direction of the upper input space points 
          */
         pandora::CartesianVector GetUpperDirection(const pandora::CartesianPointVector &spacePoints) const;
         
@@ -117,6 +125,8 @@ private:
          *  @brief  Use a sliding fit to get the lower direction of a collection of spacepoints
          *
          *  @param  spacePoints the input spacepoints to fit
+         *
+         *  @return the direction of the lower input space points 
          */
         pandora::CartesianVector GetLowerDirection(const pandora::CartesianPointVector &spacePoints) const;
 
@@ -134,6 +144,9 @@ private:
         SupportVectorMachine::DoubleVector m_featureVector;  ///< The SVM feature vector
         const NeutrinoIdTool *const        m_pTool;          ///< The tool that owns this
     };
+    
+    typedef std::pair<unsigned int, float> UintFloatPair;
+    typedef std::vector<SliceFeatures> SliceFeaturesVector;
 
     /**
      *  @brief  Get the features of each slice
@@ -146,7 +159,7 @@ private:
     void GetSliceFeatures(const NeutrinoIdTool *const pTool, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const;
 
     /**
-     *  @brief  Get the slice with the most neutrino induced hits
+     *  @brief  Get the slice with the most neutrino induced hits using Monte-Carlo information
      *
      *  @param  pAlgorithm address of the master algorithm
      *  @param  nuSliceHypotheses the input neutrino slice hypotheses
@@ -155,14 +168,16 @@ private:
      *
      *  @return does the best slice pass the quality cuts for training?
      */
-    bool GetBestSliceIndex(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const;
+    bool GetBestMCSliceIndex(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const;
 
     /**
-     *  @brief  Determine if the event passes the selection cuts for training
+     *  @brief  Determine if the event passes the selection cuts for training and has the required NUANCE code
      *
      *  @param  pAlgorithm address of the master algorithm
      *  @param  purity purity of best slice
      *  @param  completeness completeness of best slice
+     *
+     *  @return does the evenr pass the quality cuts on purity and completeness and has the required NUANCE code
      */
     bool PassesQualityCuts(const pandora::Algorithm *const pAlgorithm, const float purity, const float completeness) const;
 
@@ -175,9 +190,11 @@ private:
     void Collect2DHits(const pandora::PfoList &pfos, pandora::CaloHitList &hitList) const;
 
     /**
-     *  @brief  Count the number of neutrino induced hits in a given list
+     *  @brief  Count the number of neutrino induced hits in a given list using MC information
      *
      *  @param  hitList input list of calo hits
+     *
+     *  @return the number of neutrino induced hits in the input list
      */
     unsigned int CountNeutrinoInducedHits(const pandora::CaloHitList &hitList) const;
 
@@ -185,6 +202,8 @@ private:
      *  @brief  Use the current MCParticle list to get the nuance code of the neutrino in the event
      *
      *  @param  pAlgorithm address of the master algorithm
+     *
+     *  @return the nuance code of the event
      */
     int GetNuanceCode(const pandora::Algorithm *const pAlgorithm) const;
 

@@ -55,14 +55,16 @@ void NeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const S
         this->SelectAllPfos(crSliceHypotheses, selectedPfos);
 
         unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
-        if (!this->GetBestSliceIndex(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, bestSliceIndex)) return;
+        if (!this->GetBestMCSliceIndex(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, bestSliceIndex)) return;
 
         for (unsigned int sliceIndex = 0; sliceIndex < nSlices; ++sliceIndex)
         {
             const SliceFeatures &features(sliceFeaturesVector.at(sliceIndex));
             if (!features.IsFeatureVectorAvailable()) continue;
 
-            LArSvmHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, features.GetFeatureVector());
+            SupportVectorMachine::DoubleVector featureVector;
+            features.GetFeatureVector(featureVector);
+            LArSvmHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, featureVector);
         }
 
         return;
@@ -81,11 +83,9 @@ void NeutrinoIdTool::GetSliceFeatures(const NeutrinoIdTool *const pTool, const S
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool NeutrinoIdTool::GetBestSliceIndex(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const
+bool NeutrinoIdTool::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const
 {
-    unsigned int nHitsInBestSlice(0);
-    unsigned int nNuHitsInBestSlice(0);
-    unsigned int nuNHitsTotal(0);
+    unsigned int nHitsInBestSlice(0), nNuHitsInBestSlice(0), nuNHitsTotal(0);
    
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
@@ -101,7 +101,6 @@ bool NeutrinoIdTool::GetBestSliceIndex(const Algorithm *const pAlgorithm, const 
         const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedHits));
         nuNHitsTotal += nNuHits;
         
-        // TODO may need to be careful with reproducibility here?
         if (nNuHits > nNuHitsInBestSlice)
         {
             nNuHitsInBestSlice = nNuHits;
@@ -111,14 +110,8 @@ bool NeutrinoIdTool::GetBestSliceIndex(const Algorithm *const pAlgorithm, const 
     }
 
     // ATTN for events with no neutrino induced hits, default neutrino purity and completeness to zero
-    float purity(0);
-    float completeness(0);
-
-    if (nHitsInBestSlice > 0)
-        purity = static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nHitsInBestSlice);
-
-    if (nuNHitsTotal > 0)
-        completeness = static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nuNHitsTotal);
+    float purity(nHitsInBestSlice > 0 ? static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nHitsInBestSlice) : 0.f);
+    float completeness(nuNHitsTotal > 0 ? static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nuNHitsTotal) : 0.f);
 
     return this->PassesQualityCuts(pAlgorithm, purity, completeness);
 }
@@ -252,102 +245,102 @@ void NeutrinoIdTool::SelectPfos(const PfoList &pfos, PfoList &selectedPfos) cons
 
 // TODO think about how to make this function cleaner when features are more established
 NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoList &crPfos, const NeutrinoIdTool *const pTool) : 
-    m_isAvailable(false), m_pTool(pTool)
+    m_isAvailable(false),
+    m_pTool(pTool)
 {
-    const ParticleFlowObject *const pNeutrino(this->GetNeutrino(nuPfos));
-    const CartesianVector nuVertex(LArPfoHelper::GetVertex(pNeutrino)->GetPosition());
-    const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
-
-    // Neutrino features
-    CartesianVector nuWeightedDirTotal(0, 0, 0);
-    unsigned int nuNHitsUsedTotal(0);
-    unsigned int nuNHitsTotal(0);
-    CartesianPointVector nuAllSpacePoints;
-    for (const ParticleFlowObject *const pPfo : nuFinalStates)
-    {
-        CartesianPointVector spacePoints;
-        this->GetSpacePoints(pPfo, spacePoints);
-
-        nuAllSpacePoints.insert(nuAllSpacePoints.end(), spacePoints.begin(), spacePoints.end());
-        nuNHitsTotal += spacePoints.size();
-
-        if (spacePoints.size() < 5) continue;
-
-        CartesianVector dir(this->GetDirectionFromVertex(spacePoints, nuVertex));
-        nuWeightedDirTotal += dir * static_cast<float>(spacePoints.size());
-        nuNHitsUsedTotal += spacePoints.size();
-    }
-
-    if (nuNHitsUsedTotal == 0) return;
-    CartesianVector nuWeightedDir(nuWeightedDirTotal * (1.f / static_cast<float>(nuNHitsUsedTotal)));
-
-    CartesianPointVector pointsInSphere;
-    this->GetPointsInSphere(nuAllSpacePoints, nuVertex, 10, pointsInSphere);
-
-    CartesianVector centroid(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-    LArPcaHelper::EigenValues eigenValues(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-    LArPcaHelper::EigenVectors eigenVectors;
-
     try
     {
+        const ParticleFlowObject *const pNeutrino(this->GetNeutrino(nuPfos));
+        const CartesianVector &nuVertex(LArPfoHelper::GetVertex(pNeutrino)->GetPosition());
+        const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
+
+        // Neutrino features
+        CartesianVector nuWeightedDirTotal(0, 0, 0);
+        unsigned int nuNHitsUsedTotal(0);
+        unsigned int nuNHitsTotal(0);
+        CartesianPointVector nuAllSpacePoints;
+        for (const ParticleFlowObject *const pPfo : nuFinalStates)
+        {
+            CartesianPointVector spacePoints;
+            this->GetSpacePoints(pPfo, spacePoints);
+
+            nuAllSpacePoints.insert(nuAllSpacePoints.end(), spacePoints.begin(), spacePoints.end());
+            nuNHitsTotal += spacePoints.size();
+
+            if (spacePoints.size() < 5) continue;
+
+            const CartesianVector dir(this->GetDirectionFromVertex(spacePoints, nuVertex));
+            nuWeightedDirTotal += dir * static_cast<float>(spacePoints.size());
+            nuNHitsUsedTotal += spacePoints.size();
+        }
+
+        if (nuNHitsUsedTotal == 0) return;
+        const CartesianVector nuWeightedDir(nuWeightedDirTotal * (1.f / static_cast<float>(nuNHitsUsedTotal)));
+
+        CartesianPointVector pointsInSphere;
+        this->GetPointsInSphere(nuAllSpacePoints, nuVertex, 10, pointsInSphere);
+
+        CartesianVector centroid(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+        LArPcaHelper::EigenValues eigenValues(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+        LArPcaHelper::EigenVectors eigenVectors;
         LArPcaHelper::RunPca(pointsInSphere, centroid, eigenValues, eigenVectors);
+
+
+        float nuNFinalStatePfos(static_cast<float>(nuFinalStates.size()));
+        float nuVertexY(nuVertex.GetY());
+        float nuWeightedDirZ(nuWeightedDir.GetZ());
+        float nuNSpacePointsInSphere(static_cast<float>(pointsInSphere.size()));
+        float nuEigenRatioInSphere(eigenValues.GetY() / eigenValues.GetX());
+
+        // Cosmic-ray features
+        unsigned int nCRHitsMax(0);
+        unsigned int nCRHitsTotal(0);
+        float crLongestTrackDirY(std::numeric_limits<float>::max());
+        float crLongestTrackDeflection(-std::numeric_limits<float>::max());
+
+        for (const ParticleFlowObject *const pPfo : crPfos)
+        {
+            CartesianPointVector spacePoints;                                                                                                    
+            this->GetSpacePoints(pPfo, spacePoints);
+            
+            nCRHitsTotal += spacePoints.size();
+            
+            if (spacePoints.size() < 5) continue;
+            
+            if (spacePoints.size() > nCRHitsMax)
+            {
+                nCRHitsMax = spacePoints.size();
+                const CartesianVector upperDir(this->GetUpperDirection(spacePoints));
+                const CartesianVector lowerDir(this->GetLowerDirection(spacePoints));
+
+                crLongestTrackDirY = upperDir.GetY();
+                crLongestTrackDeflection = 1 - upperDir.GetDotProduct(lowerDir * (-1));
+            }
+        }
+
+        if (nCRHitsMax == 0) return;
+        if (nCRHitsTotal == 0) return;
+
+        float crFracHitsInLongestTrack = static_cast<float>(nCRHitsMax)/static_cast<float>(nCRHitsTotal);
+
+        // Push the features to the feature vector
+        m_featureVector.push_back(nuNFinalStatePfos);
+        m_featureVector.push_back(nuNHitsTotal);
+        m_featureVector.push_back(nuVertexY);
+        m_featureVector.push_back(nuWeightedDirZ);
+        m_featureVector.push_back(nuNSpacePointsInSphere);
+        m_featureVector.push_back(nuEigenRatioInSphere);
+        m_featureVector.push_back(crLongestTrackDirY);
+        m_featureVector.push_back(crLongestTrackDeflection);
+        m_featureVector.push_back(crFracHitsInLongestTrack);
+        m_featureVector.push_back(nCRHitsMax);
+
+        m_isAvailable = true;
     }
     catch (StatusCodeException &)
     {
         return;
     }
-
-
-    float nuNFinalStatePfos(static_cast<float>(nuFinalStates.size()));
-    float nuVertexY(nuVertex.GetY());
-    float nuWeightedDirZ(nuWeightedDir.GetZ());
-    float nuNSpacePointsInSphere(static_cast<float>(pointsInSphere.size()));
-    float nuEigenRatioInSphere(eigenValues.GetY() / eigenValues.GetX());
-
-    // Cosmic-ray features
-    unsigned int nCRHitsMax(0);
-    unsigned int nCRHitsTotal(0);
-    float crLongestTrackDirY(std::numeric_limits<float>::max());
-    float crLongestTrackDeflection(-std::numeric_limits<float>::max());
-
-    for (const ParticleFlowObject *const pPfo : crPfos)
-    {
-        CartesianPointVector spacePoints;                                                                                                    
-        this->GetSpacePoints(pPfo, spacePoints);
-        
-        nCRHitsTotal += spacePoints.size();
-        
-        if (spacePoints.size() < 5) continue;
-        
-        if (spacePoints.size() > nCRHitsMax)
-        {
-            nCRHitsMax = spacePoints.size();
-            const CartesianVector upperDir(this->GetUpperDirection(spacePoints));
-            const CartesianVector lowerDir(this->GetLowerDirection(spacePoints));
-
-            crLongestTrackDirY = upperDir.GetY();
-            crLongestTrackDeflection = 1 - upperDir.GetDotProduct(lowerDir * (-1));
-        }
-    }
-
-    if (nCRHitsMax == 0) return;
-    if (nCRHitsTotal == 0) return;
-
-    float crFracHitsInLongestTrack = static_cast<float>(nCRHitsMax)/static_cast<float>(nCRHitsTotal);
-
-    // Push the features to the feature vector
-    m_featureVector.push_back(nuNFinalStatePfos);
-    m_featureVector.push_back(nuNHitsTotal);
-    m_featureVector.push_back(nuVertexY);
-    m_featureVector.push_back(nuWeightedDirZ);
-    m_featureVector.push_back(nuNSpacePointsInSphere);
-    m_featureVector.push_back(nuEigenRatioInSphere);
-    m_featureVector.push_back(crLongestTrackDirY);
-    m_featureVector.push_back(crLongestTrackDeflection);
-    m_featureVector.push_back(crFracHitsInLongestTrack);
-    m_featureVector.push_back(nCRHitsMax);
-
-    m_isAvailable = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -359,12 +352,12 @@ bool NeutrinoIdTool::SliceFeatures::IsFeatureVectorAvailable() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
         
-SupportVectorMachine::DoubleVector NeutrinoIdTool::SliceFeatures::GetFeatureVector() const
+void NeutrinoIdTool::SliceFeatures::GetFeatureVector(SupportVectorMachine::DoubleVector &featureVector) const
 {
     if (!m_isAvailable)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return m_featureVector;
+    featureVector.insert(featureVector.end(), m_featureVector.begin(), m_featureVector.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -374,7 +367,9 @@ float NeutrinoIdTool::SliceFeatures::GetNeutrinoProbability(const SupportVectorM
     // ATTN if one or more of the features can not be calculated, then default to calling the slice a cosmic ray
     if (!this->IsFeatureVectorAvailable()) return 0.f;
 
-    return LArSvmHelper::CalculateProbability(supportVectorMachine, this->GetFeatureVector());
+    SupportVectorMachine::DoubleVector featureVector;
+    this->GetFeatureVector(featureVector);
+    return LArSvmHelper::CalculateProbability(supportVectorMachine, featureVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
