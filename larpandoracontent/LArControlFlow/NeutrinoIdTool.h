@@ -82,7 +82,7 @@ private:
          *
          *  @param  nuPfos input list of neutrino pfos
          */
-        const pandora::ParticleFlowObject *GetNeutrino(const pandora::PfoList &nuPfos);
+        const pandora::ParticleFlowObject *GetNeutrino(const pandora::PfoList &nuPfos) const;
 
         /**
          *  @brief  Get the 3D space points in a given pfo

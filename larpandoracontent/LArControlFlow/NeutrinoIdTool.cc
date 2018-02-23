@@ -92,9 +92,9 @@ bool NeutrinoIdTool::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, cons
         CaloHitList reconstructedHits;
         this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedHits);
 
-        if (nuSliceHypotheses.at(sliceIndex).size() == 1)
+        for (const ParticleFlowObject *const pNeutrino : nuSliceHypotheses.at(sliceIndex))
         {
-            const PfoList &nuFinalStates(nuSliceHypotheses.at(sliceIndex).front()->GetDaughterPfoList());
+            const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
             this->Collect2DHits(nuFinalStates, reconstructedHits);
         }
 
@@ -110,8 +110,8 @@ bool NeutrinoIdTool::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, cons
     }
 
     // ATTN for events with no neutrino induced hits, default neutrino purity and completeness to zero
-    float purity(nHitsInBestSlice > 0 ? static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nHitsInBestSlice) : 0.f);
-    float completeness(nuNHitsTotal > 0 ? static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nuNHitsTotal) : 0.f);
+    const float purity(nHitsInBestSlice > 0 ? static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nHitsInBestSlice) : 0.f);
+    const float completeness(nuNHitsTotal > 0 ? static_cast<float>(nNuHitsInBestSlice) / static_cast<float>(nuNHitsTotal) : 0.f);
 
     return this->PassesQualityCuts(pAlgorithm, purity, completeness);
 }
@@ -158,7 +158,7 @@ unsigned int NeutrinoIdTool::CountNeutrinoInducedHits(const CaloHitList &hitList
             if (LArMCParticleHelper::IsNeutrino(LArMCParticleHelper::GetParentMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit))))
                 nNuHits++;
         }
-        catch (StatusCodeException &)
+        catch (const StatusCodeException &)
         {
         }
     }
@@ -255,7 +255,7 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
         const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
 
         // Neutrino features
-        CartesianVector nuWeightedDirTotal(0, 0, 0);
+        CartesianVector nuWeightedDirTotal(0.f, 0.f, 0.f);
         unsigned int nuNHitsUsedTotal(0);
         unsigned int nuNHitsTotal(0);
         CartesianPointVector nuAllSpacePoints;
@@ -286,11 +286,13 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
         LArPcaHelper::RunPca(pointsInSphere, centroid, eigenValues, eigenVectors);
 
 
-        float nuNFinalStatePfos(static_cast<float>(nuFinalStates.size()));
-        float nuVertexY(nuVertex.GetY());
-        float nuWeightedDirZ(nuWeightedDir.GetZ());
-        float nuNSpacePointsInSphere(static_cast<float>(pointsInSphere.size()));
-        float nuEigenRatioInSphere(eigenValues.GetY() / eigenValues.GetX());
+        const float nuNFinalStatePfos(static_cast<float>(nuFinalStates.size()));
+        const float nuVertexY(nuVertex.GetY());
+        const float nuWeightedDirZ(nuWeightedDir.GetZ());
+        const float nuNSpacePointsInSphere(static_cast<float>(pointsInSphere.size()));
+
+        if (eigenValues.GetX() <= std::numeric_limit<float>::epsilon()) return;
+        const float nuEigenRatioInSphere(eigenValues.GetY() / eigenValues.GetX());
 
         // Cosmic-ray features
         unsigned int nCRHitsMax(0);
@@ -314,14 +316,14 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
                 const CartesianVector lowerDir(this->GetLowerDirection(spacePoints));
 
                 crLongestTrackDirY = upperDir.GetY();
-                crLongestTrackDeflection = 1 - upperDir.GetDotProduct(lowerDir * (-1));
+                crLongestTrackDeflection = 1.f - upperDir.GetDotProduct(lowerDir * (-1.f));
             }
         }
 
         if (nCRHitsMax == 0) return;
         if (nCRHitsTotal == 0) return;
 
-        float crFracHitsInLongestTrack = static_cast<float>(nCRHitsMax)/static_cast<float>(nCRHitsTotal);
+        const float crFracHitsInLongestTrack = static_cast<float>(nCRHitsMax)/static_cast<float>(nCRHitsTotal);
 
         // Push the features to the feature vector
         m_featureVector.push_back(nuNFinalStatePfos);
@@ -374,7 +376,7 @@ float NeutrinoIdTool::SliceFeatures::GetNeutrinoProbability(const SupportVectorM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const ParticleFlowObject *NeutrinoIdTool::SliceFeatures::GetNeutrino(const PfoList &nuPfos)
+const ParticleFlowObject *NeutrinoIdTool::SliceFeatures::GetNeutrino(const PfoList &nuPfos) const
 {
     // ATTN we should only ever have one neutrino reconstructed per slice
     if (nuPfos.size() != 1)
@@ -393,7 +395,7 @@ void NeutrinoIdTool::SliceFeatures::GetSpacePoints(const ParticleFlowObject *con
     if (clusters3D.size() > 1)
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
                                                                                                                           
-    if (clusters3D.size() == 0) return;
+    if (clusters3D.empty()) return;
 
     CaloHitList caloHits;
     clusters3D.front()->GetOrderedCaloHitList().FillCaloHitList(caloHits);
@@ -451,8 +453,8 @@ CartesianVector NeutrinoIdTool::SliceFeatures::GetDirection(const CartesianPoint
     const CartesianVector endPoint(isMinStart ? endMax : endMin);                                                                            
     const CartesianVector startDir(isMinStart ? dirMin : dirMax);                                                                            
                                                                                                                                              
-    const bool shouldFlip((endPoint - startPoint).GetUnitVector().GetDotProduct(startDir) < 0);                                              
-    return (shouldFlip ? startDir*(-1) : startDir); 
+    const bool shouldFlip((endPoint - startPoint).GetUnitVector().GetDotProduct(startDir) < 0.f);
+    return (shouldFlip ? startDir*(-1.f) : startDir); 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
