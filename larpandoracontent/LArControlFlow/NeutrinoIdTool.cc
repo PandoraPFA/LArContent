@@ -291,7 +291,7 @@ NeutrinoIdTool::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const PfoLis
         const float nuWeightedDirZ(nuWeightedDir.GetZ());
         const float nuNSpacePointsInSphere(static_cast<float>(pointsInSphere.size()));
 
-        if (eigenValues.GetX() <= std::numeric_limit<float>::epsilon()) return;
+        if (eigenValues.GetX() <= std::numeric_limits<float>::epsilon()) return;
         const float nuEigenRatioInSphere(eigenValues.GetY() / eigenValues.GetX());
 
         // Cosmic-ray features
