@@ -69,9 +69,9 @@ public:
      *  @param  orderedPfoVector the input vector of ordered Pfos
      *  @param  orderedMCParticleVector the input vector of ordered MCParticles
      *  @param  mcParticleToPfoHitSharingMap the output mapping from selected reconstructable MCParticles to Pfos and the number hits shared
+     *  @param  nMatches the maximum number of Pfo matches to show
      */
-    // TODO
-    // static void PrintMatchingTable(const pandora::PfoVector &orderedPfoVector, const pandora::MCParticleVector &orderedMCParticleVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
+    static void PrintMatchingTable(const pandora::PfoVector &orderedPfoVector, const pandora::MCParticleVector &orderedMCParticleVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const unsigned int nMatches);
 };
 
 } // namespace lar_content

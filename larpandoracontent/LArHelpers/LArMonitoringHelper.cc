@@ -137,7 +137,8 @@ void LArMonitoringHelper::PrintMCParticleTable(const LArMCParticleHelper::MCCont
         if (selectedMCParticleToGoodHitsMap.end() == it)
             continue;  // ATTN MCParticles in selectedMCParticleToGoodHitsMap may be a subset of orderedMCParticleVector
 
-        table.AddElement(id);
+        // ATTN enumerate from 1 to match event validation algorithm
+        table.AddElement(id + 1);
         table.AddElement(LArMCParticleHelper::GetNuanceCode(pMCParticle));
         table.AddElement(PdgTable::GetParticleName(pMCParticle->GetParticleId()));
 
@@ -169,7 +170,7 @@ void LArMonitoringHelper::PrintPfoTable(const LArMCParticleHelper::PfoContributi
         return;
     }
 
-    LArFormattingHelper::Table table({"ID", "PID", "Is Nu FS", "", "nHits", "U", "V", "W", "", "nGoodHits", "U", "V", "W"});
+    LArFormattingHelper::Table table({"ID", "PID", "Is Nu FS", "", "nGoodHits", "U", "V", "W"});
 
     for (unsigned int id = 0; id < orderedPfoVector.size(); ++id)
     {
@@ -179,19 +180,10 @@ void LArMonitoringHelper::PrintPfoTable(const LArMCParticleHelper::PfoContributi
         if (pfoToReconstructable2DHitsMap.end() == it)
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        table.AddElement(id);
+        // ATTN enumerate from 1 to match event validation algorithm
+        table.AddElement(id + 1);
         table.AddElement(pPfo->GetParticleId());
         table.AddElement(LArPfoHelper::IsNeutrinoFinalState(pPfo));
-
-        CaloHitList all2DCaloHits;
-        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, all2DCaloHits);
-        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, all2DCaloHits);
-        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, all2DCaloHits);
-
-        table.AddElement(all2DCaloHits.size());
-        table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, all2DCaloHits));
-        table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, all2DCaloHits));
-        table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, all2DCaloHits));
 
         table.AddElement(it->second.size());
         table.AddElement(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, it->second));
@@ -204,8 +196,7 @@ void LArMonitoringHelper::PrintPfoTable(const LArMCParticleHelper::PfoContributi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-/*
-void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, const MCParticleVector &orderedMCParticleVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap)
+void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, const MCParticleVector &orderedMCParticleVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const unsigned int nMatches)
 {
     if (orderedPfoVector.empty())
     {
@@ -219,43 +210,98 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
         return;
     }
 
-    std::vector<std::string> tableHeaders({"MCParticle",""});
-    for (unsigned int pfoId = 0; pfoId < orderedPfoVector.size(); ++pfoId)
-        tableHeaders.push_back(std::to_string(pfoId));
+    // Get the maximum number of MCParticle to Pfos matches that need to be shown
+    unsigned int maxMatches(0);
+    for (const auto &entry : mcParticleToPfoHitSharingMap)
+        maxMatches = std::max(static_cast<unsigned int>(entry.second.size()), maxMatches);
+    
+    const bool showOthersColumn(maxMatches > nMatches);
+    const unsigned int nMatchesToShow(std::min(maxMatches, nMatches));
 
+    // Set up the table headers
+    std::vector<std::string> tableHeaders({"MCParticle",""});
+    for (unsigned int i = 0; i < nMatchesToShow; ++i)
+    {
+        tableHeaders.push_back("");
+        tableHeaders.push_back("Pfo");
+        tableHeaders.push_back("nSharedHits");
+    }
+
+    if (showOthersColumn)
+    {
+        tableHeaders.push_back("");
+        tableHeaders.push_back("");
+        tableHeaders.push_back("nOtherPfos");
+        tableHeaders.push_back("nSharedHits");
+    }
+        
     LArFormattingHelper::Table table(tableHeaders);
 
+    // Make a new row for each MCParticle
     for (unsigned int mcParticleId = 0; mcParticleId < orderedMCParticleVector.size(); ++mcParticleId)
     {
         LArMCParticleHelper::MCParticleToPfoHitSharingMap::const_iterator it = mcParticleToPfoHitSharingMap.find(orderedMCParticleVector.at(mcParticleId));
         if (it == mcParticleToPfoHitSharingMap.end())
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        table.AddElement(mcParticleId);
-        for (unsigned int pfoId = 0; pfoId < orderedPfoVector.size(); ++pfoId)
+        const MCParticle *const pMCParticle(it->first);
+        const LArFormattingHelper::Color mcCol(
+            LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle) ? 
+                LArFormattingHelper::LIGHT_GREEN : (LArMCParticleHelper::IsBeamParticle(pMCParticle) ? 
+                    LArFormattingHelper::LIGHT_BLUE : LArFormattingHelper::LIGHT_RED   
+                )
+            );
+        
+        // ATTN enumerate from 1 to match event validation algorithm
+        table.AddElement(mcParticleId + 1, LArFormattingHelper::REGULAR, mcCol);
+     
+        // Get the matched Pfos
+        unsigned int nPfosShown(0);
+        unsigned int nOtherHits(0);
+        for (const auto &pfoNSharedHitsPair : it->second)
         {
-            bool foundPfo(false);
-            unsigned int nSharedHits(std::numeric_limits<unsigned int>::max());
-
-            for (const LArMCParticleHelper::PfoIntPair &pair : it->second)
+            for (unsigned int pfoId = 0; pfoId < orderedPfoVector.size(); ++pfoId)
             {
-                if (pair.first == orderedPfoVector.at(pfoId))
+                if (pfoNSharedHitsPair.first != orderedPfoVector.at(pfoId)) continue;
+           
+                if (nPfosShown < nMatchesToShow)
                 {
-                    nSharedHits = pair.second;
-                    foundPfo = true;
-                    break;
+                    // ATTN enumerate from 1 to match event validation algorithm
+                    const LArFormattingHelper::Color pfoCol(LArPfoHelper::IsNeutrinoFinalState(pfoNSharedHitsPair.first) ? LArFormattingHelper::LIGHT_GREEN : LArFormattingHelper::LIGHT_RED);
+                    table.AddElement(pfoId + 1, LArFormattingHelper::REGULAR, pfoCol);
+                    table.AddElement(pfoNSharedHitsPair.second.size(), LArFormattingHelper::REGULAR, pfoCol);
+                    nPfosShown++;
                 }
+                else
+                {
+                    nOtherHits += pfoNSharedHitsPair.second.size();
+                }
+                break;
             }
+        }
 
-            if (!foundPfo)
-                throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        // Pad the rest of the row with empty entries
+        for (unsigned int i = 0; i < nMatchesToShow - nPfosShown; ++i)
+        {
+            table.AddElement("");
+            table.AddElement("");
+        }
 
-            table.AddElement(nSharedHits);
+        // Print any remaining matches
+        if (!showOthersColumn) continue;
+
+        if (nOtherHits != 0)
+        {
+            table.AddElement(it->second.size() - nPfosShown);
+            table.AddElement(nOtherHits);
+        }
+        else
+        {
+            table.AddElement("");
+            table.AddElement("");
         }
     }
-
     table.Print();
 }
-*/
 
 } // namespace lar_content
