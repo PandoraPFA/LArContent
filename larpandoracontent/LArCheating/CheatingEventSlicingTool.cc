@@ -29,21 +29,8 @@ void CheatingEventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, con
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    const MCParticleList *pMCParticleList = NULL;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, m_mcParticleListName, pMCParticleList));
-
     MCParticleToSliceMap mcParticleToSliceMap;
-
-    for (const MCParticle *const pMCParticle : *pMCParticleList)
-    {
-        const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
-
-        if (mcParticleToSliceMap.count(pParentMCParticle))
-            continue;
-
-        if (!mcParticleToSliceMap.insert(MCParticleToSliceMap::value_type(pParentMCParticle, Slice())).second)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
+    this->InitializeMCParticleToSliceMap(pAlgorithm, caloHitListNames, mcParticleToSliceMap);
 
     this->FillSlices(pAlgorithm, TPC_VIEW_U, caloHitListNames, mcParticleToSliceMap);
     this->FillSlices(pAlgorithm, TPC_VIEW_V, caloHitListNames, mcParticleToSliceMap);
@@ -64,6 +51,41 @@ void CheatingEventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void CheatingEventSlicingTool::InitializeMCParticleToSliceMap(const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
+    MCParticleToSliceMap &mcParticleToSliceMap) const
+{
+    for (const auto &mapEntry : caloHitListNames)
+    {
+        const CaloHitList *pCaloHitList(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, mapEntry.second, pCaloHitList));
+
+        for (const CaloHit *const pCaloHit : *pCaloHitList)
+        {
+            const CaloHit *const pCaloHitMaster(static_cast<const CaloHit *>(pCaloHit->GetParentAddress()));
+
+            if (mapEntry.first != pCaloHitMaster->GetHitType())
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            MCParticleVector mcParticleVector;
+            for (const auto &weightMapEntry : pCaloHitMaster->GetMCParticleWeightMap()) mcParticleVector.push_back(weightMapEntry.first);
+            std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
+
+            for (const MCParticle *const pMCParticle : mcParticleVector)
+            {
+                const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+
+                if (mcParticleToSliceMap.count(pParentMCParticle))
+                    continue;
+
+                if (!mcParticleToSliceMap.insert(MCParticleToSliceMap::value_type(pParentMCParticle, Slice())).second)
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void CheatingEventSlicingTool::FillSlices(const Algorithm *const pAlgorithm, const HitType hitType, const HitTypeToNameMap &caloHitListNames,
     MCParticleToSliceMap &mcParticleToSliceMap) const
 {
@@ -77,10 +99,12 @@ void CheatingEventSlicingTool::FillSlices(const Algorithm *const pAlgorithm, con
     {
         try
         {
-            if (hitType != pCaloHit->GetHitType())
+            const CaloHit *const pCaloHitMaster(static_cast<const CaloHit *>(pCaloHit->GetParentAddress()));
+
+            if (hitType != pCaloHitMaster->GetHitType())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+            const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHitMaster));
             const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
             MCParticleToSliceMap::iterator mapIter = mcParticleToSliceMap.find(pParentMCParticle);
@@ -102,11 +126,8 @@ void CheatingEventSlicingTool::FillSlices(const Algorithm *const pAlgorithm, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingEventSlicingTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CheatingEventSlicingTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "MCParticleListName", m_mcParticleListName));
-
     return STATUS_CODE_SUCCESS;
 }
 
