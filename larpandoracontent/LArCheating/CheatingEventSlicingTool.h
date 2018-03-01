@@ -30,17 +30,25 @@ private:
     typedef std::unordered_map<const pandora::MCParticle*, SlicingAlgorithm::Slice> MCParticleToSliceMap;
 
     /**
+     *  @brief  Initialize the map from parent mc particles to slice objects
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  caloHitListNames the hit type to calo hit list name map
+     *  @param  mcParticleToSliceMap to receive the parent mc particle to slice map
+     */
+    void InitializeMCParticleToSliceMap(const pandora::Algorithm *const pAlgorithm, const SlicingAlgorithm::HitTypeToNameMap &caloHitListNames,
+        MCParticleToSliceMap &mcParticleToSliceMap) const;
+
+    /**
      *  @brief  Fill slices using hits from a specified view
      *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  hitType the hit type (i.e. view)
      *  @param  caloHitListNames the hit type to calo hit list name map
-     *  @param  mcParticleToSliceMap the parent mc particle to slice map
+     *  @param  mcParticleToSliceMap to receive the parent mc particle to slice map
      */
     void FillSlices(const pandora::Algorithm *const pAlgorithm, const pandora::HitType hitType, const SlicingAlgorithm::HitTypeToNameMap &caloHitListNames,
         MCParticleToSliceMap &mcParticleToSliceMap) const;
-
-    std::string     m_mcParticleListName;           ///< The name of the three d mc particle list name
 };
 
 } // namespace lar_content
