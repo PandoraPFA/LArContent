@@ -93,7 +93,7 @@ void CheatingNeutrinoIdTool::GetNeutrinoWeight(const CaloHit *const pCaloHit, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingNeutrinoIdTool::SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+void CheatingNeutrinoIdTool::SelectOutputPfos(const pandora::Algorithm *const /*pAlgorithm*/, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

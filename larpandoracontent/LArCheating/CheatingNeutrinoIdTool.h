@@ -39,7 +39,7 @@ public:
      */
     static void GetNeutrinoWeight(const pandora::CaloHit *const pCaloHit, const bool objectOwnedByMaster, float &neutrinoWeight, float &totalWeight);
 
-    void SelectOutputPfos(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
+    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
