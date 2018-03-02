@@ -39,7 +39,7 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
         LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);
 
         float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
-        CheatingNeutrinoIdTool::GetNeutrinoWeight(&downstreamPfos, false, thisNeutrinoWeight, thisTotalWeight);
+        CheatingNeutrinoIdTool::GetNeutrinoWeight(&downstreamPfos, true, thisNeutrinoWeight, thisTotalWeight);
 
         if ((thisTotalWeight > 0.f) && ((thisNeutrinoWeight / thisTotalWeight) > m_minNeutrinoFraction))
             ambiguousParentPfos.push_back(pParentCosmicRayPfo);
