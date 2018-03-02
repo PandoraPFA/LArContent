@@ -1,21 +1,21 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.cc
+ *  @file   larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.cc
  * 
- *  @brief  Implementation of the shower tensor visualization tool class.
+ *  @brief  Implementation of the transverse tensor visualization tool class.
  * 
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ShowerTensorVisualizationTool.h"
+#include "larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ShowerTensorVisualizationTool::ShowerTensorVisualizationTool() :
+TransverseTensorVisualizationTool::TransverseTensorVisualizationTool() :
     m_minClusterConnections(1),
     m_ignoreUnavailableClusters(true),
     m_showEachIndividualElement(false),
@@ -25,7 +25,7 @@ ShowerTensorVisualizationTool::ShowerTensorVisualizationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -68,10 +68,7 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm
                       << ", xSpanU " << eIter->GetOverlapResult().GetXOverlap().GetXSpanU()
                       << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
                       << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
-                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan()
-                      << ", Availability (" << eIter->GetClusterU()->IsAvailable() << eIter->GetClusterV()->IsAvailable() << eIter->GetClusterW()->IsAvailable() << ") "
-                      << ", TrackFlags (" << (MU_MINUS == std::abs(eIter->GetClusterU()->GetParticleId())) << (MU_MINUS == std::abs(eIter->GetClusterV()->GetParticleId())) << (MU_MINUS == std::abs(eIter->GetClusterW()->GetParticleId())) << ") "
-                      << std::endl;
+                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
 
             if (m_showEachIndividualElement)
             {
@@ -105,7 +102,7 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ShowerTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode TransverseTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterConnections", m_minClusterConnections));

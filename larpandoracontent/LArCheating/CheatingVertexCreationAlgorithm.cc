@@ -39,9 +39,6 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
         if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
             continue;
 
-        if (!pMCParticle->GetParentList().empty())
-            continue;
-
         PandoraContentApi::Vertex::Parameters parameters;
         parameters.m_position = CartesianVector(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), pMCParticle->GetEndpoint().GetZ());
         parameters.m_vertexLabel = VERTEX_INTERACTION;

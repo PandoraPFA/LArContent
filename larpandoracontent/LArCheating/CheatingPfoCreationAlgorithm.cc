@@ -35,6 +35,7 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
     {
         const MCParticleList *pMCParticleList(nullptr);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
         LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
     }
 
@@ -46,7 +47,9 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
 
         if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, clusterListName, pClusterList))
         {
-            std::cout << "CheatingPfoCreationAlgorithm - Could not access cluster list with name " << clusterListName << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "CheatingPfoCreationAlgorithm - Could not access cluster list with name " << clusterListName << std::endl;
+
             continue;
         }
 
@@ -54,7 +57,6 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
     }
 
     this->CreatePfos(mcParticleToClusterListMap);
-
     return STATUS_CODE_SUCCESS;
 }
 
@@ -63,9 +65,6 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
 void CheatingPfoCreationAlgorithm::GetMCParticleToClusterListMap(const ClusterList *const pClusterList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
     MCParticleToClusterListMap &mcParticleToClusterListMap) const
 {
-    if (!pClusterList)
-        return;
-
     for (const Cluster *const pCluster : *pClusterList)
     {
         try

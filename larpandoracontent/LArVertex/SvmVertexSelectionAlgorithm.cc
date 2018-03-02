@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArSvmHelper.h"
 
@@ -35,13 +36,7 @@ SvmVertexSelectionAlgorithm::SvmVertexSelectionAlgorithm() :
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_trainingSetMode(false),
     m_allowClassifyDuringTraining(false),
-    m_selectInputHits(true),
     m_mcVertexXCorrection(0.f),
-    m_minHitSharingFraction(0.9f),
-    m_maxPhotonPropagation(2.5f),
-    m_minHitsForGoodView(5),
-    m_minPrimaryGoodHits(15),
-    m_minPrimaryGoodViews(2),
     m_minClusterCaloHits(12),
     m_slidingFitWindow(100),
     m_minShowerSpineLength(15.f),
@@ -537,7 +532,7 @@ void SvmVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &vertex
     std::mt19937 generator(device());
     std::bernoulli_distribution coinFlip(0.5);
 
-    std::string interactionType(this->GetInteractionType(vertexVector));
+    const std::string interactionType(this->GetInteractionType());
 
     // Produce training examples for the vertices representing regions.
     const Vertex *const pBestRegionVertex(this->ProduceTrainingExamples(bestRegionVertices, vertexFeatureInfoMap, coinFlip, generator,
@@ -588,7 +583,7 @@ void SvmVertexSelectionAlgorithm::CalculateRPhiScores(VertexVector &vertexVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::string SvmVertexSelectionAlgorithm::GetInteractionType(const VertexVector &vertexVector) const
+std::string SvmVertexSelectionAlgorithm::GetInteractionType() const
 {
     // Extract input collections
     const MCParticleList *pMCParticleList(nullptr);
@@ -597,38 +592,17 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType(const VertexVector &
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
-    // Obtain vector: true neutrinos
-    MCParticleVector mcNeutrinoVector;
-    LArMCParticleHelper::SelectTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
+    // ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
+    LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
+        LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
 
-    std::string interactionType("UNKNOWN");
+    MCParticleList mcPrimaryList;
+    for (const auto &mapEntry : nuMCParticlesToGoodHitsMap) mcPrimaryList.push_back(mapEntry.first);
+    mcPrimaryList.sort(LArMCParticleHelper::SortByMomentum);
 
-    for (const Vertex *const pVertex : vertexVector)
-    {
-        float mcVertexDr(std::numeric_limits<float>::max());
-
-        for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
-        {
-            const CartesianVector mcNeutrinoPosition(pMCNeutrino->GetEndpoint().GetX() + m_mcVertexXCorrection, pMCNeutrino->GetEndpoint().GetY(),
-                pMCNeutrino->GetEndpoint().GetZ());
-
-            const float dr((mcNeutrinoPosition - pVertex->GetPosition()).GetMagnitude());
-
-            if (dr < mcVertexDr)
-            {
-                if (const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino))
-                {
-                    interactionType = LArMCParticleHelper::ToString(LArMCParticleHelper::GetInteractionType(pLArMCNeutrino, pMCParticleList,
-                        pCaloHitList, m_minPrimaryGoodHits, m_minHitsForGoodView, m_minPrimaryGoodViews, m_selectInputHits, m_maxPhotonPropagation,
-                        m_minHitSharingFraction));
-                }
-
-                mcVertexDr = dr;
-            }
-        }
-    }
-
-    return interactionType;
+    const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(mcPrimaryList));
+    return LArInteractionTypeHelper::ToString(interactionType);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -816,26 +790,9 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
         m_svMachineVertex.Initialize(fullSvmFileName, m_vertexSvmName);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectInputHits", m_selectInputHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MCVertexXCorrection", m_mcVertexXCorrection));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitSharingFraction", m_minHitSharingFraction));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPhotonPropagation", m_maxPhotonPropagation));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsForGoodView", m_minHitsForGoodView));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodHits", m_minPrimaryGoodHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodViews", m_minPrimaryGoodViews));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrainingOutputFileRegion", m_trainingOutputFileRegion));
@@ -915,4 +872,5 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
+
 } // namespace lar_content
