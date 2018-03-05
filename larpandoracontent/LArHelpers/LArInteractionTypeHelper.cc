@@ -427,10 +427,16 @@ std::string LArInteractionTypeHelper::ToString(const InteractionType interaction
     case COSMIC_RAY_P: return "COSMIC_RAY_P";
     case COSMIC_RAY_E: return "COSMIC_RAY_E";
     case COSMIC_RAY_PHOTON: return "COSMIC_RAY_PHOTON";
+    case COSMIC_RAY_OTHER: return "COSMIC_RAY_OTHER";
     case BEAM_PARTICLE_MU: return "BEAM_PARTICLE_MU";
     case BEAM_PARTICLE_P: return "BEAM_PARTICLE_P";
     case BEAM_PARTICLE_E: return "BEAM_PARTICLE_E";
     case BEAM_PARTICLE_PHOTON: return "BEAM_PARTICLE_PHOTON";
+    case BEAM_PARTICLE_PI_PLUS: return "BEAM_PARTICLE_PI_PLUS";
+    case BEAM_PARTICLE_PI_MINUS: return "BEAM_PARTICLE_PI_MINUS";
+    case BEAM_PARTICLE_KAON_PLUS: return "BEAM_PARTICLE_KAON_PLUS";
+    case BEAM_PARTICLE_KAON_MINUS: return "BEAM_PARTICLE_KAON_MINUS";
+    case BEAM_PARTICLE_OTHER: return "BEAM_PARTICLE_OTHER";
     case OTHER_INTERACTION: return "OTHER_INTERACTION";
     case ALL_INTERACTIONS: return "ALL_INTERACTIONS";
     default: return "UNKNOWN";
