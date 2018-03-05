@@ -109,7 +109,7 @@ void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, 
     if (pPfoToEnlarge == pPfoToDelete)
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    // ATTN Remove both pfos from stitching information here - could cause problems if stitching across multiple TPCs
+    // ATTN Remove pfos from pfo to lar tpc map here, avoiding problems if stitching across multiple tpcs. Removal info is used downstream.
     pfoToLArTPCMap.erase(pPfoToEnlarge);
     pfoToLArTPCMap.erase(pPfoToDelete);
 
@@ -176,6 +176,7 @@ StatusCode MasterAlgorithm::Initialize()
 
 StatusCode MasterAlgorithm::Run()
 {
+    PfoSet stitchedPfos;
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
 
@@ -187,13 +188,13 @@ StatusCode MasterAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
 
         if (m_shouldRunStitching)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->StitchCosmicRayPfos(pfoToLArTPCMap));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->StitchCosmicRayPfos(pfoToLArTPCMap, stitchedPfos));
     }
 
     if (m_shouldRunCosmicHitRemoval)
     {
         PfoList clearCosmicRayPfos, ambiguousPfos;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(clearCosmicRayPfos, ambiguousPfos));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfos, clearCosmicRayPfos, ambiguousPfos));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
     }
 
@@ -293,7 +294,7 @@ StatusCode MasterAlgorithm::RecreateCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) const
+StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, PfoSet &stitchedPfos) const
 {
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
@@ -313,27 +314,37 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) 
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 
+    // ATTN Use fact that stitched pfos will have been removed from the pfo to lar tpc map by this algorithm
+    for (const Pfo *const pPfo : *pRecreatedCRPfos)
+    {
+        if (pPfo->GetParentPfoList().empty() && !pfoToLArTPCMap.count(pPfo))
+            (void) stitchedPfos.insert(pPfo);
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::TagCosmicRayPfos(PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
+StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoSet &stitchedPfos, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
 {
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
 
-    PfoList parentCosmicRayPfos;
+    PfoList nonStitchedParentCosmicRayPfos;
     for (const Pfo *const pPfo : *pRecreatedCRPfos)
     {
-        if (pPfo->GetParentPfoList().empty())
-            parentCosmicRayPfos.push_back(pPfo);
+        if (!pPfo->GetParentPfoList().empty())
+            continue;
+
+        PfoList &targetList(stitchedPfos.count(pPfo) ? clearCosmicRayPfos : nonStitchedParentCosmicRayPfos);
+        targetList.push_back(pPfo);
     }
 
     for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
-        pCosmicRayTaggingTool->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos, this);
+        pCosmicRayTaggingTool->FindAmbiguousPfos(nonStitchedParentCosmicRayPfos, ambiguousPfos, this);
 
-    for (const Pfo *const pPfo : parentCosmicRayPfos)
+    for (const Pfo *const pPfo : nonStitchedParentCosmicRayPfos)
     {
         if (ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo))
             clearCosmicRayPfos.push_back(pPfo);
