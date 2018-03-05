@@ -20,7 +20,7 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
     if (mcPrimaryList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPiMinus(0), nPhotons(0);
+    unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPiPlus(0), nPiMinus(0), nPhotons(0), nKaonPlus(0), nKaonMinus(0);
 
     for (const MCParticle *const pMCPrimary : mcPrimaryList)
     {
@@ -31,6 +31,8 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         else if (22 == pMCPrimary->GetParticleId()) ++nPhotons;
         else if (211 == pMCPrimary->GetParticleId()) ++nPiPlus;
         else if (-211 == pMCPrimary->GetParticleId()) ++nPiMinus;
+        else if (321 == pMCPrimary->GetParticleId()) ++nKaonPlus;
+        else if (-321 == pMCPrimary->GetParticleId()) ++nKaonMinus;
     }
 
     if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsCosmicRay(mcPrimaryList.front()))
@@ -39,6 +41,7 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if (1 == nProtons) return COSMIC_RAY_P;
         if (1 == nElectrons) return COSMIC_RAY_E;
         if (1 == nPhotons) return COSMIC_RAY_PHOTON;
+        else return COSMIC_RAY_OTHER;
     }
 
     if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsBeamParticle(mcPrimaryList.front()))
@@ -47,6 +50,11 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         if (1 == nProtons) return BEAM_PARTICLE_P;
         if (1 == nElectrons) return BEAM_PARTICLE_E;
         if (1 == nPhotons) return BEAM_PARTICLE_PHOTON;
+        if (1 == nPiPlus) return BEAM_PARTICLE_PI_PLUS;
+        if (1 == nPiMinus) return BEAM_PARTICLE_PI_MINUS;
+        if (1 == nKaonPlus) return BEAM_PARTICLE_KAON_PLUS;
+        if (1 == nKaonMinus) return BEAM_PARTICLE_KAON_MINUS;
+        else return BEAM_PARTICLE_OTHER;
     }
 
     const MCParticle *pMCNeutrino(nullptr);
@@ -419,10 +427,16 @@ std::string LArInteractionTypeHelper::ToString(const InteractionType interaction
     case COSMIC_RAY_P: return "COSMIC_RAY_P";
     case COSMIC_RAY_E: return "COSMIC_RAY_E";
     case COSMIC_RAY_PHOTON: return "COSMIC_RAY_PHOTON";
+    case COSMIC_RAY_OTHER: return "COSMIC_RAY_OTHER";
     case BEAM_PARTICLE_MU: return "BEAM_PARTICLE_MU";
     case BEAM_PARTICLE_P: return "BEAM_PARTICLE_P";
     case BEAM_PARTICLE_E: return "BEAM_PARTICLE_E";
     case BEAM_PARTICLE_PHOTON: return "BEAM_PARTICLE_PHOTON";
+    case BEAM_PARTICLE_PI_PLUS: return "BEAM_PARTICLE_PI_PLUS";
+    case BEAM_PARTICLE_PI_MINUS: return "BEAM_PARTICLE_PI_MINUS";
+    case BEAM_PARTICLE_KAON_PLUS: return "BEAM_PARTICLE_KAON_PLUS";
+    case BEAM_PARTICLE_KAON_MINUS: return "BEAM_PARTICLE_KAON_MINUS";
+    case BEAM_PARTICLE_OTHER: return "BEAM_PARTICLE_OTHER";
     case OTHER_INTERACTION: return "OTHER_INTERACTION";
     case ALL_INTERACTIONS: return "ALL_INTERACTIONS";
     default: return "UNKNOWN";
