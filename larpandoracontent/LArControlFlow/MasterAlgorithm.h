@@ -117,16 +117,18 @@ private:
      *  @brief  Stitch together cosmic-ray pfos crossing between adjacent lar tpcs
      *
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
+     *  @param  stitchedPfos to receive the set of cosmic-ray pfos that have been stitched between lar tpcs
      */
-    pandora::StatusCode StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) const;
+    pandora::StatusCode StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoSet &stitchedPfos) const;
 
     /**
      *  @brief  Tag clear, unambiguous cosmic-ray pfos
      *
+     *  @param  stitchedPfos the set of cosmic-ray pfos that have been stitched between lar tpcs
      *  @param  clearCosmicRayPfos to receive the list of clear cosmic-ray pfos
      *  @param  ambiguousPfos to receive the list of ambiguous cosmic-ray pfos for further analysis
      */
-    pandora::StatusCode TagCosmicRayPfos(pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
+    pandora::StatusCode TagCosmicRayPfos(const pandora::PfoSet &stitchedPfos, pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
 
     /**
      *  @brief  Run cosmic-ray hit removal, freeing hits in ambiguous pfos for further processing
