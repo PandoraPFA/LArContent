@@ -29,7 +29,7 @@ public:
      */
     StitchingCosmicRayMergingTool();
 
-    void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap);
+    void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map);
 
     /**
      *  @brief  PfoAssociation class
@@ -191,9 +191,10 @@ private:
      *  @param  pointingClusterMap  the mapping between Pfos and their corresponding 3D pointing clusters
      *  @param  pfoMerges the input map of Pfo merges
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
+     *  @param  stitchedPfosToX0Map a map of cosmic-ray pfos that have been stitched between lar tpcs to the X0 shift
      */
     void StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
-        const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap) const;
+        const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const;
 
     /**
      *  @brief  Calculate x0 shift for a group of associated Pfos
