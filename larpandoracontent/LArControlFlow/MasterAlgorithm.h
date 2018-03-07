@@ -25,6 +25,7 @@ class SliceIdBaseTool;
 typedef std::vector<pandora::CaloHitList> SliceVector;
 typedef std::vector<pandora::PfoList> SliceHypotheses;
 typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::LArTPC*> PfoToLArTPCMap;
+typedef std::unordered_map<const pandora::ParticleFlowObject*, float> PfoToFloatMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -117,18 +118,18 @@ private:
      *  @brief  Stitch together cosmic-ray pfos crossing between adjacent lar tpcs
      *
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
-     *  @param  stitchedPfos to receive the set of cosmic-ray pfos that have been stitched between lar tpcs
+     *  @param  stitchedPfosToX0Map to receive the map of cosmic-ray pfos that have been stitched between lar tpcs to the X0 shift
      */
-    pandora::StatusCode StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoSet &stitchedPfos) const;
+    pandora::StatusCode StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const;
 
     /**
      *  @brief  Tag clear, unambiguous cosmic-ray pfos
      *
-     *  @param  stitchedPfos the set of cosmic-ray pfos that have been stitched between lar tpcs
+     *  @param  stitchedPfosToX0Map a map of cosmic-ray pfos that have been stitched between lar tpcs to the X0 shift
      *  @param  clearCosmicRayPfos to receive the list of clear cosmic-ray pfos
      *  @param  ambiguousPfos to receive the list of ambiguous cosmic-ray pfos for further analysis
      */
-    pandora::StatusCode TagCosmicRayPfos(const pandora::PfoSet &stitchedPfos, pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
+    pandora::StatusCode TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
 
     /**
      *  @brief  Run cosmic-ray hit removal, freeing hits in ambiguous pfos for further processing
@@ -308,6 +309,8 @@ private:
     std::string                 m_recreatedPfoListName;             ///< The output recreated pfo list name
     std::string                 m_recreatedClusterListName;         ///< The output recreated cluster list name
     std::string                 m_recreatedVertexListName;          ///< The output recreated vertex list name
+
+    float                       m_inTimeMaxX0;                      ///< Cut on X0 to determine whether particle is clear cosmic ray
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -325,8 +328,9 @@ public:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pMultiPfoList the list of pfos in multiple lar tpcs
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
+     *  @param  stitchedPfosToX0Map a map of cosmic-ray pfos that have been stitched between lar tpcs to the X0 shift
      */
-    virtual void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap) = 0;
+    virtual void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
