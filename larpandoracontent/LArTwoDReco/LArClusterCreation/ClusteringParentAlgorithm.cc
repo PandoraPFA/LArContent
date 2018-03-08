@@ -35,7 +35,9 @@ StatusCode ClusteringParentAlgorithm::Run()
 
         if (STATUS_CODE_NOT_FOUND == statusCode)
         {
-            std::cout << "ClusteringParentAlgorithm: calohit list not found " << m_inputCaloHitListName << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "ClusteringParentAlgorithm: calohit list not found " << m_inputCaloHitListName << std::endl;
+
             return STATUS_CODE_SUCCESS;
         }
 
