@@ -44,6 +44,13 @@ StatusCode PostProcessingAlgorithm::Run()
     for (const std::string &listName : m_caloHitListNames)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RenameList<CaloHitList>(listName));
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<CaloHit>(*this));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Track>(*this));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<MCParticle>(*this));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Cluster>(*this));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<ParticleFlowObject>(*this));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::DropCurrentList<Vertex>(*this));
+
     if (!m_currentPfoListReplacement.empty())
     {
         const std::string replacementListName(m_currentPfoListReplacement + TypeToString(m_listCounter));
