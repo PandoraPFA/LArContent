@@ -331,9 +331,9 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosTo
         if (!pPfo->GetParentPfoList().empty())
             continue;
 
-        PfoToFloatMap::const_iterator it = stitchedPfosToX0Map.find(pPfo);
-        float x0Shift(it != stitchedPfosToX0Map.end() ? it->second : 0.f);
-        PfoList &targetList(std::fabs(x0Shift) > m_inTimeMaxX0 ? clearCosmicRayPfos : nonStitchedParentCosmicRayPfos);
+        PfoToFloatMap::const_iterator pfoToX0Iter = stitchedPfosToX0Map.find(pPfo);
+        const float x0Shift((pfoToX0Iter != stitchedPfosToX0Map.end()) ? pfoToX0Iter->second : 0.f);
+        PfoList &targetList((std::fabs(x0Shift) > m_inTimeMaxX0) ? clearCosmicRayPfos : nonStitchedParentCosmicRayPfos);
         targetList.push_back(pPfo);
     }
 
