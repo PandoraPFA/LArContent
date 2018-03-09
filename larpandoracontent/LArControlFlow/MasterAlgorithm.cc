@@ -110,7 +110,7 @@ void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, 
     if (pPfoToEnlarge == pPfoToDelete)
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    // ATTN Remove pfos from pfo to lar tpc map here, avoiding problems if stitching across multiple tpcs. Removal info is used downstream.
+    // ATTN Remove pfos from pfo to lar tpc map here, avoiding problems if stitching across multiple tpcs.
     pfoToLArTPCMap.erase(pPfoToEnlarge);
     pfoToLArTPCMap.erase(pPfoToDelete);
 
