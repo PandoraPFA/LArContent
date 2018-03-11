@@ -132,7 +132,7 @@ public:
      *  @param  chi-squared
      */
     static void MergeTwoPositions3D(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D, 
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D,
         float &chiSquared);
 
     /**
@@ -209,6 +209,20 @@ public:
         const float gapTolerance = 0.f);
 
     /**
+     *  @brief  Whether a pair of 2D test points lies in the same registered gap with the associated hit type
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  p1 the first test point
+     *  @param  p2 the second test point
+     *  @param  hitType the hit type
+     *  @param  gapTolerance the gap tolerance
+     *
+     *  @return boolean
+     */
+    static bool IsInGap(const pandora::Pandora &pandora, const pandora::CartesianVector &p1, const pandora::CartesianVector &p2,
+        const pandora::HitType hitType, const float gapTolerance = 0.f);
+
+    /**
      *  @brief  Whether a 3D test point lies in a registered gap with the associated hit type
      *
      *  @param  pandora the associated pandora instance
@@ -223,7 +237,7 @@ public:
 
     /**
      *  @brief  Whether there is a gap in a cluster (described via its sliding fit result) at a specified x sampling position
-     * 
+     *
      *  @param  pandora the associated pandora instance
      *  @param  xSample the x sampling position
      *  @param  slidingFitResult the sliding fit result for a cluster
