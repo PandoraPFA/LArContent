@@ -390,10 +390,25 @@ CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const Hit
 
 bool LArGeometryHelper::IsInGap(const Pandora &pandora, const CartesianVector &testPoint2D, const HitType hitType, const float gapTolerance)
 {
-    // ATTN: input test point MUST be a 2D position vector 
+    // ATTN: input test point MUST be a 2D position vector
     for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
     {
         if (pDetectorGap->IsInGap(testPoint2D, hitType, gapTolerance))
+            return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArGeometryHelper::IsInGap(const Pandora &pandora, const CartesianVector &p1, const CartesianVector &p2, const HitType hitType,
+    const float gapTolerance)
+{
+    // ATTN: input test points MUST be 2D position vectors
+    for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
+    {
+        if (pDetectorGap->IsInGap(p1, hitType, gapTolerance) && pDetectorGap->IsInGap(p2, hitType, gapTolerance))
             return true;
     }
 

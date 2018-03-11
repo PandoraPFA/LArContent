@@ -20,11 +20,11 @@ namespace lar_content
 {
 
 CrossGapsExtensionAlgorithm::CrossGapsExtensionAlgorithm() :
-    m_minClusterLength(5.f),
-    m_minGapFraction(0.5f),
-    m_maxGapTolerance(2.f),
+    m_minClusterLength(10.f),
+    m_maxGapTolerance(2.5f),
     m_maxTransverseDisplacement(2.5f),
-    m_maxRelativeAngle(10.f)
+    m_maxRelativeAngle(15.f),
+    m_minCosRelativeAngle(0.966)
 {
 }
 
@@ -32,9 +32,9 @@ CrossGapsExtensionAlgorithm::CrossGapsExtensionAlgorithm() :
 
 void CrossGapsExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-    // ATTN May want to opt-out completely if no gap information available
-    // if (PandoraContentApi::GetGeometry(*this)->GetDetectorGapList().empty())
-    //     return;
+    // ATTN - Opt out completely if there is no gap information available
+    if (PandoraContentApi::GetGeometry(*this)->GetDetectorGapList().empty())
+         return;
 
     for (const Cluster *const pCluster : *pClusterList)
     {
@@ -51,72 +51,90 @@ void CrossGapsExtensionAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 
 void CrossGapsExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
-    // Build lists of pointing clusters in proximity to gaps
-    LArPointingClusterList innerPointingClusterList, outerPointingClusterList;
-    this->BuildPointingClusterList(clusterVector, innerPointingClusterList, outerPointingClusterList);
+    // Build and loop over list of pointing clusters
+    LArPointingClusterList pointingClusterList;
+    this->BuildPointingClusterList(clusterVector, pointingClusterList);
 
-    // Form associations between pairs of pointing clusters
-    for (const LArPointingCluster &pointingClusterInner : innerPointingClusterList)
+    for (LArPointingClusterList::const_iterator iter1 = pointingClusterList.begin(), iterEnd1 = pointingClusterList.end();
+        iter1 != iterEnd1; ++iter1)
     {
-        const LArPointingCluster::Vertex &pointingVertexInner(pointingClusterInner.GetInnerVertex());
-        const float zInner(pointingVertexInner.GetPosition().GetZ());
+        const LArPointingCluster &pointingCluster1 = *iter1;
+        const Cluster *const pCluster1(pointingCluster1.GetCluster());
 
-        for (const LArPointingCluster &pointingClusterOuter : outerPointingClusterList)
+        for (LArPointingClusterList::const_iterator iter2 = iter1, iterEnd2 = pointingClusterList.end(); iter2 != iterEnd2; ++iter2)
         {
-            const LArPointingCluster::Vertex &pointingVertexOuter(pointingClusterOuter.GetOuterVertex());
-            const float zOuter(pointingVertexOuter.GetPosition().GetZ());
+            const LArPointingCluster &pointingCluster2 = *iter2;
+            const Cluster *const pCluster2(pointingCluster2.GetCluster());
 
-            if (!this->IsAcrossGap(zOuter, zInner, LArClusterHelper::GetClusterHitType(pointingClusterInner.GetCluster())))
+            if (pCluster1 == pCluster2)
                 continue;
 
-            if (!this->IsAssociated(pointingVertexInner, pointingVertexOuter))
+            // Get hit types and check they're the same
+            const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
+            const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
+
+            if (hitType1 != hitType2)
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            // Get closest pair of vertices from pointing clusters
+            LArPointingCluster::Vertex closestVertex1, closestVertex2;
+
+            try
+            {
+                LArPointingClusterHelper::GetClosestVertices(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
+            }
+            catch (StatusCodeException &)
+            {
+                continue;
+            }
+
+            // Check that these vertices have associated proximity and pointing information
+            if (!this->IsAssociated(closestVertex1, closestVertex2))
                 continue;
 
-            const Cluster *const pClusterInner(pointingClusterInner.GetCluster());
-            const Cluster *const pClusterOuter(pointingClusterOuter.GetCluster());
+            // Check that these vertices lie across a registered gap
+            if (!(LArGeometryHelper::IsInGap(this->GetPandora(), closestVertex1.GetPosition(), closestVertex2.GetPosition(),
+                hitType1, m_maxGapTolerance)))
+                continue;
 
-            const float lengthSquaredInner(LArClusterHelper::GetLengthSquared(pClusterInner));
-            const float lengthSquaredOuter(LArClusterHelper::GetLengthSquared(pClusterOuter));
+            // Calculate figure of merit for this pair of clusters and require a positive answer
+            const float clusterLength1(LArClusterHelper::GetLength(pCluster1));
+            const float clusterLength2(LArClusterHelper::GetLength(pCluster2));
+            const float clusterSeparation((closestVertex1.GetPosition() - closestVertex2.GetPosition()).GetMagnitude());
 
-            (void) clusterAssociationMatrix[pClusterInner].insert(ClusterAssociationMap::value_type(pClusterOuter,
-                ClusterAssociation(ClusterAssociation::INNER, ClusterAssociation::OUTER, ClusterAssociation::STRONG, lengthSquaredOuter)));
-            (void) clusterAssociationMatrix[pClusterOuter].insert(ClusterAssociationMap::value_type(pClusterInner,
-                ClusterAssociation(ClusterAssociation::OUTER, ClusterAssociation::INNER, ClusterAssociation::STRONG, lengthSquaredInner)));
+            const float cosTheta(-1.f * closestVertex1.GetDirection().GetDotProduct(closestVertex2.GetDirection()));
+            const float logTheta(-1.f * std::log10(1.0 - cosTheta + std::numeric_limits<float>::epsilon()));
+
+            const float figureOfMerit12(logTheta * (2.f * clusterLength2 - clusterSeparation));
+            const float figureOfMerit21(logTheta * (2.f * clusterLength1 - clusterSeparation));
+
+            if (figureOfMerit12 + figureOfMerit21 < std::numeric_limits<float>::epsilon())
+                continue;
+
+            const ClusterAssociation::VertexType vertexType1(closestVertex1.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+            const ClusterAssociation::VertexType vertexType2(closestVertex2.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+
+            (void) clusterAssociationMatrix[pCluster1].insert(ClusterAssociationMap::value_type(pCluster2,
+                ClusterAssociation(vertexType1, vertexType2, ClusterAssociation::STRONG, figureOfMerit12)));
+            (void) clusterAssociationMatrix[pCluster2].insert(ClusterAssociationMap::value_type(pCluster1,
+                ClusterAssociation(vertexType2, vertexType1, ClusterAssociation::STRONG, figureOfMerit21)));
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const ClusterVector &clusterVector, LArPointingClusterList &innerPointingClusterList,
-    LArPointingClusterList &outerPointingClusterList) const
+void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const ClusterVector &clusterVector, LArPointingClusterList &pointingClusterList) const
 {
-    // Convert each input cluster into a pointing cluster
-    LArPointingClusterList pointingClusterList;
-
     for (const Cluster *const pCluster : clusterVector)
     {
-        try {pointingClusterList.push_back(LArPointingCluster(pCluster));}
-        catch (StatusCodeException &) {}
-    }
-
-    // Identify clusters adjacent to detector gaps
-    this->BuildPointingClusterList(true, pointingClusterList, innerPointingClusterList);
-    this->BuildPointingClusterList(false, pointingClusterList, outerPointingClusterList);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const bool useInner, const LArPointingClusterList &inputPointingClusterList,
-    LArPointingClusterList &outputPointingClusterList) const
-{
-    for (const LArPointingCluster &pointingCluster : inputPointingClusterList)
-    {
-        const LArPointingCluster::Vertex &pointingVertex(useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
-        const HitType hitType(LArClusterHelper::GetClusterHitType(pointingCluster.GetCluster()));
-
-        if (LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex.GetPosition(), hitType, m_maxGapTolerance))
-            outputPointingClusterList.push_back(pointingCluster);
+        try
+        {
+            pointingClusterList.push_back(LArPointingCluster(pCluster));
+        }
+        catch (StatusCodeException &)
+        {
+        }
     }
 }
 
@@ -130,23 +148,9 @@ bool CrossGapsExtensionAlgorithm::IsAssociated(const LArPointingCluster::Vertex 
         maxLongitudinalDisplacement + 1.f, m_maxTransverseDisplacement, m_maxRelativeAngle));
     const bool isAssociated2(LArPointingClusterHelper::IsEmission(pointingVertex2.GetPosition(), pointingVertex1, -1.f,
         maxLongitudinalDisplacement + 1.f, m_maxTransverseDisplacement, m_maxRelativeAngle));
+    const bool isAssociated3(-1.f * pointingVertex1.GetDirection().GetDotProduct(pointingVertex2.GetDirection()) > m_minCosRelativeAngle);
 
-    return (isAssociated1 && isAssociated2);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool CrossGapsExtensionAlgorithm::IsAcrossGap(const float minZ, const float maxZ, const HitType hitType) const
-{
-    if (maxZ - minZ < std::numeric_limits<float>::epsilon())
-        return false;
-
-    const float gapDeltaZ(LArGeometryHelper::CalculateGapDeltaZ(this->GetPandora(), minZ, maxZ, hitType));
-
-    if (gapDeltaZ / (maxZ - minZ) < m_minGapFraction)
-        return false;
-
-    return true;
+    return (isAssociated1 && isAssociated2 && isAssociated3);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -326,18 +330,14 @@ StatusCode CrossGapsExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
         "MinClusterLength", m_minClusterLength));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinGapFraction", m_minGapFraction));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxGapTolerance", m_maxGapTolerance));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    float maxCosRelativeAngle(std::cos(m_maxRelativeAngle * M_PI / 180.0));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCosRelativeAngle", maxCosRelativeAngle));
-    m_maxRelativeAngle = (180.0 / M_PI) * std::acos(maxCosRelativeAngle);
+        "MaxAngularAllowance", m_maxRelativeAngle));
+    m_minCosRelativeAngle = std::cos(m_maxRelativeAngle * M_PI / 180.0);
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
