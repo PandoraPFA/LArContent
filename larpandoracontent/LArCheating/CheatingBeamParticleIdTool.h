@@ -9,7 +9,7 @@
 #define LAR_CHEATING_BEAM_PARTICLE_ID_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
-#include "larpandoracontent/LArCheating/CheatingParticleIdBaseTool.h"
+#include "larpandoracontent/LArCheating/CheatingSliceIdBaseTool.h"
 
 namespace lar_content
 {
@@ -17,7 +17,7 @@ namespace lar_content
 /**
  *  @brief  CheatingBeamParticleIdTool class
  */
-class CheatingBeamParticleIdTool : public CheatingParticleIdBaseTool
+class CheatingBeamParticleIdTool : public CheatingSliceIdBaseTool
 {
 public:
     /**

@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArCheating/CheatingParticleIdBaseTool.h
+ *  @file   larpandoracontent/LArCheating/CheatingSliceIdBaseTool.h
  *
- *  @brief  Header file for the cheating particle id base tool class.
+ *  @brief  Header file for the cheating slice id base tool class.
  *
  *  $Log: $
  */
-#ifndef LAR_CHEATING_PARTICLE_ID_BASE_TOOL_H
-#define LAR_CHEATING_PARTICLE_ID_BASE_TOOL_H 1
+#ifndef LAR_CHEATING_SLICE_ID_BASE_TOOL_H
+#define LAR_CHEATING_SLICE_ID_BASE_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
@@ -16,9 +16,9 @@ namespace lar_content
 {
 
 /**
- *  @brief  CheatingParticleIdBaseTool class
+ *  @brief  CheatingSliceIdBaseTool class
  */
-class CheatingParticleIdBaseTool : public SliceIdBaseTool
+class CheatingSliceIdBaseTool : public SliceIdBaseTool
 {
 public:
     virtual void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos) = 0;
@@ -51,4 +51,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_CHEATING_PARTICLE_ID_BASE_TOOL_H
+#endif // #ifndef LAR_CHEATING_SLICE_ID_BASE_TOOL_H

@@ -40,7 +40,7 @@ void CheatingNeutrinoIdTool::SelectOutputPfos(const pandora::Algorithm *const /*
             LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
 
             float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
-            CheatingParticleIdBaseTool::GetTargetParticleWeight(&downstreamPfos, false, thisNeutrinoWeight, thisTotalWeight, LArMCParticleHelper::IsNeutrino);
+            CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, false, thisNeutrinoWeight, thisTotalWeight, LArMCParticleHelper::IsNeutrino);
             neutrinoWeight += thisNeutrinoWeight;
         }
 

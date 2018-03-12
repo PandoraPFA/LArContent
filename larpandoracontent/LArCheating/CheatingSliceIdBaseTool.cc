@@ -1,14 +1,14 @@
 /**
- *  @file   larpandoracontent/LArCheating/CheatingParticleIdBaseTool.cc
+ *  @file   larpandoracontent/LArCheating/CheatingSliceIdBaseTool.cc
  *
- *  @brief  Implementation of the cheating particle id base tool class.
+ *  @brief  Implementation of the cheating slice id base tool class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArCheating/CheatingParticleIdBaseTool.h"
+#include "larpandoracontent/LArCheating/CheatingSliceIdBaseTool.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
@@ -19,7 +19,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-void CheatingParticleIdBaseTool::GetTargetParticleWeight(const PfoList *const pPfoList, const bool objectOwnedByMaster, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
+void CheatingSliceIdBaseTool::GetTargetParticleWeight(const PfoList *const pPfoList, const bool objectOwnedByMaster, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
 {
     targetParticleWeight = 0.f; totalWeight = 0.f;
 
@@ -43,7 +43,7 @@ void CheatingParticleIdBaseTool::GetTargetParticleWeight(const PfoList *const pP
         for (const CaloHit *const pCaloHit : caloHitList)
         {
             float thisTargetParticleWeight = 0.f, thisTotalWeight = 0.f;
-            CheatingParticleIdBaseTool::GetTargetParticleWeight(pCaloHit, objectOwnedByMaster, thisTargetParticleWeight, thisTotalWeight, fCriteria);
+            CheatingSliceIdBaseTool::GetTargetParticleWeight(pCaloHit, objectOwnedByMaster, thisTargetParticleWeight, thisTotalWeight, fCriteria);
 
             targetParticleWeight += thisTargetParticleWeight;
             totalWeight += thisTotalWeight;
@@ -53,7 +53,7 @@ void CheatingParticleIdBaseTool::GetTargetParticleWeight(const PfoList *const pP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingParticleIdBaseTool::GetTargetParticleWeight(const CaloHit *const pCaloHit, const bool objectOwnedByMaster, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
+void CheatingSliceIdBaseTool::GetTargetParticleWeight(const CaloHit *const pCaloHit, const bool objectOwnedByMaster, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
 {
     targetParticleWeight = 0.f; totalWeight = 0.f;
 
@@ -93,7 +93,7 @@ void CheatingParticleIdBaseTool::GetTargetParticleWeight(const CaloHit *const pC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingParticleIdBaseTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode CheatingSliceIdBaseTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
 }
