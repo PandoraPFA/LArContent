@@ -44,7 +44,8 @@ MasterAlgorithm::MasterAlgorithm() :
     m_pSliceNuWorkerInstance(nullptr),
     m_pSliceCRWorkerInstance(nullptr),
     m_fullWidthCRWorkerWireGaps(true),
-    m_filePathEnvironmentVariable("FW_SEARCH_PATH")
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
+    m_inTimeMaxX0(1.f)
 {
 }
 
@@ -109,7 +110,7 @@ void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, 
     if (pPfoToEnlarge == pPfoToDelete)
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    // ATTN Remove both pfos from stitching information here - could cause problems if stitching across multiple TPCs
+    // ATTN Remove pfos from pfo to lar tpc map here, avoiding problems if stitching across multiple tpcs.
     pfoToLArTPCMap.erase(pPfoToEnlarge);
     pfoToLArTPCMap.erase(pPfoToDelete);
 
@@ -176,6 +177,7 @@ StatusCode MasterAlgorithm::Initialize()
 
 StatusCode MasterAlgorithm::Run()
 {
+    PfoToFloatMap stitchedPfosToX0Map;
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
 
@@ -187,13 +189,13 @@ StatusCode MasterAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
 
         if (m_shouldRunStitching)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->StitchCosmicRayPfos(pfoToLArTPCMap));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->StitchCosmicRayPfos(pfoToLArTPCMap, stitchedPfosToX0Map));
     }
 
     if (m_shouldRunCosmicHitRemoval)
     {
         PfoList clearCosmicRayPfos, ambiguousPfos;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(clearCosmicRayPfos, ambiguousPfos));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
     }
 
@@ -293,7 +295,7 @@ StatusCode MasterAlgorithm::RecreateCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) const
+StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const
 {
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
@@ -305,7 +307,7 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) 
     }
 
     for (StitchingBaseTool *const pStitchingTool : m_stitchingToolVector)
-        pStitchingTool->Run(this, pRecreatedCRPfos, pfoToLArTPCMap);
+        pStitchingTool->Run(this, pRecreatedCRPfos, pfoToLArTPCMap, stitchedPfosToX0Map);
 
     if (m_visualizeOverallRecoStatus)
     {
@@ -318,22 +320,27 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::TagCosmicRayPfos(PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
+StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
 {
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
 
-    PfoList parentCosmicRayPfos;
+    PfoList nonStitchedParentCosmicRayPfos;
     for (const Pfo *const pPfo : *pRecreatedCRPfos)
     {
-        if (pPfo->GetParentPfoList().empty())
-            parentCosmicRayPfos.push_back(pPfo);
+        if (!pPfo->GetParentPfoList().empty())
+            continue;
+
+        PfoToFloatMap::const_iterator pfoToX0Iter = stitchedPfosToX0Map.find(pPfo);
+        const float x0Shift((pfoToX0Iter != stitchedPfosToX0Map.end()) ? pfoToX0Iter->second : 0.f);
+        PfoList &targetList((std::fabs(x0Shift) > m_inTimeMaxX0) ? clearCosmicRayPfos : nonStitchedParentCosmicRayPfos);
+        targetList.push_back(pPfo);
     }
 
     for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
-        pCosmicRayTaggingTool->FindAmbiguousPfos(parentCosmicRayPfos, ambiguousPfos, this);
+        pCosmicRayTaggingTool->FindAmbiguousPfos(nonStitchedParentCosmicRayPfos, ambiguousPfos, this);
 
-    for (const Pfo *const pPfo : parentCosmicRayPfos)
+    for (const Pfo *const pPfo : nonStitchedParentCosmicRayPfos)
     {
         if (ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo))
             clearCosmicRayPfos.push_back(pPfo);
@@ -1008,6 +1015,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedPfoListName", m_recreatedPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedClusterListName", m_recreatedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedVertexListName", m_recreatedVertexListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMaxX0", m_inTimeMaxX0));
 
     return STATUS_CODE_SUCCESS;
 }
