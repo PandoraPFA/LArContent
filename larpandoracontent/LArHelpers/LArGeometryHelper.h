@@ -219,7 +219,7 @@ public:
      *
      *  @return boolean
      */
-    static bool IsInGap(const pandora::Pandora &pandora, const pandora::CartesianVector &p1, const pandora::CartesianVector &p2,
+    static bool ArePairOfPointsInGap(const pandora::Pandora &pandora, const pandora::CartesianVector &p1, const pandora::CartesianVector &p2,
         const pandora::HitType hitType, const float gapTolerance = 0.f);
 
     /**

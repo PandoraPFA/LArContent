@@ -24,7 +24,7 @@ CrossGapsExtensionAlgorithm::CrossGapsExtensionAlgorithm() :
     m_maxGapTolerance(2.5f),
     m_maxTransverseDisplacement(2.5f),
     m_maxRelativeAngle(15.f),
-    m_minCosRelativeAngle(0.966)
+    m_minCosRelativeAngle(0.966f)
 {
 }
 
@@ -83,7 +83,7 @@ void CrossGapsExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
             {
                 LArPointingClusterHelper::GetClosestVertices(pointingCluster1, pointingCluster2, closestVertex1, closestVertex2);
             }
-            catch (StatusCodeException &)
+            catch (const StatusCodeException &)
             {
                 continue;
             }
@@ -93,11 +93,15 @@ void CrossGapsExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
                 continue;
 
             // Check that these vertices lie across a registered gap
-            if (!(LArGeometryHelper::IsInGap(this->GetPandora(), closestVertex1.GetPosition(), closestVertex2.GetPosition(),
+            if (!(LArGeometryHelper::ArePairOfPointsInGap(this->GetPandora(), closestVertex1.GetPosition(), closestVertex2.GetPosition(),
                 hitType1, m_maxGapTolerance)))
                 continue;
 
             // Calculate figure of merit for this pair of clusters and require a positive answer
+            // ATTN: The figure of merit is given by: -1 * log10(1-cosRelativeAngle) * (2 * clusterLength - clusterSeparation)
+            //       This will preferentially stitch together longer and straighter clusters with smaller gaps.
+            // TODO: Revisit this figure of merit (and, indeed, every LArContent algorithm that stitches together clusters
+            //       based on cluster length and pointing information!)
             const float clusterLength1(LArClusterHelper::GetLength(pCluster1));
             const float clusterLength2(LArClusterHelper::GetLength(pCluster2));
             const float clusterSeparation((closestVertex1.GetPosition() - closestVertex2.GetPosition()).GetMagnitude());
@@ -132,7 +136,7 @@ void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const ClusterVector &
         {
             pointingClusterList.push_back(LArPointingCluster(pCluster));
         }
-        catch (StatusCodeException &)
+        catch (const StatusCodeException &)
         {
         }
     }
