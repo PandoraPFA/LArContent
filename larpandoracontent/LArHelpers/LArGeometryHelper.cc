@@ -402,8 +402,8 @@ bool LArGeometryHelper::IsInGap(const Pandora &pandora, const CartesianVector &t
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArGeometryHelper::IsInGap(const Pandora &pandora, const CartesianVector &p1, const CartesianVector &p2, const HitType hitType,
-    const float gapTolerance)
+bool LArGeometryHelper::ArePairOfPointsInGap(const Pandora &pandora, const CartesianVector &p1, const CartesianVector &p2,
+    const HitType hitType, const float gapTolerance)
 {
     // ATTN: input test points MUST be 2D position vectors
     for (const DetectorGap *const pDetectorGap : pandora.GetGeometry()->GetDetectorGapList())
