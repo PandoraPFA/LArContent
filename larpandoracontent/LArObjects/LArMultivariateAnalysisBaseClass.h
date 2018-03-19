@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArObjects/MultivariateAnalyisBaseClass.h
+ *  @file   larpandoracontent/LArObjects/MultivariateAnalysisBaseClass.h
  *
  *  @brief  Header file for the lar multivariate analysis base class.
  *
@@ -11,10 +11,12 @@
 namespace lar_content
 {
 
+typedef std::vector<double> DoubleVector;
+
 /**
- *  @brief  MultivariateAnalyisBaseClass class
+ *  @brief  MultivariateAnalysisBaseClass class
  */
-class MultivariateAnalyisBaseClass
+class MultivariateAnalysisBaseClass
 {
 public:
     /**
@@ -24,7 +26,7 @@ public:
      *
      *  @return the classification 
      */
-    bool Classify(const DoubleVector &features) const;
+    virtual bool Classify(const DoubleVector &features) const;
 
     /**
      *  @brief  Calculate the classification score for a set of input features, based on the trained model
@@ -33,7 +35,7 @@ public:
      *
      *  @return the classification score
      */
-    double CalculateClassificationScore(const DoubleVector &features) const;
+    virtual double CalculateClassificationScore(const DoubleVector &features) const;
 
     /**
      *  @brief  Calculate the classification probability for a set of input features, based on the trained model
@@ -42,7 +44,7 @@ public:
      *
      *  @return the classification probability
      */
-    double CalculateProbability(const DoubleVector &features) const;
+    virtual double CalculateProbability(const DoubleVector &features) const;
 };
 
 } // namespace lar_content
