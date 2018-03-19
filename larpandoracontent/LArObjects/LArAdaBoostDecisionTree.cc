@@ -77,7 +77,7 @@ void AdaBoostDecisionTree::CheckInitialization() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName, WeakClassifiers &weakClassifiers)
+pandora::StatusCode AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName, WeakClassifiers &weakClassifiers) const
 {
     pandora::TiXmlDocument xmlDocument(bdtFileName);
 
@@ -138,7 +138,7 @@ pandora::StatusCode AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFile
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode AdaBoostDecisionTree::ReadComponent(pandora::TiXmlElement *pCurrentXmlElement, WeakClassifiers &weakClassifiers)
+pandora::StatusCode AdaBoostDecisionTree::ReadComponent(pandora::TiXmlElement *pCurrentXmlElement, WeakClassifiers &weakClassifiers) const 
 {
     const std::string componentName(pCurrentXmlElement->ValueStr());
     pandora::TiXmlHandle currentHandle(pCurrentXmlElement);
@@ -154,7 +154,7 @@ pandora::StatusCode AdaBoostDecisionTree::ReadComponent(pandora::TiXmlElement *p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle &currentHandle, WeakClassifiers &weakClassifiers)
+pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle &currentHandle, WeakClassifiers &weakClassifiers) const
 {
     IDToNodeMap idToNodeMap;
     double boostWeight(0.);
@@ -187,7 +187,7 @@ pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode AdaBoostDecisionTree::ReadNode(pandora::TiXmlHandle &currentHandle, IDToNodeMap &idToNodeMap)
+pandora::StatusCode AdaBoostDecisionTree::ReadNode(pandora::TiXmlHandle &currentHandle, IDToNodeMap &idToNodeMap) const
 {
     int nodeID(-1);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,

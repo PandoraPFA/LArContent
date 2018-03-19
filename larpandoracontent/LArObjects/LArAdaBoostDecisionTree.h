@@ -211,7 +211,7 @@ private:
      *
      *  @return success
      */
-    pandora::StatusCode ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName, WeakClassifiers &weakClassifiers);
+    pandora::StatusCode ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName, WeakClassifiers &weakClassifiers) const;
 
     /**
      *  @brief  Check whether the strong classifier has been correctly initialized
@@ -226,7 +226,7 @@ private:
      *
      *  @return success
      */
-    pandora::StatusCode ReadComponent(pandora::TiXmlElement *pCurrentXmlElement, WeakClassifiers &weakClassifiers);
+    pandora::StatusCode ReadComponent(pandora::TiXmlElement *pCurrentXmlElement, WeakClassifiers &weakClassifiers) const;
 
     /**
      *  @brief  Read the decision tree component at the current xml handle
@@ -236,7 +236,7 @@ private:
      *
      *  @return success
      */
-    pandora::StatusCode ReadDecisionTree(pandora::TiXmlHandle &currentHandle, WeakClassifiers &weakClassifiers);
+    pandora::StatusCode ReadDecisionTree(pandora::TiXmlHandle &currentHandle, WeakClassifiers &weakClassifiers) const;
 
     /**
      *  @brief  Read the node component at the current xml handle
@@ -246,7 +246,7 @@ private:
      *
      *  @return success
      */
-    pandora::StatusCode ReadNode(pandora::TiXmlHandle &currentHandle, IDToNodeMap &idToNodeMap);
+    pandora::StatusCode ReadNode(pandora::TiXmlHandle &currentHandle, IDToNodeMap &idToNodeMap) const;
 
     StrongClassifier     *m_pStrongClassifier;           ///< Strong adaptive boost tree classifier 
 };
