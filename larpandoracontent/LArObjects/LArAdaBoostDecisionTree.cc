@@ -226,7 +226,7 @@ pandora::StatusCode AdaBoostDecisionTree::ReadNode(pandora::TiXmlHandle &current
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::Node::Node(const int &nodeID, const int &parentNodeID, const int &leftChildNodeID, const int &rightChildNodeID, const bool &isLeaf, const double &threshold, const int &variableID, const bool outcome) : 
+AdaBoostDecisionTree::Node::Node(const int nodeID, const int parentNodeID, const int leftChildNodeID, const int rightChildNodeID, const bool isLeaf, const double threshold, const int variableID, const bool outcome) : 
     m_nodeID(nodeID),
     m_parentNodeID(parentNodeID),
     m_leftChildNodeID(leftChildNodeID),
@@ -240,7 +240,7 @@ AdaBoostDecisionTree::Node::Node(const int &nodeID, const int &parentNodeID, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::WeakClassifier::WeakClassifier(IDToNodeMap &idToNodeMap, const double &weight, const int &treeID) : 
+AdaBoostDecisionTree::WeakClassifier::WeakClassifier(IDToNodeMap &idToNodeMap, const double weight, const int treeID) : 
     m_idToNodeMap(idToNodeMap),
     m_weight(weight),
     m_treeID(treeID)
@@ -256,7 +256,7 @@ bool AdaBoostDecisionTree::WeakClassifier::Predict(const DoubleVector &features)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int &nodeID, const DoubleVector &features) const 
+bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeID, const DoubleVector &features) const 
 {
     const Node *pActiveNode(nullptr);
 

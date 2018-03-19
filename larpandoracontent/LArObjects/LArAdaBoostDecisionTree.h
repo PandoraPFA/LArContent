@@ -87,7 +87,7 @@ private:
          *  @param  variableID index
          *  @param  outcome, only written if leaf node 
          */
-        Node(const int &nodeID, const int &parentNodeID, const int &leftChildNodeID, const int &rightChildNodeID, const bool &isLeaf, const double &threshold, const int &variableID, const bool outcome = false);
+        Node(const int nodeID, const int parentNodeID, const int leftChildNodeID, const int rightChildNodeID, const bool isLeaf, const double threshold, const int variableID, const bool outcome = false);
 
         /**
          *  @brief  Return node id
@@ -136,7 +136,7 @@ private:
         const int       m_rightChildNodeID;     ///< Right child node id
         const bool      m_isLeaf;               ///< Is node a leaf
         const double    m_threshold;            ///< Threshold used for decision if decision node
-        const int       m_variableID;          ///< Variable cut on for decision if decision node
+        const int       m_variableID;           ///< Variable cut on for decision if decision node
         const bool      m_outcome;              ///< Outcome if leaf node
     };
 
@@ -148,7 +148,7 @@ private:
         /**
          *  @brief  Constructor, set hierarchy for nodes 
          */
-        WeakClassifier(IDToNodeMap &idToNodeMap, const double &weight, const int &treeID);
+        WeakClassifier(IDToNodeMap &idToNodeMap, const double weight, const int treeID);
 
         /**
          *  @brief  Predict signal or background based on trained data
@@ -163,7 +163,7 @@ private:
          *  @param  nodeID current node id 
          *  @param  features the input features 
          */
-        bool EvaluateNode(const int &nodeID, const DoubleVector &features) const;
+        bool EvaluateNode(const int nodeID, const DoubleVector &features) const;
 
         /**
          *  @brief  Get boost weight for weak classifier
