@@ -14,25 +14,29 @@ namespace lar_content
 {
 
 AdaBoostDecisionTree::AdaBoostDecisionTree() :
-    m_isInitialized(false)
+    m_pStrongClassifier(nullptr)
 {
-    std::cout << "AdaBoostDecisionTree::AdaBoostDecisionTree" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 pandora::StatusCode AdaBoostDecisionTree::Initialize(const std::string &parameterLocation, const std::string &bdtName)
 {
-    if (m_isInitialized)
+    if (!m_pStrongClassifier)
     {
         std::cout << "AdaBoostDecisionTree: bdt was already initialized" << std::endl;
         return pandora::STATUS_CODE_FAILURE;
     }
 
+    WeakClassifiers weakClassifiers;
+    const pandora::StatusCode statusCode(this->ReadXmlFile(parameterLocation, bdtName, weakClassifiers));
+
+    if (pandora::STATUS_CODE_SUCCESS != statusCode)
+        throw pandora::StatusCodeException(statusCode);
+
     // ATTN: Add consistency check for number of features, bearing in min not all features in a bdt may be used
-    this->ReadXmlFile(parameterLocation, bdtName);
- 
-    m_isInitialized = true;
+    m_pStrongClassifier = new StrongClassifier(weakClassifiers);
+
     return pandora::STATUS_CODE_SUCCESS;
 }
 
@@ -40,6 +44,7 @@ pandora::StatusCode AdaBoostDecisionTree::Initialize(const std::string &paramete
 
 bool AdaBoostDecisionTree::Classify(const DoubleVector &features) const
 {
+    this->CheckInitialization();
     return (m_pStrongClassifier->Predict(features) > 0.0 ? true : false);
 }
 
@@ -47,6 +52,7 @@ bool AdaBoostDecisionTree::Classify(const DoubleVector &features) const
 
 double AdaBoostDecisionTree::CalculateClassificationScore(const DoubleVector &features) const
 {
+    this->CheckInitialization();
     return m_pStrongClassifier->Predict(features);
 }
 
@@ -54,21 +60,31 @@ double AdaBoostDecisionTree::CalculateClassificationScore(const DoubleVector &fe
 
 double AdaBoostDecisionTree::CalculateProbability(const DoubleVector &features) const
 {
+    this->CheckInitialization();
     return (m_pStrongClassifier->Predict(features) + 1.0) * 0.5;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName)
+void AdaBoostDecisionTree::CheckInitialization() const
 {
-    m_isInitialized = true;
+    if (m_pStrongClassifier == nullptr)
+    {
+        std::cout << "AdaBoostDecisionTree: Attempting to use an uninitialized bdt" << std::endl;
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+    }
+}
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+pandora::StatusCode AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName, WeakClassifiers &weakClassifiers)
+{
     pandora::TiXmlDocument xmlDocument(bdtFileName);
 
     if (!xmlDocument.LoadFile())
     {
         std::cout << "AdaBoostDecisionTree::Initialize - Invalid xml file." << std::endl;
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+        return pandora::STATUS_CODE_FAILURE;
     }
 
     const pandora::TiXmlHandle xmlDocumentHandle(&xmlDocument);
@@ -78,7 +94,7 @@ void AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFileName, const std
     while (pContainerXmlNode)
     {
         if (pContainerXmlNode->ValueStr() != "AdaBoostDecisionTree")
-            throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+            return pandora::STATUS_CODE_FAILURE;
 
         const pandora::TiXmlHandle currentHandle(pContainerXmlNode);
 
@@ -88,7 +104,7 @@ void AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFileName, const std
         if (currentName.empty() || (currentName.size() > 1000))
         {
             std::cout << "AdaBoostDecisionTree::Initialize - Implausible bdt name extracted from xml." << std::endl;
-            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+            return pandora::STATUS_CODE_INVALID_PARAMETER;
         }
 
         if (currentName == bdtName)
@@ -100,7 +116,7 @@ void AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFileName, const std
     if (!pContainerXmlNode)
     {
         std::cout << "AdaBoostDecisionTree: Could not find an AdaBoostDecisionTree of name " << bdtName << std::endl;
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+        return pandora::STATUS_CODE_NOT_FOUND;
     }
 
     // Read the components of this bdt container
@@ -109,20 +125,20 @@ void AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFileName, const std
 
     while (pCurrentXmlElement)
     {
-        if (pandora::STATUS_CODE_SUCCESS != this->ReadComponent(pCurrentXmlElement))
+        if (pandora::STATUS_CODE_SUCCESS != this->ReadComponent(pCurrentXmlElement, weakClassifiers))
         {
             std::cout << "AdaBoostDecisionTree: Unknown component in xml file" << std::endl;
-            throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+            return pandora::STATUS_CODE_FAILURE;
         }
 
         pCurrentXmlElement = pCurrentXmlElement->NextSiblingElement();
     }
-    m_pStrongClassifier = new StrongClassifier(m_weakClassifiers);
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode AdaBoostDecisionTree::ReadComponent(pandora::TiXmlElement *pCurrentXmlElement)
+pandora::StatusCode AdaBoostDecisionTree::ReadComponent(pandora::TiXmlElement *pCurrentXmlElement, WeakClassifiers &weakClassifiers)
 {
     const std::string componentName(pCurrentXmlElement->ValueStr());
     pandora::TiXmlHandle currentHandle(pCurrentXmlElement);
@@ -131,14 +147,14 @@ pandora::StatusCode AdaBoostDecisionTree::ReadComponent(pandora::TiXmlElement *p
         return pandora::STATUS_CODE_SUCCESS;
 
     if (std::string("DecisionTree") == componentName)
-        return this->ReadDecisionTree(currentHandle);
+        return this->ReadDecisionTree(currentHandle, weakClassifiers);
 
     return pandora::STATUS_CODE_INVALID_PARAMETER;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle &currentHandle)
+pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle &currentHandle, WeakClassifiers &weakClassifiers)
 {
     IDToNodeMap idToNodeMap;
     double boostWeight(0.);
@@ -164,7 +180,7 @@ pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle 
     }
 
     const WeakClassifier *pWeakClassifier = new WeakClassifier(idToNodeMap, boostWeight, treeIndex);
-    m_weakClassifiers.push_back(pWeakClassifier);
+    weakClassifiers.push_back(pWeakClassifier);
 
     return pandora::STATUS_CODE_SUCCESS;
 }

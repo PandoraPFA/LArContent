@@ -29,8 +29,6 @@ namespace lar_content
 class AdaBoostDecisionTree : public MultivariateAnalyisBaseClass
 {
 public:
-//    typedef std::vector<double> DoubleVector;
-
     /**
      *  @brief  Default constructor.
      */
@@ -72,14 +70,6 @@ public:
      *  @return the classification probability
      */
     double CalculateProbability(const DoubleVector &features) const;
-
-    /**
-     *  @brief  Read the bdt parameters from an xml file
-     *
-     *  @param  bdtFileName the sml file name
-     *  @param  bdtName the name of the bdt
-     */
-    void ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName);
 
 private:
     class Node
@@ -213,22 +203,40 @@ private:
     };
 
     /**
-     *  @brief  Read the component at the current xml element
+     *  @brief  Read the bdt parameters from an xml file
      *
-     *  @param  pCurrentXmlElement address of the current xml element
+     *  @param  bdtFileName the sml file name
+     *  @param  bdtName the name of the bdt
+     *  @param  weakClassifiers vector of weak classifiers contained in xml
      *
      *  @return success
      */
-    pandora::StatusCode ReadComponent(pandora::TiXmlElement *pCurrentXmlElement);
+    pandora::StatusCode ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName, WeakClassifiers &weakClassifiers);
+
+    /**
+     *  @brief  Check whether the strong classifier has been correctly initialized
+     */
+    void CheckInitialization() const;
+
+    /**
+     *  @brief  Read the component at the current xml element
+     *
+     *  @param  pCurrentXmlElement address of the current xml element
+     *  @param  weakClassifiers vector of weak classifiers contained in xml
+     *
+     *  @return success
+     */
+    pandora::StatusCode ReadComponent(pandora::TiXmlElement *pCurrentXmlElement, WeakClassifiers &weakClassifiers);
 
     /**
      *  @brief  Read the decision tree component at the current xml handle
      *
      *  @param  currentHandle the current xml handle
+     *  @param  weakClassifiers vector of weak classifiers contained in xml
      *
      *  @return success
      */
-    pandora::StatusCode ReadDecisionTree(pandora::TiXmlHandle &currentHandle);
+    pandora::StatusCode ReadDecisionTree(pandora::TiXmlHandle &currentHandle, WeakClassifiers &weakClassifiers);
 
     /**
      *  @brief  Read the node component at the current xml handle
@@ -240,9 +248,7 @@ private:
      */
     pandora::StatusCode ReadNode(pandora::TiXmlHandle &currentHandle, IDToNodeMap &idToNodeMap);
 
-    WeakClassifiers       m_weakClassifiers;             ///< Vector of all weak classifiers
     StrongClassifier     *m_pStrongClassifier;           ///< Strong adaptive boost tree classifier 
-    bool                  m_isInitialized;               ///< Whether this bdt has been initialized
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
