@@ -156,7 +156,7 @@ pandora::StatusCode AdaBoostDecisionTree::ReadComponent(pandora::TiXmlElement *p
 
 pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle &currentHandle, WeakClassifiers &weakClassifiers) const
 {
-    IDToNodeMap idToNodeMap;
+    IdToNodeMap idToNodeMap;
     double boostWeight(0.);
     int treeIndex(0);
 
@@ -186,40 +186,40 @@ pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode AdaBoostDecisionTree::ReadNode(pandora::TiXmlHandle &currentHandle, IDToNodeMap &idToNodeMap) const
+pandora::StatusCode AdaBoostDecisionTree::ReadNode(pandora::TiXmlHandle &currentHandle, IdToNodeMap &idToNodeMap) const
 {
-    int nodeID(-1);
+    int nodeId(-1);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
-        "NodeID", nodeID));
+        "NodeId", nodeId));
 
-    int variableID(-1);
+    int variableId(-1);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
-        "VariableID", variableID));
+        "VariableId", variableId));
 
     double threshold(0.);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
         "Threshold", threshold));
 
-    int leftDaughterID(-1);
+    int leftDaughterId(-1);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
-        "LeftDaughterID", leftDaughterID));
+        "LeftDaughterId", leftDaughterId));
 
-    int rightDaughterID(-1);
+    int rightDaughterId(-1);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
-        "RightDaughterID", rightDaughterID));
+        "RightDaughterId", rightDaughterId));
 
-    int parentID(-1);
+    int parentId(-1);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
-        "ParentID", parentID));
+        "ParentId", parentId));
 
     bool outcome(false);
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
         "Outcome", outcome));
 
-    bool isLeaf(leftDaughterID == -1 ? true : false);
+    bool isLeaf(leftDaughterId == -1 ? true : false);
 
-    const Node *pNode = new Node(nodeID, parentID, leftDaughterID, rightDaughterID, isLeaf, threshold, variableID, outcome);
-    idToNodeMap.insert(IDToNodeMap::value_type(nodeID, pNode));
+    const Node *pNode = new Node(nodeId, parentId, leftDaughterId, rightDaughterId, isLeaf, threshold, variableId, outcome);
+    idToNodeMap.insert(IdToNodeMap::value_type(nodeId, pNode));
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -227,14 +227,14 @@ pandora::StatusCode AdaBoostDecisionTree::ReadNode(pandora::TiXmlHandle &current
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::Node::Node(const int nodeID, const int parentNodeID, const int leftChildNodeID, const int rightChildNodeID, const bool isLeaf, const double threshold, const int variableID, const bool outcome) : 
-    m_nodeID(nodeID),
-    m_parentNodeID(parentNodeID),
-    m_leftChildNodeID(leftChildNodeID),
-    m_rightChildNodeID(rightChildNodeID),
+AdaBoostDecisionTree::Node::Node(const int nodeId, const int parentNodeId, const int leftChildNodeId, const int rightChildNodeId, const bool isLeaf, const double threshold, const int variableId, const bool outcome) : 
+    m_nodeId(nodeId),
+    m_parentNodeId(parentNodeId),
+    m_leftChildNodeId(leftChildNodeId),
+    m_rightChildNodeId(rightChildNodeId),
     m_isLeaf(isLeaf),
     m_threshold(threshold),
-    m_variableID(variableID),
+    m_variableId(variableId),
     m_outcome(outcome)
 {
 }
@@ -242,10 +242,10 @@ AdaBoostDecisionTree::Node::Node(const int nodeID, const int parentNodeID, const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const IDToNodeMap &idToNodeMap, const double weight, const int treeID) : 
+AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const IdToNodeMap &idToNodeMap, const double weight, const int treeId) : 
     m_idToNodeMap(idToNodeMap),
     m_weight(weight),
-    m_treeID(treeID)
+    m_treeId(treeId)
 {
 }
 
@@ -258,31 +258,31 @@ bool AdaBoostDecisionTree::WeakClassifier::Predict(const DoubleVector &features)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeID, const DoubleVector &features) const 
+bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const DoubleVector &features) const 
 {
     const Node *pActiveNode(nullptr);
 
-    if (m_idToNodeMap.find(nodeID) != m_idToNodeMap.end())
+    if (m_idToNodeMap.find(nodeId) != m_idToNodeMap.end())
     {
-        pActiveNode = m_idToNodeMap.at(nodeID);
+        pActiveNode = m_idToNodeMap.at(nodeId);
     }
 
     if (pActiveNode->IsLeaf())
         return pActiveNode->GetOutcome();
 
-    if (std::find(features.begin(), features.end(), pActiveNode->GetVariableID()) == features.end())
+    if (std::find(features.begin(), features.end(), pActiveNode->GetVariableId()) == features.end())
     {
         std::cout << "AdaBoostDecisionTree: Attempting to cut on unknown variable" << std::endl;
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
     }
 
-    if (features.at(pActiveNode->GetVariableID()) <= pActiveNode->GetThreshold())
+    if (features.at(pActiveNode->GetVariableId()) <= pActiveNode->GetThreshold())
     {
-        return this->EvaluateNode(pActiveNode->GetLeftChildNodeID(), features);
+        return this->EvaluateNode(pActiveNode->GetLeftChildNodeId(), features);
     }
     else 
     {
-        return this->EvaluateNode(pActiveNode->GetRightChildNodeID(), features);
+        return this->EvaluateNode(pActiveNode->GetRightChildNodeId(), features);
     }
 }
 

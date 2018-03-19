@@ -28,7 +28,7 @@ class AdaBoostDecisionTree : public MultivariateAnalyisBaseClass
 {
 public:
     /**
-     *  @brief  Default constructor.
+     *  @brief  Constructor.
      */
     AdaBoostDecisionTree();
 
@@ -70,42 +70,45 @@ public:
     double CalculateProbability(const DoubleVector &features) const;
 
 private:
+    /**
+     *  @brief Node class used for representing a decision tree
+     */
     class Node
     {
     public:
         /**
          *  @brief  Constructor
          *  
-         *  @param  nodeID id of node
-         *  @param  parentNodeID id of parent node
-         *  @param  leftChildNodeID id of left child node
-         *  @param  rightChildNodeID id of right child node
+         *  @param  nodeId id of node
+         *  @param  parentNodeId id of parent node
+         *  @param  leftChildNodeId id of left child node
+         *  @param  rightChildNodeId id of right child node
          *  @param  isLeaf is node a leaf
          *  @param  threshold threshold for cut
-         *  @param  variableID index
+         *  @param  variableId index
          *  @param  outcome, only written if leaf node 
          */
-        Node(const int nodeID, const int parentNodeID, const int leftChildNodeID, const int rightChildNodeID, const bool isLeaf, const double threshold, const int variableID, const bool outcome = false);
+        Node(const int nodeId, const int parentNodeId, const int leftChildNodeId, const int rightChildNodeId, const bool isLeaf, const double threshold, const int variableId, const bool outcome = false);
 
         /**
          *  @brief  Return node id
          */
-        int GetNodeID() const;
+        int GetNodeId() const;
 
         /**
          *  @brief  Return parent node id
          */
-        int GetParentNodeID() const;
+        int GetParentNodeId() const;
 
         /**
          *  @brief  Return left child node id
          */
-        int GetLeftChildNodeID() const;
+        int GetLeftChildNodeId() const;
 
         /**
          *  @brief  Return right child node id
          */
-        int GetRightChildNodeID() const;
+        int GetRightChildNodeId() const;
 
         /**
          *  @brief  Return is the node a leaf
@@ -120,7 +123,7 @@ private:
         /**
          *  @brief  Return cut variable
          */
-        int GetVariableID() const;
+        int GetVariableId() const;
 
         /**
          *  @brief  Return outcome
@@ -128,25 +131,28 @@ private:
         bool GetOutcome() const;
 
     private:
-        const int       m_nodeID;               ///< Node id
-        const int       m_parentNodeID;         ///< Parent node id
-        const int       m_leftChildNodeID;      ///< Left child node id
-        const int       m_rightChildNodeID;     ///< Right child node id
+        const int       m_nodeId;               ///< Node id
+        const int       m_parentNodeId;         ///< Parent node id
+        const int       m_leftChildNodeId;      ///< Left child node id
+        const int       m_rightChildNodeId;     ///< Right child node id
         const bool      m_isLeaf;               ///< Is node a leaf
         const double    m_threshold;            ///< Threshold used for decision if decision node
-        const int       m_variableID;           ///< Variable cut on for decision if decision node
+        const int       m_variableId;           ///< Variable cut on for decision if decision node
         const bool      m_outcome;              ///< Outcome if leaf node
     };
 
-    typedef std::map<int, const Node*> IDToNodeMap;
+    typedef std::map<int, const Node*> IdToNodeMap;
 
+    /**
+     *  @brief  WeakClassifier class containing a decision tree and a weight
+     */
     class WeakClassifier
     {
     public: 
         /**
          *  @brief  Constructor, set hierarchy for nodes 
          */
-        WeakClassifier(const IDToNodeMap &idToNodeMap, const double weight, const int treeID);
+        WeakClassifier(const IdToNodeMap &idToNodeMap, const double weight, const int treeId);
 
         /**
          *  @brief  Predict signal or background based on trained data
@@ -158,10 +164,10 @@ private:
         /**
          *  @brief  Evalute node and return outcome
          *
-         *  @param  nodeID current node id 
+         *  @param  nodeId current node id 
          *  @param  features the input features 
          */
-        bool EvaluateNode(const int nodeID, const DoubleVector &features) const;
+        bool EvaluateNode(const int nodeId, const DoubleVector &features) const;
 
         /**
          *  @brief  Get boost weight for weak classifier
@@ -171,16 +177,19 @@ private:
         /**
          *  @brief  Get tree id for weak classifier
          */
-        int GetTreeID() const;
+        int GetTreeId() const;
 
     private:
-        IDToNodeMap     m_idToNodeMap; ///< Decision tree nodes
+        IdToNodeMap     m_idToNodeMap; ///< Decision tree nodes
         const double    m_weight;      ///< Boost weight 
-        const int       m_treeID;      ///< Decision tree id        
+        const int       m_treeId;      ///< Decision tree id        
     };
 
     typedef std::vector<WeakClassifier> WeakClassifiers;
 
+    /**
+     *  @brief  StrongClassifier class used in application of adaptive boost decision tree
+     */
     class StrongClassifier
     {
     public:
@@ -244,37 +253,37 @@ private:
      *
      *  @return success
      */
-    pandora::StatusCode ReadNode(pandora::TiXmlHandle &currentHandle, IDToNodeMap &idToNodeMap) const;
+    pandora::StatusCode ReadNode(pandora::TiXmlHandle &currentHandle, IdToNodeMap &idToNodeMap) const;
 
     StrongClassifier     *m_pStrongClassifier;           ///< Strong adaptive boost tree classifier 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetNodeID() const 
+inline int AdaBoostDecisionTree::Node::GetNodeId() const 
 {
-    return m_nodeID;
+    return m_nodeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetParentNodeID() const 
+inline int AdaBoostDecisionTree::Node::GetParentNodeId() const 
 {
-    return m_parentNodeID;
+    return m_parentNodeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetLeftChildNodeID() const 
+inline int AdaBoostDecisionTree::Node::GetLeftChildNodeId() const 
 {
-    return m_leftChildNodeID;
+    return m_leftChildNodeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetRightChildNodeID() const 
+inline int AdaBoostDecisionTree::Node::GetRightChildNodeId() const 
 {
-    return m_rightChildNodeID;
+    return m_rightChildNodeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -293,9 +302,9 @@ inline double AdaBoostDecisionTree::Node::GetThreshold() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetVariableID() const
+inline int AdaBoostDecisionTree::Node::GetVariableId() const
 {
-    return m_variableID;
+    return m_variableId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -314,9 +323,9 @@ inline double AdaBoostDecisionTree::WeakClassifier::GetWeight() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::WeakClassifier::GetTreeID() const
+inline int AdaBoostDecisionTree::WeakClassifier::GetTreeId() const
 {
-    return m_treeID;
+    return m_treeId;
 }
 
 } // namespace lar_content
