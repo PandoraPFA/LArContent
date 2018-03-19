@@ -307,7 +307,7 @@ double AdaBoostDecisionTree::StrongClassifier::Predict(const DoubleVector &featu
 
         if (weakClassifier.Predict(features))
 	{
-             score += weakClassifier.GetWeight();
+            score += weakClassifier.GetWeight();
         }
         else
         {
@@ -315,7 +315,15 @@ double AdaBoostDecisionTree::StrongClassifier::Predict(const DoubleVector &featu
         }
     }
 
-    score /= weights;
+    if (weights > std::numeric_limits<double>::min())
+    {
+        score /= weights;
+    }
+    else
+    {
+        std::cout << "AdaBoostDecisionTree: Classifier weights sum to zero indicating defunct classifier" << std::endl;
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+    }
 
     return score;
 }
