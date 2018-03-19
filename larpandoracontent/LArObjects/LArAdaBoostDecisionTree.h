@@ -12,6 +12,7 @@
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
+#include "larpandoracontent/LArObjects/LArMultivariateAnalyisBaseClass.h"
 
 #include <functional>
 #include <map>
@@ -25,7 +26,7 @@ namespace lar_content
 /**
  *  @brief  AdaBoostDecisionTree class
  */
-class AdaBoostDecisionTree
+class AdaBoostDecisionTree : public MultivariateAnalyisBaseClass
 {
 public:
 //    typedef std::vector<double> DoubleVector;

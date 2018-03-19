@@ -12,9 +12,6 @@
 #include <chrono>
 #include <ctime>
 
-class AdaBoostDecisionTree;
-class SupportVectorMachine;
-
 namespace lar_content
 {
 
