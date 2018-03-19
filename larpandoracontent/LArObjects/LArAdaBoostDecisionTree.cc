@@ -179,8 +179,7 @@ pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle 
         }
     }
 
-    const WeakClassifier *pWeakClassifier = new WeakClassifier(idToNodeMap, boostWeight, treeIndex);
-    weakClassifiers.push_back(pWeakClassifier);
+    weakClassifiers.emplace_back(idToNodeMap, boostWeight, treeIndex);
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -293,17 +292,17 @@ double AdaBoostDecisionTree::StrongClassifier::Predict(const DoubleVector &featu
     double score(0.0);
     double weights(0.0);
 
-    for (const WeakClassifier *pWeakClassifier : m_weakClassifiers)
+    for (const WeakClassifier &weakClassifier : m_weakClassifiers)
     {
-        weights += pWeakClassifier->GetWeight();
+        weights += weakClassifier.GetWeight();
 
-        if (pWeakClassifier->Predict(features))
+        if (weakClassifier.Predict(features))
 	{
-             score += pWeakClassifier->GetWeight();
+             score += weakClassifier.GetWeight();
         }
         else
         {
-            score -= pWeakClassifier->GetWeight();
+            score -= weakClassifier.GetWeight();
         }
     }
 

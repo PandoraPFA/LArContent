@@ -181,7 +181,7 @@ private:
         const int       m_treeID;      ///< Decision tree id        
     };
 
-    typedef std::vector<const WeakClassifier*> WeakClassifiers;
+    typedef std::vector<WeakClassifier> WeakClassifiers;
 
     class StrongClassifier
     {
