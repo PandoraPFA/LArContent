@@ -225,6 +225,7 @@ pandora::StatusCode AdaBoostDecisionTree::ReadNode(pandora::TiXmlHandle &current
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 AdaBoostDecisionTree::Node::Node(const int nodeID, const int parentNodeID, const int leftChildNodeID, const int rightChildNodeID, const bool isLeaf, const double threshold, const int variableID, const bool outcome) : 
     m_nodeID(nodeID),
@@ -239,8 +240,9 @@ AdaBoostDecisionTree::Node::Node(const int nodeID, const int parentNodeID, const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::WeakClassifier::WeakClassifier(IDToNodeMap &idToNodeMap, const double weight, const int treeID) : 
+AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const IDToNodeMap &idToNodeMap, const double weight, const int treeID) : 
     m_idToNodeMap(idToNodeMap),
     m_weight(weight),
     m_treeID(treeID)
@@ -268,6 +270,12 @@ bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeID, const 
     if (pActiveNode->IsLeaf())
         return pActiveNode->GetOutcome();
 
+    if (std::find(features.begin(), features.end(), pActiveNode->GetVariableID()) == features.end())
+    {
+        std::cout << "AdaBoostDecisionTree: Attempting to cut on unknown variable" << std::endl;
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
+    }
+
     if (features.at(pActiveNode->GetVariableID()) <= pActiveNode->GetThreshold())
     {
         return this->EvaluateNode(pActiveNode->GetLeftChildNodeID(), features);
@@ -279,8 +287,9 @@ bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeID, const 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::StrongClassifier::StrongClassifier(WeakClassifiers &weakClassifiers) : 
+AdaBoostDecisionTree::StrongClassifier::StrongClassifier(const WeakClassifiers &weakClassifiers) : 
     m_weakClassifiers(weakClassifiers)    
 {
 }

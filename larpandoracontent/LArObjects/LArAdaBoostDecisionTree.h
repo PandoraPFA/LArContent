@@ -148,7 +148,7 @@ private:
         /**
          *  @brief  Constructor, set hierarchy for nodes 
          */
-        WeakClassifier(IDToNodeMap &idToNodeMap, const double weight, const int treeID);
+        WeakClassifier(const IDToNodeMap &idToNodeMap, const double weight, const int treeID);
 
         /**
          *  @brief  Predict signal or background based on trained data
@@ -189,7 +189,7 @@ private:
         /**
          *  @brief  Constructor
          */
-        StrongClassifier(WeakClassifiers &weakClassifiers);
+        StrongClassifier(const WeakClassifiers &weakClassifiers);
 
         /**
          *  @brief  Predict signal or background based on trained data
