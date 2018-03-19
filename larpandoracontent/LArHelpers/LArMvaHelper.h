@@ -12,10 +12,10 @@
 #include <chrono>
 #include <ctime>
 
+#include "larpandoracontent/LArObjects/LArMultivariateAnalysisBaseClass.h"
+
 namespace lar_content
 {
-
-typedef std::vector<double> DoubleVector; 
 
 /**
  *  @brief  MvaFeatureTool class template
@@ -65,35 +65,35 @@ public:
     /**
      *  @brief  Use the trained classifier to predict the boolean class of an example
      *
-     *  @param  classifier applied in the mva 
+     *  @param  multivariateAnalysisBaseClass applied in the mva 
      *  @param  featureLists the lists of features
      *
      *  @return the predicted boolean class of the example
      */
-    template <typename Classifier, typename ...TLISTS>
-    static bool Classify(const Classifier &classifier, TLISTS &&... featureLists);
+    template <typename ...TLISTS>
+    static bool Classify(const MultivariateAnalysisBaseClass &multivariateAnalysisBaseClass, TLISTS &&... featureLists);
 
     /**
      *  @brief  Use the trained classifer to calculate the classification score of an example (>0 means boolean class true)
      *
-     *  @param  classifier applied in the mva
+     *  @param  multivariateAnalysisBaseClass applied in the mva
      *  @param  featureLists the lists of features
      *
      *  @return the classification score
      */
-    template <typename Classifier, typename ...TLISTS>
-    static double CalculateClassificationScore(const Classifier &classifier, TLISTS &&... featureLists);
+    template <typename ...TLISTS>
+    static double CalculateClassificationScore(const MultivariateAnalysisBaseClass &multivariateAnalysisBaseClass, TLISTS &&... featureLists);
     
     /**
      *  @brief  Use the trained mva to calculate a classification probability for an example
      *
-     *  @param  classifier applied in the mva
+     *  @param  multivariateAnalysisBaseClass applied in the mva
      *  @param  featureLists the lists of features
      *
      *  @return the classification probability
      */
-    template <typename Classifier, typename ...TLISTS>
-    static double CalculateProbability(const Classifier &classifier, TLISTS &&... featureLists);
+    template <typename ...TLISTS>
+    static double CalculateProbability(const MultivariateAnalysisBaseClass &multivariateAnalysisBaseClass, TLISTS &&... featureLists);
 
     /**
      *  @brief  Calculate the features in a given feature tool vector
@@ -210,26 +210,26 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename Classifier, typename ...TLISTS>
-bool LArMvaHelper::Classify(const Classifier &classifier, TLISTS &&... featureLists)
+template <typename ...TLISTS>
+bool LArMvaHelper::Classify(const MultivariateAnalysisBaseClass &multivariateAnalysisBaseClass, TLISTS &&... featureLists)
 {
-    return classifier.Classify(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return multivariateAnalysisBaseClass.Classify(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename Classifier, typename ...TLISTS>
-double LArMvaHelper::CalculateClassificationScore(const Classifier &classifier, TLISTS &&... featureLists)
+template <typename ...TLISTS>
+double LArMvaHelper::CalculateClassificationScore(const MultivariateAnalysisBaseClass &multivariateAnalysisBaseClass, TLISTS &&... featureLists)
 {
-    return classifier.CalculateClassificationScore(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return multivariateAnalysisBaseClass.CalculateClassificationScore(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename Classifier, typename ...TLISTS>
-double LArMvaHelper::CalculateProbability(const Classifier &classifier, TLISTS &&... featureLists)
+template <typename ...TLISTS>
+double LArMvaHelper::CalculateProbability(const MultivariateAnalysisBaseClass &multivariateAnalysisBaseClass, TLISTS &&... featureLists)
 {
-    return classifier.CalculateProbability(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return multivariateAnalysisBaseClass.CalculateProbability(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
