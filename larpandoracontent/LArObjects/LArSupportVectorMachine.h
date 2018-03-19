@@ -12,7 +12,6 @@
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
-#include "larpandoracontent/LArObjects/LArMultivariateAnalyisBaseClass.h"
 
 #include <functional>
 #include <map>
@@ -26,7 +25,7 @@ namespace lar_content
 /**
  *  @brief  SupportVectorMachine class
  */
-class SupportVectorMachine : public MultivariateAnalyisBaseClass
+class SupportVectorMachine : public MultivariateAnalysisBaseClass
 {
 public:
     typedef std::function<double(const DoubleVector &, const DoubleVector &, const double)> KernelFunction;
