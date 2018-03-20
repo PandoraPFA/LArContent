@@ -80,7 +80,7 @@ bool CutPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
 
 bool CutPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowObject *const /*pPfo*/) const
 {
-	throw StatusCodeException(STATUS_CODE_FAILURE);
+	throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
