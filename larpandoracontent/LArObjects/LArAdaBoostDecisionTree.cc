@@ -32,7 +32,11 @@ pandora::StatusCode AdaBoostDecisionTree::Initialize(const std::string &paramete
     const pandora::StatusCode statusCode(this->ReadXmlFile(parameterLocation, bdtName, weakClassifiers));
 
     if (pandora::STATUS_CODE_SUCCESS != statusCode)
+    {
+        this->Reset();
+        std::cout << "AdaBoostDecisionTree: Unable to read xml" << std::endl;
         throw pandora::StatusCodeException(statusCode);
+    }
 
     // ATTN: Add consistency check for number of features, bearing in min not all features in a bdt may be used
     m_pStrongClassifier = new StrongClassifier(weakClassifiers);
@@ -42,37 +46,81 @@ pandora::StatusCode AdaBoostDecisionTree::Initialize(const std::string &paramete
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void AdaBoostDecisionTree::Reset() const
+{
+    if (!m_pStrongClassifier)
+        return;
+
+    for (const WeakClassifier *pWeakClassifier : m_pStrongClassifier->GetWeakClassifiers())
+    {
+        if (!pWeakClassifier)
+            continue;
+
+        pWeakClassifier->Reset();
+        delete pWeakClassifier;
+    }
+
+    delete m_pStrongClassifier;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool AdaBoostDecisionTree::Classify(const DoubleVector &features) const
 {
-    this->CheckInitialization();
-    return (m_pStrongClassifier->Predict(features) > 0.0 ? true : false);
+    return (this->CalculateScore(features) > 0.0 ? true : false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 double AdaBoostDecisionTree::CalculateClassificationScore(const DoubleVector &features) const
 {
-    this->CheckInitialization();
-    return m_pStrongClassifier->Predict(features);
+    return this->CalculateScore(features);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 double AdaBoostDecisionTree::CalculateProbability(const DoubleVector &features) const
 {
-    this->CheckInitialization();
-    return (m_pStrongClassifier->Predict(features) + 1.0) * 0.5;
+    return (this->CalculateScore(features) + 1.0) * 0.5;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void AdaBoostDecisionTree::CheckInitialization() const
+double AdaBoostDecisionTree::CalculateScore(const DoubleVector &features) const
 {
     if (m_pStrongClassifier == nullptr)
     {
+        this->Reset();
         std::cout << "AdaBoostDecisionTree: Attempting to use an uninitialized bdt" << std::endl;
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
     }
+
+    double score(0.0);
+
+    try
+    {
+        score = m_pStrongClassifier->Predict(features);
+    }
+    catch (pandora::StatusCodeException &statusCodeException)
+    {
+        if (pandora::STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode())
+        {
+            this->Reset();
+            std::cout << "AdaBoostDecisionTree: Caught exception thrown when trying to cut on an unknown variable.  Rethrowing exception." << std::endl;
+        }
+        else if (pandora::STATUS_CODE_INVALID_PARAMETER == statusCodeException.GetStatusCode())
+        {
+            this->Reset();
+            std::cout << "AdaBoostDecisionTree: Caught exception thrown when classifier weights sum to zero indicating defunct classifier.  Rethrowing exception." << std::endl;
+        }
+        else
+        {
+            std::cout << "AdaBoostDecisionTree: Unexpected exception thrown." << std::endl;
+        }
+        throw statusCodeException;
+    }
+
+    return score;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -90,7 +138,6 @@ pandora::StatusCode AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFile
     const pandora::TiXmlHandle xmlDocumentHandle(&xmlDocument);
     pandora::TiXmlNode *pContainerXmlNode(pandora::TiXmlHandle(xmlDocumentHandle).FirstChildElement().Element());
 
-    // Find the xml container for the bdt with the required name
     while (pContainerXmlNode)
     {
         if (pContainerXmlNode->ValueStr() != "AdaBoostDecisionTree")
@@ -119,7 +166,6 @@ pandora::StatusCode AdaBoostDecisionTree::ReadXmlFile(const std::string &bdtFile
         return pandora::STATUS_CODE_NOT_FOUND;
     }
 
-    // Read the components of this bdt container
     pandora::TiXmlHandle localHandle(pContainerXmlNode);
     pandora::TiXmlElement *pCurrentXmlElement = localHandle.FirstChild().Element();
 
@@ -179,7 +225,8 @@ pandora::StatusCode AdaBoostDecisionTree::ReadDecisionTree(pandora::TiXmlHandle 
         }
     }
 
-    weakClassifiers.emplace_back(idToNodeMap, boostWeight, treeIndex);
+    const WeakClassifier *pWeakClassifiers = new WeakClassifier(idToNodeMap, boostWeight, treeIndex);
+    weakClassifiers.push_back(pWeakClassifiers);
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -251,6 +298,21 @@ AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const IdToNodeMap &idToNode
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void AdaBoostDecisionTree::WeakClassifier::Reset() const 
+{
+    for (const auto &iter : m_idToNodeMap)
+    {
+        const Node *pNode(iter.second);
+
+        if (!pNode)
+            continue;
+
+        delete pNode;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool AdaBoostDecisionTree::WeakClassifier::Predict(const DoubleVector &features) const 
 {   
     return this->EvaluateNode(0, features); 
@@ -298,20 +360,19 @@ AdaBoostDecisionTree::StrongClassifier::StrongClassifier(const WeakClassifiers &
 
 double AdaBoostDecisionTree::StrongClassifier::Predict(const DoubleVector &features) const
 {
-    double score(0.0);
-    double weights(0.0);
+    double score(0.0), weights(0.0);
 
-    for (const WeakClassifier &weakClassifier : m_weakClassifiers)
+    for (const WeakClassifier *pWeakClassifier : m_weakClassifiers)
     {
-        weights += weakClassifier.GetWeight();
+        weights += pWeakClassifier->GetWeight();
 
-        if (weakClassifier.Predict(features))
-	{
-            score += weakClassifier.GetWeight();
+        if (pWeakClassifier->Predict(features))
+        {
+            score += pWeakClassifier->GetWeight();
         }
         else
         {
-            score -= weakClassifier.GetWeight();
+            score -= pWeakClassifier->GetWeight();
         }
     }
 

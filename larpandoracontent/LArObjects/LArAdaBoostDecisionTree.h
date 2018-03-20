@@ -42,6 +42,11 @@ public:
     pandora::StatusCode Initialize(const std::string &parameterLocation, const std::string &bdtName);
 
     /**
+     *  @brief  Reset and manage memory
+     */
+    void Reset() const;
+
+    /**
      *  @brief  Classify the set of input features based on the trained model
      *
      *  @param  features the input features
@@ -91,41 +96,57 @@ private:
 
         /**
          *  @brief  Return node id
+         *
+         *  @return node id
          */
         int GetNodeId() const;
 
         /**
          *  @brief  Return parent node id
+         *
+         *  @return parent node id
          */
         int GetParentNodeId() const;
 
         /**
          *  @brief  Return left child node id
+         *
+         *  @return left child node id
          */
         int GetLeftChildNodeId() const;
 
         /**
          *  @brief  Return right child node id
+         *
+         *  @return right child node id
          */
         int GetRightChildNodeId() const;
 
         /**
          *  @brief  Return is the node a leaf
+         *
+         *  @return is node a leaf
          */
         bool IsLeaf() const;
 
         /**
          *  @brief  Return node threshold
+         *
+         *  @return threshold cut
          */
         double GetThreshold() const;
 
         /**
          *  @brief  Return cut variable
+         *
+         *  @return variable cut on
          */
         int GetVariableId() const;
 
         /**
          *  @brief  Return outcome
+         *
+         *  @return outcome of cut
          */
         bool GetOutcome() const;
 
@@ -154,9 +175,16 @@ private:
         WeakClassifier(const IdToNodeMap &idToNodeMap, const double weight, const int treeId);
 
         /**
+         *  @brief  Reset and manage memory 
+         */
+        void Reset() const;
+
+        /**
          *  @brief  Predict signal or background based on trained data
          *
          *  @param  features the input features 
+         *
+         *  @return is signal or background
          */
         bool Predict(const DoubleVector &features) const;
 
@@ -165,16 +193,22 @@ private:
          *
          *  @param  nodeId current node id 
          *  @param  features the input features 
+         *
+         *  @return is signal or background node
          */
         bool EvaluateNode(const int nodeId, const DoubleVector &features) const;
 
         /**
          *  @brief  Get boost weight for weak classifier
+         *
+         *  @return weight for decision tree
          */
         double GetWeight() const;
 
         /**
          *  @brief  Get tree id for weak classifier
+         *
+         *  @return tree id 
          */
         int GetTreeId() const;
 
@@ -184,7 +218,7 @@ private:
         const int       m_treeId;      ///< Decision tree id        
     };
 
-    typedef std::vector<WeakClassifier> WeakClassifiers;
+    typedef std::vector<const WeakClassifier*> WeakClassifiers;
 
     /**
      *  @brief  StrongClassifier class used in application of adaptive boost decision tree
@@ -201,12 +235,30 @@ private:
          *  @brief  Predict signal or background based on trained data
          *
          *  @param  features the input features 
+         *
+         *  @return return score produced from trained model
          */
         double Predict(const DoubleVector &features) const;
+
+        /**
+         *  @brief  Get weak classifiers
+         *
+         *  @return vector of weak classifiers
+         */
+        WeakClassifiers GetWeakClassifiers() const;
 
     private: 
         WeakClassifiers     m_weakClassifiers;     ///< Vector of weak classifers 
     };
+
+    /**
+     *  @brief  Calculate score for input features using strong classifier
+     *
+     *  @param  features the input features
+     *
+     *  @return score
+     */
+    double CalculateScore(const DoubleVector &features) const;
 
     /**
      *  @brief  Read the bdt parameters from an xml file
@@ -218,11 +270,6 @@ private:
      *  @return success
      */
     pandora::StatusCode ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName, WeakClassifiers &weakClassifiers) const;
-
-    /**
-     *  @brief  Check whether the strong classifier has been correctly initialized
-     */
-    void CheckInitialization() const;
 
     /**
      *  @brief  Read the component at the current xml element
@@ -325,6 +372,13 @@ inline double AdaBoostDecisionTree::WeakClassifier::GetWeight() const
 inline int AdaBoostDecisionTree::WeakClassifier::GetTreeId() const
 {
     return m_treeId;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline AdaBoostDecisionTree::WeakClassifiers AdaBoostDecisionTree::StrongClassifier::GetWeakClassifiers() const
+{
+    return m_weakClassifiers;
 }
 
 } // namespace lar_content
