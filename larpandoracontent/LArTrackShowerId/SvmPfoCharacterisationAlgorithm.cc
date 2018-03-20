@@ -100,14 +100,26 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
         return isTrueTrack;
     }// training mode
 
-    if (!m_enableProbability)
-    {
-        return LArSvmHelper::Classify((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector);
-    }
-    else
-    {
-        return (m_minProbabilityCut <= LArSvmHelper::CalculateProbability((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector));
-    }
+	//check for failures in the calculation of features, which would give -1 in any of the features, if that happens, use current id
+	bool useSVM(true);
+	for (int i=0; i<featureVector.size(); i++)
+		if (std::fabs(featureVector[i] + 1.f) < std::numeric_limits<float>::epsilon())
+				useSVM = false;
+	if (useSVM)
+	{
+		if (!m_enableProbability)
+		{
+			return LArSvmHelper::Classify((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector);
+		}
+		else
+		{
+			return (m_minProbabilityCut <= LArSvmHelper::CalculateProbability((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector));
+		}
+	}
+	else
+	{
+		return (pPfo->GetParticleId() == MU_MINUS);
+	}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
