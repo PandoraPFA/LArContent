@@ -28,6 +28,7 @@ namespace lar_content
 NeutrinoIdTool::NeutrinoIdTool() :
     m_useTrainingMode(false),
     m_selectNuanceCode(false),
+    m_nuance(-std::numeric_limits<int>::max()),
     m_minPurity(0.9f),
     m_minCompleteness(0.9f),
     m_minProbability(0.0f),
