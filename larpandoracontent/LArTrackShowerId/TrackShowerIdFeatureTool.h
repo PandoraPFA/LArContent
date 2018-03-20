@@ -13,8 +13,8 @@
 namespace lar_content
 {
 
-typedef SvmFeatureTool<const pandora::Algorithm *const, const pandora::Cluster *const>  ClusterCharacterisationFeatureTool;
-typedef SvmFeatureTool<const pandora::Algorithm *const, const pandora::ParticleFlowObject *const>  PfoCharacterisationFeatureTool;
+typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::Cluster *const>  ClusterCharacterisationFeatureTool;
+typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::ParticleFlowObject *const>  PfoCharacterisationFeatureTool;
 
 /**
  *   @brief  ShowerFitFeatureTool to calculate variables related to sliding shower fit
@@ -27,7 +27,7 @@ public:
      */
     TwoDShowerFitFeatureTool();
 
-    void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
+    void Run(DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -60,7 +60,7 @@ public:
      */
     TwoDLinearFitFeatureTool();
 
-    void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
+    void Run(DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -97,7 +97,7 @@ public:
      */
     TwoDVertexDistanceFeatureTool();
 
-    void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
+    void Run(DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -128,7 +128,7 @@ public:
      */
     ThreeDLinearFitFeatureTool();
 
-    void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -165,7 +165,7 @@ public:
      */
     ThreeDVertexDistanceFeatureTool();
 
-    void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -187,7 +187,7 @@ public:
      */
     ThreeDOpeningAngleFeatureTool();
 
-    void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -211,7 +211,7 @@ public:
      */
     ThreeDPCAFeatureTool();
 
-    void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -255,7 +255,7 @@ public:
 
     };
 
-    void Run(SupportVectorMachine::DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+    void Run(DoubleVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
     /**
