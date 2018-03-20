@@ -81,6 +81,8 @@ double AdaBoostDecisionTree::CalculateClassificationScore(const DoubleVector &fe
 
 double AdaBoostDecisionTree::CalculateProbability(const DoubleVector &features) const
 {
+    // ATTN: BDT score, once normalised by total weight, is confined to the range -1 to +1.  This linear mapping places the score in the 
+    // range 0 to 1 so that it may be interpreted as a probability. 
     return (this->CalculateScore(features) + 1.0) * 0.5;
 }
 
