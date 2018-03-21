@@ -32,6 +32,25 @@ public:
     AdaBoostDecisionTree();
 
     /**
+     *  @brief  Copy constructor
+     * 
+     *  @param  rhs the AdaBoostDecisionTree to copy
+     */
+    AdaBoostDecisionTree(const AdaBoostDecisionTree &rhs);
+
+    /**
+     *  @brief  Assignment operator
+     * 
+     *  @param  rhs the AdaBoostDecisionTree to assign
+     */
+    AdaBoostDecisionTree &operator=(const AdaBoostDecisionTree &rhs);
+
+    /**
+     *  @brief  Destructor
+     */
+    ~AdaBoostDecisionTree();
+
+    /**
      *  @brief  Initialize the bdt model 
      *
      *  @param  parameterLocation the location of the model
@@ -40,11 +59,6 @@ public:
      *  @return success
      */
     pandora::StatusCode Initialize(const std::string &parameterLocation, const std::string &bdtName);
-
-    /**
-     *  @brief  Reset and manage memory
-     */
-    void Reset() const;
 
     /**
      *  @brief  Classify the set of input features based on the trained model
@@ -93,6 +107,32 @@ private:
          *  @param  outcome, only written if leaf node 
          */
         Node(const int nodeId, const int parentNodeId, const int leftChildNodeId, const int rightChildNodeId, const bool isLeaf, const double threshold, const int variableId, const bool outcome = false);
+
+        /**
+         *  @brief  Constructor using xml handle to set member variables
+         *
+         *  @param  pXmlHandle xml handle to use when setting member variables 
+         */
+        Node(const pandora::TiXmlHandle *const pXmlHandle);
+
+        /**
+         *  @brief  Copy constructor
+         * 
+         *  @param  rhs the node to copy
+         */
+        Node(const Node &rhs);
+
+        /**
+         *  @brief  Assignment operator
+         * 
+         *  @param  rhs the node to assign
+         */
+        Node &operator=(const Node &rhs);
+
+        /**
+         *  @brief  Destructor
+         */
+        ~Node();
 
         /**
          *  @brief  Return node id
@@ -151,14 +191,14 @@ private:
         bool GetOutcome() const;
 
     private:
-        const int       m_nodeId;               ///< Node id
-        const int       m_parentNodeId;         ///< Parent node id
-        const int       m_leftChildNodeId;      ///< Left child node id
-        const int       m_rightChildNodeId;     ///< Right child node id
-        const bool      m_isLeaf;               ///< Is node a leaf
-        const double    m_threshold;            ///< Threshold used for decision if decision node
-        const int       m_variableId;           ///< Variable cut on for decision if decision node
-        const bool      m_outcome;              ///< Outcome if leaf node
+        int       m_nodeId;               ///< Node id
+        int       m_parentNodeId;         ///< Parent node id
+        int       m_leftChildNodeId;      ///< Left child node id
+        int       m_rightChildNodeId;     ///< Right child node id
+        bool      m_isLeaf;               ///< Is node a leaf
+        double    m_threshold;            ///< Threshold used for decision if decision node
+        int       m_variableId;           ///< Variable cut on for decision if decision node
+        bool      m_outcome;              ///< Outcome if leaf node
     };
 
     typedef std::map<int, const Node*> IdToNodeMap;
@@ -171,13 +211,38 @@ private:
     public: 
         /**
          *  @brief  Constructor, set hierarchy for nodes 
+         *
+         *  @param  idToNodeMap map of node id to node
+         *  @param  weight applied to decision tree
+         *  @param  treeId index of tree in decision tree forest 
          */
         WeakClassifier(const IdToNodeMap &idToNodeMap, const double weight, const int treeId);
 
         /**
-         *  @brief  Reset and manage memory 
+         *  @brief  Constructor using xml handle to set member variables
+         *
+         *  @param  pXmlHandle xml handle to use when setting member variables 
          */
-        void Reset() const;
+        WeakClassifier(const pandora::TiXmlHandle *const pXmlHandle);
+
+        /**
+         *  @brief  Copy constructor
+         * 
+         *  @param  rhs the weak classifier to copy
+         */
+        WeakClassifier(const WeakClassifier &rhs);
+
+        /**
+         *  @brief  Assignment operator
+         * 
+         *  @param  rhs the weak classifier to assign
+         */
+        WeakClassifier &operator=(const WeakClassifier &rhs);
+
+        /**
+         *  @brief  Destructor
+         */
+        ~WeakClassifier();
 
         /**
          *  @brief  Predict signal or background based on trained data
@@ -214,8 +279,8 @@ private:
 
     private:
         IdToNodeMap     m_idToNodeMap; ///< Decision tree nodes
-        const double    m_weight;      ///< Boost weight 
-        const int       m_treeId;      ///< Decision tree id        
+        double          m_weight;      ///< Boost weight 
+        int             m_treeId;      ///< Decision tree id        
     };
 
     typedef std::vector<const WeakClassifier*> WeakClassifiers;
@@ -232,6 +297,32 @@ private:
         StrongClassifier(const WeakClassifiers &weakClassifiers);
 
         /**
+         *  @brief  Constructor using xml handle to set member variables
+         *
+         *  @param  pXmlHandle xml handle to use when setting member variables 
+         */
+        StrongClassifier(const pandora::TiXmlHandle *const pXmlHandle);
+
+        /**
+         *  @brief  Copy constructor
+         * 
+         *  @param  rhs the strong classifier to copy
+         */
+        StrongClassifier(const StrongClassifier &rhs);
+
+        /**
+         *  @brief  Assignment operator
+         * 
+         *  @param  rhs the strong classifier to assign
+         */
+        StrongClassifier &operator=(const StrongClassifier &rhs);
+
+        /**
+         *  @brief  Destructor
+         */
+        ~StrongClassifier();
+
+        /**
          *  @brief  Predict signal or background based on trained data
          *
          *  @param  features the input features 
@@ -240,14 +331,12 @@ private:
          */
         double Predict(const DoubleVector &features) const;
 
-        /**
-         *  @brief  Get weak classifiers
-         *
-         *  @return vector of weak classifiers
-         */
-        WeakClassifiers GetWeakClassifiers() const;
-
     private: 
+        /**
+         *  @brief  Read xml element and if weak classifier add to member variables
+         */
+        pandora::StatusCode ReadComponent(pandora::TiXmlElement *pCurrentXmlElement);
+
         WeakClassifiers     m_weakClassifiers;     ///< Vector of weak classifers 
     };
 
@@ -259,47 +348,6 @@ private:
      *  @return score
      */
     double CalculateScore(const DoubleVector &features) const;
-
-    /**
-     *  @brief  Read the bdt parameters from an xml file
-     *
-     *  @param  bdtFileName the sml file name
-     *  @param  bdtName the name of the bdt
-     *  @param  weakClassifiers vector of weak classifiers contained in xml
-     *
-     *  @return success
-     */
-    pandora::StatusCode ReadXmlFile(const std::string &bdtFileName, const std::string &bdtName, WeakClassifiers &weakClassifiers) const;
-
-    /**
-     *  @brief  Read the component at the current xml element
-     *
-     *  @param  pCurrentXmlElement address of the current xml element
-     *  @param  weakClassifiers vector of weak classifiers contained in xml
-     *
-     *  @return success
-     */
-    pandora::StatusCode ReadComponent(pandora::TiXmlElement *pCurrentXmlElement, WeakClassifiers &weakClassifiers) const;
-
-    /**
-     *  @brief  Read the decision tree component at the current xml handle
-     *
-     *  @param  currentHandle the current xml handle
-     *  @param  weakClassifiers vector of weak classifiers contained in xml
-     *
-     *  @return success
-     */
-    pandora::StatusCode ReadDecisionTree(pandora::TiXmlHandle &currentHandle, WeakClassifiers &weakClassifiers) const;
-
-    /**
-     *  @brief  Read the node component at the current xml handle
-     *
-     *  @param  currentHandle the current xml handle
-     *  @param  idToNodeMap map of id to node
-     *
-     *  @return success
-     */
-    pandora::StatusCode ReadNode(pandora::TiXmlHandle &currentHandle, IdToNodeMap &idToNodeMap) const;
 
     StrongClassifier     *m_pStrongClassifier;           ///< Strong adaptive boost tree classifier 
 };
@@ -372,13 +420,6 @@ inline double AdaBoostDecisionTree::WeakClassifier::GetWeight() const
 inline int AdaBoostDecisionTree::WeakClassifier::GetTreeId() const
 {
     return m_treeId;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline AdaBoostDecisionTree::WeakClassifiers AdaBoostDecisionTree::StrongClassifier::GetWeakClassifiers() const
-{
-    return m_weakClassifiers;
 }
 
 } // namespace lar_content
