@@ -26,7 +26,7 @@ public:
      *
      *  @return the classification 
      */
-    virtual bool Classify(const DoubleVector &features) const;
+    virtual bool Classify(const DoubleVector &features) const = 0;
 
     /**
      *  @brief  Calculate the classification score for a set of input features, based on the trained model
@@ -35,7 +35,7 @@ public:
      *
      *  @return the classification score
      */
-    virtual double CalculateClassificationScore(const DoubleVector &features) const;
+    virtual double CalculateClassificationScore(const DoubleVector &features) const = 0;
 
     /**
      *  @brief  Calculate the classification probability for a set of input features, based on the trained model
@@ -44,7 +44,7 @@ public:
      *
      *  @return the classification probability
      */
-    virtual double CalculateProbability(const DoubleVector &features) const;
+    virtual double CalculateProbability(const DoubleVector &features) const = 0;
 };
 
 } // namespace lar_content
