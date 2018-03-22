@@ -51,7 +51,7 @@ private:
     std::string     m_mcParticleListName;       ///< Name of input MC particle list
 
     bool            m_useTrueNeutrinosOnly;     ///< Whether to consider only mc particles that were neutrino induced
-    int             m_minHitsForDisplay;        ///< Min hits associated with mc particle to warrant display to terminal
+    unsigned int    m_minHitsForDisplay;        ///< Min hits associated with mc particle to warrant display to terminal
 };
 
 } // namespace lar_content
