@@ -190,10 +190,8 @@ CosmicRayTaggingMonitoringTool::Classification CosmicRayTaggingMonitoringTool::C
     if (!isPure && !isSignificant && isMuon)
         return CR_MUON;
 
-    if (!isPure && !isSignificant && !isMuon)
-        return CR_OTHER;
-
-    return UNCLASSIFIED;
+    // !isPure && !isSignificant && !isMuon
+    return CR_OTHER;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
