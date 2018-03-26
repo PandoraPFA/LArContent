@@ -45,6 +45,11 @@ public:
      *  @return the classification probability
      */
     virtual double CalculateProbability(const DoubleVector &features) const = 0;
+
+    /**
+     *  @brief  Destructor 
+     */
+    virtual ~MultivariateAnalysisBaseClass() {};
 };
 
 } // namespace lar_content
