@@ -13,6 +13,8 @@
 
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
+#include "larpandoracontent/LArObjects/LArMvaInterface.h"
+
 #include <functional>
 #include <map>
 #include <vector>
@@ -23,7 +25,7 @@ namespace lar_content
 /**
  *  @brief  AdaBoostDecisionTree class
  */
-class AdaBoostDecisionTree : public MultivariateAnalysisBaseClass
+class AdaBoostDecisionTree : public MvaInterface
 {
 public:
     /**
