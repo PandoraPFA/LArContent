@@ -51,10 +51,10 @@ void EnergyKickVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &
         const float beamDeweightingScore(this->IsBeamModeOn() ? this->GetBeamDeweightingScore(beamConstants, pVertex) : 0.f);
 
         const float energyKick(LArMvaHelper::CalculateFeaturesOfType<EnergyKickFeatureTool>(m_featureToolVector, this, pVertex, slidingFitDataListMap,
-            ClusterListMap(), KDTreeMap(), ShowerClusterListMap(), beamDeweightingScore, bestFastScore).at(0));
+            ClusterListMap(), KDTreeMap(), ShowerClusterListMap(), beamDeweightingScore, bestFastScore).at(0).Get());
 
         const float energyAsymmetry(LArMvaHelper::CalculateFeaturesOfType<LocalAsymmetryFeatureTool>(m_featureToolVector, this, pVertex, slidingFitDataListMap,
-            ClusterListMap(), KDTreeMap(), ShowerClusterListMap(), beamDeweightingScore, bestFastScore).at(0));
+            ClusterListMap(), KDTreeMap(), ShowerClusterListMap(), beamDeweightingScore, bestFastScore).at(0).Get());
 
         const float energyKickScore(-energyKick / m_epsilon);
         const float energyAsymmetryScore(energyAsymmetry / m_asymmetryConstant);

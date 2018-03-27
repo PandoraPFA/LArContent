@@ -305,7 +305,7 @@ template <typename TLIST, typename ...TLISTS>
 inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists)
 {
     static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureVector>::value,
-        "LArMvaHelper: Could not write training set example because a passed parameter was not a vector of doubles");
+        "LArMvaHelper: Could not write training set example because a passed parameter was not a vector of MvaFeatures");
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, WriteFeaturesToFileImpl(outfile, delimiter, featureList));
     return WriteFeaturesToFile(outfile, delimiter, featureLists...);
@@ -323,8 +323,8 @@ inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(std::ofstream &, co
 template <typename TLIST>
 pandora::StatusCode LArMvaHelper::WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList)
 {
-    for (const double feature : featureList)
-        outfile << feature << delimiter;
+    for (const MvaFeature feature : featureList)
+        outfile << feature.Get() << delimiter;
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -335,11 +335,11 @@ template <typename TLIST, typename ...TLISTS>
 LArMvaHelper::MvaFeatureVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
 {
     static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureVector>::value,
-        "LArMvaHelper: Could not concatenate feature lists because one or more lists was not a vector of doubles");
+        "LArMvaHelper: Could not concatenate feature lists because one or more lists was not a vector of MvaFeatures");
 
     LArMvaHelper::MvaFeatureVector featureVector;
 
-    for (const double feature : featureList)
+    for (const MvaFeature feature : featureList)
         featureVector.push_back(feature);
 
     LArMvaHelper::MvaFeatureVector newFeatureVector = ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...);

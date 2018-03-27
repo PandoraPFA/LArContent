@@ -38,12 +38,16 @@ bool SvmClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pClu
     if (m_ratioVariables)
     {
         // TODO This assumption is very bad - remove
-        const double straightLineLength(featureVector.at(0));
+        const double straightLineLength(featureVector.at(0).Get());
 
         if (straightLineLength > std::numeric_limits<double>::epsilon())
         {
             for (unsigned int i = 1; i < featureVector.size(); ++i)
-                featureVector[i] /= straightLineLength;
+            {
+                LArMvaHelper::MvaFeature currentFeature(featureVector.at(i));
+                featureVector.at(i) = currentFeature.Get() / straightLineLength;
+                //featureVector.at(i).Get() /= straightLineLength;
+            }
         }
     }
 
