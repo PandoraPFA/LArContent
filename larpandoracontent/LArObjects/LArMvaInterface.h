@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArObjects/MultivariateAnalysisBaseClass.h
+ *  @file   larpandoracontent/LArObjects/LArMvaInterface.h
  *
- *  @brief  Header file for the lar multivariate analysis base class.
+ *  @brief  Header file for the lar multivariate analysis interface class.
  *
  *  $Log: $
  */
-#ifndef LAR_MULTIVARIATE_ANALYSIS_BASE_CLASS_H
-#define LAR_MULTIVARIATE_ANALYSIS_BASE_CLASS_H 1
+#ifndef LAR_MVA_INTERFACE_H
+#define LAR_MVA_INTERFACE_H 1
 
 #include "Pandora/PandoraInputTypes.h"
 
@@ -20,16 +20,15 @@ class MvaTypes
 {
 public:
     typedef pandora::PandoraInputType<double> MvaFeature;
-//    typedef double MvaFeature;
     typedef std::vector<MvaFeature> MvaFeatureVector;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  MultivariateAnalysisBaseClass class
+ *  @brief  MvaInterface class
  */
-class MultivariateAnalysisBaseClass
+class MvaInterface
 {
 public:
     /**
@@ -62,9 +61,9 @@ public:
     /**
      *  @brief  Destructor 
      */
-    virtual ~MultivariateAnalysisBaseClass() {};
+    virtual ~MvaInterface() = default;
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_MULTIVARIATE_ANALYSIS_BASE_CLASS_H
+#endif // #ifndef LAR_MVA_INTERFACE_H
