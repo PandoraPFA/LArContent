@@ -65,7 +65,7 @@ private:
          *
          *  @param  featuresVector empty feature vector to populate
          */
-        void GetFeatureVector(DoubleVector &featureVector) const;
+        void GetFeatureVector(LArMvaHelper::MvaFeatureVector &featureVector) const;
         
         /**
          *  @brief  Get the probability that this slice contains a neutrino interaction
@@ -141,7 +141,7 @@ private:
         void GetPointsInSphere(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex, const float radius, pandora::CartesianPointVector &spacePointsInSphere) const;
 
         bool                               m_isAvailable;    ///< Is the feature vector available
-        DoubleVector                       m_featureVector;  ///< The SVM feature vector
+        LArMvaHelper::MvaFeatureVector     m_featureVector;  ///< The SVM feature vector
         const NeutrinoIdTool *const        m_pTool;          ///< The tool that owns this
     };
     

@@ -11,7 +11,18 @@
 namespace lar_content
 {
 
-typedef std::vector<double> DoubleVector;
+/**
+ *  @brief  MvaTypes class
+ */
+class MvaTypes
+{
+public:
+//    typedef pandora::InputType<double> MvaFeature;
+    typedef double MvaFeature;
+    typedef std::vector<MvaFeature> MvaFeatureVector;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  MultivariateAnalysisBaseClass class
@@ -26,7 +37,7 @@ public:
      *
      *  @return the classification 
      */
-    virtual bool Classify(const DoubleVector &features) const = 0;
+    virtual bool Classify(const MvaTypes::MvaFeatureVector &features) const = 0;
 
     /**
      *  @brief  Calculate the classification score for a set of input features, based on the trained model
@@ -35,7 +46,7 @@ public:
      *
      *  @return the classification score
      */
-    virtual double CalculateClassificationScore(const DoubleVector &features) const = 0;
+    virtual double CalculateClassificationScore(const MvaTypes::MvaFeatureVector &features) const = 0;
 
     /**
      *  @brief  Calculate the classification probability for a set of input features, based on the trained model
@@ -44,7 +55,7 @@ public:
      *
      *  @return the classification probability
      */
-    virtual double CalculateProbability(const DoubleVector &features) const = 0;
+    virtual double CalculateProbability(const MvaTypes::MvaFeatureVector &features) const = 0;
 
     /**
      *  @brief  Destructor 

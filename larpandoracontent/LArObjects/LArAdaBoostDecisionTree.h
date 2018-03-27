@@ -67,7 +67,7 @@ public:
      *
      *  @return the classification 
      */
-    bool Classify(const DoubleVector &features) const;
+    bool Classify(const LArMvaHelper::MvaFeatureVector &features) const;
 
     /**
      *  @brief  Calculate the classification score for a set of input features, based on the trained model
@@ -76,7 +76,7 @@ public:
      *
      *  @return the classification score
      */
-    double CalculateClassificationScore(const DoubleVector &features) const;
+    double CalculateClassificationScore(const LArMvaHelper::MvaFeatureVector &features) const;
 
     /**
      *  @brief  Calculate the classification probability for a set of input features, based on the trained model
@@ -85,7 +85,7 @@ public:
      *
      *  @return the classification probability
      */
-    double CalculateProbability(const DoubleVector &features) const;
+    double CalculateProbability(const LArMvaHelper::MvaFeatureVector &features) const;
 
 private:
     /**
@@ -251,7 +251,7 @@ private:
          *
          *  @return is signal or background
          */
-        bool Predict(const DoubleVector &features) const;
+        bool Predict(const LArMvaHelper::MvaFeatureVector &features) const;
 
         /**
          *  @brief  Evalute node and return outcome
@@ -261,7 +261,7 @@ private:
          *
          *  @return is signal or background node
          */
-        bool EvaluateNode(const int nodeId, const DoubleVector &features) const;
+        bool EvaluateNode(const int nodeId, const LArMvaHelper::MvaFeatureVector &features) const;
 
         /**
          *  @brief  Get boost weight for weak classifier
@@ -329,7 +329,7 @@ private:
          *
          *  @return return score produced from trained model
          */
-        double Predict(const DoubleVector &features) const;
+        double Predict(const LArMvaHelper::MvaFeatureVector &features) const;
 
     private: 
         /**
@@ -347,7 +347,7 @@ private:
      *
      *  @return score
      */
-    double CalculateScore(const DoubleVector &features) const;
+    double CalculateScore(const LArMvaHelper::MvaFeatureVector &features) const;
 
     StrongClassifier     *m_pStrongClassifier;           ///< Strong adaptive boost tree classifier 
 };

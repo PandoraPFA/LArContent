@@ -117,21 +117,21 @@ pandora::StatusCode AdaBoostDecisionTree::Initialize(const std::string &bdtXmlFi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AdaBoostDecisionTree::Classify(const DoubleVector &features) const
+bool AdaBoostDecisionTree::Classify(const LArMvaHelper::MvaFeatureVector &features) const
 {
     return (this->CalculateScore(features) > 0.0 ? true : false);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-double AdaBoostDecisionTree::CalculateClassificationScore(const DoubleVector &features) const
+double AdaBoostDecisionTree::CalculateClassificationScore(const LArMvaHelper::MvaFeatureVector &features) const
 {
     return this->CalculateScore(features);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-double AdaBoostDecisionTree::CalculateProbability(const DoubleVector &features) const
+double AdaBoostDecisionTree::CalculateProbability(const LArMvaHelper::MvaFeatureVector &features) const
 {
     // ATTN: BDT score, once normalised by total weight, is confined to the range -1 to +1.  This linear mapping places the score in the 
     // range 0 to 1 so that it may be interpreted as a probability. 
@@ -140,7 +140,7 @@ double AdaBoostDecisionTree::CalculateProbability(const DoubleVector &features) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-double AdaBoostDecisionTree::CalculateScore(const DoubleVector &features) const
+double AdaBoostDecisionTree::CalculateScore(const LArMvaHelper::MvaFeatureVector &features) const
 {
     if (!m_pStrongClassifier)
     {
@@ -344,14 +344,14 @@ AdaBoostDecisionTree::WeakClassifier::~WeakClassifier()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AdaBoostDecisionTree::WeakClassifier::Predict(const DoubleVector &features) const 
+bool AdaBoostDecisionTree::WeakClassifier::Predict(const LArMvaHelper::MvaFeatureVector &features) const 
 {   
     return this->EvaluateNode(0, features); 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const DoubleVector &features) const 
+bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const LArMvaHelper::MvaFeatureVector &features) const 
 {
     const Node *pActiveNode(nullptr);
 
@@ -432,7 +432,7 @@ AdaBoostDecisionTree::StrongClassifier::~StrongClassifier()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-double AdaBoostDecisionTree::StrongClassifier::Predict(const DoubleVector &features) const
+double AdaBoostDecisionTree::StrongClassifier::Predict(const LArMvaHelper::MvaFeatureVector &features) const
 {
     double score(0.0), weights(0.0);
 
