@@ -23,7 +23,7 @@ ShowerAsymmetryFeatureTool::ShowerAsymmetryFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerAsymmetryFeatureTool::Run(DoubleVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &,
+void ShowerAsymmetryFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &,
                 const VertexSelectionBaseAlgorithm::ClusterListMap &, const VertexSelectionBaseAlgorithm::KDTreeMap &,
                 const VertexSelectionBaseAlgorithm::ShowerClusterListMap &showerClusterListMap, const float, float &)
 {

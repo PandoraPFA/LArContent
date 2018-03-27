@@ -10,7 +10,7 @@
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
 #include "larpandoracontent/LArTrackShowerId/SvmPfoCharacterisationAlgorithm.h"
 
@@ -36,7 +36,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
     if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
         return false;
 
-    const SupportVectorMachine::DoubleVector featureVector(LArSvmHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
+    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
 
     if (m_trainingSetMode)
     {
@@ -49,17 +49,17 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
         }
         catch (const StatusCodeException &) {}
 
-        LArSvmHelper::ProduceTrainingExample(m_trainingOutputFile, isTrueTrack, featureVector);
+        LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, isTrueTrack, featureVector);
         return isTrueTrack;
     }
 
     if (!m_enableProbability)
     {
-        return LArSvmHelper::Classify(m_supportVectorMachine, featureVector);
+        return LArMvaHelper::Classify(m_supportVectorMachine, featureVector);
     }
     else
     {
-        return (LArSvmHelper::CalculateProbability(m_supportVectorMachine, featureVector) > m_minProbabilityCut);
+        return (LArMvaHelper::CalculateProbability(m_supportVectorMachine, featureVector) > m_minProbabilityCut);
     }
 }
 
@@ -74,7 +74,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     //charge related features are only calculated using hits in W view
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
-    const SupportVectorMachine::DoubleVector featureVector(LArSvmHelper::CalculateFeatures((wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD), this, pPfo));
+    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures((wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD), this, pPfo));
 
     if (m_trainingSetMode)
     {
@@ -95,18 +95,18 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
             outputFile.append(m_trainingOutputFile);
             const std::string end=((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
             outputFile.append(end);
-            LArSvmHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
+            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
         }
         return isTrueTrack;
     }// training mode
 
     if (!m_enableProbability)
     {
-        return LArSvmHelper::Classify((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector);
+        return LArMvaHelper::Classify((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector);
     }
     else
     {
-        return (m_minProbabilityCut <= LArSvmHelper::CalculateProbability((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector));
+        return (m_minProbabilityCut <= LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector));
     }
 }
 
@@ -182,14 +182,14 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         AlgorithmToolVector algorithmToolVectorNoChargeInfo;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolVectorNoChargeInfo));
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorThreeD));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorThreeD));
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVectorNoChargeInfo)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorNoChargeInfo));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorNoChargeInfo));
     }
     else
     {
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArSvmHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
     }
 
     return PfoCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);

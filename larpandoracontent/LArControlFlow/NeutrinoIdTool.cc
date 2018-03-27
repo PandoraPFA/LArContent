@@ -14,7 +14,7 @@
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArSvmHelper.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 
@@ -63,9 +63,9 @@ void NeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const S
             const SliceFeatures &features(sliceFeaturesVector.at(sliceIndex));
             if (!features.IsFeatureVectorAvailable()) continue;
 
-            SupportVectorMachine::DoubleVector featureVector;
+            LArMvaHelper::MvaFeatureVector featureVector;
             features.GetFeatureVector(featureVector);
-            LArSvmHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, featureVector);
+            LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, featureVector);
         }
 
         return;
@@ -355,7 +355,7 @@ bool NeutrinoIdTool::SliceFeatures::IsFeatureVectorAvailable() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
         
-void NeutrinoIdTool::SliceFeatures::GetFeatureVector(SupportVectorMachine::DoubleVector &featureVector) const
+void NeutrinoIdTool::SliceFeatures::GetFeatureVector(LArMvaHelper::MvaFeatureVector &featureVector) const
 {
     if (!m_isAvailable)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -370,9 +370,9 @@ float NeutrinoIdTool::SliceFeatures::GetNeutrinoProbability(const SupportVectorM
     // ATTN if one or more of the features can not be calculated, then default to calling the slice a cosmic ray
     if (!this->IsFeatureVectorAvailable()) return 0.f;
 
-    SupportVectorMachine::DoubleVector featureVector;
+    LArMvaHelper::MvaFeatureVector featureVector;
     this->GetFeatureVector(featureVector);
-    return LArSvmHelper::CalculateProbability(supportVectorMachine, featureVector);
+    return LArMvaHelper::CalculateProbability(supportVectorMachine, featureVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
