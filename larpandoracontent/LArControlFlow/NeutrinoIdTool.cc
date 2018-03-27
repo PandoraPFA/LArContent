@@ -63,7 +63,7 @@ void NeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const S
             const SliceFeatures &features(sliceFeaturesVector.at(sliceIndex));
             if (!features.IsFeatureVectorAvailable()) continue;
 
-            DoubleVector featureVector;
+            LArMvaHelper::MvaFeatureVector featureVector;
             features.GetFeatureVector(featureVector);
             LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, featureVector);
         }
@@ -355,7 +355,7 @@ bool NeutrinoIdTool::SliceFeatures::IsFeatureVectorAvailable() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
         
-void NeutrinoIdTool::SliceFeatures::GetFeatureVector(DoubleVector &featureVector) const
+void NeutrinoIdTool::SliceFeatures::GetFeatureVector(LArMvaHelper::MvaFeatureVector &featureVector) const
 {
     if (!m_isAvailable)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -370,7 +370,7 @@ float NeutrinoIdTool::SliceFeatures::GetNeutrinoProbability(const SupportVectorM
     // ATTN if one or more of the features can not be calculated, then default to calling the slice a cosmic ray
     if (!this->IsFeatureVectorAvailable()) return 0.f;
 
-    DoubleVector featureVector;
+    LArMvaHelper::MvaFeatureVector featureVector;
     this->GetFeatureVector(featureVector);
     return LArMvaHelper::CalculateProbability(supportVectorMachine, featureVector);
 }

@@ -94,7 +94,7 @@ void SvmVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexV
     // Calculate the event feature list and the vertex feature map.
     EventFeatureInfo eventFeatureInfo(this->CalculateEventFeatures(clustersU, clustersV, clustersW, vertexVector));
 
-    DoubleVector eventFeatureList;
+    LArMvaHelper::MvaFeatureVector eventFeatureList;
     this->AddEventFeaturesToVector(eventFeatureInfo, eventFeatureList);
 
     VertexFeatureInfoMap vertexFeatureInfoMap;
@@ -430,7 +430,7 @@ inline float SvmVertexSelectionAlgorithm::GetCoordinateSpan(const InputFloat &mi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SvmVertexSelectionAlgorithm::AddEventFeaturesToVector(const EventFeatureInfo &eventFeatureInfo,
-    DoubleVector &featureVector) const
+    LArMvaHelper::MvaFeatureVector &featureVector) const
 {
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventShoweryness));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventEnergy));
@@ -522,7 +522,7 @@ void SvmVertexSelectionAlgorithm::GetBestRegionVertices(VertexScoreList &initial
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SvmVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &vertexVector, const VertexVector &bestRegionVertices,
-    VertexFeatureInfoMap &vertexFeatureInfoMap, const DoubleVector &eventFeatureList, const KDTreeMap &kdTreeMap) const
+    VertexFeatureInfoMap &vertexFeatureInfoMap, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const KDTreeMap &kdTreeMap) const
 {
     if (vertexVector.empty())
         return;
@@ -609,13 +609,13 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType() const
 
 const pandora::Vertex * SvmVertexSelectionAlgorithm::ProduceTrainingExamples(const VertexVector &vertexVector,
     const VertexFeatureInfoMap &vertexFeatureInfoMap, std::bernoulli_distribution &coinFlip, std::mt19937 &generator,
-    const std::string &interactionType, const std::string &trainingOutputFile, const DoubleVector &eventFeatureList,
+    const std::string &interactionType, const std::string &trainingOutputFile, const LArMvaHelper::MvaFeatureVector &eventFeatureList,
     const float maxRadius, const bool useRPhi) const
 {
     const Vertex *pBestVertex(nullptr);
     float bestVertexDr(std::numeric_limits<float>::max());
 
-    DoubleVector bestVertexFeatureList;
+    LArMvaHelper::MvaFeatureVector bestVertexFeatureList;
     this->GetBestVertex(vertexVector, pBestVertex, bestVertexDr);
 
     VertexFeatureInfo bestVertexFeatureInfo(vertexFeatureInfoMap.at(pBestVertex));
@@ -626,7 +626,7 @@ const pandora::Vertex * SvmVertexSelectionAlgorithm::ProduceTrainingExamples(con
         if (pVertex == pBestVertex)
             continue;
 
-        DoubleVector featureList;
+        LArMvaHelper::MvaFeatureVector featureList;
         VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
         this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
 
@@ -685,7 +685,7 @@ void SvmVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVector
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void SvmVertexSelectionAlgorithm::AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo,
-    DoubleVector &featureVector, const bool useRPhi) const
+    LArMvaHelper::MvaFeatureVector &featureVector, const bool useRPhi) const
 {
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_beamDeweighting));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_energyKick));
@@ -700,10 +700,10 @@ void SvmVertexSelectionAlgorithm::AddVertexFeaturesToVector(const VertexFeatureI
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const pandora::Vertex * SvmVertexSelectionAlgorithm::CompareVertices(const VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
-    const DoubleVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const
+    const LArMvaHelper::MvaFeatureVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const
 {
     const Vertex *pBestVertex(vertexVector.front());
-    DoubleVector chosenFeatureList;
+    LArMvaHelper::MvaFeatureVector chosenFeatureList;
 
     VertexFeatureInfo chosenVertexFeatureInfo(vertexFeatureInfoMap.at(pBestVertex));
     this->AddVertexFeaturesToVector(chosenVertexFeatureInfo, chosenFeatureList, useRPhi);
@@ -713,7 +713,7 @@ const pandora::Vertex * SvmVertexSelectionAlgorithm::CompareVertices(const Verte
         if (pVertex == pBestVertex)
             continue;
 
-        DoubleVector featureList;
+        LArMvaHelper::MvaFeatureVector featureList;
         VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
         this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
 
