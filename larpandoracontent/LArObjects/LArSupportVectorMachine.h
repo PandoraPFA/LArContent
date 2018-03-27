@@ -13,6 +13,8 @@
 
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
+#include "larpandoracontent/LArObjects/LArMvaInterface.h"
+
 #include <functional>
 #include <map>
 #include <vector>
@@ -25,7 +27,7 @@ namespace lar_content
 /**
  *  @brief  SupportVectorMachine class
  */
-class SupportVectorMachine : public MultivariateAnalysisBaseClass
+class SupportVectorMachine : public MvaInterface
 {
 public:
     typedef std::function<double(const LArMvaHelper::MvaFeatureVector &, const LArMvaHelper::MvaFeatureVector &, const double)> KernelFunction;
