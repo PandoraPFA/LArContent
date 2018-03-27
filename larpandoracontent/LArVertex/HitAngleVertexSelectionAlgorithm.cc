@@ -37,7 +37,7 @@ void HitAngleVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &ve
         const float beamDeweightingScore(this->IsBeamModeOn() ? std::exp(this->GetBeamDeweightingScore(beamConstants, pVertex)) : 1.f);
 
         const float rPhiScore(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex, SlidingFitDataListMap(),
-            ClusterListMap(), kdTreeMap, ShowerClusterListMap(), beamDeweightingScore, bestFastScore).at(0));
+            ClusterListMap(), kdTreeMap, ShowerClusterListMap(), beamDeweightingScore, bestFastScore).at(0).Get());
 
         vertexScoreList.emplace_back(pVertex, beamDeweightingScore * rPhiScore);
     }

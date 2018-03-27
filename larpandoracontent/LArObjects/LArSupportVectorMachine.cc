@@ -207,11 +207,11 @@ pandora::StatusCode SupportVectorMachine::ReadMachine(const pandora::TiXmlHandle
 
 pandora::StatusCode SupportVectorMachine::ReadFeatures(const pandora::TiXmlHandle &currentHandle)
 {
-    LArMvaHelper::MvaFeatureVector muValues;
+    std::vector<double> muValues;
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadVectorOfValues(currentHandle,
         "MuValues", muValues));
 
-    LArMvaHelper::MvaFeatureVector sigmaValues;
+    std::vector<double> sigmaValues;
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadVectorOfValues(currentHandle,
         "SigmaValues", sigmaValues));
 
@@ -238,11 +238,15 @@ pandora::StatusCode SupportVectorMachine::ReadSupportVector(const pandora::TiXml
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadValue(currentHandle,
         "AlphaY", yAlpha));
 
-    LArMvaHelper::MvaFeatureVector values;
+    std::vector<double> values;
     PANDORA_RETURN_RESULT_IF_AND_IF(pandora::STATUS_CODE_SUCCESS, pandora::STATUS_CODE_NOT_FOUND, !=, pandora::XmlHelper::ReadVectorOfValues(currentHandle,
         "Values", values));
 
-    m_svInfoList.emplace_back(yAlpha, values);
+    LArMvaHelper::MvaFeatureVector valuesFeatureVector;
+    for (const double &value : values)
+        valuesFeatureVector.emplace_back(value);
+
+    m_svInfoList.emplace_back(yAlpha, valuesFeatureVector);
     return pandora::STATUS_CODE_SUCCESS;
 }
 
@@ -268,7 +272,7 @@ double SupportVectorMachine::CalculateClassificationScoreImpl(const LArMvaHelper
     if (m_standardizeFeatures)
     {
         for (std::size_t i = 0; i < m_nFeatures; ++i)
-            standardizedFeatures.push_back(m_featureInfoList.at(i).StandardizeParameter(features.at(i)));
+            standardizedFeatures.push_back(m_featureInfoList.at(i).StandardizeParameter(features.at(i).Get()));
     }
 
     double classScore(0.);
