@@ -36,7 +36,7 @@ public:
      *
      *  @param  features the input features
      *
-     *  @return the classification 
+     *  @return the classification
      */
     virtual bool Classify(const MvaTypes::MvaFeatureVector &features) const = 0;
 
@@ -59,7 +59,7 @@ public:
     virtual double CalculateProbability(const MvaTypes::MvaFeatureVector &features) const = 0;
 
     /**
-     *  @brief  Destructor 
+     *  @brief  Destructor
      */
     virtual ~MvaInterface() = default;
 };
