@@ -366,7 +366,7 @@ bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const 
     if (features.size() <= pActiveNode->GetVariableId())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
 
-    if (features.at(pActiveNode->GetVariableId()) <= pActiveNode->GetThreshold())
+    if (features.at(pActiveNode->GetVariableId()).Get() <= pActiveNode->GetThreshold())
         return this->EvaluateNode(pActiveNode->GetLeftChildNodeId(), features);
     else 
         return this->EvaluateNode(pActiveNode->GetRightChildNodeId(), features);
