@@ -23,7 +23,7 @@ GlobalAsymmetryFeatureTool::GlobalAsymmetryFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void GlobalAsymmetryFeatureTool::Run(DoubleVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
+void GlobalAsymmetryFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
     const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
     const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &)
 {

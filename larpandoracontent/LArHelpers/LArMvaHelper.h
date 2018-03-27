@@ -37,7 +37,7 @@ public:
      *  @param  featureVector the vector of features to append
      *  @param  args arguments to pass to the tool
      */
-    virtual void Run(DoubleVector &featureVector, Ts... args) = 0;
+    virtual void Run(MvaTypes::MvaFeatureVector &featureVector, Ts... args) = 0;
 };
 
 template <typename ...Ts>
@@ -51,6 +51,9 @@ using MvaFeatureToolVector = std::vector<MvaFeatureTool<Ts...> *>;
 class LArMvaHelper
 {
 public:
+    typedef MvaTypes::MvaFeature MvaFeature;
+    typedef MvaTypes::MvaFeatureVector MvaFeatureVector;
+
     /**
      *  @brief  Produce a training example with the given features and result
      *
@@ -104,7 +107,7 @@ public:
      *  @return the vector of features
      */
     template <typename ...Ts, typename ...TARGS>
-    static DoubleVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
+    static MvaFeatureVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
@@ -115,7 +118,7 @@ public:
      *  @return the vector of features
      */
     template <typename T, typename ...Ts, typename ...TARGS>
-    static DoubleVector CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
+    static MvaFeatureVector CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
      *  @brief  Add a feature tool to a vector of feature tools
@@ -177,12 +180,12 @@ private:
      *  @return the concatenated vector of features
      */
     template <typename TLIST, typename ...TLISTS>
-    static DoubleVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
+    static MvaFeatureVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
 
     /**
      *  @brief  Recursively concatenate vectors of features (terminating method)
      */
-    static DoubleVector ConcatenateFeatureLists();
+    static MvaFeatureVector ConcatenateFeatureLists();
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -235,9 +238,9 @@ double LArMvaHelper::CalculateProbability(const MultivariateAnalysisBaseClass &m
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename ...Ts, typename ...TARGS>
-DoubleVector LArMvaHelper::CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
+LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
-    DoubleVector featureVector;
+    LArMvaHelper::MvaFeatureVector featureVector;
 
     for (MvaFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
         pFeatureTool->Run(featureVector, std::forward<TARGS>(args)...);
@@ -248,10 +251,10 @@ DoubleVector LArMvaHelper::CalculateFeatures(const MvaFeatureToolVector<Ts...> &
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T, typename ...Ts, typename ...TARGS>
-DoubleVector LArMvaHelper::CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
+LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
     using TD = typename std::decay<T>::type;
-    DoubleVector featureVector;
+    LArMvaHelper::MvaFeatureVector featureVector;
 
     for (MvaFeatureTool<Ts...> *const pFeatureTool : featureToolVector)
     {
@@ -301,7 +304,7 @@ inline std::string LArMvaHelper::GetTimestampString()
 template <typename TLIST, typename ...TLISTS>
 inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists)
 {
-    static_assert(std::is_same<typename std::decay<TLIST>::type, DoubleVector>::value,
+    static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureVector>::value,
         "LArMvaHelper: Could not write training set example because a passed parameter was not a vector of doubles");
 
     PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, WriteFeaturesToFileImpl(outfile, delimiter, featureList));
@@ -329,17 +332,17 @@ pandora::StatusCode LArMvaHelper::WriteFeaturesToFileImpl(std::ofstream &outfile
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TLIST, typename ...TLISTS>
-DoubleVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
+LArMvaHelper::MvaFeatureVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
 {
-    static_assert(std::is_same<typename std::decay<TLIST>::type, DoubleVector>::value,
+    static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureVector>::value,
         "LArMvaHelper: Could not concatenate feature lists because one or more lists was not a vector of doubles");
 
-    DoubleVector featureVector;
+    LArMvaHelper::MvaFeatureVector featureVector;
 
     for (const double feature : featureList)
         featureVector.push_back(feature);
 
-    DoubleVector newFeatureVector = ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...);
+    LArMvaHelper::MvaFeatureVector newFeatureVector = ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...);
     featureVector.insert(featureVector.end(), newFeatureVector.begin(), newFeatureVector.end());
 
     return featureVector;
@@ -347,9 +350,9 @@ DoubleVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline DoubleVector LArMvaHelper::ConcatenateFeatureLists()
+inline LArMvaHelper::MvaFeatureVector LArMvaHelper::ConcatenateFeatureLists()
 {
-    return DoubleVector();
+    return LArMvaHelper::MvaFeatureVector();
 }
 
 } // namespace lar_content

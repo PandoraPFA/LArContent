@@ -35,7 +35,7 @@ TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDShowerFitFeatureTool::Run(DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void TwoDShowerFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::Cluster *const pCluster)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -81,7 +81,7 @@ TwoDLinearFitFeatureTool::TwoDLinearFitFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDLinearFitFeatureTool::Run(DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void TwoDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
 const pandora::Cluster * const pCluster)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -215,7 +215,7 @@ TwoDVertexDistanceFeatureTool::TwoDVertexDistanceFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDVertexDistanceFeatureTool::Run(DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void TwoDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::Cluster *const pCluster)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -258,7 +258,7 @@ ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLinearFitFeatureTool::Run(DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
 const pandora::ParticleFlowObject *const pInputPfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -398,7 +398,7 @@ ThreeDVertexDistanceFeatureTool::ThreeDVertexDistanceFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDVertexDistanceFeatureTool::Run(DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -450,7 +450,7 @@ ThreeDOpeningAngleFeatureTool::ThreeDOpeningAngleFeatureTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDOpeningAngleFeatureTool::Run(DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -565,7 +565,7 @@ ThreeDPCAFeatureTool::ThreeDPCAFeatureTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDPCAFeatureTool::Run(DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
      if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -618,7 +618,7 @@ ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDChargeFeatureTool::Run(DoubleVector &featureVector, const Algorithm *const pAlgorithm,
+void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
