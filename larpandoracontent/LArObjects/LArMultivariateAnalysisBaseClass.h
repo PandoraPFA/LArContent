@@ -8,6 +8,8 @@
 #ifndef LAR_MULTIVARIATE_ANALYSIS_BASE_CLASS_H
 #define LAR_MULTIVARIATE_ANALYSIS_BASE_CLASS_H 1
 
+#include "Pandora/PandoraInputTypes.h"
+
 namespace lar_content
 {
 
@@ -17,8 +19,8 @@ namespace lar_content
 class MvaTypes
 {
 public:
-//    typedef pandora::InputType<double> MvaFeature;
-    typedef double MvaFeature;
+    typedef pandora::PandoraInputType<double> MvaFeature;
+//    typedef double MvaFeature;
     typedef std::vector<MvaFeature> MvaFeatureVector;
 };
 
