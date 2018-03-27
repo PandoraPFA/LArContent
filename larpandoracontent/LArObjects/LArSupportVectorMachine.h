@@ -342,7 +342,7 @@ inline double SupportVectorMachine::LinearKernel(const LArMvaHelper::MvaFeatureV
 
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
-        total += supportVector.at(i) * features.at(i);
+        total += supportVector.at(i).Get() * features.at(i).Get();
 
     return total / denominator;
 }
@@ -357,7 +357,7 @@ inline double SupportVectorMachine::QuadraticKernel(const LArMvaHelper::MvaFeatu
 
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
-        total += supportVector.at(i) * features.at(i);
+        total += supportVector.at(i).Get() * features.at(i).Get();
 
     total = total / denominator + 1.;
     return total * total;
@@ -373,7 +373,7 @@ inline double SupportVectorMachine::CubicKernel(const LArMvaHelper::MvaFeatureVe
 
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
-        total += supportVector.at(i) * features.at(i);
+        total += supportVector.at(i).Get() * features.at(i).Get();
 
     total = total / denominator + 1.;
     return total * total * total;
@@ -385,7 +385,7 @@ inline double SupportVectorMachine::GaussianRbfKernel(const LArMvaHelper::MvaFea
 {
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
-        total += (supportVector.at(i) - features.at(i)) * (supportVector.at(i) - features.at(i));
+        total += (supportVector.at(i).Get() - features.at(i).Get()) * (supportVector.at(i).Get() - features.at(i).Get());
 
     return std::exp(-scaleFactor * total);
 }
