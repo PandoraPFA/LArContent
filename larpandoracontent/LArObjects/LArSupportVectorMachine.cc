@@ -179,15 +179,15 @@ StatusCode SupportVectorMachine::ReadMachine(const TiXmlHandle &currentHandle)
     bool standardize(true);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
         "Standardize", standardize));
-        
+
     bool enableProbability(false);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
         "EnableProbability", enableProbability));
-        
+
     double probAParameter(0.);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
         "ProbAParameter", probAParameter));
-        
+
     double probBParameter(0.);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
         "ProbBParameter", probBParameter));

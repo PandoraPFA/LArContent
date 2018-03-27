@@ -288,7 +288,7 @@ const pandora::ParticleFlowObject *const pInputPfo)
 
     if (!clusterList.empty())
     {
-        const float nClusters(static_cast<float>(clusterList.size()));  
+        const float nClusters(static_cast<float>(clusterList.size()));
         diffWithStraightLineMean   /= nClusters;
         maxFitGapLength            /= nClusters;
         rmsSlidingLinearFit        /= nClusters;

@@ -131,8 +131,8 @@ double AdaBoostDecisionTree::CalculateClassificationScore(const LArMvaHelper::Mv
 
 double AdaBoostDecisionTree::CalculateProbability(const LArMvaHelper::MvaFeatureVector &features) const
 {
-    // ATTN: BDT score, once normalised by total weight, is confined to the range -1 to +1.  This linear mapping places the score in the 
-    // range 0 to 1 so that it may be interpreted as a probability. 
+    // ATTN: BDT score, once normalised by total weight, is confined to the range -1 to +1.  This linear mapping places the score in the
+    // range 0 to 1 so that it may be interpreted as a probability.
     return (this->CalculateScore(features) + 1.) * 0.5;
 }
 
@@ -199,12 +199,12 @@ AdaBoostDecisionTree::Node::Node(const TiXmlHandle *const pXmlHandle) :
     if (STATUS_CODE_SUCCESS == leftChildNodeIdStatusCode || STATUS_CODE_SUCCESS == rightChildNodeIdStatusCode ||
         STATUS_CODE_SUCCESS == thresholdStatusCode || STATUS_CODE_SUCCESS == variableIdStatusCode)
     {
-        m_isLeaf = false; 
+        m_isLeaf = false;
         m_outcome = false;
     }
     else if (outcomeStatusCode == STATUS_CODE_SUCCESS)
     {
-        m_isLeaf = true; 
+        m_isLeaf = true;
         m_leftChildNodeId = std::numeric_limits<int>::max();
         m_rightChildNodeId = std::numeric_limits<int>::max();
         m_threshold = std::numeric_limits<double>::max();
@@ -218,7 +218,7 @@ AdaBoostDecisionTree::Node::Node(const TiXmlHandle *const pXmlHandle) :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::Node::Node(const Node &rhs) : 
+AdaBoostDecisionTree::Node::Node(const Node &rhs) :
     m_nodeId(rhs.m_nodeId),
     m_parentNodeId(rhs.m_parentNodeId),
     m_leftChildNodeId(rhs.m_leftChildNodeId),
@@ -283,7 +283,7 @@ AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const TiXmlHandle *const pX
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const WeakClassifier &rhs) : 
+AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const WeakClassifier &rhs) :
     m_weight(rhs.m_weight),
     m_treeId(rhs.m_treeId)
 {
@@ -323,14 +323,14 @@ AdaBoostDecisionTree::WeakClassifier::~WeakClassifier()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AdaBoostDecisionTree::WeakClassifier::Predict(const LArMvaHelper::MvaFeatureVector &features) const 
-{   
-    return this->EvaluateNode(0, features); 
+bool AdaBoostDecisionTree::WeakClassifier::Predict(const LArMvaHelper::MvaFeatureVector &features) const
+{
+    return this->EvaluateNode(0, features);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const LArMvaHelper::MvaFeatureVector &features) const 
+bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const LArMvaHelper::MvaFeatureVector &features) const
 {
     const Node *pActiveNode(nullptr);
 
@@ -338,7 +338,7 @@ bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const 
     {
         pActiveNode = m_idToNodeMap.at(nodeId);
     }
-    else 
+    else
     {
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
     }
@@ -362,14 +362,14 @@ bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::StrongClassifier::StrongClassifier(const TiXmlHandle *const pXmlHandle) 
+AdaBoostDecisionTree::StrongClassifier::StrongClassifier(const TiXmlHandle *const pXmlHandle)
 {
     TiXmlElement *pCurrentXmlElement = pXmlHandle->FirstChild().Element();
 
     while (pCurrentXmlElement)
     {
         if (STATUS_CODE_SUCCESS != this->ReadComponent(pCurrentXmlElement))
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER); 
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         pCurrentXmlElement = pCurrentXmlElement->NextSiblingElement();
     }
