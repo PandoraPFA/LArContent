@@ -36,7 +36,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
     if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
         return false;
 
-    const DoubleVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
+    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
 
     if (m_trainingSetMode)
     {
@@ -74,7 +74,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     //charge related features are only calculated using hits in W view
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
-    const DoubleVector featureVector(LArMvaHelper::CalculateFeatures((wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD), this, pPfo));
+    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures((wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD), this, pPfo));
 
     if (m_trainingSetMode)
     {

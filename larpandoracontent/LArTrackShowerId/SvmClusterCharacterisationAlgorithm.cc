@@ -33,7 +33,7 @@ bool SvmClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pClu
     if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
         return false;
 
-    DoubleVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
+    LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(m_featureToolVector, this, pCluster));
 
     if (m_ratioVariables)
     {
