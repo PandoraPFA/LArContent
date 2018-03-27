@@ -86,7 +86,7 @@ public:
      */
     template <typename ...TLISTS>
     static double CalculateClassificationScore(const MvaInterface &classifier, TLISTS &&... featureLists);
-    
+
     /**
      *  @brief  Use the trained mva to calculate a classification probability for an example
      *

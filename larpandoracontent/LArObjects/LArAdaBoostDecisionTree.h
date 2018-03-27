@@ -97,20 +97,6 @@ private:
     {
     public:
         /**
-         *  @brief  Constructor
-         *  
-         *  @param  nodeId id of node
-         *  @param  parentNodeId id of parent node
-         *  @param  leftChildNodeId id of left child node
-         *  @param  rightChildNodeId id of right child node
-         *  @param  isLeaf is node a leaf
-         *  @param  threshold threshold for cut
-         *  @param  variableId index
-         *  @param  outcome, only written if leaf node 
-         */
-        Node(const int nodeId, const int parentNodeId, const int leftChildNodeId, const int rightChildNodeId, const bool isLeaf, const double threshold, const int variableId, const bool outcome = false);
-
-        /**
          *  @brief  Constructor using xml handle to set member variables
          *
          *  @param  pXmlHandle xml handle to use when setting member variables 
@@ -212,15 +198,6 @@ private:
     {
     public: 
         /**
-         *  @brief  Constructor, set hierarchy for nodes 
-         *
-         *  @param  idToNodeMap map of node id to node
-         *  @param  weight applied to decision tree
-         *  @param  treeId index of tree in decision tree forest 
-         */
-        WeakClassifier(const IdToNodeMap &idToNodeMap, const double weight, const int treeId);
-
-        /**
          *  @brief  Constructor using xml handle to set member variables
          *
          *  @param  pXmlHandle xml handle to use when setting member variables 
@@ -293,11 +270,6 @@ private:
     class StrongClassifier
     {
     public:
-        /**
-         *  @brief  Constructor
-         */
-        StrongClassifier(const WeakClassifiers &weakClassifiers);
-
         /**
          *  @brief  Constructor using xml handle to set member variables
          *
