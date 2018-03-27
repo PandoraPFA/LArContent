@@ -35,7 +35,7 @@ RPhiFeatureTool::RPhiFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void RPhiFeatureTool::Run(DoubleVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
+void RPhiFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
     const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &, const VertexSelectionBaseAlgorithm::ClusterListMap &,
     const VertexSelectionBaseAlgorithm::KDTreeMap &kdTreeMap, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &,
     const float beamDeweightingScore, float &bestFastScore)
