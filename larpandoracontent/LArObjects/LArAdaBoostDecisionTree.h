@@ -35,14 +35,14 @@ public:
 
     /**
      *  @brief  Copy constructor
-     * 
+     *
      *  @param  rhs the AdaBoostDecisionTree to copy
      */
     AdaBoostDecisionTree(const AdaBoostDecisionTree &rhs);
 
     /**
      *  @brief  Assignment operator
-     * 
+     *
      *  @param  rhs the AdaBoostDecisionTree to assign
      */
     AdaBoostDecisionTree &operator=(const AdaBoostDecisionTree &rhs);
@@ -53,7 +53,7 @@ public:
     ~AdaBoostDecisionTree();
 
     /**
-     *  @brief  Initialize the bdt model 
+     *  @brief  Initialize the bdt model
      *
      *  @param  parameterLocation the location of the model
      *  @param  bdtName the name of the model
@@ -67,7 +67,7 @@ public:
      *
      *  @param  features the input features
      *
-     *  @return the classification 
+     *  @return the classification
      */
     bool Classify(const LArMvaHelper::MvaFeatureVector &features) const;
 
@@ -99,20 +99,20 @@ private:
         /**
          *  @brief  Constructor using xml handle to set member variables
          *
-         *  @param  pXmlHandle xml handle to use when setting member variables 
+         *  @param  pXmlHandle xml handle to use when setting member variables
          */
         Node(const pandora::TiXmlHandle *const pXmlHandle);
 
         /**
          *  @brief  Copy constructor
-         * 
+         *
          *  @param  rhs the node to copy
          */
         Node(const Node &rhs);
 
         /**
          *  @brief  Assignment operator
-         * 
+         *
          *  @param  rhs the node to assign
          */
         Node &operator=(const Node &rhs);
@@ -196,24 +196,24 @@ private:
      */
     class WeakClassifier
     {
-    public: 
+    public:
         /**
          *  @brief  Constructor using xml handle to set member variables
          *
-         *  @param  pXmlHandle xml handle to use when setting member variables 
+         *  @param  pXmlHandle xml handle to use when setting member variables
          */
         WeakClassifier(const pandora::TiXmlHandle *const pXmlHandle);
 
         /**
          *  @brief  Copy constructor
-         * 
+         *
          *  @param  rhs the weak classifier to copy
          */
         WeakClassifier(const WeakClassifier &rhs);
 
         /**
          *  @brief  Assignment operator
-         * 
+         *
          *  @param  rhs the weak classifier to assign
          */
         WeakClassifier &operator=(const WeakClassifier &rhs);
@@ -226,7 +226,7 @@ private:
         /**
          *  @brief  Predict signal or background based on trained data
          *
-         *  @param  features the input features 
+         *  @param  features the input features
          *
          *  @return is signal or background
          */
@@ -235,8 +235,8 @@ private:
         /**
          *  @brief  Evalute node and return outcome
          *
-         *  @param  nodeId current node id 
-         *  @param  features the input features 
+         *  @param  nodeId current node id
+         *  @param  features the input features
          *
          *  @return is signal or background node
          */
@@ -252,14 +252,14 @@ private:
         /**
          *  @brief  Get tree id for weak classifier
          *
-         *  @return tree id 
+         *  @return tree id
          */
         int GetTreeId() const;
 
     private:
         IdToNodeMap     m_idToNodeMap; ///< Decision tree nodes
-        double          m_weight;      ///< Boost weight 
-        int             m_treeId;      ///< Decision tree id        
+        double          m_weight;      ///< Boost weight
+        int             m_treeId;      ///< Decision tree id
     };
 
     typedef std::vector<const WeakClassifier*> WeakClassifiers;
@@ -273,20 +273,20 @@ private:
         /**
          *  @brief  Constructor using xml handle to set member variables
          *
-         *  @param  pXmlHandle xml handle to use when setting member variables 
+         *  @param  pXmlHandle xml handle to use when setting member variables
          */
         StrongClassifier(const pandora::TiXmlHandle *const pXmlHandle);
 
         /**
          *  @brief  Copy constructor
-         * 
+         *
          *  @param  rhs the strong classifier to copy
          */
         StrongClassifier(const StrongClassifier &rhs);
 
         /**
          *  @brief  Assignment operator
-         * 
+         *
          *  @param  rhs the strong classifier to assign
          */
         StrongClassifier &operator=(const StrongClassifier &rhs);
@@ -299,19 +299,19 @@ private:
         /**
          *  @brief  Predict signal or background based on trained data
          *
-         *  @param  features the input features 
+         *  @param  features the input features
          *
          *  @return return score produced from trained model
          */
         double Predict(const LArMvaHelper::MvaFeatureVector &features) const;
 
-    private: 
+    private:
         /**
          *  @brief  Read xml element and if weak classifier add to member variables
          */
         pandora::StatusCode ReadComponent(pandora::TiXmlElement *pCurrentXmlElement);
 
-        WeakClassifiers     m_weakClassifiers;     ///< Vector of weak classifers 
+        WeakClassifiers     m_weakClassifiers;     ///< Vector of weak classifers
     };
 
     /**
@@ -323,33 +323,33 @@ private:
      */
     double CalculateScore(const LArMvaHelper::MvaFeatureVector &features) const;
 
-    StrongClassifier     *m_pStrongClassifier;           ///< Strong adaptive boost tree classifier 
+    StrongClassifier     *m_pStrongClassifier;           ///< Strong adaptive boost tree classifier
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetNodeId() const 
+inline int AdaBoostDecisionTree::Node::GetNodeId() const
 {
     return m_nodeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetParentNodeId() const 
+inline int AdaBoostDecisionTree::Node::GetParentNodeId() const
 {
     return m_parentNodeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetLeftChildNodeId() const 
+inline int AdaBoostDecisionTree::Node::GetLeftChildNodeId() const
 {
     return m_leftChildNodeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline int AdaBoostDecisionTree::Node::GetRightChildNodeId() const 
+inline int AdaBoostDecisionTree::Node::GetRightChildNodeId() const
 {
     return m_rightChildNodeId;
 }
@@ -384,7 +384,7 @@ inline bool AdaBoostDecisionTree::Node::GetOutcome() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double AdaBoostDecisionTree::WeakClassifier::GetWeight() const 
+inline double AdaBoostDecisionTree::WeakClassifier::GetWeight() const
 {
     return m_weight;
 }
