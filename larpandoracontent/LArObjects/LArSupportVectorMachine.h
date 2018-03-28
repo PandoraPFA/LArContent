@@ -8,12 +8,11 @@
 #ifndef LAR_SUPPORT_VECTOR_MACHINE_H
 #define LAR_SUPPORT_VECTOR_MACHINE_H 1
 
-#include "Pandora/AlgorithmTool.h"
-#include "Pandora/StatusCodes.h"
-
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
 #include "larpandoracontent/LArObjects/LArMvaInterface.h"
+
+#include "Pandora/StatusCodes.h"
 
 #include <functional>
 #include <map>

@@ -10,6 +10,8 @@
 
 #include "Pandora/PandoraInputTypes.h"
 
+#include <vector>
+
 namespace lar_content
 {
 

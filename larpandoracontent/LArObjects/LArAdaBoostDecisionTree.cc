@@ -108,6 +108,8 @@ StatusCode AdaBoostDecisionTree::Initialize(const std::string &bdtXmlFileName, c
 
         if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
             std::cout << "AdaBoostDecisionTree: Node definition does not contain expected leaf or branch variables." << std::endl;
+
+        return statusCodeException.GetStatusCode();
     }
 
     return STATUS_CODE_SUCCESS;
@@ -287,9 +289,9 @@ AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const WeakClassifier &rhs) 
     m_weight(rhs.m_weight),
     m_treeId(rhs.m_treeId)
 {
-    for (const auto &iter : rhs.m_idToNodeMap)
+    for (const auto &mapEntry : rhs.m_idToNodeMap)
     {
-        const Node *pNode = new Node(*iter.second);
+        const Node *pNode = new Node(*(mapEntry.second));
         m_idToNodeMap.insert(IdToNodeMap::value_type(pNode->GetNodeId(), pNode));
     }
 }
@@ -300,9 +302,9 @@ AdaBoostDecisionTree::WeakClassifier &AdaBoostDecisionTree::WeakClassifier::oper
 {
     if (this != &rhs)
     {
-        for (const auto &iter : rhs.m_idToNodeMap)
+        for (const auto &mapEntry : rhs.m_idToNodeMap)
         {
-            const Node *pNode = new Node(*iter.second);
+            const Node *pNode = new Node(*(mapEntry.second));
             m_idToNodeMap.insert(IdToNodeMap::value_type(pNode->GetNodeId(), pNode));
         }
 
