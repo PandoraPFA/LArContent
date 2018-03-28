@@ -46,7 +46,6 @@ bool SvmClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pClu
             {
                 LArMvaHelper::MvaFeature currentFeature(featureVector.at(i));
                 featureVector.at(i) = currentFeature.Get() / straightLineLength;
-                //featureVector.at(i).Get() /= straightLineLength;
             }
         }
     }

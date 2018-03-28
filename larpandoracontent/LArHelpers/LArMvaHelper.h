@@ -8,11 +8,14 @@
 #ifndef LAR_MVA_HELPER_H
 #define LAR_MVA_HELPER_H 1
 
+#include "larpandoracontent/LArObjects/LArMvaInterface.h"
+
+#include "Pandora/AlgorithmTool.h"
+#include "Pandora/StatusCodes.h"
+
 #include <fstream>
 #include <chrono>
 #include <ctime>
-
-#include "larpandoracontent/LArObjects/LArMvaInterface.h"
 
 namespace lar_content
 {
