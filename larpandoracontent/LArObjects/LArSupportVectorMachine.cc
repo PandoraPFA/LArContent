@@ -37,7 +37,7 @@ StatusCode SupportVectorMachine::Initialize(const std::string &parameterLocation
     if (m_isInitialized)
     {
         std::cout << "SupportVectorMachine: svm was already initialized" << std::endl;
-        return STATUS_CODE_FAILURE;
+        return STATUS_CODE_ALREADY_INITIALIZED;
     }
 
     this->ReadXmlFile(parameterLocation, svmName);
@@ -87,7 +87,7 @@ void SupportVectorMachine::ReadXmlFile(const std::string &svmFileName, const std
     if (!xmlDocument.LoadFile())
     {
         std::cout << "SupportVectorMachine::Initialize - Invalid xml file." << std::endl;
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
     const TiXmlHandle xmlDocumentHandle(&xmlDocument);
