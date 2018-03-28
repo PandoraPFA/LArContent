@@ -122,8 +122,8 @@ private:
          */
         SupportVectorInfo(const double yAlpha, LArMvaHelper::MvaFeatureVector supportVector);
 
-        double                  m_yAlpha;        ///< The alpha-value multiplied by the y-value for the support vector
-        LArMvaHelper::MvaFeatureVector        m_supportVector; ///< The support vector
+        double                          m_yAlpha;        ///< The alpha-value multiplied by the y-value for the support vector
+        LArMvaHelper::MvaFeatureVector  m_supportVector; ///< The support vector
     };
 
     /**
