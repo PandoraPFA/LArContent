@@ -68,7 +68,7 @@ StatusCode AdaBoostDecisionTree::Initialize(const std::string &bdtXmlFileName, c
     while (pContainerXmlNode)
     {
         if (pContainerXmlNode->ValueStr() != "AdaBoostDecisionTree")
-            return STATUS_CODE_INVALID_PARAMETER;
+            return STATUS_CODE_FAILURE;
 
         const TiXmlHandle currentHandle(pContainerXmlNode);
 
