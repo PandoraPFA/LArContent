@@ -8,53 +8,28 @@
 #ifndef LAR_SUPPORT_VECTOR_MACHINE_H
 #define LAR_SUPPORT_VECTOR_MACHINE_H 1
 
-#include "Pandora/AlgorithmTool.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
+
+#include "larpandoracontent/LArObjects/LArMvaInterface.h"
+
 #include "Pandora/StatusCodes.h"
 
 #include <functional>
 #include <map>
 #include <vector>
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 namespace lar_content
 {
 
 /**
- *  @brief  SvmFeatureTool class template
- */
-template <typename ...Ts>
-class SvmFeatureTool : public pandora::AlgorithmTool
-{
-public:
-    typedef std::vector<double> DoubleVector;
-    typedef std::vector<SvmFeatureTool<Ts...> *> FeatureToolVector;
-
-    /**
-     *  @brief  Default constructor.
-     */
-    SvmFeatureTool() = default;
-
-    /**
-     *  @brief  Run the algorithm tool
-     *
-     *  @param  featureVector the vector of features to append
-     *  @param  args arguments to pass to the tool
-     */
-    virtual void Run(DoubleVector &featureVector, Ts... args) = 0;
-};
-
-template <typename ...Ts>
-using SvmFeatureToolVector = std::vector<SvmFeatureTool<Ts...> *>;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/**
  *  @brief  SupportVectorMachine class
  */
-class SupportVectorMachine
+class SupportVectorMachine : public MvaInterface
 {
 public:
-    typedef std::vector<double> DoubleVector;
-    typedef std::function<double(const DoubleVector &, const DoubleVector &, const double)> KernelFunction;
+    typedef std::function<double(const LArMvaHelper::MvaFeatureVector &, const LArMvaHelper::MvaFeatureVector &, const double)> KernelFunction;
 
     /**
      *  @brief  KernelType enum
@@ -90,7 +65,7 @@ public:
      *
      *  @return the predicted boolean class
      */
-    bool Classify(const DoubleVector &features) const;
+    bool Classify(const LArMvaHelper::MvaFeatureVector &features) const;
 
     /**
      *  @brief  Calculate the classification score for a set of input features, based on the trained model
@@ -99,8 +74,8 @@ public:
      *
      *  @return the classification score
      */
-    double CalculateClassificationScore(const DoubleVector &features) const;
-    
+    double CalculateClassificationScore(const LArMvaHelper::MvaFeatureVector &features) const;
+
     /**
      *  @brief  Calculate the classification probability for a set of input features, based on the trained model
      *
@@ -108,7 +83,7 @@ public:
      *
      *  @return the classification probability
      */
-    double CalculateProbability(const DoubleVector &features) const;
+    double CalculateProbability(const LArMvaHelper::MvaFeatureVector &features) const;
 
     /**
      *  @brief  Query whether this svm is initialized
@@ -144,10 +119,10 @@ private:
          *  @param  yAlpha the alpha value multiplied by the y-value for the support vector
          *  @param  supportVector the support vector, passed by value then uses move semantics for efficiency
          */
-        SupportVectorInfo(const double yAlpha, DoubleVector supportVector);
+        SupportVectorInfo(const double yAlpha, LArMvaHelper::MvaFeatureVector supportVector);
 
-        double       m_yAlpha;        ///< The alpha-value multiplied by the y-value for the support vector
-        DoubleVector m_supportVector; ///< The support vector
+        double                          m_yAlpha;        ///< The alpha-value multiplied by the y-value for the support vector
+        LArMvaHelper::MvaFeatureVector  m_supportVector; ///< The support vector
     };
 
     /**
@@ -188,7 +163,7 @@ private:
     typedef std::map<KernelType, KernelFunction> KernelMap;
 
     bool              m_isInitialized;       ///< Whether this svm has been initialized
-    
+
     bool              m_enableProbability;   ///< Whether to enable probability calculations
     double            m_probAParameter;      ///< The first-order score coefficient for mapping to a probability using the logistic function
     double            m_probBParameter;      ///< The score offset parameter for mapping to a probability using the logistic function
@@ -256,7 +231,7 @@ private:
      *
      *  @return the classification score
      */
-    double CalculateClassificationScoreImpl(const DoubleVector &features) const;
+    double CalculateClassificationScoreImpl(const LArMvaHelper::MvaFeatureVector &features) const;
 
     /**
      *  @brief  An inhomogeneous quadratic kernel
@@ -267,7 +242,7 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double QuadraticKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.);
+    static double QuadraticKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  An inhomogeneous cubic kernel
@@ -278,7 +253,7 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double CubicKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.);
+    static double CubicKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  A linear kernel
@@ -289,7 +264,7 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double LinearKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.);
+    static double LinearKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  A gaussian RBF kernel
@@ -300,40 +275,40 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double GaussianRbfKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor = 1.);
+    static double GaussianRbfKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool SupportVectorMachine::Classify(const DoubleVector &features) const
+inline bool SupportVectorMachine::Classify(const LArMvaHelper::MvaFeatureVector &features) const
 {
     return (this->CalculateClassificationScoreImpl(features) > 0.);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::CalculateClassificationScore(const DoubleVector &features) const
+inline double SupportVectorMachine::CalculateClassificationScore(const LArMvaHelper::MvaFeatureVector &features) const
 {
     return this->CalculateClassificationScoreImpl(features);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::CalculateProbability(const DoubleVector &features) const
+inline double SupportVectorMachine::CalculateProbability(const LArMvaHelper::MvaFeatureVector &features) const
 {
     if (!m_enableProbability)
     {
         std::cout << "LArSupportVectorMachine: cannot calculate probabilities for this SVM" << std::endl;
         throw pandora::STATUS_CODE_NOT_INITIALIZED;
     }
-    
+
     // Use the logistic function to map the linearly-transformed score on the interval (-inf,inf) to a probability on [0,1] - the two free
     // parameters in the linear transformation are trained such that the logistic map produces an accurate probability
     const double scaledScore = m_probAParameter * this->CalculateClassificationScoreImpl(features) + m_probBParameter;
-    
+
     if (scaledScore >= 0.)
         return std::exp(-scaledScore) / (1. + std::exp(-scaledScore));
-        
+
     return 1./(1. + std::exp(scaledScore));
 }
 
@@ -360,7 +335,7 @@ inline void SupportVectorMachine::SetKernelFunction(KernelFunction kernelFunctio
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::LinearKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor)
+inline double SupportVectorMachine::LinearKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
 {
     const double denominator(scaleFactor * scaleFactor);
     if (denominator < std::numeric_limits<double>::epsilon())
@@ -368,14 +343,14 @@ inline double SupportVectorMachine::LinearKernel(const DoubleVector &supportVect
 
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
-        total += supportVector.at(i) * features.at(i);
+        total += supportVector.at(i).Get() * features.at(i).Get();
 
     return total / denominator;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::QuadraticKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor)
+inline double SupportVectorMachine::QuadraticKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
 {
     const double denominator(scaleFactor * scaleFactor);
     if (denominator < std::numeric_limits<double>::epsilon())
@@ -383,7 +358,7 @@ inline double SupportVectorMachine::QuadraticKernel(const DoubleVector &supportV
 
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
-        total += supportVector.at(i) * features.at(i);
+        total += supportVector.at(i).Get() * features.at(i).Get();
 
     total = total / denominator + 1.;
     return total * total;
@@ -391,7 +366,7 @@ inline double SupportVectorMachine::QuadraticKernel(const DoubleVector &supportV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::CubicKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor)
+inline double SupportVectorMachine::CubicKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
 {
     const double denominator(scaleFactor * scaleFactor);
     if (denominator < std::numeric_limits<double>::epsilon())
@@ -399,7 +374,7 @@ inline double SupportVectorMachine::CubicKernel(const DoubleVector &supportVecto
 
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
-        total += supportVector.at(i) * features.at(i);
+        total += supportVector.at(i).Get() * features.at(i).Get();
 
     total = total / denominator + 1.;
     return total * total * total;
@@ -407,18 +382,18 @@ inline double SupportVectorMachine::CubicKernel(const DoubleVector &supportVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::GaussianRbfKernel(const DoubleVector &supportVector, const DoubleVector &features, const double scaleFactor)
+inline double SupportVectorMachine::GaussianRbfKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
 {
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
-        total += (supportVector.at(i) - features.at(i)) * (supportVector.at(i) - features.at(i));
+        total += (supportVector.at(i).Get() - features.at(i).Get()) * (supportVector.at(i).Get() - features.at(i).Get());
 
     return std::exp(-scaleFactor * total);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SupportVectorMachine::SupportVectorInfo::SupportVectorInfo(const double yAlpha, DoubleVector supportVector) :
+inline SupportVectorMachine::SupportVectorInfo::SupportVectorInfo(const double yAlpha, LArMvaHelper::MvaFeatureVector supportVector) :
     m_yAlpha(yAlpha),
     m_supportVector(std::move(supportVector))
 {

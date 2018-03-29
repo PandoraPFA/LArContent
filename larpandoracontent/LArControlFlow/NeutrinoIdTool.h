@@ -20,11 +20,11 @@ namespace lar_content
 /**
  *  @brief  NeutrinoIdTool class
  *
- *          Compares the neutrino and cosmic hypotheses of all of the slices in the event. Uses an SVM to calculate the probability of each slice 
+ *          Compares the neutrino and cosmic hypotheses of all of the slices in the event. Uses an SVM to calculate the probability of each slice
  *          containing a neutrino interaction. The N slices with the highest probabilities are identified as a neutrino (if sufficiently probable)
  *          all other slices are deemed cosmogenic.
  *
- *          If training mode is switched on, then the tool will write SVM training exmples to the specified output file. The events selected for 
+ *          If training mode is switched on, then the tool will write SVM training exmples to the specified output file. The events selected for
  *          training must pass (user configurable) slicing quality cuts. Users may also select events based on their interaction type (nuance code).
  */
 class NeutrinoIdTool : public SliceIdBaseTool
@@ -65,8 +65,8 @@ private:
          *
          *  @param  featuresVector empty feature vector to populate
          */
-        void GetFeatureVector(SupportVectorMachine::DoubleVector &featureVector) const;
-        
+        void GetFeatureVector(LArMvaHelper::MvaFeatureVector &featureVector) const;
+
         /**
          *  @brief  Get the probability that this slice contains a neutrino interaction
          *
@@ -98,7 +98,7 @@ private:
          *  @param  spacePoints the input spacepoints to fit
          *  @param  fShouldChooseA a function that when given two fitted endpoints A and B, will return true if A is the endpoint at which to calculate the direction
          *
-         *  @return the direction of the input spacepoints 
+         *  @return the direction of the input spacepoints
          */
         pandora::CartesianVector GetDirection(const pandora::CartesianPointVector &spacePoints, std::function<bool(const pandora::CartesianVector &pointA, const pandora::CartesianVector &pointB)> fShouldChooseA) const;
 
@@ -111,22 +111,22 @@ private:
          *  @return the direction of the input space points from the vertex supplied
          */
         pandora::CartesianVector GetDirectionFromVertex(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex) const;
-        
+
         /**
          *  @brief  Use a sliding fit to get the upper direction of a collection of spacepoints
          *
          *  @param  spacePoints the input spacepoints to fit
          *
-         *  @return the direction of the upper input space points 
+         *  @return the direction of the upper input space points
          */
         pandora::CartesianVector GetUpperDirection(const pandora::CartesianPointVector &spacePoints) const;
-        
+
         /**
          *  @brief  Use a sliding fit to get the lower direction of a collection of spacepoints
          *
          *  @param  spacePoints the input spacepoints to fit
          *
-         *  @return the direction of the lower input space points 
+         *  @return the direction of the lower input space points
          */
         pandora::CartesianVector GetLowerDirection(const pandora::CartesianPointVector &spacePoints) const;
 
@@ -141,10 +141,10 @@ private:
         void GetPointsInSphere(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex, const float radius, pandora::CartesianPointVector &spacePointsInSphere) const;
 
         bool                               m_isAvailable;    ///< Is the feature vector available
-        SupportVectorMachine::DoubleVector m_featureVector;  ///< The SVM feature vector
+        LArMvaHelper::MvaFeatureVector     m_featureVector;  ///< The SVM feature vector
         const NeutrinoIdTool *const        m_pTool;          ///< The tool that owns this
     };
-    
+
     typedef std::pair<unsigned int, float> UintFloatPair;
     typedef std::vector<SliceFeatures> SliceFeaturesVector;
 
@@ -245,8 +245,8 @@ private:
 
     // Classification
     float                 m_minProbability;               ///< Minimum probability required to classify a slice as the neutrino
-    unsigned int          m_maxNeutrinos;                 ///< The maximum number of neutrinos to select in any one event 
-    
+    unsigned int          m_maxNeutrinos;                 ///< The maximum number of neutrinos to select in any one event
+
     SupportVectorMachine  m_supportVectorMachine;         ///< The support vector machine
     std::string           m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to svm files
 };
