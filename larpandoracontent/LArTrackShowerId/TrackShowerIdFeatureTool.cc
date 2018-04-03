@@ -268,7 +268,7 @@ const pandora::ParticleFlowObject *const pInputPfo)
     LArPfoHelper::GetTwoDClusterList(pInputPfo, clusterList);
     float diffWithStraightLineMean(0.f), maxFitGapLength(0.f), rmsSlidingLinearFit(0.f);
 
-	int nClustersUsed(0);
+    unsigned int nClustersUsed(0);
 
     for (const Cluster *const pCluster : clusterList)
     {
@@ -282,32 +282,32 @@ const pandora::ParticleFlowObject *const pInputPfo)
             maxFitGapLengthCluster           /= straightLineLengthLargeCluster;
             rmsSlidingLinearFitCluster       /= straightLineLengthLargeCluster;
 
-			diffWithStraightLineMean   += diffWithStraightLineMeanCluster;
-			maxFitGapLength            += maxFitGapLengthCluster;
-			rmsSlidingLinearFit        += rmsSlidingLinearFitCluster;
+            diffWithStraightLineMean   += diffWithStraightLineMeanCluster;
+            maxFitGapLength            += maxFitGapLengthCluster;
+            rmsSlidingLinearFit        += rmsSlidingLinearFitCluster;
 
-			++nClustersUsed;
-		}
+            ++nClustersUsed;
+        }
     }
 
-	float lenght3D(-1.f);
+    float length3D(-1.f);
     if (nClustersUsed > 0)
     {
        const float nClusters(static_cast<float>(nClustersUsed));
-       lenght3D = std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
+       length3D = std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
 
         diffWithStraightLineMean   /= nClusters;
         maxFitGapLength            /= nClusters;
         rmsSlidingLinearFit        /= nClusters;
     }
-	else
-	{
-		diffWithStraightLineMean = -1.f;
-		maxFitGapLength = -1.f;
-		rmsSlidingLinearFit = -1.f;
-	}
+    else
+    {
+        diffWithStraightLineMean = -1.f;
+        maxFitGapLength = -1.f;
+        rmsSlidingLinearFit = -1.f;
+    }
 
-    featureVector.push_back(lenght3D);
+    featureVector.push_back(length3D);
     featureVector.push_back(diffWithStraightLineMean);
     featureVector.push_back(maxFitGapLength);
     featureVector.push_back(rmsSlidingLinearFit);
@@ -361,10 +361,10 @@ void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandor
                 if (correctedGapLength > maxFitGapLength)
                     maxFitGapLength = correctedGapLength;
             }
-			else
-			{
-				maxFitGapLength = 0.f;
-			}
+            else
+            {
+                maxFitGapLength = 0.f;
+            }
 
             dTdLMin = std::min(dTdLMin, static_cast<float>(layerFitResult.GetGradient()));
             dTdLMax = std::max(dTdLMax, static_cast<float>(layerFitResult.GetGradient()));
@@ -431,7 +431,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
 
     const Vertex *const nuVertex(pVertexList->front());
     //find the particle vertex
-	float vertexDistance(-1.f);
+    float vertexDistance(-1.f);
     try
     {
         const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
@@ -482,28 +482,30 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
     float diffAngle(-1.f);
     if (!threeDCaloHitList.empty())
     {
-      CartesianPointVector pointVectorStart, pointVectorEnd;
-      this->Divide3DCaloHitList(pAlgorithm, threeDCaloHitList, pointVectorStart, pointVectorEnd);
-      if ((pointVectorStart.size()>1)&&(pointVectorEnd.size()>1)) //otherwise not able to calculate angles if only 1 point provided
-      {
-		// Run the PCA analysis twice
-		CartesianVector centroidStart(0.f, 0.f, 0.f), centroidEnd(0.f, 0.f, 0.f);
-		LArPcaHelper::EigenVectors eigenVecsStart, eigenVecsEnd;
-		LArPcaHelper::EigenValues eigenValuesStart(0.f, 0.f, 0.f), eigenValuesEnd(0.f, 0.f, 0.f);
-		try
-		{
-			LArPcaHelper::RunPca(pointVectorStart, centroidStart, eigenValuesStart, eigenVecsStart);
-			LArPcaHelper::RunPca(pointVectorEnd, centroidEnd, eigenValuesEnd, eigenVecsEnd);
+        CartesianPointVector pointVectorStart, pointVectorEnd;
+        this->Divide3DCaloHitList(pAlgorithm, threeDCaloHitList, pointVectorStart, pointVectorEnd);
 
-			const float openingAngle(this->OpeningAngle(eigenVecsStart.at(0), eigenVecsStart.at(1), eigenValuesStart));
-			const float closingAngle(this->OpeningAngle(eigenVecsEnd.at(0), eigenVecsEnd.at(1), eigenValuesEnd));
-			diffAngle = std::fabs(openingAngle-closingAngle);
-		}
-		catch (const StatusCodeException &)
-		{
-			diffAngle = -1.f;
-		}
-      }
+        //able to calculate angles only if > 1 point provided
+        if ((pointVectorStart.size() > 1) && (pointVectorEnd.size() > 1))
+        {
+            // Run the PCA analysis twice
+            CartesianVector centroidStart(0.f, 0.f, 0.f), centroidEnd(0.f, 0.f, 0.f);
+            LArPcaHelper::EigenVectors eigenVecsStart, eigenVecsEnd;
+            LArPcaHelper::EigenValues eigenValuesStart(0.f, 0.f, 0.f), eigenValuesEnd(0.f, 0.f, 0.f);
+            try
+            {
+                LArPcaHelper::RunPca(pointVectorStart, centroidStart, eigenValuesStart, eigenVecsStart);
+                LArPcaHelper::RunPca(pointVectorEnd, centroidEnd, eigenValuesEnd, eigenVecsEnd);
+
+                const float openingAngle(this->OpeningAngle(eigenVecsStart.at(0), eigenVecsStart.at(1), eigenValuesStart));
+                const float closingAngle(this->OpeningAngle(eigenVecsEnd.at(0), eigenVecsEnd.at(1), eigenValuesEnd));
+                diffAngle = std::fabs(openingAngle-closingAngle);
+            }
+            catch (const StatusCodeException &)
+            {
+                diffAngle = -1.f;
+            }
+        }
     }
     featureVector.push_back(diffAngle);
 }
@@ -592,27 +594,27 @@ ThreeDPCAFeatureTool::ThreeDPCAFeatureTool()
 void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
-	if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-	// Need the 3D cluster and hits to calculate PCA components
-	ClusterList threeDClusterList;
-	LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
+    // Need the 3D cluster and hits to calculate PCA components
+    ClusterList threeDClusterList;
+    LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
 
-	if (threeDClusterList.empty())
-		return;
+    if (threeDClusterList.empty())
+        return;
 
-	CaloHitList threeDCaloHitList;
-	LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
+    CaloHitList threeDCaloHitList;
+    LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
-	if (threeDCaloHitList.empty())
-		return;
+    if (threeDCaloHitList.empty())
+        return;
 
-	// Run the PCA analysis
-	CartesianVector centroid(0.f, 0.f, 0.f);
-	float pca1(-1.f), pca2(-1.f);
-	LArPcaHelper::EigenVectors eigenVecs;
-	LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    // Run the PCA analysis
+    CartesianVector centroid(0.f, 0.f, 0.f);
+    float pca1(-1.f), pca2(-1.f);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
     try
     {
       LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
