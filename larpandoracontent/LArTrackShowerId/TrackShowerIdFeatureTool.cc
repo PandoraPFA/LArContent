@@ -294,7 +294,7 @@ const pandora::ParticleFlowObject *const pInputPfo)
     if (nClustersUsed > 0)
     {
        const float nClusters(static_cast<float>(nClustersUsed));
-       lenght3D = std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
+       length3D = std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
 
         diffWithStraightLineMean   /= nClusters;
         maxFitGapLength            /= nClusters;
@@ -307,7 +307,7 @@ const pandora::ParticleFlowObject *const pInputPfo)
         rmsSlidingLinearFit = -1.f;
     }
 
-    featureVector.push_back(lenght3D);
+    featureVector.push_back(length3D);
     featureVector.push_back(diffWithStraightLineMean);
     featureVector.push_back(maxFitGapLength);
     featureVector.push_back(rmsSlidingLinearFit);
