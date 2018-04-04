@@ -32,16 +32,17 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     PfoList ambiguousParentPfos;
+    const float maxCosmicRayFraction(1.f - m_minNeutrinoFraction);
 
     for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)
     {
         PfoList downstreamPfos;
         LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);
 
-        float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
-        CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, true, thisNeutrinoWeight, thisTotalWeight, LArMCParticleHelper::IsNeutrino);
+        float thisCosmicRayWeight(0.f), thisTotalWeight(0.f);
+        CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, true, thisCosmicRayWeight, thisTotalWeight, LArMCParticleHelper::IsCosmicRay);
 
-        if ((thisTotalWeight > 0.f) && ((thisNeutrinoWeight / thisTotalWeight) > m_minNeutrinoFraction))
+        if ((thisTotalWeight > 0.f) && ((thisCosmicRayWeight / thisTotalWeight) < maxCosmicRayFraction))
             ambiguousParentPfos.push_back(pParentCosmicRayPfo);
     }
 
