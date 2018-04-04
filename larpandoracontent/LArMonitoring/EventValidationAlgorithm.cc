@@ -122,7 +122,9 @@ void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pM
         PfoList finalStatePfos;
         for (const ParticleFlowObject *const pPfo : allConnectedPfos)
         {
-            if (LArPfoHelper::IsFinalState(pPfo))
+// First change used in metric creation
+//            if (LArPfoHelper::IsFinalState(pPfo))
+            if (pPfo->GetParentPfoList().empty())
                 finalStatePfos.push_back(pPfo);
         }
 
@@ -290,8 +292,11 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 recoNeutrinos.insert(pRecoNeutrino);
             }
 
-            if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
-            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
+            bool isNeutrino(LArPfoHelper::IsNeutrino(pfoToSharedHits.first));
+            //if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
+            if (isNeutrino && isGoodMatch) ++nPrimaryNuMatches;
+            //if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
+            if (!isNeutrino && isGoodMatch) ++nPrimaryCRMatches;
 
             targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "")
                      << "MatchedPfoId " << pfoId
