@@ -268,7 +268,6 @@ const pandora::ParticleFlowObject *const pInputPfo)
     LArPfoHelper::GetTwoDClusterList(pInputPfo, clusterList);
     float diffWithStraightLineMean(0.f), maxFitGapLength(0.f), rmsSlidingLinearFit(0.f);
     LArMvaHelper::MvaFeature length, diff, gap, rms;
-
     unsigned int nClustersUsed(0);
 
     for (const Cluster *const pCluster : clusterList)
@@ -604,12 +603,12 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
     LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
     try
     {
-      LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
-      const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ()); 
-      if (principalEigenvalue > std::numeric_limits<float>::epsilon())
+        LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
+        const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
+        if (principalEigenvalue > std::numeric_limits<float>::epsilon())
         {
-          pca1 = secondaryEigenvalue/principalEigenvalue;
-          pca2 = tertiaryEigenvalue/principalEigenvalue;
+            pca1 = secondaryEigenvalue/principalEigenvalue;
+            pca2 = tertiaryEigenvalue/principalEigenvalue;
         }
     }
     catch (const StatusCodeException &){}
@@ -652,10 +651,10 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
     }
 
     if (chargeMean > std::numeric_limits<float>::epsilon())
-      charge1 = chargeSigma / chargeMean;
+        charge1 = chargeSigma / chargeMean;
 
     if (totalCharge > std::numeric_limits<float>::epsilon())
-      charge2 = endCharge / totalCharge;
+        charge2 = endCharge / totalCharge;
 
     featureVector.push_back(charge1);
     featureVector.push_back(charge2);
