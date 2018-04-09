@@ -69,6 +69,7 @@
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoDaughterVerticesAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoPropertiesAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArEventBuilding/TestBeamParticleCreationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.h"
 
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ClearLongitudinalTrackHitsTool.h"
@@ -200,6 +201,7 @@
     d("LArNeutrinoDaughterVertices",            NeutrinoDaughterVerticesAlgorithm)                                              \
     d("LArNeutrinoHierarchy",                   NeutrinoHierarchyAlgorithm)                                                     \
     d("LArNeutrinoProperties",                  NeutrinoPropertiesAlgorithm)                                                    \
+    d("LArTestBeamParticleCreation",            TestBeamParticleCreationAlgorithm)                                              \
     d("LArCosmicRayShowerMatching",             CosmicRayShowerMatchingAlgorithm)                                               \
     d("LArCosmicRayTrackMatching",              CosmicRayTrackMatchingAlgorithm)                                                \
     d("LArCosmicRayTrackRecovery",              CosmicRayTrackRecoveryAlgorithm)                                                \
