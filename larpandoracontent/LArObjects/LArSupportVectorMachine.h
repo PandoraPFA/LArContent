@@ -306,10 +306,7 @@ inline double SupportVectorMachine::CalculateProbability(const LArMvaHelper::Mva
     // parameters in the linear transformation are trained such that the logistic map produces an accurate probability
     const double scaledScore = m_probAParameter * this->CalculateClassificationScoreImpl(features) + m_probBParameter;
 
-    if (scaledScore >= 0.)
-        return std::exp(-scaledScore) / (1. + std::exp(-scaledScore));
-
-    return 1./(1. + std::exp(scaledScore));
+    return 1. / (1. + std::exp(scaledScore));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
