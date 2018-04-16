@@ -102,8 +102,10 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 
     //check for failures in the calculation of features, i.e. not initialized features
     for (const LArMvaHelper::MvaFeature featureValue : featureVector)
+    {
         if (!featureValue.IsInitialized())
             return (pPfo->GetParticleId() == MU_MINUS);
+    }
 
     //if no failures, proceed with svm classification
     if (!m_enableProbability)
