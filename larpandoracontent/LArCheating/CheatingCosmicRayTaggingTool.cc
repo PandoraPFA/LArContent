@@ -20,7 +20,7 @@ namespace lar_content
 {
 
 CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() :
-    m_minNeutrinoFraction(0.75f)
+    m_maxCosmicRayFraction(0.25f)
 {
 }
 
@@ -32,7 +32,6 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     PfoList ambiguousParentPfos;
-    const float maxCosmicRayFraction(1.f - m_minNeutrinoFraction);
 
     for (const Pfo *const pParentCosmicRayPfo : parentCosmicRayPfos)
     {
@@ -42,7 +41,7 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
         float thisCosmicRayWeight(0.f), thisTotalWeight(0.f);
         CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, true, thisCosmicRayWeight, thisTotalWeight, LArMCParticleHelper::IsCosmicRay);
 
-        if ((thisTotalWeight > 0.f) && ((thisCosmicRayWeight / thisTotalWeight) < maxCosmicRayFraction))
+        if ((thisTotalWeight > 0.f) && ((thisCosmicRayWeight / thisTotalWeight) < m_maxCosmicRayFraction))
             ambiguousParentPfos.push_back(pParentCosmicRayPfo);
     }
 
@@ -54,7 +53,7 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
 StatusCode CheatingCosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinNeutrinoFraction", m_minNeutrinoFraction));
+        "MaxCosmicRayFraction", m_maxCosmicRayFraction));
 
     return STATUS_CODE_SUCCESS;
 }
