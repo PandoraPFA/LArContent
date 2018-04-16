@@ -38,7 +38,7 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
         if (!LArPfoHelper::IsNeutrino(pPfo))
             continue;
 
-        PfoList daughterList(pPfo->GetDaughterPfoList());
+        const PfoList &daughterList(pPfo->GetDaughterPfoList());
 
         const Pfo *pPrimaryPfo(nullptr);
         float caloHitMinZ(std::numeric_limits<float>::max());
@@ -66,6 +66,8 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPrimaryPfo, pPrimaryDaughterPfo));
         }
 
+        // ATTN: If the primary pfo is shower like, the target beam particle is most likely an electron/positron.  If the primary pfo is track like, the target 
+        // beam particle is most likely a pion as pion interactions are more frequent than proton, kaon and muon interactions in the CERN test beam. 
         if (std::abs(pPrimaryPfo->GetParticleId()) != E_MINUS)
         {
             PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
