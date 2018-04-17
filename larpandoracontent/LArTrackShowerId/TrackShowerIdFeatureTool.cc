@@ -267,6 +267,8 @@ const pandora::ParticleFlowObject *const pInputPfo)
     ClusterList clusterList;
     LArPfoHelper::GetTwoDClusterList(pInputPfo, clusterList);
     float diffWithStraightLineMean(0.f), maxFitGapLength(0.f), rmsSlidingLinearFit(0.f);
+    LArMvaHelper::MvaFeature length, diff, gap, rms;
+    unsigned int nClustersUsed(0);
 
     for (const Cluster *const pCluster : clusterList)
     {
@@ -279,26 +281,28 @@ const pandora::ParticleFlowObject *const pInputPfo)
             diffWithStraightLineMeanCluster  /= straightLineLengthLargeCluster;
             maxFitGapLengthCluster           /= straightLineLengthLargeCluster;
             rmsSlidingLinearFitCluster       /= straightLineLengthLargeCluster;
+
+            diffWithStraightLineMean   += diffWithStraightLineMeanCluster;
+            maxFitGapLength            += maxFitGapLengthCluster;
+            rmsSlidingLinearFit        += rmsSlidingLinearFitCluster;
+
+            ++nClustersUsed;
         }
-
-        diffWithStraightLineMean   += diffWithStraightLineMeanCluster;
-        maxFitGapLength            += maxFitGapLengthCluster;
-        rmsSlidingLinearFit        += rmsSlidingLinearFitCluster;
     }
 
-    if (!clusterList.empty())
+    if (nClustersUsed > 0)
     {
-        const float nClusters(static_cast<float>(clusterList.size()));
-        diffWithStraightLineMean   /= nClusters;
-        maxFitGapLength            /= nClusters;
-        rmsSlidingLinearFit        /= nClusters;
+        const float nClusters(static_cast<float>(nClustersUsed));
+        length = std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
+        diff   = diffWithStraightLineMean / nClusters;
+        gap    = maxFitGapLength          / nClusters;
+        rms    = rmsSlidingLinearFit      / nClusters;
     }
 
-    const float lenghtSquare(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
-    featureVector.push_back(std::sqrt(lenghtSquare));
-    featureVector.push_back(diffWithStraightLineMean);
-    featureVector.push_back(maxFitGapLength);
-    featureVector.push_back(rmsSlidingLinearFit);
+    featureVector.push_back(length);
+    featureVector.push_back(diff);
+    featureVector.push_back(gap);
+    featureVector.push_back(rms);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -348,6 +352,10 @@ void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandor
 
                 if (correctedGapLength > maxFitGapLength)
                     maxFitGapLength = correctedGapLength;
+            }
+            else
+            {
+                maxFitGapLength = 0.f;
             }
 
             dTdLMin = std::min(dTdLMin, static_cast<float>(layerFitResult.GetGradient()));
@@ -415,17 +423,14 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
 
     const Vertex *const nuVertex(pVertexList->front());
     //find the particle vertex
-   float vertexDistance(-1.f);
+    LArMvaHelper::MvaFeature vertexDistance;
     try
     {
         const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
         const CartesianVector nuPosition(nuVertex->GetPosition()), pfoPosition(pVertex->GetPosition());
         vertexDistance = (nuPosition - pfoPosition).GetMagnitude();
     }
-    catch (const StatusCodeException &)
-    {
-        vertexDistance = -1.f;
-    }
+    catch (const StatusCodeException &) {}
 
     featureVector.push_back(vertexDistance);
 }
@@ -463,25 +468,32 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
     CaloHitList threeDCaloHitList;
     LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
-    if (threeDCaloHitList.empty())
-        return;
+    LArMvaHelper::MvaFeature diffAngle;
+    if (!threeDCaloHitList.empty())
+    {
+        CartesianPointVector pointVectorStart, pointVectorEnd;
+        this->Divide3DCaloHitList(pAlgorithm, threeDCaloHitList, pointVectorStart, pointVectorEnd);
 
-    CartesianPointVector pointVectorStart, pointVectorEnd;
+        //able to calculate angles only if > 1 point provided
+        if ((pointVectorStart.size() > 1) && (pointVectorEnd.size() > 1))
+        {
+            // Run the PCA analysis twice
+            CartesianVector centroidStart(0.f, 0.f, 0.f), centroidEnd(0.f, 0.f, 0.f);
+            LArPcaHelper::EigenVectors eigenVecsStart, eigenVecsEnd;
+            LArPcaHelper::EigenValues eigenValuesStart(0.f, 0.f, 0.f), eigenValuesEnd(0.f, 0.f, 0.f);
+            try
+            {
+                LArPcaHelper::RunPca(pointVectorStart, centroidStart, eigenValuesStart, eigenVecsStart);
+                LArPcaHelper::RunPca(pointVectorEnd, centroidEnd, eigenValuesEnd, eigenVecsEnd);
 
-    this->Divide3DCaloHitList(pAlgorithm, threeDCaloHitList, pointVectorStart, pointVectorEnd);
-    // Run the PCA analysis twice
-    CartesianVector centroidStart(0.f, 0.f, 0.f), centroidEnd(0.f, 0.f, 0.f);
-    LArPcaHelper::EigenVectors eigenVecsStart, eigenVecsEnd;
-    LArPcaHelper::EigenValues eigenValuesStart(0.f, 0.f, 0.f), eigenValuesEnd(0.f, 0.f, 0.f);
-
-    LArPcaHelper::RunPca(pointVectorStart, centroidStart, eigenValuesStart, eigenVecsStart);
-    LArPcaHelper::RunPca(pointVectorEnd, centroidEnd, eigenValuesEnd, eigenVecsEnd);
-
-    const float openingAngle(this->OpeningAngle(eigenVecsStart.at(0), eigenVecsStart.at(1), eigenValuesStart));
-    const float closingAngle(this->OpeningAngle(eigenVecsEnd.at(0), eigenVecsEnd.at(1), eigenValuesEnd));
-
-    featureVector.push_back(std::fabs(openingAngle-closingAngle));
-
+                const float openingAngle(this->OpeningAngle(eigenVecsStart.at(0), eigenVecsStart.at(1), eigenValuesStart));
+                const float closingAngle(this->OpeningAngle(eigenVecsEnd.at(0), eigenVecsEnd.at(1), eigenValuesEnd));
+                diffAngle = std::fabs(openingAngle-closingAngle);
+            }
+            catch (const StatusCodeException &){}
+        }
+    }
+    featureVector.push_back(diffAngle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -568,7 +580,7 @@ ThreeDPCAFeatureTool::ThreeDPCAFeatureTool()
 void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
 {
-     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     // Need the 3D cluster and hits to calculate PCA components
@@ -586,17 +598,20 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
 
     // Run the PCA analysis
     CartesianVector centroid(0.f, 0.f, 0.f);
+    LArMvaHelper::MvaFeature pca1, pca2;
     LArPcaHelper::EigenVectors eigenVecs;
     LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-    LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
-    const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
-
-    float pca1(-1.f), pca2(-1.f);
-    if (principalEigenvalue > std::numeric_limits<float>::epsilon())
+    try
     {
-        pca1 = secondaryEigenvalue/principalEigenvalue;
-        pca2 = tertiaryEigenvalue/principalEigenvalue;
+        LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
+        const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
+        if (principalEigenvalue > std::numeric_limits<float>::epsilon())
+        {
+            pca1 = secondaryEigenvalue/principalEigenvalue;
+            pca2 = tertiaryEigenvalue/principalEigenvalue;
+        }
     }
+    catch (const StatusCodeException &){}
 
     featureVector.push_back(pca1);
     featureVector.push_back(pca2);
@@ -611,6 +626,7 @@ StatusCode ThreeDPCAFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
+
 ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :
     m_endChargeFraction(0.1f)
 {
@@ -625,6 +641,7 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     float totalCharge(-1.f), chargeSigma(-1.f), chargeMean(-1.f), endCharge(-1.f);
+    LArMvaHelper::MvaFeature charge1, charge2;
     ClusterList pClusterList;
     LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, pClusterList);
     if ((!pClusterList.empty()) && (pClusterList.size() == 1))
@@ -634,13 +651,13 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
     }
 
     if (chargeMean > std::numeric_limits<float>::epsilon())
-        chargeSigma /= chargeMean;
+        charge1 = chargeSigma / chargeMean;
 
     if (totalCharge > std::numeric_limits<float>::epsilon())
-        endCharge /= totalCharge;
+        charge2 = endCharge / totalCharge;
 
-    featureVector.push_back(chargeSigma);
-    featureVector.push_back(endCharge);
+    featureVector.push_back(charge1);
+    featureVector.push_back(charge2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -678,21 +695,21 @@ void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pA
         }
     }
 
-    chargeMean = 0.f;
-    chargeSigma = 0.f;
+    if (!chargeVector.empty())
+    {
+        chargeMean = 0.f;
+        chargeSigma = 0.f;
 
-    for (const float charge : chargeVector)
-        chargeMean += charge;
+        for (const float charge : chargeVector)
+            chargeMean += charge;
 
-    chargeMean /= static_cast<float>(chargeVector.size());
+        chargeMean /= static_cast<float>(chargeVector.size());
 
-    for (const float charge : chargeVector)
-        chargeSigma += (charge - chargeMean) * (charge - chargeMean);
+        for (const float charge : chargeVector)
+            chargeSigma += (charge - chargeMean) * (charge - chargeMean);
 
-    if (chargeSigma < 0.f)
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    chargeSigma = std::sqrt(chargeSigma / static_cast<float>(chargeVector.size()));
+        chargeSigma = std::sqrt(chargeSigma / static_cast<float>(chargeVector.size()));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
