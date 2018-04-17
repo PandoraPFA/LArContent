@@ -191,7 +191,7 @@ void ThreeDHitCreationAlgorithm::ExtractResults(const ProtoHitVector &protoHitVe
 
 double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &slidingFitResult, const ProtoHitVector &protoHitVector) const
 {
-    const double sigmaUVW(PandoraContentApi::GetGeometry(*this)->GetLArTPC().GetSigmaUVW());
+    const double sigmaUVW(LArGeometryHelper::GetSigmaUVW(this->GetPandora()));
     const double sigma3DFit(sigmaUVW * m_sigma3DFitMultiplier);
 
     double chi2WrtFit(0.);
@@ -223,7 +223,7 @@ double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &s
 
 double ThreeDHitCreationAlgorithm::GetHitMovementChi2(const ProtoHitVector &protoHitVector) const
 {
-    const double sigmaUVW(PandoraContentApi::GetGeometry(*this)->GetLArTPC().GetSigmaUVW());
+    const double sigmaUVW(LArGeometryHelper::GetSigmaUVW(this->GetPandora()));
     double hitMovementChi2(0.);
 
     for (const ProtoHit &protoHit : protoHitVector)
@@ -244,7 +244,7 @@ double ThreeDHitCreationAlgorithm::GetHitMovementChi2(const ProtoHitVector &prot
 
 void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult &slidingFitResult, ProtoHitVector &protoHitVector) const
 {
-    const double sigmaUVW(PandoraContentApi::GetGeometry(*this)->GetLArTPC().GetSigmaUVW());
+    const double sigmaUVW(LArGeometryHelper::GetSigmaUVW(this->GetPandora()));
     const double sigmaFit(sigmaUVW); // ATTN sigmaFit and sigmaHit here should agree with treatment in HitCreation tools
     const double sigmaHit(sigmaUVW);
     const double sigma3DFit(sigmaUVW * m_sigma3DFitMultiplier);
