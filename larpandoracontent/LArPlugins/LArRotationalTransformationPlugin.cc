@@ -28,7 +28,6 @@ using namespace pandora;
 LArRotationalTransformationPlugin::LArRotationalTransformationPlugin() :
     m_thetaU(0.),
     m_thetaV(0.),
-    m_sigmaUVW(0.),
     m_sinUplusV(0.),
     m_sinU(0.),
     m_sinV(0.),
@@ -86,13 +85,6 @@ double LArRotationalTransformationPlugin::YZtoU(const double y, const double z) 
 double LArRotationalTransformationPlugin::YZtoV(const double y, const double z) const
 {
     return z * m_cosV + y * m_sinV;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-double LArRotationalTransformationPlugin::GetSigmaUVW() const
-{
-    return m_sigmaUVW;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -253,7 +245,7 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
     const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
     m_thetaU = pFirstLArTPC->GetWireAngleU();
     m_thetaV = pFirstLArTPC->GetWireAngleV();
-    m_sigmaUVW = pFirstLArTPC->GetSigmaUVW();
+    const double sigmaUVW(pFirstLArTPC->GetSigmaUVW());
 
     m_sinUplusV = std::sin(m_thetaU + m_thetaV);
     m_sinU = std::sin(m_thetaU);
@@ -267,7 +259,7 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
 
         if ((std::fabs(m_thetaU - pLArTPC->GetWireAngleU()) > m_maxAngularDiscrepancy) ||
             (std::fabs(m_thetaV - pLArTPC->GetWireAngleV()) > m_maxAngularDiscrepancy) ||
-            (std::fabs(m_sigmaUVW - pLArTPC->GetSigmaUVW()) > m_maxSigmaDiscrepancy))
+            (std::fabs(sigmaUVW - pLArTPC->GetSigmaUVW()) > m_maxSigmaDiscrepancy))
         {
             std::cout << "LArRotationalTransformationPlugin::Initialize - Plugin does not support provided LArTPC configurations " << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
