@@ -386,8 +386,6 @@ private:
     std::string                     m_trainingOutputFile;                   ///< Output file name for training examples
     float                           m_minPurity;                            ///< Minimum purity of the best slice to use event for training
     float                           m_minCompleteness;                      ///< Minimum completeness of the best slice to use event for training
-    bool                            m_selectInputHits;                      ///< Whether to select input hits
-    float                           m_maxPhotonPropagation;                 ///< The maximum photon propagation length
 
     // Classification
     AdaBoostDecisionTree            m_adaBoostDecisionTree;                 ///< The adaptive boost decision tree
