@@ -31,8 +31,6 @@ NeutrinoIdTool::NeutrinoIdTool() :
     m_nuance(-std::numeric_limits<int>::max()),
     m_minPurity(0.9f),
     m_minCompleteness(0.9f),
-    m_selectInputHits(true),
-    m_maxPhotonPropagation(2.5f),
     m_minProbability(0.0f),
     m_maxNeutrinos(1),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
@@ -103,7 +101,8 @@ bool NeutrinoIdTool::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, cons
 
     // Remove non-reconstructable hits, e.g. those downstream of a neutron
     CaloHitList reconstructableCaloHitList;
-    LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList, m_selectInputHits, m_maxPhotonPropagation);
+    LArMCParticleHelper::PrimaryParameters parameters;
+    LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
 
     const int nuNHitsTotal(this->CountNeutrinoInducedHits(reconstructableCaloHitList));
 
@@ -510,12 +509,6 @@ StatusCode NeutrinoIdTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinimumCompleteness", m_minCompleteness));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectInputHits", m_selectInputHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPhotonPropagation", m_maxPhotonPropagation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectNuanceCode", m_selectNuanceCode));

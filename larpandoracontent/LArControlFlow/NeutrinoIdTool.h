@@ -243,8 +243,6 @@ private:
     int                   m_nuance;                       ///< Nuance code to select for training
     float                 m_minPurity;                    ///< Minimum purity of the best slice to use event for training
     float                 m_minCompleteness;              ///< Minimum completeness of the best slice to use event for training
-    bool                  m_selectInputHits;              ///< Whether to select input hits
-    float                 m_maxPhotonPropagation;         ///< The maximum photon propagation length
 
     // Classification
     float                 m_minProbability;               ///< Minimum probability required to classify a slice as the neutrino
