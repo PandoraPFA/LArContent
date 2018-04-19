@@ -31,6 +31,8 @@ NeutrinoIdTool::NeutrinoIdTool() :
     m_nuance(-std::numeric_limits<int>::max()),
     m_minPurity(0.9f),
     m_minCompleteness(0.9f),
+    m_selectInputHits(true),
+    m_maxPhotonPropagation(2.5f),
     m_minProbability(0.0f),
     m_maxNeutrinos(1),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
@@ -86,21 +88,37 @@ void NeutrinoIdTool::GetSliceFeatures(const NeutrinoIdTool *const pTool, const S
 
 bool NeutrinoIdTool::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const
 {
-    unsigned int nHitsInBestSlice(0), nNuHitsInBestSlice(0), nuNHitsTotal(0);
+    unsigned int nHitsInBestSlice(0), nNuHitsInBestSlice(0);
+
+    // Get all hits in all slices to find true number of mc hits
+    const CaloHitList *pAllReconstructedCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pAllReconstructedCaloHitList));
+
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pMCParticleList));
+
+    // Obtain map: [mc particle -> primary mc particle]
+    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+
+    // Remove non-reconstructable hits, e.g. those downstream of a neutron
+    CaloHitList reconstructableCaloHitList;
+    LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList, m_selectInputHits, m_maxPhotonPropagation);
+
+    const int nuNHitsTotal(this->CountNeutrinoInducedHits(reconstructableCaloHitList));
 
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
         CaloHitList reconstructedHits;
-        this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedHits);
+        this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedHits, reconstructableCaloHitList);
 
         for (const ParticleFlowObject *const pNeutrino : nuSliceHypotheses.at(sliceIndex))
         {
             const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
-            this->Collect2DHits(nuFinalStates, reconstructedHits);
+            this->Collect2DHits(nuFinalStates, reconstructedHits, reconstructableCaloHitList);
         }
 
         const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedHits));
-        nuNHitsTotal += nNuHits;
 
         if (nNuHits > nNuHitsInBestSlice)
         {
@@ -129,7 +147,7 @@ bool NeutrinoIdTool::PassesQualityCuts(const Algorithm *const pAlgorithm, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &hitList) const
+void NeutrinoIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &hitList, CaloHitList &reconstructableCaloHitList) const
 {
     CaloHitList collectedHits;
     LArPfoHelper::GetCaloHits(pfos, TPC_VIEW_U, collectedHits);
@@ -140,6 +158,9 @@ void NeutrinoIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &hitList) co
     {
         // ATTN hits collected from Pfos are copies of hits passed from master instance, we need to access their parent to use MC info
         const CaloHit *pParentCaloHit(static_cast<const CaloHit *>(pCaloHit->GetParentAddress()));
+
+        if (std::find(reconstructableCaloHitList.begin(), reconstructableCaloHitList.end(), pParentCaloHit) == reconstructableCaloHitList.end())
+            continue;
 
         // Ensure no hits have been double counted
         if (std::find(hitList.begin(), hitList.end(), pParentCaloHit) == hitList.end())
@@ -166,6 +187,8 @@ unsigned int NeutrinoIdTool::CountNeutrinoInducedHits(const CaloHitList &hitList
 
     return nNuHits;
 }
+
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -487,6 +510,12 @@ StatusCode NeutrinoIdTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinimumCompleteness", m_minCompleteness));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectInputHits", m_selectInputHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxPhotonPropagation", m_maxPhotonPropagation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectNuanceCode", m_selectNuanceCode));
