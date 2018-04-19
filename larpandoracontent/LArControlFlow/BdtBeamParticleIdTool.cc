@@ -25,8 +25,6 @@ BdtBeamParticleIdTool::BdtBeamParticleIdTool() :
     m_trainingOutputFile(""),
     m_minPurity(0.8f),
     m_minCompleteness(0.8f),
-    m_selectInputHits(true),
-    m_maxPhotonPropagation(2.5f),
     m_adaBoostDecisionTree(AdaBoostDecisionTree()),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_maxNeutrinos(std::numeric_limits<int>::max()),
@@ -42,8 +40,6 @@ BdtBeamParticleIdTool::BdtBeamParticleIdTool(const BdtBeamParticleIdTool &rhs) :
     m_trainingOutputFile(rhs.m_trainingOutputFile),
     m_minPurity(rhs.m_minPurity),
     m_minCompleteness(rhs.m_minCompleteness),
-    m_selectInputHits(rhs.m_selectInputHits),
-    m_maxPhotonPropagation(rhs.m_maxPhotonPropagation),
     m_adaBoostDecisionTree(rhs.m_adaBoostDecisionTree),
     m_filePathEnvironmentVariable(rhs.m_filePathEnvironmentVariable),
     m_maxNeutrinos(rhs.m_maxNeutrinos),
@@ -62,8 +58,6 @@ BdtBeamParticleIdTool &BdtBeamParticleIdTool::operator=(const BdtBeamParticleIdT
         m_trainingOutputFile = rhs.m_trainingOutputFile;
         m_minPurity = rhs.m_minPurity;
         m_minCompleteness = rhs.m_minCompleteness;
-        m_selectInputHits = rhs.m_selectInputHits;
-        m_maxPhotonPropagation = rhs.m_maxPhotonPropagation;
         m_adaBoostDecisionTree = rhs.m_adaBoostDecisionTree;
         m_filePathEnvironmentVariable = rhs.m_filePathEnvironmentVariable;
         m_maxNeutrinos = rhs.m_maxNeutrinos;
@@ -193,7 +187,8 @@ void BdtBeamParticleIdTool::GetBestMCSliceIndicies(const pandora::Algorithm *con
 
     // Remove non-reconstructable hits, e.g. those downstream of a neutron
     CaloHitList reconstructableCaloHitList;
-    LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList, m_selectInputHits, m_maxPhotonPropagation);
+    LArMCParticleHelper::PrimaryParameters parameters; 
+    LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
 
     MCParticleToIntMap mcParticleToReconstructableHitsMap;
     this->PopulateMCParticleToHitsMap(mcParticleToReconstructableHitsMap, reconstructableCaloHitList);
@@ -689,12 +684,6 @@ StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinimumCompleteness", m_minCompleteness));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectInputHits", m_selectInputHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPhotonPropagation", m_maxPhotonPropagation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
