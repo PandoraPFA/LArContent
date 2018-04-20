@@ -18,17 +18,29 @@ namespace lar_content
 
 void LArPcaHelper::RunPca(const CaloHitList &caloHitList, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
-    CartesianPointVector pointVector;
+    CartesianPointDoublePairVector cartesianPointDoublePairVector;
 
     for (const CaloHit *const pCaloHit : caloHitList)
-        pointVector.push_back(pCaloHit->GetPositionVector());
+        cartesianPointDoublePairVector.push_back(std::make_pair(pCaloHit->GetPositionVector(), 1.0));
 
-    return LArPcaHelper::RunPca(pointVector, centroid, outputEigenValues, outputEigenVectors);
+    return LArPcaHelper::RunPca(cartesianPointDoublePairVector, centroid, outputEigenValues, outputEigenVectors);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
+{
+    CartesianPointDoublePairVector cartesianPointDoublePairVector;
+
+    for (const CartesianVector &point : pointVector)
+        cartesianPointDoublePairVector.push_back(std::make_pair(point, 1.0));
+
+    return LArPcaHelper::RunPca(cartesianPointDoublePairVector, centroid, outputEigenValues, outputEigenVectors);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
     // The steps are:
     // 1) do a mean normalization of the input vec points
@@ -45,8 +57,9 @@ void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVect
 
     double meanPosition[3] = {0., 0., 0.};
 
-    for (const CartesianVector &point : pointVector)
+    for (const auto &iter : pointVector)
     {
+        const CartesianVector &point(iter.first);
         meanPosition[0] += point.GetX();
         meanPosition[1] += point.GetY();
         meanPosition[2] += point.GetZ();
@@ -67,9 +80,10 @@ void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVect
     double zi2(0.);
     double weightSum(0.);
 
-    for (const CartesianVector &point : pointVector)
+    for (const auto &iter : pointVector)
     {
-        const double weight(1.);
+        const CartesianVector &point(iter.first);
+        const double weight(iter.second);
         const double x((point.GetX() - meanPosition[0]) * weight);
         const double y((point.GetY() - meanPosition[1]) * weight);
         const double z((point.GetZ() - meanPosition[2]) * weight);
