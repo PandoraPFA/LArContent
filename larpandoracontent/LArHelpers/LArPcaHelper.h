@@ -20,7 +20,8 @@ class LArPcaHelper
 public:
     typedef pandora::CartesianVector EigenValues;
     typedef std::vector<pandora::CartesianVector> EigenVectors;
-    typedef std::vector<std::pair<const pandora::CartesianVector, double> > CartesianPointDoublePairVector;
+    typedef std::pair<const pandora::CartesianVector, double> WeightedPoint;
+    typedef std::vector<WeightedPoint> WeightedPointVector;
 
     /**
      *  @brief  Run principal component analysis using input calo hits (TPC_VIEW_U,V,W or TPC_3D; all treated as 3D points)
@@ -41,7 +42,7 @@ public:
      *  @param  outputEigenValues to receive the eigen values
      *  @param  outputEigenVectors to receive the eigen vectors
      */
-    static void RunPca(const CartesianPointDoublePairVector &pointVector, pandora::CartesianVector &centroid, EigenValues &outputEigenValues, 
+    static void RunPca(const WeightedPointVector &pointVector, pandora::CartesianVector &centroid, EigenValues &outputEigenValues,
         EigenVectors &outputEigenVectors);
 };
 

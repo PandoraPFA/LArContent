@@ -14,13 +14,13 @@ namespace lar_content
 {
 
 template <>
-const CartesianVector LArObjectHelper::TypeAdaptor::GetPosition(const CartesianVector &t)
+CartesianVector LArObjectHelper::TypeAdaptor::GetPosition(const CartesianVector &t)
 {
     return t;
 }
 
 template <>
-const CartesianVector LArObjectHelper::TypeAdaptor::GetPosition(const CaloHit *const &pT)
+CartesianVector LArObjectHelper::TypeAdaptor::GetPosition(const CaloHit *const &pT)
 {
     return pT->GetPositionVector();
 }

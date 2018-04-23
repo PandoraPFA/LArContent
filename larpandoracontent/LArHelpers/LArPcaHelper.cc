@@ -10,6 +10,7 @@
 #include "larpandoracontent/LArHelpers/LArObjectHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
+#include <array>
 #include <Eigen/Dense>
 
 using namespace pandora;
@@ -20,17 +21,17 @@ namespace lar_content
 template <typename T>
 void LArPcaHelper::RunPca(const T &t, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
-    CartesianPointDoublePairVector cartesianPointDoublePairVector;
+    WeightedPointVector weightedPointVector;
 
     for (const auto &iter : t)
-        cartesianPointDoublePairVector.push_back(std::make_pair(LArObjectHelper::TypeAdaptor::GetPosition(iter), 1.0));
+        weightedPointVector.push_back(std::make_pair(LArObjectHelper::TypeAdaptor::GetPosition(iter), 1.0));
 
-    return LArPcaHelper::RunPca(cartesianPointDoublePairVector, centroid, outputEigenValues, outputEigenVectors);
+    return LArPcaHelper::RunPca(weightedPointVector, centroid, outputEigenValues, outputEigenVectors);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
+void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
     // The steps are:
     // 1) do a mean normalization of the input vec points
@@ -45,21 +46,36 @@ void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, Car
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
-    double meanPosition[3] = {0., 0., 0.};
+    std::array<double,3> meanPosition = {0.,0.,0.};
+    double sumWeight(0.);
 
-    for (const auto &iter : pointVector)
+    for (const WeightedPoint &weightedPoint : pointVector)
     {
-        const CartesianVector &point(iter.first);
-        meanPosition[0] += point.GetX();
-        meanPosition[1] += point.GetY();
-        meanPosition[2] += point.GetZ();
+        const CartesianVector &point(weightedPoint.first);
+        const double weight(weightedPoint.second);
+
+        if (weight < 0.)
+        {
+            std::cout << "LArPcaHelper::RunPca - negative weight found" << std::endl;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+        }
+
+        meanPosition.at(0) += point.GetX() * weight;
+        meanPosition.at(1) += point.GetY() * weight;
+        meanPosition.at(2) += point.GetZ() * weight;
+        sumWeight += weight;
     }
 
-    const double nThreeDHitsAsDouble(static_cast<double>(pointVector.size()));
-    meanPosition[0] /= nThreeDHitsAsDouble;
-    meanPosition[1] /= nThreeDHitsAsDouble;
-    meanPosition[2] /= nThreeDHitsAsDouble;
-    centroid = CartesianVector(meanPosition[0], meanPosition[1], meanPosition[2]);
+    if (std::fabs(sumWeight) < std::numeric_limits<double>::epsilon())
+    {
+        std::cout << "LArPcaHelper::RunPca - sum of weights is zero" << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    }
+
+    meanPosition.at(0) /= sumWeight;
+    meanPosition.at(1) /= sumWeight;
+    meanPosition.at(2) /= sumWeight;
+    centroid = CartesianVector(meanPosition.at(0), meanPosition.at(1), meanPosition.at(2));
 
     // Define elements of our covariance matrix
     double xi2(0.);
@@ -68,15 +84,15 @@ void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, Car
     double yi2(0.);
     double yizi(0.);
     double zi2(0.);
-    double weightSum(0.);
+    double sumWeightSquared(0.);
 
-    for (const auto &iter : pointVector)
+    for (const WeightedPoint &weightedPoint : pointVector)
     {
-        const CartesianVector &point(iter.first);
-        const double weight(iter.second);
-        const double x((point.GetX() - meanPosition[0]) * weight);
-        const double y((point.GetY() - meanPosition[1]) * weight);
-        const double z((point.GetZ() - meanPosition[2]) * weight);
+        const CartesianVector &point(weightedPoint.first);
+        const double weight(weightedPoint.second);
+        const double x((point.GetX() - meanPosition.at(0)) * weight);
+        const double y((point.GetY() - meanPosition.at(1)) * weight);
+        const double z((point.GetZ() - meanPosition.at(2)) * weight);
 
         xi2  += x * x;
         xiyi += x * y;
@@ -84,7 +100,7 @@ void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, Car
         yi2  += y * y;
         yizi += y * z;
         zi2  += z * z;
-        weightSum += weight * weight;
+        sumWeightSquared += weight * weight;
     }
 
     // Using Eigen package
@@ -94,13 +110,13 @@ void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, Car
            xiyi,  yi2, yizi,
            xizi, yizi,  zi2;
 
-    if (std::fabs(weightSum) < std::numeric_limits<double>::epsilon())
+    if (std::fabs(sumWeightSquared) < std::numeric_limits<double>::epsilon())
     {
-        std::cout << "LArPcaHelper::RunPca - weight of three dimensional hits = " << weightSum << std::endl;
+        std::cout << "LArPcaHelper::RunPca - weight of three dimensional hits = " << sumWeightSquared << std::endl;
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
-    sig *= 1. / weightSum;
+    sig *= 1. / sumWeightSquared;
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigenMat(sig);
 
@@ -114,7 +130,7 @@ void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, Car
     typedef std::vector<EigenValColPair> EigenValColVector;
 
     EigenValColVector eigenValColVector;
-    const auto &resultEigenMat(eigenMat.eigenvalues());//------------------------------------------------------------------------------------------------------------------------------------------
+    const auto &resultEigenMat(eigenMat.eigenvalues());
     eigenValColVector.emplace_back(resultEigenMat(0), 0);
     eigenValColVector.emplace_back(resultEigenMat(1), 1);
     eigenValColVector.emplace_back(resultEigenMat(2), 2);
