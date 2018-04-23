@@ -17,8 +17,6 @@
 namespace lar_content
 {
 
-class AdaBoostDecisionTree;
-
 /**
  *  @brief  BdtBeamParticleIdTool class
  */
@@ -35,19 +33,19 @@ public:
      *
      *  @param  rhs the BdtBeamParticleIdTool to copy
      */
-    BdtBeamParticleIdTool(const BdtBeamParticleIdTool &rhs);
+    BdtBeamParticleIdTool(const BdtBeamParticleIdTool &rhs) = default;
 
     /**
      *  @brief  Assignment operator
      *
      *  @param  rhs the BdtBeamParticleIdTool to assign
      */
-    BdtBeamParticleIdTool &operator=(const BdtBeamParticleIdTool &rhs);
+    BdtBeamParticleIdTool &operator=(const BdtBeamParticleIdTool &rhs) = default;
 
     /**
      *  @brief  Destructor
      */
-    ~BdtBeamParticleIdTool();
+    ~BdtBeamParticleIdTool() = default;
 
     void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &beamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
@@ -67,12 +65,12 @@ private:
         Plane(const pandora::CartesianVector &normal, const pandora::CartesianVector &point);
 
         /**
-         *  @brief  Return the intersection between the plane and a line 
+         *  @brief  Return the intersection between the plane and a line
          *
-         *  @param  a0 point on the line
-         *  @param  a vector pointing along the line
+         *  @param  point a point on the line
+         *  @param  direction vector pointing along the line
          */
-        pandora::CartesianVector GetLineIntersection(const pandora::CartesianVector &a0, const pandora::CartesianVector &a) const;
+        pandora::CartesianVector GetLineIntersection(const pandora::CartesianVector &point, const pandora::CartesianVector &direction) const;
 
     private:
         pandora::CartesianVector      m_unitNormal;                         ///< Unit normal to plane
@@ -83,100 +81,100 @@ private:
     typedef std::vector<Plane> PlaneVector;
 
     /**
-     *  @brief  SliceFeatureParamters class
-     */ 
-    class SliceFeatureParamters
+     *  @brief  SliceFeatureParameters class
+     */
+    class SliceFeatureParameters
     {
     public:
         /**
          *  @brief  Constructor
          */
-        SliceFeatureParamters();
+        SliceFeatureParameters();
 
         /**
-         *  @brief  Set TPC geometry information
+         *  @brief  Set LArTPC geometry information
          *
-         *  @param  tpcMinX the global TPC volume minimum x extent
-         *  @param  tpcMaxX the global TPC volume maximum x extent
-         *  @param  tpcMinY the global TPC volume minimum y extent
-         *  @param  tpcMaxY the global TPC volume maximum y extent
-         *  @param  tpcMinZ the global TPC volume minimum z extent
-         *  @param  tpcMaxZ the global TPC volume maximum z extent
+         *  @param  larTPCMinX the global LArTPC volume minimum x extent
+         *  @param  larTPCMaxX the global LArTPC volume maximum x extent
+         *  @param  larTPCMinY the global LArTPC volume minimum y extent
+         *  @param  larTPCMaxY the global LArTPC volume maximum y extent
+         *  @param  larTPCMinZ the global LArTPC volume minimum z extent
+         *  @param  larTPCMaxZ the global LArTPC volume maximum z extent
          */
-       void SetTPCGeometryInformation(float &tpcMinX, float &tpcMaxX, float &tpcMinY, float &tpcMaxY, float &tpcMinZ, float &tpcMaxZ);
+       void Initialize(const float larTPCMinX, const float larTPCMaxX, const float larTPCMinY, const float larTPCMaxY, const float larTPCMinZ, const float larTPCMaxZ);
 
        /**
-        *  @brief  Set m_beamTPCIntersection
+        *  @brief  Set m_beamLArTPCIntersection
         *
-        *  @param  beamTPCIntersection intersection of beam and TPC
+        *  @param  beamLArTPCIntersection intersection of beam and TPC
         */
-       void SetBeamTPCIntersection(pandora::CartesianVector &beamTPCIntersection);
+       void SetBeamLArTPCIntersection(const pandora::CartesianVector &beamLArTPCIntersection);
 
        /**
         *  @brief  Set m_beamDirection
         *
         *  @param  beamDirection direction of beam
         */
-       void SetBeamDirection(pandora::CartesianVector &beamDirection);
+       void SetBeamDirection(const pandora::CartesianVector &beamDirection);
 
        /**
         *  @brief  Set m_selectedFraction
         *
         *  @param  selectedFraction fraction of hits to use in 3D cluster fits
         */
-       void SetSelectedFraction(float &selectedFraction);
+       void SetSelectedFraction(const float selectedFraction);
 
        /**
         *  @brief  Set m_nSelectedHits
         *
         *  @param  nSelectedHits minimum number of hits to use in 3D cluster fits
         */
-       void SetNSelectedHits(unsigned int &nSelectedHits);
+       void SetNSelectedHits(const unsigned int nSelectedHits);
 
        /**
-        *  @brief  Get m_tpcMinX
+        *  @brief  Get m_larTPCMinX
         */
-       float GetTPCMinX() const;
+       float GetLArTPCMinX() const;
 
        /**
-        *  @brief  Get m_tpcMaxX
+        *  @brief  Get m_larTPCMaxX
         */
-       float GetTPCMaxX() const;
+       float GetLArTPCMaxX() const;
 
        /**
-        *  @brief  Get m_tpcMinY
+        *  @brief  Get m_larTPCMinY
         */
-       float GetTPCMinY() const;
+       float GetLArTPCMinY() const;
 
        /**
-        *  @brief  Get m_tpcMaxY
+        *  @brief  Get m_larTPCMaxY
         */
-       float GetTPCMaxY() const;
+       float GetLArTPCMaxY() const;
 
        /**
-        *  @brief  Get m_tpcMinZ
+        *  @brief  Get m_larTPCMinZ
         */
-       float GetTPCMinZ() const;
+       float GetLArTPCMinZ() const;
 
        /**
-        *  @brief  Get m_tpcMaxZ
+        *  @brief  Get m_larTPCMaxZ
         */
-       float GetTPCMaxZ() const;
+       float GetLArTPCMaxZ() const;
 
        /**
         *  @brief  Get vector of planes
         */
-       PlaneVector GetPlanes() const;
+       const PlaneVector &GetPlanes() const;
 
        /**
-        *  @brief  Get the beam TPC intersection 
+        *  @brief  Get the beam LArTPC intersection
         */
-       pandora::CartesianVector GetBeamTPCIntersection() const;
+       const pandora::CartesianVector &GetBeamLArTPCIntersection() const;
 
        /**
         *  @brief  Get the beam direction
         */
-       pandora::CartesianVector GetBeamDirection() const;
+       const pandora::CartesianVector &GetBeamDirection() const;
 
        /**
         *  @brief  Get m_selectedFraction
@@ -184,21 +182,21 @@ private:
        float GetSelectedFraction() const;
 
        /**
-        *  @brief  Set m_nSelectedHits
+        *  @brief  Get m_nSelectedHits
         *
         *  @param  nSelectedHits minimum number of hits to use in 3D cluster fits
         */
        unsigned int GetNSelectedHits() const;
 
     private:
-        float                       m_tpcMinX;                ///< Global TPC volume minimum x extent 
-        float                       m_tpcMaxX;                ///< Global TPC volume maximum x extent
-        float                       m_tpcMinY;                ///< Global TPC volume minimum y extent
-        float                       m_tpcMaxY;                ///< Global TPC volume maximum y extent
-        float                       m_tpcMinZ;                ///< Global TPC volume minimum z extent
-        float                       m_tpcMaxZ;                ///< Global TPC volume maximum z extent
-        PlaneVector                 m_tpcPlanes;              ///< Vector of all planes making up global TPC volume
-        pandora::CartesianVector    m_beamTPCIntersection;    ///< Intersection of beam and global TPC volume
+        float                       m_larTPCMinX;             ///< Global LArTPC volume minimum x extent
+        float                       m_larTPCMaxX;             ///< Global LArTPC volume maximum x extent
+        float                       m_larTPCMinY;             ///< Global LArTPC volume minimum y extent
+        float                       m_larTPCMaxY;             ///< Global LArTPC volume maximum y extent
+        float                       m_larTPCMinZ;             ///< Global LArTPC volume minimum z extent
+        float                       m_larTPCMaxZ;             ///< Global LArTPC volume maximum z extent
+        PlaneVector                 m_larTPCPlanes;           ///< Vector of all planes making up global LArTPC volume
+        pandora::CartesianVector    m_beamLArTPCIntersection; ///< Intersection of beam and global LArTPC volume
         pandora::CartesianVector    m_beamDirection;          ///< Beam direction
         float                       m_selectedFraction;       ///< Fraction of hits to use in 3D cluster fits
         unsigned int                m_nSelectedHits;          ///< Minimum number of hits to use in 3D cluster fits
@@ -207,7 +205,7 @@ private:
     /**
      *  @brief  Slice features class
      */
-    class SliceFeatures 
+    class SliceFeatures
     {
     public:
         /**
@@ -218,26 +216,26 @@ private:
          *  @param  pTool address of the tool using this class
          *  @param  geometryInfo geometry information block
          */
-         SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const BdtBeamParticleIdTool *const pTool, const SliceFeatureParamters *pSliceFeatureParamters);
+         SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const BdtBeamParticleIdTool *const pTool, const SliceFeatureParameters &sliceFeatureParameters);
 
         /**
          *  @brief  Copy constructor
          *
          *  @param  rhs the SliceFeatures to copy
          */
-        SliceFeatures(const SliceFeatures &rhs);
+        SliceFeatures(const SliceFeatures &rhs) = default;
 
         /**
          *  @brief  Assignment operator
          *
          *  @param  rhs the SliceFeatures to assign
          */
-        SliceFeatures &operator=(const SliceFeatures &rhs);
+        SliceFeatures &operator=(const SliceFeatures &rhs) = default;
 
         /**
          *  @brief  Destructor
          */
-        ~SliceFeatures();
+        ~SliceFeatures() = default;
 
         /**
          *  @brief  Check if all features were calculable
@@ -251,10 +249,10 @@ private:
          *
          *  @param  featuresVector empty feature vector to populate
          */
-        void GetFeatureVector(LArMvaHelper::MvaFeatureVector &featureVector) const;
-        
+        void FillFeatureVector(LArMvaHelper::MvaFeatureVector &featureVector) const;
+
         /**
-         *  @brief  Get the probability that this slice contains a beam particle 
+         *  @brief  Get the probability that this slice contains a beam particle
          *
          *  @param  adaBoostDecisionTree the adaptive boost decision tree used to calculate the probability
          *
@@ -270,40 +268,37 @@ private:
          *  @param  outputCaloHitList to receive the list of selected calo hits
          *  @param  closestHitToFaceDistance to receive the distance of closest hit to beam spot
          */
-        void GetSelectedCaloHits(const pandora::CaloHitList &inputCaloHitList, pandora::CaloHitList &outputCaloHitList,
+        void GetLeadingCaloHits(const pandora::CaloHitList &inputCaloHitList, pandora::CaloHitList &outputCaloHitList,
             double &closestHitToFaceDistance) const;
 
-        /** 
+        /**
          *  @brief  Find the intercepts of a line with the protoDUNE detector
          *
          *  @param  a0 a point on the line in question
          *  @param  majorAxis the direction of the line in question
-         *  @param  interceptOne to receive the first intersection between line and protoDUNE detector 
-         *  @param  interceptTwo to receive the second intersection between line and protoDUNE detector 
+         *  @param  interceptOne to receive the first intersection between line and protoDUNE detector
+         *  @param  interceptTwo to receive the second intersection between line and protoDUNE detector
          */
-        void GetTPCIntercepts(const pandora::CartesianVector &a0, const pandora::CartesianVector &majorAxis,
+        void GetLArTPCIntercepts(const pandora::CartesianVector &a0, const pandora::CartesianVector &majorAxis,
             pandora::CartesianVector &interceptOne, pandora::CartesianVector &interceptTwo) const;
 
         /**
-         *  @brief  Check if a given 3D spacepoint is inside the global TPC volume
+         *  @brief  Check if a given 3D spacepoint is inside the global LArTPC volume
          *
          *  @param  spacePoint
          */
         bool IsContained(const pandora::CartesianVector &spacePoint) const;
 
         bool                            m_isAvailable;               ///< Is the feature vector available
-        const SliceFeatureParamters    *m_pSliceFeatureParamters;    ///< Geometry information block
+        const SliceFeatureParameters    m_sliceFeatureParameters;    ///< Geometry information block
         LArMvaHelper::MvaFeatureVector  m_featureVector;             ///< The MVA feature vector
         const BdtBeamParticleIdTool    *m_pTool;                     ///< The tool that owns this
     };
 
     typedef std::vector<SliceFeatures> SliceFeaturesVector;
     typedef std::pair<unsigned int, float> UintFloatPair;
-    typedef std::map<const pandora::MCParticle*, int> MCParticleToIntMap;
+    typedef std::unordered_map<const pandora::MCParticle*, int> MCParticleToIntMap;
 
-    /**
-     *  @brief  Initialize TPC geometry 
-     */
     pandora::StatusCode Initialize();
 
     /**
@@ -338,9 +333,9 @@ private:
      *  @param  pAlgorithm address of the master algorithm
      *  @param  nuSliceHypotheses the input neutrino slice hypotheses
      *  @param  crSliceHypotheses the input cosmic slice hypotheses
-     *  @param  bestSliceIndicies vector of slice indicies passing quality cuts 
+     *  @param  bestSliceIndices vector of slice indices passing quality cuts
      */
-    void GetBestMCSliceIndicies(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::IntVector &bestSliceIndicies) const;
+    void GetBestMCSliceIndices(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::IntVector &bestSliceIndices) const;
 
     /**
      *  @brief  Fill mc particle to nHits map from calo hit list
@@ -354,10 +349,10 @@ private:
      *  @brief  Collect all 2D hits in a supplied list of Pfos and push them on to an existing hit list, check so not to double count
      *
      *  @param  pfos input list of pfos
-     *  @param  hitList output list of all 2d hits in the input pfos
-     *  @param  reconstructableHits to check if part of before adding
+     *  @param  caloHitList output list of all 2d hits in the input pfos
+     *  @param  reconstructableCaloHitSet to check if part of before adding
      */
-    void Collect2DHits(const pandora::PfoList &pfos, pandora::CaloHitList &hitList, const pandora::CaloHitList &reconstructableHits) const;
+    void Collect2DHits(const pandora::PfoList &pfos, pandora::CaloHitList &caloHitList, const pandora::CaloHitSet &reconstructableCaloHitSet) const;
 
     /**
      *  @brief  Determine if the event passes the selection cuts for training
@@ -365,7 +360,7 @@ private:
      *  @param  purity purity of best slice
      *  @param  completeness completeness of best slice
      *
-     *  @return does the evenr pass the quality cuts on purity and completeness 
+     *  @return does the evenr pass the quality cuts on purity and completeness
      */
     bool PassesQualityCuts(const float purity, const float completeness) const;
 
@@ -390,114 +385,121 @@ private:
     // Classification
     AdaBoostDecisionTree            m_adaBoostDecisionTree;                 ///< The adaptive boost decision tree
     std::string                     m_filePathEnvironmentVariable;          ///< The environment variable providing a list of paths to bdt files
-    unsigned int                    m_maxNeutrinos;                         ///< The maximum number of neutrinos to select in any one event 
+    unsigned int                    m_maxNeutrinos;                         ///< The maximum number of neutrinos to select in any one event
     float                           m_minAdaBDTScore;                       ///< Minimum score required to classify a slice as a beam particle
-    SliceFeatureParamters          *m_pSliceFeatureParamters;               ///< Geometry information block
+    SliceFeatureParameters          m_sliceFeatureParameters;               ///< Geometry information block
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void BdtBeamParticleIdTool::SliceFeatureParamters::SetBeamTPCIntersection(pandora::CartesianVector &beamTPCIntersection)
+inline void BdtBeamParticleIdTool::SliceFeatureParameters::SetBeamLArTPCIntersection(const pandora::CartesianVector &beamLArTPCIntersection)
 {
-    m_beamTPCIntersection = beamTPCIntersection;
+    m_beamLArTPCIntersection = beamLArTPCIntersection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void BdtBeamParticleIdTool::SliceFeatureParamters::SetBeamDirection(pandora::CartesianVector &beamDirection)
+inline void BdtBeamParticleIdTool::SliceFeatureParameters::SetBeamDirection(const pandora::CartesianVector &beamDirection)
 {
     m_beamDirection = beamDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void BdtBeamParticleIdTool::SliceFeatureParamters::SetSelectedFraction(float &selectedFraction)
+inline void BdtBeamParticleIdTool::SliceFeatureParameters::SetSelectedFraction(const float selectedFraction)
 {
     m_selectedFraction = selectedFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void BdtBeamParticleIdTool::SliceFeatureParamters::SetNSelectedHits(unsigned int &nSelectedHits)
+inline void BdtBeamParticleIdTool::SliceFeatureParameters::SetNSelectedHits(const unsigned int nSelectedHits)
 {
     m_nSelectedHits = nSelectedHits;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float BdtBeamParticleIdTool::SliceFeatureParamters::GetTPCMinX() const 
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLArTPCMinX() const
 {
-    return m_tpcMinX;
+    return m_larTPCMinX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float BdtBeamParticleIdTool::SliceFeatureParamters::GetTPCMaxX() const 
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLArTPCMaxX() const
 {
-    return m_tpcMaxX;
+    return m_larTPCMaxX;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float BdtBeamParticleIdTool::SliceFeatureParamters::GetTPCMinY() const 
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLArTPCMinY() const
 {
-    return m_tpcMinY;
+    return m_larTPCMinY;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float BdtBeamParticleIdTool::SliceFeatureParamters::GetTPCMaxY() const 
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLArTPCMaxY() const
 {
-    return m_tpcMaxY;
+    return m_larTPCMaxY;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float BdtBeamParticleIdTool::SliceFeatureParamters::GetTPCMinZ() const 
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLArTPCMinZ() const
 {
-    return m_tpcMinZ;
+    return m_larTPCMinZ;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float BdtBeamParticleIdTool::SliceFeatureParamters::GetTPCMaxZ() const 
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLArTPCMaxZ() const
 {
-    return m_tpcMaxZ;
+    return m_larTPCMaxZ;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline BdtBeamParticleIdTool::PlaneVector BdtBeamParticleIdTool::SliceFeatureParamters::GetPlanes() const
+inline const BdtBeamParticleIdTool::PlaneVector &BdtBeamParticleIdTool::SliceFeatureParameters::GetPlanes() const
 {
-    return m_tpcPlanes;
+    return m_larTPCPlanes;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector BdtBeamParticleIdTool::SliceFeatureParamters::GetBeamTPCIntersection() const
+inline const pandora::CartesianVector &BdtBeamParticleIdTool::SliceFeatureParameters::GetBeamLArTPCIntersection() const
 {
-    return m_beamTPCIntersection;
+    return m_beamLArTPCIntersection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector BdtBeamParticleIdTool::SliceFeatureParamters::GetBeamDirection() const
+inline const pandora::CartesianVector &BdtBeamParticleIdTool::SliceFeatureParameters::GetBeamDirection() const
 {
     return m_beamDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float BdtBeamParticleIdTool::SliceFeatureParamters::GetSelectedFraction() const
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetSelectedFraction() const
 {
     return m_selectedFraction;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline unsigned int BdtBeamParticleIdTool::SliceFeatureParamters::GetNSelectedHits() const
+inline unsigned int BdtBeamParticleIdTool::SliceFeatureParameters::GetNSelectedHits() const
 {
     return m_nSelectedHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool BdtBeamParticleIdTool::SliceFeatures::IsFeatureVectorAvailable() const
+{
+    return m_isAvailable;
 }
 
 } // namespace lar_content
