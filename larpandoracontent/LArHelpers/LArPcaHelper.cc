@@ -7,6 +7,7 @@
  */
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArObjectHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include <Eigen/Dense>
@@ -16,24 +17,13 @@ using namespace pandora;
 namespace lar_content
 {
 
-void LArPcaHelper::RunPca(const CaloHitList &caloHitList, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
+template <typename T>
+void LArPcaHelper::RunPca(const T &t, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
     CartesianPointDoublePairVector cartesianPointDoublePairVector;
 
-    for (const CaloHit *const pCaloHit : caloHitList)
-        cartesianPointDoublePairVector.push_back(std::make_pair(pCaloHit->GetPositionVector(), 1.0));
-
-    return LArPcaHelper::RunPca(cartesianPointDoublePairVector, centroid, outputEigenValues, outputEigenVectors);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
-{
-    CartesianPointDoublePairVector cartesianPointDoublePairVector;
-
-    for (const CartesianVector &point : pointVector)
-        cartesianPointDoublePairVector.push_back(std::make_pair(point, 1.0));
+    for (const auto &iter : t)
+        cartesianPointDoublePairVector.push_back(std::make_pair(LArObjectHelper::TypeAdaptor::GetPosition(iter), 1.0));
 
     return LArPcaHelper::RunPca(cartesianPointDoublePairVector, centroid, outputEigenValues, outputEigenVectors);
 }
@@ -124,7 +114,7 @@ void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, Car
     typedef std::vector<EigenValColPair> EigenValColVector;
 
     EigenValColVector eigenValColVector;
-    const auto &resultEigenMat(eigenMat.eigenvalues());
+    const auto &resultEigenMat(eigenMat.eigenvalues());//------------------------------------------------------------------------------------------------------------------------------------------
     eigenValColVector.emplace_back(resultEigenMat(0), 0);
     eigenValColVector.emplace_back(resultEigenMat(1), 1);
     eigenValColVector.emplace_back(resultEigenMat(2), 2);
@@ -140,5 +130,10 @@ void LArPcaHelper::RunPca(const CartesianPointDoublePairVector &pointVector, Car
     for (const EigenValColPair &pair : eigenValColVector)
         outputEigenVectors.emplace_back(eigenVecs(0, pair.second), eigenVecs(1, pair.second), eigenVecs(2, pair.second));
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template void LArPcaHelper::RunPca(const CartesianPointVector &cartesianPointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors);
+template void LArPcaHelper::RunPca(const CaloHitList &caloHitList, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors);
 
 } // namespace lar_content
