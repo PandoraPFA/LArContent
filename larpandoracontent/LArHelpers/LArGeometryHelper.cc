@@ -485,7 +485,7 @@ float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-double LArGeometryHelper::GetSigmaUVW(const Pandora &pandora, const double maxSigmaDiscrepancy) 
+float LArGeometryHelper::GetSigmaUVW(const Pandora &pandora, const float maxSigmaDiscrepancy) 
 {
     const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
 
@@ -496,7 +496,7 @@ double LArGeometryHelper::GetSigmaUVW(const Pandora &pandora, const double maxSi
     }
 
     const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
-    const double sigmaUVW(pFirstLArTPC->GetSigmaUVW());
+    const float sigmaUVW(pFirstLArTPC->GetSigmaUVW());
 
     for (const LArTPCMap::value_type &mapEntry : larTPCMap)
     {
