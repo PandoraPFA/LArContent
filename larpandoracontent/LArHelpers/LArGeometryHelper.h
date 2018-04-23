@@ -250,7 +250,7 @@ public:
      *  @param  pandora the associated pandora instance
      *  @param  maxSigmaDiscrepancy maximum allowed discrepancy between lar tpc sigmaUVW values
      */
-    static double GetSigmaUVW(const pandora::Pandora &pandora, const double maxSigmaDiscrepancy = 0.01);
+    static float GetSigmaUVW(const pandora::Pandora &pandora, const float maxSigmaDiscrepancy = 0.01);
 };
 
 } // namespace lar_content
