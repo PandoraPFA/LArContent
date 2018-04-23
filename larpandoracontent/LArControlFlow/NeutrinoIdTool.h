@@ -185,19 +185,19 @@ private:
      *  @brief  Collect all 2D hits in a supplied list of Pfos and push them on to an existing hit list, check so not to double count
      *
      *  @param  pfos input list of pfos
-     *  @param  hitList output list of all 2d hits in the input pfos
-     *  @param  reconstructableCaloHitList list of reconstructable calo hits
+     *  @param  reconstructedCaloHitList output list of all 2d hits in the input pfos
+     *  @param  reconstructableCaloHitSet set of reconstructable calo hits
      */
-    void Collect2DHits(const pandora::PfoList &pfos, pandora::CaloHitList &hitList, pandora::CaloHitList &reconstructableCaloHitList) const;
+    void Collect2DHits(const pandora::PfoList &pfos, pandora::CaloHitList &reconstructedCaloHitList, const pandora::CaloHitSet &reconstructableCaloHitSet) const;
 
     /**
      *  @brief  Count the number of neutrino induced hits in a given list using MC information
      *
-     *  @param  hitList input list of calo hits
+     *  @param  caloHitSet input list of calo hits
      *
      *  @return the number of neutrino induced hits in the input list
      */
-    unsigned int CountNeutrinoInducedHits(const pandora::CaloHitList &hitList) const;
+    unsigned int CountNeutrinoInducedHits(const pandora::CaloHitList &caloHitList) const;
 
     /**
      *  @brief  Use the current MCParticle list to get the nuance code of the neutrino in the event
