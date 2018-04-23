@@ -243,6 +243,14 @@ public:
      *  @param  hitType the hit type
      */
     static float CalculateGapDeltaZ(const pandora::Pandora &pandora, const float minZ, const float maxZ, const pandora::HitType hitType);
+
+    /**
+     *  @brief  Find the sigmaUVW value for the detector geometry
+     *
+     *  @param  pandora the associated pandora instance
+     *  @param  maxSigmaDiscrepancy maximum allowed discrepancy between lar tpc sigmaUVW values
+     */
+    static float GetSigmaUVW(const pandora::Pandora &pandora, const float maxSigmaDiscrepancy = 0.01);
 };
 
 } // namespace lar_content

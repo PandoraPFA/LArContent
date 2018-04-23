@@ -138,7 +138,7 @@ void LArGeometryHelper::MergeTwoPositions(const Pandora &pandora, const HitType 
     const float Z3(LArGeometryHelper::MergeTwoPositions(pandora, view1, view2, Z1, Z2));
 
     position3.SetValues(X3, 0.f, Z3);
-    const float sigmaUVW(pandora.GetGeometry()->GetLArTPC().GetSigmaUVW());
+    const float sigmaUVW(LArGeometryHelper::GetSigmaUVW(pandora));
     chiSquared = ((X3 - position1.GetX()) * (X3 - position1.GetX()) + (X3 - position2.GetX()) * (X3 - position2.GetX())) / (sigmaUVW * sigmaUVW);
 }
 
@@ -252,7 +252,7 @@ void LArGeometryHelper::MergeThreePositions(const Pandora &pandora, const Cartes
     outputV.SetValues(aveX, 0.f, aveV);
     outputW.SetValues(aveX, 0.f, aveW);
 
-    const float sigmaUVW(pandora.GetGeometry()->GetLArTPC().GetSigmaUVW());
+    const float sigmaUVW(LArGeometryHelper::GetSigmaUVW(pandora));
     chiSquared = ((outputU.GetX() - positionU.GetX()) * (outputU.GetX() - positionU.GetX()) +
         (outputV.GetX() - positionV.GetX()) * (outputV.GetX() - positionV.GetX()) +
         (outputW.GetX() - positionW.GetX()) * (outputW.GetX() - positionW.GetX()) +
@@ -481,6 +481,35 @@ float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float 
     }
 
     return gapDeltaZ;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArGeometryHelper::GetSigmaUVW(const Pandora &pandora, const float maxSigmaDiscrepancy) 
+{
+    const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
+
+    if (larTPCMap.empty())
+    {
+        std::cout << "LArGeometryHelper::GetSigmaUVW - LArTPC description not registered with Pandora as required " << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    }
+
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+    const float sigmaUVW(pFirstLArTPC->GetSigmaUVW());
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+
+        if (std::fabs(sigmaUVW - pLArTPC->GetSigmaUVW()) > maxSigmaDiscrepancy)
+        {
+            std::cout << "LArGeometryHelper::GetSigmaUVW - Plugin does not support provided LArTPC configurations " << std::endl;
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        }
+    }
+
+    return sigmaUVW;
 }
 
 } // namespace lar_content
