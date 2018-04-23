@@ -347,33 +347,6 @@ private:
     template <typename T>
     static void SlidingFitTrajectoryImpl(const T *const pT, const pandora::CartesianVector &vertexPosition, const unsigned int layerWindow,
         const float layerPitch, LArTrackStateVector &trackStateVector, pandora::IntVector *const pIndexVector = nullptr);
-
-    /**
-     *  @brief  TypeAdaptor
-     */
-    class TypeAdaptor
-    {
-    public:
-        /**
-         *  @brief  Get the associated position
-         *
-         *  @param  t the input object
-         *
-         *  @return the associated position
-         */
-        template<typename T>
-        static const pandora::CartesianVector GetPosition(const T &t);
-
-        /**
-         *  @brief  Get the associated calo hit, or nullptr if none
-         *
-         *  @param  t the input object
-         *
-         *  @return the associated calo hit, or nullptr if none
-         */
-        template<typename T>
-        static const pandora::CaloHit *GetCaloHit(const T &t);
-    };
 };
 
 } // namespace lar_content
