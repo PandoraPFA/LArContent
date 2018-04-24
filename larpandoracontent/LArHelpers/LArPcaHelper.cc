@@ -23,8 +23,8 @@ void LArPcaHelper::RunPca(const T &t, CartesianVector &centroid, EigenValues &ou
 {
     WeightedPointVector weightedPointVector;
 
-    for (const auto &iter : t)
-        weightedPointVector.push_back(std::make_pair(LArObjectHelper::TypeAdaptor::GetPosition(iter), 1.0));
+    for (const auto &point : t)
+        weightedPointVector.push_back(std::make_pair(LArObjectHelper::TypeAdaptor::GetPosition(point), 1.0));
 
     return LArPcaHelper::RunPca(weightedPointVector, centroid, outputEigenValues, outputEigenVectors);
 }
@@ -46,7 +46,7 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
-    std::array<double,3> meanPosition = {0.,0.,0.};
+    double meanPosition[3] = {0.,0.,0.};
     double sumWeight(0.);
 
     for (const WeightedPoint &weightedPoint : pointVector)
@@ -60,9 +60,9 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
             throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
 
-        meanPosition.at(0) += point.GetX() * weight;
-        meanPosition.at(1) += point.GetY() * weight;
-        meanPosition.at(2) += point.GetZ() * weight;
+        meanPosition[0] += point.GetX() * weight;
+        meanPosition[1] += point.GetY() * weight;
+        meanPosition[2] += point.GetZ() * weight;
         sumWeight += weight;
     }
 
@@ -72,10 +72,10 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
-    meanPosition.at(0) /= sumWeight;
-    meanPosition.at(1) /= sumWeight;
-    meanPosition.at(2) /= sumWeight;
-    centroid = CartesianVector(meanPosition.at(0), meanPosition.at(1), meanPosition.at(2));
+    meanPosition[0] /= sumWeight;
+    meanPosition[1] /= sumWeight;
+    meanPosition[2] /= sumWeight;
+    centroid = CartesianVector(meanPosition[0], meanPosition[1], meanPosition[2]);
 
     // Define elements of our covariance matrix
     double xi2(0.);
@@ -84,23 +84,21 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
     double yi2(0.);
     double yizi(0.);
     double zi2(0.);
-    double sumWeightSquared(0.);
 
     for (const WeightedPoint &weightedPoint : pointVector)
     {
         const CartesianVector &point(weightedPoint.first);
         const double weight(weightedPoint.second);
-        const double x((point.GetX() - meanPosition.at(0)) * weight);
-        const double y((point.GetY() - meanPosition.at(1)) * weight);
-        const double z((point.GetZ() - meanPosition.at(2)) * weight);
+        const double x((point.GetX() - meanPosition[0]));
+        const double y((point.GetY() - meanPosition[1]));
+        const double z((point.GetZ() - meanPosition[2]));
 
-        xi2  += x * x;
-        xiyi += x * y;
-        xizi += x * z;
-        yi2  += y * y;
-        yizi += y * z;
-        zi2  += z * z;
-        sumWeightSquared += weight * weight;
+        xi2  += x * x * weight;
+        xiyi += x * y * weight;
+        xizi += x * z * weight;
+        yi2  += y * y * weight;
+        yizi += y * z * weight;
+        zi2  += z * z * weight;
     }
 
     // Using Eigen package
@@ -110,13 +108,7 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
            xiyi,  yi2, yizi,
            xizi, yizi,  zi2;
 
-    if (std::fabs(sumWeightSquared) < std::numeric_limits<double>::epsilon())
-    {
-        std::cout << "LArPcaHelper::RunPca - weight of three dimensional hits = " << sumWeightSquared << std::endl;
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    }
-
-    sig *= 1. / sumWeightSquared;
+    sig *= 1. / sumWeight;
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigenMat(sig);
 
