@@ -23,6 +23,7 @@ namespace lar_content
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
     m_useTrueNeutrinosOnly(false),
+    m_testBeamMode(false),
     m_selectInputHits(true),
     m_minHitSharingFraction(0.9f),
     m_maxPhotonPropagation(2.5f),
@@ -122,9 +123,7 @@ void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pM
         PfoList finalStatePfos;
         for (const ParticleFlowObject *const pPfo : allConnectedPfos)
         {
-// First change used in metric creation
-//            if (LArPfoHelper::IsFinalState(pPfo))
-            if (pPfo->GetParentPfoList().empty())
+            if ((!m_testBeamMode && LArPfoHelper::IsFinalState(pPfo)) || (m_testBeamMode && pPfo->GetParentPfoList().empty()))
                 finalStatePfos.push_back(pPfo);
         }
 
@@ -292,11 +291,17 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 recoNeutrinos.insert(pRecoNeutrino);
             }
 
-            bool isNeutrino(LArPfoHelper::IsNeutrino(pfoToSharedHits.first));
-            //if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
-            if (isNeutrino && isGoodMatch) ++nPrimaryNuMatches;
-            //if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
-            if (!isNeutrino && isGoodMatch) ++nPrimaryCRMatches;
+            if (!m_testBeamMode)
+            {
+                if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
+                if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
+            }
+            else
+            {
+                bool isTestBeam(LArPfoHelper::IsTestBeam(pfoToSharedHits.first));
+                if (isNeutrino && isGoodMatch) ++nPrimaryNuMatches;
+                if (!isNeutrino && isGoodMatch) ++nPrimaryCRMatches;
+            }
 
             targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "")
                      << "MatchedPfoId " << pfoId
@@ -607,6 +612,9 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseTrueNeutrinosOnly", m_useTrueNeutrinosOnly));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TestBeamMode", m_testBeamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectInputHits", m_selectInputHits));

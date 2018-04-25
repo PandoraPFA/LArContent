@@ -220,6 +220,7 @@ private:
     std::string             m_pfoListName;                  ///< Name of input Pfo list
 
     bool                    m_useTrueNeutrinosOnly;         ///< Whether to consider only mc particles that were neutrino induced
+    bool                    m_testBeamMode;                 ///< Whether pandora is reconstructing test beam particles
 
     bool                    m_selectInputHits;              ///< Whether to use only hits passing mc-based quality (is "reconstructable") checks
     float                   m_minHitSharingFraction;        ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
