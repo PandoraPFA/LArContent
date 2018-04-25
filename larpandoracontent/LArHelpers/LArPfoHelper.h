@@ -242,6 +242,15 @@ public:
     static bool IsNeutrino(const pandora::ParticleFlowObject *const pPfo);
 
     /**
+     *  @brief  Whether a pfo is a test beam particle 
+     *
+     *  @param  pPfo the address of the Pfo
+     *
+     *  @return boolean
+     */
+    static bool IsTestBeam(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
      *  @brief  Get neutrino pfos from an input pfo list
      *
      *  @param  pPfoList the input pfo list

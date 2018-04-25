@@ -373,6 +373,18 @@ bool LArPfoHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArPfoHelper::IsTestBeam(const ParticleFlowObject *const pPfo)
+{
+    const int absoluteParticleId(std::abs(pPfo->GetParticleId()));
+
+    if ((E_PLUS == absoluteParticleId) || (PI_PLUS == absoluteParticleId))
+        return true;
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetRecoNeutrinos(const PfoList *const pPfoList, PfoList &recoNeutrinos)
 {
     if (!pPfoList)
