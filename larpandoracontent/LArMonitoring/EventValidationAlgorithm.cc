@@ -299,8 +299,8 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             else
             {
                 bool isTestBeam(LArPfoHelper::IsTestBeam(pfoToSharedHits.first));
-                if (isNeutrino && isGoodMatch) ++nPrimaryNuMatches;
-                if (!isNeutrino && isGoodMatch) ++nPrimaryCRMatches;
+                if (isTestBeam && isGoodMatch) ++nPrimaryNuMatches;
+                if (!isTestBeam && isGoodMatch) ++nPrimaryCRMatches;
             }
 
             targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "")
@@ -386,9 +386,13 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetMatches", nTargetMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuMatches", nTargetNuMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetCRMatches", nTargetCRMatches));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetGoodNuMatches", nTargetGoodNuMatches));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuSplits", nTargetNuSplits));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuLosses", nTargetNuLosses));
+
+            if (!m_testBeamMode)
+            {
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetGoodNuMatches", nTargetGoodNuMatches));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuSplits", nTargetNuSplits));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuLosses", nTargetNuLosses));
+            }
         }
 
         if (isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
@@ -399,7 +403,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
 #endif
             // ATTN Some redundancy introduced to contributing variables
             const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
-            const int isCorrectTB(isBeamParticle && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == 1) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
+            const int isCorrectTB(isBeamParticle && (nTargetNuMatches == 1) && (nTargetCRMatches == 0));
             const int isCorrectCR(isCosmicRay && (nTargetNuMatches == 0) && (nTargetCRMatches == 1));
             const int isFakeNu(isCosmicRay && (nTargetNuMatches > 0));
             const int isFakeCR(!isCosmicRay && (nTargetCRMatches > 0));
@@ -444,7 +448,8 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectCR", isCorrectCR));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isFakeNu", isFakeNu));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isFakeCR", isFakeCR));
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitNu", isSplitNu));
+                if (!m_testBeamMode)
+                    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitNu", isSplitNu));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitCR", isSplitCR));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isLost", isLost));
                 PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
