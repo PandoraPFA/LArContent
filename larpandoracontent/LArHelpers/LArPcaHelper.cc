@@ -10,7 +10,6 @@
 #include "larpandoracontent/LArHelpers/LArObjectHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
-#include <array>
 #include <Eigen/Dense>
 
 using namespace pandora;
