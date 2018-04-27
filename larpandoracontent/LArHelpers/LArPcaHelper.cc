@@ -140,7 +140,7 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template void LArPcaHelper::RunPca(const CartesianPointVector &cartesianPointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors);
-template void LArPcaHelper::RunPca(const CaloHitList &caloHitList, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors);
+template void LArPcaHelper::RunPca(const CartesianPointVector &, CartesianVector &, EigenValues &, EigenVectors &);
+template void LArPcaHelper::RunPca(const CaloHitList &, CartesianVector &, EigenValues &, EigenVectors &);
 
 } // namespace lar_content
