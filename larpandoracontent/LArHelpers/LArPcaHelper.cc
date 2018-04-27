@@ -23,7 +23,7 @@ void LArPcaHelper::RunPca(const T &t, CartesianVector &centroid, EigenValues &ou
     WeightedPointVector weightedPointVector;
 
     for (const auto &point : t)
-        weightedPointVector.push_back(std::make_pair(LArObjectHelper::TypeAdaptor::GetPosition(point), 1.0));
+        weightedPointVector.push_back(std::make_pair(LArObjectHelper::TypeAdaptor::GetPosition(point), 1.));
 
     return LArPcaHelper::RunPca(weightedPointVector, centroid, outputEigenValues, outputEigenVectors);
 }
@@ -45,7 +45,7 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
-    double meanPosition[3] = {0.,0.,0.};
+    double meanPosition[3] = {0., 0., 0.};
     double sumWeight(0.);
 
     for (const WeightedPoint &weightedPoint : pointVector)
@@ -59,9 +59,9 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
             throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
 
-        meanPosition[0] += point.GetX() * weight;
-        meanPosition[1] += point.GetY() * weight;
-        meanPosition[2] += point.GetZ() * weight;
+        meanPosition[0] += static_cast<double>(point.GetX()) * weight;
+        meanPosition[1] += static_cast<double>(point.GetY()) * weight;
+        meanPosition[2] += static_cast<double>(point.GetZ()) * weight;
         sumWeight += weight;
     }
 
@@ -88,9 +88,9 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
     {
         const CartesianVector &point(weightedPoint.first);
         const double weight(weightedPoint.second);
-        const double x((point.GetX() - meanPosition[0]));
-        const double y((point.GetY() - meanPosition[1]));
-        const double z((point.GetZ() - meanPosition[2]));
+        const double x(static_cast<double>((point.GetX()) - meanPosition[0]));
+        const double y(static_cast<double>((point.GetY()) - meanPosition[1]));
+        const double z(static_cast<double>((point.GetZ()) - meanPosition[2]));
 
         xi2  += x * x * weight;
         xiyi += x * y * weight;
@@ -117,7 +117,7 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
-    typedef std::pair<float,size_t> EigenValColPair;
+    typedef std::pair<float, size_t> EigenValColPair;
     typedef std::vector<EigenValColPair> EigenValColVector;
 
     EigenValColVector eigenValColVector;
