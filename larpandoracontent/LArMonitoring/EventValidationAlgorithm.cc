@@ -23,6 +23,7 @@ namespace lar_content
 
 EventValidationAlgorithm::EventValidationAlgorithm() :
     m_useTrueNeutrinosOnly(false),
+    m_testBeamMode(false),
     m_selectInputHits(true),
     m_minHitSharingFraction(0.9f),
     m_maxPhotonPropagation(2.5f),
@@ -122,7 +123,7 @@ void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pM
         PfoList finalStatePfos;
         for (const ParticleFlowObject *const pPfo : allConnectedPfos)
         {
-            if (LArPfoHelper::IsFinalState(pPfo))
+            if ((!m_testBeamMode && LArPfoHelper::IsFinalState(pPfo)) || (m_testBeamMode && pPfo->GetParentPfoList().empty()))
                 finalStatePfos.push_back(pPfo);
         }
 
@@ -290,8 +291,17 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 recoNeutrinos.insert(pRecoNeutrino);
             }
 
-            if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
-            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
+            if (!m_testBeamMode)
+            {
+                if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
+                if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
+            }
+            else
+            {
+                bool isTestBeam(LArPfoHelper::IsTestBeam(pfoToSharedHits.first));
+                if (isTestBeam && isGoodMatch) ++nPrimaryNuMatches;
+                if (!isTestBeam && isGoodMatch) ++nPrimaryCRMatches;
+            }
 
             targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "")
                      << "MatchedPfoId " << pfoId
@@ -376,9 +386,13 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetMatches", nTargetMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuMatches", nTargetNuMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetCRMatches", nTargetCRMatches));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetGoodNuMatches", nTargetGoodNuMatches));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuSplits", nTargetNuSplits));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuLosses", nTargetNuLosses));
+
+            if (!m_testBeamMode)
+            {
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetGoodNuMatches", nTargetGoodNuMatches));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuSplits", nTargetNuSplits));
+                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetNuLosses", nTargetNuLosses));
+            }
         }
 
         if (isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
@@ -389,7 +403,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
 #endif
             // ATTN Some redundancy introduced to contributing variables
             const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
-            const int isCorrectTB(isBeamParticle && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == 1) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
+            const int isCorrectTB(isBeamParticle && (nTargetNuMatches == 1) && (nTargetCRMatches == 0));
             const int isCorrectCR(isCosmicRay && (nTargetNuMatches == 0) && (nTargetCRMatches == 1));
             const int isFakeNu(isCosmicRay && (nTargetNuMatches > 0));
             const int isFakeCR(!isCosmicRay && (nTargetCRMatches > 0));
@@ -434,7 +448,10 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectCR", isCorrectCR));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isFakeNu", isFakeNu));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isFakeCR", isFakeCR));
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitNu", isSplitNu));
+                if (!m_testBeamMode)
+                {
+                    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitNu", isSplitNu));
+                }
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isSplitCR", isSplitCR));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isLost", isLost));
                 PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
@@ -602,6 +619,9 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseTrueNeutrinosOnly", m_useTrueNeutrinosOnly));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TestBeamMode", m_testBeamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectInputHits", m_selectInputHits));
