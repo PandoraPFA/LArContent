@@ -31,7 +31,6 @@ public:
     virtual double UVtoZ(const double u, const double v) const;
     virtual double YZtoU(const double y, const double z) const;
     virtual double YZtoV(const double y, const double z) const;
-    virtual double GetSigmaUVW() const;
     virtual void GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV, const double sigmaW,
         double &y, double &z, double &chiSquared) const;
     virtual void GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV, const double sigmaW,
@@ -45,7 +44,6 @@ private:
 
     double    m_thetaU;          ///< inclination of U wires (radians)
     double    m_thetaV;          ///< inclination of V wires (radians)
-    double    m_sigmaUVW;        ///< resolution (cm), for calculation of chi2
     double    m_sinUplusV;       ///< sin(thetaU+thetaV)
     double    m_sinU;            ///< sin(thetaU)
     double    m_sinV;            ///< sin(thetaV)
