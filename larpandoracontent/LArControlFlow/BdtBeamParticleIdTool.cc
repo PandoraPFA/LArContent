@@ -627,10 +627,10 @@ StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
             "TrainingOutputFileName", m_trainingOutputFile));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
             "CaloHitListName", m_caloHitListName));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
             "MCParticleListName", m_mcParticleListName));
     }
     else
