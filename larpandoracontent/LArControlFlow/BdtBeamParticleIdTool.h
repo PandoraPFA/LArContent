@@ -379,6 +379,8 @@ private:
     // Training
     bool                            m_useTrainingMode;                      ///< Should use training mode. If true, training examples will be written to the output file
     std::string                     m_trainingOutputFile;                   ///< Output file name for training examples
+    std::string                     m_caloHitListName;                      ///< Name of input calo hit list
+    std::string                     m_mcParticleListName;                   ///< Name of input MC particle list
     float                           m_minPurity;                            ///< Minimum purity of the best slice to use event for training
     float                           m_minCompleteness;                      ///< Minimum completeness of the best slice to use event for training
 
