@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArObjectHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
@@ -547,7 +548,7 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
     CartesianPointVector pointVector;
 
     for (const auto &nextPoint : *pT)
-        pointVector.push_back(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint));
+        pointVector.push_back(LArObjectHelper::TypeAdaptor::GetPosition(nextPoint));
 
     if (pointVector.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -579,7 +580,7 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
 
             try
             {
-                const float rL(slidingFitResult.GetLongitudinalDisplacement(LArPfoHelper::TypeAdaptor::GetPosition(nextPoint)));
+                const float rL(slidingFitResult.GetLongitudinalDisplacement(LArObjectHelper::TypeAdaptor::GetPosition(nextPoint)));
 
                 CartesianVector position(0.f, 0.f, 0.f);
                 const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, position));
@@ -596,7 +597,7 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
                 const float projection(seedDirection.GetDotProduct(position - seedPosition));
 
                 trackTrajectory.push_back(LArTrackTrajectoryPoint(projection * scaleFactor,
-                    LArTrackState(position, direction * scaleFactor, LArPfoHelper::TypeAdaptor::GetCaloHit(nextPoint)), index));
+                    LArTrackState(position, direction * scaleFactor, LArObjectHelper::TypeAdaptor::GetCaloHit(nextPoint)), index));
             }
             catch (const StatusCodeException &statusCodeException1)
             {
@@ -628,36 +629,6 @@ void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVe
         for (const int index : indicesWithoutSpacePoints)
             pIndexVector->push_back(index);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <>
-const CartesianVector LArPfoHelper::TypeAdaptor::GetPosition(const CartesianVector &t)
-{
-    return t;
-}
-
-template <>
-const CartesianVector LArPfoHelper::TypeAdaptor::GetPosition(const CaloHit *const &pT)
-{
-    return pT->GetPositionVector();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <>
-const CaloHit *LArPfoHelper::TypeAdaptor::GetCaloHit(const CartesianVector &)
-{
-    return nullptr;
-}
-
-template <>
-const CaloHit *LArPfoHelper::TypeAdaptor::GetCaloHit(const CaloHit *const &pCaloHit3D)
-{
-    const CaloHit *const pCaloHit2D = static_cast<const CaloHit*>(pCaloHit3D->GetParentAddress());
-    return pCaloHit2D;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

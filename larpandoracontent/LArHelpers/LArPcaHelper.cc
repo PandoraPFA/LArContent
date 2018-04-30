@@ -7,6 +7,7 @@
  */
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArObjectHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include <Eigen/Dense>
@@ -16,19 +17,20 @@ using namespace pandora;
 namespace lar_content
 {
 
-void LArPcaHelper::RunPca(const CaloHitList &caloHitList, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
+template <typename T>
+void LArPcaHelper::RunPca(const T &t, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
-    CartesianPointVector pointVector;
+    WeightedPointVector weightedPointVector;
 
-    for (const CaloHit *const pCaloHit : caloHitList)
-        pointVector.push_back(pCaloHit->GetPositionVector());
+    for (const auto &point : t)
+        weightedPointVector.push_back(std::make_pair(LArObjectHelper::TypeAdaptor::GetPosition(point), 1.));
 
-    return LArPcaHelper::RunPca(pointVector, centroid, outputEigenValues, outputEigenVectors);
+    return LArPcaHelper::RunPca(weightedPointVector, centroid, outputEigenValues, outputEigenVectors);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
+void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVector &centroid, EigenValues &outputEigenValues, EigenVectors &outputEigenVectors)
 {
     // The steps are:
     // 1) do a mean normalization of the input vec points
@@ -44,18 +46,34 @@ void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVect
     }
 
     double meanPosition[3] = {0., 0., 0.};
+    double sumWeight(0.);
 
-    for (const CartesianVector &point : pointVector)
+    for (const WeightedPoint &weightedPoint : pointVector)
     {
-        meanPosition[0] += point.GetX();
-        meanPosition[1] += point.GetY();
-        meanPosition[2] += point.GetZ();
+        const CartesianVector &point(weightedPoint.first);
+        const double weight(weightedPoint.second);
+
+        if (weight < 0.)
+        {
+            std::cout << "LArPcaHelper::RunPca - negative weight found" << std::endl;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+        }
+
+        meanPosition[0] += static_cast<double>(point.GetX()) * weight;
+        meanPosition[1] += static_cast<double>(point.GetY()) * weight;
+        meanPosition[2] += static_cast<double>(point.GetZ()) * weight;
+        sumWeight += weight;
     }
 
-    const double nThreeDHitsAsDouble(static_cast<double>(pointVector.size()));
-    meanPosition[0] /= nThreeDHitsAsDouble;
-    meanPosition[1] /= nThreeDHitsAsDouble;
-    meanPosition[2] /= nThreeDHitsAsDouble;
+    if (std::fabs(sumWeight) < std::numeric_limits<double>::epsilon())
+    {
+        std::cout << "LArPcaHelper::RunPca - sum of weights is zero" << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    }
+
+    meanPosition[0] /= sumWeight;
+    meanPosition[1] /= sumWeight;
+    meanPosition[2] /= sumWeight;
     centroid = CartesianVector(meanPosition[0], meanPosition[1], meanPosition[2]);
 
     // Define elements of our covariance matrix
@@ -65,22 +83,21 @@ void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVect
     double yi2(0.);
     double yizi(0.);
     double zi2(0.);
-    double weightSum(0.);
 
-    for (const CartesianVector &point : pointVector)
+    for (const WeightedPoint &weightedPoint : pointVector)
     {
-        const double weight(1.);
-        const double x((point.GetX() - meanPosition[0]) * weight);
-        const double y((point.GetY() - meanPosition[1]) * weight);
-        const double z((point.GetZ() - meanPosition[2]) * weight);
+        const CartesianVector &point(weightedPoint.first);
+        const double weight(weightedPoint.second);
+        const double x(static_cast<double>((point.GetX()) - meanPosition[0]));
+        const double y(static_cast<double>((point.GetY()) - meanPosition[1]));
+        const double z(static_cast<double>((point.GetZ()) - meanPosition[2]));
 
-        xi2  += x * x;
-        xiyi += x * y;
-        xizi += x * z;
-        yi2  += y * y;
-        yizi += y * z;
-        zi2  += z * z;
-        weightSum += weight * weight;
+        xi2  += x * x * weight;
+        xiyi += x * y * weight;
+        xizi += x * z * weight;
+        yi2  += y * y * weight;
+        yizi += y * z * weight;
+        zi2  += z * z * weight;
     }
 
     // Using Eigen package
@@ -90,13 +107,7 @@ void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVect
            xiyi,  yi2, yizi,
            xizi, yizi,  zi2;
 
-    if (std::fabs(weightSum) < std::numeric_limits<double>::epsilon())
-    {
-        std::cout << "LArPcaHelper::RunPca - weight of three dimensional hits = " << weightSum << std::endl;
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    }
-
-    sig *= 1. / weightSum;
+    sig *= 1. / sumWeight;
 
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigenMat(sig);
 
@@ -106,7 +117,7 @@ void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVect
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
-    typedef std::pair<float,size_t> EigenValColPair;
+    typedef std::pair<float, size_t> EigenValColPair;
     typedef std::vector<EigenValColPair> EigenValColVector;
 
     EigenValColVector eigenValColVector;
@@ -126,5 +137,10 @@ void LArPcaHelper::RunPca(const CartesianPointVector &pointVector, CartesianVect
     for (const EigenValColPair &pair : eigenValColVector)
         outputEigenVectors.emplace_back(eigenVecs(0, pair.second), eigenVecs(1, pair.second), eigenVecs(2, pair.second));
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template void LArPcaHelper::RunPca(const CartesianPointVector &, CartesianVector &, EigenValues &, EigenVectors &);
+template void LArPcaHelper::RunPca(const CaloHitList &, CartesianVector &, EigenValues &, EigenVectors &);
 
 } // namespace lar_content
