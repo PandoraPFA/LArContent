@@ -86,26 +86,44 @@ void NeutrinoIdTool::GetSliceFeatures(const NeutrinoIdTool *const pTool, const S
 
 bool NeutrinoIdTool::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, unsigned int &bestSliceIndex) const
 {
-    unsigned int nHitsInBestSlice(0), nNuHitsInBestSlice(0), nuNHitsTotal(0);
+    unsigned int nHitsInBestSlice(0), nNuHitsInBestSlice(0);
+
+    // Get all hits in all slices to find true number of mc hits
+    const CaloHitList *pAllReconstructedCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pAllReconstructedCaloHitList));
+
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pMCParticleList));
+
+    // Obtain map: [mc particle -> primary mc particle]
+    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+
+    // Remove non-reconstructable hits, e.g. those downstream of a neutron
+    CaloHitList reconstructableCaloHitList;
+    LArMCParticleHelper::PrimaryParameters parameters;
+    LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
+
+    const int nuNHitsTotal(this->CountNeutrinoInducedHits(reconstructableCaloHitList));
+    const CaloHitSet reconstructableCaloHitSet(reconstructableCaloHitList.begin(), reconstructableCaloHitList.end()); 
 
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
-        CaloHitList reconstructedHits;
-        this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedHits);
+        CaloHitList reconstructedCaloHitList;
+        this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedCaloHitList, reconstructableCaloHitSet);
 
         for (const ParticleFlowObject *const pNeutrino : nuSliceHypotheses.at(sliceIndex))
         {
             const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
-            this->Collect2DHits(nuFinalStates, reconstructedHits);
+            this->Collect2DHits(nuFinalStates, reconstructedCaloHitList, reconstructableCaloHitSet);
         }
 
-        const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedHits));
-        nuNHitsTotal += nNuHits;
+        const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedCaloHitList));
 
         if (nNuHits > nNuHitsInBestSlice)
         {
             nNuHitsInBestSlice = nNuHits;
-            nHitsInBestSlice = reconstructedHits.size();
+            nHitsInBestSlice = reconstructedCaloHitList.size();
             bestSliceIndex = sliceIndex;
         }
     }
@@ -129,7 +147,7 @@ bool NeutrinoIdTool::PassesQualityCuts(const Algorithm *const pAlgorithm, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &hitList) const
+void NeutrinoIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &reconstructedCaloHitList, const CaloHitSet &reconstructableCaloHitSet) const
 {
     CaloHitList collectedHits;
     LArPfoHelper::GetCaloHits(pfos, TPC_VIEW_U, collectedHits);
@@ -141,18 +159,21 @@ void NeutrinoIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &hitList) co
         // ATTN hits collected from Pfos are copies of hits passed from master instance, we need to access their parent to use MC info
         const CaloHit *pParentCaloHit(static_cast<const CaloHit *>(pCaloHit->GetParentAddress()));
 
+        if (!reconstructableCaloHitSet.count(pParentCaloHit))
+            continue;
+
         // Ensure no hits have been double counted
-        if (std::find(hitList.begin(), hitList.end(), pParentCaloHit) == hitList.end())
-            hitList.push_back(pParentCaloHit);
+        if (std::find(reconstructedCaloHitList.begin(), reconstructedCaloHitList.end(), pParentCaloHit) == reconstructedCaloHitList.end())
+            reconstructedCaloHitList.push_back(pParentCaloHit);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int NeutrinoIdTool::CountNeutrinoInducedHits(const CaloHitList &hitList) const
+unsigned int NeutrinoIdTool::CountNeutrinoInducedHits(const CaloHitList &caloHitList) const
 {
     unsigned int nNuHits(0);
-    for (const CaloHit *const pCaloHit : hitList)
+    for (const CaloHit *const pCaloHit : caloHitList)
     {
         try
         {

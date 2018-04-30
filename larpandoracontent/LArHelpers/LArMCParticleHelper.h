@@ -226,17 +226,6 @@ public:
     static void GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToHitsMaps,
         PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
 
-private:
-    /**
-     *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
-     *
-     *  @param  pPfo the input pfo
-     *  @param  selectedMCParticleToHitsMaps the input mappings from selected reconstructable MCParticles to hits
-     *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
-     */
-    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        pandora::CaloHitList &reconstructableCaloHitList2D);
-
     /**
      *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
      *
@@ -248,6 +237,17 @@ private:
      */
     static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToPrimaryMCMap,
         pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float maxPhotonPropagation);
+
+private:
+    /**
+     *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pPfo the input pfo
+     *  @param  selectedMCParticleToHitsMaps the input mappings from selected reconstructable MCParticles to hits
+     *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
+     */
+    static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
+        pandora::CaloHitList &reconstructableCaloHitList2D);
 
     /**
      *  @brief  Apply further selection criteria to end up with a collection of "good" calo hits that can be use to define whether
