@@ -56,22 +56,8 @@ StatusCode PfoCharacterisationBaseAlgorithm::Run()
         for (const ParticleFlowObject *const pPfo : *pPfoList)
         {
             PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
-            bool isTrackLike(false);
-            try
-            {
-                if (m_useThreeDInformation)
-                {
-                    isTrackLike = this->IsClearTrack(pPfo);
-                }
-                else
-                {
-                    isTrackLike = this->IsClearTrack3x2D(pPfo);
-                }
-            }
-            catch (const StatusCodeException &)
-            {
-                continue;
-            }
+            const bool isTrackLike(m_useThreeDInformation ? this->IsClearTrack(pPfo) : this->IsClearTrack3x2D(pPfo));
+
             if (isTrackLike)
             {
                 pfoMetadata.m_particleId = MU_MINUS;

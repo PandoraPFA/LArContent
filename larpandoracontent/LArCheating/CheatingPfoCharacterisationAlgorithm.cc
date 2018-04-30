@@ -61,7 +61,7 @@ bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject
 
 bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const /*pCluster*/) const
 {
-    throw StatusCodeException(STATUS_CODE_FAILURE);
+    throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
 
 } // namespace lar_content
