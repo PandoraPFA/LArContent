@@ -21,7 +21,9 @@ namespace lar_content
 
 TestBeamParticleCreationAlgorithm::TestBeamParticleCreationAlgorithm() :
     m_pfoListName(""),
-    m_vertexLowZ(false)
+    m_vertexListName(""),
+    m_keepInteractionVertex(true),
+    m_keepStartVertex(false)
 {
 }
 
@@ -42,7 +44,7 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
         const PfoList &daughterList(pPfo->GetDaughterPfoList());
 
         const Pfo *pPrimaryPfo(nullptr);
-        CartesianVector positionMinZCaloHit(0.f, 0.f, 0.f);
+        CartesianVector positionMinZCaloHit(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
         for (const Pfo *const pDaughterPfo : daughterList)
         {
@@ -67,8 +69,8 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPrimaryPfo, pPrimaryDaughterPfo));
         }
 
-        // ATTN: If the primary pfo is shower like, the target beam particle is most likely an electron/positron.  If the primary pfo is track like, the target 
-        // beam particle is most likely a pion as pion interactions are more frequent than proton, kaon and muon interactions in the CERN test beam. 
+        // ATTN: If the primary pfo is shower like, the target beam particle is most likely an electron/positron.  If the primary pfo is track like, the target
+        // beam particle is most likely a pion as pion interactions are more frequent than proton, kaon and muon interactions in the CERN test beam.
         if (std::abs(pPrimaryPfo->GetParticleId()) != E_MINUS)
         {
             PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
@@ -76,22 +78,32 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPrimaryPfo, pfoMetadata));
         }
 
-        if (m_vertexLowZ)
+        if (m_keepStartVertex)
         {
-            for (const Vertex *const pVertex : pPrimaryPfo->GetVertexList())
+            if (!m_keepInteractionVertex)
             {
-                pPrimaryPfo->RemoveFromPfo(pVertex);
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pVertex);
+                const VertexList originalVertexList(pPrimaryPfo->GetVertexList());
+                for (const Vertex *const pVertex : originalVertexList)
+                {
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPrimaryPfo, pVertex));
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pVertex));
+                }
             }
+
+            std::string vertexListName;
+            const VertexList *pVertexList(nullptr);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
 
             PandoraContentApi::Vertex::Parameters parameters;
             parameters.m_position = positionMinZCaloHit;
-            parameters.m_vertexLabel = VERTEX_INTERACTION;
+            parameters.m_vertexLabel = VERTEX_START;
             parameters.m_vertexType = VERTEX_3D;
 
             const Vertex *pVertex(nullptr);
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-            pPrimaryPfo->AddToPfo(pVertex);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPrimaryPfo, pVertex));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_vertexListName));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_vertexListName));
         }
 
         neutrinoPfos.push_back(pPfo);
@@ -108,7 +120,21 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
 StatusCode TestBeamParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexAtLowZ", m_vertexLowZ));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "KeepInteractionVertex", m_keepInteractionVertex));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "KeepStartVertex", m_keepStartVertex));
+
+    if (m_keepStartVertex)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
+
+    if (!m_keepInteractionVertex && !m_keepStartVertex)
+    {
+        std::cout << "TestBeamParticleCreationAlgorithm::ReadSettings - must retain at least one vertex" << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
 
     return STATUS_CODE_SUCCESS;
 }
