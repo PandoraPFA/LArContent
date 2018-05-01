@@ -1,6 +1,27 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_11_00
 --------------------------------------------------------------------------------------------------------------------------------------------
+Restructured LArSupportVectorMachine class and converted the LArSvmHelper into the more generic LArMvaHelper.
+Added LArAdaBoostDecisionTree class.
+Added BDT beam particle id tool.
+Added test beam particle creation algorithm.
+Added configurable option to position test beam particle vertex at lowest Z calo hit.
+Removed neutrino reference in CheatingCosmicRayTaggingTool.
+Modified the purity and completeness calculation used in neutrino id training.
+Moved the GetSigmaUVW function to the LArGeometryHelper.
+Modified the event validation algorithm to work with ProtoDUNE.
+Added functionality to weight Cartesian points in Pca fits.
+Updated exception handling in svm track/shower id
+Removed unused SVMClusterCharacterisationAlgorithm
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_11_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Changes to the in-LArSoft build mechanics, from the LArSoft team.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_11_00
+--------------------------------------------------------------------------------------------------------------------------------------------
 Control flow updates relating to stitching of cosmic-ray muons that cross the mid plane in e.g. ProtoDUNE.
 Overhauled, and added where necessary, cheating versions of all tools used for steps in the Pandora consolidated reconstruction.
 Added NeutrinoIdentification tool, and a SimpleNeutrinoIdentification tool to provide old, placeholder functionality.
