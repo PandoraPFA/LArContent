@@ -30,6 +30,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string    m_pfoListName;    ///< Input pfo list name
+    bool           m_vertexLowZ;     ///< Put the vertex for the test beam particle at the low z point
 };
 
 } // namespace lar_content
