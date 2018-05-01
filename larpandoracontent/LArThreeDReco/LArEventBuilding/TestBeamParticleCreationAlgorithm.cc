@@ -22,8 +22,8 @@ namespace lar_content
 TestBeamParticleCreationAlgorithm::TestBeamParticleCreationAlgorithm() :
     m_pfoListName(""),
     m_vertexListName(""),
-    m_keepInteractionVertex(true),
-    m_keepStartVertex(false)
+    m_keepInteractionVertex(false),
+    m_keepStartVertex(true)
 {
 }
 
@@ -82,12 +82,9 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
         {
             if (!m_keepInteractionVertex)
             {
-                const VertexList originalVertexList(pPrimaryPfo->GetVertexList());
-                for (const Vertex *const pVertex : originalVertexList)
-                {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPrimaryPfo, pVertex));
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pVertex));
-                }
+                const Vertex *const pVertex(LArPfoHelper::GetVertex(pPrimaryPfo));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPrimaryPfo, pVertex));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pVertex));
             }
 
             std::string vertexListName;
@@ -103,7 +100,6 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPrimaryPfo, pVertex));
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_vertexListName));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_vertexListName));
         }
 
         neutrinoPfos.push_back(pPfo);
@@ -130,10 +126,10 @@ StatusCode TestBeamParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xml
     if (m_keepStartVertex)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
 
-    if (!m_keepInteractionVertex && !m_keepStartVertex)
+    if (m_keepInteractionVertex == m_keepStartVertex)
     {
-        std::cout << "TestBeamParticleCreationAlgorithm::ReadSettings - must retain at least one vertex" << std::endl;
-        return STATUS_CODE_FAILURE;
+        std::cout << "TestBeamParticleCreationAlgorithm::ReadSettings - must persist one vertex per pfo" << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
     }
 
     return STATUS_CODE_SUCCESS;
