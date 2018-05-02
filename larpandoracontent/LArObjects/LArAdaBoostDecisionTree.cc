@@ -348,7 +348,7 @@ bool AdaBoostDecisionTree::WeakClassifier::EvaluateNode(const int nodeId, const 
     if (pActiveNode->IsLeaf())
         return pActiveNode->GetOutcome();
 
-    if (features.size() <= pActiveNode->GetVariableId())
+    if (static_cast<int>(features.size()) <= pActiveNode->GetVariableId())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     if (features.at(pActiveNode->GetVariableId()).Get() <= pActiveNode->GetThreshold())
