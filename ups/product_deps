@@ -12,9 +12,9 @@ fcldir  -
 # With "product  version" table below, we now define depdendencies
 # Add the dependent product and version
 product		version
-eigen		v3_3_3
-pandora		v03_07_00c
-cetbuildtools	v7_02_01	-	only_for_build
+eigen		v3_3_4a
+pandora		v03_07_00d
+cetbuildtools	v7_03_02	-	only_for_build
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
