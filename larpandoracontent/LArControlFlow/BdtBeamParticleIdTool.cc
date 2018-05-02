@@ -197,7 +197,7 @@ void BdtBeamParticleIdTool::GetBestMCSliceIndices(const pandora::Algorithm *cons
 
         for (const auto &iter : mcParticleToHitsInSliceMap)
         {
-            if (iter.second > nSharedHits)
+            if (iter.second > static_cast<int>(nSharedHits))
             {
                 pBestMCParticle = iter.first;
                 nSharedHits = iter.second;
