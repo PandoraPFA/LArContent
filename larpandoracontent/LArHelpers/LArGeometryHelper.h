@@ -176,16 +176,18 @@ public:
      *  @brief  Return the wire pitch
      *
      *  @param  pandora the associated pandora instance
+     *  @param  maxWirePitchDiscrepancy maximum allowed discrepancy between lar tpc wire pitch value in the w view
      */
-    static float GetWireZPitch(const pandora::Pandora &pandora);
+    static float GetWireZPitch(const pandora::Pandora &pandora, const float maxWirePitchDiscrepancy = 0.01);
 
     /**
      *  @brief  Return the wire pitch
      *
      *  @param  pandora the associated pandora instance
      *  @param  view the 2D projection
+     *  @param  maxWirePitchDiscrepancy maximum allowed discrepancy between lar tpc wire pitch values
      */
-    static float GetWirePitch(const pandora::Pandora &pandora, const pandora::HitType view);
+    static float GetWirePitch(const pandora::Pandora &pandora, const pandora::HitType view, const float maxWirePitchDiscrepancy = 0.01);
 
     /**
      *  @brief  Return the wire axis (vector perpendicular to the wire direction and drift direction)

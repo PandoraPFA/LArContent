@@ -331,31 +331,64 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArGeometryHelper::GetWireZPitch(const Pandora &pandora)
+float LArGeometryHelper::GetWireZPitch(const Pandora &pandora, const float maxWirePitchWDiscrepancy)
 {
-    return (pandora.GetGeometry()->GetLArTPC().GetWirePitchW());
+    const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
+
+    if (larTPCMap.empty())
+    {
+        std::cout << "LArGeometryHelper::GetWireZPitch - LArTPC description not registered with Pandora as required " << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+    }
+
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+    const float wirePitchW(pFirstLArTPC->GetWirePitchW());
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+
+        if (std::fabs(wirePitchW - pLArTPC->GetWirePitchW()) > maxWirePitchWDiscrepancy)
+        {
+            std::cout << "LArGeometryHelper::GetWireZPitch - Plugin does not support provided LArTPC configurations " << std::endl;
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        }
+    }
+
+    return wirePitchW;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArGeometryHelper::GetWirePitch(const Pandora &pandora, const HitType view)
+float LArGeometryHelper::GetWirePitch(const Pandora &pandora, const HitType view, const float maxWirePitchDiscrepancy)
 {
-    if (view == TPC_VIEW_U)
+    if (view != TPC_VIEW_U && view != TPC_VIEW_V && view != TPC_VIEW_W)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
+
+    if (larTPCMap.empty())
     {
-        return (pandora.GetGeometry()->GetLArTPC().GetWirePitchU());
+        std::cout << "LArGeometryHelper::GetWirePitch - LArTPC description not registered with Pandora as required " << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
     }
 
-    else if (view == TPC_VIEW_V)
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+    const float wirePitch(view == TPC_VIEW_U ? pFirstLArTPC->GetWirePitchU() : (view == TPC_VIEW_V ? pFirstLArTPC->GetWirePitchV() : pFirstLArTPC->GetWirePitchW()));
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
     {
-        return (pandora.GetGeometry()->GetLArTPC().GetWirePitchV());
+        const LArTPC *const pLArTPC(mapEntry.second);
+        const float alternateWirePitch(view == TPC_VIEW_U ? pLArTPC->GetWirePitchU() : (view == TPC_VIEW_V ? pLArTPC->GetWirePitchV() : pLArTPC->GetWirePitchW()));
+
+        if (std::fabs(wirePitch - alternateWirePitch) > maxWirePitchDiscrepancy)
+        {
+            std::cout << "LArGeometryHelper::GetWirePitch - Plugin does not support provided LArTPC configurations " << std::endl;
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        }
     }
 
-    else if (view == TPC_VIEW_W)
-    {
-        return (pandora.GetGeometry()->GetLArTPC().GetWirePitchW());
-    }
-
-    throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    return wirePitch;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -485,7 +518,7 @@ float LArGeometryHelper::CalculateGapDeltaZ(const Pandora &pandora, const float 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArGeometryHelper::GetSigmaUVW(const Pandora &pandora, const float maxSigmaDiscrepancy) 
+float LArGeometryHelper::GetSigmaUVW(const Pandora &pandora, const float maxSigmaDiscrepancy)
 {
     const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
 
