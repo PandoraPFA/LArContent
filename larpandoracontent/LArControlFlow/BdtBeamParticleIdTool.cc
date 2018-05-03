@@ -357,6 +357,12 @@ CartesianVector BdtBeamParticleIdTool::Plane::GetLineIntersection(const Cartesia
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 BdtBeamParticleIdTool::SliceFeatureParameters::SliceFeatureParameters() :
+    m_larTPCMinX(std::numeric_limits<float>::max()),
+    m_larTPCMaxX(std::numeric_limits<float>::max()),
+    m_larTPCMinY(std::numeric_limits<float>::max()),
+    m_larTPCMaxY(std::numeric_limits<float>::max()),
+    m_larTPCMinZ(std::numeric_limits<float>::max()),
+    m_larTPCMaxZ(std::numeric_limits<float>::max()),
     m_beamLArTPCIntersection(0.f, 0.f, 0.f),
     m_beamDirection(0.f, 0.f, 0.f),
     m_selectedFraction(10.f),
