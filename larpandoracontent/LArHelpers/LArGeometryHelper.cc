@@ -331,35 +331,6 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArGeometryHelper::GetWireZPitch(const Pandora &pandora, const float maxWirePitchWDiscrepancy)
-{
-    const LArTPCMap &larTPCMap(pandora.GetGeometry()->GetLArTPCMap());
-
-    if (larTPCMap.empty())
-    {
-        std::cout << "LArGeometryHelper::GetWireZPitch - LArTPC description not registered with Pandora as required " << std::endl;
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-    }
-
-    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
-    const float wirePitchW(pFirstLArTPC->GetWirePitchW());
-
-    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
-    {
-        const LArTPC *const pLArTPC(mapEntry.second);
-
-        if (std::fabs(wirePitchW - pLArTPC->GetWirePitchW()) > maxWirePitchWDiscrepancy)
-        {
-            std::cout << "LArGeometryHelper::GetWireZPitch - Plugin does not support provided LArTPC configurations " << std::endl;
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-        }
-    }
-
-    return wirePitchW;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 float LArGeometryHelper::GetWirePitch(const Pandora &pandora, const HitType view, const float maxWirePitchDiscrepancy)
 {
     if (view != TPC_VIEW_U && view != TPC_VIEW_V && view != TPC_VIEW_W)
@@ -383,7 +354,7 @@ float LArGeometryHelper::GetWirePitch(const Pandora &pandora, const HitType view
 
         if (std::fabs(wirePitch - alternateWirePitch) > maxWirePitchDiscrepancy)
         {
-            std::cout << "LArGeometryHelper::GetWirePitch - Plugin does not support provided LArTPC configurations " << std::endl;
+            std::cout << "LArGeometryHelper::GetWirePitch - LArTPC configuration not supported" << std::endl;
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
         }
     }
