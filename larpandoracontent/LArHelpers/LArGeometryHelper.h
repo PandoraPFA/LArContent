@@ -255,6 +255,13 @@ public:
     static float GetSigmaUVW(const pandora::Pandora &pandora, const float maxSigmaDiscrepancy = 0.01);
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArGeometryHelper::GetWireZPitch(const pandora::Pandora &pandora, const float maxWirePitchWDiscrepancy)
+{
+    return LArGeometryHelper::GetWirePitch(pandora, pandora::TPC_VIEW_W, maxWirePitchWDiscrepancy);
+}
+
 } // namespace lar_content
 
 #endif // #ifndef LAR_GEOMETRY_HELPER_H
