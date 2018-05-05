@@ -412,21 +412,16 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     LArMvaHelper::MvaFeature vertexDistance;
-    //find the neutrino vertex
-    const VertexList *pVertexList = nullptr;
+    const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
     if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
-      const Vertex *const nuVertex(pVertexList->front());
-      //find the particle vertex
-      try
+        try
         {
-          const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
-          const CartesianVector nuPosition(nuVertex->GetPosition()), pfoPosition(pVertex->GetPosition());
-          vertexDistance = (nuPosition - pfoPosition).GetMagnitude();
+            vertexDistance = (pVertexList->front()->GetPosition() - LArPfoHelper::GetVertex(pInputPfo)->GetPosition()).GetMagnitude();
         }
-      catch (const StatusCodeException &) {}
+        catch (const StatusCodeException &) {}
     }
 
     featureVector.push_back(vertexDistance);
