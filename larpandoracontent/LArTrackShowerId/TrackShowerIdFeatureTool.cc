@@ -399,8 +399,7 @@ StatusCode ThreeDLinearFitFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDVertexDistanceFeatureTool::ThreeDVertexDistanceFeatureTool() :
-    m_slidingLinearFitWindow(10000)
+ThreeDVertexDistanceFeatureTool::ThreeDVertexDistanceFeatureTool()
 {
 }
 
@@ -412,36 +411,26 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    //find the neutrino vertex
-    const VertexList *pVertexList = nullptr;
+    LArMvaHelper::MvaFeature vertexDistance;
+    const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if (pVertexList->empty() || (pVertexList->size() != 1) || (VERTEX_3D != pVertexList->front()->GetVertexType()))
+    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+        try
+        {
+            vertexDistance = (pVertexList->front()->GetPosition() - LArPfoHelper::GetVertex(pInputPfo)->GetPosition()).GetMagnitude();
+        }
+        catch (const StatusCodeException &) {}
     }
-
-    const Vertex *const nuVertex(pVertexList->front());
-    //find the particle vertex
-    LArMvaHelper::MvaFeature vertexDistance;
-    try
-    {
-        const Vertex *const pVertex = LArPfoHelper::GetVertex(pInputPfo);
-        const CartesianVector nuPosition(nuVertex->GetPosition()), pfoPosition(pVertex->GetPosition());
-        vertexDistance = (nuPosition - pfoPosition).GetMagnitude();
-    }
-    catch (const StatusCodeException &) {}
 
     featureVector.push_back(vertexDistance);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingLinearFitWindow", m_slidingLinearFitWindow));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -477,12 +466,13 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
         //able to calculate angles only if > 1 point provided
         if ((pointVectorStart.size() > 1) && (pointVectorEnd.size() > 1))
         {
-            // Run the PCA analysis twice
-            CartesianVector centroidStart(0.f, 0.f, 0.f), centroidEnd(0.f, 0.f, 0.f);
-            LArPcaHelper::EigenVectors eigenVecsStart, eigenVecsEnd;
-            LArPcaHelper::EigenValues eigenValuesStart(0.f, 0.f, 0.f), eigenValuesEnd(0.f, 0.f, 0.f);
             try
             {
+                // Run the PCA analysis twice
+                CartesianVector centroidStart(0.f, 0.f, 0.f), centroidEnd(0.f, 0.f, 0.f);
+                LArPcaHelper::EigenVectors eigenVecsStart, eigenVecsEnd;
+                LArPcaHelper::EigenValues eigenValuesStart(0.f, 0.f, 0.f), eigenValuesEnd(0.f, 0.f, 0.f);
+
                 LArPcaHelper::RunPca(pointVectorStart, centroidStart, eigenValuesStart, eigenVecsStart);
                 LArPcaHelper::RunPca(pointVectorEnd, centroidEnd, eigenValuesEnd, eigenVecsEnd);
 
@@ -493,6 +483,7 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
             catch (const StatusCodeException &){}
         }
     }
+
     featureVector.push_back(diffAngle);
 }
 
@@ -503,21 +494,21 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if (!pVertexList || (pVertexList->size() != 1) || (VERTEX_3D != pVertexList->front()->GetVertexType()))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
-
-    const CartesianVector nuVertex(pVertexList->front()->GetPosition());
-    CaloHitVector threeDCaloHitVector(threeDCaloHitList.begin(), threeDCaloHitList.end());
-
-    //order by distance to vertex, so first ones are closer to nuvertex
-    std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), ThreeDChargeFeatureTool::VertexComparator(nuVertex));
-    CaloHitList orderedCaloHitList(threeDCaloHitVector.begin(),threeDCaloHitVector.end());
-    const unsigned int nhits(orderedCaloHitList.size());
-
-    for (const CaloHit *const pCaloHit : orderedCaloHitList)
+    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
-        CartesianPointVector &targetVector((pointVectorStart.size() < (nhits / 2)) ? pointVectorStart : pointVectorEnd);
-        targetVector.push_back(pCaloHit->GetPositionVector());
+        const CartesianVector nuVertex(pVertexList->front()->GetPosition());
+        CaloHitVector threeDCaloHitVector(threeDCaloHitList.begin(), threeDCaloHitList.end());
+
+        //order by distance to vertex, so first ones are closer to nuvertex
+        std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), ThreeDChargeFeatureTool::VertexComparator(nuVertex));
+        CaloHitList orderedCaloHitList(threeDCaloHitVector.begin(),threeDCaloHitVector.end());
+        const unsigned int nhits(orderedCaloHitList.size());
+
+        for (const CaloHit *const pCaloHit : orderedCaloHitList)
+        {
+            CartesianPointVector &targetVector((pointVectorStart.size() < (nhits / 2)) ? pointVectorStart : pointVectorEnd);
+            targetVector.push_back(pCaloHit->GetPositionVector());
+        }
     }
 }
 
@@ -583,35 +574,33 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
+    LArMvaHelper::MvaFeature pca1, pca2;
     // Need the 3D cluster and hits to calculate PCA components
     ClusterList threeDClusterList;
     LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
 
-    if (threeDClusterList.empty())
-        return;
-
     CaloHitList threeDCaloHitList;
     LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
-    if (threeDCaloHitList.empty())
-        return;
 
-    // Run the PCA analysis
-    CartesianVector centroid(0.f, 0.f, 0.f);
-    LArMvaHelper::MvaFeature pca1, pca2;
-    LArPcaHelper::EigenVectors eigenVecs;
-    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-    try
+    if ((!threeDClusterList.empty()) && (!threeDCaloHitList.empty()))
     {
-        LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
-        const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
-        if (principalEigenvalue > std::numeric_limits<float>::epsilon())
+        // Run the PCA analysis
+        CartesianVector centroid(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenVectors eigenVecs;
+        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+        try
         {
-            pca1 = secondaryEigenvalue/principalEigenvalue;
-            pca2 = tertiaryEigenvalue/principalEigenvalue;
+            LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
+            const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
+            if (principalEigenvalue > std::numeric_limits<float>::epsilon())
+            {
+                pca1 = secondaryEigenvalue/principalEigenvalue;
+                pca2 = tertiaryEigenvalue/principalEigenvalue;
+            }
         }
+        catch (const StatusCodeException &){}
     }
-    catch (const StatusCodeException &){}
 
     featureVector.push_back(pca1);
     featureVector.push_back(pca2);
@@ -642,12 +631,13 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
 
     float totalCharge(-1.f), chargeSigma(-1.f), chargeMean(-1.f), endCharge(-1.f);
     LArMvaHelper::MvaFeature charge1, charge2;
+
     ClusterList pClusterList;
     LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, pClusterList);
     if ((!pClusterList.empty()) && (pClusterList.size() == 1))
     {
         const Cluster *const pCluster(pClusterList.front());
-        this->CalculateChargeVariables(pAlgorithm, pCluster, totalCharge, chargeSigma, chargeMean, endCharge, m_endChargeFraction);
+        this->CalculateChargeVariables(pAlgorithm, pCluster, totalCharge, chargeSigma, chargeMean, endCharge);
     }
 
     if (chargeMean > std::numeric_limits<float>::epsilon())
@@ -663,7 +653,7 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge,
-    float &chargeSigma, float &chargeMean, float &endCharge, float endChargeFraction)
+    float &chargeSigma, float &chargeMean, float &endCharge)
 {
 
     CaloHitList orderedCaloHitList;
@@ -673,6 +663,7 @@ void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pA
     FloatVector chargeVector;
     int hitCounter(0);
     totalCharge = 0.f;
+    endCharge = 0.f;
 
     for (const CaloHit *const pCaloHit : orderedCaloHitList)
     {
@@ -688,7 +679,7 @@ void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pA
             totalCharge    += pCaloHitCharge;
             chargeVector.push_back(pCaloHitCharge);
 
-            if (hitCounter >= std::floor(totalHits*(1.f-endChargeFraction)))
+            if (hitCounter >= std::floor(totalHits*(1.f-m_endChargeFraction)))
             {
                 endCharge += pCaloHitCharge;
             }
@@ -720,21 +711,21 @@ void ThreeDChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *c
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if (!pVertexList || (pVertexList->size() != 1) || (VERTEX_3D != pVertexList->front()->GetVertexType()))
-        throw StatusCodeException(STATUS_CODE_FAILURE);
+    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
+    {
+        const Vertex *const pVertex(pVertexList->front());
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
 
-    const Vertex *const pVertex(pVertexList->front());
-    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
+        const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertex->GetPosition(), hitType));
 
-    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), pVertex->GetPosition(), hitType));
+        CaloHitList clusterCaloHitList;
+        pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
+        CaloHitVector clusterCaloHitVector(clusterCaloHitList.begin(), clusterCaloHitList.end());
 
-    CaloHitList clusterCaloHitList;
-    pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
-    CaloHitVector clusterCaloHitVector(clusterCaloHitList.begin(), clusterCaloHitList.end());
-
-    //TODO: might give problems if vertex in the middle of the cluster ?
-    std::sort(clusterCaloHitVector.begin(), clusterCaloHitVector.end(), VertexComparator(vertexPosition2D));
-    caloHitList.insert(caloHitList.end(), clusterCaloHitVector.begin(), clusterCaloHitVector.end());
+        //TODO: might give problems if vertex in the middle of the cluster ?
+        std::sort(clusterCaloHitVector.begin(), clusterCaloHitVector.end(), VertexComparator(vertexPosition2D));
+        caloHitList.insert(caloHitList.end(), clusterCaloHitVector.begin(), clusterCaloHitVector.end());
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -170,7 +170,6 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int    m_slidingLinearFitWindow;       ///< The sliding linear fit window
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -270,7 +269,7 @@ private:
      *  @param  endCharge, to receive the charge in the last 10% hits
      */
     void CalculateChargeVariables(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge, float &chargeSigma,
-        float &chargeMean, float &endCharge, float endChargeFraction);
+        float &chargeMean, float &endCharge);
 
     /**
      *  @brief  Function to order the calo hit list by distance to neutrino vertex
