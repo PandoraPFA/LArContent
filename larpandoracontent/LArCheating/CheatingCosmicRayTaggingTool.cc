@@ -39,7 +39,7 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
         LArPfoHelper::GetAllDownstreamPfos(pParentCosmicRayPfo, downstreamPfos);
 
         float thisCosmicRayWeight(0.f), thisTotalWeight(0.f);
-        CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, true, thisCosmicRayWeight, thisTotalWeight, LArMCParticleHelper::IsCosmicRay);
+        CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, thisCosmicRayWeight, thisTotalWeight, LArMCParticleHelper::IsCosmicRay);
 
         if ((thisTotalWeight > 0.f) && ((thisCosmicRayWeight / thisTotalWeight) < m_maxCosmicRayFraction))
             ambiguousParentPfos.push_back(pParentCosmicRayPfo);

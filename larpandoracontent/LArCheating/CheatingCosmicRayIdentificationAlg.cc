@@ -50,7 +50,7 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
         LArPfoHelper::GetAllDownstreamPfos(pPfo, downstreamPfos);
 
         float thisNeutrinoWeight(0.f), thisTotalWeight(0.f);
-        CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, true, thisNeutrinoWeight, thisTotalWeight, LArMCParticleHelper::IsNeutrino);
+        CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, thisNeutrinoWeight, thisTotalWeight, LArMCParticleHelper::IsNeutrino);
 
         if ((thisTotalWeight < std::numeric_limits<float>::epsilon()) || ((thisNeutrinoWeight / thisTotalWeight) < m_maxNeutrinoFraction))
             outputPfoList.push_back(pPfo);
