@@ -16,9 +16,11 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
+#include "larpandoracontent/LArObjects/LArMCParticle.h"
 
 #include "larpandoracontent/LArPlugins/LArPseudoLayerPlugin.h"
 #include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
@@ -44,6 +46,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_pSliceNuWorkerInstance(nullptr),
     m_pSliceCRWorkerInstance(nullptr),
     m_fullWidthCRWorkerWireGaps(true),
+    m_passMCParticlesToWorkerInstances(false),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_inTimeMaxX0(1.f)
 {
@@ -177,6 +180,9 @@ StatusCode MasterAlgorithm::Initialize()
 
 StatusCode MasterAlgorithm::Run()
 {
+    if (m_passMCParticlesToWorkerInstances)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
+
     PfoToFloatMap stitchedPfosToX0Map;
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
@@ -210,6 +216,29 @@ StatusCode MasterAlgorithm::Run()
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::CopyMCParticles() const
+{
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputMCParticleListName, pMCParticleList));
+
+    PandoraInstanceList pandoraWorkerInstances(m_crWorkerInstances);
+    if (m_pSlicingWorkerInstance) pandoraWorkerInstances.push_back(m_pSlicingWorkerInstance);
+    if (m_pSliceNuWorkerInstance) pandoraWorkerInstances.push_back(m_pSliceNuWorkerInstance);
+    if (m_pSliceCRWorkerInstance) pandoraWorkerInstances.push_back(m_pSliceCRWorkerInstance);
+
+    const LArMCParticleFactory mcParticleFactory;
+
+    for (const Pandora *const pPandoraWorker : pandoraWorkerInstances)
+    {
+        for (const MCParticle *const pMCParticle : *pMCParticleList)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pPandoraWorker, pMCParticle, &mcParticleFactory));
+    }
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -534,7 +563,8 @@ StatusCode MasterAlgorithm::Reset()
 
 StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
 {
-    // TODO Useful protection to ensure that only calo hits owned by the master instance are copied
+    // TODO Protection to ensure that only calo hits owned by the master instance are copied?
+    // TODO Might ultimately want to create LArCaloHits in worker instances, rather than CaloHits, just as we create LArMCParticles, below
     PandoraApi::CaloHit::Parameters parameters;
     parameters.m_positionVector = pCaloHit->GetPositionVector();
     parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
@@ -555,8 +585,57 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     parameters.m_hitRegion = pCaloHit->GetHitRegion();
     parameters.m_layer = pCaloHit->GetLayer();
     parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
+    // ATTN Parent of calo hit in worker is corresponding calo hit in master
     parameters.m_pParentAddress = static_cast<const void*>(pCaloHit);
-    return PandoraApi::CaloHit::Create(*pPandora, parameters);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters));
+
+    if (m_passMCParticlesToWorkerInstances)
+    {
+        MCParticleVector mcParticleVector;
+        for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(weightMapEntry.first);
+        std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
+
+        for (const MCParticle *const pMCParticle : mcParticleVector)
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(*pPandora, pCaloHit,
+                pMCParticle, pCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
+        }
+    }
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const MCParticle *const pMCParticle, const LArMCParticleFactory *const pMCParticleFactory) const
+{
+    LArMCParticleParameters parameters;
+    const LArMCParticle *const pLArMCParticle = dynamic_cast<const LArMCParticle*>(pMCParticle);
+
+    if (!pLArMCParticle)
+    {
+        std::cout << "MasterAlgorithm::Copy - Expect to pass only LArMCParticles to Pandora worker instances." << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+
+    parameters.m_nuanceCode = pLArMCParticle->GetNuanceCode();
+    parameters.m_energy = pMCParticle->GetEnergy();
+    parameters.m_momentum = pMCParticle->GetMomentum();
+    parameters.m_vertex = pMCParticle->GetVertex();
+    parameters.m_endpoint = pMCParticle->GetEndpoint();
+    parameters.m_particleId = pMCParticle->GetParticleId();
+    parameters.m_mcParticleType = pMCParticle->GetMCParticleType();
+    // ATTN Parent of mc particle in worker is corresponding mc particle in master
+    parameters.m_pParentAddress = static_cast<const void*>(pMCParticle);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*pPandora, parameters, *pMCParticleFactory));
+
+    for (const MCParticle *const pDaughterMCParticle : pMCParticle->GetDaughterList())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(*pPandora, pMCParticle, pDaughterMCParticle));
+
+    for (const MCParticle *const pParentMCParticle : pMCParticle->GetParentList())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetMCParentDaughterRelationship(*pPandora, pParentMCParticle, pMCParticle));
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1002,6 +1081,9 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "FullWidthCRWorkerWireGaps", m_fullWidthCRWorkerWireGaps));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PassMCParticlesToWorkerInstances", m_passMCParticlesToWorkerInstances));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CRSettingsFile", m_crSettingsFile));
@@ -1010,6 +1092,11 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     m_crSettingsFile = LArFileHelper::FindFileInPath(m_crSettingsFile, m_filePathEnvironmentVariable);
     m_nuSettingsFile = LArFileHelper::FindFileInPath(m_nuSettingsFile, m_filePathEnvironmentVariable);
     m_slicingSettingsFile = LArFileHelper::FindFileInPath(m_slicingSettingsFile, m_filePathEnvironmentVariable);
+
+    if (m_passMCParticlesToWorkerInstances)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputMCParticleListName", m_inputMCParticleListName));
+    }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputHitListName", m_inputHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedPfoListName", m_recreatedPfoListName));
