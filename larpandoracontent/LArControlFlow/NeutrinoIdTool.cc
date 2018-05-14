@@ -156,15 +156,12 @@ void NeutrinoIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &reconstruct
 
     for (const CaloHit *const pCaloHit : collectedHits)
     {
-        // ATTN hits collected from Pfos are copies of hits passed from master instance, we need to access their parent to use MC info
-        const CaloHit *pParentCaloHit(static_cast<const CaloHit *>(pCaloHit->GetParentAddress()));
-
-        if (!reconstructableCaloHitSet.count(pParentCaloHit))
+        if (!reconstructableCaloHitSet.count(pCaloHit))
             continue;
 
         // Ensure no hits have been double counted
-        if (std::find(reconstructedCaloHitList.begin(), reconstructedCaloHitList.end(), pParentCaloHit) == reconstructedCaloHitList.end())
-            reconstructedCaloHitList.push_back(pParentCaloHit);
+        if (std::find(reconstructedCaloHitList.begin(), reconstructedCaloHitList.end(), pCaloHit) == reconstructedCaloHitList.end())
+            reconstructedCaloHitList.push_back(pCaloHit);
     }
 }
 

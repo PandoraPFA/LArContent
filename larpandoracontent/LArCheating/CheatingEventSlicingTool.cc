@@ -61,13 +61,8 @@ void CheatingEventSlicingTool::InitializeMCParticleToSliceMap(const Algorithm *c
 
         for (const CaloHit *const pCaloHit : *pCaloHitList)
         {
-            const CaloHit *const pCaloHitMaster(static_cast<const CaloHit *>(pCaloHit->GetParentAddress()));
-
-            if (mapEntry.first != pCaloHitMaster->GetHitType())
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
             MCParticleVector mcParticleVector;
-            for (const auto &weightMapEntry : pCaloHitMaster->GetMCParticleWeightMap()) mcParticleVector.push_back(weightMapEntry.first);
+            for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(weightMapEntry.first);
             std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
             for (const MCParticle *const pMCParticle : mcParticleVector)
@@ -99,12 +94,7 @@ void CheatingEventSlicingTool::FillSlices(const Algorithm *const pAlgorithm, con
     {
         try
         {
-            const CaloHit *const pCaloHitMaster(static_cast<const CaloHit *>(pCaloHit->GetParentAddress()));
-
-            if (hitType != pCaloHitMaster->GetHitType())
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHitMaster));
+            const MCParticle *const pMainMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
             const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMainMCParticle));
 
             MCParticleToSliceMap::iterator mapIter = mcParticleToSliceMap.find(pParentMCParticle);
