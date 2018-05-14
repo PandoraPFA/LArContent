@@ -231,7 +231,7 @@ StatusCode MasterAlgorithm::CopyMCParticles() const
     if (m_pSliceNuWorkerInstance) pandoraWorkerInstances.push_back(m_pSliceNuWorkerInstance);
     if (m_pSliceCRWorkerInstance) pandoraWorkerInstances.push_back(m_pSliceCRWorkerInstance);
 
-    const LArMCParticleFactory mcParticleFactory;
+    LArMCParticleFactory mcParticleFactory;
 
     for (const Pandora *const pPandoraWorker : pandoraWorkerInstances)
     {
