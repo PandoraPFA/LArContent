@@ -78,28 +78,36 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPrimaryPfo, pfoMetadata));
         }
 
-        if (m_keepStartVertex)
+        try
         {
-            if (!m_keepInteractionVertex)
+            if (m_keepStartVertex)
             {
-                const Vertex *const pVertex(LArPfoHelper::GetVertex(pPrimaryPfo));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPrimaryPfo, pVertex));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pVertex));
+                if (!m_keepInteractionVertex)
+                {
+                    const Vertex *const pVertex(LArPfoHelper::GetVertex(pPrimaryPfo));
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPrimaryPfo, pVertex));
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pVertex));
+                }
+
+                std::string vertexListName;
+                const VertexList *pVertexList(nullptr);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
+                PandoraContentApi::Vertex::Parameters parameters;
+                parameters.m_position = positionMinZCaloHit;
+                parameters.m_vertexLabel = VERTEX_START;
+                parameters.m_vertexType = VERTEX_3D;
+
+                const Vertex *pVertex(nullptr);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPrimaryPfo, pVertex));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_vertexListName));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_vertexListName));
             }
-
-            std::string vertexListName;
-            const VertexList *pVertexList(nullptr);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
-
-            PandoraContentApi::Vertex::Parameters parameters;
-            parameters.m_position = positionMinZCaloHit;
-            parameters.m_vertexLabel = VERTEX_START;
-            parameters.m_vertexType = VERTEX_3D;
-
-            const Vertex *pVertex(nullptr);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPrimaryPfo, pVertex));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_vertexListName));
+        }
+        catch (StatusCodeException &)
+        {
+            std::cout << "TestBeamParticleCreationAlgorithm::Run - unable to modify test beam particle vertex" << std::endl;
         }
 
         neutrinoPfos.push_back(pPfo);
