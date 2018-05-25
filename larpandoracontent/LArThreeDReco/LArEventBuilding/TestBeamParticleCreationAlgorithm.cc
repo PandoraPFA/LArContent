@@ -105,7 +105,7 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_vertexListName));
             }
         }
-        catch (StatusCodeException &)
+        catch (const StatusCodeException &)
         {
             std::cout << "TestBeamParticleCreationAlgorithm::Run - unable to modify test beam particle vertex" << std::endl;
         }
