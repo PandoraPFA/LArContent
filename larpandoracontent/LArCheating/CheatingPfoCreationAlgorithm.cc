@@ -20,6 +20,7 @@ namespace lar_content
 CheatingPfoCreationAlgorithm::CheatingPfoCreationAlgorithm() :
     m_collapseToPrimaryMCParticles(false),
     m_useOnlyAvailableClusters(true),
+    m_addVertices(false),
     m_minGoodHitTypes(0),
     m_nHitsForGoodHitType(10)
 {
@@ -129,6 +130,27 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
 
             const ParticleFlowObject *pPfo(nullptr);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
+
+            if (m_addVertices)
+            {
+                const VertexList *pVertexList = NULL; std::string vertexListName;
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
+                PandoraContentApi::Vertex::Parameters parameters;
+                parameters.m_position = CartesianVector(pMCParticle->GetVertex().GetX(), pMCParticle->GetVertex().GetY(), pMCParticle->GetVertex().GetZ());
+                parameters.m_vertexLabel = VERTEX_START;
+                parameters.m_vertexType = VERTEX_3D;
+
+                const Vertex *pVertex(NULL);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+
+                if (!pVertexList->empty())
+                {
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_vertexListName));
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_vertexListName));
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pPfo, pVertex));
+                }
+            }
         }
         catch (const StatusCodeException &)
         {
@@ -186,6 +208,15 @@ StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseOnlyAvailableClusters", m_useOnlyAvailableClusters));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "AddVertices", m_addVertices));
+
+    if (m_addVertices)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+            "OutputVertexListName", m_vertexListName));
+    }
 
     IntVector particleIdVector;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
