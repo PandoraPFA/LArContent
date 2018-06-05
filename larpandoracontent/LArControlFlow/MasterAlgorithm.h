@@ -21,6 +21,7 @@ namespace lar_content
 class StitchingBaseTool;
 class CosmicRayTaggingBaseTool;
 class SliceIdBaseTool;
+class LArMCParticleFactory;
 
 typedef std::vector<pandora::CaloHitList> SliceVector;
 typedef std::vector<pandora::PfoList> SliceHypotheses;
@@ -92,6 +93,11 @@ private:
 
     pandora::StatusCode Initialize();
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Copy mc particles in the named input list to all pandora worker instances
+     */
+    pandora::StatusCode CopyMCParticles() const;
 
     /**
      *  @brief  Get the mapping from lar tpc volume id to lists of all hits, and truncated hits
@@ -175,6 +181,15 @@ private:
      *  @param  pCaloHit the address of the calo hit
      */
     pandora::StatusCode Copy(const pandora::Pandora *const pPandora, const pandora::CaloHit *const pCaloHit) const;
+
+    /**
+     *  @brief  Copy a specified mc particle to the provided pandora instance
+     *
+     *  @param  pPandora the address of the target pandora instance
+     *  @param  pMCParticle the address of the mc particle
+     *  @param  pMCParticleFactory the address of the mc particle factory, allowing decoration of instances with information beyond that expected by sdk
+     */
+    pandora::StatusCode Copy(const pandora::Pandora *const pPandora, const pandora::MCParticle *const pMCParticle, const LArMCParticleFactory *const pMCParticleFactory) const;
 
     /**
      *  @brief  Recreate a specified list of pfos in the current pandora instance
@@ -291,6 +306,7 @@ private:
     const pandora::Pandora     *m_pSliceCRWorkerInstance;           ///< The per-slice cosmic-ray reconstruction worker instance
 
     bool                        m_fullWidthCRWorkerWireGaps;        ///< Whether wire-type line gaps in cosmic-ray worker instances should cover all drift time
+    bool                        m_passMCParticlesToWorkerInstances; ///< Whether to pass mc particle details (and links to calo hits) to worker instances
 
     typedef std::vector<StitchingBaseTool*> StitchingToolVector;
     typedef std::vector<CosmicRayTaggingBaseTool*> CosmicRayTaggingToolVector;
@@ -305,6 +321,7 @@ private:
     std::string                 m_nuSettingsFile;                   ///< The neutrino reconstruction settings file
     std::string                 m_slicingSettingsFile;              ///< The slicing settings file
 
+    std::string                 m_inputMCParticleListName;          ///< The input mc particle list name
     std::string                 m_inputHitListName;                 ///< The input hit list name
     std::string                 m_recreatedPfoListName;             ///< The output recreated pfo list name
     std::string                 m_recreatedClusterListName;         ///< The output recreated cluster list name

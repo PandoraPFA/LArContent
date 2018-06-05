@@ -44,7 +44,7 @@ void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *cons
             LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
 
             float thisBeamParticleWeight(0.f), thisTotalWeight(0.f);
-            CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, false, thisBeamParticleWeight, thisTotalWeight, LArMCParticleHelper::IsBeamParticle);
+            CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, thisBeamParticleWeight, thisTotalWeight, LArMCParticleHelper::IsBeamParticle);
 
             beamParticleWeight += thisBeamParticleWeight;
             totalWeight += thisTotalWeight;

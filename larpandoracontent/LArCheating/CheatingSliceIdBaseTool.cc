@@ -19,7 +19,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-void CheatingSliceIdBaseTool::GetTargetParticleWeight(const PfoList *const pPfoList, const bool objectOwnedByMaster, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
+void CheatingSliceIdBaseTool::GetTargetParticleWeight(const PfoList *const pPfoList, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
 {
     targetParticleWeight = 0.f; totalWeight = 0.f;
 
@@ -43,7 +43,7 @@ void CheatingSliceIdBaseTool::GetTargetParticleWeight(const PfoList *const pPfoL
         for (const CaloHit *const pCaloHit : caloHitList)
         {
             float thisTargetParticleWeight = 0.f, thisTotalWeight = 0.f;
-            CheatingSliceIdBaseTool::GetTargetParticleWeight(pCaloHit, objectOwnedByMaster, thisTargetParticleWeight, thisTotalWeight, fCriteria);
+            CheatingSliceIdBaseTool::GetTargetParticleWeight(pCaloHit, thisTargetParticleWeight, thisTotalWeight, fCriteria);
 
             targetParticleWeight += thisTargetParticleWeight;
             totalWeight += thisTotalWeight;
@@ -53,12 +53,10 @@ void CheatingSliceIdBaseTool::GetTargetParticleWeight(const PfoList *const pPfoL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingSliceIdBaseTool::GetTargetParticleWeight(const CaloHit *const pCaloHit, const bool objectOwnedByMaster, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
+void CheatingSliceIdBaseTool::GetTargetParticleWeight(const CaloHit *const pCaloHit, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
 {
     targetParticleWeight = 0.f; totalWeight = 0.f;
-
-    const CaloHit *const pCaloHitMaster(objectOwnedByMaster ? pCaloHit : static_cast<const CaloHit *>(pCaloHit->GetParentAddress()));
-    const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHitMaster->GetMCParticleWeightMap());
+    const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
 
     if (hitMCParticleWeightMap.empty())
         return;
