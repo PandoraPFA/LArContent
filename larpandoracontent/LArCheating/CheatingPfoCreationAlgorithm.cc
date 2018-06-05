@@ -20,7 +20,8 @@ namespace lar_content
 CheatingPfoCreationAlgorithm::CheatingPfoCreationAlgorithm() :
     m_collapseToPrimaryMCParticles(false),
     m_useOnlyAvailableClusters(true),
-    m_addVertices(false),
+    m_addVertices(true),
+    m_replaceCurrentVertexList(false),
     m_minGoodHitTypes(0),
     m_nHitsForGoodHitType(10)
 {
@@ -104,6 +105,9 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
     const PfoList *pPfoList(nullptr); std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
+    const VertexList *pVertexList(nullptr); std::string vertexListName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
     MCParticleVector mcParticleVector;
     for (const auto &mapEntry : mcParticleToClusterListMap) mcParticleVector.push_back(mapEntry.first);
     std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
@@ -133,23 +137,14 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
 
             if (m_addVertices)
             {
-                const VertexList *pVertexList = NULL; std::string vertexListName;
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
-
                 PandoraContentApi::Vertex::Parameters parameters;
-                parameters.m_position = CartesianVector(pMCParticle->GetVertex().GetX(), pMCParticle->GetVertex().GetY(), pMCParticle->GetVertex().GetZ());
+                parameters.m_position = pMCParticle->GetVertex();
                 parameters.m_vertexLabel = VERTEX_START;
                 parameters.m_vertexType = VERTEX_3D;
 
-                const Vertex *pVertex(NULL);
+                const Vertex *pVertex(nullptr);
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-
-                if (!pVertexList->empty())
-                {
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_vertexListName));
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_vertexListName));
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pPfo, pVertex));
-                }
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pPfo, pVertex));
             }
         }
         catch (const StatusCodeException &)
@@ -162,6 +157,14 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Pfo>(*this, m_outputPfoListName));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Pfo>(*this, m_outputPfoListName));
+    }
+
+    if (!pVertexList->empty())
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
+
+        if (m_replaceCurrentVertexList)
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
     }
 }
 
@@ -215,7 +218,10 @@ StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     if (m_addVertices)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "OutputVertexListName", m_vertexListName));
+            "OutputVertexListName", m_outputVertexListName));
+
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+            "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
     }
 
     IntVector particleIdVector;
