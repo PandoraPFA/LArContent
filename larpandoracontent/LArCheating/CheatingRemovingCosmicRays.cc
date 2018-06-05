@@ -37,7 +37,7 @@ StatusCode CheatingRemovingCosmicRays::Run()
         }
         catch (const StatusCodeException &)
         {
-            std::cout << "CheatingRemovingCosmicRays::Run - LArMCParticleHelper::IsCosmicRay function raised an exception." << std::endl;
+            std::cout << "CheatingRemovingCosmicRays::Run - Unable to determine MCParticle origin for an input CaloHit, which will be skipped." << std::endl;
             continue;
         }
     }
