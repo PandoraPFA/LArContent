@@ -867,6 +867,7 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const
     larTPCParameters.m_wirePitchW = larTPC.GetWirePitchW();
     larTPCParameters.m_wireAngleU = larTPC.GetWireAngleU();
     larTPCParameters.m_wireAngleV = larTPC.GetWireAngleV();
+    larTPCParameters.m_wireAngleW = larTPC.GetWireAngleW();
     larTPCParameters.m_sigmaUVW = larTPC.GetSigmaUVW();
     larTPCParameters.m_isDriftInPositiveX = larTPC.IsDriftInPositiveX();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
@@ -955,6 +956,7 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap,
     larTPCParameters.m_wirePitchW = pFirstLArTPC->GetWirePitchW();
     larTPCParameters.m_wireAngleU = pFirstLArTPC->GetWireAngleU();
     larTPCParameters.m_wireAngleV = pFirstLArTPC->GetWireAngleV();
+    larTPCParameters.m_wireAngleW = pFirstLArTPC->GetWireAngleW();
     larTPCParameters.m_sigmaUVW = pFirstLArTPC->GetSigmaUVW();
     larTPCParameters.m_isDriftInPositiveX = pFirstLArTPC->IsDriftInPositiveX();
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::Geometry::LArTPC::Create(*pPandora, larTPCParameters));
