@@ -22,7 +22,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    CheatingRemovingCosmicRays();
+    CheatingRemovingCosmicRays() = default;
 
 private:
     pandora::StatusCode Run();

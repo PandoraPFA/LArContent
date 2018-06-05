@@ -18,14 +18,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingRemovingCosmicRays::CheatingRemovingCosmicRays() :
-    m_inputCaloHitListName(""),
-    m_mcParticleListName("")
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode CheatingRemovingCosmicRays::Run()
 {
     const MCParticleList *pMCParticleList(nullptr);
@@ -40,14 +32,12 @@ StatusCode CheatingRemovingCosmicRays::Run()
     {
         try
         {
-            const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
-
-            if (!LArMCParticleHelper::IsCosmicRay(pHitParticle))
+            if (!LArMCParticleHelper::IsCosmicRay(MCParticleHelper::GetMainMCParticle(pCaloHit)))
                 outputCaloHitList.push_back(pCaloHit);
         }
-        catch (...)
+        catch (const StatusCodeException &)
         {
-            std::cout << "CheatingRemovingCosmicRays::Run - Calo hit has no available MainMCParticle." << std::endl;
+            std::cout << "CheatingRemovingCosmicRays::Run - LArMCParticleHelper::IsCosmicRay function raised an exception." << std::endl;
             continue;
         }
     }
