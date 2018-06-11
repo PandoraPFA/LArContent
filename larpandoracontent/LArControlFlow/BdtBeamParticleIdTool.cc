@@ -324,7 +324,7 @@ void BdtBeamParticleIdTool::SelectPfosByAdaBDTScore(const SliceHypotheses &nuSli
 BdtBeamParticleIdTool::Plane::Plane(const CartesianVector &normal, const CartesianVector &point) :
     m_unitNormal(0.f, 0.f, 0.f),
     m_point(point),
-    m_d(-1.f * (normal.GetDotProduct(point)))
+    m_d(-1. * static_cast<double>(normal.GetDotProduct(point)))
 {
     try
     {
@@ -349,7 +349,7 @@ CartesianVector BdtBeamParticleIdTool::Plane::GetLineIntersection(const Cartesia
     if (std::fabs(denominator) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
-    const float t(-1.f * (point.GetDotProduct(m_unitNormal) + m_d) / denominator);
+    const double t(-1. * (static_cast<double>(point.GetDotProduct(m_unitNormal)) + m_d) / static_cast<double>(denominator));
     return (point + (direction * t));
 }
 
