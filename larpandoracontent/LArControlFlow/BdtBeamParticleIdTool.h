@@ -75,7 +75,7 @@ private:
     private:
         pandora::CartesianVector      m_unitNormal;                         ///< Unit normal to plane
         pandora::CartesianVector      m_point;                              ///< A point on the plane
-        float                         m_d;                                  ///< Parameter defining a plane
+        double                        m_d;                                  ///< Parameter defining a plane
     };
 
     typedef std::vector<Plane> PlaneVector;
