@@ -132,6 +132,11 @@ private:
        void SetNSelectedHits(const unsigned int nSelectedHits);
 
        /**
+        *  @brief  Set m_looseFiducialCut
+        */
+       void SetLooseFiducialCut(const float looseFiducialCut);
+
+       /**
         *  @brief  Get m_larTPCMinX
         */
        float GetLArTPCMinX() const;
@@ -188,6 +193,11 @@ private:
         */
        unsigned int GetNSelectedHits() const;
 
+       /**
+        *  @brief  Get m_looseFiducialCut
+        */
+       float GetLooseFiducialCut() const;
+
     private:
         float                       m_larTPCMinX;             ///< Global LArTPC volume minimum x extent
         float                       m_larTPCMaxX;             ///< Global LArTPC volume maximum x extent
@@ -200,6 +210,7 @@ private:
         pandora::CartesianVector    m_beamDirection;          ///< Beam direction
         float                       m_selectedFraction;       ///< Fraction of hits to use in 3D cluster fits
         unsigned int                m_nSelectedHits;          ///< Minimum number of hits to use in 3D cluster fits
+        float                       m_looseFiducialCut;       ///< Cut to apply on contained intercepts if primary calculation fails
     };
 
     /**
@@ -286,8 +297,9 @@ private:
          *  @brief  Check if a given 3D spacepoint is inside the global LArTPC volume
          *
          *  @param  spacePoint
+         *  @param  limit to use for containment cut
          */
-        bool IsContained(const pandora::CartesianVector &spacePoint) const;
+        bool IsContained(const pandora::CartesianVector &spacePoint, const float limit = std::numeric_limits<float>::epsilon()) const;
 
         bool                            m_isAvailable;               ///< Is the feature vector available
         const SliceFeatureParameters    m_sliceFeatureParameters;    ///< Geometry information block
@@ -422,6 +434,13 @@ inline void BdtBeamParticleIdTool::SliceFeatureParameters::SetNSelectedHits(cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline void BdtBeamParticleIdTool::SliceFeatureParameters::SetLooseFiducialCut(const float looseFiducialCut)
+{
+    m_looseFiducialCut = looseFiducialCut;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLArTPCMinX() const
 {
     return m_larTPCMinX;
@@ -495,6 +514,13 @@ inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetSelectedFraction(
 inline unsigned int BdtBeamParticleIdTool::SliceFeatureParameters::GetNSelectedHits() const
 {
     return m_nSelectedHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLooseFiducialCut() const
+{
+    return m_looseFiducialCut;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
