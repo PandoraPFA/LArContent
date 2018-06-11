@@ -349,7 +349,7 @@ CartesianVector BdtBeamParticleIdTool::Plane::GetLineIntersection(const Cartesia
     if (std::fabs(denominator) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
-    const float t(-1.f * (point.GetDotProduct(m_unitNormal) + m_d) / denominator);
+    const double t(-1.f * (point.GetDotProduct(m_unitNormal) + m_d) / denominator);
     return (point + (direction * t));
 }
 
@@ -366,7 +366,8 @@ BdtBeamParticleIdTool::SliceFeatureParameters::SliceFeatureParameters() :
     m_beamLArTPCIntersection(0.f, 0.f, 0.f),
     m_beamDirection(0.f, 0.f, 0.f),
     m_selectedFraction(10.f),
-    m_nSelectedHits(100)
+    m_nSelectedHits(100),
+    m_looseFiducialCut(0.01)
 {
 }
 
@@ -561,18 +562,47 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(const CartesianVe
     }
     else
     {
-        std::cout << "BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts - inconsistent number of intercepts between a line and the LArTPC" << std::endl;
-        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+        // ATTN: The intersection calculation at this point has failed due to floating point rounding errors.  Fallback to method using a looser fiducial cut.
+        CartesianPointVector looseIntercepts;
+
+        for (const Plane &plane : m_sliceFeatureParameters.GetPlanes())
+        {
+            const CartesianVector looseIntercept(plane.GetLineIntersection(a0, lineUnitVector));
+
+            if (this->IsContained(looseIntercept, m_sliceFeatureParameters.GetLooseFiducialCut()))
+                looseIntercepts.push_back(looseIntercept);
+        }
+
+        if (looseIntercepts.size() < 2)
+        {
+            std::cout << "BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts - inconsistent number of intercepts between a line and the LArTPC" << std::endl;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+        }
+
+        float maximumSeparationSquared(0.f);
+        for (const CartesianVector &looseInterceptOne: looseIntercepts)
+        {
+            for (const CartesianVector &looseInterceptTwo: looseIntercepts)
+            {
+                const float separationSquared((looseInterceptOne - looseInterceptTwo).GetMagnitudeSquared());
+                if (separationSquared > maximumSeparationSquared)
+                {
+                    maximumSeparationSquared = separationSquared;
+                    interceptOne = looseInterceptOne;
+                    interceptTwo = looseInterceptTwo;
+                }
+            }
+        }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool BdtBeamParticleIdTool::SliceFeatures::IsContained(const CartesianVector &spacePoint) const
+bool BdtBeamParticleIdTool::SliceFeatures::IsContained(const CartesianVector &spacePoint, const float limit) const
 {
-    if ((m_sliceFeatureParameters.GetLArTPCMinX() - spacePoint.GetX() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetX() - m_sliceFeatureParameters.GetLArTPCMaxX() > std::numeric_limits<float>::epsilon()) ||
-        (m_sliceFeatureParameters.GetLArTPCMinY() - spacePoint.GetY() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetY() - m_sliceFeatureParameters.GetLArTPCMaxY() > std::numeric_limits<float>::epsilon()) ||
-        (m_sliceFeatureParameters.GetLArTPCMinZ() - spacePoint.GetZ() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetZ() - m_sliceFeatureParameters.GetLArTPCMaxZ() > std::numeric_limits<float>::epsilon()))
+    if ((m_sliceFeatureParameters.GetLArTPCMinX() - spacePoint.GetX() > limit) || (spacePoint.GetX() - m_sliceFeatureParameters.GetLArTPCMaxX() > limit) ||
+        (m_sliceFeatureParameters.GetLArTPCMinY() - spacePoint.GetY() > limit) || (spacePoint.GetY() - m_sliceFeatureParameters.GetLArTPCMaxY() > limit) ||
+        (m_sliceFeatureParameters.GetLArTPCMinZ() - spacePoint.GetZ() > limit) || (spacePoint.GetZ() - m_sliceFeatureParameters.GetLArTPCMaxZ() > limit))
     {
         return false;
     }
@@ -733,6 +763,14 @@ StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     if (nSelectedHits > 0)
         m_sliceFeatureParameters.SetNSelectedHits(nSelectedHits);
+
+    float looseFiducialCut(0.f);
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "LooseFiducialCut", looseFiducialCut));
+
+    if (looseFiducialCut > 0.f)
+        m_sliceFeatureParameters.SetLooseFiducialCut(looseFiducialCut);
 
     return STATUS_CODE_SUCCESS;
 }
