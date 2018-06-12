@@ -69,14 +69,15 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPrimaryPfo, pPrimaryDaughterPfo));
         }
 
+        PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
+        pfoMetadata.m_propertiesToAdd["IsTestBeam"] = 1.f;
+
         // ATTN: If the primary pfo is shower like, the target beam particle is most likely an electron/positron.  If the primary pfo is track like, the target
         // beam particle is most likely a pion as pion interactions are more frequent than proton, kaon and muon interactions in the CERN test beam.
         if (std::abs(pPrimaryPfo->GetParticleId()) != E_MINUS)
-        {
-            PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
             pfoMetadata.m_particleId = PI_PLUS;
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPrimaryPfo, pfoMetadata));
-        }
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPrimaryPfo, pfoMetadata));
 
         try
         {
