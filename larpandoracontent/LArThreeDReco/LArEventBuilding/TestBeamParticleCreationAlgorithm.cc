@@ -41,8 +41,14 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
         if (!LArPfoHelper::IsNeutrino(pPfo))
             continue;
 
-        const PfoList &daughterList(pPfo->GetDaughterPfoList());
+        // ATTN: If the test beam score is not set in the neutrino pfo, set the score to 1 as it has been reconstructed under the neutrino hypothesis
+        const PropertiesMap properties(pPfo->GetPropertiesMap());
+        float testBeamScore(1.f);
 
+        if (properties.find("TestBeamScore") != properties.end())
+            testBeamScore = properties.at("TestBeamScore");
+
+        const PfoList &daughterList(pPfo->GetDaughterPfoList());
         const Pfo *pPrimaryPfo(nullptr);
         CartesianVector positionMinZCaloHit(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
 
@@ -71,6 +77,7 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
 
         PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
         pfoMetadata.m_propertiesToAdd["IsTestBeam"] = 1.f;
+        pfoMetadata.m_propertiesToAdd["TestBeamScore"] = testBeamScore;
 
         // ATTN: If the primary pfo is shower like, the target beam particle is most likely an electron/positron.  If the primary pfo is track like, the target
         // beam particle is most likely a pion as pion interactions are more frequent than proton, kaon and muon interactions in the CERN test beam.
