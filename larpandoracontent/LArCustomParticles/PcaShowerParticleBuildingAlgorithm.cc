@@ -63,6 +63,7 @@ void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
         pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_momentum = pInputPfo->GetMomentum();
+        pfoParameters.m_propertiesToAdd = pInputPfo->GetPropertiesMap();
         pfoParameters.m_showerVertex = pInputVertex->GetPosition();
         pfoParameters.m_showerCentroid = showerPCA.GetCentroid();
         pfoParameters.m_showerDirection = showerPCA.GetPrimaryAxis();

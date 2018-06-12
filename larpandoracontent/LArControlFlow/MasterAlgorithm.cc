@@ -834,6 +834,7 @@ const ParticleFlowObject *MasterAlgorithm::CreatePfo(const ParticleFlowObject *c
     parameters.m_clusterList = newClusterList;
     parameters.m_trackList.clear();
     parameters.m_vertexList = newVertexList;
+    parameters.m_propertiesToAdd = pInputPfo->GetPropertiesMap();
 
     const ParticleFlowObject *pNewPfo(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, parameters, pNewPfo));
