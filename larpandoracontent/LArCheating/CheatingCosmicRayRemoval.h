@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArCheating/CheatingRemovingCosmicRays.h
+ *  @file   larpandoracontent/LArCheating/CheatingCosmicRayRemoval.h
  * 
- *  @brief  Header file for the cheating removing cosmic rays algorithm class.
+ *  @brief  Header file for the cheating cosmic ray removal algorithm class.
  * 
  *  $Log: $
  */
-#ifndef LAR_CHEATING_REMOVING_COSMIC_RAYS_H
-#define LAR_CHEATING_REMOVING_COSMIC_RAYS_H 1
+#ifndef LAR_CHEATING_COSMIC_RAY_REMOVAL_H
+#define LAR_CHEATING_COSMIC_RAY_REMOVAL_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,15 +14,15 @@ namespace lar_content
 {
 
 /**
- *  @brief  CheatingRemovingCosmicRays::Algorithm class
+ *  @brief  CheatingCosmicRayRemoval::Algorithm class
  */
-class CheatingRemovingCosmicRays : public pandora::Algorithm
+class CheatingCosmicRayRemoval : public pandora::Algorithm
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    CheatingRemovingCosmicRays() = default;
+    CheatingCosmicRayRemoval() = default;
 
 private:
     pandora::StatusCode Run();
@@ -36,4 +36,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_CHEATING_REMOVING_COSMIC_RAYS_H
+#endif // #ifndef LAR_CHEATING_COSMIC_RAY_REMOVAL_H

@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArCheating/CheatingRemovingCosmicRays.cc
+ *  @file   larpandoracontent/LArCheating/CheatingCosmicRayRemoval.cc
  * 
- *  @brief  Implementation of the cheating removing cosmic rays algorithm class.
+ *  @brief  Implementation of the cheating cosmic ray removal algorithm class.
  * 
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "larpandoracontent/LArCheating/CheatingRemovingCosmicRays.h"
+#include "larpandoracontent/LArCheating/CheatingCosmicRayRemoval.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-StatusCode CheatingRemovingCosmicRays::Run()
+StatusCode CheatingCosmicRayRemoval::Run()
 {
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
@@ -32,12 +32,13 @@ StatusCode CheatingRemovingCosmicRays::Run()
     {
         try
         {
-            if (!LArMCParticleHelper::IsCosmicRay(MCParticleHelper::GetMainMCParticle(pCaloHit)))
+            const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+            if (!LArMCParticleHelper::IsCosmicRay(LArMCParticleHelper::GetParentMCParticle(pMCParticle)))
                 outputCaloHitList.push_back(pCaloHit);
         }
         catch (const StatusCodeException &)
         {
-            std::cout << "CheatingRemovingCosmicRays::Run - Unable to determine MCParticle origin for an input CaloHit, which will be skipped." << std::endl;
+            std::cout << "CheatingCosmicRayRemoval::Run - Unable to determine MCParticle origin for an input CaloHit, which will be skipped." << std::endl;
             continue;
         }
     }
@@ -50,7 +51,7 @@ StatusCode CheatingRemovingCosmicRays::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingRemovingCosmicRays::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CheatingCosmicRayRemoval::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_inputCaloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
