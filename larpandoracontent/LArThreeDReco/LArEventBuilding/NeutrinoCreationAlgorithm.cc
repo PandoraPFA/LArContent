@@ -106,6 +106,7 @@ void NeutrinoCreationAlgorithm::FillDefaultNeutrinoParameters(PandoraContentApi:
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
     pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
+    pfoParameters.m_propertiesToAdd["IsNeutrino"] = 1.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
