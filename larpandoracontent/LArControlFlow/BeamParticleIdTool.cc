@@ -39,7 +39,7 @@ BeamParticleIdTool::BeamParticleIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const /*pAlgorithm*/, const SliceHypotheses &beamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &beamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
     if (beamSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -51,6 +51,18 @@ void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const /*pAlgorithm*/,
         {
             const PfoList &sliceOutput((m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex))) ?
                 beamSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
+
+            float score(-1.f);
+
+            if (m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex)))
+                score = 1.f;
+
+            for (const ParticleFlowObject *const pPfo : sliceOutput)
+            {
+                object_creation::ParticleFlowObject::Metadata metadata;
+                metadata.m_propertiesToAdd["TestBeamScore"] = score;
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+            }
 
             selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
         }
@@ -104,7 +116,15 @@ void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const /*pAlgorithm*/,
         }
 
         const PfoList &sliceOutput(usebeamHypothesis ? beamSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
-            selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
+        selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
+        float score(usebeamHypothesis ? 1.f : -1.f);
+
+        for (const ParticleFlowObject *const pPfo : sliceOutput)
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["TestBeamScore"] = score;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
     }
 }
 
