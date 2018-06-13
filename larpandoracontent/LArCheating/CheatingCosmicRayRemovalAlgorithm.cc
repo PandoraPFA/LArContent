@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArCheating/CheatingCosmicRayRemoval.cc
+ *  @file   larpandoracontent/LArCheating/CheatingCosmicRayRemovalAlgorithm.cc
  * 
  *  @brief  Implementation of the cheating cosmic ray removal algorithm class.
  * 
@@ -11,14 +11,14 @@
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "larpandoracontent/LArCheating/CheatingCosmicRayRemoval.h"
+#include "larpandoracontent/LArCheating/CheatingCosmicRayRemovalAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-StatusCode CheatingCosmicRayRemoval::Run()
+StatusCode CheatingCosmicRayRemovalAlgorithm::Run()
 {
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
@@ -38,7 +38,7 @@ StatusCode CheatingCosmicRayRemoval::Run()
         }
         catch (const StatusCodeException &)
         {
-            std::cout << "CheatingCosmicRayRemoval::Run - Unable to determine MCParticle origin for an input CaloHit, which will be skipped." << std::endl;
+            std::cout << "CheatingCosmicRayRemovalAlgorithm::Run - Unable to determine MCParticle origin for an input CaloHit, which will be skipped." << std::endl;
             continue;
         }
     }
@@ -51,7 +51,7 @@ StatusCode CheatingCosmicRayRemoval::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingCosmicRayRemoval::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CheatingCosmicRayRemovalAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_inputCaloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));

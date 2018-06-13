@@ -1,5 +1,22 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
-TAG v03_11_00
+TAG v03_13_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Updated lar rotational transformation plugin implementation to handle a non-zero w wire angle. Sign convention for v wire angle also changed.
+First use of PfoPropertiesMap, in neutrino and test beam particle creation algorithms, and when copying/recreating any pfo instances.
+Added CheatingCosmicRayRemoval algorithm.
+Added vertices for cheated (non-neutrino) particles.
+Corrected particle id comparison inside LArPfoHelper::IsTestBeam.
+Modified accuracy used in calculation of intersection between PCA fit and LArTPC.
+Added option to pass MCParticle instances, relationships and links to CaloHits, to Pandora worker instances.
+Cheating tools no longer need to navigate back to master CaloHit instances in order to access MCParticle information.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_12_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Minor changes from the LArSoft team.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_12_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Restructured LArSupportVectorMachine class and converted the LArSvmHelper into the more generic LArMvaHelper.
 Added LArAdaBoostDecisionTree class.
