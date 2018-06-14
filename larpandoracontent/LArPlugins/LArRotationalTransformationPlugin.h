@@ -62,7 +62,9 @@ private:
     double    m_sinWminusV;             ///< sin(thetaW - thetaV)
     double    m_sinUminusW;             ///< sin(thetaU - thetaW)
 
-    double    m_maxAngularDiscrepancy;  ///< Maximum allowed difference between like wire (u and v) angles between LArTPCs
+    double    m_maxAngularDiscrepancyU; ///< Maximum allowed difference between u wire angles between LArTPCs
+    double    m_maxAngularDiscrepancyV; ///< Maximum allowed difference between v wire angles between LArTPCs
+    double    m_maxAngularDiscrepancyW; ///< Maximum allowed difference between w wire angles between LArTPCs
     double    m_maxSigmaDiscrepancy;    ///< Maximum allowed difference between like wire sigma values between LArTPCs
 };
 

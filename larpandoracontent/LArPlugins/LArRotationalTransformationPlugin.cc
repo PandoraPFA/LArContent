@@ -38,7 +38,9 @@ LArRotationalTransformationPlugin::LArRotationalTransformationPlugin() :
     m_sinVminusU(0.),
     m_sinWminusV(0.),
     m_sinUminusW(0.),
-    m_maxAngularDiscrepancy(0.03),
+    m_maxAngularDiscrepancyU(0.03),
+    m_maxAngularDiscrepancyV(0.03),
+    m_maxAngularDiscrepancyW(0.03),
     m_maxSigmaDiscrepancy(0.01)
 {
 }
@@ -302,13 +304,13 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
     {
         const LArTPC *const pLArTPC(mapEntry.second);
 
-        if ((std::fabs(m_thetaU - pLArTPC->GetWireAngleU()) > m_maxAngularDiscrepancy) ||
-            (std::fabs(m_thetaV - pLArTPC->GetWireAngleV()) > m_maxAngularDiscrepancy) ||
-            (std::fabs(m_thetaW - pLArTPC->GetWireAngleW()) > m_maxAngularDiscrepancy) ||
+        if ((std::fabs(m_thetaU - pLArTPC->GetWireAngleU()) > m_maxAngularDiscrepancyU) ||
+            (std::fabs(m_thetaV - pLArTPC->GetWireAngleV()) > m_maxAngularDiscrepancyV) ||
+            (std::fabs(m_thetaW - pLArTPC->GetWireAngleW()) > m_maxAngularDiscrepancyW) ||
             (std::fabs(sigmaUVW - pLArTPC->GetSigmaUVW()) > m_maxSigmaDiscrepancy))
         {
             std::cout << "LArRotationalTransformationPlugin::Initialize - Dissimilar drift volumes; Plugin does not support provided LArTPC configurations. " << std::endl;
-            return STATUS_CODE_INVALID_PARAMETER;
+            //return STATUS_CODE_INVALID_PARAMETER;
         }
     }
 
@@ -320,7 +322,13 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
 pandora::StatusCode LArRotationalTransformationPlugin::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAngularDiscrepancy", m_maxAngularDiscrepancy));
+        "MaxAngularDiscrepancyU", m_maxAngularDiscrepancyU));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxAngularDiscrepancyV", m_maxAngularDiscrepancyV));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxAngularDiscrepancyW", m_maxAngularDiscrepancyW));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxSigmaDiscrepancy", m_maxSigmaDiscrepancy));
