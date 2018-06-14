@@ -23,7 +23,7 @@ SimpleNeutrinoIdTool::SimpleNeutrinoIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SimpleNeutrinoIdTool::SelectOutputPfos(const Algorithm *const /*pAlgorithm*/, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+void SimpleNeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -32,6 +32,22 @@ void SimpleNeutrinoIdTool::SelectOutputPfos(const Algorithm *const /*pAlgorithm*
     {
         const PfoList &sliceOutput((m_selectAllNeutrinos || (m_selectOnlyFirstSliceNeutrinos && (0 == sliceIndex))) ?
             nuSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
+
+        float score(m_selectAllNeutrinos || (m_selectOnlyFirstSliceNeutrinos && (0 == sliceIndex)) ? 1.f : -1.f);
+
+        for (const ParticleFlowObject *const pPfo : crSliceHypotheses.at(sliceIndex))
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["NuScore"] = score;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
+
+        for (const ParticleFlowObject *const pPfo : nuSliceHypotheses.at(sliceIndex))
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["NuScore"] = score;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
 
         selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
     }
