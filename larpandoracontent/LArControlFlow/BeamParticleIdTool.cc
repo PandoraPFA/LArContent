@@ -52,10 +52,7 @@ void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, con
             const PfoList &sliceOutput((m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex))) ?
                 beamSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
 
-            float score(-1.f);
-
-            if (m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex)))
-                score = 1.f;
+            const float score(m_selectAllBeamParticles || (m_selectOnlyFirstSliceBeamParticles && (0 == sliceIndex)) ? 1.f : -1.f);
 
             for (const ParticleFlowObject *const pPfo : sliceOutput)
             {
@@ -117,7 +114,8 @@ void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, con
 
         const PfoList &sliceOutput(usebeamHypothesis ? beamSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
         selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
-        float score(usebeamHypothesis ? 1.f : -1.f);
+
+        const float score(usebeamHypothesis ? 1.f : -1.f);
 
         for (const ParticleFlowObject *const pPfo : sliceOutput)
         {
@@ -186,7 +184,7 @@ void BeamParticleIdTool::GetSelectedCaloHits(const CaloHitList &inputCaloHitList
     typedef std::pair<const CaloHit*, float> HitDistancePair;
     typedef std::vector<HitDistancePair> HitDistanceVector;
     HitDistanceVector hitDistanceVector;
-    
+
     for (const CaloHit *const pCaloHit : inputCaloHitList)
         hitDistanceVector.emplace_back(pCaloHit, (pCaloHit->GetPositionVector() - m_beamTPCIntersection).GetMagnitudeSquared());
 

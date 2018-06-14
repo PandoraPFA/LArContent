@@ -43,10 +43,8 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
 
         // ATTN: If the test beam score is not set in the neutrino pfo, set the score to 1 as it has been reconstructed under the neutrino hypothesis
         const PropertiesMap properties(pPfo->GetPropertiesMap());
-        float testBeamScore(1.f);
-
-        if (properties.find("TestBeamScore") != properties.end())
-            testBeamScore = properties.at("TestBeamScore");
+        PropertiesMap::const_iterator propertiesIter(properties.find("TestBeamScore"));
+        const float testBeamScore(propertiesIter != properties.end() ? (*propertiesIter).second : 1.f);
 
         const PfoList &daughterList(pPfo->GetDaughterPfoList());
         const Pfo *pPrimaryPfo(nullptr);
