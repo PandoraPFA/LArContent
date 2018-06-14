@@ -33,7 +33,7 @@ void SimpleNeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, c
         const PfoList &sliceOutput((m_selectAllNeutrinos || (m_selectOnlyFirstSliceNeutrinos && (0 == sliceIndex))) ?
             nuSliceHypotheses.at(sliceIndex) : crSliceHypotheses.at(sliceIndex));
 
-        float score(m_selectAllNeutrinos || (m_selectOnlyFirstSliceNeutrinos && (0 == sliceIndex)) ? 1.f : -1.f);
+        const float score(m_selectAllNeutrinos || (m_selectOnlyFirstSliceNeutrinos && (0 == sliceIndex)) ? 1.f : -1.f);
 
         for (const ParticleFlowObject *const pPfo : crSliceHypotheses.at(sliceIndex))
         {
