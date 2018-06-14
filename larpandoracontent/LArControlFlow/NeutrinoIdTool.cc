@@ -53,7 +53,7 @@ void NeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const S
     if (m_useTrainingMode)
     {
         // ATTN in training mode, just return everything as a cosmic-ray
-        this->SelectAllPfos(crSliceHypotheses, selectedPfos);
+        this->SelectAllPfos(pAlgorithm, crSliceHypotheses, selectedPfos);
 
         unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
         if (!this->GetBestMCSliceIndex(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, bestSliceIndex)) return;
@@ -71,7 +71,7 @@ void NeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const S
         return;
     }
 
-    this->SelectPfosByProbability(nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector, selectedPfos);
+    this->SelectPfosByProbability(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector, selectedPfos);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -206,21 +206,44 @@ int NeutrinoIdTool::GetNuanceCode(const Algorithm *const pAlgorithm) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoIdTool::SelectAllPfos(const SliceHypotheses &hypotheses, PfoList &selectedPfos) const
+void NeutrinoIdTool::SelectAllPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &hypotheses, PfoList &selectedPfos) const
 {
     for (const PfoList &pfos : hypotheses)
+    {
+        for (const ParticleFlowObject *const pPfo : pfos)
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["TestBeamScore"] = -1.f;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
+
         this->SelectPfos(pfos, selectedPfos);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoIdTool::SelectPfosByProbability(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos) const
+void NeutrinoIdTool::SelectPfosByProbability(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos) const
 {
     // Calculate the probability of each slice that passes the minimum probability cut
     std::vector<UintFloatPair> sliceIndexProbabilityPairs;
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
         const float nuProbability(sliceFeaturesVector.at(sliceIndex).GetNeutrinoProbability(m_supportVectorMachine));
+
+        for (const ParticleFlowObject *const pPfo : crSliceHypotheses.at(sliceIndex))
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["NuScore"] = nuProbability;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
+
+        for (const ParticleFlowObject *const pPfo : nuSliceHypotheses.at(sliceIndex))
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["NuScore"] = nuProbability;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
 
         if (nuProbability < m_minProbability)
         {
