@@ -87,7 +87,7 @@ void BdtBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const pAl
     if (m_useTrainingMode)
     {
         // ATTN in training mode, just return everything as a cosmic-ray
-        this->SelectAllPfos(crSliceHypotheses, selectedPfos);
+        this->SelectAllPfos(pAlgorithm, crSliceHypotheses, selectedPfos);
 
         pandora::IntVector bestSliceIndices;
         this->GetBestMCSliceIndices(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, bestSliceIndices);
@@ -119,7 +119,7 @@ void BdtBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const pAl
         return;
     }
 
-    this->SelectPfosByAdaBDTScore(nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector, selectedPfos);
+    this->SelectPfosByAdaBDTScore(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector, selectedPfos);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,10 +132,19 @@ void BdtBeamParticleIdTool::GetSliceFeatures(const BdtBeamParticleIdTool *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::SelectAllPfos(const SliceHypotheses &hypotheses, PfoList &selectedPfos) const
+void BdtBeamParticleIdTool::SelectAllPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &hypotheses, PfoList &selectedPfos) const
 {
     for (const PfoList &pfos : hypotheses)
+    {
+        for (const ParticleFlowObject *const pPfo : pfos)
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["TestBeamScore"] = -1.f;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
+
         this->SelectPfos(pfos, selectedPfos);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -280,13 +289,27 @@ bool BdtBeamParticleIdTool::PassesQualityCuts(const float purity, const float co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::SelectPfosByAdaBDTScore(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos) const
+void BdtBeamParticleIdTool::SelectPfosByAdaBDTScore(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos) const
 {
     // Calculate the probability of each slice that passes the minimum probability cut
     std::vector<UintFloatPair> sliceIndexAdaBDTScorePairs;
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
         const float nuAdaBDTScore(sliceFeaturesVector.at(sliceIndex).GetAdaBoostDecisionTreeScore(m_adaBoostDecisionTree));
+
+        for (const ParticleFlowObject *const pPfo : crSliceHypotheses.at(sliceIndex))
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["TestBeamScore"] = nuAdaBDTScore;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
+
+        for (const ParticleFlowObject *const pPfo : nuSliceHypotheses.at(sliceIndex))
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["TestBeamScore"] = nuAdaBDTScore;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
+        }
 
         if (nuAdaBDTScore < m_minAdaBDTScore)
         {

@@ -211,20 +211,22 @@ private:
     /**
      *  @brief  Select all pfos under the same hypothesis
      *
+     *  @param  pAlgorithm address of the master algorithm
      *  @param  hypotheses the lists of slices under a certain hypothesis
      *  @param  selectedPfos the list of pfos to populate
      */
-    void SelectAllPfos(const SliceHypotheses &hypotheses, pandora::PfoList &selectedPfos) const;
+    void SelectAllPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &hypotheses, pandora::PfoList &selectedPfos) const;
 
     /**
      *  @brief  Select pfos based on the probability that their slice contains a neutrino interaction
      *
+     *  @param  pAlgorithm address of the master algorithm
      *  @param  nuSliceHypotheses the input neutrino slice hypotheses
      *  @param  crSliceHypotheses the input cosmic slice hypotheses
      *  @param  sliceFeaturesVector vector holding the slice features
      *  @param  selectedPfos the list of pfos to populate
      */
-    void SelectPfosByProbability(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, pandora::PfoList &selectedPfos) const;
+    void SelectPfosByProbability(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, pandora::PfoList &selectedPfos) const;
 
     /**
      *  @brief  Add the given pfos to the selected Pfo list
