@@ -9,6 +9,7 @@ Corrected particle id comparison inside LArPfoHelper::IsTestBeam.
 Modified accuracy used in calculation of intersection between PCA fit and LArTPC.
 Added option to pass MCParticle instances, relationships and links to CaloHits, to Pandora worker instances.
 Cheating tools no longer need to navigate back to master CaloHit instances in order to access MCParticle information.
+Pandora worker instances now initialized at start of first event, as client app is unable to extract gap information before that point.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_12_01
