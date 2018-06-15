@@ -69,8 +69,15 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 {
 
     if (!LArPfoHelper::IsThreeD(pPfo))
+    {
+        if (m_enableProbability)
+        {
+            object_creation::ParticleFlowObject::Metadata metadata;
+            metadata.m_propertiesToAdd["TrackScore"] = -1.f;
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+        }
         return (pPfo->GetParticleId() == MU_MINUS);
-
+    }
     //charge related features are only calculated using hits in W view
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
@@ -104,7 +111,15 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     for (const LArMvaHelper::MvaFeature &featureValue : featureVector)
     {
         if (!featureValue.IsInitialized())
+        {
+            if (m_enableProbability)
+            {
+                object_creation::ParticleFlowObject::Metadata metadata;
+                metadata.m_propertiesToAdd["TrackScore"] = -1.f;
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+            }
             return (pPfo->GetParticleId() == MU_MINUS);
+        }
     }
 
     //if no failures, proceed with svm classification
@@ -114,7 +129,11 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     }
     else
     {
-        return (m_minProbabilityCut <= LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector));
+        const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_supportVectorMachineNoChargeInfo : m_supportVectorMachine), featureVector));
+        object_creation::ParticleFlowObject::Metadata metadata;
+        metadata.m_propertiesToAdd["TrackScore"] = score;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+        return (m_minProbabilityCut <= score);
     }
 }
 
