@@ -581,12 +581,14 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(const CartesianVe
     if (intercepts.size() > 1)
     {
         float maximumSeparationSquared(0.f);
+        bool interceptsSet(false);
+
         for (unsigned int i = 0; i < intercepts.size(); i++)
         {
             for (unsigned int j = i + 1; j < intercepts.size(); j++)
             {
-                const CartesianVector candidateInterceptOne(intercepts.at(i));
-                const CartesianVector candidateInterceptTwo(intercepts.at(j));
+                const CartesianVector &candidateInterceptOne(intercepts.at(i));
+                const CartesianVector &candidateInterceptTwo(intercepts.at(j));
                 const float separationSquared((candidateInterceptOne - candidateInterceptTwo).GetMagnitudeSquared());
 
                 if (separationSquared > maximumSeparationSquared)
@@ -594,8 +596,15 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(const CartesianVe
                     maximumSeparationSquared = separationSquared;
                     interceptOne = candidateInterceptOne;
                     interceptTwo = candidateInterceptTwo;
+                    interceptsSet = true;
                 }
             }
+        }
+
+        if (!interceptsSet)
+        {
+            std::cout << "BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts - unable to set the intercepts between a line and the LArTPC" << std::endl;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
     }
     else
@@ -778,8 +787,15 @@ StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ContainmentLimit", containmentLimit));
 
-    if (containmentLimit > 0.f)
+    if (containmentLimit < 0.f)
+    {
+        std::cout << "BdtBeamParticleIdTool::ReadSettings - invalid ContainmentLimit specified " << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+    else if (containmentLimit > 0.f)
+    {
         m_sliceFeatureParameters.SetContainmentLimit(containmentLimit);
+    }
 
     return STATUS_CODE_SUCCESS;
 }
