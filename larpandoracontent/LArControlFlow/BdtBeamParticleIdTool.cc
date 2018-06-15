@@ -389,7 +389,8 @@ BdtBeamParticleIdTool::SliceFeatureParameters::SliceFeatureParameters() :
     m_beamLArTPCIntersection(0.f, 0.f, 0.f),
     m_beamDirection(0.f, 0.f, 0.f),
     m_selectedFraction(10.f),
-    m_nSelectedHits(100)
+    m_nSelectedHits(100),
+    m_containmentLimit(0.01f)
 {
 }
 
@@ -573,14 +574,38 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(const CartesianVe
     {
         const CartesianVector intercept(plane.GetLineIntersection(a0, lineUnitVector));
 
-        if (this->IsContained(intercept))
+        if (this->IsContained(intercept, m_sliceFeatureParameters.GetContainmentLimit()))
             intercepts.push_back(intercept);
     }
 
-    if (intercepts.size() == 2)
+    if (intercepts.size() > 1)
     {
-        interceptOne = intercepts.at(0);
-        interceptTwo = intercepts.at(1);
+        float maximumSeparationSquared(0.f);
+        bool interceptsSet(false);
+
+        for (unsigned int i = 0; i < intercepts.size(); i++)
+        {
+            for (unsigned int j = i + 1; j < intercepts.size(); j++)
+            {
+                const CartesianVector &candidateInterceptOne(intercepts.at(i));
+                const CartesianVector &candidateInterceptTwo(intercepts.at(j));
+                const float separationSquared((candidateInterceptOne - candidateInterceptTwo).GetMagnitudeSquared());
+
+                if (separationSquared > maximumSeparationSquared)
+                {
+                    maximumSeparationSquared = separationSquared;
+                    interceptOne = candidateInterceptOne;
+                    interceptTwo = candidateInterceptTwo;
+                    interceptsSet = true;
+                }
+            }
+        }
+
+        if (!interceptsSet)
+        {
+            std::cout << "BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts - unable to set the intercepts between a line and the LArTPC" << std::endl;
+            throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+        }
     }
     else
     {
@@ -591,11 +616,11 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(const CartesianVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool BdtBeamParticleIdTool::SliceFeatures::IsContained(const CartesianVector &spacePoint) const
+bool BdtBeamParticleIdTool::SliceFeatures::IsContained(const CartesianVector &spacePoint, const float limit) const
 {
-    if ((m_sliceFeatureParameters.GetLArTPCMinX() - spacePoint.GetX() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetX() - m_sliceFeatureParameters.GetLArTPCMaxX() > std::numeric_limits<float>::epsilon()) ||
-        (m_sliceFeatureParameters.GetLArTPCMinY() - spacePoint.GetY() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetY() - m_sliceFeatureParameters.GetLArTPCMaxY() > std::numeric_limits<float>::epsilon()) ||
-        (m_sliceFeatureParameters.GetLArTPCMinZ() - spacePoint.GetZ() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetZ() - m_sliceFeatureParameters.GetLArTPCMaxZ() > std::numeric_limits<float>::epsilon()))
+    if ((m_sliceFeatureParameters.GetLArTPCMinX() - spacePoint.GetX() > limit) || (spacePoint.GetX() - m_sliceFeatureParameters.GetLArTPCMaxX() > limit) ||
+        (m_sliceFeatureParameters.GetLArTPCMinY() - spacePoint.GetY() > limit) || (spacePoint.GetY() - m_sliceFeatureParameters.GetLArTPCMaxY() > limit) ||
+        (m_sliceFeatureParameters.GetLArTPCMinZ() - spacePoint.GetZ() > limit) || (spacePoint.GetZ() - m_sliceFeatureParameters.GetLArTPCMaxZ() > limit))
     {
         return false;
     }
@@ -756,6 +781,21 @@ StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     if (nSelectedHits > 0)
         m_sliceFeatureParameters.SetNSelectedHits(nSelectedHits);
+
+    float containmentLimit(0.f);
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ContainmentLimit", containmentLimit));
+
+    if (containmentLimit < 0.f)
+    {
+        std::cout << "BdtBeamParticleIdTool::ReadSettings - invalid ContainmentLimit specified " << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+    else if (containmentLimit > 0.f)
+    {
+        m_sliceFeatureParameters.SetContainmentLimit(containmentLimit);
+    }
 
     return STATUS_CODE_SUCCESS;
 }
