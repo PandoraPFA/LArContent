@@ -26,7 +26,7 @@ public:
     SvmPfoCharacterisationAlgorithm();
 
 protected:
-    virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
+    virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo);
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

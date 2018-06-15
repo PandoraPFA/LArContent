@@ -19,7 +19,7 @@ namespace lar_content
 class CheatingPfoCharacterisationAlgorithm : public PfoCharacterisationBaseAlgorithm
 {
 private:
-    bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
+    bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo);
     bool IsClearTrack(const pandora::Cluster *const pCluster) const;
 };
 

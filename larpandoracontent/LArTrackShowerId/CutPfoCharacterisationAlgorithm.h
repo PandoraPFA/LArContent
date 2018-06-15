@@ -26,7 +26,7 @@ public:
 
 private:
     bool IsClearTrack(const pandora::Cluster *const pCluster) const;
-    bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
+    bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     bool                    m_postBranchAddition;           ///< Whether to use configuration for shower clusters post branch addition
