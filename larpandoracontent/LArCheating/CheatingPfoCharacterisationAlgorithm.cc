@@ -18,7 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const pPfo) const
+bool CheatingPfoCharacterisationAlgorithm::IsClearTrack(const ParticleFlowObject *const pPfo)
 {
     CaloHitList caloHitList;
     LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList);

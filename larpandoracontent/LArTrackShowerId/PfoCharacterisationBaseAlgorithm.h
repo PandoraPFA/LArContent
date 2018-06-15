@@ -48,7 +48,7 @@ protected:
      * 
      *  @return boolean
      */
-    virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const = 0;
+    virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) = 0;
 
     /**
      *  @brief  Whether cluster is identified as a clear track
