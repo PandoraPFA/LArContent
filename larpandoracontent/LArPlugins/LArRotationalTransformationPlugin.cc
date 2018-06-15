@@ -155,7 +155,7 @@ void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const
 
     const double deltaU(u - LArRotationalTransformationPlugin::YZtoU(y, z));
     const double deltaV(v - LArRotationalTransformationPlugin::YZtoV(y, z));
-    const double deltaW(w - z);
+    const double deltaW(w - LArRotationalTransformationPlugin::YZtoW(y, z));
     chiSquared = ((deltaU * deltaU) / sigmaU2) + ((deltaV * deltaV) / sigmaV2) + ((deltaW * deltaW) / sigmaW2);
 }
 
@@ -255,9 +255,10 @@ void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const
 
     const double outputU(LArRotationalTransformationPlugin::YZtoU(y, z));
     const double outputV(LArRotationalTransformationPlugin::YZtoV(y, z));
+    const double outputW(LArRotationalTransformationPlugin::YZtoW(y, z));
 
-    const double deltaU(u - outputU), deltaV(v - outputV), deltaW(w - z);
-    const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - z);
+    const double deltaU(u - outputU), deltaV(v - outputV), deltaW(w - outputW);
+    const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
 
     chiSquared = ((deltaU * deltaU) / sigmaU2) + ((deltaV * deltaV) / sigmaV2) + ((deltaW * deltaW) / sigmaW2) +
         ((deltaUFit * deltaUFit) / sigmaFit2) + ((deltaVFit * deltaVFit) / sigmaFit2) + ((deltaWFit * deltaWFit) / sigmaFit2);
@@ -310,7 +311,7 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
             (std::fabs(sigmaUVW - pLArTPC->GetSigmaUVW()) > m_maxSigmaDiscrepancy))
         {
             std::cout << "LArRotationalTransformationPlugin::Initialize - Dissimilar drift volumes; Plugin does not support provided LArTPC configurations. " << std::endl;
-            //return STATUS_CODE_INVALID_PARAMETER;
+            return STATUS_CODE_INVALID_PARAMETER;
         }
     }
 
