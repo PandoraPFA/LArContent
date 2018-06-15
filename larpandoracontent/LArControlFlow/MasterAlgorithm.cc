@@ -33,6 +33,7 @@ namespace lar_content
 {
 
 MasterAlgorithm::MasterAlgorithm() :
+    m_workerInstancesInitialized(false),
     m_shouldRunAllHitsCosmicReco(true),
     m_shouldRunStitching(true),
     m_shouldRunCosmicHitRemoval(true),
@@ -148,38 +149,11 @@ void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::Initialize()
-{
-    try
-    {
-        const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
-        const DetectorGapList &gapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
-
-        for (const LArTPCMap::value_type &mapEntry : larTPCMap)
-            m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile));
-
-        if (m_shouldRunSlicing)
-            m_pSlicingWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_slicingSettingsFile);
-
-        if (m_shouldRunNeutrinoRecoOption)
-            m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
-
-        if (m_shouldRunCosmicRecoOption)
-            m_pSliceCRWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile);
-    }
-    catch (const StatusCodeException &statusCodeException)
-    {
-        std::cout << "MasterAlgorithm: Exception during initialization of worker instances " << statusCodeException.ToString() << std::endl;
-        return statusCodeException.GetStatusCode();
-    }
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode MasterAlgorithm::Run()
 {
+    if (!m_workerInstancesInitialized)
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitializeWorkerInstances());
+
     if (m_passMCParticlesToWorkerInstances)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
 
@@ -216,6 +190,41 @@ StatusCode MasterAlgorithm::Run()
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode MasterAlgorithm::InitializeWorkerInstances()
+{
+    // ATTN Used to be in the regular Initialize callback, but detector gap list cannot be extracted in client app before the first event
+    if (m_workerInstancesInitialized)
+        return STATUS_CODE_ALREADY_INITIALIZED;
+
+    try
+    {
+        const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+        const DetectorGapList &gapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
+
+        for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+            m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile));
+
+        if (m_shouldRunSlicing)
+            m_pSlicingWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_slicingSettingsFile);
+
+        if (m_shouldRunNeutrinoRecoOption)
+            m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
+
+        if (m_shouldRunCosmicRecoOption)
+            m_pSliceCRWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile);
+    }
+    catch (const StatusCodeException &statusCodeException)
+    {
+        std::cout << "MasterAlgorithm: Exception during initialization of worker instances " << statusCodeException.ToString() << std::endl;
+        return statusCodeException.GetStatusCode();
+    }
+
+    m_workerInstancesInitialized = true;
     return STATUS_CODE_SUCCESS;
 }
 

@@ -91,8 +91,12 @@ private:
 
     typedef std::map<unsigned int, LArTPCHitList> VolumeIdToHitListMap;
 
-    pandora::StatusCode Initialize();
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Initialize pandora worker instances
+     */
+    pandora::StatusCode InitializeWorkerInstances();
 
     /**
      *  @brief  Copy mc particles in the named input list to all pandora worker instances
@@ -289,6 +293,8 @@ private:
      */
     pandora::StatusCode ReadExternalSettings(const ExternalSteeringParameters *const pExternalParameters, const pandora::InputBool inputBool,
         const pandora::TiXmlHandle xmlHandle, const std::string &xmlTag, bool &outputBool);
+
+    bool                        m_workerInstancesInitialized;       ///< Whether all worker instances have been initialized
 
     bool                        m_shouldRunAllHitsCosmicReco;       ///< Whether to run all hits cosmic-ray reconstruction
     bool                        m_shouldRunStitching;               ///< Whether to stitch cosmic-ray muons crossing between volumes
