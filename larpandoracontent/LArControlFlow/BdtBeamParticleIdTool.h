@@ -132,6 +132,13 @@ private:
        void SetNSelectedHits(const unsigned int nSelectedHits);
 
        /**
+        *  @brief  Set m_containmentLimit
+        *
+        *  @param  containmentLimit limit used in is contained definition
+        */
+       void SetContainmentLimit(const float containmentLimit);
+
+       /**
         *  @brief  Get m_larTPCMinX
         */
        float GetLArTPCMinX() const;
@@ -183,10 +190,13 @@ private:
 
        /**
         *  @brief  Get m_nSelectedHits
-        *
-        *  @param  nSelectedHits minimum number of hits to use in 3D cluster fits
         */
        unsigned int GetNSelectedHits() const;
+
+       /**
+        *  @brief  Get m_containmentLimit
+        */
+       float GetContainmentLimit() const;
 
     private:
         float                       m_larTPCMinX;             ///< Global LArTPC volume minimum x extent
@@ -200,6 +210,7 @@ private:
         pandora::CartesianVector    m_beamDirection;          ///< Beam direction
         float                       m_selectedFraction;       ///< Fraction of hits to use in 3D cluster fits
         unsigned int                m_nSelectedHits;          ///< Minimum number of hits to use in 3D cluster fits
+        float                       m_containmentLimit;       ///< Limit applied in is contained definition
     };
 
     /**
@@ -287,7 +298,7 @@ private:
          *
          *  @param  spacePoint
          */
-        bool IsContained(const pandora::CartesianVector &spacePoint) const;
+        bool IsContained(const pandora::CartesianVector &spacePoint, const float limit) const;
 
         bool                            m_isAvailable;               ///< Is the feature vector available
         const SliceFeatureParameters    m_sliceFeatureParameters;    ///< Geometry information block
@@ -424,6 +435,13 @@ inline void BdtBeamParticleIdTool::SliceFeatureParameters::SetNSelectedHits(cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline void BdtBeamParticleIdTool::SliceFeatureParameters::SetContainmentLimit(const float containmentLimit)
+{
+    m_containmentLimit = containmentLimit;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetLArTPCMinX() const
 {
     return m_larTPCMinX;
@@ -497,6 +515,13 @@ inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetSelectedFraction(
 inline unsigned int BdtBeamParticleIdTool::SliceFeatureParameters::GetNSelectedHits() const
 {
     return m_nSelectedHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float BdtBeamParticleIdTool::SliceFeatureParameters::GetContainmentLimit() const
+{
+    return m_containmentLimit;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
