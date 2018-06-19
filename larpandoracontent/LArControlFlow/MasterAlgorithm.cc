@@ -151,6 +151,8 @@ void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, 
 
 StatusCode MasterAlgorithm::Run()
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
+
     if (!m_workerInstancesInitialized)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitializeWorkerInstances());
 
@@ -189,7 +191,6 @@ StatusCode MasterAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses));
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
     return STATUS_CODE_SUCCESS;
 }
 
@@ -380,8 +381,14 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosTo
 
     for (const Pfo *const pPfo : nonStitchedParentCosmicRayPfos)
     {
-        if (ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo))
+        const bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
+
+        if (isClearCosmic)
             clearCosmicRayPfos.push_back(pPfo);
+    
+        PandoraContentApi::ParticleFlowObject::Metadata metadata;
+        metadata.m_propertiesToAdd["isClearCosmic"] = isClearCosmic;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
     }
 
     if (m_visualizeOverallRecoStatus)
@@ -501,6 +508,13 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceNuWorkerInstance, pSliceNuPfos));
             nuSliceHypotheses.push_back(*pSliceNuPfos);
+    
+            for (const ParticleFlowObject *const pPfo : *pSliceNuPfos)
+            {
+                PandoraContentApi::ParticleFlowObject::Metadata metadata;
+                metadata.m_propertiesToAdd["sliceIndex"] = sliceCounter;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+            }
         }
 
         if (m_shouldRunCosmicRecoOption)
@@ -512,6 +526,13 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
             crSliceHypotheses.push_back(*pSliceCRPfos);
+            
+            for (const ParticleFlowObject *const pPfo : *pSliceCRPfos)
+            {
+                PandoraContentApi::ParticleFlowObject::Metadata metadata;
+                metadata.m_propertiesToAdd["sliceIndex"] = sliceCounter;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+            }
         }
     }
 
