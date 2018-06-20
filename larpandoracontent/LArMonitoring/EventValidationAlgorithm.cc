@@ -249,6 +249,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             const CaloHitList &pfoHitList(validationInfo.GetPfoToHitsMap().at(pfoToSharedHits.first));
 
             const bool isRecoNeutrinoFinalState(LArPfoHelper::IsNeutrinoFinalState(pfoToSharedHits.first));
+            const bool isRecoTestBeam(LArPfoHelper::IsTestBeam(pfoToSharedHits.first));
             const bool isGoodMatch(this->IsGoodMatch(mcPrimaryHitList, pfoHitList, sharedHitList));
 
             const int pfoId(pfoToIdMap.at(pfoToSharedHits.first));
@@ -260,7 +261,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 bestMatchPfoPdg.push_back(pfoToSharedHits.first->GetParticleId());
                 bestMatchPfoIsRecoNu.push_back(isRecoNeutrinoFinalState ? 1 : 0);
                 bestMatchPfoRecoNuId.push_back(recoNuId);
-                bestMatchPfoIsTestBeam.push_back(LArPfoHelper::IsTestBeam(pfoToSharedHits.first) ? 1 : 0);
+                bestMatchPfoIsTestBeam.push_back(isRecoTestBeam ? 1 : 0);
                 bestMatchPfoNHitsTotal.push_back(pfoHitList.size());
                 bestMatchPfoNHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoHitList));
                 bestMatchPfoNHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoHitList));
@@ -308,7 +309,8 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                      << "MatchedPfoId " << pfoId
                      << ", Nu " << isRecoNeutrinoFinalState;
             if (isRecoNeutrinoFinalState) targetSS << " [NuId: " << recoNuId << "]";
-            targetSS << ", CR " << !isRecoNeutrinoFinalState
+            targetSS << ", TB " << isRecoTestBeam
+                     << ", CR " << (!isRecoNeutrinoFinalState && !isRecoTestBeam)
                      << ", PDG " << pfoToSharedHits.first->GetParticleId()
                      << ", nMatchedHits " << sharedHitList.size()
                      << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList)
