@@ -376,11 +376,11 @@ bool LArPfoHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
 
 bool LArPfoHelper::IsTestBeam(const ParticleFlowObject *const pPfo)
 {
-    const PropertiesMap properties(pPfo->GetPropertiesMap());
-    const PropertiesMap::const_iterator iter = properties.find("IsTestBeam");
+    const PropertiesMap &properties(pPfo->GetPropertiesMap());
+    const PropertiesMap::const_iterator iter(properties.find("IsTestBeam"));
 
     if (iter != properties.end())
-        return ((*iter).second > 0.f ? true : false);
+        return ((iter->second > 0.f) ? true : false);
 
     return false;
 }
