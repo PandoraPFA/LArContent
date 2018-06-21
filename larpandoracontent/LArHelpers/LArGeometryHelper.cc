@@ -243,7 +243,7 @@ void LArGeometryHelper::MergeThreePositions(const Pandora &pandora, const Cartes
 
     const float aveX((positionU.GetX() + positionV.GetX() + positionW.GetX()) / 3.f);
     const float aveY(YfromUV);
-    const float aveW((positionW.GetZ() + 2.f * ZfromUV ) / 3.f);
+    const float aveW((positionW.GetZ() + 2.f * ZfromUV ) / 3.f); // TODO This needs updating to use YZtoW
 
     const float aveU(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(aveY, aveW));
     const float aveV(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(aveY, aveW));
@@ -301,7 +301,7 @@ CartesianVector LArGeometryHelper::ProjectPosition(const Pandora &pandora, const
 
     else if (view == TPC_VIEW_W)
     {
-        return CartesianVector(position3D.GetX(), 0.f, position3D.GetZ());
+        return CartesianVector(position3D.GetX(), 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoW(position3D.GetY(), position3D.GetZ()));
     }
 
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -323,7 +323,7 @@ CartesianVector LArGeometryHelper::ProjectDirection(const Pandora &pandora, cons
 
     else if (view == TPC_VIEW_W)
     {
-        return CartesianVector(direction3D.GetX(), 0.f, direction3D.GetZ()).GetUnitVector();
+        return CartesianVector(direction3D.GetX(), 0.f, pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoW(direction3D.GetY(), direction3D.GetZ())).GetUnitVector();
     }
 
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -368,7 +368,6 @@ CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const Hit
 {
     if (view == TPC_VIEW_U)
     {
-        // CartesianVector(0.f, -m_sinU, m_cosU)
         return CartesianVector(0.f,
             pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(1.f, 0.f),
             pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(0.f, 1.f));
@@ -376,7 +375,6 @@ CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const Hit
 
     else if (view == TPC_VIEW_V)
     {
-        // CartesianVector(0.f, +m_sinV, m_cosV)
         return CartesianVector(0.f,
             pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(1.f, 0.f),
             pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(0.f, 1.f));
@@ -384,7 +382,9 @@ CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const Hit
 
     else if (view == TPC_VIEW_W)
     {
-        return CartesianVector(0.f, 0.f, 1.f);
+        return CartesianVector(0.f,
+            pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoW(1.f, 0.f),
+            pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoW(0.f, 1.f));
     }
 
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
