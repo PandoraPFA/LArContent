@@ -239,14 +239,20 @@ void LArGeometryHelper::MergeThreePositions(const Pandora &pandora, const Cartes
     const CartesianVector &positionW, CartesianVector &outputU, CartesianVector &outputV, CartesianVector &outputW, float &chiSquared)
 {
     const float YfromUV(pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoY(positionU.GetZ(), positionV.GetZ()));
+    const float YfromUW(pandora.GetPlugins()->GetLArTransformationPlugin()->UWtoY(positionU.GetZ(), positionW.GetZ()));
+    const float YfromVW(pandora.GetPlugins()->GetLArTransformationPlugin()->VWtoY(positionV.GetZ(), positionW.GetZ()));
+
     const float ZfromUV(pandora.GetPlugins()->GetLArTransformationPlugin()->UVtoZ(positionU.GetZ(), positionV.GetZ()));
+    const float ZfromUW(pandora.GetPlugins()->GetLArTransformationPlugin()->UWtoZ(positionU.GetZ(), positionW.GetZ()));
+    const float ZfromVW(pandora.GetPlugins()->GetLArTransformationPlugin()->VWtoZ(positionV.GetZ(), positionW.GetZ()));
 
     const float aveX((positionU.GetX() + positionV.GetX() + positionW.GetX()) / 3.f);
-    const float aveY(YfromUV);
-    const float aveW((positionW.GetZ() + 2.f * ZfromUV ) / 3.f); // TODO This needs updating to use YZtoW
+    const float aveY((YfromUV + YfromUW + YfromVW) / 3.f);
+    const float aveZ((ZfromUV + ZfromUW + ZfromVW) / 3.f);
 
-    const float aveU(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(aveY, aveW));
-    const float aveV(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(aveY, aveW));
+    const float aveU(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(aveY, aveZ));
+    const float aveV(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(aveY, aveZ));
+    const float aveW(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoW(aveY, aveZ));
 
     outputU.SetValues(aveX, 0.f, aveU);
     outputV.SetValues(aveX, 0.f, aveV);
