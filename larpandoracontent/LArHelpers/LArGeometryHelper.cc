@@ -246,9 +246,11 @@ void LArGeometryHelper::MergeThreePositions(const Pandora &pandora, const Cartes
     const float ZfromUW(pandora.GetPlugins()->GetLArTransformationPlugin()->UWtoZ(positionU.GetZ(), positionW.GetZ()));
     const float ZfromVW(pandora.GetPlugins()->GetLArTransformationPlugin()->VWtoZ(positionV.GetZ(), positionW.GetZ()));
 
+    // ATTN For detectors where w and z are equivalent, remain consistent with original treatment. TODO Use new treatment always.
+    const bool useOldWZEquivalentTreatment(std::fabs(ZfromUW - ZfromVW) < std::numeric_limits<float>::epsilon());
     const float aveX((positionU.GetX() + positionV.GetX() + positionW.GetX()) / 3.f);
-    const float aveY((YfromUV + YfromUW + YfromVW) / 3.f);
-    const float aveZ((ZfromUV + ZfromUW + ZfromVW) / 3.f);
+    const float aveY(useOldWZEquivalentTreatment ? YfromUV : (YfromUV + YfromUW + YfromVW) / 3.f);
+    const float aveZ(useOldWZEquivalentTreatment ? (positionW.GetZ() + 2.f * ZfromUV) / 3.f : (ZfromUV + ZfromUW + ZfromVW) / 3.f);
 
     const float aveU(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoU(aveY, aveZ));
     const float aveV(pandora.GetPlugins()->GetLArTransformationPlugin()->YZtoV(aveY, aveZ));
