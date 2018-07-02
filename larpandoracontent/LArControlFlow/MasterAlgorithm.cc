@@ -208,16 +208,19 @@ StatusCode MasterAlgorithm::InitializeWorkerInstances()
         const DetectorGapList &gapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
 
         for (const LArTPCMap::value_type &mapEntry : larTPCMap)
-            m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile));
+        {
+            const unsigned int volumeId(mapEntry.second->GetLArTPCVolumeId());
+            m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile, "CRWorkerInstance" + std::to_string(volumeId)));
+        }
 
         if (m_shouldRunSlicing)
-            m_pSlicingWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_slicingSettingsFile, "SliceWorker");
+            m_pSlicingWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_slicingSettingsFile, "SlicingWorker");
 
         if (m_shouldRunNeutrinoRecoOption)
-            m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile, "NeutrinoWorker");
+            m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile, "SliceNuWorker");
 
         if (m_shouldRunCosmicRecoOption)
-            m_pSliceCRWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile, "CosmicRayWorker");
+            m_pSliceCRWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile, "SliceCRWorker");
     }
     catch (const StatusCodeException &statusCodeException)
     {
@@ -387,7 +390,7 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosTo
             clearCosmicRayPfos.push_back(pPfo);
     
         PandoraContentApi::ParticleFlowObject::Metadata metadata;
-        metadata.m_propertiesToAdd["IsClearCosmic"] = isClearCosmic;
+        metadata.m_propertiesToAdd["IsClearCosmic"] = (isClearCosmic ? 1.f : 0.f);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
     }
 
