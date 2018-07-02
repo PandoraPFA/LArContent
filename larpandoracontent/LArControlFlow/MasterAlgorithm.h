@@ -262,11 +262,12 @@ private:
      *  @param  larTPC the lar tpc
      *  @param  gapList the gap list
      *  @param  settingsFile the pandora settings file
+     *  @param  name the pandora instance name
      *
      *  @return the address of the pandora instance
      */
     const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPC &larTPC, const pandora::DetectorGapList &gapList,
-        const std::string &settingsFile) const;
+        const std::string &settingsFile, const std::string &name) const;
 
     /**
      *  @brief  Create a pandora worker instance to handle a number of LArTPCs
@@ -274,11 +275,12 @@ private:
      *  @param  larTPCMap the lar tpc map
      *  @param  gapList the gap list
      *  @param  settingsFile the pandora settings file
+     *  @param  name the pandora instance name
      *
      *  @return the address of the pandora instance
      */
     const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPCMap &larTPCMap, const pandora::DetectorGapList &gapList,
-        const std::string &settingsFile) const;
+        const std::string &settingsFile, const std::string &name) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

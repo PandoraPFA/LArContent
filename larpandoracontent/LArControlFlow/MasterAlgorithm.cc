@@ -151,6 +151,8 @@ void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, 
 
 StatusCode MasterAlgorithm::Run()
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
+
     if (!m_workerInstancesInitialized)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitializeWorkerInstances());
 
@@ -189,7 +191,6 @@ StatusCode MasterAlgorithm::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses));
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
     return STATUS_CODE_SUCCESS;
 }
 
@@ -207,16 +208,19 @@ StatusCode MasterAlgorithm::InitializeWorkerInstances()
         const DetectorGapList &gapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
 
         for (const LArTPCMap::value_type &mapEntry : larTPCMap)
-            m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile));
+        {
+            const unsigned int volumeId(mapEntry.second->GetLArTPCVolumeId());
+            m_crWorkerInstances.push_back(this->CreateWorkerInstance(*(mapEntry.second), gapList, m_crSettingsFile, "CRWorkerInstance" + std::to_string(volumeId)));
+        }
 
         if (m_shouldRunSlicing)
-            m_pSlicingWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_slicingSettingsFile);
+            m_pSlicingWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_slicingSettingsFile, "SlicingWorker");
 
         if (m_shouldRunNeutrinoRecoOption)
-            m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile);
+            m_pSliceNuWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_nuSettingsFile, "SliceNuWorker");
 
         if (m_shouldRunCosmicRecoOption)
-            m_pSliceCRWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile);
+            m_pSliceCRWorkerInstance = this->CreateWorkerInstance(larTPCMap, gapList, m_crSettingsFile, "SliceCRWorker");
     }
     catch (const StatusCodeException &statusCodeException)
     {
@@ -380,8 +384,14 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosTo
 
     for (const Pfo *const pPfo : nonStitchedParentCosmicRayPfos)
     {
-        if (ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo))
+        const bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
+
+        if (isClearCosmic)
             clearCosmicRayPfos.push_back(pPfo);
+    
+        PandoraContentApi::ParticleFlowObject::Metadata metadata;
+        metadata.m_propertiesToAdd["IsClearCosmic"] = (isClearCosmic ? 1.f : 0.f);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
     }
 
     if (m_visualizeOverallRecoStatus)
@@ -501,6 +511,13 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceNuWorkerInstance, pSliceNuPfos));
             nuSliceHypotheses.push_back(*pSliceNuPfos);
+    
+            for (const ParticleFlowObject *const pPfo : *pSliceNuPfos)
+            {
+                PandoraContentApi::ParticleFlowObject::Metadata metadata;
+                metadata.m_propertiesToAdd["SliceIndex"] = sliceCounter;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+            }
         }
 
         if (m_shouldRunCosmicRecoOption)
@@ -512,6 +529,13 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
             crSliceHypotheses.push_back(*pSliceCRPfos);
+            
+            for (const ParticleFlowObject *const pPfo : *pSliceCRPfos)
+            {
+                PandoraContentApi::ParticleFlowObject::Metadata metadata;
+                metadata.m_propertiesToAdd["SliceIndex"] = sliceCounter;
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+            }
         }
     }
 
@@ -853,10 +877,10 @@ const ParticleFlowObject *MasterAlgorithm::CreatePfo(const ParticleFlowObject *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const DetectorGapList &gapList, const std::string &settingsFile) const
+const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const DetectorGapList &gapList, const std::string &settingsFile, const std::string &name) const
 {
     // The Pandora instance
-    const Pandora *const pPandora(new Pandora());
+    const Pandora *const pPandora(new Pandora(name));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPandora));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterBasicPlugins(*pPandora));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(*pPandora, new lar_content::LArPseudoLayerPlugin));
@@ -917,7 +941,7 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap, const DetectorGapList &gapList, const std::string &settingsFile) const
+const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap, const DetectorGapList &gapList, const std::string &settingsFile, const std::string &name) const
 {
     if (larTPCMap.empty())
     {
@@ -926,7 +950,7 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPCMap &larTPCMap,
     }
 
     // The Pandora instance
-    const Pandora *const pPandora(new Pandora());
+    const Pandora *const pPandora(new Pandora(name));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPandora));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterBasicPlugins(*pPandora));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(*pPandora, new lar_content::LArPseudoLayerPlugin));
