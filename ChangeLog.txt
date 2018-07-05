@@ -1,4 +1,13 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_13_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added slice id metadata to output pfos.
+Added names to pandora worker instances in master algorithm.
+Replaced assumed w/z equivalence with use of LArTransformationPlugin YZtoW.
+Altered IsTestBeam function in LArPfoHelper to use Pfo PropertiesMap.
+Added bestMatchPfoIsTestBeam vector to event validation output tree and edited printout in event validation algorithm.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_13_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Updated lar rotational transformation plugin implementation to handle a non-zero w wire angle. Sign convention for v wire angle also changed.
