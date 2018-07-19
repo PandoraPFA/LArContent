@@ -29,10 +29,10 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string    m_pfoListName;               ///< Input pfo list name
+    std::string    m_parentPfoListName;         ///< The parent pfo list name
     std::string    m_trackPfoListName;          ///< The track pfo list name
     std::string    m_showerPfoListName;         ///< The shower pfo list name
-    std::string    m_vertexListName;            ///< Input vertex list name
+    std::string    m_parentVertexListName;      ///< Parent vertex list name
     std::string    m_daughterVertexListName;    ///< Daughter vertex list name
     bool           m_keepInteractionVertex;     ///< Retain the vertex for the test beam particle at the low z point
     bool           m_keepStartVertex;           ///< Retain the vertex for the test beam particle at the interaction point
