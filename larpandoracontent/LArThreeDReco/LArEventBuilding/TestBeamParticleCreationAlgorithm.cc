@@ -84,21 +84,23 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPrimaryPfo, pfoMetadata));
 
+        const std::string previousListName(LArPfoHelper::IsTrack(pPrimaryPfo) ? m_trackPfoListName : m_showerPfoListName);
+        PfoList pfoList;
+        pfoList.push_back(pPrimaryPfo);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, previousListName, m_pfoListName, pfoList));
+
         try
         {
+            const Vertex *const pOriginalVertex(LArPfoHelper::GetVertex(pPrimaryPfo));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPrimaryPfo, pOriginalVertex));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pOriginalVertex, m_daughterVertexListName));
+
+            std::string vertexListName;
+            const VertexList *pVertexList(nullptr);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
             if (m_keepStartVertex)
             {
-                if (!m_keepInteractionVertex)
-                {
-                    const Vertex *const pVertex(LArPfoHelper::GetVertex(pPrimaryPfo));
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPrimaryPfo, pVertex));
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pVertex));
-                }
-
-                std::string vertexListName;
-                const VertexList *pVertexList(nullptr);
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
-
                 PandoraContentApi::Vertex::Parameters parameters;
                 parameters.m_position = positionMinZCaloHit;
                 parameters.m_vertexLabel = VERTEX_START;
@@ -110,6 +112,12 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_vertexListName));
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_vertexListName));
             }
+            else
+            {
+                const Vertex *const pVertex(LArPfoHelper::GetVertex(pPfo));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pPfo, pVertex));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPrimaryPfo, pVertex));
+            }
         }
         catch (const StatusCodeException &)
         {
@@ -120,7 +128,7 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
     }
 
     for (const Pfo *const pNeutrinoPfo : neutrinoPfos)
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Pfo>(*this, pNeutrinoPfo));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Pfo>(*this, pNeutrinoPfo, m_pfoListName));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -130,6 +138,8 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
 StatusCode TestBeamParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackPfoListName", m_trackPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ShowerPfoListName", m_showerPfoListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "KeepInteractionVertex", m_keepInteractionVertex));
@@ -137,8 +147,8 @@ StatusCode TestBeamParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xml
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "KeepStartVertex", m_keepStartVertex));
 
-    if (m_keepStartVertex)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DaughterVertexListName", m_daughterVertexListName));
 
     if (m_keepInteractionVertex == m_keepStartVertex)
     {
