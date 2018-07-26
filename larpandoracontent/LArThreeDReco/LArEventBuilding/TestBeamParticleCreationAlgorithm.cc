@@ -17,13 +17,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 TestBeamParticleCreationAlgorithm::TestBeamParticleCreationAlgorithm() :
-    m_parentPfoListName(""),
-    m_parentVertexListName(""),
-    m_keepInteractionVertex(false),
-    m_keepStartVertex(true)
+    m_keepInteractionVertex(true),
+    m_keepStartVertex(false)
 {
 }
 
@@ -31,103 +27,128 @@ TestBeamParticleCreationAlgorithm::TestBeamParticleCreationAlgorithm() :
 
 StatusCode TestBeamParticleCreationAlgorithm::Run()
 {
-    const PfoList *pPfoList(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_parentPfoListName, pPfoList));
+    const PfoList *pParentNuPfoList(nullptr);
+
+    if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, m_parentPfoListName, pParentNuPfoList))
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "TestBeamParticleCreationAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
+
+        return STATUS_CODE_SUCCESS;
+    }
 
     PfoList neutrinoPfos;
 
-    for (const Pfo *const pNuPfo : *pPfoList)
+    for (const Pfo *const pNuPfo : *pParentNuPfoList)
     {
         if (!LArPfoHelper::IsNeutrino(pNuPfo))
             continue;
 
-        // ATTN: If the test beam score is not set in the neutrino pfo, set the score to 1 as it has been reconstructed under the neutrino hypothesis
-        const PropertiesMap properties(pNuPfo->GetPropertiesMap());
-        PropertiesMap::const_iterator propertiesIter(properties.find("TestBeamScore"));
-        const float testBeamScore(propertiesIter != properties.end() ? (*propertiesIter).second : 1.f);
-
-        const PfoList &nuDaughterPfoList(pNuPfo->GetDaughterPfoList());
-        const Pfo *pTestBeamPfo(nullptr);
-        CartesianVector positionMinZCaloHit(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
-
-        for (const Pfo *const pNuDaughterPfo : nuDaughterPfoList)
-        {
-            CaloHitList collectedHits;
-            LArPfoHelper::GetCaloHits(pNuDaughterPfo, TPC_3D, collectedHits);
-
-            for (const CaloHit *const pCaloHit : collectedHits)
-            {
-                if (pCaloHit->GetPositionVector().GetZ() < positionMinZCaloHit.GetZ())
-                {
-                    positionMinZCaloHit = pCaloHit->GetPositionVector();
-                    pTestBeamPfo = pNuDaughterPfo;
-                }
-            }
-        }
-
-        for (const Pfo *const pNuDaughterPfo : nuDaughterPfoList)
-        {
-            if (pNuDaughterPfo == pTestBeamPfo)
-                continue;
-
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pTestBeamPfo, pNuDaughterPfo));
-        }
-
-        PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
-        pfoMetadata.m_propertiesToAdd["IsTestBeam"] = 1.f;
-        pfoMetadata.m_propertiesToAdd["TestBeamScore"] = testBeamScore;
-
-        // ATTN: If the primary pfo is shower like, the target beam particle is most likely an electron/positron.  If the primary pfo is track like, the target
-        // beam particle is most likely a pion as pion interactions are more frequent than proton, kaon and muon interactions in the CERN test beam.
-        if (std::abs(pTestBeamPfo->GetParticleId()) != E_MINUS)
-            pfoMetadata.m_particleId = PI_PLUS;
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pTestBeamPfo, pfoMetadata));
-
-        const std::string &daughterPfoListName(LArPfoHelper::IsTrack(pTestBeamPfo) ? m_trackPfoListName : m_showerPfoListName);
-        PfoList pfoList(1, pTestBeamPfo);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, daughterPfoListName, m_parentPfoListName, pfoList));
-
-        try
-        {
-            const Vertex *const pNuDaughterVertex(LArPfoHelper::GetVertex(pTestBeamPfo));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pTestBeamPfo, pNuDaughterVertex));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pNuDaughterVertex, m_daughterVertexListName));
-
-            std::string vertexListName;
-            const VertexList *pVertexList(nullptr);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
-
-            if (m_keepStartVertex)
-            {
-                PandoraContentApi::Vertex::Parameters parameters;
-                parameters.m_position = positionMinZCaloHit;
-                parameters.m_vertexLabel = VERTEX_START;
-                parameters.m_vertexType = VERTEX_3D;
-
-                const Vertex *pTestBeamStartVertex(nullptr);
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pTestBeamStartVertex));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pTestBeamPfo, pTestBeamStartVertex));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_parentVertexListName));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_parentVertexListName));
-            }
-            else
-            {
-                const Vertex *const pNuVertex(LArPfoHelper::GetVertex(pNuPfo));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pNuPfo, pNuVertex));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pTestBeamPfo, pNuVertex));
-            }
-        }
-        catch (const StatusCodeException &)
-        {
-            std::cout << "TestBeamParticleCreationAlgorithm::Run - unable to modify test beam particle vertex" << std::endl;
-        }
-
         neutrinoPfos.push_back(pNuPfo);
+
+        const Pfo *pTestBeamPfo(nullptr);
+        CartesianVector testBeamStartVertex(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SetupTestBeamPfo(pNuPfo, pTestBeamPfo, testBeamStartVertex));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SetupTestBeamVertex(pNuPfo, pTestBeamPfo, testBeamStartVertex));
     }
 
     for (const Pfo *const pNuPfo : neutrinoPfos)
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Pfo>(*this, pNuPfo, m_parentPfoListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Pfo>(*this, pNuPfo, m_parentPfoListName));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TestBeamParticleCreationAlgorithm::SetupTestBeamPfo(const Pfo *const pNuPfo, const Pfo *&pTestBeamPfo, CartesianVector &testBeamStartVertex) const
+{
+    pTestBeamPfo = nullptr;
+    testBeamStartVertex = CartesianVector(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+
+    for (const Pfo *const pNuDaughterPfo : pNuPfo->GetDaughterPfoList())
+    {
+        CaloHitList collectedHits;
+        LArPfoHelper::GetCaloHits(pNuDaughterPfo, TPC_3D, collectedHits);
+
+        for (const CaloHit *const pCaloHit : collectedHits)
+        {
+            if (pCaloHit->GetPositionVector().GetZ() < testBeamStartVertex.GetZ())
+            {
+                testBeamStartVertex = pCaloHit->GetPositionVector();
+                pTestBeamPfo = pNuDaughterPfo;
+            }
+        }
+    }
+
+    if (!pTestBeamPfo)
+        return STATUS_CODE_NOT_FOUND;
+
+    for (const Pfo *const pNuDaughterPfo : pNuPfo->GetDaughterPfoList())
+    {
+        if (pNuDaughterPfo != pTestBeamPfo)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pTestBeamPfo, pNuDaughterPfo));
+    }
+
+    // Move test beam pfo to parent list from its initial track or shower list
+    const std::string &originalListName(LArPfoHelper::IsTrack(pTestBeamPfo) ? m_trackPfoListName : m_showerPfoListName);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, originalListName, m_parentPfoListName, PfoList(1, pTestBeamPfo)));
+
+    // Alter metadata: test beam score (1, if not previously set) and particle id (electron if primary pfo shower-like, else charged pion)
+    PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
+    pfoMetadata.m_propertiesToAdd["IsTestBeam"] = 1.f;
+    pfoMetadata.m_propertiesToAdd["TestBeamScore"] = (pNuPfo->GetPropertiesMap().count("TestBeamScore")) ? pNuPfo->GetPropertiesMap().at("TestBeamScore") : 1.f;
+    pfoMetadata.m_particleId = (std::fabs(pTestBeamPfo->GetParticleId()) == E_MINUS) ? E_MINUS : PI_PLUS;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pTestBeamPfo, pfoMetadata));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TestBeamParticleCreationAlgorithm::SetupTestBeamVertex(const Pfo *const pNuPfo, const Pfo *const pTestBeamPfo, const CartesianVector &testBeamStartVertex) const
+{
+    try
+    {
+        const Vertex *const pInitialVertex(LArPfoHelper::GetVertex(pTestBeamPfo));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pTestBeamPfo, pInitialVertex));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pInitialVertex, m_daughterVertexListName));
+    }
+    catch (const StatusCodeException &)
+    {
+        std::cout << "TestBeamParticleCreationAlgorithm::SetupTestBeamVertex - Test beam particle has no initial vertex" << std::endl;
+    }
+
+    if (m_keepStartVertex)
+    {
+        std::string vertexListName;
+        const VertexList *pVertexList(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
+        PandoraContentApi::Vertex::Parameters parameters;
+        parameters.m_position = testBeamStartVertex;
+        parameters.m_vertexLabel = VERTEX_START;
+        parameters.m_vertexType = VERTEX_3D;
+        const Vertex *pTestBeamStartVertex(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pTestBeamStartVertex));
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_parentVertexListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_parentVertexListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pTestBeamPfo, pTestBeamStartVertex));
+    }
+    else
+    {
+        try
+        {
+            const Vertex *const pNuVertex(LArPfoHelper::GetVertex(pNuPfo));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pNuPfo, pNuVertex));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pTestBeamPfo, pNuVertex));
+            // ATTN This vertex already lives in m_parentVertexListName
+        }
+        catch (const StatusCodeException &)
+        {
+            std::cout << "TestBeamParticleCreationAlgorithm::SetupTestBeamVertex - Cannot transfer interaction vertex to test beam particle" << std::endl;
+        }
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -136,9 +157,20 @@ StatusCode TestBeamParticleCreationAlgorithm::Run()
 
 StatusCode TestBeamParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentPfoListName", m_parentPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackPfoListName", m_trackPfoListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ShowerPfoListName", m_showerPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ParentPfoListName", m_parentPfoListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "TrackPfoListName", m_trackPfoListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowerPfoListName", m_showerPfoListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "ParentVertexListName", m_parentVertexListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "DaughterVertexListName", m_daughterVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "KeepInteractionVertex", m_keepInteractionVertex));
@@ -146,12 +178,9 @@ StatusCode TestBeamParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xml
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "KeepStartVertex", m_keepStartVertex));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentVertexListName", m_parentVertexListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DaughterVertexListName", m_daughterVertexListName));
-
     if (m_keepInteractionVertex == m_keepStartVertex)
     {
-        std::cout << "TestBeamParticleCreationAlgorithm::ReadSettings - must persist one vertex per pfo" << std::endl;
+        std::cout << "TestBeamParticleCreationAlgorithm::ReadSettings - Must persist exactly one vertex per test beam particle." << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
