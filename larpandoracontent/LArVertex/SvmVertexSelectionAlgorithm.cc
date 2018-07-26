@@ -353,7 +353,7 @@ void SvmVertexSelectionAlgorithm::IncrementShoweryParameters(const ClusterList &
         if (this->IsClusterShowerLike(pCluster))
             nShoweryHits += pCluster->GetNCaloHits();
 
-        eventEnergy += pCluster->GetElectromagneticEnergy();
+        eventEnergy += LArClusterHelper::GetInputEnergy(pCluster);
         nHits += pCluster->GetNCaloHits();
     }
 }

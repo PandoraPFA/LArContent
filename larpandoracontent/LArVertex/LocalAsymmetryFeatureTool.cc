@@ -60,8 +60,9 @@ float LocalAsymmetryFeatureTool::GetLocalAsymmetryForView(const CartesianVector 
     for (const VertexSelectionBaseAlgorithm::SlidingFitData &slidingFitData : slidingFitDataList)
     {
         const Cluster *const pCluster(slidingFitData.GetCluster());
+        const float clusterEnergy(LArClusterHelper::GetInputEnergy(pCluster));
 
-        if (pCluster->GetElectromagneticEnergy() < std::numeric_limits<float>::epsilon())
+        if (clusterEnergy < std::numeric_limits<float>::epsilon())
             useEnergy = false;
 
         const CartesianVector vertexToMinLayer(slidingFitData.GetMinLayerPosition() - vertexPosition2D);
@@ -72,7 +73,7 @@ float LocalAsymmetryFeatureTool::GetLocalAsymmetryForView(const CartesianVector 
 
         if (useAsymmetry && (LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster) < m_maxAsymmetryDistance))
         {
-            useAsymmetry &= this->IncrementAsymmetryParameters(pCluster->GetElectromagneticEnergy(), clusterDirection, energyWeightedDirectionSum);
+            useAsymmetry &= this->IncrementAsymmetryParameters(clusterEnergy, clusterDirection, energyWeightedDirectionSum);
             useAsymmetry &= this->IncrementAsymmetryParameters(static_cast<float>(pCluster->GetNCaloHits()), clusterDirection, hitWeightedDirectionSum);
             asymmetryClusters.push_back(pCluster);
         }
@@ -142,13 +143,13 @@ float LocalAsymmetryFeatureTool::CalculateLocalAsymmetry(const bool useEnergyMet
         {
             if (pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection) < evtProjectedVtxPos)
             {
-                beforeVtxHitEnergy += pCaloHit->GetElectromagneticEnergy();
+                beforeVtxHitEnergy += pCaloHit->GetInputEnergy();
                 ++beforeVtxHitCount;
             }
 
             else
             {
-                afterVtxHitEnergy += pCaloHit->GetElectromagneticEnergy();
+                afterVtxHitEnergy += pCaloHit->GetInputEnergy();
                 ++afterVtxHitCount;
             }
         }

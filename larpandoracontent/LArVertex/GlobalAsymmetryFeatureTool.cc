@@ -55,8 +55,9 @@ float GlobalAsymmetryFeatureTool::GetGlobalAsymmetryForView(const CartesianVecto
     for (const VertexSelectionBaseAlgorithm::SlidingFitData &slidingFitData : slidingFitDataList)
     {
         const Cluster *const pCluster(slidingFitData.GetCluster());
+        const float clusterEnergy(LArClusterHelper::GetInputEnergy(pCluster));
 
-        if (pCluster->GetElectromagneticEnergy() < std::numeric_limits<float>::epsilon())
+        if (clusterEnergy < std::numeric_limits<float>::epsilon())
             useEnergy = false;
 
         const CartesianVector vertexToMinLayer(slidingFitData.GetMinLayerPosition() - vertexPosition2D);
@@ -67,7 +68,7 @@ float GlobalAsymmetryFeatureTool::GetGlobalAsymmetryForView(const CartesianVecto
 
         if ((LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster) < m_maxAsymmetryDistance))
         {
-            this->IncrementAsymmetryParameters(pCluster->GetElectromagneticEnergy(), clusterDirection, energyWeightedDirectionSum);
+            this->IncrementAsymmetryParameters(clusterEnergy, clusterDirection, energyWeightedDirectionSum);
             this->IncrementAsymmetryParameters(static_cast<float>(pCluster->GetNCaloHits()), clusterDirection, hitWeightedDirectionSum);
         }
     }
@@ -123,13 +124,13 @@ float GlobalAsymmetryFeatureTool::CalculateGlobalAsymmetry(const bool useEnergyM
         {
             if (pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection) < evtProjectedVtxPos)
             {
-                beforeVtxHitEnergy += pCaloHit->GetElectromagneticEnergy();
+                beforeVtxHitEnergy += pCaloHit->GetInputEnergy();
                 ++beforeVtxHitCount;
             }
 
             else
             {
-                afterVtxHitEnergy += pCaloHit->GetElectromagneticEnergy();
+                afterVtxHitEnergy += pCaloHit->GetInputEnergy();
                 ++afterVtxHitCount;
             }
         }
