@@ -111,10 +111,10 @@ void ShowerAsymmetryFeatureTool::CalculateAsymmetryParameters(const VertexSelect
         for (const CaloHit *const pCaloHit : caloHitVector)
         {
             if (pCaloHit->GetPositionVector().GetDotProduct(showerDirection) < projectedVtxPosition)
-                beforeVtxEnergy += pCaloHit->GetElectromagneticEnergy();
+                beforeVtxEnergy += pCaloHit->GetInputEnergy();
 
             else if (pCaloHit->GetPositionVector().GetDotProduct(showerDirection) > projectedVtxPosition)
-                afterVtxEnergy += pCaloHit->GetElectromagneticEnergy();
+                afterVtxEnergy += pCaloHit->GetInputEnergy();
         }
     }
 }

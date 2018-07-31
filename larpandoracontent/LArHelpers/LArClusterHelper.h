@@ -346,6 +346,15 @@ public:
      *  @param  rhs second point
      */
     static bool SortCoordinatesByPosition(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
+
+    /**
+     *  @brief  Get the cluster's total input energy
+     *
+     *  @param  pCluster address of the cluster
+     * 
+     *  @return the total input energy
+     */
+    static float GetInputEnergy(const pandora::Cluster *const pCluster);
 };
 
 } // namespace lar_content

@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
 
@@ -58,8 +59,9 @@ float EnergyKickFeatureTool::GetEnergyKickForView(const CartesianVector &vertexP
     for (const VertexSelectionBaseAlgorithm::SlidingFitData &slidingFitData : slidingFitDataList)
     {
         const Cluster *const pCluster(slidingFitData.GetCluster());
+        const float clusterEnergy(LArClusterHelper::GetInputEnergy(pCluster));
 
-        if (pCluster->GetElectromagneticEnergy() < std::numeric_limits<float>::epsilon())
+        if (clusterEnergy < std::numeric_limits<float>::epsilon())
             useEnergy = false;
 
         const CartesianVector vertexToMinLayer(slidingFitData.GetMinLayerPosition() - vertexPosition2D);
@@ -69,7 +71,7 @@ float EnergyKickFeatureTool::GetEnergyKickForView(const CartesianVector &vertexP
         const CartesianVector &clusterDisplacement((minLayerClosest) ? vertexToMinLayer : vertexToMaxLayer);
         const CartesianVector &clusterDirection((minLayerClosest) ? slidingFitData.GetMinLayerDirection() : slidingFitData.GetMaxLayerDirection());
 
-        this->IncrementEnergyKickParameters(pCluster, clusterDisplacement, clusterDirection, totEnergyKick, totEnergy, totHitKick, totHits);
+        this->IncrementEnergyKickParameters(pCluster, clusterDisplacement, clusterDirection, totEnergyKick, totEnergy, totHitKick, totHits, clusterEnergy);
     }
 
     float energyKick(0.f);
@@ -85,13 +87,13 @@ float EnergyKickFeatureTool::GetEnergyKickForView(const CartesianVector &vertexP
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EnergyKickFeatureTool::IncrementEnergyKickParameters(const Cluster *const pCluster, const CartesianVector &clusterDisplacement,
-    const CartesianVector &clusterDirection, float &totEnergyKick, float &totEnergy, float &totHitKick, unsigned int &totHits) const
+    const CartesianVector &clusterDirection, float &totEnergyKick, float &totEnergy, float &totHitKick, unsigned int &totHits, const float clusterEnergy) const
 {
     const float impactParameter(clusterDisplacement.GetCrossProduct(clusterDirection).GetMagnitude());
     const float displacement(clusterDisplacement.GetMagnitude());
 
-    totEnergyKick += pCluster->GetElectromagneticEnergy() * (impactParameter + m_xOffset) / (displacement + m_rOffset);
-    totEnergy += pCluster->GetElectromagneticEnergy();
+    totEnergyKick += clusterEnergy * (impactParameter + m_xOffset) / (displacement + m_rOffset);
+    totEnergy += clusterEnergy;
 
     totHitKick += static_cast<float>(pCluster->GetNCaloHits()) * (impactParameter + m_xOffset) / (displacement + m_rOffset);
     totHits += pCluster->GetNCaloHits();

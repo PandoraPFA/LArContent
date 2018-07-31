@@ -729,4 +729,18 @@ bool LArClusterHelper::SortCoordinatesByPosition(const CartesianVector &lhs, con
     return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetInputEnergy(const Cluster *const pCluster)
+{
+    CaloHitList caloHitList;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+    float inputEnergy(0.f);
+    
+    for (const CaloHit *const pCaloHit : caloHitList)
+        inputEnergy += pCaloHit->GetInputEnergy();
+
+    return inputEnergy;
+}
 } // namespace lar_content
