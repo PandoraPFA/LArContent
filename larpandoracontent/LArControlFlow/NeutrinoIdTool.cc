@@ -213,7 +213,7 @@ void NeutrinoIdTool::SelectAllPfos(const pandora::Algorithm *const pAlgorithm, c
         for (const ParticleFlowObject *const pPfo : pfos)
         {
             object_creation::ParticleFlowObject::Metadata metadata;
-            metadata.m_propertiesToAdd["TestBeamScore"] = -1.f;
+            metadata.m_propertiesToAdd["NuScore"] = -1.f;
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
 
