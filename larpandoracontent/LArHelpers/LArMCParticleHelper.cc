@@ -216,6 +216,42 @@ const MCParticle *LArMCParticleHelper::GetMainMCParticle(const ParticleFlowObjec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const MCParticle *LArMCParticleHelper::GetBestMCParticle(const ParticleFlowObject *const pPfo)
+{
+    CaloHitList caloHitList;
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitList);
+
+    const MCParticleWeightMap mcParticleWeightMap(GetMCParticleWeightMap(caloHitList));
+
+    float             bestWeight(0.f);
+    const MCParticle *pBestMCParticle(nullptr);
+
+    // Iterate through map in a reproducible order
+    MCParticleVector mcParticleVector;
+
+    for (const MCParticleWeightMap::value_type &mapEntry : mcParticleWeightMap)
+        mcParticleVector.push_back(mapEntry.first);
+
+    std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pMCParticle : mcParticleVector)
+    {
+        const float currentWeight(mcParticleWeightMap.at(pMCParticle));
+
+        if (currentWeight > bestWeight)
+        {
+            pBestMCParticle = pMCParticle;
+            bestWeight      = currentWeight;
+        }
+    }
+
+    return pBestMCParticle; // can be nullptr
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArMCParticleHelper::SortByMomentum(const MCParticle *const pLhs, const MCParticle *const pRhs)
 {
     // Sort by momentum (prefer higher momentum)
@@ -602,6 +638,39 @@ CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, cons
     }
 
     return sharedHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+MCParticleWeightMap LArMCParticleHelper::GetMCParticleWeightMap(const CaloHitList &caloHitList)
+{
+    MCParticleWeightMap mcParticleWeightMap;
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        // Synthesize the weights from every hit into the main map
+        const MCParticleWeightMap &hitMCWeightMap(pCaloHit->GetMCParticleWeightMap());
+        MCParticleVector           mcParticleVector;
+
+        // Iterate through map in a reproducible order
+        for (const MCParticleWeightMap::value_type &mapEntry : hitMCWeightMap)
+            mcParticleVector.push_back(mapEntry.first);
+
+        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
+
+        for (const MCParticle *const pMCParticle : mcParticleVector)
+        {
+            const auto findIter = mcParticleWeightMap.find(pMCParticle);
+
+            if (findIter == mcParticleWeightMap.end())
+                mcParticleWeightMap.emplace(pMCParticle, hitMCWeightMap.at(pMCParticle));
+
+            else
+                findIter->second += hitMCWeightMap.at(pMCParticle);
+        }
+    }
+
+    return mcParticleWeightMap;
 }
 
 } // namespace lar_content

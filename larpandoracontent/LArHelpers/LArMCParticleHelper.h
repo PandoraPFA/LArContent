@@ -164,6 +164,15 @@ public:
     static const pandora::MCParticle *GetMainMCParticle(const pandora::ParticleFlowObject *const pPfo);
 
     /**
+     *  @brief  Find the best mc particle making the largest contribution to 2D hits in a specified pfo
+     *
+     *  @param  pPfo address of the pfo to examine
+     *
+     *  @return address of the best mc particle
+     */
+    static const pandora::MCParticle *GetBestMCParticle(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
      *  @brief  Sort mc particles by their momentum
      *
      *  @param  pLhs address of first mc particle
@@ -306,6 +315,15 @@ private:
      *  @return The hits that are found in both hitListA and hitListB
      */
     static pandora::CaloHitList GetSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
+
+    /**
+     *  @brief  Get the MCParticle weight map for a set of CaloHits
+     *
+     *  @param  caloHitList the list of CaloHits
+     *
+     *  @return the MCParticle weight map
+     */
+    static pandora::MCParticleWeightMap GetMCParticleWeightMap(const pandora::CaloHitList &caloHitList);
 };
 
 } // namespace lar_content
