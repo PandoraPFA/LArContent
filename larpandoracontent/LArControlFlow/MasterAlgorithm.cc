@@ -388,7 +388,11 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosTo
 
         if (isClearCosmic)
             clearCosmicRayPfos.push_back(pPfo);
-    
+   }
+
+    for (const Pfo *const pPfo : *pRecreatedCRPfos)
+    {
+        const bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
         PandoraContentApi::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["IsClearCosmic"] = (isClearCosmic ? 1.f : 0.f);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
