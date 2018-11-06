@@ -82,7 +82,7 @@ void BdtBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const pAl
     if (nSlices == 0) return;
 
     SliceFeaturesVector sliceFeaturesVector;
-    this->GetSliceFeatures(this, nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector);
+    this->GetSliceFeatures(nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector);
 
     if (m_useTrainingMode)
     {
@@ -124,10 +124,10 @@ void BdtBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const pAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::GetSliceFeatures(const BdtBeamParticleIdTool *const pTool, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const
+void BdtBeamParticleIdTool::GetSliceFeatures(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const
 {
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
-        sliceFeaturesVector.push_back(SliceFeatures(nuSliceHypotheses.at(sliceIndex), crSliceHypotheses.at(sliceIndex), pTool, m_sliceFeatureParameters));
+        sliceFeaturesVector.push_back(SliceFeatures(nuSliceHypotheses.at(sliceIndex), crSliceHypotheses.at(sliceIndex), m_sliceFeatureParameters));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -423,10 +423,9 @@ void BdtBeamParticleIdTool::SliceFeatureParameters::Initialize(const float larTP
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-BdtBeamParticleIdTool::SliceFeatures::SliceFeatures(const PfoList &pfosNu, const PfoList &pfosCr, const BdtBeamParticleIdTool *const pTool, const SliceFeatureParameters &sliceFeatureParameters) :
+BdtBeamParticleIdTool::SliceFeatures::SliceFeatures(const PfoList &pfosNu, const PfoList &pfosCr, const SliceFeatureParameters &sliceFeatureParameters) :
     m_isAvailable(false),
-    m_sliceFeatureParameters(sliceFeatureParameters),
-    m_pTool(pTool)
+    m_sliceFeatureParameters(sliceFeatureParameters)
 {
     try
     {
