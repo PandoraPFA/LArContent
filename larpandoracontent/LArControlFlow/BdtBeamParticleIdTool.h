@@ -224,10 +224,9 @@ private:
          *
          *  @param  nuPfos input list of Pfos reconstructed under the neutrino hypothesis
          *  @param  crPfos input list of Pfos reconstructed under the cosmic ray hypothesis
-         *  @param  pTool address of the tool using this class
          *  @param  geometryInfo geometry information block
          */
-         SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const BdtBeamParticleIdTool *const pTool, const SliceFeatureParameters &sliceFeatureParameters);
+         SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const SliceFeatureParameters &sliceFeatureParameters);
 
         /**
          *  @brief  Copy constructor
@@ -303,7 +302,6 @@ private:
         bool                            m_isAvailable;               ///< Is the feature vector available
         const SliceFeatureParameters    m_sliceFeatureParameters;    ///< Geometry information block
         LArMvaHelper::MvaFeatureVector  m_featureVector;             ///< The MVA feature vector
-        const BdtBeamParticleIdTool    *m_pTool;                     ///< The tool that owns this
     };
 
     typedef std::vector<SliceFeatures> SliceFeaturesVector;
@@ -315,12 +313,11 @@ private:
     /**
      *  @brief  Get the features of each slice
      *
-     *  @param  pTool the address of the this NeutrinoId tool
      *  @param  nuSliceHypotheses the input neutrino slice hypotheses
      *  @param  crSliceHypotheses the input cosmic slice hypotheses
      *  @param  sliceFeaturesVector vector to hold the slice features
      */
-    void GetSliceFeatures(const BdtBeamParticleIdTool *const pTool, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const;
+    void GetSliceFeatures(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const;
 
     /**
      *  @brief  Select all pfos under the same hypothesis
