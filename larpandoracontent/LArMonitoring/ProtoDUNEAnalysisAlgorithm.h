@@ -39,6 +39,8 @@ private:
     std::string             m_treeName;                     ///< Name of output tree
     std::string             m_fileName;                     ///< Name of output file
 
+    bool                    m_visualDisplay;                ///< Visual display
+
     int                     m_eventNumber;                  ///< The event number
 };
 

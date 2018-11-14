@@ -18,6 +18,7 @@ namespace lar_content
 {
 
 ProtoDUNEAnalysisAlgorithm::ProtoDUNEAnalysisAlgorithm() :
+    m_visualDisplay(false),
     m_eventNumber(0)
 {
 }
@@ -41,8 +42,11 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     const PfoList *pPfoList(nullptr);
     (void) PandoraContentApi::GetList(*this, m_pfoListName, pPfoList);
 
-    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XY, -1.f, 1.f, 1.f));
-    PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), pPfoList, "CurrentPfos", AUTO, true, true));
+    if (m_visualDisplay)
+    {
+        PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XY, -1.f, 1.f, 1.f));
+        PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), pPfoList, "CurrentPfos", AUTO, true, true));
+    }
 
     // Triggered Information
     int isTriggered(pMCParticleList->empty() ? 0 : 1);
@@ -123,10 +127,13 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             recoDirectionY.push_back(directionY);
             recoDirectionZ.push_back(directionZ);
 
-            CartesianVector pfoPosition(pVertex->GetPosition());
-            CartesianVector pfoDirection(directionX, directionY, directionZ);
-            CartesianVector pfoEndpoint(pfoPosition + pfoDirection * 100.f);
-            PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &pfoPosition, &pfoEndpoint, "Beam_PfoInfo_" + std::to_string(nBeamPfos), BLUE, 3, 1));
+            if (m_visualDisplay)
+            {
+                CartesianVector pfoPosition(pVertex->GetPosition());
+                CartesianVector pfoDirection(directionX, directionY, directionZ);
+                CartesianVector pfoEndpoint(pfoPosition + pfoDirection * 100.f);
+                PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &pfoPosition, &pfoEndpoint, "Beam_PfoInfo_" + std::to_string(nBeamPfos), BLUE, 3, 1));
+            }
         }
     }
 
@@ -155,15 +162,18 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 
-    if (beamPositionX < 10000.f)
+    if (m_visualDisplay)
     {
-        CartesianVector beamPosition(beamPositionX, beamPositionY, beamPositionZ);
-        CartesianVector beamDirection(beamDirectionX, beamDirectionY, beamDirectionZ);
-        CartesianVector endpoint(beamPosition + beamDirection * 100.f);
-        PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &beamPosition, &endpoint, "Beam_TriggerInfo", RED, 3, 1));
-    }
+        if (beamPositionX < 10000.f)
+        {
+            CartesianVector beamPosition(beamPositionX, beamPositionY, beamPositionZ);
+            CartesianVector beamDirection(beamDirectionX, beamDirectionY, beamDirectionZ);
+            CartesianVector endpoint(beamPosition + beamDirection * 100.f);
+            PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &beamPosition, &endpoint, "Beam_TriggerInfo", RED, 3, 1));
+        }
 
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -176,6 +186,7 @@ StatusCode ProtoDUNEAnalysisAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputTree", m_treeName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputFile", m_fileName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VisualDisplay", m_visualDisplay));
     return STATUS_CODE_SUCCESS;
 }
 
