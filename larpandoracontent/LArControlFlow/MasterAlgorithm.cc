@@ -504,12 +504,10 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceCRWorkerInstance, pCaloHitInMaster));
         }
 
-        ++sliceCounter;
-
         if (m_shouldRunNeutrinoRecoOption)
         {
             if (m_printOverallRecoStatus)
-                std::cout << "Running nu worker instance for slice " << sliceCounter << " of " << sliceVector.size() << std::endl;
+                std::cout << "Running nu worker instance for slice " << (sliceCounter + 1) << " of " << sliceVector.size() << std::endl;
 
             const PfoList *pSliceNuPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
@@ -527,7 +525,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
         if (m_shouldRunCosmicRecoOption)
         {
             if (m_printOverallRecoStatus)
-                std::cout << "Running cr worker instance for slice " << sliceCounter << " of " << sliceVector.size() << std::endl;
+                std::cout << "Running cr worker instance for slice " << (sliceCounter + 1) << " of " << sliceVector.size() << std::endl;
 
             const PfoList *pSliceCRPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
@@ -541,6 +539,8 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
         }
+
+        ++sliceCounter;
     }
 
     if (m_shouldRunNeutrinoRecoOption && m_shouldRunCosmicRecoOption && (nuSliceHypotheses.size() != crSliceHypotheses.size()))
