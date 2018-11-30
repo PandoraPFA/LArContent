@@ -524,6 +524,44 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
         for (const ParticleFlowObject *const pPfo : pfoList) pfoVector.push_back(pPfo);
         std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
 
+        std::pair<const LArTPC*, const LArTPC*> stitchedLArTPCs;
+
+        try
+        {
+            for (const ParticleFlowObject *const pPfoToShift : pfoVector)
+            {
+                if (pfoToLArTPCMap.find(pPfoToShift) != pfoToLArTPCMap.end())
+                {
+                    if (!stitchedLArTPCs.first)
+                    {
+                        stitchedLArTPCs.first = pfoToLArTPCMap.at(pPfoToShift);
+                    }
+                    else if (!stitchedLArTPCs.second)
+                    {
+                        stitchedLArTPCs.second = pfoToLArTPCMap.at(pPfoToShift);
+                    }
+                    else
+                    {
+                        throw StatusCodeException(STATUS_CODE_FAILURE);
+                    }
+                }
+                else
+                {
+                    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+                }
+            }
+        }
+        catch (const pandora::StatusCodeException &statusCodeException)
+        {
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                std::cout << "StitchingCosmicRayMergingTool: Attempting to stitch a pfo across more than two LArTPCs" << std::endl;
+
+            if (STATUS_CODE_NOT_FOUND == statusCodeException.GetStatusCode())
+                std::cout << "StitchingCosmicRayMergingTool: Unable to find LArTPC for a pfo" << std::endl;
+
+            continue;
+        }
+
         float x0(0.f);
 
         if (!m_useXcoordinate)
@@ -538,7 +576,16 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             }
 
             for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
+            {
+                if (pfoToLArTPCMap.find(pPfoToShift) != pfoToLArTPCMap.end())
+                {
+                    const LArTPC *const pActiveLArTPC(pfoToLArTPCMap.at(pPfoToShift));
+                    const LArTPC *const pPartnerLArTPC(stitchedLArTPCs.first == pActiveLArTPC ? stitchedLArTPCs.second : stitchedLArTPCs.first);
+                    const float sign(pActiveLArTPC->GetCenterX() < pPartnerLArTPC->GetCenterX() ? 1.f : -1.f);
+                    x0 = std::fabs(x0) * sign;
+                    pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
+                }
+            }
         }
 
         for (const ParticleFlowObject *const pPfoToDelete : pfoVector)
