@@ -532,13 +532,18 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             {
                 if (pfoToLArTPCMap.find(pPfoToShift) != pfoToLArTPCMap.end())
                 {
+                    const LArTPC *const pLArTPC(pfoToLArTPCMap.at(pPfoToShift));
+
+                    if (pLArTPC && (stitchedLArTPCs.first == pLArTPC || stitchedLArTPCs.second == pLArTPC))
+                        continue;
+
                     if (!stitchedLArTPCs.first)
                     {
-                        stitchedLArTPCs.first = pfoToLArTPCMap.at(pPfoToShift);
+                        stitchedLArTPCs.first = pLArTPC;
                     }
                     else if (!stitchedLArTPCs.second)
                     {
-                        stitchedLArTPCs.second = pfoToLArTPCMap.at(pPfoToShift);
+                        stitchedLArTPCs.second = pLArTPC;
                     }
                     else
                     {
