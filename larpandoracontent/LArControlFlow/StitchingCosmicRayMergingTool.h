@@ -5,7 +5,7 @@
  *
  *  $Log: $
  */
-#ifndef LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H
+# ifndef LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H
 #define LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
@@ -184,6 +184,8 @@ private:
     void OrderPfoMerges(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
         const PfoMergeMap &inputPfoMerges, PfoMergeMap &outputPfoMerges) const;
 
+    typedef std::pair<const pandora::LArTPC*, const pandora::LArTPC*> LArTPCPair;
+
     /**
      *  @brief  Apply X0 corrections, and then stitch together Pfos
      *
@@ -195,6 +197,15 @@ private:
      */
     void StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
         const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const;
+
+    /**
+     *  @brief  Find the pair of LArTPCs that contain the pfos being stitched
+     *
+     *  @param  pfoVector vector of pfos being stitched
+     *  @param  pfoToLArTPCMap the pfo to lar tpc map
+     *  @param  stitchedLArTPCs the pair of LArTPCs containing the pfos being stitched
+     */
+    void FindStitchedLArTPCs(const pandora::PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap, LArTPCPair &stitchedLArTPCs) const;
 
     /**
      *  @brief  Calculate x0 shift for a group of associated Pfos

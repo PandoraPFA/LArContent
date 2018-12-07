@@ -524,37 +524,11 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
         for (const ParticleFlowObject *const pPfo : pfoList) pfoVector.push_back(pPfo);
         std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
 
-        std::pair<const LArTPC*, const LArTPC*> stitchedLArTPCs;
+        LArTPCPair stitchedLArTPCs(nullptr, nullptr);
 
         try
         {
-            for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-            {
-                if (pfoToLArTPCMap.find(pPfoToShift) != pfoToLArTPCMap.end())
-                {
-                    const LArTPC *const pLArTPC(pfoToLArTPCMap.at(pPfoToShift));
-
-                    if (pLArTPC && (stitchedLArTPCs.first == pLArTPC || stitchedLArTPCs.second == pLArTPC))
-                        continue;
-
-                    if (!stitchedLArTPCs.first)
-                    {
-                        stitchedLArTPCs.first = pLArTPC;
-                    }
-                    else if (!stitchedLArTPCs.second)
-                    {
-                        stitchedLArTPCs.second = pLArTPC;
-                    }
-                    else
-                    {
-                        throw StatusCodeException(STATUS_CODE_FAILURE);
-                    }
-                }
-                else
-                {
-                    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-                }
-            }
+            this->FindStitchedLArTPCs(pfoVector, pfoToLArTPCMap, stitchedLArTPCs);
         }
         catch (const pandora::StatusCodeException &statusCodeException)
         {
@@ -582,9 +556,11 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
             for (const ParticleFlowObject *const pPfoToShift : pfoVector)
             {
-                if (pfoToLArTPCMap.find(pPfoToShift) != pfoToLArTPCMap.end())
+                PfoToLArTPCMap::const_iterator iter(pfoToLArTPCMap.find(pPfoToShift));
+
+                if (iter != pfoToLArTPCMap.end())
                 {
-                    const LArTPC *const pActiveLArTPC(pfoToLArTPCMap.at(pPfoToShift));
+                    const LArTPC *const pActiveLArTPC(iter->second);
                     const LArTPC *const pPartnerLArTPC(stitchedLArTPCs.first == pActiveLArTPC ? stitchedLArTPCs.second : stitchedLArTPCs.first);
                     const float sign(pActiveLArTPC->GetCenterX() < pPartnerLArTPC->GetCenterX() ? 1.f : -1.f);
                     x0 = std::fabs(x0) * sign;
@@ -600,6 +576,42 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
             pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
 	    stitchedPfosToX0Map.insert(PfoToFloatMap::value_type(pPfoToEnlarge, x0));
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void StitchingCosmicRayMergingTool::FindStitchedLArTPCs(const PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap,
+    LArTPCPair &stitchedLArTPCs) const
+{
+    for (const ParticleFlowObject *const pPfoToShift : pfoVector)
+    {
+        PfoToLArTPCMap::const_iterator iter(pfoToLArTPCMap.find(pPfoToShift));
+
+        if (iter != pfoToLArTPCMap.end())
+        {
+            const LArTPC *const pLArTPC(iter->second);
+
+            if (pLArTPC && (stitchedLArTPCs.first == pLArTPC || stitchedLArTPCs.second == pLArTPC))
+                continue;
+
+            if (!stitchedLArTPCs.first)
+            {
+                stitchedLArTPCs.first = pLArTPC;
+            }
+            else if (!stitchedLArTPCs.second)
+            {
+                stitchedLArTPCs.second = pLArTPC;
+            }
+            else
+            {
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+            }
+        }
+        else
+        {
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
         }
     }
 }
