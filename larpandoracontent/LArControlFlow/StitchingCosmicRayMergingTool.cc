@@ -542,6 +542,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
         }
 
         float x0(0.f);
+        const float tpcBoundaryCenterX(LArStitchingHelper::GetTPCBoundaryCenterX(*stitchedLArTPCs.first, *stitchedLArTPCs.second));
 
         if (!m_useXcoordinate)
         {
@@ -556,16 +557,25 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
             for (const ParticleFlowObject *const pPfoToShift : pfoVector)
             {
-                PfoToLArTPCMap::const_iterator iter(pfoToLArTPCMap.find(pPfoToShift));
+                CaloHitList caloHitList3D;
+                LArPfoHelper::GetCaloHits(pPfoToShift, TPC_3D, caloHitList3D);
 
-                if (iter != pfoToLArTPCMap.end())
+                float xsum(0.f);
+                int count(0);
+
+                for (const CaloHit *const pCaloHit : caloHitList3D)
                 {
-                    const LArTPC *const pActiveLArTPC(iter->second);
-                    const LArTPC *const pPartnerLArTPC(stitchedLArTPCs.first == pActiveLArTPC ? stitchedLArTPCs.second : stitchedLArTPCs.first);
-                    const float sign(pActiveLArTPC->GetCenterX() < pPartnerLArTPC->GetCenterX() ? 1.f : -1.f);
-                    x0 = std::fabs(x0) * sign;
-                    pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
+                    xsum += pCaloHit->GetPositionVector().GetX();
+                    ++count;
                 }
+
+                if (count == 0)
+                    continue;
+
+                const float averageX(xsum / static_cast<float>(count));
+                const float sign(averageX < tpcBoundaryCenterX ? 1.f : -1.f);
+                x0 = std::fabs(x0) * sign;
+                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
             }
         }
 
