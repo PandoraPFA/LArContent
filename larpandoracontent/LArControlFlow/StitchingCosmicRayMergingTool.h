@@ -5,7 +5,7 @@
  *
  *  $Log: $
  */
-# ifndef LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H
+#ifndef LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H
 #define LAR_STITCHING_COSMIC_RAY_MERGING_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
