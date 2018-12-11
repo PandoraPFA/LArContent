@@ -559,20 +559,17 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             {
                 CaloHitList caloHitList3D;
                 LArPfoHelper::GetCaloHits(pPfoToShift, TPC_3D, caloHitList3D);
+                const unsigned int nCaloHits3D(caloHitList3D.size());
 
-                float xsum(0.f);
-                int count(0);
-
-                for (const CaloHit *const pCaloHit : caloHitList3D)
-                {
-                    xsum += pCaloHit->GetPositionVector().GetX();
-                    ++count;
-                }
-
-                if (count == 0)
+                if (nCaloHits3D == 0)
                     continue;
 
-                const float averageX(xsum / static_cast<float>(count));
+                float xSum(0.f);
+
+                for (const CaloHit *const pCaloHit : caloHitList3D)
+                    xSum += pCaloHit->GetPositionVector().GetX();
+
+                const float averageX(xSum / static_cast<float>(nCaloHits3D));
                 const float sign(averageX < tpcBoundaryCenterX ? 1.f : -1.f);
                 x0 = std::fabs(x0) * sign;
                 pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
