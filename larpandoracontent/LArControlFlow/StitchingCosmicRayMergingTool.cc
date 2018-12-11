@@ -546,9 +546,11 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
         if (!m_useXcoordinate)
         {
+            PfoToPointingVertexMap pfoToPointingVertexMap;
+
             try
             {
-                this->CalculateX0(pfoToLArTPCMap, pointingClusterMap, pfoVector, x0);
+                this->CalculateX0(pfoToLArTPCMap, pointingClusterMap, pfoVector, x0, pfoToPointingVertexMap);
             }
             catch (const pandora::StatusCodeException &)
             {
@@ -557,20 +559,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
             for (const ParticleFlowObject *const pPfoToShift : pfoVector)
             {
-                CaloHitList caloHitList3D;
-                LArPfoHelper::GetCaloHits(pPfoToShift, TPC_3D, caloHitList3D);
-                const unsigned int nCaloHits3D(caloHitList3D.size());
-
-                if (nCaloHits3D == 0)
-                    continue;
-
-                float xSum(0.f);
-
-                for (const CaloHit *const pCaloHit : caloHitList3D)
-                    xSum += pCaloHit->GetPositionVector().GetX();
-
-                const float averageX(xSum / static_cast<float>(nCaloHits3D));
-                const float sign(averageX < tpcBoundaryCenterX ? 1.f : -1.f);
+                const float sign(pfoToPointingVertexMap.at(pPfoToShift).GetPosition().GetX() < tpcBoundaryCenterX ? 1.f : -1.f);
                 x0 = std::fabs(x0) * sign;
                 pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
             }
@@ -626,7 +615,7 @@ void StitchingCosmicRayMergingTool::FindStitchedLArTPCs(const PfoVector &pfoVect
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
-    const PfoVector &pfoVector, float &x0) const
+    const PfoVector &pfoVector, float &x0, PfoToPointingVertexMap &pfoToPointingVertexMap) const
 {
     float sumX(0.f), sumN(0.f);
 
@@ -665,10 +654,36 @@ void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
                 LArStitchingHelper::GetClosestVertices(*pLArTPC1, *pLArTPC2, pointingCluster1, pointingCluster2,
                     pointingVertex1, pointingVertex2);
 
+                PfoToPointingVertexMap::iterator pfoToPointingVertexMapIter1(pfoToPointingVertexMap.find(pPfo1));
+                if (pfoToPointingVertexMapIter1 == pfoToPointingVertexMap.end())
+                {
+                    pfoToPointingVertexMap.insert(std::make_pair(pPfo1, pointingVertex1));
+                }
+                else
+                {
+                    if ((pfoToPointingVertexMapIter1->second.GetPosition() - pointingVertex1.GetPosition()).GetMagnitude() > std::numeric_limits<float>::epsilon())
+                        throw StatusCodeException(STATUS_CODE_FAILURE);;
+                }
+
+                PfoToPointingVertexMap::iterator pfoToPointingVertexMapIter2(pfoToPointingVertexMap.find(pPfo2));
+                if (pfoToPointingVertexMapIter2 == pfoToPointingVertexMap.end())
+                {
+                    pfoToPointingVertexMap.insert(std::make_pair(pPfo2, pointingVertex2));
+                }
+                else
+                {
+                    if ((pfoToPointingVertexMapIter2->second.GetPosition() - pointingVertex2.GetPosition()).GetMagnitude() > std::numeric_limits<float>::epsilon())
+                        throw StatusCodeException(STATUS_CODE_FAILURE);;
+                }
+
                 const float thisX0(LArStitchingHelper::CalculateX0(*pLArTPC1, *pLArTPC2, pointingVertex1, pointingVertex2));
                 sumX += thisX0; sumN += 1.f;
             }
-            catch (const pandora::StatusCodeException &) {}
+            catch (const pandora::StatusCodeException &statusCodeException)
+            {
+                if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                    std::cout << "StitchingCosmicRayMergingTool: Attempting to stitch a pfo using multiple cluster pointing vertices" << std::endl;
+            }
         }
     }
 

@@ -185,6 +185,7 @@ private:
         const PfoMergeMap &inputPfoMerges, PfoMergeMap &outputPfoMerges) const;
 
     typedef std::pair<const pandora::LArTPC*, const pandora::LArTPC*> LArTPCPair;
+    typedef std::map<const pandora::ParticleFlowObject*, LArPointingCluster::Vertex> PfoToPointingVertexMap;
 
     /**
      *  @brief  Apply X0 corrections, and then stitch together Pfos
@@ -214,9 +215,10 @@ private:
      *  @param  pointingClusterMap the mapping between Pfos and their corresponding 3D pointing clusters
      *  @param  pfoVector the vector of parent Pfos to stitch together
      *  @param  x0 the output x0 value
+     *  @param  pfoToPointingVertexMap map of pfo to pointing vertex used in stitching
      */
     void CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
-        const pandora::PfoVector &pfoVector, float &x0) const;
+        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMap &pfoToPointingVertexMap) const;
 
     bool  m_useXcoordinate;
     int   m_halfWindowLayers;
