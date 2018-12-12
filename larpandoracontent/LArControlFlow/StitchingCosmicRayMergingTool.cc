@@ -543,6 +543,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
         float x0(0.f);
         const float tpcBoundaryCenterX(LArStitchingHelper::GetTPCBoundaryCenterX(*stitchedLArTPCs.first, *stitchedLArTPCs.second));
+        bool isCPAStitch(stitchedLArTPCs.first->GetCenterX() < tpcBoundaryCenterX ? !stitchedLArTPCs.first->IsDriftInPositiveX() : !stitchedLArTPCs.second->IsDriftInPositiveX());
 
         if (!m_useXcoordinate)
         {
@@ -559,9 +560,14 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
             for (const ParticleFlowObject *const pPfoToShift : pfoVector)
             {
-                const float sign(pfoToPointingVertexMap.at(pPfoToShift).GetPosition().GetX() < tpcBoundaryCenterX ? 1.f : -1.f);
-                x0 = std::fabs(x0) * sign;
-                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, x0);
+                const float t0Sign(isCPAStitch ? -1.f : 1.f);
+                object_creation::ParticleFlowObject::Metadata metadata;
+                metadata.m_propertiesToAdd["X0"] = x0 * t0Sign;
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfoToShift, metadata));
+
+                const float shiftSign(pfoToPointingVertexMap.at(pPfoToShift).GetPosition().GetX() < tpcBoundaryCenterX ? 1.f : -1.f);
+                const float signedX0(std::fabs(x0) * shiftSign);
+                pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, signedX0);
             }
         }
 
