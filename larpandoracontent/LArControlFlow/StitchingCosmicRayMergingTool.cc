@@ -663,7 +663,7 @@ void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
                 PfoToPointingVertexMap::iterator pfoToPointingVertexMapIter1(pfoToPointingVertexMap.find(pPfo1));
                 if (pfoToPointingVertexMapIter1 == pfoToPointingVertexMap.end())
                 {
-                    pfoToPointingVertexMap.insert(std::make_pair(pPfo1, pointingVertex1));
+                    (void) pfoToPointingVertexMap.insert(PfoToPointingVertexMap::value_type(pPfo1, pointingVertex1));
                 }
                 else
                 {
@@ -674,7 +674,7 @@ void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
                 PfoToPointingVertexMap::iterator pfoToPointingVertexMapIter2(pfoToPointingVertexMap.find(pPfo2));
                 if (pfoToPointingVertexMapIter2 == pfoToPointingVertexMap.end())
                 {
-                    pfoToPointingVertexMap.insert(std::make_pair(pPfo2, pointingVertex2));
+                    (void) pfoToPointingVertexMap.insert(PfoToPointingVertexMap::value_type(pPfo2, pointingVertex2));
                 }
                 else
                 {
