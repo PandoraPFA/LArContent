@@ -275,13 +275,6 @@ float LArStitchingHelper::CalculateX0(const LArTPC &firstTPC, const LArTPC &seco
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector LArStitchingHelper::GetCorrectedPosition(const LArTPC &larTPC, const float x0, const CartesianVector &inputPosition)
-{
-  return (inputPosition + CartesianVector(larTPC.IsDriftInPositiveX() ? -x0 : x0, 0.f, 0.f));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool LArStitchingHelper::SortTPCs(const pandora::LArTPC *const pLhs, const pandora::LArTPC *const pRhs)
 {
     if (std::fabs(pLhs->GetCenterX() - pRhs->GetCenterX()) > std::numeric_limits<float>::epsilon())
