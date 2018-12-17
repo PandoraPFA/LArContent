@@ -123,18 +123,6 @@ public:
         const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex);
 
     /**
-     *  @brief  Apply the X0 correction to an input position vector
-     *
-     *  @param  larTPC the tpc
-     *  @param  x0  the x0 value
-     *  @param  inputPosition  the input uncorrected position vector
-     *
-     *  @return the output corrected position vector
-     */
-    static pandora::CartesianVector GetCorrectedPosition(const pandora::LArTPC &larTPC, const float x0,
-        const pandora::CartesianVector &inputPosition);
-
-    /**
      *  @brief  Sort tpcs by central positions
      *
      *  @param  pLhs address of first tpc

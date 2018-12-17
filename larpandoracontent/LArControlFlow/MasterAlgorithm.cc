@@ -67,11 +67,10 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
 
     PfoList pfoList;
     LArPfoHelper::GetAllDownstreamPfos(pParentPfo, pfoList);
-    const float signedX0(larTPCIter->second->IsDriftInPositiveX() ? -x0 : x0);
 
     if (m_visualizeOverallRecoStatus)
     {
-        std::cout << "ShiftPfoHierarchy: signedX0 " << signedX0 << std::endl;
+        std::cout << "ShiftPfoHierarchy: x0 " << x0 << std::endl;
         PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "BeforeShiftCRPfos", GREEN));
     }
 
@@ -87,14 +86,14 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
         for (const CaloHit *const pCaloHit : caloHitList)
         {
             PandoraContentApi::CaloHit::Metadata metadata;
-            metadata.m_x0 = signedX0;
+            metadata.m_x0 = x0;
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
         }
 
         for (const Vertex *const pVertex : pDaughterPfo->GetVertexList())
         {
             PandoraContentApi::Vertex::Metadata metadata;
-            metadata.m_x0 = signedX0;
+            metadata.m_x0 = x0;
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::AlterMetadata(*this, pVertex, metadata));
         }
     }
