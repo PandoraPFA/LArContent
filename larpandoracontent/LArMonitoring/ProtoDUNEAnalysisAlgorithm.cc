@@ -74,6 +74,8 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     int nBeamPfos(0), nTrkBeamPfos(0), nShwBeamPfos(0);
     IntVector nHitsRecoU, nHitsRecoV, nHitsRecoW, nHitsRecoTotal, recoParticleId;
     FloatVector recoDirectionX, recoDirectionY, recoDirectionZ;;
+    int nCosmicRayPfos(0);
+    FloatVector cosmicRayX0s;
 
     for (const Pfo *const pPfo : *pPfoList)
     {
@@ -132,8 +134,21 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
                 CartesianVector pfoPosition(pVertex->GetPosition());
                 CartesianVector pfoDirection(directionX, directionY, directionZ);
                 CartesianVector pfoEndpoint(pfoPosition + pfoDirection * 100.f);
-                PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &pfoPosition, &pfoEndpoint, "Beam_PfoInfo_" + std::to_string(nBeamPfos), BLUE, 3, 1));
+                PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &pfoPosition, &pfoEndpoint, "Beam_PfoInfo_" + std::to_string(nBeamPfos), MAGENTA, 3, 2));
+
+                PfoList testBeamPfo;
+                testBeamPfo.push_back(pPfo);
+                PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &testBeamPfo, "TestBeamPfo", MAGENTA, true, true));
             }
+        }
+        else if (pPfo->GetParticleId() == 13)
+        {
+            // Cosmic Ray Pfo
+            nCosmicRayPfos++;
+            const Pfo *const pParentPfo(LArPfoHelper::GetParentPfo(pPfo));
+
+            if (pParentPfo->GetPropertiesMap().count("X0"))
+                cosmicRayX0s.push_back(pParentPfo->GetPropertiesMap().at("X0"));
         }
     }
 
@@ -159,6 +174,8 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionX", &recoDirectionX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionY", &recoDirectionY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionZ", &recoDirectionZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nCosmicRayPfos", nCosmicRayPfos));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "cosmicRayX0s", &cosmicRayX0s));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 
