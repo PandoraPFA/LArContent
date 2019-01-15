@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArMonitoring/ProtoDUNEAnalysisAlgorithm.h"
@@ -57,6 +58,7 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
 
     if (isTriggered && pMCParticleList->size() == 1)
     {
+        // Data Event
         const MCParticle *pMCParticle(pMCParticleList->front());
         beamMomentum = pMCParticle->GetEnergy();
         beamDirectionX = pMCParticle->GetMomentum().GetX();
@@ -68,6 +70,37 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
         tof = pMCParticle->GetEndpoint().GetX();
         ckov0Status = static_cast<int>(pMCParticle->GetEndpoint().GetY());
         ckov1Status = static_cast<int>(pMCParticle->GetEndpoint().GetZ());
+    }
+    else if (isTriggered && pMCParticleList->size() >  1)
+    {
+        // MC Event
+        const MCParticle *pMCTriggeredParticle(nullptr);
+
+        for (const MCParticle *pMCParticle : *pMCParticleList)
+        {
+            const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+
+            if (LArMCParticleHelper::IsPrimary(pMCParticle) && nuance == 2001)
+            {
+                if (pMCTriggeredParticle)
+                {
+                    std::cout << "More than one target triggered mc particle" << std::endl;
+                    pMCTriggeredParticle = nullptr;
+                    break;
+                }
+                pMCTriggeredParticle = pMCParticle;
+            }
+        }
+        beamMomentum = pMCTriggeredParticle->GetMomentum().GetMagnitude();
+        beamDirectionX = pMCTriggeredParticle->GetMomentum().GetX() / pMCTriggeredParticle->GetMomentum().GetMagnitude();
+        beamDirectionY = pMCTriggeredParticle->GetMomentum().GetY() / pMCTriggeredParticle->GetMomentum().GetMagnitude();
+        beamDirectionZ = pMCTriggeredParticle->GetMomentum().GetZ() / pMCTriggeredParticle->GetMomentum().GetMagnitude();
+        beamPositionX = pMCTriggeredParticle->GetVertex().GetX();
+        beamPositionY = pMCTriggeredParticle->GetVertex().GetY();
+        beamPositionZ = pMCTriggeredParticle->GetVertex().GetZ();
+        tof = std::numeric_limits<float>::max();
+        ckov0Status = pMCTriggeredParticle->GetParticleId();
+        ckov1Status = std::numeric_limits<int>::max();
     }
 
     // Reconstruction Information
