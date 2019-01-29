@@ -23,6 +23,7 @@ namespace lar_content
 
 StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_useXcoordinate(false),
+    m_alwaysApplyT0Calculation(true),
     m_halfWindowLayers(30),
     m_minLengthSquared(50.f),
     m_minCosRelativeAngle(0.966),
@@ -545,7 +546,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
         const float tpcBoundaryCenterX(LArStitchingHelper::GetTPCBoundaryCenterX(*stitchedLArTPCs.first, *stitchedLArTPCs.second));
         bool isCPAStitch(stitchedLArTPCs.first->GetCenterX() < tpcBoundaryCenterX ? !stitchedLArTPCs.first->IsDriftInPositiveX() : !stitchedLArTPCs.second->IsDriftInPositiveX());
 
-        if (!m_useXcoordinate)
+        if (!m_useXcoordinate || m_alwaysApplyT0Calculation)
         {
             PfoToPointingVertexMap pfoToPointingVertexMap;
 
@@ -737,6 +738,9 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ThreeDStitchingMode", m_useXcoordinate));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "AlwaysApplyT0Calculation", m_alwaysApplyT0Calculation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "HalfWindowLayers", m_halfWindowLayers));

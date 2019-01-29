@@ -221,6 +221,7 @@ private:
         const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMap &pfoToPointingVertexMap) const;
 
     bool  m_useXcoordinate;
+    bool  m_alwaysApplyT0Calculation;
     int   m_halfWindowLayers;
     float m_minLengthSquared;
     float m_minCosRelativeAngle;
