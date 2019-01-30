@@ -91,16 +91,20 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
                 pMCTriggeredParticle = pMCParticle;
             }
         }
-        beamMomentum = pMCTriggeredParticle->GetMomentum().GetMagnitude();
-        beamDirectionX = pMCTriggeredParticle->GetMomentum().GetX() / pMCTriggeredParticle->GetMomentum().GetMagnitude();
-        beamDirectionY = pMCTriggeredParticle->GetMomentum().GetY() / pMCTriggeredParticle->GetMomentum().GetMagnitude();
-        beamDirectionZ = pMCTriggeredParticle->GetMomentum().GetZ() / pMCTriggeredParticle->GetMomentum().GetMagnitude();
-        beamPositionX = pMCTriggeredParticle->GetVertex().GetX();
-        beamPositionY = pMCTriggeredParticle->GetVertex().GetY();
-        beamPositionZ = pMCTriggeredParticle->GetVertex().GetZ();
-        tof = std::numeric_limits<float>::max();
-        ckov0Status = pMCTriggeredParticle->GetParticleId();
-        ckov1Status = std::numeric_limits<int>::max();
+
+        if (pMCTriggeredParticle)
+        {
+            beamMomentum = pMCTriggeredParticle->GetMomentum().GetMagnitude();
+            beamDirectionX = pMCTriggeredParticle->GetMomentum().GetX();
+            beamDirectionY = pMCTriggeredParticle->GetMomentum().GetY();
+            beamDirectionZ = pMCTriggeredParticle->GetMomentum().GetZ();
+            beamPositionX = pMCTriggeredParticle->GetVertex().GetX();
+            beamPositionY = pMCTriggeredParticle->GetVertex().GetY();
+            beamPositionZ = pMCTriggeredParticle->GetVertex().GetZ();
+            tof = std::numeric_limits<float>::max();
+            ckov0Status = pMCTriggeredParticle->GetParticleId();
+            ckov1Status = std::numeric_limits<int>::max();
+        }
     }
 
     // Reconstruction Information
