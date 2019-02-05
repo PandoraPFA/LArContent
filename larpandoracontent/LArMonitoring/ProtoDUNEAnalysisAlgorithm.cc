@@ -110,6 +110,7 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     // Reconstruction Information
     int nBeamPfos(0), nTrkBeamPfos(0), nShwBeamPfos(0);
     IntVector nHitsRecoU, nHitsRecoV, nHitsRecoW, nHitsRecoTotal, recoParticleId;
+    IntVector nHitsCosmicU, nHitsCosmicV, nHitsCosmicW, nHitsCosmicTotal;
     FloatVector recoDirectionX, recoDirectionY, recoDirectionZ;;
     int nCosmicRayPfos(0);
     FloatVector cosmicRayX0s;
@@ -186,6 +187,15 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
 
             if (pParentPfo->GetPropertiesMap().count("X0"))
                 cosmicRayX0s.push_back(pParentPfo->GetPropertiesMap().at("X0"));
+
+            CaloHitList uHits, vHits, wHits;
+            LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, uHits);
+            LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, vHits);
+            LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, wHits);
+            nHitsCosmicU.push_back(uHits.size());
+            nHitsCosmicV.push_back(vHits.size());
+            nHitsCosmicW.push_back(wHits.size());
+            nHitsCosmicTotal.push_back(uHits.size() + vHits.size() + wHits.size());
         }
     }
 
@@ -213,6 +223,10 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionZ", &recoDirectionZ));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nCosmicRayPfos", nCosmicRayPfos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "cosmicRayX0s", &cosmicRayX0s));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsCosmicU", &nHitsCosmicU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsCosmicV", &nHitsCosmicV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsCosmicW", &nHitsCosmicW));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsCosmicTotal", &nHitsCosmicTotal));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 
