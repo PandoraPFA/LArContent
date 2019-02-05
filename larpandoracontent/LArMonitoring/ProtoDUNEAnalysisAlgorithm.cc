@@ -111,12 +111,14 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     int nBeamPfos(0), nTrkBeamPfos(0), nShwBeamPfos(0);
     IntVector nHitsRecoU, nHitsRecoV, nHitsRecoW, nHitsRecoTotal, recoParticleId;
     IntVector nHitsCosmicU, nHitsCosmicV, nHitsCosmicW, nHitsCosmicTotal;
-    FloatVector recoDirectionX, recoDirectionY, recoDirectionZ;;
+    FloatVector recoDirectionX, recoDirectionY, recoDirectionZ, testBeamScore, allTestBeamScores;
     int nCosmicRayPfos(0);
     FloatVector cosmicRayX0s;
 
     for (const Pfo *const pPfo : *pPfoList)
     {
+        allTestBeamScores.push_back((pPfo->GetPropertiesMap().count("TestBeamScore")) ? pPfo->GetPropertiesMap().at("TestBeamScore") : -std::numeric_limits<float>::max());
+
         if (LArPfoHelper::IsTestBeam(pPfo))
         {
             const Vertex *const pVertex = LArPfoHelper::GetVertex(pPfo);
@@ -162,6 +164,7 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             nHitsRecoV.push_back(vHits.size());
             nHitsRecoW.push_back(wHits.size());
             nHitsRecoTotal.push_back(uHits.size() + vHits.size() + wHits.size());
+            testBeamScore.push_back((pPfo->GetPropertiesMap().count("TestBeamScore")) ? pPfo->GetPropertiesMap().at("TestBeamScore") : -std::numeric_limits<float>::max());
             recoParticleId.push_back(pPfo->GetParticleId());
             recoDirectionX.push_back(directionX);
             recoDirectionY.push_back(directionY);
@@ -213,10 +216,12 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nBeamPfos", nBeamPfos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nShwBeamPfos", nShwBeamPfos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTrkBeamPfos", nTrkBeamPfos));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "allTestBeamScores", &allTestBeamScores));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsRecoU", &nHitsRecoU));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsRecoV", &nHitsRecoV));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsRecoW", &nHitsRecoW));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsRecoTotal", &nHitsRecoTotal));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "testBeamScore", &testBeamScore));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoParticleId", &recoParticleId));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionX", &recoDirectionX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionY", &recoDirectionY));
