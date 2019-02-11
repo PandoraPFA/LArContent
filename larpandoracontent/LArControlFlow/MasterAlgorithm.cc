@@ -423,16 +423,13 @@ StatusCode MasterAlgorithm::RunCosmicRayHitRemoval(const PfoList &ambiguousPfos)
         // ATTN: If an ambiguous pfo has been stitched, reset the calo hit positions in preparation for subsequent algorithm chains
         if (LArStitchingHelper::HasPfoBeenStitched(pPfoToDelete))
         {
-            PfoList downstreamPfos;
-            LArPfoHelper::GetAllDownstreamPfos(pPfoToDelete, downstreamPfos);
-
             CaloHitList caloHitList2D;
-            LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_U, caloHitList2D);
-            LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_V, caloHitList2D);
-            LArPfoHelper::GetCaloHits(downstreamPfos, TPC_VIEW_W, caloHitList2D);
-            LArPfoHelper::GetIsolatedCaloHits(downstreamPfos, TPC_VIEW_U, caloHitList2D);
-            LArPfoHelper::GetIsolatedCaloHits(downstreamPfos, TPC_VIEW_V, caloHitList2D);
-            LArPfoHelper::GetIsolatedCaloHits(downstreamPfos, TPC_VIEW_W, caloHitList2D);
+            LArPfoHelper::GetCaloHits(pPfoToDelete, TPC_VIEW_U, caloHitList2D);
+            LArPfoHelper::GetCaloHits(pPfoToDelete, TPC_VIEW_V, caloHitList2D);
+            LArPfoHelper::GetCaloHits(pPfoToDelete, TPC_VIEW_W, caloHitList2D);
+            LArPfoHelper::GetIsolatedCaloHits(pPfoToDelete, TPC_VIEW_U, caloHitList2D);
+            LArPfoHelper::GetIsolatedCaloHits(pPfoToDelete, TPC_VIEW_V, caloHitList2D);
+            LArPfoHelper::GetIsolatedCaloHits(pPfoToDelete, TPC_VIEW_W, caloHitList2D);
 
             for (const CaloHit *const pCaloHit : caloHitList2D)
             {
