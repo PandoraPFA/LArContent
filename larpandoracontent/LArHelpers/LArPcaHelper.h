@@ -8,6 +8,7 @@
 #ifndef LAR_PCA_HELPER_H
 #define LAR_PCA_HELPER_H 1
 
+#include "Objects/CartesianVector.h"
 
 namespace lar_content
 {

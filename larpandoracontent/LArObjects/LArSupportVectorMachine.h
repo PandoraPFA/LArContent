@@ -12,6 +12,7 @@
 
 #include "larpandoracontent/LArObjects/LArMvaInterface.h"
 
+#include "Helpers/XmlHelper.h"
 #include "Pandora/StatusCodes.h"
 
 #include <functional>

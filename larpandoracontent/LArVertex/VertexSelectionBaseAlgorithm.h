@@ -8,6 +8,7 @@
 #ifndef LAR_VERTEX_SELECTION_BASE_ALGORITHM_H
 #define LAR_VERTEX_SELECTION_BASE_ALGORITHM_H 1
 
+#include "Objects/Vertex.h"
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
