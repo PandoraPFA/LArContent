@@ -564,7 +564,13 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
                 const float t0Sign(isCPAStitch ? -1.f : 1.f);
                 object_creation::ParticleFlowObject::Metadata metadata;
                 metadata.m_propertiesToAdd["X0"] = x0 * t0Sign;
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfoToShift, metadata));
+
+                // ATTN: Set the X0 shift for all particles in hierarchy
+                PfoList downstreamPfoList;
+                LArPfoHelper::GetAllDownstreamPfos(pPfoToShift, downstreamPfoList);
+
+                for (const ParticleFlowObject *const pHierarchyPfo : downstreamPfoList)
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pHierarchyPfo, metadata));
 
                 const float shiftSign(pfoToPointingVertexMap.at(pPfoToShift).GetPosition().GetX() < tpcBoundaryCenterX ? 1.f : -1.f);
                 const float signedX0(std::fabs(x0) * shiftSign);
