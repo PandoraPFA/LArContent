@@ -286,4 +286,29 @@ bool LArStitchingHelper::SortTPCs(const pandora::LArTPC *const pLhs, const pando
     return (pLhs->GetCenterZ() < pRhs->GetCenterZ());
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+bool LArStitchingHelper::HasPfoBeenStitched(const ParticleFlowObject *const pPfo)
+{
+    const PropertiesMap &properties(pPfo->GetPropertiesMap());
+    const PropertiesMap::const_iterator iter(properties.find("X0"));
+
+    if (iter != properties.end())
+        return true;
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+float LArStitchingHelper::GetPfoX0(const ParticleFlowObject *const pPfo)
+{
+    // ATTN: If no stitch is present return a shift of 0.f
+    if (!LArStitchingHelper::HasPfoBeenStitched(pPfo))
+        return 0.f;
+
+    // ATTN: HasPfoBeenStitched ensures X0 is present in the properties map
+    return pPfo->GetPropertiesMap().at("X0");
+}
+
 } // namespace lar_content

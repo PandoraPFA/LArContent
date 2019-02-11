@@ -18,6 +18,7 @@
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
 
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
@@ -420,7 +421,7 @@ StatusCode MasterAlgorithm::RunCosmicRayHitRemoval(const PfoList &ambiguousPfos)
         const VertexList vertexList(pPfoToDelete->GetVertexList());
 
         // ATTN: If an ambiguous pfo has been stitched, reset the calo hit positions in preparation for subsequent algorithm chains
-        if (pPfoToDelete->GetPropertiesMap().count("X0"))
+        if (LArStitchingHelper::HasPfoBeenStitched(pPfoToDelete))
         {
             PfoList downstreamPfos;
             LArPfoHelper::GetAllDownstreamPfos(pPfoToDelete, downstreamPfos);
