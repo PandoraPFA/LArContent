@@ -129,6 +129,22 @@ public:
      *  @param  pRhs address of second tpc
      */
     static bool SortTPCs(const pandora::LArTPC *const pLhs, const pandora::LArTPC *const pRhs);
+
+    /**
+     *  @brief  Whether a pfo has been stitched
+     *
+     *  @param  pPfo the address of the Pfo
+     *
+     *  @return boolean
+     */
+    static bool HasPfoBeenStitched(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Return the x0 for a pfo
+     *
+     *  @param  pPfo the address of the Pfo
+     */
+    static float GetPfoX0(const pandora::ParticleFlowObject *const pPfo);
 };
 
 } // namespace lar_content
