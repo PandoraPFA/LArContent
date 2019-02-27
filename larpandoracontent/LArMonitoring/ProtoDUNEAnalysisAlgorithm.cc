@@ -111,7 +111,9 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     int nBeamPfos(0), nTrkBeamPfos(0), nShwBeamPfos(0);
     IntVector nHitsRecoU, nHitsRecoV, nHitsRecoW, nHitsRecoTotal, recoParticleId;
     IntVector nHitsCosmicU, nHitsCosmicV, nHitsCosmicW, nHitsCosmicTotal;
-    FloatVector recoDirectionX, recoDirectionY, recoDirectionZ, testBeamScore, allTestBeamScores;
+    FloatVector recoDirectionX, recoDirectionY, recoDirectionZ, recoVertexX, recoVertexY, recoVertexZ;
+    FloatVector recoDirectionCRX, recoDirectionCRY, recoDirectionCRZ, recoVertexCRX, recoVertexCRY, recoVertexCRZ;
+    FloatVector allTestBeamScores;
     int nCosmicRayPfos(0);
     FloatVector cosmicRayX0s;
 
@@ -164,11 +166,13 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             nHitsRecoV.push_back(vHits.size());
             nHitsRecoW.push_back(wHits.size());
             nHitsRecoTotal.push_back(uHits.size() + vHits.size() + wHits.size());
-            testBeamScore.push_back((pPfo->GetPropertiesMap().count("TestBeamScore")) ? pPfo->GetPropertiesMap().at("TestBeamScore") : -std::numeric_limits<float>::max());
             recoParticleId.push_back(pPfo->GetParticleId());
             recoDirectionX.push_back(directionX);
             recoDirectionY.push_back(directionY);
             recoDirectionZ.push_back(directionZ);
+            recoVertexX.push_back(pVertex->GetPosition().GetX());
+            recoVertexY.push_back(pVertex->GetPosition().GetY());
+            recoVertexZ.push_back(pVertex->GetPosition().GetZ());
 
             if (m_visualDisplay)
             {
@@ -186,10 +190,32 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
         {
             // Cosmic Ray Pfo
             nCosmicRayPfos++;
+
+            const Vertex *const pVertex = LArPfoHelper::GetVertex(pPfo);
             const Pfo *const pParentPfo(LArPfoHelper::GetParentPfo(pPfo));
 
             if (pParentPfo->GetPropertiesMap().count("X0"))
                 cosmicRayX0s.push_back(pParentPfo->GetPropertiesMap().at("X0"));
+
+            float directionX(std::numeric_limits<float>::max()), directionY(std::numeric_limits<float>::max()), directionZ(std::numeric_limits<float>::max());
+
+            // ATTN If wire w pitches vary between TPCs, exception will be raised in initialisation of lar pseudolayer plugin
+            const LArTPC *const pFirstLArTPC(this->GetPandora().GetGeometry()->GetLArTPCMap().begin()->second);
+            const float layerPitch(pFirstLArTPC->GetWirePitchW());
+
+            // Calculate sliding fit trajectory
+            const float slidingFitHalfWindow(20);
+            LArTrackStateVector trackStateVector;
+            LArPfoHelper::GetSlidingFitTrajectory(pPfo, pVertex, slidingFitHalfWindow, layerPitch, trackStateVector);
+
+            // Check front gives start trajectory? Display?
+            if (trackStateVector.size() > 0)
+            {
+                const LArTrackState &startTrackState(trackStateVector.front());
+                directionX = startTrackState.GetDirection().GetX();
+                directionY = startTrackState.GetDirection().GetY();
+                directionZ = startTrackState.GetDirection().GetZ();
+            }
 
             CaloHitList uHits, vHits, wHits;
             LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, uHits);
@@ -199,9 +225,16 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             nHitsCosmicV.push_back(vHits.size());
             nHitsCosmicW.push_back(wHits.size());
             nHitsCosmicTotal.push_back(uHits.size() + vHits.size() + wHits.size());
+            recoDirectionCRX.push_back(directionX);
+            recoDirectionCRY.push_back(directionY);
+            recoDirectionCRZ.push_back(directionZ);
+            recoVertexCRX.push_back(pVertex->GetPosition().GetX());
+            recoVertexCRY.push_back(pVertex->GetPosition().GetY());
+            recoVertexCRZ.push_back(pVertex->GetPosition().GetZ());
         }
     }
 
+    // MC
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isTriggered", isTriggered));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "beamMomentum", beamMomentum));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "beamPositionX", beamPositionX));
@@ -213,6 +246,8 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "tof", tof));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ckov0Status", ckov0Status));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ckov1Status", ckov1Status));
+
+    // Beam
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nBeamPfos", nBeamPfos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nShwBeamPfos", nShwBeamPfos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTrkBeamPfos", nTrkBeamPfos));
@@ -221,17 +256,27 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsRecoV", &nHitsRecoV));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsRecoW", &nHitsRecoW));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsRecoTotal", &nHitsRecoTotal));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "testBeamScore", &testBeamScore));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoParticleId", &recoParticleId));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionX", &recoDirectionX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionY", &recoDirectionY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionZ", &recoDirectionZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexX", &recoVertexX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexY", &recoVertexY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexZ", &recoVertexZ));
+
+    // Cosmics
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nCosmicRayPfos", nCosmicRayPfos));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "cosmicRayX0s", &cosmicRayX0s));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsCosmicU", &nHitsCosmicU));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsCosmicV", &nHitsCosmicV));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsCosmicW", &nHitsCosmicW));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHitsCosmicTotal", &nHitsCosmicTotal));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionCRX", &recoDirectionCRX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionCRY", &recoDirectionCRY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoDirectionCRZ", &recoDirectionCRZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexCRX", &recoVertexCRX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexCRY", &recoVertexCRY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexCRZ", &recoVertexCRZ));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 
