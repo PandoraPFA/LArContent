@@ -113,6 +113,8 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     IntVector nHitsCosmicU, nHitsCosmicV, nHitsCosmicW, nHitsCosmicTotal;
     FloatVector recoDirectionX, recoDirectionY, recoDirectionZ, recoVertexX, recoVertexY, recoVertexZ;
     FloatVector recoDirectionCRX, recoDirectionCRY, recoDirectionCRZ, recoVertexCRX, recoVertexCRY, recoVertexCRZ;
+    FloatVector tbStartPointX, tbStartPointY, tbStartPointZ, tbEndPointX, tbEndPointY, tbEndPointZ;
+    FloatVector crStartPointX, crStartPointY, crStartPointZ, crEndPointX, crEndPointY, crEndPointZ;
     FloatVector allTestBeamScores;
     int nCosmicRayPfos(0);
     FloatVector cosmicRayX0s;
@@ -125,6 +127,10 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
         {
             const Vertex *const pVertex = LArPfoHelper::GetVertex(pPfo);
             float directionX(std::numeric_limits<int>::max()), directionY(std::numeric_limits<int>::max()), directionZ(std::numeric_limits<int>::max());
+            float tbStartX(std::numeric_limits<float>::max()), tbStartY(std::numeric_limits<float>::max());
+            float tbStartZ(std::numeric_limits<float>::max()), tbEndX(std::numeric_limits<float>::max());
+            float tbEndY(std::numeric_limits<float>::max()), tbEndZ(std::numeric_limits<float>::max());
+
             nBeamPfos++;
 
             if (std::fabs(pPfo->GetParticleId()) == E_MINUS)
@@ -135,6 +141,16 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
                 directionX = showerPCA.GetPrimaryAxis().GetX();
                 directionY = showerPCA.GetPrimaryAxis().GetY();
                 directionZ = showerPCA.GetPrimaryAxis().GetZ();
+
+                const CartesianVector showerStart(showerPCA.GetCentroid() - (showerPCA.GetPrimaryAxis() * 0.5f * showerPCA.GetPrimaryLength()));
+                tbStartX = showerStart.GetX();
+                tbStartY = showerStart.GetY();
+                tbStartZ = showerStart.GetZ();
+
+                const CartesianVector endStart(showerPCA.GetCentroid() + (showerPCA.GetPrimaryAxis() *0.5f * showerPCA.GetPrimaryLength()));
+                tbEndX = endStart.GetX();
+                tbEndY = endStart.GetY();
+                tbEndZ = endStart.GetZ();
             }
             else
             {
@@ -156,6 +172,19 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
                     directionY = startTrackState.GetDirection().GetY();
                     directionZ = startTrackState.GetDirection().GetZ();
                 }
+                // Save start and endpoints
+                if (trackStateVector.size() > 1)
+                {
+                    const LArTrackState &startTrackState(trackStateVector.front());
+                    tbStartX = startTrackState.GetPosition().GetX();
+                    tbStartY = startTrackState.GetPosition().GetY();
+                    tbStartZ = startTrackState.GetPosition().GetZ();
+
+                    const LArTrackState &endTrackState(trackStateVector.back());
+                    tbEndX = endTrackState.GetPosition().GetX();
+                    tbEndY = endTrackState.GetPosition().GetY();
+                    tbEndZ = endTrackState.GetPosition().GetZ();
+                }
             }
 
             CaloHitList uHits, vHits, wHits;
@@ -173,6 +202,12 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             recoVertexX.push_back(pVertex->GetPosition().GetX());
             recoVertexY.push_back(pVertex->GetPosition().GetY());
             recoVertexZ.push_back(pVertex->GetPosition().GetZ());
+            tbStartPointX.push_back(tbStartX);
+            tbStartPointY.push_back(tbStartY);
+            tbStartPointZ.push_back(tbStartZ);
+            tbEndPointX.push_back(tbEndX);
+            tbEndPointY.push_back(tbEndY);
+            tbEndPointZ.push_back(tbEndZ);
 
             if (m_visualDisplay)
             {
@@ -217,6 +252,23 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
                 directionZ = startTrackState.GetDirection().GetZ();
             }
 
+            float crStartX(std::numeric_limits<float>::max()), crStartY(std::numeric_limits<float>::max());
+            float crStartZ(std::numeric_limits<float>::max()), crEndX(std::numeric_limits<float>::max());
+            float crEndY(std::numeric_limits<float>::max()), crEndZ(std::numeric_limits<float>::max());
+
+            if (trackStateVector.size() > 1)
+            {
+                const LArTrackState &startTrackState(trackStateVector.front());
+                crStartX = startTrackState.GetPosition().GetX();
+                crStartY = startTrackState.GetPosition().GetY();
+                crStartZ = startTrackState.GetPosition().GetZ();
+
+                const LArTrackState &endTrackState(trackStateVector.back());
+                crEndX = endTrackState.GetPosition().GetX();
+                crEndY = endTrackState.GetPosition().GetY();
+                crEndZ = endTrackState.GetPosition().GetZ();
+            }
+
             CaloHitList uHits, vHits, wHits;
             LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, uHits);
             LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, vHits);
@@ -231,6 +283,12 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             recoVertexCRX.push_back(pVertex->GetPosition().GetX());
             recoVertexCRY.push_back(pVertex->GetPosition().GetY());
             recoVertexCRZ.push_back(pVertex->GetPosition().GetZ());
+            crStartPointX.push_back(crStartX);
+            crStartPointY.push_back(crStartY);
+            crStartPointZ.push_back(crStartZ);
+            crEndPointX.push_back(crEndX);
+            crEndPointY.push_back(crEndY);
+            crEndPointZ.push_back(crEndZ);
         }
     }
 
@@ -263,6 +321,12 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexX", &recoVertexX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexY", &recoVertexY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexZ", &recoVertexZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "tbStartPointX", &tbStartPointX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "tbStartPointY", &tbStartPointY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "tbStartPointZ", &tbStartPointZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "tbEndPointX", &tbEndPointX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "tbEndPointY", &tbEndPointY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "tbEndPointZ", &tbEndPointZ));
 
     // Cosmics
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nCosmicRayPfos", nCosmicRayPfos));
@@ -277,6 +341,12 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexCRX", &recoVertexCRX));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexCRY", &recoVertexCRY));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "recoVertexCRZ", &recoVertexCRZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "crStartPointX", &crStartPointX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "crStartPointY", &crStartPointY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "crStartPointZ", &crStartPointZ));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "crEndPointX", &crEndPointX));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "crEndPointY", &crEndPointY));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "crEndPointZ", &crEndPointZ));
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 
