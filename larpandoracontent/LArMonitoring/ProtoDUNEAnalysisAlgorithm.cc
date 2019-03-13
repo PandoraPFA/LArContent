@@ -52,8 +52,9 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     // Triggered Information
     int isTriggered(pMCParticleList->empty() ? 0 : 1);
 
-    float beamMomentum(std::numeric_limits<float>::max()), beamPositionX(std::numeric_limits<float>::max()), beamPositionY(std::numeric_limits<float>::max()), beamPositionZ(std::numeric_limits<float>::max()),
-          beamDirectionX(std::numeric_limits<float>::max()), beamDirectionY(std::numeric_limits<float>::max()), beamDirectionZ(std::numeric_limits<float>::max()), tof(std::numeric_limits<float>::max());
+    float beamMomentum(std::numeric_limits<float>::max()), beamPositionX(std::numeric_limits<float>::max()), beamPositionY(std::numeric_limits<float>::max());
+    float beamPositionZ(std::numeric_limits<float>::max()), beamDirectionX(std::numeric_limits<float>::max()), beamDirectionY(std::numeric_limits<float>::max());
+    float beamDirectionZ(std::numeric_limits<float>::max()), tof(std::numeric_limits<float>::max());
     int ckov0Status(std::numeric_limits<int>::max()), ckov1Status(std::numeric_limits<int>::max());
 
     if (isTriggered && pMCParticleList->size() == 1)
@@ -123,9 +124,20 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
     {
         allTestBeamScores.push_back((pPfo->GetPropertiesMap().count("TestBeamScore")) ? pPfo->GetPropertiesMap().at("TestBeamScore") : -std::numeric_limits<float>::max());
 
+        const Vertex *pVertex(nullptr);
+
+        try
+        {
+            pVertex = LArPfoHelper::GetVertex(pPfo);
+        }
+        catch (...)
+        {
+            std::cout << "ProtoDUNEAnalysisAlgorithm::Run - PFO found without vertex, skipping" << std::endl;
+            continue;
+        }
+
         if (LArPfoHelper::IsTestBeam(pPfo))
         {
-            const Vertex *const pVertex = LArPfoHelper::GetVertex(pPfo);
             float directionX(std::numeric_limits<int>::max()), directionY(std::numeric_limits<int>::max()), directionZ(std::numeric_limits<int>::max());
             float tbStartX(std::numeric_limits<float>::max()), tbStartY(std::numeric_limits<float>::max());
             float tbStartZ(std::numeric_limits<float>::max()), tbEndX(std::numeric_limits<float>::max());
@@ -137,20 +149,27 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             {
                 nShwBeamPfos++;
 
-                const LArShowerPCA showerPCA(LArPfoHelper::GetPrincipalComponents(pPfo, pVertex));
-                directionX = showerPCA.GetPrimaryAxis().GetX();
-                directionY = showerPCA.GetPrimaryAxis().GetY();
-                directionZ = showerPCA.GetPrimaryAxis().GetZ();
+                try
+                {
+                    const LArShowerPCA showerPCA(LArPfoHelper::GetPrincipalComponents(pPfo, pVertex));
+                    directionX = showerPCA.GetPrimaryAxis().GetX();
+                    directionY = showerPCA.GetPrimaryAxis().GetY();
+                    directionZ = showerPCA.GetPrimaryAxis().GetZ();
 
-                const CartesianVector showerStart(showerPCA.GetCentroid() - (showerPCA.GetPrimaryAxis() * 0.5f * showerPCA.GetPrimaryLength()));
-                tbStartX = showerStart.GetX();
-                tbStartY = showerStart.GetY();
-                tbStartZ = showerStart.GetZ();
+                    const CartesianVector showerStart(showerPCA.GetCentroid() - (showerPCA.GetPrimaryAxis() * 0.5f * showerPCA.GetPrimaryLength()));
+                    tbStartX = showerStart.GetX();
+                    tbStartY = showerStart.GetY();
+                    tbStartZ = showerStart.GetZ();
 
-                const CartesianVector endStart(showerPCA.GetCentroid() + (showerPCA.GetPrimaryAxis() *0.5f * showerPCA.GetPrimaryLength()));
-                tbEndX = endStart.GetX();
-                tbEndY = endStart.GetY();
-                tbEndZ = endStart.GetZ();
+                    const CartesianVector endStart(showerPCA.GetCentroid() + (showerPCA.GetPrimaryAxis() *0.5f * showerPCA.GetPrimaryLength()));
+                    tbEndX = endStart.GetX();
+                    tbEndY = endStart.GetY();
+                    tbEndZ = endStart.GetZ();
+                }
+                catch (...)
+                {
+                    std::cout << "ProtoDUNEAnalysisAlgorithm::Run - Unable to perform PCA fit on shower like test beam PFO" << std::endl;
+                }
             }
             else
             {
@@ -163,7 +182,17 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
                 // Calculate sliding fit trajectory
                 const float slidingFitHalfWindow(20);
                 LArTrackStateVector trackStateVector;
-                LArPfoHelper::GetSlidingFitTrajectory(pPfo, pVertex, slidingFitHalfWindow, layerPitch, trackStateVector);
+
+                try
+                {
+                    LArPfoHelper::GetSlidingFitTrajectory(pPfo, pVertex, slidingFitHalfWindow, layerPitch, trackStateVector);
+                }
+                catch (...)
+                {
+                    trackStateVector.clear();
+                    std::cout << "ProtoDUNEAnalysisAlgorithm::Run - Unable to perform sliding linear fit on track like test beam PFO" << std::endl;
+                }
+
                 // Check front gives start trajectory? Display?
                 if (trackStateVector.size() > 0)
                 {
@@ -226,7 +255,6 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             // Cosmic Ray Pfo
             nCosmicRayPfos++;
 
-            const Vertex *const pVertex = LArPfoHelper::GetVertex(pPfo);
             const Pfo *const pParentPfo(LArPfoHelper::GetParentPfo(pPfo));
 
             if (pParentPfo->GetPropertiesMap().count("X0"))
@@ -241,7 +269,16 @@ StatusCode ProtoDUNEAnalysisAlgorithm::Run()
             // Calculate sliding fit trajectory
             const float slidingFitHalfWindow(20);
             LArTrackStateVector trackStateVector;
-            LArPfoHelper::GetSlidingFitTrajectory(pPfo, pVertex, slidingFitHalfWindow, layerPitch, trackStateVector);
+
+            try
+            {
+                LArPfoHelper::GetSlidingFitTrajectory(pPfo, pVertex, slidingFitHalfWindow, layerPitch, trackStateVector);
+            }
+            catch (...)
+            {
+                trackStateVector.clear();
+                std::cout << "ProtoDUNEAnalysisAlgorithm::Run - Unable to perform sliding linear fit on track like cosmic PFO" << std::endl;
+            }
 
             // Check front gives start trajectory? Display?
             if (trackStateVector.size() > 0)
