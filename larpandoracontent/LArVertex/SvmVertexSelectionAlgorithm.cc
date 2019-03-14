@@ -77,7 +77,7 @@ void SvmVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexV
     // Create maps from hit types to objects for passing to feature tools.
     const ClusterListMap clusterListMap{{TPC_VIEW_U, clustersU},
                                         {TPC_VIEW_V, clustersV},
-                                        {TPC_VIEW_W, clustersV}};
+                                        {TPC_VIEW_W, clustersW}};
 
     const SlidingFitDataListMap slidingFitDataListMap{{TPC_VIEW_U, slidingFitDataListU},
                                                       {TPC_VIEW_V, slidingFitDataListV},
