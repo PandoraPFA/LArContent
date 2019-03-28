@@ -15,7 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteractionType(const MCParticleList &mcPrimaryList)
+LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteractionType(const MCParticleList &mcPrimaryList, const bool testBeamHierarchyMode)
 {
     if (mcPrimaryList.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
@@ -44,17 +44,140 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
         else return COSMIC_RAY_OTHER;
     }
 
-    if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsBeamParticle(mcPrimaryList.front()))
+    if (!testBeamHierarchyMode)
     {
-        if (1 == nMuons) return BEAM_PARTICLE_MU;
-        if (1 == nProtons) return BEAM_PARTICLE_P;
-        if (1 == nElectrons) return BEAM_PARTICLE_E;
-        if (1 == nPhotons) return BEAM_PARTICLE_PHOTON;
-        if (1 == nPiPlus) return BEAM_PARTICLE_PI_PLUS;
-        if (1 == nPiMinus) return BEAM_PARTICLE_PI_MINUS;
-        if (1 == nKaonPlus) return BEAM_PARTICLE_KAON_PLUS;
-        if (1 == nKaonMinus) return BEAM_PARTICLE_KAON_MINUS;
-        else return BEAM_PARTICLE_OTHER;
+        if ((1 == mcPrimaryList.size()) && LArMCParticleHelper::IsBeamParticle(mcPrimaryList.front()))
+        {
+            if (1 == nMuons) return BEAM_PARTICLE_MU;
+            if (1 == nProtons) return BEAM_PARTICLE_P;
+            if (1 == nElectrons) return BEAM_PARTICLE_E;
+            if (1 == nPhotons) return BEAM_PARTICLE_PHOTON;
+            if (1 == nPiPlus) return BEAM_PARTICLE_PI_PLUS;
+            if (1 == nPiMinus) return BEAM_PARTICLE_PI_MINUS;
+            if (1 == nKaonPlus) return BEAM_PARTICLE_KAON_PLUS;
+            if (1 == nKaonMinus) return BEAM_PARTICLE_KAON_MINUS;
+            else return BEAM_PARTICLE_OTHER;
+        }
+    }
+    else
+    {
+        int targetParentId(0);
+
+        for (const MCParticle *const pMCPrimary : mcPrimaryList)
+        {
+            if (LArMCParticleHelper::GetParentMCParticle(pMCPrimary) != pMCPrimary)
+                continue;
+
+            if (13 == std::fabs(pMCPrimary->GetParticleId())) --nMuons;
+            if (11 == std::fabs(pMCPrimary->GetParticleId())) --nElectrons;
+            else if (2212 == std::fabs(pMCPrimary->GetParticleId())) --nProtons;
+            else if (22 == pMCPrimary->GetParticleId()) --nPhotons;
+            else if (211 == pMCPrimary->GetParticleId()) --nPiPlus;
+            else if (-211 == pMCPrimary->GetParticleId()) --nPiMinus;
+            else if (321 == pMCPrimary->GetParticleId()) --nKaonPlus;
+            else if (-321 == pMCPrimary->GetParticleId()) --nKaonMinus;
+
+            --nNonNeutrons;
+            targetParentId = pMCPrimary->GetParticleId();
+        }
+
+        MCParticleSet piZero, kaon0L;
+        for (const MCParticle *const pMCPrimary : mcPrimaryList)
+        {
+            if (22 == pMCPrimary->GetParticleId() && pMCPrimary->GetParentList().size() == 1)
+            {
+                const MCParticle *const pParentMCParticle(pMCPrimary->GetParentList().front());
+                if (pParentMCParticle->GetParticleId() == 111 && !piZero.count(pParentMCParticle))
+                    piZero.insert(pParentMCParticle);
+            }
+            else if ((111 == pMCPrimary->GetParticleId() || 211 == std::fabs(pMCPrimary->GetParticleId())) && pMCPrimary->GetParentList().size() == 1)
+            {
+                const MCParticle *const pParentMCParticle(pMCPrimary->GetParentList().front());
+                if (pParentMCParticle->GetParticleId() == 130 && !kaon0L.count(pParentMCParticle))
+                    kaon0L.insert(pParentMCParticle);
+            }
+        }
+
+        const int nPiZero(piZero.size());
+        const int nKaon0L(kaon0L.size());
+
+        if (211 == targetParentId)
+        {
+            if ((1 == nNonNeutrons) && (1 == nPiPlus)) return BEAM_PARTICLE_PI_PLUS_PI_PLUS;
+            if ((2 == nNonNeutrons) && (1 == nPiPlus) && (1 == nPhotons)) return BEAM_PARTICLE_PI_PLUS_PI_PLUS_PHOTON;
+            if ((3 == nNonNeutrons) && (1 == nPiPlus) && (1 == nPiZero)) return BEAM_PARTICLE_PI_PLUS_PI_PLUS_PIZERO;
+            return BEAM_PARTICLE_PI_PLUS_COMPLEX;
+        }
+        else if (-211 == targetParentId)
+        {
+            if ((1 == nNonNeutrons) && (1 == nPiMinus)) return BEAM_PARTICLE_PI_MINUS_PI_MINUS;
+            if ((2 == nNonNeutrons) && (1 == nPiMinus) && (1 == nPhotons)) return BEAM_PARTICLE_PI_MINUS_PI_MINUS_PHOTON;
+            if ((3 == nNonNeutrons) && (1 == nPiMinus) && (1 == nPiZero)) return BEAM_PARTICLE_PI_MINUS_PI_MINUS_PIZERO;
+            return BEAM_PARTICLE_PI_MINUS_COMPLEX;
+        }
+        else if (2212 == targetParentId)
+        {
+            if ((1 == nNonNeutrons) && (1 == nProtons)) return BEAM_PARTICLE_P_P;
+            if ((2 == nNonNeutrons) && (1 == nProtons) && (1 == nPhotons)) return BEAM_PARTICLE_P_P_PHOTON;
+            if ((3 == nNonNeutrons) && (1 == nProtons) && (2 == nPhotons)) return BEAM_PARTICLE_P_P_PHOTON_PHOTON;
+            if ((4 == nNonNeutrons) && (1 == nProtons) && (3 == nPhotons)) return BEAM_PARTICLE_P_P_PHOTON_PHOTON_PHOTON;
+            if ((5 == nNonNeutrons) && (1 == nProtons) && (4 == nPhotons)) return BEAM_PARTICLE_P_P_PHOTON_PHOTON_PHOTON_PHOTON;
+
+            if ((2 == nNonNeutrons) && (2 == nProtons)) return BEAM_PARTICLE_P_P_P;
+            if ((3 == nNonNeutrons) && (2 == nProtons) && (1 == nPhotons)) return BEAM_PARTICLE_P_P_P_PHOTON;
+            if ((4 == nNonNeutrons) && (2 == nProtons) && (2 == nPhotons)) return BEAM_PARTICLE_P_P_P_PHOTON_PHOTON;
+            if ((5 == nNonNeutrons) && (2 == nProtons) && (3 == nPhotons)) return BEAM_PARTICLE_P_P_P_PHOTON_PHOTON_PHOTON;
+
+            if ((3 == nNonNeutrons) && (3 == nProtons)) return BEAM_PARTICLE_P_P_P_P;
+            if ((4 == nNonNeutrons) && (3 == nProtons) && (1 == nPhotons)) return BEAM_PARTICLE_P_P_P_P_PHOTON;
+            if ((5 == nNonNeutrons) && (3 == nProtons) && (2 == nPhotons)) return BEAM_PARTICLE_P_P_P_P_PHOTON_PHOTON;
+
+            if ((4 == nNonNeutrons) && (4 == nProtons)) return BEAM_PARTICLE_P_P_P_P_P;
+            if ((5 == nNonNeutrons) && (4 == nProtons) && (1 == nPhotons)) return BEAM_PARTICLE_P_P_P_P_P_PHOTON;
+
+            if ((5 == nNonNeutrons) && (5 == nProtons)) return BEAM_PARTICLE_P_P_P_P_P_P;
+
+            return BEAM_PARTICLE_P_COMPLEX;
+        }
+        else if (13 == std::fabs(targetParentId))
+        {
+            if (0 == nNonNeutrons) return BEAM_PARTICLE_MU;
+            if ((1 == nNonNeutrons) && (1 == nElectrons)) return BEAM_PARTICLE_MU_E;
+            return BEAM_PARTICLE_MU_COMPLEX;
+        }
+        else if (321 == targetParentId)
+        {
+            if ((1 == nNonNeutrons) && (1 == nMuons)) return BEAM_PARTICLE_KAON_PLUS_MU;
+            if ((nNonNeutrons >= 2) && (1 == nKaonPlus) && (1 == nKaon0L)) return BEAM_PARTICLE_KAON_PLUS_KAON_PLUS_KAON0L_COMPLEX;
+            if ((nNonNeutrons > 1) && (1 == nKaonPlus)) return BEAM_PARTICLE_KAON_PLUS_KAON_PLUS_COMPLEX;
+            return BEAM_PARTICLE_KAON_PLUS_COMPLEX;
+        }
+        else if (-321 == targetParentId)
+        {
+            if ((1 == nNonNeutrons) && (1 == nMuons)) return BEAM_PARTICLE_KAON_MINUS_MU;
+            if ((nNonNeutrons >= 2) && (1 == nKaonMinus) && (1 == nKaon0L)) return BEAM_PARTICLE_KAON_MINUS_KAON_MINUS_KAON0L_COMPLEX;
+            if ((nNonNeutrons > 1) && (1 == nKaonMinus)) return BEAM_PARTICLE_KAON_MINUS_KAON_MINUS_COMPLEX;
+            return BEAM_PARTICLE_KAON_MINUS_COMPLEX;
+        }
+        else if (11 == std::fabs(targetParentId))
+        {
+            if (0 == nNonNeutrons) return BEAM_PARTICLE_E;
+            return BEAM_PARTICLE_E_COMPLEX;
+        }
+
+        if (nNonNeutrons > 5) return BEAM_PARTICLE_COMPLEX_HIERARCHY;
+
+std::cout << "nElectrons : " << nElectrons << std::endl;
+std::cout << "nPhotons   : " << nPhotons << std::endl;
+std::cout << "nPiPlus    : " << nPiPlus << std::endl;
+std::cout << "nPiMinus   : " << nPiMinus << std::endl;
+std::cout << "nKaonPlus  : " << nKaonPlus << std::endl;
+std::cout << "nKaonMinus : " << nKaonMinus << std::endl;
+std::cout << "nPiZero    : " << nPiZero << std::endl;
+std::cout << "nProtons   : " << nProtons << std::endl;
+std::cout << "nMuons     : " << nMuons << std::endl;
+
+        return BEAM_PARTICLE_UNKNOWN_HIERARCHY;
     }
 
     const MCParticle *pMCNeutrino(nullptr);
@@ -437,6 +560,44 @@ std::string LArInteractionTypeHelper::ToString(const InteractionType interaction
     case BEAM_PARTICLE_KAON_PLUS: return "BEAM_PARTICLE_KAON_PLUS";
     case BEAM_PARTICLE_KAON_MINUS: return "BEAM_PARTICLE_KAON_MINUS";
     case BEAM_PARTICLE_OTHER: return "BEAM_PARTICLE_OTHER";
+    case BEAM_PARTICLE_PI_PLUS_PI_PLUS: return "BEAM_PARTICLE_PI_PLUS_PI_PLUS";
+    case BEAM_PARTICLE_PI_PLUS_PI_PLUS_PHOTON: return "BEAM_PARTICLE_PI_PLUS_PI_PLUS_PHOTON";
+    case BEAM_PARTICLE_PI_PLUS_PI_PLUS_PIZERO: return "BEAM_PARTICLE_PI_PLUS_PI_PLUS_PIZERO";
+    case BEAM_PARTICLE_PI_PLUS_COMPLEX: return "BEAM_PARTICLE_PI_PLUS_COMPLEX";
+    case BEAM_PARTICLE_PI_MINUS_PI_MINUS: return "BEAM_PARTICLE_PI_MINUS_PI_MINUS";
+    case BEAM_PARTICLE_PI_MINUS_PI_MINUS_PHOTON: return "BEAM_PARTICLE_PI_MINUS_PI_MINUS_PHOTON";
+    case BEAM_PARTICLE_PI_MINUS_PI_MINUS_PIZERO: return "BEAM_PARTICLE_PI_MINUS_PI_MINUS_PIZERO";
+    case BEAM_PARTICLE_PI_MINUS_COMPLEX: return "BEAM_PARTICLE_PI_MINUS_COMPLEX";
+    case BEAM_PARTICLE_P_P: return "BEAM_PARTICLE_P_P";
+    case BEAM_PARTICLE_P_P_PHOTON: return "BEAM_PARTICLE_P_P_PHOTON";
+    case BEAM_PARTICLE_P_P_PHOTON_PHOTON: return "BEAM_PARTICLE_P_P_PHOTON_PHOTON";
+    case BEAM_PARTICLE_P_P_PHOTON_PHOTON_PHOTON: return "BEAM_PARTICLE_P_P_PHOTON_PHOTON_PHOTON";
+    case BEAM_PARTICLE_P_P_PHOTON_PHOTON_PHOTON_PHOTON: return "BEAM_PARTICLE_P_P_PHOTON_PHOTON_PHOTON_PHOTON";
+    case BEAM_PARTICLE_P_P_P: return "BEAM_PARTICLE_P_P_P";
+    case BEAM_PARTICLE_P_P_P_PHOTON: return "BEAM_PARTICLE_P_P_P_PHOTON";
+    case BEAM_PARTICLE_P_P_P_PHOTON_PHOTON: return "BEAM_PARTICLE_P_P_P_PHOTON_PHOTON";
+    case BEAM_PARTICLE_P_P_P_PHOTON_PHOTON_PHOTON: return "BEAM_PARTICLE_P_P_P_PHOTON_PHOTON_PHOTON";
+    case BEAM_PARTICLE_P_P_P_P: return "BEAM_PARTICLE_P_P_P_P";
+    case BEAM_PARTICLE_P_P_P_P_PHOTON: return "BEAM_PARTICLE_P_P_P_P_PHOTON";
+    case BEAM_PARTICLE_P_P_P_P_PHOTON_PHOTON: return "BEAM_PARTICLE_P_P_P_P_PHOTON_PHOTON";
+    case BEAM_PARTICLE_P_P_P_P_P: return "BEAM_PARTICLE_P_P_P_P_P";
+    case BEAM_PARTICLE_P_P_P_P_P_PHOTON: return "BEAM_PARTICLE_P_P_P_P_P_PHOTON";
+    case BEAM_PARTICLE_P_P_P_P_P_P: return "BEAM_PARTICLE_P_P_P_P_P_P";
+    case BEAM_PARTICLE_P_COMPLEX: return "BEAM_PARTICLE_P_COMPLEX";
+    case BEAM_PARTICLE_MU_E: return "BEAM_PARTICLE_MU_E";
+    case BEAM_PARTICLE_MU_COMPLEX: return "BEAM_PARTICLE_MU_COMPLEX";
+    case BEAM_PARTICLE_KAON_PLUS_MU: return "BEAM_PARTICLE_KAON_PLUS_MU";
+    case BEAM_PARTICLE_KAON_PLUS_KAON_PLUS_KAON0L_COMPLEX: return "BEAM_PARTICLE_KAON_PLUS_KAON_PLUS_KAON0L_COMPLEX";
+    case BEAM_PARTICLE_KAON_PLUS_KAON_PLUS_COMPLEX: return "BEAM_PARTICLE_KAON_PLUS_KAON_PLUS_COMPLEX";
+    case BEAM_PARTICLE_KAON_PLUS_COMPLEX: return "BEAM_PARTICLE_KAON_PLUS_COMPLEX";
+    case BEAM_PARTICLE_KAON_MINUS_MU: return "BEAM_PARTICLE_KAON_MINUS_MU";
+    case BEAM_PARTICLE_KAON_MINUS_KAON_MINUS_KAON0L_COMPLEX: return "BEAM_PARTICLE_KAON_MINUS_KAON_MINUS_KAON0L_COMPLEX";
+    case BEAM_PARTICLE_KAON_MINUS_KAON_MINUS_COMPLEX: return "BEAM_PARTICLE_KAON_MINUS_KAON_MINUS_COMPLEX";
+    case BEAM_PARTICLE_KAON_MINUS_COMPLEX: return "BEAM_PARTICLE_KAON_MINUS_COMPLEX";
+    case BEAM_PARTICLE_E_COMPLEX: return "BEAM_PARTICLE_E_COMPLEX";
+    case BEAM_PARTICLE_COMPLEX_HIERARCHY: return "BEAM_PARTICLE_COMPLEX_HIERARCHY";
+    case BEAM_PARTICLE_UNKNOWN_HIERARCHY: return "BEAM_PARTICLE_UNKNOWN_HIERARCHY";
+
     case OTHER_INTERACTION: return "OTHER_INTERACTION";
     case ALL_INTERACTIONS: return "ALL_INTERACTIONS";
     default: return "UNKNOWN";

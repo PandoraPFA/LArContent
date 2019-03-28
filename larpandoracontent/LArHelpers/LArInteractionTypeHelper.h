@@ -189,6 +189,43 @@ public:
         BEAM_PARTICLE_KAON_PLUS,
         BEAM_PARTICLE_KAON_MINUS,
         BEAM_PARTICLE_OTHER,
+        BEAM_PARTICLE_PI_PLUS_PI_PLUS,
+        BEAM_PARTICLE_PI_PLUS_PI_PLUS_PHOTON,
+        BEAM_PARTICLE_PI_PLUS_PI_PLUS_PIZERO,
+        BEAM_PARTICLE_PI_PLUS_COMPLEX,
+        BEAM_PARTICLE_PI_MINUS_PI_MINUS,
+        BEAM_PARTICLE_PI_MINUS_PI_MINUS_PHOTON,
+        BEAM_PARTICLE_PI_MINUS_PI_MINUS_PIZERO,
+        BEAM_PARTICLE_PI_MINUS_COMPLEX,
+        BEAM_PARTICLE_P_P,
+        BEAM_PARTICLE_P_P_PHOTON,
+        BEAM_PARTICLE_P_P_PHOTON_PHOTON,
+        BEAM_PARTICLE_P_P_PHOTON_PHOTON_PHOTON,
+        BEAM_PARTICLE_P_P_PHOTON_PHOTON_PHOTON_PHOTON,
+        BEAM_PARTICLE_P_P_P,
+        BEAM_PARTICLE_P_P_P_PHOTON,
+        BEAM_PARTICLE_P_P_P_PHOTON_PHOTON,
+        BEAM_PARTICLE_P_P_P_PHOTON_PHOTON_PHOTON,
+        BEAM_PARTICLE_P_P_P_P,
+        BEAM_PARTICLE_P_P_P_P_PHOTON,
+        BEAM_PARTICLE_P_P_P_P_PHOTON_PHOTON,
+        BEAM_PARTICLE_P_P_P_P_P,
+        BEAM_PARTICLE_P_P_P_P_P_PHOTON,
+        BEAM_PARTICLE_P_P_P_P_P_P,
+        BEAM_PARTICLE_P_COMPLEX,
+        BEAM_PARTICLE_MU_E,
+        BEAM_PARTICLE_MU_COMPLEX,
+        BEAM_PARTICLE_KAON_PLUS_MU,
+        BEAM_PARTICLE_KAON_PLUS_KAON_PLUS_KAON0L_COMPLEX,
+        BEAM_PARTICLE_KAON_PLUS_KAON_PLUS_COMPLEX,
+        BEAM_PARTICLE_KAON_PLUS_COMPLEX,
+        BEAM_PARTICLE_KAON_MINUS_MU,
+        BEAM_PARTICLE_KAON_MINUS_KAON_MINUS_KAON0L_COMPLEX,
+        BEAM_PARTICLE_KAON_MINUS_KAON_MINUS_COMPLEX,
+        BEAM_PARTICLE_KAON_MINUS_COMPLEX,
+        BEAM_PARTICLE_E_COMPLEX,
+        BEAM_PARTICLE_COMPLEX_HIERARCHY,
+        BEAM_PARTICLE_UNKNOWN_HIERARCHY,
         OTHER_INTERACTION,
         ALL_INTERACTIONS
     };
@@ -198,10 +235,11 @@ public:
      *
      *  @param  nuanceCode the nuance code
      *  @param  mcPrimaryList the list of primary mc particles
+     *  @param  testBeamHierarchyMode
      *
      *  @return interaction type
      */
-    static InteractionType GetInteractionType(const pandora::MCParticleList &mcPrimaryList);
+    static InteractionType GetInteractionType(const pandora::MCParticleList &mcPrimaryList, const bool testBeamHierarchyMode = false);
 
     /**
      *  @brief  Get a string representation of an interaction type
