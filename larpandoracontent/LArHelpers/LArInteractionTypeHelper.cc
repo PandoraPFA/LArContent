@@ -167,16 +167,6 @@ LArInteractionTypeHelper::InteractionType LArInteractionTypeHelper::GetInteracti
 
         if (nNonNeutrons > 5) return BEAM_PARTICLE_COMPLEX_HIERARCHY;
 
-std::cout << "nElectrons : " << nElectrons << std::endl;
-std::cout << "nPhotons   : " << nPhotons << std::endl;
-std::cout << "nPiPlus    : " << nPiPlus << std::endl;
-std::cout << "nPiMinus   : " << nPiMinus << std::endl;
-std::cout << "nKaonPlus  : " << nKaonPlus << std::endl;
-std::cout << "nKaonMinus : " << nKaonMinus << std::endl;
-std::cout << "nPiZero    : " << nPiZero << std::endl;
-std::cout << "nProtons   : " << nProtons << std::endl;
-std::cout << "nMuons     : " << nMuons << std::endl;
-
         return BEAM_PARTICLE_UNKNOWN_HIERARCHY;
     }
 

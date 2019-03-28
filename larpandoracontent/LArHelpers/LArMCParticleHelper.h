@@ -25,6 +25,7 @@ class LArMCParticleHelper
 {
 public:
     typedef std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
+    typedef std::unordered_map<const pandora::MCParticle*, int> MCParticleIntMap;
 
     typedef std::unordered_map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCToPfoMap;
 
@@ -121,6 +122,15 @@ public:
      *  @return boolean
      */
     static bool IsLeading(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Determine the position in the hierarchy for the MCParticle
+     *
+     *  @param  pMCParticle the address of the mc particle
+     *
+     *  @return integer
+     */
+    static int GetHierarchyTier(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Whether a mc particle is visible (i.e. long-lived charged particle)
