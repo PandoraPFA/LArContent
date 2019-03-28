@@ -70,7 +70,10 @@ bool LArMCParticleHelper::IsLeadingBeamParticle(const MCParticle *const pMCParti
 {
     // ATTN: Only the parent triggered beam particle has nuance code 2001
     const int parentNuance(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCParticle)));
-    return (LArMCParticleHelper::IsLeading(pMCParticle) && (parentNuance == 2001 || parentNuance == 2000));
+
+    bool isLeading(LArMCParticleHelper::IsLeading(pMCParticle) && (parentNuance == 2001 || parentNuance == 2000));
+//    std::cout << "IsLeading : " << isLeading << std::endl;
+    return isLeading;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -129,6 +132,25 @@ bool LArMCParticleHelper::IsLeading(const pandora::MCParticle *const pMCParticle
     catch (const StatusCodeException &) {}
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int LArMCParticleHelper::GetHierarchyTier(const pandora::MCParticle *const pMCParticle)
+{
+    const MCParticle *pParentMCParticle = pMCParticle;
+    int tier(0);
+
+    while (pParentMCParticle->GetParentList().empty() == false)
+    {
+        if (1 != pParentMCParticle->GetParentList().size())
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
+        ++tier;
+    }
+
+    return tier;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -255,9 +277,10 @@ const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *co
 
 const MCParticle *LArMCParticleHelper::GetLeadingMCParticle(const MCParticle *const pMCParticle, const int hierarchyTierLimit)
 {
+//std::cout << "IsLeading Start" << std::endl;
     // ATTN: If not beam particle return primary particle
     const bool isBeamParticle(LArMCParticleHelper::IsBeamParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle)));
-
+//std::cout << "isBeamParticle " << isBeamParticle << std::endl;
     if (!isBeamParticle)
         return LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
 
@@ -276,6 +299,8 @@ const MCParticle *LArMCParticleHelper::GetLeadingMCParticle(const MCParticle *co
         mcVector.push_back(pParentMCParticle);
     }
 
+//    std::cout << "pParentMCParticle->GetParticleId() " << pParentMCParticle->GetParticleId() << std::endl;
+
     int hierarchyTier(0);
     const MCParticle *pLeadingMCParticle(nullptr);
 
@@ -293,7 +318,7 @@ const MCParticle *LArMCParticleHelper::GetLeadingMCParticle(const MCParticle *co
 
         hierarchyTier++;
     }
-
+//std::cout << "hierarchyTier " << hierarchyTier << std::endl;
     if (!pLeadingMCParticle)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
@@ -443,6 +468,23 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
 
     // Ensure the MCParticles have enough "good" hits to be reconstructed
     LArMCParticleHelper::SelectParticlesByHitCount(candidateTargets, mcToTrueHitListMap, mcToPrimaryMCMap, parameters, selectedMCParticlesToHitsMap);
+
+    // ATTN: The parent particle must be in the hierarchy map, event if not reconstructable
+    if (testBeamHierarchyMode)
+    {
+        for (const MCParticle *const pMCParticle : candidateTargets)
+        {
+            if (!LArMCParticleHelper::IsBeamParticle(pMCParticle))
+                continue;
+
+            const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+            if (selectedMCParticlesToHitsMap.find(pParentMCParticle) == selectedMCParticlesToHitsMap.end())
+            {
+                CaloHitList caloHitList;
+                selectedMCParticlesToHitsMap.insert(MCContributionMap::value_type(pParentMCParticle, caloHitList));
+            }
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -144,6 +144,15 @@ public:
     static void GetAllDownstreamPfos(const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
 
     /**
+     *  @brief  Determine the position in the hierarchy for the MCParticle
+     *
+     *  @param  pPfo the input Pfo
+     *
+     *  @return integer
+     */
+    static int GetHierarchyTier(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
      *  @brief  Calculate length of Pfo using 2D clusters
      *
      *  @param  pPfo the input Pfo
@@ -248,6 +257,15 @@ public:
      *  @return boolean
      */
     static bool IsNeutrino(const pandora::ParticleFlowObject *const pPfo);
+
+     /**
+     *  @brief  Whether a pfo is a final-state particle from a test beam particle interaction
+     *
+     *  @param  pPfo the address of the Pfo
+     *
+     *  @return boolean
+     */
+    static bool IsTestBeamFinalState(const pandora::ParticleFlowObject *const pPfo);
 
     /**
      *  @brief  Whether a pfo is a test beam particle

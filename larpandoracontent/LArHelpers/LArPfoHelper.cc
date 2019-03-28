@@ -173,6 +173,25 @@ void LArPfoHelper::GetAllDownstreamPfos(const ParticleFlowObject *const pPfo, Pf
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+int LArPfoHelper::GetHierarchyTier(const ParticleFlowObject *const pPfo)
+{
+    const ParticleFlowObject *pParentPfo = pPfo;
+    int tier(0);
+
+    while (pParentPfo->GetParentPfoList().empty() == false)
+    {
+        if (1 != pParentPfo->GetParentPfoList().size())
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        pParentPfo = *(pParentPfo->GetParentPfoList().begin());
+        ++tier;
+    }
+
+    return tier;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 float LArPfoHelper::GetTwoDLengthSquared(const ParticleFlowObject *const pPfo)
 {
     if (!LArPfoHelper::IsTwoD(pPfo))
@@ -384,6 +403,13 @@ bool LArPfoHelper::IsNeutrino(const ParticleFlowObject *const pPfo)
         return true;
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArPfoHelper::IsTestBeamFinalState(const ParticleFlowObject *const pPfo)
+{
+    return LArPfoHelper::IsTestBeam(LArPfoHelper::GetParentPfo(pPfo));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
