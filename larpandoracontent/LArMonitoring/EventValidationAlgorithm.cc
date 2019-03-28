@@ -24,6 +24,7 @@ namespace lar_content
 EventValidationAlgorithm::EventValidationAlgorithm() :
     m_useTrueNeutrinosOnly(false),
     m_testBeamMode(false),
+    m_testBeamHierarchyMode(false),
     m_selectInputHits(true),
     m_minHitSharingFraction(0.9f),
     m_maxPhotonPropagation(2.5f),
@@ -99,17 +100,19 @@ void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pM
         parameters.m_minHitSharingFraction = m_minHitSharingFraction;
         parameters.m_maxPhotonPropagation = m_maxPhotonPropagation;
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
-        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, targetMCParticleToHitsMap);
-        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
+//        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+//        if (!m_useTrueNeutrinosOnly && !m_testBeamHierarchyMode) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, targetMCParticleToHitsMap);
+//        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
+        if (m_testBeamHierarchyMode) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, targetMCParticleToHitsMap, true);
 
         parameters.m_minPrimaryGoodHits = 0;
         parameters.m_minHitsForGoodView = 0;
         parameters.m_minHitSharingFraction = 0.f;
         LArMCParticleHelper::MCContributionMap allMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, allMCParticleToHitsMap);
-        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, allMCParticleToHitsMap);
-        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, allMCParticleToHitsMap);
+//        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, allMCParticleToHitsMap);
+//        if (!m_useTrueNeutrinosOnly && !m_testBeamHierarchyMode) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, allMCParticleToHitsMap);
+//        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, allMCParticleToHitsMap);
+        if (m_testBeamHierarchyMode) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, allMCParticleToHitsMap, true);
 
         validationInfo.SetTargetMCParticleToHitsMap(targetMCParticleToHitsMap);
         validationInfo.SetAllMCParticleToHitsMap(allMCParticleToHitsMap);
@@ -123,12 +126,31 @@ void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pM
         PfoList finalStatePfos;
         for (const ParticleFlowObject *const pPfo : allConnectedPfos)
         {
-            if ((!m_testBeamMode && LArPfoHelper::IsFinalState(pPfo)) || (m_testBeamMode && pPfo->GetParentPfoList().empty()))
+            // ATTN: Is test beam only set for parent pfo, therefor add parent and daughters for that particle
+            if (m_testBeamHierarchyMode && LArPfoHelper::IsTestBeam(pPfo))
+            {
                 finalStatePfos.push_back(pPfo);
+
+                for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
+                    finalStatePfos.push_back(pDaughterPfo);
+            }
+            else if ((!m_testBeamMode && LArPfoHelper::IsFinalState(pPfo)) || ((m_testBeamMode || m_testBeamHierarchyMode) && pPfo->GetParentPfoList().empty()))
+            {
+                finalStatePfos.push_back(pPfo);
+            }
         }
 
         LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
+
+        if (m_testBeamHierarchyMode)
+        {
+            LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, true);
+        }
+        else
+        {
+            LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
+        }
+
         validationInfo.SetPfoToHitsMap(pfoToHitsMap);
     }
 
@@ -190,6 +212,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
+        std::cout << "MCP : " << pMCPrimary->GetParticleId() << " " << pMCPrimary->GetEnergy() << std::endl;
         const bool hasMatch(mcToPfoHitSharingMap.count(pMCPrimary) && !mcToPfoHitSharingMap.at(pMCPrimary).empty());
         const bool isTargetPrimary(validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary));
 
@@ -403,12 +426,12 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             }
         }
 
-        if (isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
+        if (true) //isLastNeutrinoPrimary || isBeamParticle || isCosmicRay)
         {
-            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
-#ifdef MONITORING
-            const int interactionTypeInt(static_cast<int>(interactionType));
-#endif
+            //const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
+//#ifdef MONITORING
+//            const int interactionTypeInt(static_cast<int>(0)); //interactionType));
+//#endif
             // ATTN Some redundancy introduced to contributing variables
             const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
             const int isCorrectTB(isBeamParticle && (nTargetNuMatches == 1) && (nTargetCRMatches == 0));
@@ -420,7 +443,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             const int isLost(nTargetMatches == 0);
 
             std::stringstream outcomeSS;
-            outcomeSS << LArInteractionTypeHelper::ToString(interactionType) << " (Nuance " << mcNuanceCode << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamParticle << ", CR " << isCosmicRay << ")" << std::endl;
+//            outcomeSS << LArInteractionTypeHelper::ToString(interactionType) << " (Nuance " << mcNuanceCode << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamParticle << ", CR " << isCosmicRay << ")" << std::endl;
 
             if (isLastNeutrinoPrimary) ++nTotalNu;
             if (isBeamParticle) ++nTotalTB;
@@ -450,7 +473,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
 
             if (fillTree)
             {
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "interactionType", interactionTypeInt));
+//                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "interactionType", interactionTypeInt));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectNu", isCorrectNu));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectTB", isCorrectTB));
                 PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isCorrectCR", isCorrectCR));
@@ -630,6 +653,9 @@ StatusCode EventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TestBeamMode", m_testBeamMode));
+
+     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TestBeamHierarchyMode", m_testBeamHierarchyMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SelectInputHits", m_selectInputHits));

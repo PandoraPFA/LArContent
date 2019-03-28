@@ -81,6 +81,11 @@ public:
     static bool IsBeamParticle(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Returns true if passed a leading beam MCParticle
+     */
+    static bool IsLeadingBeamParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
      *  @brief  Return true if passed a primary cosmic ray MCParticle
      */
     static bool IsCosmicRay(const pandora::MCParticle *const pMCParticle);
@@ -107,6 +112,15 @@ public:
      *  @return boolean
      */
     static bool IsPrimary(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Whether a provided mc particle matches the implemented definition of being leading
+     *
+     *  @param  pMCParticle the address of the mc particle
+     *
+     *  @return boolean
+     */
+    static bool IsLeading(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Whether a mc particle is visible (i.e. long-lived charged particle)
@@ -143,12 +157,29 @@ public:
     static const pandora::MCParticle *GetPrimaryMCParticle(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Get the leasding particle in the hierarchy, for use at ProtoDUNE
+     *
+     *  @param  pMCParticle the input mc particle
+     *
+     *  @return address of the primary parent mc particle
+     */
+    static const pandora::MCParticle *GetLeadingMCParticle(const pandora::MCParticle *const pMCParticle, const int hierarchyTierLimit = 1);
+
+    /**
      *  @brief  Get vector of primary MC particles from an input list of MC particles
      *
      *  @param  pMCParticleList the input mc particle list
      *  @param  mcPrimaryVector the output mc particle vector
      */
     static void GetPrimaryMCParticleList(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &mcPrimaryVector);
+
+    /**
+     *  @brief  Get vector of leading MC particles from an input list of MC particles
+     *
+     *  @param  pMCParticleList the input mc particle list
+     *  @param  mcLeadingVector the output mc particle vector
+     */
+    static void GetLeadingMCParticleList(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &mcLeadingVector);
 
     /**
      *  @brief  Get the parent mc particle
@@ -166,6 +197,14 @@ public:
      *  @param  mcPrimaryMap the output mapping between mc particles and their parents
      */
     static void GetMCPrimaryMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcPrimaryMap);
+
+    /**
+     *  @brief  Get mapping from individual mc particles (in a provided list) and their leading parent mc particles
+     *
+     *  @param  pMCParticleList the input mc particle list
+     *  @param  mcLeadingMap the output mapping between mc particles and their leading parent
+     */
+    static void GetMCLeadingMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcLeadingMap);
 
     /**
      *  @brief  Find the mc particle making the largest contribution to 2D clusters in a specified pfo
@@ -203,9 +242,11 @@ public:
      *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
      *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
      *  @param  selectedMCParticlesToHitsMap the output mapping from selected mcparticles to their hits
+     *  @param  testBeamHierarchyMode test beam hierarchy mode
      */
     static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList,
-        const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap);
+        const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap,
+        const bool testBeamHierarchyMode = false);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
@@ -213,9 +254,10 @@ public:
      *  @param  pfoList the input list of Pfos
      *  @param  selectedMCParticleToHitsMap the input mapping from selected reconstructable MCParticles to their hits
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     *  @param  testBeamHierarchyMode test beam hierarchy mode
      */
     static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap,
-        PfoContributionMap &pfoToReconstructable2DHitsMap);
+        PfoContributionMap &pfoToReconstructable2DHitsMap, const bool testBeamHierarchyMode = false);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
@@ -223,9 +265,10 @@ public:
      *  @param  pfoList the input list of Pfos
      *  @param  selectedMCParticleToHitsMaps the input vector of mappings from selected reconstructable MCParticles to their hits
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     *  @param  testBeamHierarchyMode test beam hierarchy mode
      */
     static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        PfoContributionMap &pfoToReconstructable2DHitsMap);
+        PfoContributionMap &pfoToReconstructable2DHitsMap, const bool testBeamHierarchyMode = false);
 
     /**
      *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
@@ -258,9 +301,10 @@ private:
      *  @param  pPfo the input pfo
      *  @param  selectedMCParticleToHitsMaps the input mappings from selected reconstructable MCParticles to hits
      *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
+     *  @param  testBeamHierarchyMode test beam hierarchy mode
      */
     static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        pandora::CaloHitList &reconstructableCaloHitList2D);
+        pandora::CaloHitList &reconstructableCaloHitList2D, const bool testBeamHierarchyMode = false);
 
     /**
      *  @brief  Apply further selection criteria to end up with a collection of "good" calo hits that can be use to define whether
