@@ -127,16 +127,23 @@ void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pM
         for (const ParticleFlowObject *const pPfo : allConnectedPfos)
         {
             // ATTN: Is test beam only set for parent pfo, therefor add parent and daughters for that particle
-            if (m_testBeamHierarchyMode && LArPfoHelper::IsTestBeam(pPfo))
+            if (m_testBeamHierarchyMode)
             {
-                finalStatePfos.push_back(pPfo);
-
-                for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
-                    finalStatePfos.push_back(pDaughterPfo);
+                if (LArPfoHelper::IsTestBeam(pPfo))
+                {
+                    finalStatePfos.push_back(pPfo);
+                    for (const ParticleFlowObject *const pDaughterPfo : pPfo->GetDaughterPfoList())
+                        finalStatePfos.push_back(pDaughterPfo);
+                }
+                else if (pPfo->GetParentPfoList().empty())
+                {
+                    finalStatePfos.push_back(pPfo);
+                }
             }
-            else if ((!m_testBeamMode && LArPfoHelper::IsFinalState(pPfo)) || ((m_testBeamMode || m_testBeamHierarchyMode) && pPfo->GetParentPfoList().empty()))
+            else
             {
-                finalStatePfos.push_back(pPfo);
+                if ((!m_testBeamMode && LArPfoHelper::IsFinalState(pPfo)) || (m_testBeamMode && pPfo->GetParentPfoList().empty()))
+                    finalStatePfos.push_back(pPfo);
             }
         }
 
@@ -269,13 +276,23 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
     {
         const bool hasMatch(mcToPfoHitSharingMap.count(pMCPrimary) && !mcToPfoHitSharingMap.at(pMCPrimary).empty());
         const bool isTargetPrimary(validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary));
-        const bool hasVisibleTargets(triggeredToLeading.at(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)) != 1);
 
-        if (!isTargetPrimary)
-            continue;
+        if (!m_testBeamHierarchyMode)
+        {
+            if (!isTargetPrimary && !hasMatch)
+                continue;
+        }
+        else
+        {
+            if (!isTargetPrimary)
+                continue;
 
-        if (!hasMatch && !hasVisibleTargets)
-            continue;
+            // Parent in hierarchy needed even if no match
+            const bool hasVisibleTargets(!triggeredToLeading.empty() ? triggeredToLeading.at(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)) != 1 : false);
+
+            if (!hasMatch && !hasVisibleTargets)
+                continue;
+        }
 
         associatedMCPrimaries.push_back(pMCPrimary);
         const int nTargetPrimaries(associatedMCPrimaries.size());
@@ -307,17 +324,17 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         const float targetVertexX(targetVertex.GetX()), targetVertexY(targetVertex.GetY()), targetVertexZ(targetVertex.GetZ());
 #endif
 
-        for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << " -> ";
+        if (m_testBeamHierarchyMode) for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << " -> ";
 
         targetSS << (!isTargetPrimary ? "(Non target) " : "")
                  << "PrimaryId " << mcPrimaryIndex
                  << ", Nu " << isBeamNeutrinoFinalState
-                 << ", TB " << isBeamParticle
-                 << ", TB Hierarchy " << isLeadingBeamParticle
-                 << ", CR " << isCosmicRay
-                 << ", MCPDG " << pMCPrimary->GetParticleId()
-                 << ", Tier " << mcHierarchyTier
-                 << ", Energy " << pMCPrimary->GetEnergy()
+                 << ", TB " << isBeamParticle;
+        if (m_testBeamHierarchyMode) targetSS << ", TB Hierarchy " << isLeadingBeamParticle;
+        targetSS << ", CR " << isCosmicRay
+                 << ", MCPDG " << pMCPrimary->GetParticleId();
+        if (m_testBeamHierarchyMode) targetSS << ", Tier " << mcHierarchyTier;
+        targetSS << ", Energy " << pMCPrimary->GetEnergy()
                  << ", Dist. " << (pMCPrimary->GetEndpoint() - pMCPrimary->GetVertex()).GetMagnitude()
                  << ", nMCHits " << mcPrimaryHitList.size()
                  << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, mcPrimaryHitList)
@@ -427,19 +444,19 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 if (!isRecoTestBeam && isGoodMatch) ++nPrimaryCRMatches;
             }
 
-            for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << "    ";
+            if (m_testBeamHierarchyMode) for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << "    ";
 
             targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "")
                      << "MatchedPfoId " << pfoId
                      << ", Nu " << isRecoNeutrinoFinalState;
             if (isRecoNeutrinoFinalState) targetSS << " [NuId: " << recoNuId << "]";
-            targetSS << ", TB " << isRecoTestBeam
-                     << ", TB Hierarchy " << isRecoTestBeamHierarchy;
+            targetSS << ", TB " << isRecoTestBeam;
+            if (m_testBeamHierarchyMode) targetSS << ", TB Hierarchy " << isRecoTestBeamHierarchy;
             if (isRecoTestBeamHierarchy) targetSS << " [TBId: " << recoTBId << "]";
             targetSS << ", CR " << (!isRecoNeutrinoFinalState && !isRecoTestBeam && !isRecoTestBeamHierarchy)
-                     << ", PDG " << pfoToSharedHits.first->GetParticleId()
-                     << ", Tier " << pfoHierarchyTier
-                     << ", nMatchedHits " << sharedHitList.size()
+                     << ", PDG " << pfoToSharedHits.first->GetParticleId();
+            if (m_testBeamHierarchyMode) targetSS << ", Tier " << pfoHierarchyTier;
+            targetSS << ", nMatchedHits " << sharedHitList.size()
                      << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList)
                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList)
                      << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList) << ")"
@@ -451,7 +468,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
 
         if (mcToPfoHitSharingMap.at(pMCPrimary).empty())
         {
-            for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << "    ";
+            if (m_testBeamHierarchyMode) for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << "    ";
             targetSS << "-No matched Pfo" << std::endl;
             bestMatchPfoId.push_back(-1); bestMatchPfoPdg.push_back(0); bestMatchPfoTier.push_back(-1); bestMatchPfoIsRecoNu.push_back(0); bestMatchPfoRecoNuId.push_back(-1); bestMatchPfoIsTestBeam.push_back(0); bestMatchPfoRecoTBId.push_back(-1);
             bestMatchPfoNHitsTotal.push_back(0); bestMatchPfoNHitsU.push_back(0); bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0);
