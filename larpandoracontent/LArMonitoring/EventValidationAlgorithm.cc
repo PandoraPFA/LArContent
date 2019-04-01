@@ -214,9 +214,9 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
     // ProtoDUNE Hierarchy Validation Bookkeeping
     if (m_testBeamHierarchyMode)
     {
-        // ATTN: At this stage the mcPrimaryVector is ordered from neutrinos, beam and then cosmics.  Here we extract the beam and reorder to ensure
-        // the order follows primary parent beam 1, daughter 1 of beam 1, daughter 2 of beam 1, ..., primary parent beam 2, daughter 1 of beam 2, etc...
-        // as expected by downstream logic
+        // ATTN: At this stage the mcPrimaryVector is ordered from neutrinos, beam and then cosmics.  Here we extract the beam and reorder
+        // to ensure the order follows primary parent beam 1, daughter 1 of beam 1, daughter 2 of beam 1, ..., primary parent beam 2,
+        // daughter 1 of beam 2, etc... as expected by downstream logic
         MCParticleVector temporaryMCParticleVector(mcPrimaryVector), triggeredBeamParticles;
         LArMCParticleHelper::MCRelationMap leadingToTriggeredMap;
         mcPrimaryVector.clear();
@@ -259,14 +259,15 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
     PfoSet recoNeutrinos, recoTestBeamHierarchies;
     MCParticleList associatedMCPrimaries;
 
-    int nCorrectNu(0), nTotalNu(0), nCorrectTB(0), nTotalTB(0), nCorrectTBHierarchy(0), nTotalTBHierarchy(0), nCorrectCR(0), nTotalCR(0), nFakeNu(0), nFakeCR(0), nSplitNu(0), nSplitCR(0), nLost(0);
-    int mcPrimaryIndex(0), nTargetMatches(0), nTargetNuMatches(0), nTargetCRMatches(0), nTargetGoodNuMatches(0), nTargetNuSplits(0), nTargetNuLosses(0);
+    int nCorrectNu(0), nTotalNu(0), nCorrectTB(0), nTotalTB(0), nCorrectTBHierarchy(0), nTotalTBHierarchy(0), nCorrectCR(0), nTotalCR(0);
+    int nFakeNu(0), nFakeCR(0), nSplitNu(0), nSplitCR(0), nLost(0), mcPrimaryIndex(0), nTargetMatches(0), nTargetNuMatches(0);
+    int nTargetCRMatches(0), nTargetGoodNuMatches(0), nTargetNuSplits(0), nTargetNuLosses(0);
     IntVector mcPrimaryId, mcPrimaryPdg, mcPrimaryTier, nMCHitsTotal, nMCHitsU, nMCHitsV, nMCHitsW;
     FloatVector mcPrimaryE, mcPrimaryPX, mcPrimaryPY, mcPrimaryPZ;
     FloatVector mcPrimaryVtxX, mcPrimaryVtxY, mcPrimaryVtxZ, mcPrimaryEndX, mcPrimaryEndY, mcPrimaryEndZ;
     IntVector nPrimaryMatchedPfos, nPrimaryMatchedNuPfos, nPrimaryMatchedCRPfos;
-    IntVector bestMatchPfoId, bestMatchPfoPdg, bestMatchPfoTier, bestMatchPfoIsRecoNu, bestMatchPfoRecoNuId, bestMatchPfoIsTestBeam, bestMatchPfoRecoTBId;
-    IntVector bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW;
+    IntVector bestMatchPfoId, bestMatchPfoPdg, bestMatchPfoTier, bestMatchPfoIsRecoNu, bestMatchPfoRecoNuId, bestMatchPfoIsTestBeam;
+    IntVector bestMatchPfoRecoTBId, bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW;
     IntVector bestMatchPfoNSharedHitsTotal, bestMatchPfoNSharedHitsU, bestMatchPfoNSharedHitsV, bestMatchPfoNSharedHitsW;
 
     std::stringstream targetSS;
@@ -288,7 +289,8 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 continue;
 
             // Parent in hierarchy needed even if no match
-            const bool hasVisibleTargets(!triggeredToLeading.empty() ? triggeredToLeading.at(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)) != 1 : false);
+            const bool hasVisibleTargets((!triggeredToLeading.empty() && LArMCParticleHelper::IsBeamParticle(LArMCParticleHelper::GetParentMCParticle(pMCPrimary))) ?
+                triggeredToLeading.at(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)) != 1 : false);
 
             if (!hasMatch && !hasVisibleTargets)
                 continue;
@@ -307,7 +309,7 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         const int isLeadingBeamParticle(LArMCParticleHelper::IsLeadingBeamParticle(pMCPrimary));
         const int isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary));
 
-        // Tier (0) : Primary, (1) : Daughter, (2) : Granddaughter etc...  Note that the tier increases for both visible and invisible particles
+        // Tier (0) : Primary, (1) : Daughter, (2) : Granddaughter etc...  Note tier increases for both visible and invisible particles
         const int mcHierarchyTier(LArMCParticleHelper::GetHierarchyTier(pMCPrimary));
 
         // Identify the number of matched leading particles and flag whether last particle in hierarchy is being considered
@@ -470,7 +472,8 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
         {
             if (m_testBeamHierarchyMode) for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << "    ";
             targetSS << "-No matched Pfo" << std::endl;
-            bestMatchPfoId.push_back(-1); bestMatchPfoPdg.push_back(0); bestMatchPfoTier.push_back(-1); bestMatchPfoIsRecoNu.push_back(0); bestMatchPfoRecoNuId.push_back(-1); bestMatchPfoIsTestBeam.push_back(0); bestMatchPfoRecoTBId.push_back(-1);
+            bestMatchPfoId.push_back(-1); bestMatchPfoPdg.push_back(0); bestMatchPfoTier.push_back(-1); bestMatchPfoIsRecoNu.push_back(0);
+            bestMatchPfoRecoNuId.push_back(-1); bestMatchPfoIsTestBeam.push_back(0); bestMatchPfoRecoTBId.push_back(-1);
             bestMatchPfoNHitsTotal.push_back(0); bestMatchPfoNHitsU.push_back(0); bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0);
             bestMatchPfoNSharedHitsTotal.push_back(0); bestMatchPfoNSharedHitsU.push_back(0); bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
         }
@@ -569,7 +572,8 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
             const int isLost(nTargetMatches == 0);
 
             std::stringstream outcomeSS;
-            outcomeSS << LArInteractionTypeHelper::ToString(interactionType) << " (Nuance " << mcNuanceCode << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamParticle << ", CR " << isCosmicRay << ")" << std::endl;
+            const bool isBeamHierarchy((mcNuanceCode == 2001) | (mcNuanceCode == 2000));
+            outcomeSS << LArInteractionTypeHelper::ToString(interactionType) << " (Nuance " << mcNuanceCode << ", Nu " << isBeamNeutrinoFinalState << ", TB " << isBeamHierarchy << ", CR " << isCosmicRay << ")" << std::endl;
 
             if (isLastNeutrinoPrimary) ++nTotalNu;
             if (isBeamParticle) ++nTotalTB;
