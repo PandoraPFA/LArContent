@@ -33,8 +33,7 @@ LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
     m_minHitsForGoodView(5),
     m_minPrimaryGoodViews(2),
     m_selectInputHits(true),
-    m_maxPhotonPropagation(1000000.f),
-//    m_maxPhotonPropagation(2.5f),
+    m_maxPhotonPropagation(2.5f),
     m_minHitSharingFraction(0.9f)
 {
 }
