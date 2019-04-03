@@ -87,6 +87,7 @@
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 
+#include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ExamplePfoMopUpAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMopUpAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/ShowerPfoMopUpAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.h"
@@ -142,6 +143,7 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
 
+#include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ExampleClusterMopUpAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeClusterMopUpAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedClusterMopUpAlgorithm.h"
@@ -213,6 +215,7 @@
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
     d("LArThreeDLongitudinalTracks",            ThreeDLongitudinalTracksAlgorithm)                                              \
+    d("LArExamplePfoMopUp",                     ExamplePfoMopUpAlgorithm)                                                       \
     d("LArSlidingConePfoMopUp",                 SlidingConePfoMopUpAlgorithm)                                                   \
     d("LArShowerPfoMopUp",                      ShowerPfoMopUpAlgorithm)                                                        \
     d("LArVertexBasedPfoMopUp",                 VertexBasedPfoMopUpAlgorithm)                                                   \
@@ -237,6 +240,7 @@
     d("LArSimpleClusterCreation",               SimpleClusterCreationAlgorithm)                                                 \
     d("LArTrackClusterCreation",                TrackClusterCreationAlgorithm)                                                  \
     d("LArClusteringParent",                    ClusteringParentAlgorithm)                                                      \
+    d("LArExampleClusterMopUp",                 ExampleClusterMopUpAlgorithm)                                                   \
     d("LArBoundedClusterMopUp",                 BoundedClusterMopUpAlgorithm)                                                   \
     d("LArConeClusterMopUp",                    ConeClusterMopUpAlgorithm)                                                      \
     d("LArIsolatedClusterMopUp",                IsolatedClusterMopUpAlgorithm)                                                  \
