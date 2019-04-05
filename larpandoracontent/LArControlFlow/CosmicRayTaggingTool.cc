@@ -462,12 +462,23 @@ void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates,
 void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap, const PfoToBoolMap &pfoToIsContainedMap,
     UIntSet &neutrinoSliceSet) const
 {
+    IntBoolMap sliceIdToIsInTimeMap;
+
+    for (const CRCandidate &candidate : candidates)
+    {
+        if (sliceIdToIsInTimeMap.find(candidate.m_sliceId) == sliceIdToIsInTimeMap.end())
+            sliceIdToIsInTimeMap.insert(std::make_pair(candidate.m_sliceId, true));
+
+        if (!pfoToInTimeMap.at(candidate.m_pPfo))
+            sliceIdToIsInTimeMap.at(candidate.m_sliceId) = false;
+    }
+
     for (const CRCandidate &candidate : candidates)
     {
         if (neutrinoSliceSet.count(candidate.m_sliceId))
             continue;
 
-        const bool likelyNeutrino(candidate.m_canFit && pfoToInTimeMap.at(candidate.m_pPfo) &&
+        const bool likelyNeutrino(candidate.m_canFit && sliceIdToIsInTimeMap.at(candidate.m_sliceId) &&
             (candidate.m_theta < m_maxNeutrinoCosTheta || pfoToIsContainedMap.at(candidate.m_pPfo)));
 
         if (likelyNeutrino)
