@@ -156,6 +156,7 @@ private:
     void CheckIfTopToBottom(const CRCandidateList &candidates, PfoToBoolMap &pfoToIsTopToBottomMap) const;
 
     typedef std::set<unsigned int> UIntSet;
+    typedef std::unordered_map<int, bool> IntBoolMap;
 
     /**
      *  @brief  Get the slice indices which contain a likely neutrino Pfo
