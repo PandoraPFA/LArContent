@@ -59,7 +59,7 @@ void SimpleClusterGrowingAlgorithm::GetListOfSeedClusters(const ClusterVector &i
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode SimpleClusterGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{       
+{
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 

@@ -27,7 +27,7 @@ DeltaRaySplittingAlgorithm::DeltaRaySplittingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &principalSlidingFit, 
+void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &principalSlidingFit,
     CartesianVector &principalStartPosition, CartesianVector &branchSplitPosition, CartesianVector &branchSplitDirection) const
 {
     // Conventions:

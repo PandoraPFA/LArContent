@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ClearShowersTool.h
- * 
+ *
  *  @brief  Header file for the clear showers tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef CLEAR_SHOWERS_TOOL_H
@@ -26,17 +26,17 @@ public:
 
     /**
      *  @brief  Whether a large shower-like element shares clusters with any other long elements
-     * 
+     *
      *  @param  iIter specifies the large element under consideration
      *  @param  iteratorList list of iterators to other large elements
-     * 
+     *
      *  @return boolean
      */
     static bool HasLargeDirectConnections(IteratorList::const_iterator iIter, const IteratorList &iteratorList);
 
     /**
      *  @brief  Whether a large shower-like element is significantly larger that other elements with which it shares a cluster
-     * 
+     *
      *  @param  iIter specifies the large element under consideration
      *  @param  elementList the full list of connected tensor elements
      *  @param  minMatchedSamplingPointRatio the min ratio between 1st and 2nd highest msps for simple ambiguity resolution
@@ -53,7 +53,7 @@ private:
 
     /**
      *  @brief  Find clear shower matches, hidden by simple ambiguities in the tensor
-     * 
+     *
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
      */
@@ -61,7 +61,7 @@ private:
 
     /**
      *  @brief  Select a list of large shower-like elements from a set of connected tensor elements
-     * 
+     *
      *  @param  elementList the full list of connected tensor elements
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to large shower-like elements

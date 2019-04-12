@@ -104,7 +104,7 @@ private:
 
     /**
      *  @brief  Initialize a nearby cluster map with details relating to a specific cluster list
-     * 
+     *
      *  @param  clusterListName the cluster list name
      *  @param  nearbyClustersMap to receive the nearby clusters map
      */
@@ -145,21 +145,21 @@ private:
 
     /**
      *  @brief  Match clusters using all three views
-     * 
+     *
      *  @param  clusterLengthMap the cluster length map
      */
     void ThreeViewMatching(ClusterLengthMap &clusterLengthMap) const;
 
     /**
      *  @brief  Match clusters using pairs of views
-     * 
+     *
      *  @param  clusterLengthMap the cluster length map
      */
     void TwoViewMatching(ClusterLengthMap &clusterLengthMap) const;
 
     /**
      *  @brief  Match clusters using single views
-     * 
+     *
      *  @param  clusterLengthMap the cluster length map
      */
     void OneViewMatching(ClusterLengthMap &clusterLengthMap) const;
@@ -233,7 +233,7 @@ private:
      *
      *  @param  pCluster the cluster
      *  @param  clusterLengthMap the cluster length map
-     * 
+     *
      *  @return the length (squared)
      */
     float GetLengthFromCache(const pandora::Cluster *const pCluster, ClusterLengthMap &clusterLengthMap) const;
@@ -243,7 +243,7 @@ private:
      *
      *  @param  pPfo the pfo
      *  @param  pfoLengthMap the pfo length map
-     * 
+     *
      *  @return the length (squared)
      */
     float GetLengthFromCache(const pandora::ParticleFlowObject *const pPfo, PfoLengthMap &pfoLengthMap) const;
@@ -253,7 +253,7 @@ private:
      *
      *  @param  particle the particle
      *  @param  clusterLengthMap the cluster length map
-     * 
+     *
      *  @return the length (squared)
      */
     float GetLength(const Particle &particle, ClusterLengthMap &clusterLengthMap) const;
@@ -283,7 +283,7 @@ private:
      *  @param  pParentPfo address of the parent pfo
      */
     void CreateDaughterPfo(const pandora::ClusterList &clusterList, const pandora::ParticleFlowObject *const pParentPfo) const;
-  
+
     /**
      *  @brief  Merge an input cluster list with an existing daughter Pfo
      *

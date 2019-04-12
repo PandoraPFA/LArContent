@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.h
- * 
+ *
  *  @brief  Header file for the end associated pfos tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_END_ASSOCIATED_PFOS_TOOL_H

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the bounded cluster mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -95,7 +95,7 @@ void BoundedClusterMopUpAlgorithm::GetShowerPositionMap(const TwoDSlidingShowerF
 
 float BoundedClusterMopUpAlgorithm::GetBoundedFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &showerPositionMap) const
 {
-  if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) || (0 >= xSampling.m_nPoints) || 
+  if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) || (0 >= xSampling.m_nPoints) ||
       (0 == pCluster->GetNCaloHits()))
     {
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -115,7 +115,7 @@ float BoundedClusterMopUpAlgorithm::GetBoundedFraction(const Cluster *const pClu
             try
             {
                 const int xBin(xSampling.GetBin(x));
-            
+
                 ShowerPositionMap::const_iterator positionIter = showerPositionMap.find(xBin);
 
                 if ((showerPositionMap.end() != positionIter) && (z > positionIter->second.GetLowEdgeZ()) && (z < positionIter->second.GetHighEdgeZ()))
@@ -158,13 +158,13 @@ int BoundedClusterMopUpAlgorithm::XSampling::GetBin(const float x) const
 
 StatusCode BoundedClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowerEdgeMultiplier", m_showerEdgeMultiplier));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinBoundedFraction", m_minBoundedFraction));
 
     return ClusterMopUpBaseAlgorithm::ReadSettings(xmlHandle);

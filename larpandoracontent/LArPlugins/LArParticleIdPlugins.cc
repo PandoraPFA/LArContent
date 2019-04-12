@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArPlugins/LArParticleIdPlugins.cc
- * 
+ *
  *  @brief  Implementation of the lar particle id plugins class.
- * 
+ *
  *  $Log: $
  */
 

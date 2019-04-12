@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/ListChangingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the list changing algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_LIST_CHANGING_ALGORITHM_H

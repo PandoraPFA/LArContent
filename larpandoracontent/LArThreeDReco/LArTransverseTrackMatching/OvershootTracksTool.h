@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/OvershootTracksTool.h
- * 
+ *
  *  @brief  Header file for the overshoot tracks tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef OVERSHOOT_TRACKS_TOOL_H
@@ -33,7 +33,7 @@ private:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  elementA the tensor element A
          *  @param  elementB the tensor element B
          */
@@ -54,7 +54,7 @@ private:
 
     /**
      *  @brief  Whether a pair of vertices pass longitudinal projection cuts
-     * 
+     *
      *  @param  vertexA vertex from cluster in tensor element a
      *  @param  vertexB vertex from cluster in tensor element b
      */
@@ -62,7 +62,7 @@ private:
 
     /**
      *  @brief  Set split position for a provided particle
-     * 
+     *
      *  @param  vertexA1 vertex for tensor element a in view 1
      *  @param  vertexA2 vertex for tensor element a in view 2
      *  @param  vertexB1 vertex for tensor element b in view 1
@@ -74,12 +74,12 @@ private:
 
     /**
      *  @brief  Whether the provided particle is consistent with being a kink, when examined in three dimensions at the split position
-     * 
+     *
      *  @param  pAlgorithm the calling algorithm
      *  @param  particle the particle
      *  @param  isA1LowestInX whether cluster associated with tensor element a extends to lowest x positions in view 1
      *  @param  isA2LowestInX whether cluster associated with tensor element a extends to lowest x positions in view 2
-     * 
+     *
      *  @return boolean
      */
     bool IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const bool isA1LowestInX,

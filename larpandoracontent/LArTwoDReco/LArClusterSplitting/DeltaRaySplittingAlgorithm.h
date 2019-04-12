@@ -25,8 +25,8 @@ public:
     DeltaRaySplittingAlgorithm();
 
 private:
-    void FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &replacementSlidingFit, 
-        pandora::CartesianVector &replacementStartPosition, pandora::CartesianVector &branchSplitPosition, 
+    void FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &replacementSlidingFit,
+        pandora::CartesianVector &replacementStartPosition, pandora::CartesianVector &branchSplitPosition,
         pandora::CartesianVector &branchSplitDirection) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

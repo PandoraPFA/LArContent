@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h
- * 
+ *
  *  @brief  Header file for the three dimensional tracks algorithm base class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_THREE_D_TRACKS_BASE_ALGORITHM_H
@@ -40,35 +40,35 @@ public:
 
     /**
      *  @brief  Get a sliding fit result from the algorithm cache
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     const TwoDSlidingFitResult &GetCachedSlidingFitResult(const pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Get the layer window for the sliding linear fits
-     * 
+     *
      *  @return the layer window for the sliding linear fits
      */
     unsigned int GetSlidingFitWindow() const;
 
     /**
      *  @brief  Make cluster splits
-     * 
+     *
      *  @param  splitPositionMap the split position map
-     * 
+     *
      *  @return whether changes to the tensor have been made
      */
     virtual bool MakeClusterSplits(const SplitPositionMap &splitPositionMap);
 
     /**
      *  @brief  Make a cluster split
-     * 
+     *
      *  @param  splitPosition the split position
      *  @param  pCurrentCluster the cluster to split
      *  @param  pLowXCluster to receive the low x cluster
      *  @param  pHighXCluster to receive the high x cluster
-     * 
+     *
      *  @return whether a cluster split occurred
      */
     virtual bool MakeClusterSplit(const pandora::CartesianVector &splitPosition, const pandora::Cluster *&pCurrentCluster,
@@ -76,7 +76,7 @@ public:
 
     /**
      *  @brief  Sort split position cartesian vectors by increasing x coordinate
-     * 
+     *
      *  @param  lhs the first cartesian vector
      *  @param  rhs the second cartesian vector
      */
@@ -92,7 +92,7 @@ protected:
 
     /**
      *  @brief  Preparation step for a specific cluster list
-     * 
+     *
      *  @param  clusterList the cluster list
      */
     virtual void PreparationStep(pandora::ClusterList &clusterList);
@@ -101,14 +101,14 @@ protected:
 
     /**
      *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Remova an existing sliding fit result, for the specified cluster, from the algorithm cache
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     void RemoveFromSlidingFitCache(const pandora::Cluster *const pCluster);

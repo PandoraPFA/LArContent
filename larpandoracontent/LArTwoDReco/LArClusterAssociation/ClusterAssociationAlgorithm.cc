@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cluster association algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -151,7 +151,7 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(const Cluster *const pClu
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *dIter));
         m_mergeMade = true;
         *dIter = NULL;
-    } 
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

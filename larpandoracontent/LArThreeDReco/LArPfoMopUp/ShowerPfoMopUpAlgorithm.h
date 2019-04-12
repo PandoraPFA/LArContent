@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/ShowerPfoMopUpAlgorithm.h
- * 
+ *
  *  @brief  Header file for the shower pfo mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_SHOWER_PFO_MOP_UP_ALGORITHM_H

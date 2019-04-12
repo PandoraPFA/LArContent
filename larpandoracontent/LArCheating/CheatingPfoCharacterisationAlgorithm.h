@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cheating pfo characterisation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_PFO_CHARACTERISATION_ALGORITHM_H

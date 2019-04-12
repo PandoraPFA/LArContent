@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cheating neutrino creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 

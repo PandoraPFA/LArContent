@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/NearbyClusterMopUpAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the nearby cluster mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 

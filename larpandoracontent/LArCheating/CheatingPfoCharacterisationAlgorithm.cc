@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cheating pfo characterisation algorithm class.
- * 
+ *
  *  $Log: $
  */
 

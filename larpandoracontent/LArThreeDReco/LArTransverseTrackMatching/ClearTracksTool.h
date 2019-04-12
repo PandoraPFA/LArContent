@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h
- * 
+ *
  *  @brief  Header file for the clear tracks tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef CLEAR_TRACKS_TOOL_H
@@ -31,7 +31,7 @@ private:
 
     /**
      *  @brief  Create three dimensional particles for a given tensor element list
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm (ultimately responsible for the particles)
      *  @param  elementList the tensor element list
      *  @param  particlesMade receive boolean indicating whether particles have been made

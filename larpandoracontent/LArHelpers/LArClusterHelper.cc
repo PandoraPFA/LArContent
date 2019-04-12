@@ -149,9 +149,9 @@ float LArClusterHelper::GetClosestDistance(const ClusterList &clusterList1, cons
     {
         const Cluster *const pCluster1 = *iter1;
         const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster1, clusterList2));
- 
+
         if (thisDistance < closestDistance)
-            closestDistance = thisDistance; 
+            closestDistance = thisDistance;
     }
 
     return closestDistance;
@@ -172,7 +172,7 @@ float LArClusterHelper::GetClosestDistance(const Cluster *const pCluster, const 
         const float thisDistance(LArClusterHelper::GetClosestDistance(pCluster, pTestCluster));
 
         if (thisDistance < closestDistance)
-            closestDistance = thisDistance; 
+            closestDistance = thisDistance;
     }
 
     return closestDistance;
@@ -210,7 +210,7 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 {
     bool distanceFound(false);
     float closestDistanceSquared(std::numeric_limits<float>::max());
-    CartesianVector closestPosition(0.f, 0.f, 0.f);    
+    CartesianVector closestPosition(0.f, 0.f, 0.f);
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {
@@ -261,10 +261,10 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
- 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetClosestPositions(const Cluster *const pCluster1, const Cluster *const pCluster2, CartesianVector &outputPosition1, 
+void LArClusterHelper::GetClosestPositions(const Cluster *const pCluster1, const Cluster *const pCluster2, CartesianVector &outputPosition1,
     CartesianVector &outputPosition2)
 {
     bool distanceFound(false);
@@ -287,7 +287,7 @@ void LArClusterHelper::GetClosestPositions(const Cluster *const pCluster1, const
             for (OrderedCaloHitList::const_iterator iter2 = orderedCaloHitList2.begin(), iter2End = orderedCaloHitList2.end(); iter2 != iter2End; ++iter2)
             {
                 for (CaloHitList::const_iterator hitIter2 = iter2->second->begin(), hitIter2End = iter2->second->end(); hitIter2 != hitIter2End; ++hitIter2)
-                { 
+                {
                     const CartesianVector &positionVector2((*hitIter2)->GetPositionVector());
 
                     const float distanceSquared((positionVector1 - positionVector2).GetMagnitudeSquared());
@@ -365,7 +365,7 @@ void LArClusterHelper::GetClusterSpanX(const Cluster *const pCluster, float &xmi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetClusterSpanZ(const Cluster *const pCluster, const float xmin, const float xmax, 
+void LArClusterHelper::GetClusterSpanZ(const Cluster *const pCluster, const float xmin, const float xmax,
     float &zmin, float &zmax)
 {
     if (xmin > xmax)
@@ -377,7 +377,7 @@ void LArClusterHelper::GetClusterSpanZ(const Cluster *const pCluster, const floa
     zmax = -std::numeric_limits<float>::max();
 
     bool foundHits(false);
-    
+
     for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
     {
         for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
@@ -692,7 +692,7 @@ bool LArClusterHelper::SortByPulseHeight(const Cluster *const pLhs, const Cluste
 bool LArClusterHelper::SortHitsByPosition(const CaloHit *const pLhs, const CaloHit *const pRhs)
 {
     const CartesianVector deltaPosition(pRhs->GetPositionVector() - pLhs->GetPositionVector());
-    
+
     if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
         return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
 
@@ -705,7 +705,7 @@ bool LArClusterHelper::SortHitsByPosition(const CaloHit *const pLhs, const CaloH
     // Use pulse height to resolve ties
     return SortHitsByPulseHeight(pLhs, pRhs);
 }
-  
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArClusterHelper::SortHitsByPulseHeight(const CaloHit *const pLhs, const CaloHit *const pRhs)

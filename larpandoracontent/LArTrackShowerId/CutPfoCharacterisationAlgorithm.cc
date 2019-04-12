@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cut based pfo characterisation algorithm class.
- * 
+ *
  *  $Log: $
  */
 

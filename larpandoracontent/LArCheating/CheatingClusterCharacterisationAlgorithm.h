@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cheating cluster characterisation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_CLUSTER_CHARACTERISATION_ALGORITHM_H

@@ -27,7 +27,7 @@ public:
     /**
      *  @brief  Run principal component analysis using input calo hits (TPC_VIEW_U,V,W or TPC_3D; all treated as 3D points)
      *
-     *  @param  t the input information 
+     *  @param  t the input information
      *  @param  centroid to receive the centroid position
      *  @param  outputEigenValues to receive the eigen values
      *  @param  outputEigenVectors to receive the eigen vectors
@@ -38,7 +38,7 @@ public:
     /**
      *  @brief  Run principal component analysis using weighted input Cartesian vectors (TPC_VIEW_U,V,W or TPC_3D; all treated as 3D points)
      *
-     *  @param  pointVector a vector of pairs of positions and weights 
+     *  @param  pointVector a vector of pairs of positions and weights
      *  @param  centroid to receive the centroid position
      *  @param  outputEigenValues to receive the eigen values
      *  @param  outputEigenVectors to receive the eigen vectors

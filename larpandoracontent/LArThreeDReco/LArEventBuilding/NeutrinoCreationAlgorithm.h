@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the neutrino creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_NEUTRINO_CREATION_ALGORITHM_H
@@ -34,7 +34,7 @@ private:
 
     /**
      *  @brief  Fill provided pfo parameters with default/dummy values for later refinement
-     * 
+     *
      *  @param  pfoParameters the pfo parameters
      */
     void FillDefaultNeutrinoParameters(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;

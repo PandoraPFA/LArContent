@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h
- * 
+ *
  *  @brief  Header file for the kd tree linker algo template class
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_KD_TREE_LINKER_ALGO_TEMPLATED_H
@@ -34,7 +34,7 @@ public:
 
     /**
      *  @brief  Build the KD tree from the "eltList" in the space define by "region"
-     * 
+     *
      *  @param  eltList
      *  @param  region
      */
@@ -43,7 +43,7 @@ public:
     /**
      *  @brief  Search in the KDTree for all points that would be contained in the given searchbox
      *          The founded points are stored in resRecHitList
-     * 
+     *
      *  @param  searchBox
      *  @param  resRecHitList
      */
@@ -51,7 +51,7 @@ public:
 
     /**
      *  @brief  findNearestNeighbour
-     * 
+     *
      *  @param  point
      *  @param  result
      *  @param  distance
@@ -60,14 +60,14 @@ public:
 
     /**
      *  @brief  Whether the tree is empty
-     * 
+     *
      *  @return boolean
      */
     bool empty();
 
     /**
      *  @brief  Return the number of nodes + leaves in the tree (nElements should be (size() +1) / 2)
-     * 
+     *
      *  @return the number of nodes + leaves in the tree
      */
     int size();
@@ -80,14 +80,14 @@ public:
 private:
     /**
      *  @brief  Get the next node from the node pool
-     * 
+     *
      *  @return the next node from the node pool
      */
     KDTreeNodeT<DATA, DIM> *getNextNode();
 
     /**
      *  @brief  Fast median search with Wirth algorithm in eltList between low and high indexes.
-     * 
+     *
      *  @param  low
      *  @param  high
      *  @param  treeDepth
@@ -96,7 +96,7 @@ private:
 
     /**
      *  @brief  Recursive kdtree builder. Is called by build()
-     * 
+     *
      *  @param  low
      *  @param  high
      *  @param  depth
@@ -106,7 +106,7 @@ private:
 
     /**
      *  @brief  Recursive kdtree search. Is called by search()
-     * 
+     *
      *  @param  current
      *  @param  trackBox
      */
@@ -114,7 +114,7 @@ private:
 
     /**
      *  @brief  Recursive nearest neighbour search. Is called by findNearestNeighbour()
-     * 
+     *
      *  @param  depth
      *  @param  current
      *  @param  point
@@ -126,17 +126,17 @@ private:
 
     /**
      *  @brief  Add all elements of an subtree to the closest elements. Used during the recSearch().
-     * 
+     *
      *  @param  current
      */
     void addSubtree(const KDTreeNodeT<DATA, DIM> *current);
 
     /**
      *  @brief  dist2
-     * 
+     *
      *  @param  a
      *  @param  b
-     * 
+     *
      *  @return dist2
      */
     float dist2(const KDTreeNodeInfoT<DATA, DIM> &a, const KDTreeNodeInfoT<DATA, DIM> &b) const;

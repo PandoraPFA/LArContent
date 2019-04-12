@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/ListDeletionAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the list deletion algorithm class.
- * 
+ *
  *  $Log: $
  */
 

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the clustering parent algorithm class.
- * 
+ *
  *  $Log: $
  */
 

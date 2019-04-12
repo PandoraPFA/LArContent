@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the branch growing algorithm base class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_BRANCH_GROWING_ALGORITHM_H
@@ -45,7 +45,7 @@ protected:
 
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  order the association order
          *  @param  type the association type
          */
@@ -53,28 +53,28 @@ protected:
 
         /**
          *  @brief  Set association order
-         * 
+         *
          *  @param  order the association order
          */
         void SetOrder(const unsigned int order);
 
         /**
          *  @brief  Set association type
-         * 
+         *
          *  @param  associationType the association type
          */
         void SetType(const AssociationType associationType);
 
         /**
          *  @brief  Get association order
-         * 
+         *
          *  @return the association order
          */
         unsigned int GetOrder() const;
 
         /**
          *  @brief  Get association type
-         * 
+         *
          *  @return the association type
          */
         AssociationType GetType() const;
@@ -89,17 +89,17 @@ protected:
 
     /**
      *  @brief  Determine whether two clusters are associated
-     * 
+     *
      *  @param  pClusterSeed address of cluster seed (may be daughter of primary seed)
      *  @param  pCluster address of cluster
-     * 
+     *
      *  @return the association type
      */
     virtual AssociationType AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const = 0;
 
     /**
      *  @brief  Find clusters associated with a particle seed
-     * 
+     *
      *  @param  pParticleSeed address of the particle seed
      *  @param  candidateClusters list of clusters which may be associated with seed
      *  @param  forwardUsageMap the particle seed usage map
@@ -112,7 +112,7 @@ protected:
 
     /**
      *  @brief  Identify cluster merges
-     * 
+     *
      *  @param  particleSeedVector the list of all particle seeds
      *  @param  backwardUsageMap the map from cluster to particle seed associations
      *  @param  seedAssociationList to receive the populated seed association list

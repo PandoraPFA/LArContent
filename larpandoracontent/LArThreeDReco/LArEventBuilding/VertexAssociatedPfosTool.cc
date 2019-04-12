@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/VertexAssociatedPfosTool.cc
- * 
+ *
  *  @brief  Implementation of the vertex associated pfos tool class.
- * 
+ *
  *  $Log: $
  */
 

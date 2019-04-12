@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h
- * 
+ *
  *  @brief  Header file for the branch associated pfos tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_BRANCH_ASSOCIATED_PFOS_TOOL_H

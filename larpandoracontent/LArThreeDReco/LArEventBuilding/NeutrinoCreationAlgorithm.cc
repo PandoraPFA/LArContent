@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoCreationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the neutrino creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 

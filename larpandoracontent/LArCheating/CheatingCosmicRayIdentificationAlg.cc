@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.cc
- * 
+ *
  *  @brief  Implementation of the cheater for the cosmic ray identification algorithm class.
- * 
+ *
  *  $Log: $
  */
 

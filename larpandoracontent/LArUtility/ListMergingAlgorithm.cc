@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/ListMergingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the list merging algorithm class.
- * 
+ *
  *  $Log: $
  */
 

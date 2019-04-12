@@ -317,7 +317,7 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHits(const ProtoHitVector &protoHit
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDHitCreationAlgorithm::CreateThreeDHit(const ProtoHit &protoHit, const CaloHit *&pCaloHit3D) const
-{ 
+{
     if (!this->CheckThreeDHit(protoHit))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 

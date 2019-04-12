@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cheating cluster characterisation algorithm class.
- * 
+ *
  *  $Log: $
  */
 

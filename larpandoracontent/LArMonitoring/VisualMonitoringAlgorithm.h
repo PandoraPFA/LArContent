@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArMonitoring/VisualMonitoringAlgorithm.h
- * 
+ *
  *  @brief  Header file for the visual monitoring algorithm class
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_VISUAL_MONITORING_ALGORITHM_H
@@ -30,42 +30,42 @@ private:
 
     /**
      *  @brief  Visualize mc particle list
-     * 
+     *
      *  @param  listName the list name
      */
     void VisualizeMCParticleList(const std::string &listName) const;
 
     /**
      *  @brief  Visualize a specified calo hit list
-     * 
+     *
      *  @param  listName the list name
      */
     void VisualizeCaloHitList(const std::string &listName) const;
 
     /**
      *  @brief  Visualize a specified track list
-     * 
+     *
      *  @param  listName the list name
      */
     void VisualizeTrackList(const std::string &listName) const;
 
     /**
      *  @brief  Visualize a specified calo hit list
-     * 
+     *
      *  @param  listName the list name
      */
     void VisualizeClusterList(const std::string &listName) const;
 
     /**
      *  @brief  Visualize a specified pfo list
-     * 
+     *
      *  @param  listName the list name
      */
     void VisualizeParticleFlowList(const std::string &listName) const;
 
     /**
      *  @brief  Visualize a specified vertex list
-     * 
+     *
      *  @param  listName the list name
      */
     void VisualizeVertexList(const std::string &listName) const;

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the three dimensional tracks tracks algorithm base class.
- * 
+ *
  *  $Log: $
  */
 

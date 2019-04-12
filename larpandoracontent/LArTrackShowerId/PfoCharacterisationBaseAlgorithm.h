@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTrackShowerId/PfoCharacterisationBaseAlgorithm.h
- * 
+ *
  *  @brief  Header file for the pfo characterisation base algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_PFO_CHARACTERISATION_BASE_ALGORITHM_H
@@ -45,7 +45,7 @@ protected:
      *  @brief  Whether pfo is identified as a clear track
      *
      *  @param  pPfo address of the relevant pfo
-     * 
+     *
      *  @return boolean
      */
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const = 0;
@@ -54,7 +54,7 @@ protected:
      *  @brief  Whether cluster is identified as a clear track
      *
      *  @param  pCluster address of the relevant cluster
-     * 
+     *
      *  @return boolean
      */
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const = 0;

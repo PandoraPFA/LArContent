@@ -1,8 +1,8 @@
 /**
  *  @file   PandoraSDK/src/Persistency/EventReadingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the event reading algorithm class.
- * 
+ *
  *  $Log: $
  */
 

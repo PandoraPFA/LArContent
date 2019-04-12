@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/EndAssociatedPfosTool.cc
- * 
+ *
  *  @brief  Implementation of the end associated pfos tool class.
- * 
+ *
  *  $Log: $
  */
 

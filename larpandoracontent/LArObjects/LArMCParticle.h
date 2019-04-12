@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArMCParticle.h
- * 
+ *
  *  @brief  Header file for the lar mc particle class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_MC_PARTICLE_H
@@ -40,14 +40,14 @@ class LArMCParticle : public object_creation::MCParticle::Object
 public:
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  parameters the lar mc particle parameters
      */
     LArMCParticle(const LArMCParticleParameters &parameters);
 
     /**
      *  @brief  Get the nuance code
-     * 
+     *
      *  @return the nuance code
      */
     int GetNuanceCode() const;
@@ -66,7 +66,7 @@ class LArMCParticleFactory : public pandora::ObjectFactory<object_creation::MCPa
 public:
     /**
      *  @brief  Create new parameters instance on the heap (memory-management to be controlled by user)
-     * 
+     *
      *  @return the address of the new parameters instance
      */
     Parameters *NewParameters() const;

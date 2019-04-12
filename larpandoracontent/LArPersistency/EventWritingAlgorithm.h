@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArPersistency/EventWritingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the event writing algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_EVENT_WRITING_ALGORITHM_H
@@ -41,21 +41,21 @@ private:
 
     /**
      *  @brief  Whether current event passes nuance code filter
-     * 
+     *
      *  @return boolean
      */
     bool PassNuanceCodeFilter() const;
 
     /**
      *  @brief  Whether current event passes mc particle constituent filter
-     * 
+     *
      *  @return boolean
      */
     bool PassMCParticleFilter() const;
 
     /**
      *  @brief  Whether current event passes neutrino vertex position filter (e.g. fiducial volume cut)
-     * 
+     *
      *  @return boolean
      */
     bool PassNeutrinoVertexFilter() const;

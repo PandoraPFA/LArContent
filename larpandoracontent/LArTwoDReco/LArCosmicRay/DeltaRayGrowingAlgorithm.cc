@@ -117,7 +117,7 @@ void DeltaRayGrowingAlgorithm::GetPfos(const std::string inputPfoListName, PfoVe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DeltaRayGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{       
+{
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentPfoListName", m_parentPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DaughterPfoListName", m_daughterPfoListName));
 

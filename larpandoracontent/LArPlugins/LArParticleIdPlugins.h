@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArPlugins/LArParticleIdPlugins.h
- * 
+ *
  *  @brief  Header file for the lar particle id plugins class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_PARTICLE_ID_PLUGINS_H
@@ -40,9 +40,9 @@ public:
     private:
         /**
          *  @brief  Get the muon track width estimator for a provided sliding fit result
-         * 
+         *
          *  @param  twoDSlidingFitResult the sliding fit result
-         * 
+         *
          *  @return the muon track width estimator
          */
         float GetMuonTrackWidth(const TwoDSlidingFitResult &twoDSlidingFitResult) const;

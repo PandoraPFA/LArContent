@@ -34,7 +34,7 @@ StatusCode DeltaRayIdentificationAlgorithm::Run()
     this->GetPfos(m_daughterPfoListName, daughterPfos);
 
     if (parentPfos.empty())
-    {   
+    {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             std::cout << "DeltaRayIdentificationAlgorithm: pfo list " << m_parentPfoListName << " unavailable." << std::endl;
         return STATUS_CODE_SUCCESS;

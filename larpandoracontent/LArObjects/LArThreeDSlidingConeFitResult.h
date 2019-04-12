@@ -38,7 +38,7 @@ class SimpleCone
 public:
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  coneApex
      *  @param  coneDirection
      *  @param  coneLength
@@ -48,57 +48,57 @@ public:
 
     /**
      *  @brief  Get the cone apex
-     * 
+     *
      *  @return the cone apex
      */
     const pandora::CartesianVector &GetConeApex() const;
 
     /**
      *  @brief  Get the cone direction
-     * 
+     *
      *  @return the cone direction
-     */    
+     */
     const pandora::CartesianVector &GetConeDirection() const;
-    
+
     /**
      *  @brief  Get the cone length
-     * 
+     *
      *  @return the cone length
      */
     float GetConeLength() const;
 
     /**
      *  @brief  Get the tangent of the cone half-angle
-     * 
+     *
      *  @return the tangent of the cone half-angle
      */
     float GetConeTanHalfAngle() const;
 
     /**
      *  @brief  Get the mean transverse distance to all hits in a cluster (whether contained or not)
-     * 
+     *
      *  @param  pCluster the address of the cluster
-     * 
+     *
      *  @return the mean transverse distance to all hits (whether contained or not)
      */
     float GetMeanRT(const pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Get the fraction of hits in a provided cluster that are bounded within the cone, using fitted cone angle and length
-     * 
+     *
      *  @param  pCluster the address of the cluster
-     * 
+     *
      *  @return the bounded hit fraction
      */
     float GetBoundedHitFraction(const pandora::Cluster *const pCluster) const;
 
     /**
      *  @brief  Get the fraction of hits in a provided cluster that are bounded within the cone, using provided cone angle and length
-     * 
+     *
      *  @param  pCluster the address of the cluster
      *  @param  coneLength the provided cone length
      *  @param  coneTanHalfAngle the provided tangent of the cone half-angle
-     * 
+     *
      *  @return the bounded hit fraction
      */
     float GetBoundedHitFraction(const pandora::Cluster *const pCluster, const float coneLength, const float coneTanHalfAngle) const;
@@ -124,7 +124,7 @@ class ThreeDSlidingConeFitResult
 public:
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  pT describing the positions to be fitted
      *  @param  slidingFitWindow the sliding fit window
      *  @param  slidingFitLayerPitch the sliding fit pitch, units cm
@@ -134,21 +134,21 @@ public:
 
     /**
      *  @brief  Get the sliding fit result for the full cluster
-     * 
+     *
      *  @return the sliding fit result for the full cluster
      */
     const ThreeDSlidingFitResult &GetSlidingFitResult() const;
 
     /**
      *  @brief  Get the track state map, which caches results from the sliding fit result
-     * 
+     *
      *  @return the track state map
      */
-    const TrackStateMap &GetTrackStateMap() const; 
+    const TrackStateMap &GetTrackStateMap() const;
 
     /**
      *  @brief  Get the list of simple cones fitted to the three dimensional cluster
-     * 
+     *
      *  @param  nLayersForConeFit the number of layer to use to extract the cone direction
      *  @param  nCones the number of cones to extract from the cluster (spaced uniformly along the cluster)
      *  @param  coneSelection whether to receive forwards or backwards (or both) cones

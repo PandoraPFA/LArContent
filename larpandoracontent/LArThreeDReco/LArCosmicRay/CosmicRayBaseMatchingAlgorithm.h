@@ -84,7 +84,7 @@ protected:
      *  @param  protoParticle the input proto particle
      *  @param  pfoParameters the output pfo parameters
      */
-    virtual void SetPfoParameters(const CosmicRayBaseMatchingAlgorithm::Particle &protoParticle, 
+    virtual void SetPfoParameters(const CosmicRayBaseMatchingAlgorithm::Particle &protoParticle,
         PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const = 0;
 
 private:

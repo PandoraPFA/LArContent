@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArMonitoring/VisualMonitoringAlgorithm.cc
- * 
- *  @brief  Implementation of the visual monitoring algorithm class 
- * 
+ *
+ *  @brief  Implementation of the visual monitoring algorithm class
+ *
  *  $Log: $
  */
 

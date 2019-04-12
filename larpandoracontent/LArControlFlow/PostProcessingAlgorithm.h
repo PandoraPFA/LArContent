@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArControlFlow/PostProcessingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the post processing algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_POST_PROCESSING_ALGORITHM_H

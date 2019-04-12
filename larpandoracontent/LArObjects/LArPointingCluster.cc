@@ -78,7 +78,7 @@ void LArPointingCluster::BuildPointingCluster(const ThreeDSlidingFitResult &slid
     if (slidingFitResult.GetMinLayer() >= slidingFitResult.GetMaxLayer())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const bool isInner((slidingFitResult.GetGlobalMinLayerPosition().GetZ() < slidingFitResult.GetGlobalMaxLayerPosition().GetZ()) && 
+    const bool isInner((slidingFitResult.GetGlobalMinLayerPosition().GetZ() < slidingFitResult.GetGlobalMaxLayerPosition().GetZ()) &&
         (slidingFitResult.GetMinLayer() < slidingFitResult.GetMaxLayer()));
 
     m_pCluster = slidingFitResult.GetCluster();

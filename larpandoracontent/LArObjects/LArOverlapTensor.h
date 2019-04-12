@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArOverlapTensor.h
- * 
+ *
  *  @brief  Header file for the lar overlap tensor class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_OVERLAP_TENSOR_H
@@ -33,7 +33,7 @@ public:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pClusterU the address of the u cluster
          *  @param  pClusterV the address of the v cluster
          *  @param  pClusterW the address of the w cluster
@@ -43,35 +43,35 @@ public:
 
         /**
          *  @brief  Get the address of the u cluster
-         * 
+         *
          *  @return address of the u cluster
          */
         const pandora::Cluster *GetClusterU() const;
 
         /**
          *  @brief  Get the address of the v cluster
-         * 
+         *
          *  @return address of the v cluster
          */
         const pandora::Cluster *GetClusterV() const;
 
         /**
          *  @brief  Get the address of the w cluster
-         * 
+         *
          *  @return address of the w cluster
          */
         const pandora::Cluster *GetClusterW() const;
 
         /**
          *  @brief  Get the overlap result
-         * 
+         *
          *  @return the overlap result
          */
         const OverlapResult &GetOverlapResult() const;
 
         /**
          *  @brief  Element less than operator
-         * 
+         *
          *  @param  rhs the element for comparison
          */
         bool operator<(const Element &rhs) const;
@@ -87,7 +87,7 @@ public:
 
     /**
      *  @brief  Get unambiguous elements
-     * 
+     *
      *  @param  ignoreUnavailable whether to ignore unavailable clusters
      *  @param  elementList to receive the unambiguous element list
      */
@@ -95,14 +95,14 @@ public:
 
     /**
      *  @brief  Default ambiguity function, checking that only one U, V and W cluster is found
-     * 
+     *
      *  @param  clusterListU cluster list U
      *  @param  clusterListV cluster list V
      *  @param  clusterListW cluster list W
      *  @param  pClusterU to receive the address of the unambiguous U cluster
      *  @param  pClusterV to receive the address of the unambiguous V cluster
      *  @param  pClusterW to receive the address of the unambiguous W cluster
-     * 
+     *
      *  @return boolean
      */
     bool DefaultAmbiguityFunction(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, const pandora::ClusterList &clusterListW,
@@ -110,7 +110,7 @@ public:
 
     /**
      *  @brief  Get the number of connections for a specified cluster
-     * 
+     *
      *  @param  pCluster address of a cluster
      *  @param  ignoreUnavailable whether to ignore unavailable clusters
      *  @param  nU to receive the number of u connections
@@ -121,7 +121,7 @@ public:
 
     /**
      *  @brief  Get a list of elements connected to a specified cluster
-     * 
+     *
      *  @param  pCluster address of a cluster
      *  @param  ignoreUnavailable whether to ignore unavailable clusters
      *  @param  elementList to receive the connected element list
@@ -130,7 +130,7 @@ public:
 
     /**
      *  @brief  Get a list of elements connected to a specified cluster
-     * 
+     *
      *  @param  pCluster address of a cluster
      *  @param  ignoreUnavailable whether to ignore unavailable clusters
      *  @param  elementList to receive the connected element list
@@ -160,65 +160,65 @@ public:
 
     /**
      *  @brief  Get a sorted vector of key clusters (U clusters with current implementation)
-     * 
+     *
      *  @param sortedKeyClusters to receive the sorted vector of key clusters
      */
     void GetSortedKeyClusters(pandora::ClusterVector &sortedKeyClusters) const;
 
     /**
      *  @brief  Get the overlap result for a specified trio of clusters
-     * 
+     *
      *  @param  pClusterU address of cluster u
      *  @param  pClusterV address of cluster v
      *  @param  pClusterW address of cluster w
-     * 
+     *
      *  @return the address of the overlap result
      */
     const OverlapResult &GetOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW) const;
 
     /**
      *  @brief  Get the  overlap list for a specified pair of clusters
-     * 
+     *
      *  @param  pClusterU address of cluster u
      *  @param  pClusterV address of cluster v
-     * 
+     *
      *  @return the cluster overlap list
      */
     const OverlapList &GetOverlapList(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV) const;
 
     /**
      *  @brief  Get the cluster overlap matrix for a specified cluster
-     * 
+     *
      *  @param  pClusterU address of cluster u
-     * 
+     *
      *  @return the cluster overlap matrix
      */
     const OverlapMatrix &GetOverlapMatrix(const pandora::Cluster *const pClusterU) const;
 
     /**
      *  @brief  Get the cluster navigation map U->V
-     * 
+     *
      *  @return the cluster navigation map U->V
      */
     const ClusterNavigationMap &GetClusterNavigationMapUV() const;
 
     /**
      *  @brief  Get the cluster navigation map V->W
-     * 
+     *
      *  @return the cluster navigation map V->W
      */
     const ClusterNavigationMap &GetClusterNavigationMapVW() const;
 
     /**
      *  @brief  Get the cluster navigation map W->U
-     * 
+     *
      *  @return the cluster navigation map W->U
      */
     const ClusterNavigationMap &GetClusterNavigationMapWU() const;
 
     /**
      *  @brief  Set overlap result
-     * 
+     *
      *  @param  pClusterU address of cluster u
      *  @param  pClusterV address of cluster v
      *  @param  pClusterW address of cluster w
@@ -228,7 +228,7 @@ public:
 
     /**
      *  @brief  SetReplace an existing overlap result
-     * 
+     *
      *  @param  pClusterU address of cluster u
      *  @param  pClusterV address of cluster v
      *  @param  pClusterW address of cluster w
@@ -238,7 +238,7 @@ public:
 
     /**
      *  @brief  Remove entries from tensor corresponding to specified cluster
-     * 
+     *
      *  @param  pCluster address of the cluster
      */
     void RemoveCluster(const pandora::Cluster *const pCluster);
@@ -251,7 +251,7 @@ public:
 private:
     /**
      *  @brief  Get elements connected to a specified cluster
-     * 
+     *
      *  @param  pCluster address of the cluster
      *  @param  elementList the element list
      *  @param  clusterListU connected u clusters
@@ -263,7 +263,7 @@ private:
 
     /**
      *  @brief  Explore connections associated with a given cluster
-     * 
+     *
      *  @param  pCluster address of the cluster
      *  @param  clusterListU connected u clusters
      *  @param  clusterListV connected v clusters

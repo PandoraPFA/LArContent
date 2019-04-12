@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cluster mop up algorithm base class.
- * 
+ *
  *  $Log: $
  */
 

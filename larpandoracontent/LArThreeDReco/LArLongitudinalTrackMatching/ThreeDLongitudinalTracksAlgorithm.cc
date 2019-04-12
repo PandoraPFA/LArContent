@@ -131,7 +131,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *co
                 const CartesianVector &endMerged3D(*iterJ);
 
                 TrackOverlapResult overlapResult;
-                this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, 
+                this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW,
                     vtxMerged3D, endMerged3D, overlapResult);
 
                 if (overlapResult.IsInitialized() && (overlapResult.GetNMatchedSamplingPoints() > 0) && (overlapResult > bestOverlapResult))

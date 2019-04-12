@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArShowerOverlapResult.cc
- * 
+ *
  *  @brief  Implementation of the lar shower overlap result class.
- * 
+ *
  *  $Log: $
  */
 

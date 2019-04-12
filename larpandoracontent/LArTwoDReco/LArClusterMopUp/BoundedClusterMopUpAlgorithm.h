@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.h
- * 
+ *
  *  @brief  Header file for the bounded cluster mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_BOUNDED_CLUSTER_MOP_UP_ALGORITHM_H
@@ -38,7 +38,7 @@ private:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  fitResult the sliding fit result
          */
         XSampling(const TwoDSlidingFitResult &fitResult);
@@ -48,7 +48,7 @@ private:
          *
          *  @param  x  the input x coordinate
          */
-        int GetBin(const float x) const; 
+        int GetBin(const float x) const;
 
         float     m_minX;          ///< The min x value
         float     m_maxX;          ///< The max x value
@@ -59,7 +59,7 @@ private:
 
     /**
      *  @brief  Get the shower position map containing high and low edge z positions in bins of x
-     * 
+     *
      *  @param  fitResult the sliding shower fit result
      *  @param  xSampling the x sampling details
      *  @param  showerPositionMap to receive the shower position map
@@ -68,11 +68,11 @@ private:
 
     /**
      *  @brief  Get the fraction of hits in a cluster bounded by a specified shower position map
-     * 
+     *
      *  @param  pCluster address of the cluster
      *  @param  xSampling the x sampling details
      *  @param  showerPositionMap the shower position map
-     * 
+     *
      *  @return the fraction of bounded hits
      */
     float GetBoundedFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &showerPositionMap) const;

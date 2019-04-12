@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArMonitoring/ShowerTensorVisualizationTool.h
- * 
+ *
  *  @brief  Header file for the shower tensor visualization tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef SHOWER_TENSOR_VISUALIZATION_TOOL_H

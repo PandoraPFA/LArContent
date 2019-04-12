@@ -30,7 +30,7 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float     m_minWeightFraction;     ///< The minimum weight fraction for identifying a slice as a beam particle 
+    float     m_minWeightFraction;     ///< The minimum weight fraction for identifying a slice as a beam particle
 };
 
 } // namespace lar_content

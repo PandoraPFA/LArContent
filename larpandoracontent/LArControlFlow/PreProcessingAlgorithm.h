@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArControlFlow/PreProcessingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the pre processing algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_PRE_PROCESSING_ALGORITHM_H

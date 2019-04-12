@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TracksCrossingGapsTool.cc
- * 
+ *
  *  @brief  Implementation of the long tracks tool class.
- * 
+ *
  *  $Log: $
  */
 

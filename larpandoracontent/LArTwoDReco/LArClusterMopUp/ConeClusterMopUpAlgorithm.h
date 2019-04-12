@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeClusterMopUpAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cone cluster mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CONE_CLUSTER_MOP_UP_ALGORITHM_H
@@ -34,10 +34,10 @@ private:
 
     /**
      *  @brief  Sort coordinates by increasing transverse displacement
-     * 
+     *
      *  @param  lhs the first coordinate for comparison
      *  @param  rhs the second coordinate for comparison
-     * 
+     *
      *  @return boolean
      */
     static bool SortCoordinates(const Coordinate &lhs, const Coordinate &rhs);

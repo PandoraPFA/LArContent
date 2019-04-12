@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h
- * 
+ *
  *  @brief  Header file for the pfo mop up algorithm base class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_PFO_MOP_UP_BASE_ALGORITHM_H
@@ -21,7 +21,7 @@ class PfoMopUpBaseAlgorithm : public MopUpBaseAlgorithm
 public:
     /**
      *  @brief  Merge and delete a pair of pfos, with a specific set of conventions for cluster merging, vertex use, etc.
-     * 
+     *
      *  @param  pPfoToEnlarge the address of the pfo to enlarge
      *  @param  pPfoToDelete the address of the pfo to delete (will become a dangling pointer)
      */
@@ -29,10 +29,10 @@ public:
 
     /**
      *  @brief  Select the parent cluster (same hit type and most hits) using a provided cluster list and hit type
-     * 
+     *
      *  @param  clusterList the cluster list
      *  @param  hitType the hit type
-     * 
+     *
      *  @return the address of the parent cluster
      */
     static const pandora::Cluster *GetParentCluster(const pandora::ClusterList &clusterList, const pandora::HitType hitType);

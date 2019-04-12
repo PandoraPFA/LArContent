@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/MopUpBaseAlgorithm.h
- * 
+ *
  *  @brief  Header file for the mop up algorithm base class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_MOP_UP_BASE_ALGORITHM_H
@@ -21,9 +21,9 @@ class MopUpBaseAlgorithm : public pandora::Algorithm
 public:
     /**
      *  @brief  Find the name of the list hosting a specific object
-     * 
+     *
      *  @param  pT the address of the object
-     * 
+     *
      *  @return the name of the list
      */
     template <typename T>

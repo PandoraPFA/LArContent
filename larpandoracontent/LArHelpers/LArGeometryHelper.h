@@ -132,7 +132,7 @@ public:
      *  @param  chi-squared
      */
     static void MergeTwoPositions3D(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D, 
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D,
         float &chiSquared);
 
     /**
@@ -225,7 +225,7 @@ public:
 
     /**
      *  @brief  Whether there is a gap in a cluster (described via its sliding fit result) at a specified x sampling position
-     * 
+     *
      *  @param  pandora the associated pandora instance
      *  @param  xSample the x sampling position
      *  @param  slidingFitResult the sliding fit result for a cluster

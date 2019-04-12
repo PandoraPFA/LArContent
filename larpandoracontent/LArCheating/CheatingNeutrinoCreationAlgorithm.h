@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cheating neutrino creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_NEUTRINO_CREATION_ALGORITHM_H
@@ -33,14 +33,14 @@ private:
 
     /**
      *  @brief  Get the mc neutrino vector
-     * 
+     *
      *  @param  mcNeutrinoVector to receive the mc neutrino vector
      */
     void GetMCNeutrinoVector(pandora::MCParticleVector &mcNeutrinoVector) const;
 
     /**
      *  @brief  Create and save a neutrino pfo with properties dictated by the mc neutrino
-     * 
+     *
      *  @param  pMCNeutrino the address of the mc neutrino
      *  @param  pNeutrinoPfo to receive the address of the neutrino pfo
      */
@@ -48,7 +48,7 @@ private:
 
     /**
      *  @brief  Extract reconstructed vertex from external list, check its position agrees with mc neutrino, and add to pfo
-     * 
+     *
      *  @param  pMCNeutrino the address of the mc neutrino
      *  @param  pNeutrinoPfo the address of the neutrino pfo
      */
@@ -58,16 +58,16 @@ private:
 
     /**
      *  @brief  Extract candidate daughter pfos from external lists and populate a map from main mc particle (or primary) to pfo
-     * 
+     *
      *  @param  mcParticleToPfoMap to receive the mc particle to pfo map
      */
     void GetMCParticleToDaughterPfoMap(MCParticleToPfoMap &mcParticleToPfoMap) const;
 
     /**
      *  @brief  Use information from mc particles and the mc particle to pfo map to fully-reconstruct the daughter pfo hierarchy
-     * 
+     *
      *  @param  pParentMCParticle the address of the (current) parent mc particle
-     *  @param  pParentPfo the address of the (current) parent pfo 
+     *  @param  pParentPfo the address of the (current) parent pfo
      *  @param  mcParticleToPfoMap the mc particle to pfo map
      */
     void CreatePfoHierarchy(const pandora::MCParticle *const pParentMCParticle, const pandora::ParticleFlowObject *const pParentPfo,

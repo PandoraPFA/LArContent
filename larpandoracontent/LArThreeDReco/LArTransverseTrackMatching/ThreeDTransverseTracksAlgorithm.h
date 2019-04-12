@@ -47,7 +47,7 @@ private:
      *  @param  pClusterV the cluster from the V view
      *  @param  pClusterW the cluster from the W view
      *  @param  overlapResult to receive the overlap result
-     * 
+     *
      *  @return statusCode, faster than throwing in regular use-cases
      */
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
@@ -74,7 +74,7 @@ private:
      *  @param  slidingFitResultV sliding fit result for v cluster
      *  @param  slidingFitResultW sliding fit result for w cluster
      *  @param  transverseOverlapResult to receive the transverse overlap result
-     * 
+     *
      *  @return statusCode, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,

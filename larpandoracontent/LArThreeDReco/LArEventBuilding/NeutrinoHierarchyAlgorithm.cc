@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the neutrino hierarchy algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -305,7 +305,7 @@ NeutrinoHierarchyAlgorithm::PfoInfo::PfoInfo(const PfoInfo &rhs) :
     if (!rhs.m_pSlidingFitResult3D)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    m_pSlidingFitResult3D = new ThreeDSlidingFitResult(m_pCluster3D, rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerFitHalfWindow(), 
+    m_pSlidingFitResult3D = new ThreeDSlidingFitResult(m_pCluster3D, rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerFitHalfWindow(),
         rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerPitch());
 }
 
@@ -327,7 +327,7 @@ NeutrinoHierarchyAlgorithm::PfoInfo &NeutrinoHierarchyAlgorithm::PfoInfo::operat
         m_daughterPfoList = rhs.m_daughterPfoList;
 
         delete m_pSlidingFitResult3D;
-        m_pSlidingFitResult3D = new ThreeDSlidingFitResult(m_pCluster3D, rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerFitHalfWindow(), 
+        m_pSlidingFitResult3D = new ThreeDSlidingFitResult(m_pCluster3D, rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerFitHalfWindow(),
             rhs.m_pSlidingFitResult3D->GetFirstFitResult().GetLayerPitch());
     }
 

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArXOverlap.h
- * 
+ *
  *  @brief  Header file for the lar x overlap class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_X_OVERLAP_H
@@ -19,7 +19,7 @@ class XOverlap
 public:
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  uMinX min x value in the u view
      *  @param  uMaxX max x value in the u view
      *  @param  vMinX min x value in the v view
@@ -32,70 +32,70 @@ public:
 
     /**
      *  @brief  Get the min x value in the u view
-     * 
+     *
      *  @return the min x value in the u view
      */
     float GetUMinX() const;
 
     /**
      *  @brief  Get the max x value in the u view
-     * 
+     *
      *  @return the max x value in the u view
      */
     float GetUMaxX() const;
 
     /**
      *  @brief  Get the min x value in the v view
-     * 
+     *
      *  @return the min x value in the v view
      */
     float GetVMinX() const;
 
     /**
      *  @brief  Get the max x value in the v view
-     * 
+     *
      *  @return the max x value in the v view
      */
     float GetVMaxX() const;
 
     /**
      *  @brief  Get the min x value in the w view
-     * 
+     *
      *  @return the min x value in the w view
      */
     float GetWMinX() const;
 
     /**
      *  @brief  Get the max x value in the w view
-     * 
+     *
      *  @return the max x value in the w view
      */
     float GetWMaxX() const;
 
     /**
      *  @brief  Get the x span in the u view
-     * 
+     *
      *  @return the x span in the u view
      */
     float GetXSpanU() const;
 
     /**
      *  @brief  Get the x span in the v view
-     * 
+     *
      *  @return the x span in the v view
      */
     float GetXSpanV() const;
 
     /**
      *  @brief  Get the x span in the w view
-     * 
+     *
      *  @return the x span in the w view
      */
     float GetXSpanW() const;
 
     /**
      *  @brief  Get the x overlap span
-     * 
+     *
      *  @return the x overlap span
      */
     float GetXOverlapSpan() const;
@@ -112,7 +112,7 @@ private:
 
 /**
  *  @brief  x overlap result + operator
- * 
+ *
  *  @param  lhs the first x overlap result to add
  *  @param  rhs the second x overlap result to add
  */

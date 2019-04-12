@@ -99,7 +99,7 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const LArPoint
     if (LArClusterHelper::GetLayerOccupancy(pClusterI, pClusterJ) < m_clusterMinLayerOccupancy)
         return;
 
-    // Identify closest pair of vertices 
+    // Identify closest pair of vertices
     LArPointingCluster::Vertex targetVertexI, targetVertexJ;
 
     try

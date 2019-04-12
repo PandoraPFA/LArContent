@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArShowerOverlapResult.h
- * 
+ *
  *  @brief  Header file for the lar shower overlap result class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_SHOWER_OVERLAP_RESULT_H
@@ -32,7 +32,7 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  nMatchedSamplingPoints
      *  @param  nSamplingPoints
      */
@@ -40,7 +40,7 @@ public:
 
     /**
      *  @brief  Copy constructor
-     * 
+     *
      *  @param  rhs
      */
     ShowerOverlapResult(const ShowerOverlapResult &rhs);
@@ -80,28 +80,28 @@ public:
 
     /**
      *  @brief  Get the x overlap object
-     * 
+     *
      *  @return the x overlap object
      */
     const XOverlap &GetXOverlap() const;
 
     /**
      *  @brief  Track overlap result less than operator
-     * 
+     *
      *  @param  rhs the track overlap result for comparison
      */
     bool operator<(const ShowerOverlapResult &rhs) const;
 
     /**
      *  @brief  Track overlap result greater than operator
-     * 
+     *
      *  @param  rhs the track overlap result for comparison
      */
     bool operator>(const ShowerOverlapResult &rhs) const;
 
     /**
      *  @brief  Track overlap result assigment operator
-     * 
+     *
      *  @param  rhs the track overlap result to assign
      */
     ShowerOverlapResult &operator=(const ShowerOverlapResult &rhs);

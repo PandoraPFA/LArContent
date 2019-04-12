@@ -214,7 +214,7 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
     unsigned int maxMatches(0);
     for (const auto &entry : mcParticleToPfoHitSharingMap)
         maxMatches = std::max(static_cast<unsigned int>(entry.second.size()), maxMatches);
-    
+
     const bool showOthersColumn(maxMatches > nMatches);
     const unsigned int nMatchesToShow(std::min(maxMatches, nMatches));
 
@@ -234,7 +234,7 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
         tableHeaders.push_back("nOtherPfos");
         tableHeaders.push_back("nSharedHits");
     }
-        
+
     LArFormattingHelper::Table table(tableHeaders);
 
     // Make a new row for each MCParticle
@@ -246,15 +246,15 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
 
         const MCParticle *const pMCParticle(it->first);
         const LArFormattingHelper::Color mcCol(
-            LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle) ? 
-                LArFormattingHelper::LIGHT_GREEN : (LArMCParticleHelper::IsBeamParticle(pMCParticle) ? 
-                    LArFormattingHelper::LIGHT_BLUE : LArFormattingHelper::LIGHT_RED   
+            LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle) ?
+                LArFormattingHelper::LIGHT_GREEN : (LArMCParticleHelper::IsBeamParticle(pMCParticle) ?
+                    LArFormattingHelper::LIGHT_BLUE : LArFormattingHelper::LIGHT_RED
                 )
             );
-        
+
         // ATTN enumerate from 1 to match event validation algorithm
         table.AddElement(mcParticleId + 1, LArFormattingHelper::REGULAR, mcCol);
-     
+
         // Get the matched Pfos
         unsigned int nPfosShown(0);
         unsigned int nOtherHits(0);
@@ -263,7 +263,7 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
             for (unsigned int pfoId = 0; pfoId < orderedPfoVector.size(); ++pfoId)
             {
                 if (pfoNSharedHitsPair.first != orderedPfoVector.at(pfoId)) continue;
-           
+
                 if (nPfosShown < nMatchesToShow)
                 {
                     // ATTN enumerate from 1 to match event validation algorithm

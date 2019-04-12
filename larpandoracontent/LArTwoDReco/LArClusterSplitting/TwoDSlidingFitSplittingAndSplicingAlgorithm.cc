@@ -118,7 +118,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(const ClusterVector &clusterVector, 
+void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(const ClusterVector &clusterVector,
     const TwoDSlidingFitResultMap &branchSlidingFitResultMap, const TwoDSlidingFitResultMap &replacementSlidingFitResultMap,
     ClusterExtensionList &clusterExtensionList) const
 {

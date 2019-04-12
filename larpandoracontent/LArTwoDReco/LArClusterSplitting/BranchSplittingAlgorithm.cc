@@ -28,7 +28,7 @@ BranchSplittingAlgorithm::BranchSplittingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &principalSlidingFit, 
+void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &principalSlidingFit,
     CartesianVector &principalStartPosition, CartesianVector &branchSplitPosition, CartesianVector &branchSplitDirection) const
 {
     // Conventions:
@@ -112,7 +112,7 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
 
             try
             {
-                const float currentCosTheta(branchSlidingFit.GetCosScatteringAngle(localL)); 
+                const float currentCosTheta(branchSlidingFit.GetCosScatteringAngle(localL));
 
                 if (cosTheta < currentCosTheta)
                     continue;

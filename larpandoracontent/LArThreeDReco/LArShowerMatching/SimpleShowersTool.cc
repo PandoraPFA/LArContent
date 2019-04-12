@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/SimpleShowersTool.cc
- * 
+ *
  *  @brief  Implementation of the clear showers tool class.
- * 
+ *
  *  $Log: $
  */
 

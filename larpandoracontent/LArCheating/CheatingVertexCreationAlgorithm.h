@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cheating vertex creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_VERTEX_CREATION_ALGORITHM_H

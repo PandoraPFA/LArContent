@@ -51,7 +51,7 @@ public:
 
     /**
      *  @brief  Get the shower length and width from 3d shower fit
-     * 
+     *
      *  @return the shower length and width from 3d shower fit
      */
     const pandora::CartesianVector &GetShowerLength() const;

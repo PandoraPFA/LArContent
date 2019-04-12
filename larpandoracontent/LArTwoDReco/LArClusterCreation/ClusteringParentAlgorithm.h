@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h
- * 
+ *
  *  @brief  Header file for the clustering parent algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CLUSTERING_PARENT_ALGORITHM_H

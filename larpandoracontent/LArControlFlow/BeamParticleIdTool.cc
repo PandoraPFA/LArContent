@@ -225,7 +225,7 @@ void BeamParticleIdTool::GetTPCIntercepts(const CartesianVector &a0, const Carte
         interceptOne = intercepts.at(0);
         interceptTwo = intercepts.at(1);
     }
-    else 
+    else
     {
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
     }
@@ -233,7 +233,7 @@ void BeamParticleIdTool::GetTPCIntercepts(const CartesianVector &a0, const Carte
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool BeamParticleIdTool::IsContained(const CartesianVector &spacePoint) const 
+bool BeamParticleIdTool::IsContained(const CartesianVector &spacePoint) const
 {
     if ((m_tpcMinX - spacePoint.GetX() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetX() - m_tpcMaxX > std::numeric_limits<float>::epsilon()) ||
         (m_tpcMinY - spacePoint.GetY() > std::numeric_limits<float>::epsilon()) || (spacePoint.GetY() - m_tpcMaxY > std::numeric_limits<float>::epsilon()) ||
@@ -248,7 +248,7 @@ bool BeamParticleIdTool::IsContained(const CartesianVector &spacePoint) const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-BeamParticleIdTool::Plane::Plane(const CartesianVector &normal, const CartesianVector &point) : 
+BeamParticleIdTool::Plane::Plane(const CartesianVector &normal, const CartesianVector &point) :
     m_unitNormal(normal.GetUnitVector()),
     m_point(point),
     m_d(-1.f * (normal.GetDotProduct(point)))
@@ -291,7 +291,7 @@ StatusCode BeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
     FloatVector beamTPCIntersection;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "BeamTPCIntersection", beamTPCIntersection));
- 
+
     if (3 == beamTPCIntersection.size())
     {
         m_beamTPCIntersection.SetValues(beamTPCIntersection.at(0), beamTPCIntersection.at(1), beamTPCIntersection.at(2));

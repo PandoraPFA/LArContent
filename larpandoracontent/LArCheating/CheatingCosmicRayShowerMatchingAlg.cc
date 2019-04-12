@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CosmicRayShowerMatchingAlg.cc
- * 
+ *
  *  @brief  Implementation of the cheater for the cosmic ray shower matching algorithm class.
- * 
+ *
  *  $Log: $
  */
 

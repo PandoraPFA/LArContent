@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.h
- * 
+ *
  *  @brief  Header file for the missing track segment tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef MISSING_TRACK_SEGMENT_TOOL_H
@@ -37,7 +37,7 @@ private:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  element the tensor element
          */
         Particle(const TensorType::Element &element);
@@ -79,7 +79,7 @@ private:
 
     /**
      *  @brief  Find remaining tracks, hidden by missing track segments (and maybe other ambiguities) in the tensor
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
@@ -90,7 +90,7 @@ private:
 
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
-     * 
+     *
      *  @param  elementList the full list of connected tensor elements
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to long track-like elements
@@ -99,7 +99,7 @@ private:
 
     /**
      *  @brief  Whether a provided tensor element can be used to construct a pfo
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the tensor element
      *  @param  usedClusters the list of used clusters
@@ -110,7 +110,7 @@ private:
 
     /**
      *  @brief  Get a list of candidate clusters, which may represent missing track segments for a provided particle
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  particle the particle
      *  @param  candidateClusters to receive the list of candidate clusters
@@ -119,7 +119,7 @@ private:
 
     /**
      *  @brief  Get a sliding fit result map for the list of candidate clusters
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  candidateClusters the list of candidate clusters
      *  @param  slidingFitResultMap to receive the sliding fit result map
@@ -129,7 +129,7 @@ private:
 
     /**
      *  @brief  Get a segment overlap map, describing overlap between a provided particle and all clusters in a sliding fit result map
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  particle the particle
      *  @param  slidingFitResultMap the sliding fit result map
@@ -140,13 +140,13 @@ private:
 
     /**
      *  @brief  Make decisions about whether to create a pfo for a provided particle and whether to make cluster merges
-     * 
+     *
      *  @param  particle the particle
      *  @param  slidingFitResultMap the sliding fit result map
      *  @param  segmentOverlapMap the segment overlap map
      *  @param  usedClusters the list of used clusters
      *  @param  clusterMergeMap to receive details of cluster merges clusterMergeMap
-     * 
+     *
      *  @return whether to make the particle
      */
     bool MakeDecisions(const Particle &particle, const TwoDSlidingFitResultMap &slidingFitResultMap, const SegmentOverlapMap &segmentOverlapMap,
@@ -154,21 +154,21 @@ private:
 
     /**
      *  @brief  Whether the segment overlap object passes cuts on matched sampling points, etc.
-     * 
+     *
      *  @param  segmentOverlap the segment overlap
-     * 
+     *
      *  @return boolean
      */
     bool PassesSamplingCuts(const SegmentOverlap &segmentOverlap) const;
 
     /**
      *  @brief  Whether the cluster could be merged with the candidate particle
-     * 
+     *
      *  @param  pCluster address of the cluster
      *  @param  particle the particle
      *  @param  segmentOverlap the segment overlap
      *  @param  slidingFitResultMap the sliding fit result map
-     * 
+     *
      *  @return boolean
      */
     bool IsPossibleMerge(const pandora::Cluster *const pCluster, const Particle &particle, const SegmentOverlap &segmentOverlap,

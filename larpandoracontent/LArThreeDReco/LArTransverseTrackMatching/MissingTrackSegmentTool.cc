@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackSegmentTool.cc
- * 
+ *
  *  @brief  Implementation of the missing track segment tool class.
- * 
+ *
  *  $Log: $
  */
 

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDKinkBaseTool.cc
- * 
+ *
  *  @brief  Implementation of the three d kink base tool class.
- * 
+ *
  *  $Log: $
  */
 
@@ -87,7 +87,7 @@ float ThreeDKinkBaseTool::GetXSamplingPoint(const CartesianVector &splitPosition
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, fitResult1.GetGlobalFitPosition(fitResult1.GetL(lowLayer), minus));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, fitResult1.GetGlobalFitPosition(fitResult1.GetL(highLayer), plus));
 
-    if (minus.GetX() > plus.GetX()) 
+    if (minus.GetX() > plus.GetX())
     {
         CartesianVector temporary(minus);
         minus = plus;

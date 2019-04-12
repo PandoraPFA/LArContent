@@ -1,8 +1,8 @@
 /**
  *  @file   TwoDParticleCreationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the two dimensional particle creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 

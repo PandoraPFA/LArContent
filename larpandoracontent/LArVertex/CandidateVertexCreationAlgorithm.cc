@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the candidate vertex creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -165,7 +165,7 @@ void CandidateVertexCreationAlgorithm::CreateEndpointVertex(const CartesianVecto
 {
     const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
-    
+
     if ((((position1.GetX() < minLayerPosition2.GetX()) && (position1.GetX() < maxLayerPosition2.GetX())) ||
         ((position1.GetX() > minLayerPosition2.GetX()) && (position1.GetX() > maxLayerPosition2.GetX()))) &&
         (std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxEndpointXDiscrepancy) &&
@@ -299,7 +299,7 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointVe
                 break;
             }
         }
-        
+
         if (!alreadyPopulated)
         {
             crossingPoints.push_back(bestPosition1);

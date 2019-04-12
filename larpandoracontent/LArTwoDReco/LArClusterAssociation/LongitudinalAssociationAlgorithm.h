@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/LongitudinalAssociationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the longitudinal association algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_LONGITUDINAL_ASSOCIATION_ALGORITHM_H
@@ -36,22 +36,22 @@ private:
 
     /**
      *  @brief  Determine whether two clusters are associated
-     * 
+     *
      *  @param  pInnerCluster address of the inner cluster
      *  @param  pOuterCluster address of the outer cluster
-     * 
+     *
      *  @return whether the clusters are associated
      */
     bool AreClustersAssociated(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster) const;
 
     /**
      *  @brief  Determine whether two clusters are associated
-     * 
+     *
      *  @param  innerClusterEnd inner cluster end position
      *  @param  outerClusterStart outer cluster start position
      *  @param  innerFit inner cluster fit result
      *  @param  outerFit outer cluster fit result
-     * 
+     *
      *  @return whether the clusters are associated
      */
     bool AreClustersAssociated(const pandora::CartesianVector &innerClusterEnd, const pandora::CartesianVector &outerClusterStart,

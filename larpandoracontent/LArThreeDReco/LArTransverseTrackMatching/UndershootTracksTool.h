@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h
- * 
+ *
  *  @brief  Header file for the undershoot tracks tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef UNDERSHOOT_TRACKS_TOOL_H
@@ -33,7 +33,7 @@ private:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  elementA the tensor element A
          *  @param  elementB the tensor element B
          */
@@ -50,12 +50,12 @@ private:
 
     /**
      *  @brief  Whether the provided particle is consistent with being a kink, when examined in three dimensions at the provided split position
-     * 
+     *
      *  @param  pAlgorithm the calling algorithm
      *  @param  particle the particle
      *  @param  splitPosition the candidate split position
      *  @param  isALowestInX whether cluster associated with tensor element a extends to lowest x positions
-     * 
+     *
      *  @return boolean
      */
     bool IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const pandora::CartesianVector &splitPosition,

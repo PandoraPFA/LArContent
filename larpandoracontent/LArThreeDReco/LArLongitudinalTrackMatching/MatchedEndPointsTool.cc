@@ -38,7 +38,7 @@ bool MatchedEndPointsTool::Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorit
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
-{ 
+{
     ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
@@ -51,7 +51,7 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
         overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
-        
+
         if (nU * nV * nW == 0)
             continue;
 
@@ -85,7 +85,7 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
 
 bool MatchedEndPointsTool::SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs)
 {
-    return (lhs.GetOverlapResult().GetInnerChi2() + lhs.GetOverlapResult().GetOuterChi2() < 
+    return (lhs.GetOverlapResult().GetInnerChi2() + lhs.GetOverlapResult().GetOuterChi2() <
         rhs.GetOverlapResult().GetInnerChi2() + rhs.GetOverlapResult().GetOuterChi2());
 }
 

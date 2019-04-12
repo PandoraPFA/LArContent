@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTrackShowerId/SvmPfoCharacterisationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the svm pfo characterisation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_SVM_PFO_CHARACTERISATION_ALGORITHM_H

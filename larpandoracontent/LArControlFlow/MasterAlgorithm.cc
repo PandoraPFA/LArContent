@@ -533,7 +533,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceNuWorkerInstance, pSliceNuPfos));
             nuSliceHypotheses.push_back(*pSliceNuPfos);
-    
+
             for (const ParticleFlowObject *const pPfo : *pSliceNuPfos)
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
@@ -551,7 +551,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
             crSliceHypotheses.push_back(*pSliceCRPfos);
-            
+
             for (const ParticleFlowObject *const pPfo : *pSliceCRPfos)
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/SlidingConeClusterMopUpAlgorithm.h
- * 
+ *
  *  @brief  Header file for the sliding cone cluster mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_SLIDING_CONE_CLUSTER_MOP_UP_ALGORITHM_H
@@ -35,7 +35,7 @@ private:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pParentCluster the address of the candidate parent (shower) cluster
          *  @param  boundedFraction1 the bounded fraction for algorithm-specified cone angle
          *  @param  meanRT the mean transverse distance of all hits (whether contained or not)
@@ -65,9 +65,9 @@ private:
 
         /**
          *  @brief  operator <
-         * 
+         *
          *  @param  rhs object for comparison
-         * 
+         *
          *  @return boolean
          */
         bool operator<(const ClusterMerge &rhs) const;
@@ -84,7 +84,7 @@ private:
 
     /**
      *  @brief  Get the neutrino interaction vertex if it is available and if the algorithm is configured to do so
-     * 
+     *
      *  @param  pVertex to receive the neutrino interaction vertex
      */
     void GetInteractionVertex(const pandora::Vertex *&pVertex) const;
@@ -93,7 +93,7 @@ private:
 
     /**
      *  @brief  Get all 3d clusters contained in the input pfo lists and a mapping from clusters to pfos
-     * 
+     *
      *  @param  clusters3D to receive the sorted list of 3d clusters
      *  @param  clusterToPfoMap to receive the mapping from 3d cluster to pfo
      */
@@ -101,7 +101,7 @@ private:
 
     /**
      *  @brief  Get all available 2d clusters contained in the input cluster lists
-     * 
+     *
      *  @param  availableClusters2D to receive the sorted list of available 2d clusters
      */
     void GetAvailableTwoDClusters(pandora::ClusterVector &availableClusters2D) const;
@@ -110,7 +110,7 @@ private:
 
     /**
      *  @brief  Get the cluster merge map describing all potential 3d cluster merges
-     * 
+     *
      *  @param  pVertex the neutrino interaction vertex, if available
      *  @param  clusters3D the sorted list of 3d clusters
      *  @param  availableClusters2D the sorted list of available 2d clusters
@@ -121,7 +121,7 @@ private:
 
     /**
      *  @brief  Make cluster merges based on the provided cluster merge map
-     * 
+     *
      *  @param  clusterToPfoMap the mapping from 3d cluster to pfo
      *  @param  clusterMergeMap the populated cluster merge map
      */

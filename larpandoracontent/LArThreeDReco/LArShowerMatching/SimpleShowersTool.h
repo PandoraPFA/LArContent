@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/SimpleShowersTool.h
- * 
+ *
  *  @brief  Header file for the simple showers tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef SIMPLE_SHOWERS_TOOL_H
@@ -29,7 +29,7 @@ public:
 private:
     /**
      *  @brief  Find best shower match as a simple way to (try to) resolve ambiguities in the tensor
-     * 
+     *
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
      */
@@ -37,7 +37,7 @@ private:
 
     /**
      *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for particle creation
-     * 
+     *
      *  @param  eIter the iterator to the tensor element
      */
     bool PassesElementCuts(TensorType::ElementList::const_iterator eIter) const;

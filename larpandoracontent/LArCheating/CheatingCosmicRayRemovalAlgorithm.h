@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingCosmicRayRemovalAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cheating cosmic ray removal algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_COSMIC_RAY_REMOVAL_ALGORITHM_H

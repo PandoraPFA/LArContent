@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cheating cluster creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_PFO_CREATION_ALGORITHM_H

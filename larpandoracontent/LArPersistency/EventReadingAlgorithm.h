@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArPersistency/EventReadingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the event reading algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_EVENT_READING_ALGORITHM_H

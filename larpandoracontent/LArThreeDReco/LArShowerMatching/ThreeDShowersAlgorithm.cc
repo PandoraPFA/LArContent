@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the three dimensional showers algorithm class.
- * 
+ *
  *  $Log: $
  */
 

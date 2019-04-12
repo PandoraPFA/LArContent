@@ -21,9 +21,9 @@ class LArClusterHelper
 public:
     /**
      *  @brief  Get the hit type associated with a two dimensional cluster
-     * 
+     *
      *  @param  pCluster the address of the cluster
-     * 
+     *
      *  @return the cluster hit type
      */
     static pandora::HitType GetClusterHitType(const pandora::Cluster *const pCluster);
@@ -192,7 +192,7 @@ public:
      *  @param  the inner extremal position
      *  @param  the outer extremal position
      */
-    static void GetExtremalCoordinates(const pandora::ClusterList &clusterList, pandora::CartesianVector &innerCoordinate, 
+    static void GetExtremalCoordinates(const pandora::ClusterList &clusterList, pandora::CartesianVector &innerCoordinate,
         pandora::CartesianVector &outerCoordinate);
 
     /**
@@ -202,7 +202,7 @@ public:
      *  @param  the inner extremal position
      *  @param  the outer extremal position
      */
-    static void GetExtremalCoordinates(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, 
+    static void GetExtremalCoordinates(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate,
         pandora::CartesianVector &outerCoordinate);
 
     /**
@@ -212,7 +212,7 @@ public:
      *  @param  the inner extremal position
      *  @param  the outer extremal position
      */
-    static void GetExtremalCoordinates(const pandora::OrderedCaloHitList &orderedCaloHitList, pandora::CartesianVector &innerCoordinate, 
+    static void GetExtremalCoordinates(const pandora::OrderedCaloHitList &orderedCaloHitList, pandora::CartesianVector &innerCoordinate,
         pandora::CartesianVector &outerCoordinate);
 
   /**
@@ -232,7 +232,7 @@ public:
      *  @param  the minimum positions (x,y,z)
      *  @param  the maximum positions (x,y,z)
      */
-    static void GetClusterBoundingBox(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate, 
+    static void GetClusterBoundingBox(const pandora::Cluster *const pCluster, pandora::CartesianVector &minimumCoordinate,
         pandora::CartesianVector &maximumCoordinate);
 
     /**
@@ -270,7 +270,7 @@ public:
      *  @param  xmin for range in x
      *  @param  xmax for range in x
      *  @param  averageZ to receive the average Z position
-     * 
+     *
      *  @return status code, faster than throwing in regular use-cases
      */
     static pandora::StatusCode GetAverageZ(const pandora::Cluster *const pCluster, const float xmin, const float xmax, float &averageZ);
@@ -330,7 +330,7 @@ public:
      *  @param  pRhs address of second calo hit
      */
     static bool SortHitsByPosition(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
-  
+
    /**
      *  @brief  Sort calo hits by their pulse height
      *

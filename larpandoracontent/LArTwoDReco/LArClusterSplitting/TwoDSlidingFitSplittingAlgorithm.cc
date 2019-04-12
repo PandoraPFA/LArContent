@@ -54,7 +54,7 @@ StatusCode TwoDSlidingFitSplittingAlgorithm::DivideCaloHits(const Cluster *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAlgorithm::DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const CartesianVector &splitPosition, 
+StatusCode TwoDSlidingFitSplittingAlgorithm::DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const CartesianVector &splitPosition,
     CaloHitList &firstCaloHitList, CaloHitList &secondCaloHitList) const
 {
     float rL(0.f), rT(0.f);

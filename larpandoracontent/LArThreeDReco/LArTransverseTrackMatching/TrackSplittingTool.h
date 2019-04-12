@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h
- * 
+ *
  *  @brief  Header file for the track splitting tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef TRACK_SPLITTING_TOOL_H
@@ -35,7 +35,7 @@ private:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  element the tensor element
          */
         Particle(const TensorType::Element &element);
@@ -55,7 +55,7 @@ private:
 
     /**
      *  @brief  Find remaining tracks, hidden by spurious track segments (and maybe other ambiguities) in the tensor
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  splitPositionMap to receive the split position map
@@ -64,7 +64,7 @@ private:
 
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
-     * 
+     *
      *  @param  elementList the full list of connected tensor elements
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to long track-like elements
@@ -73,7 +73,7 @@ private:
 
     /**
      *  @brief  Whether a provided tensor element can be used to construct a pfo
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the tensor element
      *  @param  isMinX whether to look for track splits at min or max x coordinate
@@ -85,7 +85,7 @@ private:
 
     /**
      *  @brief  Check a candidate split position for consistency with the associated track cluster sliding linear fit
-     * 
+     *
      *  @param  splitPosition the candidate split position
      *  @param  splitX the split x coordinate
      *  @param  longFitResult the sliding linear fit for the long cluster

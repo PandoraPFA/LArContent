@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingCosmicRayRemovalAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cheating cosmic ray removal algorithm class.
- * 
+ *
  *  $Log: $
  */
 

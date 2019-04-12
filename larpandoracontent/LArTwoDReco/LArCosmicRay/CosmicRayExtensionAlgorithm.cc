@@ -116,7 +116,7 @@ void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointing
     // Requirements on length
     const float lengthSquaredI(LArPointingClusterHelper::GetLengthSquared(clusterI));
     const float lengthSquaredJ(LArPointingClusterHelper::GetLengthSquared(clusterJ));
-    
+
     if (std::max(lengthSquaredI, lengthSquaredJ) < m_minSeedClusterLength * m_minSeedClusterLength)
         return;
 

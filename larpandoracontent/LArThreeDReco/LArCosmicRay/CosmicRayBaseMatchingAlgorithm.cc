@@ -55,7 +55,7 @@ StatusCode CosmicRayBaseMatchingAlgorithm::GetAvailableClusters(const std::strin
         inputClusterListName, pClusterList))
 
     if (!pClusterList || pClusterList->empty())
-    { 
+    {
         if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             std::cout << "CosmicRayBaseMatchingAlgorithm: unable to find cluster list " << inputClusterListName << std::endl;
 
@@ -260,7 +260,7 @@ void CosmicRayBaseMatchingAlgorithm::BuildParticles(const ParticleList &particle
         this->SetPfoParameters(particle, pfoParameters);
 
         if (pfoParameters.m_clusterList.empty())
-            throw StatusCodeException(STATUS_CODE_FAILURE); 
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
         const ParticleFlowObject *pPfo(NULL);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));

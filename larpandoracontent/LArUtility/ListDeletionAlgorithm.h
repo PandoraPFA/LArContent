@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/ListDeletionAlgorithm.h
- * 
+ *
  *  @brief  Header file for the list deletion algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_LIST_DELETION_ALGORITHM_H

@@ -36,7 +36,7 @@ class TwoDSlidingShowerFitResult
 public:
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  pT describing the positions to be fitted
      *  @param  slidingFitWindow the sliding fit window
      *  @param  slidingFitLayerPitch the sliding fit z pitch, units cm
@@ -48,28 +48,28 @@ public:
 
     /**
      *  @brief  Get the sliding fit result for the full shower cluster
-     * 
+     *
      *  @return the sliding fit result for the full shower cluster
      */
     const TwoDSlidingFitResult &GetShowerFitResult() const;
 
     /**
      *  @brief  Get the sliding fit result for the negative shower edge
-     * 
+     *
      *  @return the sliding fit result for the negative shower edge
      */
     const TwoDSlidingFitResult &GetNegativeEdgeFitResult() const;
 
     /**
      *  @brief  Get the sliding fit result for the positive shower edge
-     * 
+     *
      *  @return the sliding fit result for the positive shower edge
      */
     const TwoDSlidingFitResult &GetPositiveEdgeFitResult() const;
 
     /**
      *  @brief  Get the most appropriate shower edges at a given x coordinate
-     * 
+     *
      *  @param  x the x coordinate
      *  @param  widenIfAmbiguity whether to widen the shower edges in cases of ambiguities (i.e. be generous)
      *  @param  edgePositions to receive the list of intersections of the shower fit at the given x coordinate
@@ -125,7 +125,7 @@ class ShowerExtent
 public:
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  xCoordinate the x coordinate
      *  @param  highEdgeZ the shower high edge z coordinate
      *  @param  lowEdgeZ the shower low edge z coordinate
@@ -134,21 +134,21 @@ public:
 
     /**
      *  @param  Get the x coordinate
-     * 
+     *
      *  @return the x coordinate
      */
     float GetXCoordinate() const;
 
     /**
      *  @param  Get the shower high edge z coordinate
-     * 
+     *
      *  @return the shower high edge z coordinate
      */
     float GetHighEdgeZ() const;
 
     /**
      *  @param  Get the shower low edge z coordinate
-     * 
+     *
      *  @return the shower low edge z coordinate
      */
     float GetLowEdgeZ() const;

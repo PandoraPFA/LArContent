@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the cheating neutrino daughter vertices algorithm class.
- * 
+ *
  *  $Log: $
  */
 

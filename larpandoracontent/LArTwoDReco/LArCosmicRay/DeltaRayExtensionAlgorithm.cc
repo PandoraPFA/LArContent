@@ -176,7 +176,7 @@ void DeltaRayExtensionAlgorithm::FillClusterAssociationMatrix(const Cluster *con
 
 void DeltaRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMatrix &parentToDaughterMatrix, ClusterMergeMap &clusterMergeMap) const
 {
-    // Merge parent and daughter clusters if they are strongly associated 
+    // Merge parent and daughter clusters if they are strongly associated
     // and the associations have the best figures of merit
     // (i.e. the P --> D association is the best P --> X association,
     //   and the P <-- D association is the best X <-- D association).

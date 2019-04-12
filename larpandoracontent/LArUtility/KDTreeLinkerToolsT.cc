@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/KDTreeLinkerToolsT.cc
- * 
+ *
  *  @brief  Implementation of the kd tree linker tools template class
- * 
+ *
  *  $Log: $
  */
 

@@ -48,7 +48,7 @@ private:
 
     /**
      *  @brief  Find the position of greatest scatter along a sliding linear fit
-     * 
+     *
      *  @param  slidingFitResult the input sliding linear fit result
      *  @param  splitPosition the position of greatest scatter
      *  @param  splitDirection1 the direction vector just above the scatter position
@@ -59,7 +59,7 @@ private:
 
     /**
      *  @brief  Find a second replacement cluster that aligns with the scatter of the first branch cluster
-     * 
+     *
      *  @param  branchSlidingFitResult the sliding fit result for the branch cluster
      *  @param  replacementSlidingFitResult the sliding fit result for the replacement cluster
      *  @param  splitPosition the candidate split position on the branch cluster
@@ -75,7 +75,7 @@ private:
 
     /**
      *  @brief  Split a branch cluster for case of one replacement cluster
-     * 
+     *
      *  @param  pBranchCluster the branch cluster
      *  @param  pReplacementCluster the replacement cluster
      *  @param  splitPosition the split position

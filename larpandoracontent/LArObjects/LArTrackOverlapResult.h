@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArTrackOverlapResult.h
- * 
+ *
  *  @brief  Header file for the lar track overlap result class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_TRACK_OVERLAP_RESULT_H
@@ -32,7 +32,7 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  nMatchedSamplingPoints
      *  @param  nSamplingPoints
      *  @param  chi2
@@ -41,7 +41,7 @@ public:
 
     /**
      *  @brief  Copy constructor
-     * 
+     *
      *  @param  rhs
      */
     TrackOverlapResult(const TrackOverlapResult &rhs);
@@ -95,21 +95,21 @@ public:
 
     /**
      *  @brief  Track overlap result less than operator
-     * 
+     *
      *  @param  rhs the track overlap result for comparison
      */
     bool operator<(const TrackOverlapResult &rhs) const;
 
     /**
      *  @brief  Track overlap result greater than operator
-     * 
+     *
      *  @param  rhs the track overlap result for comparison
      */
     bool operator>(const TrackOverlapResult &rhs) const;
 
     /**
      *  @brief  Track overlap result assigment operator
-     * 
+     *
      *  @param  rhs the track overlap result to assign
      */
     TrackOverlapResult &operator=(const TrackOverlapResult &rhs);
@@ -138,7 +138,7 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  nMatchedSamplingPoints
      *  @param  nSamplingPoints
      *  @param  chi2
@@ -149,7 +149,7 @@ public:
 
     /**
      *  @brief  Copy constructor
-     * 
+     *
      *  @param  rhs
      */
     TransverseOverlapResult(const TransverseOverlapResult &rhs);
@@ -161,14 +161,14 @@ public:
 
     /**
      *  @brief  Get the x overlap object
-     * 
+     *
      *  @return the x overlap object
      */
     const XOverlap &GetXOverlap() const;
 
     /**
      *  @brief  Track overlap result assigment operator
-     * 
+     *
      *  @param  rhs the track overlap result to assign
      */
     TransverseOverlapResult &operator=(const TransverseOverlapResult &rhs);
@@ -181,7 +181,7 @@ typedef std::vector<TransverseOverlapResult> TransverseOverlapResultVector;
 
 /**
  *  @brief  Transverse overlap result + operator
- * 
+ *
  *  @param  lhs the first transverse overlap result to add
  *  @param  rhs the second transverse overlap result to add
  */
@@ -202,7 +202,7 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  trackOverlapResult
      *  @param  innerChi2
      *  @param  outerChi2
@@ -211,7 +211,7 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  nMatchedSamplingPoints
      *  @param  nSamplingPoints
      *  @param  chi2
@@ -223,7 +223,7 @@ public:
 
     /**
      *  @brief  Copy constructor
-     * 
+     *
      *  @param  rhs
      */
     LongitudinalOverlapResult(const LongitudinalOverlapResult &rhs);
@@ -234,22 +234,22 @@ public:
     ~LongitudinalOverlapResult();
 
     /**
-     *  @brief  
-     * 
-     *  @return 
+     *  @brief
+     *
+     *  @return
      */
     float GetInnerChi2() const;
 
     /**
-     *  @brief  
-     * 
-     *  @return 
+     *  @brief
+     *
+     *  @return
      */
     float GetOuterChi2() const;
 
     /**
      *  @brief  Track overlap result assigment operator
-     * 
+     *
      *  @param  rhs the track overlap result to assign
      */
     LongitudinalOverlapResult &operator=(const LongitudinalOverlapResult &rhs);
@@ -276,7 +276,7 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  trackOverlapResult
      *  @param  caloHitList
      *  @param  clusterList
@@ -286,7 +286,7 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  nMatchedSamplingPoints
      *  @param  nSamplingPoints
      *  @param  chi2
@@ -298,7 +298,7 @@ public:
 
     /**
      *  @brief  Copy constructor
-     * 
+     *
      *  @param  rhs
      */
     FragmentOverlapResult(const FragmentOverlapResult &rhs);
@@ -310,28 +310,28 @@ public:
 
     /**
      *  @brief  Get the list of fragment-associated hits
-     * 
+     *
      *  @return the list of fragment-associated hits
      */
     const pandora::CaloHitList &GetFragmentCaloHitList() const;
 
     /**
      *  @brief  Get the list of fragment-associated clusters
-     * 
+     *
      *  @return the list of fragment-associated clusters
      */
     const pandora::ClusterList &GetFragmentClusterList() const;
 
     /**
      *  @brief  Get the fragment hit type
-     * 
+     *
      *  @return the fragment hit type
      */
     pandora::HitType GetFragmentHitType() const;
 
     /**
      *  @brief  Fragments overlap result assigment operator
-     * 
+     *
      *  @param  rhs the track overlap result to assign
      */
     FragmentOverlapResult &operator=(const FragmentOverlapResult &rhs);

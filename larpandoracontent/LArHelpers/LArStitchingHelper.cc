@@ -286,7 +286,7 @@ bool LArStitchingHelper::SortTPCs(const pandora::LArTPC *const pLhs, const pando
     return (pLhs->GetCenterZ() < pRhs->GetCenterZ());
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArStitchingHelper::HasPfoBeenStitched(const ParticleFlowObject *const pPfo)
 {
@@ -299,7 +299,7 @@ bool LArStitchingHelper::HasPfoBeenStitched(const ParticleFlowObject *const pPfo
     return false;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 float LArStitchingHelper::GetPfoX0(const ParticleFlowObject *const pPfo)
 {

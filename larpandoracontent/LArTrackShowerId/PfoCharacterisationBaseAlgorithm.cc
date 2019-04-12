@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTrackShowerId/PfoCharacterisationBaseAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the pfo characterisation base algorithm class.
- * 
+ *
  *  $Log: $
  */
 

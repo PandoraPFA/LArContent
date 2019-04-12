@@ -42,7 +42,7 @@ private:
         Plane(const pandora::CartesianVector &normal, const pandora::CartesianVector &point);
 
         /**
-         *  @brief  Return the intersection between the plane and a line 
+         *  @brief  Return the intersection between the plane and a line
          *
          *  @param  a0 point on the line
          *  @param  a vector pointing along the line
@@ -72,8 +72,8 @@ private:
      *
      *  @param  a0 a point on the line in question
      *  @param  majorAxis the direction of the line in question
-     *  @param  interceptOne to receive the first intersection between line and protoDUNE detector 
-     *  @param  interceptTwo to receive the second intersection between line and protoDUNE detector 
+     *  @param  interceptOne to receive the first intersection between line and protoDUNE detector
+     *  @param  interceptTwo to receive the second intersection between line and protoDUNE detector
      */
     void GetTPCIntercepts(const pandora::CartesianVector &a0, const pandora::CartesianVector &majorAxis,
         pandora::CartesianVector &interceptOne, pandora::CartesianVector &interceptTwo) const;
@@ -91,7 +91,7 @@ private:
 
     bool                            m_selectAllBeamParticles;               ///< First approach: select all beam particles, as opposed to selecting all cosmics
     bool                            m_selectOnlyFirstSliceBeamParticles;    ///< First approach: select first slice beam particles, cosmics for all subsequent slices
-    float                           m_tpcMinX;                              ///< Global TPC volume minimum x extent 
+    float                           m_tpcMinX;                              ///< Global TPC volume minimum x extent
     float                           m_tpcMaxX;                              ///< Global TPC volume maximum x extent
     float                           m_tpcMinY;                              ///< Global TPC volume minimum y extent
     float                           m_tpcMaxY;                              ///< Global TPC volume maximum y extent

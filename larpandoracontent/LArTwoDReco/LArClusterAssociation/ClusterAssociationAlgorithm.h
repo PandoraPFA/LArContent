@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cluster association algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CLUSTER_ASSOCIATION_ALGORITHM_H
@@ -44,7 +44,7 @@ protected:
 
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
-     * 
+     *
      *  @param  pClusterList address of the cluster list
      *  @param  clusterVector to receive the populated cluster vector
      */
@@ -52,7 +52,7 @@ protected:
 
     /**
      *  @brief  Populate the cluster association map
-     * 
+     *
      *  @param  clusterVector the cluster vector
      *  @param  clusterAssociationMap to receive the populated cluster association map
      */
@@ -60,11 +60,11 @@ protected:
 
     /**
      *  @brief  Determine which of two clusters is extremal
-     * 
+     *
      *  @param  isForward whether propagation direction is forward
      *  @param  pCurrentCluster current extremal cluster
      *  @param  pTestCluster potential extremal cluster
-     * 
+     *
      *  @return boolean
      */
     virtual bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster, const pandora::Cluster *const pTestCluster) const = 0;
@@ -72,7 +72,7 @@ protected:
 private:
     /**
      *  @brief  Unambiguous propagation
-     * 
+     *
      *  @param  pCluster address of the cluster to propagate
      *  @param  isForward whether propagation direction is forward
      *  @param  clusterAssociationMap the cluster association map
@@ -81,7 +81,7 @@ private:
 
     /**
      *  @brief  Ambiguous propagation
-     * 
+     *
      *  @param  pCluster address of the cluster to propagate
      *  @param  isForward whether propagation direction is forward
      *  @param  clusterAssociationMap the cluster association map
@@ -90,7 +90,7 @@ private:
 
     /**
      *  @brief  Update cluster association map to reflect an unambiguous cluster merge
-     * 
+     *
      *  @param  pClusterToEnlarge address of the cluster to be enlarged
      *  @param  pClusterToDelete address of the cluster to be deleted
      *  @param  isForwardMerge whether merge is forward (pClusterToEnlarge is forward-associated with pClusterToDelete)
@@ -101,7 +101,7 @@ private:
 
     /**
      *  @brief  Update cluster association map to reflect an ambiguous cluster merge
-     * 
+     *
      *  @param  pClusterToEnlarge address of the cluster to be enlarged
      *  @param  pClusterToDelete address of the cluster to be deleted
      *  @param  isForwardMerge whether merge is forward (pClusterToEnlarge is forward-associated with pClusterToDelete)
@@ -112,7 +112,7 @@ private:
 
     /**
      *  @brief  Navigate along cluster associations, from specified cluster, in specified direction
-     * 
+     *
      *  @param  clusterAssociationMap the cluster association map
      *  @param  pCluster address of cluster with which to begin search
      *  @param  isForward whether propagation direction is forward

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/KDTreeLinkerToolsT.h
- * 
+ *
  *  @brief  Header file for the kd tree linker tools template class
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_KD_TREE_LINKER_TOOLS_TEMPLATED_H
@@ -40,14 +40,14 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  dimargs
      */
     template<typename... Ts>
     KDTreeBoxT(Ts... dimargs);
 
-    std::array<float, DIM>      dimmin;     ///< 
-    std::array<float, DIM>      dimmax;     ///< 
+    std::array<float, DIM>      dimmin;     ///<
+    std::array<float, DIM>      dimmax;     ///<
 };
 
 typedef KDTreeBoxT<2> KDTreeBox;
@@ -70,15 +70,15 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  d
      *  @param  dimargs
      */
     template<typename... Ts>
     KDTreeNodeInfoT(const DATA &d, Ts... dimargs);
 
-    DATA                        data;       ///< 
-    std::array<float, DIM>      dims;       ///< 
+    DATA                        data;       ///<
+    std::array<float, DIM>      dims;       ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@ public:
 
     /**
      *  @brief  setAttributs
-     * 
+     *
      *  @param  regionBox
      *  @param  infoToStore
      */
@@ -105,7 +105,7 @@ public:
 
     /**
      *  @brief  setAttributs
-     * 
+     *
      *  @param  regionBox
      */
     void setAttributs(const KDTreeBoxT<DIM> &regionBox);
@@ -121,15 +121,15 @@ public:
 /**
  *  @brief  kdtree_type_adaptor
  */
-template<typename T> 
+template<typename T>
 class kdtree_type_adaptor
 {
 public:
     /**
      *  @brief  position
-     * 
+     *
      *  @param  t
-     * 
+     *
      *  @return position
      */
     static const pandora::CartesianVector &position(const T *const t);
@@ -139,20 +139,20 @@ public:
 
 /**
  *  @brief  minmax
- * 
+ *
  *  @param  a
  *  @param  b
- * 
+ *
  *  @return minmax
  */
 std::pair<float,float> minmax(const float a, const float b);
 
 /**
  *  @brief  fill_and_bound_2d_kd_tree
- * 
+ *
  *  @param  points
  *  @param  nodes
- * 
+ *
  *  @return KDTreeCube
  */
 template<typename T>
@@ -160,10 +160,10 @@ KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T*> &points, s
 
 /**
  *  @brief  fill_and_bound_3d_kd_tree
- * 
+ *
  *  @param  points
  *  @param  nodes
- * 
+ *
  *  @return KDTreeCube
  */
 template<typename T>
@@ -171,46 +171,46 @@ KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T*> &points, 
 
 /**
  *  @brief  build_2d_kd_search_region
- * 
+ *
  *  @param  point
  *  @param  x_span
  *  @param  z_span
- * 
+ *
  *  @return KDTreeBox
  */
 KDTreeBox build_2d_kd_search_region(const pandora::CaloHit *const point, const float x_span, const float z_span);
 
 /**
  *  @brief  build_2d_kd_search_region
- * 
+ *
  *  @param  pos
  *  @param  x_span
  *  @param  z_span
- * 
+ *
  *  @return KDTreeBox
  */
 KDTreeBox build_2d_kd_search_region(const pandora::CartesianVector &pos, const float x_span, const float z_span);
 
 /**
  *  @brief  build_3d_kd_search_region
- * 
+ *
  *  @param  point
  *  @param  x_span
  *  @param  y_span
  *  @param  z_span
- * 
+ *
  *  @return KDTreeCube
  */
 KDTreeCube build_3d_kd_search_region(const pandora::CaloHit *const point, const float x_span, const float y_span, const float z_span);
 
 /**
  *  @brief  build_3d_kd_search_region
- * 
+ *
  *  @param  pos
  *  @param  x_span
  *  @param  y_span
  *  @param  z_span
- * 
+ *
  *  @return KDTreeCube
  */
 KDTreeCube build_3d_kd_search_region(const pandora::CartesianVector &pos, const float x_span, const float y_span, const float z_span);
@@ -252,7 +252,7 @@ inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT() :
 
 template<typename DATA, unsigned DIM>
 template<typename... Ts>
-inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT(const DATA &d, Ts... dimargs) : 
+inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT(const DATA &d, Ts... dimargs) :
     data(d),
     dims{ {dimargs...} }
 {
@@ -280,7 +280,7 @@ inline void KDTreeNodeT<DATA, DIM>::setAttributs(const KDTreeBoxT<DIM> &regionBo
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename DATA, unsigned DIM>
-inline void KDTreeNodeT<DATA, DIM>::setAttributs(const KDTreeBoxT<DIM> &regionBox) 
+inline void KDTreeNodeT<DATA, DIM>::setAttributs(const KDTreeBoxT<DIM> &regionBox)
 {
     region = regionBox;
 }
@@ -296,7 +296,7 @@ inline const pandora::CartesianVector &kdtree_type_adaptor<T>::position(const T 
 template<>
 inline const pandora::CartesianVector &kdtree_type_adaptor<const pandora::CaloHit>::position(const pandora::CaloHit *const t)
 {
-    return t->GetPositionVector(); 
+    return t->GetPositionVector();
 }
 
 template<>

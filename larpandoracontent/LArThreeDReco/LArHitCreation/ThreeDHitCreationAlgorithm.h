@@ -40,21 +40,21 @@ public:
 
         /**
          *  @brief  Get the sampling position
-         * 
+         *
          *  @return the sampling position
          */
         const pandora::CartesianVector &GetPosition() const;
 
         /**
          *  @brief  Get the sampling hit type
-         * 
+         *
          *  @return the sampling hit type
          */
         pandora::HitType GetHitType() const;
 
         /**
          *  @brief  Get the sampling sigma
-         * 
+         *
          *  @return the sampling sigma
          */
         double GetSigma() const;
@@ -75,71 +75,71 @@ public:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pParentCaloHit2D the address of the parent 2D calo hit
          */
         ProtoHit(const pandora::CaloHit *const pParentCaloHit2D);
 
         /**
          *  @brief  Get the address of the parent 2D calo hit
-         * 
+         *
          *  @return the address of the parent 2D calo hit
          */
         const pandora::CaloHit *GetParentCaloHit2D() const;
 
         /**
          *  @brief  Whether the proto hit position is set
-         * 
+         *
          *  @return boolean
          */
         bool IsPositionSet() const;
 
         /**
          *  @brief  Get the output 3D position
-         * 
+         *
          *  @return the output 3D position, if set
-         * 
+         *
          *  @throws StatusCodeException
          */
         const pandora::CartesianVector &GetPosition3D() const;
 
         /**
          *  @brief  Get the chi squared value
-         * 
+         *
          *  @return the chi squared value, if set
-         * 
+         *
          *  @throws StatusCodeException
          */
         double GetChi2() const;
 
         /**
          *  @brief  Get the number of trajectory samples
-         * 
+         *
          *  @return the number of trajectory samples
          */
         unsigned int GetNTrajectorySamples() const;
 
         /**
          *  @brief  Get the first trajectory sample
-         * 
+         *
          *  @return the first trajectory sample, if at least one sample is present
-         * 
+         *
          *  @throws StatusCodeException
          */
         const TrajectorySample &GetFirstTrajectorySample() const;
 
         /**
          *  @brief  Get the last trajectory sample
-         * 
+         *
          *  @return the last trajectory sample, if at least two samples are present
-         * 
+         *
          *  @throws StatusCodeException
          */
         const TrajectorySample &GetLastTrajectorySample() const;
 
         /**
          *  @brief  Set position 3D
-         * 
+         *
          *  @param  the output 3D position
          *  @param  the output chi squared value
          */
@@ -147,7 +147,7 @@ public:
 
         /**
          *  @brief  Add a trajectory sample
-         * 
+         *
          *  @param  the trajectory sample
          */
         void AddTrajectorySample(const TrajectorySample &trajectorySample);
@@ -254,7 +254,7 @@ private:
      *
      *  @param  protoHit the proto hit
      *
-     *  @param  boolean  
+     *  @param  boolean
      */
     bool CheckThreeDHit(const ProtoHit &protoHit) const;
 

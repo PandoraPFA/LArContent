@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.cc
- * 
+ *
  *  @brief  Implementation of the transverse tensor visualization tool class.
- * 
+ *
  *  $Log: $
  */
 

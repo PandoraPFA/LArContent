@@ -18,7 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingBeamParticleIdTool::CheatingBeamParticleIdTool() : 
+CheatingBeamParticleIdTool::CheatingBeamParticleIdTool() :
     m_minWeightFraction(0.5f)
 {
 }
@@ -57,7 +57,7 @@ void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *cons
             const PfoList &sliceOutput(nuSliceHypotheses.at(sliceIndex));
             selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
         }
-        else 
+        else
         {
             const PfoList &sliceOutput(crSliceHypotheses.at(sliceIndex));
             selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the pfo mop up algorithm base class.
- * 
+ *
  *  $Log: $
  */
 

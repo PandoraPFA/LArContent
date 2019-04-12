@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h
- * 
+ *
  *  @brief  Header file for the transverse tensor visualization tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef TRANSVERSE_TENSOR_VISUALIZATION_TOOL_H

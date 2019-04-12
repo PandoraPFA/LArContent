@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTrackShowerId/BranchGrowingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the branch growing algorithm base class.
- * 
+ *
  *  $Log: $
  */
 

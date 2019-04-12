@@ -1,8 +1,8 @@
 /**
  *  @file   TwoDParticleCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the two dimensional particle creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_TWO_D_PARTICLE_CREATION_ALGORITHM_H
@@ -30,7 +30,7 @@ private:
 
     /**
      *  @brief  Create pfos for provided clusters
-     * 
+     *
      *  @param  pClusterList address of the cluster list
      */
     pandora::StatusCode CreatePFOs(const pandora::ClusterList *const pClusterList) const;

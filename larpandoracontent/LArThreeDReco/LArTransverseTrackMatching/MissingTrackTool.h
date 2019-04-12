@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h
- * 
+ *
  *  @brief  Header file for the missing track tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef MISSING_TRACK_TOOL_H
@@ -31,7 +31,7 @@ private:
 
     /**
      *  @brief  Find missing tracks, due to merging of multiple particle deposits into single hits during hit creation
-     * 
+     *
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
      */

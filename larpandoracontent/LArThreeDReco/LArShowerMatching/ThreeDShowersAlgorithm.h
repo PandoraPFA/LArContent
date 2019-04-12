@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
- * 
+ *
  *  @brief  Header file for the three dimensional showers algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_THREE_D_SHOWERS_ALGORITHM_H
@@ -35,7 +35,7 @@ public:
 
     /**
      *  @brief  Get a sliding shower fit result from the algorithm cache
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     const TwoDSlidingShowerFitResult &GetCachedSlidingFitResult(const pandora::Cluster *const pCluster) const;
@@ -54,7 +54,7 @@ private:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  fitResultU the sliding fit result for the u view
          *  @param  fitResultV the sliding fit result for the v view
          *  @param  fitResultW the sliding fit result for the w view
@@ -66,7 +66,7 @@ private:
          *
          *  @param  x the input x coordinate
          *  @param  xBin to receive the x bin
-         * 
+         *
          *  @return status code, faster than throwing in regular use-cases
          */
         pandora::StatusCode GetBin(const float x, int &xBin) const;
@@ -87,7 +87,7 @@ private:
 
     /**
      *  @brief  Preparation step for a specific cluster list
-     * 
+     *
      *  @param  clusterList the cluster list
      */
     void PreparationStep(pandora::ClusterList &clusterList);
@@ -96,14 +96,14 @@ private:
 
     /**
      *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Remova an existing sliding fit result, for the specified cluster, from the algorithm cache
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     void RemoveFromSlidingFitCache(const pandora::Cluster *const pCluster);
@@ -125,7 +125,7 @@ private:
 
     /**
      *  @brief  Get the shower position maps
-     * 
+     *
      *  @param  fitResultU the sliding shower fit result for the u view
      *  @param  fitResultV the sliding shower fit result for the v view
      *  @param  fitResultW the sliding shower fit result for the w view
@@ -139,7 +139,7 @@ private:
 
     /**
      *  @brief  Get the best fraction of hits, in the common x-overlap range, contained within the provided pair of shower boundaries
-     * 
+     *
      *  @param  pCluster the address of the candidate cluster
      *  @param  xSampling the x sampling details
      *  @param  positionMaps the shower edge position maps

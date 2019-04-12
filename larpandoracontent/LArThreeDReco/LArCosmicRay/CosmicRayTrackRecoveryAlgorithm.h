@@ -27,7 +27,7 @@ public:
      */
     CosmicRayTrackRecoveryAlgorithm();
 
-private:    
+private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -75,7 +75,7 @@ private:
      *  @param slidingFitResultMap the input map of sliding linear fit results
      *  @param clusterAssociationMap the output map of cluster associations
      */
-    void MatchViews(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2, 
+    void MatchViews(const pandora::ClusterVector &clusterVector1, const pandora::ClusterVector &clusterVector2,
         const TwoDSlidingFitResultMap &slidingFitResultMap, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
@@ -86,9 +86,9 @@ private:
      *  @param slidingFitResultMap the input map of sliding linear fit results
      *  @param clusterAssociationMap the output map of cluster associations
      */
-    void MatchClusters(const pandora::Cluster* const pSeedCluster, const pandora::ClusterVector &targetClusters, 
+    void MatchClusters(const pandora::Cluster* const pSeedCluster, const pandora::ClusterVector &targetClusters,
         const TwoDSlidingFitResultMap &slidingFitResultMap, ClusterAssociationMap &clusterAssociationMap) const;
-   
+
     /**
      *  @brief  Create candidate particles using three primary clusters
      *
@@ -101,13 +101,13 @@ private:
      *  @param particleList the output list of candidate particles
      */
     void MatchThreeViews(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
-        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
+        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV,
         const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
         ParticleList &particleList) const;
 
     /**
      *  @brief  Create candidate particles using two primary clusters and one pair of broken clusters
-     *  
+     *
      *  @param clusterVectorU input vector of clusters from the U view
      *  @param clusterVectorV input vector of clusters from the V view
      *  @param clusterVectorW input vector of clusters from the W view
@@ -117,10 +117,10 @@ private:
      *  @param particleList the output list of candidate particles
      */
     void MatchTwoViews(const pandora::ClusterVector &clusterVectorU,  const pandora::ClusterVector &clusterVectorV,
-        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
+        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV,
         const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
         ParticleList &particleList) const;
- 
+
     /**
      *  @brief  Create candidate particles using one primary cluster and one pair of broken clusters
      *
@@ -133,7 +133,7 @@ private:
      *  @param particleList the output list of candidate particles
      */
     void MatchOneView(const pandora::ClusterVector &clusterVectorU,  const pandora::ClusterVector &clusterVectorV,
-        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV, 
+        const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV,
         const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
         ParticleList &particleList) const;
 
@@ -151,15 +151,15 @@ private:
      *  @param inputParticleList the input list of candidate particles
      *  @param outputParticleList the input list of candidate particles with duplications removed
      */
-    void RemoveAmbiguities(const ParticleList &inputParticleList, ParticleList &outputParticleList) const; 
+    void RemoveAmbiguities(const ParticleList &inputParticleList, ParticleList &outputParticleList) const;
 
     /**
      *  @brief Merge broken clusters into a single cluster
      *
-     *  @param inputClusterList the input list of broken clusters 
+     *  @param inputClusterList the input list of broken clusters
      *  @param outputClusterList the output list of merged clusters
      */
-    void MergeClusters(const pandora::ClusterList &inputClusterList, pandora::ClusterList &outputClusterList) const; 
+    void MergeClusters(const pandora::ClusterList &inputClusterList, pandora::ClusterList &outputClusterList) const;
 
     /**
      *  @brief Build particle flow objects

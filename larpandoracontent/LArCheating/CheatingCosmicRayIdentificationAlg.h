@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h
- * 
+ *
  *  @brief  Header file for the cosmic ray identification cheater class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_COSMIC_RAY_IDENTIFICATION_ALG_H

@@ -31,7 +31,7 @@ private:
 
     /**
      *  @brief  Find matched tracks, hidden by ambiguities in the tensor
-     * 
+     *
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
      */
@@ -39,10 +39,10 @@ private:
 
     /**
      *  @brief  Sort tensor elements by chi-squared
-     * 
+     *
      *  @param  lhs the first tensor element
      *  @param  rhs the second tensor element
-     * 
+     *
      *  @return boolean
      */
     static bool SortByChiSquared(const TensorType::Element &lhs, const TensorType::Element &rhs);

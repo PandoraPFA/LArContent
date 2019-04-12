@@ -57,7 +57,7 @@ protected:
      *  @param  inputClusterList the input cluster list
      *  @param  pBestMatchedCluster to receive the address of the best matched cluster
      *  @param  fragmentOverlapResult to receive the populated fragment overlap result
-     * 
+     *
      *  @return statusCode, faster than throwing in regular use-cases
      */
     pandora::StatusCode CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
@@ -71,7 +71,7 @@ protected:
      *  @param  fitResult1 the first sliding fit result
      *  @param  fitResult2 the second sliding fit result
      *  @param  projectedPositions to receive the list of projected positions
-     * 
+     *
      *  @return statusCode, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
@@ -84,7 +84,7 @@ protected:
      *  @param  projectedPositions the list of projected positions
      *  @param  hitToClusterMap to receive the hit to cluster map
      *  @param  matchedCaloHits to receive the list of associated calo hits
-     * 
+     *
      *  @return statusCode, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetMatchedHits(const pandora::ClusterList &inputClusterList, const pandora::CartesianPointVector &projectedPositions,
@@ -97,7 +97,7 @@ protected:
      *  @param  hitToClusterMap the hit to cluster map
      *  @param  matchedClusters to receive the list of matched clusters
      *  @param  pBestMatchedCluster to receive the address of the single best matched cluster
-     * 
+     *
      *  @return statusCode, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetMatchedClusters(const pandora::CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/SlidingConePfoMopUpAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the sliding cone pfo mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -256,7 +256,7 @@ bool SlidingConePfoMopUpAlgorithm::MakePfoMerges(const ClusterToPfoMap &clusterT
         this->MergeAndDeletePfos(pParentPfo, pDaughterPfo);
         pfosMerged = true;
 
-        // Simple/placeholder book-keeping for reciprocal relationships and progressive merges 
+        // Simple/placeholder book-keeping for reciprocal relationships and progressive merges
         clusterReplacementMap[pDaughterCluster] = pParentCluster;
 
         for (ClusterReplacementMap::value_type &mapEntry : clusterReplacementMap)

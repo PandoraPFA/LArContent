@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/MultiValuedTransverseTrackHitsTool.cc
- * 
+ *
  *  @brief  Implementation of the multivalued transverse track hit creation tool.
- * 
+ *
  *  $Log: $
  */
 
@@ -14,7 +14,7 @@ using namespace pandora;
 
 namespace lar_content
 {
- 
+
 void MultiValuedTransverseTrackHitsTool::GetTransverseTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const
 {
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/ListMergingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the list merging algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_LIST_MERGING_ALGORITHM_H

@@ -274,7 +274,7 @@ void BdtBeamParticleIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &reco
 
         // Ensure no hits have been double counted
         if (std::find(reconstructedCaloHitList.begin(), reconstructedCaloHitList.end(), pParentCaloHit) == reconstructedCaloHitList.end())
-            reconstructedCaloHitList.push_back(pParentCaloHit); 
+            reconstructedCaloHitList.push_back(pParentCaloHit);
     }
 }
 
@@ -647,7 +647,7 @@ void BdtBeamParticleIdTool::SliceFeatures::FillFeatureVector(LArMvaHelper::MvaFe
 
 float BdtBeamParticleIdTool::SliceFeatures::GetAdaBoostDecisionTreeScore(const AdaBoostDecisionTree &adaBoostDecisionTree) const
 {
-    // ATTN if one or more of the features can not be calculated, then default to calling the slice a cosmic ray.  -1.f is the minimum score 
+    // ATTN if one or more of the features can not be calculated, then default to calling the slice a cosmic ray.  -1.f is the minimum score
     // possible for a weighted bdt.
     if (!this->IsFeatureVectorAvailable()) return -1.f;
 

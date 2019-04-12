@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h
- * 
+ *
  *  @brief  Header file for the long tracks tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LONG_TRACKS_TOOL_H
@@ -26,17 +26,17 @@ public:
 
     /**
      *  @brief  Whether a long element shares clusters with any other long elements
-     * 
+     *
      *  @param  iIter specifies the long element under consideration
      *  @param  iteratorList list of iterators to other long elements
-     * 
+     *
      *  @return boolean
      */
     static bool HasLongDirectConnections(IteratorList::const_iterator iIter, const IteratorList &iteratorList);
 
     /**
      *  @brief  Whether a long element is significantly longer that other elements with which it shares a cluster
-     * 
+     *
      *  @param  iIter specifies the long element under consideration
      *  @param  elementList the full list of connected tensor elements
      *  @param  minMatchedSamplingPointRatio the min ratio between 1st and 2nd highest msps for simple ambiguity resolution
@@ -52,7 +52,7 @@ private:
 
     /**
      *  @brief  Find long tracks, hidden by simple ambiguities in the tensor
-     * 
+     *
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
      */
@@ -60,7 +60,7 @@ private:
 
     /**
      *  @brief  Select a list of long track-like elements from a set of connected tensor elements
-     * 
+     *
      *  @param  elementList the full list of connected tensor elements
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to long track-like elements

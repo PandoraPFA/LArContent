@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/ThreeViewShowerHitsTool.cc
- * 
+ *
  *  @brief  Implementation of the three view shower hits tool.
- * 
+ *
  *  $Log: $
  */
 
@@ -49,7 +49,7 @@ void ThreeViewShowerHitsTool::GetShowerHit3D(const CaloHitVector &caloHitVector1
                 continue;
 
             ProtoHit thisProtoHit(pCaloHit2D);
-            this->GetBestPosition3D(hitType1, hitType2, position1, position2, thisProtoHit); 
+            this->GetBestPosition3D(hitType1, hitType2, position1, position2, thisProtoHit);
 
             if (!protoHit.IsPositionSet() || (thisProtoHit.GetChi2() < protoHit.GetChi2()))
                 protoHit = thisProtoHit;

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/ShowerPfoMopUpAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the shower pfo mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 

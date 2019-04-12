@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.h
- * 
+ *
  *  @brief  Header file for the track recovery algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_PARTICLE_RECOVERY_ALGORITHM_H
@@ -35,7 +35,7 @@ private:
     public:
         /**
          *  @brief  Add an association between two clusters to the simple overlap tensor
-         * 
+         *
          *  @param  pCluster1 address of cluster 1
          *  @param  pCluster2 address of cluster 2
          */
@@ -43,7 +43,7 @@ private:
 
         /**
          *  @brief  Get elements connected to a specified cluster
-         * 
+         *
          *  @param  pCluster address of the cluster
          *  @param  elementList the element list
          *  @param  clusterListU connected u clusters
@@ -138,7 +138,7 @@ private:
 
     /**
      *  @brief  Calculate effective span for a given clsuter taking gaps into account
-     * 
+     *
      *  @param  pCluster address of the cluster
      *  @param  xMin the min x value above which checks for gaps will be performed
      *  @param  xMax the max x value below which checks for gaps will be performed
@@ -160,7 +160,7 @@ private:
      *  @param  pClusterU the address of cluster u
      *  @param  pClusterV the address of cluster v
      *  @param  pClusterW the address of cluster w
-     * 
+     *
      *  @return boolean
      */
     bool CheckConsistency(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW) const;

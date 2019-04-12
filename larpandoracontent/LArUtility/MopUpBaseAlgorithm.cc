@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArUtility/MopUpBaseAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the mop up algorithm base class.
- * 
+ *
  *  $Log: $
  */
 

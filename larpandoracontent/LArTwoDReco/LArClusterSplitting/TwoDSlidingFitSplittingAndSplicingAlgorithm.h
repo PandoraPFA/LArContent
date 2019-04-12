@@ -93,7 +93,7 @@ protected:
      *  @param  branchSplitPosition the outputted start position of the branch
      *  @param  branchSplitDirection the outputted start direction of the branch
      */
-    virtual void FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, 
+    virtual void FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit,
         const TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &replacementStartPosition,
         pandora::CartesianVector &branchSplitPosition, pandora::CartesianVector &branchSplitDirection) const = 0;
 
@@ -146,7 +146,7 @@ private:
      *  @param  splitPosition the start position of the branch
      *  @param  splitDirection the start direction of the branch
      */
-    float CalculateBranchChi2(const pandora::Cluster* const pCluster, const pandora::CartesianVector &splitPosition, 
+    float CalculateBranchChi2(const pandora::Cluster* const pCluster, const pandora::CartesianVector &splitPosition,
         const pandora::CartesianVector &splitDirection) const;
 
     /**
@@ -158,8 +158,8 @@ private:
      *  @param  principalCaloHitList the hits to be added to the principal cluster
      *  @param  branchCaloHitList the hits to be split off into the output branch cluster
      */
-    void SplitBranchCluster(const pandora::Cluster* const pCluster, const pandora::CartesianVector &splitPosition, 
-        const pandora::CartesianVector &splitDirection, pandora::CaloHitList &principalCaloHitList, 
+    void SplitBranchCluster(const pandora::Cluster* const pCluster, const pandora::CartesianVector &splitPosition,
+        const pandora::CartesianVector &splitDirection, pandora::CaloHitList &principalCaloHitList,
         pandora::CaloHitList &branchCaloHitList) const;
 
     /**

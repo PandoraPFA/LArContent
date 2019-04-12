@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.h
- * 
+ *
  *  @brief  Header file for the vertex splitting algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_VERTEX_SPLITTING_ALGORITHM_H

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/ClusterMopUpBaseAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cluster mop up algorithm base class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CLUSTER_MOP_UP_BASE_ALGORITHM_H
@@ -32,7 +32,7 @@ protected:
 
     /**
      *  @brief  Get the two dimensional clusters contained in the input pfo list, divided into three different views
-     * 
+     *
      *  @param  clusterListU to receive the list of clusters in the u view
      *  @param  clusterListV to receive the list of clusters in the v view
      *  @param  clusterListW to receive the list of clusters in the w view
@@ -41,7 +41,7 @@ protected:
 
     /**
      *  @brief  Get the two dimensional clusters contained in the input remant/daughter cluster lists, divided into three different views
-     * 
+     *
      *  @param  clusterListU to receive the list of clusters in the u view
      *  @param  clusterListV to receive the list of clusters in the v view
      *  @param  clusterListW to receive the list of clusters in the w view
@@ -50,7 +50,7 @@ protected:
 
     /**
      *  @brief  Get the two dimensional clusters contained in an input cluster list, divided into three different views
-     * 
+     *
      *  @param  inputClusterList the input cluster list
      *  @param  availabilityFlag only clusters with matching availability will be considered
      *  @param  clusterListU to receive the list of clusters in the u view
@@ -62,7 +62,7 @@ protected:
 
     /**
      *  @brief  Cluster mop up for a single view. This function is responsible for instructing pandora to make cluster alterations
-     * 
+     *
      *  @param  pfoClusters the list of pfo clusters
      *  @param  remnantClusters the list of remnant clusters
      */
@@ -73,7 +73,7 @@ protected:
 
     /**
      *  @brief  Make the cluster merges specified in the cluster association map, using list name information in the cluster list name map
-     * 
+     *
      *  @param  clusterAssociationMap the cluster association map
      */
     virtual void MakeClusterMerges(const ClusterAssociationMap &clusterAssociationMap) const;

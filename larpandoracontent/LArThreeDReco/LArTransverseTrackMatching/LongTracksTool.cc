@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.cc
- * 
+ *
  *  @brief  Implementation of the long tracks tool class.
- * 
+ *
  *  $Log: $
  */
 

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h
- * 
+ *
  *  @brief  Header file for the cheating neutrino daughter vertices algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_NEUTRINO_DAUGHTER_VERTICES_ALGORITHM_H
@@ -31,14 +31,14 @@ private:
 
     /**
      *  @brief  Get the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
-     * 
+     *
      *  @param  mcPrimaryMap to receive the mapping from mc particle to primary
      */
     void GetMCPrimaryMap(LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const;
 
     /**
      *  @brief  Process the list of reconstructed neutrinos
-     * 
+     *
      *  @param  neutrinoPfos the list of neutrino pfos
      *  @param  mcPrimaryMap the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
      */
@@ -46,7 +46,7 @@ private:
 
     /**
      *  @brief  Process a daughter pfo
-     * 
+     *
      *  @param  pDaughterPfo the address of a daughter pfo
      *  @param  mcPrimaryMap the mapping from mc particle to primary, only required if collapsed mc particle hierarchy specified
      */

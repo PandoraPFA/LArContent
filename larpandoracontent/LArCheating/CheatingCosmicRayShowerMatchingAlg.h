@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArCheating/CheatingCosmicRayShowerMatchingAlg.h
- * 
+ *
  *  @brief  Header file for the cosmic ray shower matching cheater class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CHEATING_COSMIC_RAY_SHOWER_MATCHING_ALG_H

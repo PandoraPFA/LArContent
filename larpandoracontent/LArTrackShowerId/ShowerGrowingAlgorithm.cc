@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the shower growing algorithm class.
- * 
+ *
  *  $Log: $
  */
 
@@ -391,7 +391,7 @@ float ShowerGrowingAlgorithm::GetFigureOfMerit(const SeedAssociationList &seedAs
     return figureOfMerit;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------                                     
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 unsigned int ShowerGrowingAlgorithm::GetNVertexConnections(const CartesianVector &vertexPosition2D, const LArPointingClusterList &pointingClusterList) const
 {

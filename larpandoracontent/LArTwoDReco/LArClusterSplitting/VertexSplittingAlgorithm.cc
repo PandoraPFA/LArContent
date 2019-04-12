@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterSplitting/VertexSplittingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the vertex splitting algorithm class.
- * 
+ *
  *  $Log: $
  */
 

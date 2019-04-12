@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/TestBeamParticleCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the test beam particle creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_TEST_BEAM_PARTICLE_CREATION_ALGORITHM_H

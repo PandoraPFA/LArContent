@@ -183,7 +183,7 @@ public:
 
     /**
      *  @brief  Whether the object is initialized
-     * 
+     *
      *  @return boolean
      */
     bool IsInitialized() const;

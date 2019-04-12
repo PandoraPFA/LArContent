@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/SlidingConeClusterMopUpAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the sliding cone cluster mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 

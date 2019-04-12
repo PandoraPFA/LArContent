@@ -1,8 +1,8 @@
 /**
  *  @file   PandoraSDK/src/Persistency/EventWritingAlgorithm.cc
- * 
+ *
  *  @brief  Implementation of the event writing algorithm class.
- * 
+ *
  *  $Log: $
  */
 

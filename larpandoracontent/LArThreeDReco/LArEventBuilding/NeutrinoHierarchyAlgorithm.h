@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArEventBuilding/NeutrinoHierarchyAlgorithm.h
- * 
+ *
  *  @brief  Header file for the neutrino hierarchy algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_NEUTRINO_HIERARCHY_ALGORITHM_H
@@ -40,7 +40,7 @@ public:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pPfo the address of the pfo
          *  @param  halfWindowLayers the number of layers to use for half-window of sliding fit
          *  @param  layerPitch the sliding fit z pitch, units cm
@@ -49,14 +49,14 @@ public:
 
         /**
          *  @brief  Copy constructor
-         * 
+         *
          *  @param  rhs the pfo info to copy
          */
         PfoInfo(const PfoInfo &rhs);
 
         /**
          *  @brief  Assignment operator
-         * 
+         *
          *  @param  rhs the pfo info to assign
          */
         PfoInfo &operator=(const PfoInfo &rhs);
@@ -68,70 +68,70 @@ public:
 
         /**
          *  @brief  Get the address of the pfo
-         * 
+         *
          *  @return the address of the pfo
          */
         const pandora::ParticleFlowObject *GetThisPfo() const;
 
         /**
          *  @brief  Get the address of the three dimensional cluster
-         * 
+         *
          *  @return the address of the three dimensional cluster
          */
         const pandora::Cluster *GetCluster3D() const;
 
         /**
          *  @brief  Get the address of the three dimensional sliding fit result
-         * 
+         *
          *  @return the address of the three dimensional sliding fit result
          */
         const ThreeDSlidingFitResult *GetSlidingFitResult3D() const;
 
         /**
          *  @brief  Whether the pfo is associated with the neutrino vertex
-         * 
+         *
          *  @return boolean
          */
         bool IsNeutrinoVertexAssociated() const;
 
         /**
          *  @brief  If associated, whether association to parent (vtx or pfo) is at sliding fit inner layer
-         * 
+         *
          *  @return boolean
          */
         bool IsInnerLayerAssociated() const;
 
         /**
          *  @brief  Get the address of the parent pfo
-         * 
+         *
          *  @return the address of the parent pfo
          */
         const pandora::ParticleFlowObject *GetParentPfo() const;
 
         /**
          *  @brief  Get the daughter pfo list
-         * 
+         *
          *  @return the daughter pfo list
          */
         const pandora::PfoList &GetDaughterPfoList() const;
 
         /**
          *  @brief  Set the neutrino vertex association flag
-         * 
+         *
          *  @param  isNeutrinoVertexAssociated the neutrino vertex association flag
          */
         void SetNeutrinoVertexAssociation(const bool isNeutrinoVertexAssociated);
 
         /**
          *  @brief  Set the inner layer association flag
-         * 
+         *
          *  @param  isInnerLayerAssociated the inner layer association flag
          */
         void SetInnerLayerAssociation(const bool isInnerLayerAssociated);
 
         /**
          *  @brief  Set the parent pfo
-         * 
+         *
          *  @param  pParentPfo the address of the parent pfo
          */
         void SetParentPfo(const pandora::ParticleFlowObject *const pParentPfo);
@@ -143,14 +143,14 @@ public:
 
         /**
          *  @brief  Add a daughter pfo
-         * 
+         *
          *  @param  pDaughterPfo the address of the daughter pfo to add
          */
         void AddDaughterPfo(const pandora::ParticleFlowObject *const pDaughterPfo);
 
         /**
          *  @brief  Remove a daughter pfo
-         * 
+         *
          *  @param  pDaughterPfo the address of the daughter pfo to remove
          */
         void RemoveDaughterPfo(const pandora::ParticleFlowObject *const pDaughterPfo);
@@ -171,7 +171,7 @@ public:
 
     /**
      *  @brief  Query the pfo info map and separate/extract pfos currently either acting as parents or associated with the neutrino vertex
-     * 
+     *
      *  @param  pfoInfoMap the pfo info map
      *  @param  assignedPfos to receive the sorted vector of assigned pfos
      *  @param  unassignedPfos to receive the sorted vector of unassigned pfos
@@ -183,21 +183,21 @@ private:
 
     /**
      *  @brief  Get the address of the input neutrino pfo - enforces only one pfo present in input list; can return NULL if no neutrino exists
-     * 
+     *
      *  @param  to receive the address of the input neutrino pfo
      */
     void GetNeutrinoPfo(const pandora::ParticleFlowObject *&pNeutrinoPfo) const;
 
     /**
      *  @brief  Get the list of candidate daughter pfos
-     * 
+     *
      *  @param  candidateDaughterPfoList to receive the candidate daughter pfo list
      */
     void GetCandidateDaughterPfoList(pandora::PfoList &candidateDaughterPfoList) const;
 
     /**
      *  @brief  Process a provided pfo list and populate an initial pfo info map
-     * 
+     *
      *  @param  pfoList the provided pfo list
      *  @param  pfoInfoMap to receive the initial pfo info map
      */
@@ -205,7 +205,7 @@ private:
 
     /**
      *  @brief  Process the information in a pfo info map, creating pfo parent/daughter links
-     * 
+     *
      *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
      *  @param  candidateDaughterPfoList the list of candidate daughter pfos
      *  @param  pfoInfoMap the pfo info map
@@ -215,7 +215,7 @@ private:
 
     /**
      *  @brief  Display the information in a pfo info map, visualising pfo parent/daughter links
-     * 
+     *
      *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
      *  @param  pfoInfoMap the pfo info map
      */

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.cc
- * 
+ *
  *  @brief  Implementation of the undershoot tracks tool class.
- * 
+ *
  *  $Log: $
  */
 

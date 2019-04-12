@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/SplitShowersTool.h
- * 
+ *
  *  @brief  Header file for the split showers tool class.
- * 
+ *
  *  $Log: $
  */
 #ifndef SPLIT_SHOWERS_TOOL_H
@@ -29,7 +29,7 @@ public:
 private:
     /**
      *  @brief  Find split showers, using information from the overlap tensor
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  clusterMergeMap to receive the list of cluster merges
@@ -38,7 +38,7 @@ private:
 
     /**
      *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for undershoots identification
-     * 
+     *
      *  @param  eIter the iterator to the tensor element
      *  @param  usedClusters the list of used clusters
      */
@@ -46,7 +46,7 @@ private:
 
     /**
      *  @brief  Select elements representing possible components of interest due to undershoots in clustering
-     * 
+     *
      *  @param  eIter iterator to a candidate element
      *  @param  elementList the provided element list
      *  @param  usedClusters the list of used clusters
@@ -57,7 +57,7 @@ private:
 
     /**
      *  @brief  Get cluster merges specific elements of the tensor
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  iteratorList list of iterators to relevant tensor elements
      *  @param  usedClusters the list of used clusters
@@ -68,7 +68,7 @@ private:
 
     /**
      *  @brief  Check the clusters in a provided cluster list are in suitable proximity for merging
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterList the cluster list
      */
@@ -76,7 +76,7 @@ private:
 
     /**
      *  @brief  Check the consistency of the clusters in a provided cluster list with the event vertex, if available
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterList the cluster list
      */
@@ -84,7 +84,7 @@ private:
 
     /**
      *  @brief  Check the consistency of the split positions in the provided u, v and w cluster lists
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterListU the u cluster list
      *  @param  clusterListV the v cluster list
@@ -95,7 +95,7 @@ private:
 
     /**
      *  @brief  Get the x coordinate representing the midpoint between two clusters (hypothesis: clusters represent a split shower)
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pClusterA the address of cluster A
      *  @param  pClusterB the address of cluster B
@@ -107,7 +107,7 @@ private:
 
     /**
      *  @brief  Populate the cluster merge map, based on the information contained in the provided cluster list
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterList the cluster list
      *  @param  clusterMergeMap to receive the populated cluster merge map
@@ -116,10 +116,10 @@ private:
 
     /**
      *  @brief  Apply the changes cached in a cluster merge map and update the tensor accordingly
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  clusterMergeMap the cluster merge map
-     * 
+     *
      *  @return whether changes to the tensor have been made
      */
     bool ApplyChanges(ThreeDShowersAlgorithm *const pAlgorithm, const ClusterMergeMap &clusterMergeMap) const;

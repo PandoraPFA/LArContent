@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArCaloHit.h
- * 
+ *
  *  @brief  Header file for the lar calo hit class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CALO_HIT_H

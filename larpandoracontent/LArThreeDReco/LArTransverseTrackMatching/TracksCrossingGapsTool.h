@@ -32,7 +32,7 @@ private:
 
     /**
      *  @brief  Find tracks crossing gaps, with unambiguous connection but poor overlap due to gaps
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
@@ -41,7 +41,7 @@ private:
 
     /**
      *  @brief  Select a list of track-like elements crossing a gap in one or more views from a set of connected tensor elements
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  elementList the full list of connected tensor elements
      *  @param  usedClusters the set of clusters already marked as to be added to a pfo
@@ -52,7 +52,7 @@ private:
 
     /**
      *  @brief  Calculate the effective overlap fractions given a set of clusters, taking gaps into account
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the connected tensor element
      *  @param  xOverlapFractionU to receive the effective overlap fraction in the u view
@@ -64,7 +64,7 @@ private:
 
     /**
      *  @brief  Calculate the effective overlap span given a set of clusters, taking gaps into account
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the connected tensor element
      *  @param  xMinEffU to receive the effective min u coordinate
@@ -79,14 +79,14 @@ private:
 
     /**
      *  @brief  Check whether there is any gap in the three U-V-W clusters combination
-     * 
+     *
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the connected tensor element
      *  @param  xSample the x sampling position
      *  @param  gapInU to receive whether there is a gap in the u view
      *  @param  gapInV to receive whether there is a gap in the v view
      *  @param  gapInW to receive whether there is a gap in the w view
-     * 
+     *
      *  @return boolean
      */
     bool PassesGapChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const float xSample,
@@ -94,7 +94,7 @@ private:
 
     /**
      *  @brief  Check individually each cluster where a gap might be present
-     * 
+     *
      *  @param  xSample, the x coordinate we are checking
      *  @param  slidingFitResult1 the sliding fit result for the cluster in view 1
      *  @param  slidingFitResult2 the sliding fit result for the cluster in view 2
@@ -102,7 +102,7 @@ private:
      *  @param  gapIn1 whether there is a gap in view 1
      *  @param  gapIn2 whether there is a gap in view 2
      *  @param  gapIn3 whether there is a gap in view 3
-     * 
+     *
      *  @return boolean
      */
     bool CheckXPositionInGap(const float xSample, const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
@@ -110,10 +110,10 @@ private:
 
     /**
      *  @brief  Check whether a x position is at the end of the cluster
-     * 
+     *
      *  @param  xSample, the x coordinate of the point tested
      *  @param  pCluster the cluster we are interrogating for its extreme coordinates
-     * 
+     *
      *  @return boolean
      */
     bool IsEndOfCluster(const float xSample, const TwoDSlidingFitResult &slidingFitResult) const;

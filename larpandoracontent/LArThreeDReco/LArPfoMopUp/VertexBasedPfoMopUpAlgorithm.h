@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArPfoMopUp/VertexBasedPfoMopUpAlgorithm.h
- * 
+ *
  *  @brief  Header file for the vertex based pfo mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_VERTEX_BASED_PFO_MOP_UP_ALGORITHM_H
@@ -40,7 +40,7 @@ protected:
 
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pVertexCluster the address of the vertex cluster
          *  @param  pDaughterCluster the address of the daughter cluster
          *  @param  boundedFraction the fraction of daughter hits bounded by the cone defined by the vertex cluster
@@ -92,7 +92,7 @@ protected:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pVertexPfo the address of the vertex pfo
          *  @param  pDaughterPfo the address of the daughter candidate pfo
          *  @param  clusterAssociationU the cluster association in the u view
@@ -167,9 +167,9 @@ protected:
 
         /**
          *  @brief  operator<
-         * 
+         *
          *  @param  rhs the pfo association object for comparison
-         * 
+         *
          *  @return boolean
          */
         bool operator< (const PfoAssociation &rhs) const;
@@ -193,7 +193,7 @@ protected:
     public:
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pCluster address of the cluster
          *  @param  vertexPosition2D the event 2D vertex position
          *  @param  coneAngleCentile the cone angle centile
@@ -204,10 +204,10 @@ protected:
 
         /**
          *  @brief  Get the fraction of hits in a candidate daughter cluster bounded by the cone
-         * 
+         *
          *  @param  pDaughterCluster the address of the daughter cluster
          *  @param  coneLengthMultiplier cnsider hits as bound if inside cone with projected distance less than N times cone length
-         * 
+         *
          *  @return the bounded fraction
          */
         float GetBoundedFraction(const pandora::Cluster *const pDaughterCluster, const float coneLengthMultiplier) const;
@@ -215,23 +215,23 @@ protected:
     private:
         /**
          *  @brief  Get the cone direction estimate, with apex fixed at the 2d vertex position
-         * 
+         *
          *  @return the direction estimate
          */
         pandora::CartesianVector GetDirectionEstimate() const;
 
         /**
          *  @brief  Get the cone length (signed, by projections of hits onto initial direction estimate)
-         * 
+         *
          *  @return rhe cone length
          */
         float GetSignedConeLength() const;
 
         /**
          *  @brief  Get the cone cos half angle estimate
-         * 
+         *
          *  @param  coneAngleCentile the cone angle centile
-         * 
+         *
          *  @return the cone cos half angle estimate
          */
         float GetCosHalfAngleEstimate(const float coneAngleCentile) const;
@@ -247,10 +247,10 @@ protected:
 
     /**
      *  @brief  Whether a specified pfo is associated with a specified vertex
-     * 
+     *
      *  @param  vertex2D the 2d vertex position
      *  @param  pointingCluster the pointing cluster
-     * 
+     *
      *  @return boolean
      */
     virtual bool IsVertexAssociated(const pandora::CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const;
@@ -259,11 +259,11 @@ protected:
 
     /**
      *  @brief  Get pfo association details between a vertex-associated pfo and a non-vertex associated daughter candidate pfo
-     * 
+     *
      *  @param  pVertexPfo the address of the vertex-associated pfo
      *  @param  pDaughterPfo the address of the non-vertex-associated pfo
      *  @param  hitTypeToAssociationMap the hit type to association map
-     * 
+     *
      *  @return the pfo association details
      */
     virtual PfoAssociation GetPfoAssociation(const pandora::Pfo *const pVertexPfo, const pandora::Pfo *const pDaughterPfo,
@@ -271,7 +271,7 @@ protected:
 
     /**
      *  @brief  Get the list of input pfos and divide them into vertex-associated and non-vertex-associated lists
-     * 
+     *
      *  @param  pVertex the address of the 3d vertex
      *  @param  vertexPfos to receive the list of vertex-associated pfos
      *  @param  nonVertexPfos to receive the list of nonvertex-associated pfos
@@ -280,17 +280,17 @@ protected:
 
     /**
      *  @brief  Whether a specified pfo is associated with a specified vertex
-     * 
+     *
      *  @param  pPfo the address of the pfo
      *  @param  pVertex the address of the 3d vertex
-     * 
+     *
      *  @return boolean
      */
     bool IsVertexAssociated(const pandora::Pfo *const pPfo, const pandora::Vertex *const pVertex) const;
 
     /**
      *  @brief  Get the list of associations between vertex-associated pfos and non-vertex-associated pfos
-     * 
+     *
      *  @param  pVertex the address of the 3d vertex
      *  @param  vertexPfos the list of vertex-associated pfos
      *  @param  nonVertexPfos the list of nonvertex-associated pfos
@@ -301,22 +301,22 @@ protected:
 
     /**
      *  @brief  Get pfo association details between a vertex-associated pfo and a non-vertex associated daughter candidate pfo
-     * 
+     *
      *  @param  pVertex the address of the 3d vertex
      *  @param  pVertexPfo the address of the vertex-associated pfo
      *  @param  pDaughterPfo the address of the non-vertex-associated pfo
-     * 
+     *
      *  @return the pfo association details
      */
     PfoAssociation GetPfoAssociation(const pandora::Vertex *const pVertex, const pandora::Pfo *const pVertexPfo, const pandora::Pfo *const pDaughterPfo) const;
 
     /**
      *  @brief  Get cluster association details between a vertex-associated cluster and a non-vertex associated daughter candidate cluster
-     * 
+     *
      *  @param  pVertex the address of the vertex
      *  @param  pVertexCluster the address of the vertex-associated cluster
      *  @param  pDaughterCluster the address of the non-vertex-associated cluster
-     * 
+     *
      *  @return the cluster association details
      */
     ClusterAssociation GetClusterAssociation(const pandora::Vertex *const pVertex, const pandora::Cluster *const pVertexCluster,
@@ -324,16 +324,16 @@ protected:
 
     /**
      *  @brief  Process the list of pfo associations, merging the best-matching pfo
-     * 
+     *
      *  @param  pfoAssociationList the pfo association list
-     * 
+     *
      *  @return whether a pfo merge was made
      */
     bool ProcessPfoAssociations(const PfoAssociationList &pfoAssociationList) const;
 
     /**
      *  @brief  Merge the vertex and daughter pfos (deleting daughter pfo, merging clusters, etc.) described in the specified pfoAssociation
-     * 
+     *
      *  @param  pfoAssociation the pfo association details
      */
     void MergePfos(const PfoAssociation &pfoAssociation) const;

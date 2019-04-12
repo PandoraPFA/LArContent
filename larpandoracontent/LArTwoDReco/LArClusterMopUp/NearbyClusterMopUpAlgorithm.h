@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/NearbyClusterMopUpAlgorithm.h
- * 
+ *
  *  @brief  Header file for the nearby cluster mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_NEARBY_CLUSTER_MOP_UP_ALGORITHM_H

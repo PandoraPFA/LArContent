@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArVertex/CandidateVertexCreationAlgorithm.h
- * 
+ *
  *  @brief  Header file for the candidate vertex creation algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_CANDIDATE_VERTEX_CREATION_ALGORITHM_H
@@ -106,14 +106,14 @@ private:
 
     /**
      *  @brief  Creates a 2D sliding fit of a cluster and stores it for later use
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
     /**
      *  @brief  Get a sliding fit result from the algorithm cache
-     * 
+     *
      *  @param  pCluster address of the relevant cluster
      */
     const TwoDSlidingFitResult &GetCachedSlidingFitResult(const pandora::Cluster *const pCluster) const;

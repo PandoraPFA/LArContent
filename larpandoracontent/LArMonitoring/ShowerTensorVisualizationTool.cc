@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArMonitoring/ShowerTensorVisualizationTool.cc
- * 
+ *
  *  @brief  Implementation of the shower tensor visualization tool class.
- * 
+ *
  *  $Log: $
  */
 

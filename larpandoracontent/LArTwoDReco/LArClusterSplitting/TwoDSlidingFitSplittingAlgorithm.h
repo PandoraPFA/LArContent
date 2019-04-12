@@ -37,7 +37,7 @@ protected:
      *
      *  @return pandora::StatusCode
      */
-    virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, 
+    virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult,
         pandora::CartesianVector& splitPosition) const = 0;
 
     unsigned int    m_slidingFitHalfWindow;   ///<
@@ -57,7 +57,7 @@ private:
      *
      *  @return pandora::StatusCode
      */
-    pandora::StatusCode DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector& splitPosition, 
+    pandora::StatusCode DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector& splitPosition,
         pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 };
 

@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedClusterMopUpAlgorithm.h
- * 
+ *
  *  @brief  Header file for the isolated cluster mop up algorithm class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_ISOLATED_CLUSTER_MOP_UP_ALGORITHM_H
@@ -38,7 +38,7 @@ private:
 
     /**
      *  @brief  Examine a list of clusters, identify and delete remnants; receive the list of newly available hits
-     * 
+     *
      *  @param  clusterList the list of clusters to consider
      *  @param  caloHitList to receive the list of newly available hits
      */
@@ -48,7 +48,7 @@ private:
 
     /**
      *  @brief  Look for isolated hit additions, considering a list of candidate hits and a list of host clusters
-     * 
+     *
      *  @param  caloHitList the list of hits to consider
      *  @param  clusterList the list of clusters to consider
      *  @param  caloHitToClusterMap to receive the calo hit to cluster map

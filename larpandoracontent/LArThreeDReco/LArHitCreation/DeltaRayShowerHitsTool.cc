@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/DeltaRayShowerHitsTool.cc
- * 
+ *
  *  @brief  Implementation of the delta ray shower hits tool.
- * 
+ *
  *  $Log: $
  */
 

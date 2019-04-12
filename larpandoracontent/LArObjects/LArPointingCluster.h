@@ -1,8 +1,8 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArPointingCluster.h
- * 
+ *
  *  @brief  Header file for the lar pointing cluster class.
- * 
+ *
  *  $Log: $
  */
 #ifndef LAR_POINTING_CLUSTER_H
@@ -33,7 +33,7 @@ public:
 
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pCluster address of the cluster
          *  @param  position the vertex position
          *  @param  direction the vertex direction
@@ -45,62 +45,62 @@ public:
 
         /**
          *  @brief  Copy constructor
-         * 
+         *
          *  @param  rhs the vertex instance to copy
          */
         Vertex(const Vertex &rhs);
 
         /**
          *  @brief  Destructor
-         * 
+         *
          */
         ~Vertex();
 
         /**
          *  @brief  Get the address of the cluster
-         * 
+         *
          *  @return the address of the cluster
          */
         const pandora::Cluster *GetCluster() const;
 
         /**
          *  @brief  Get the vertex position
-         * 
+         *
          *  @return the vertex position
          */
         const pandora::CartesianVector &GetPosition() const;
 
         /**
          *  @brief  Get the vertex direction
-         * 
+         *
          *  @return the vertex direction
          */
         const pandora::CartesianVector &GetDirection() const;
 
          /**
          *  @brief  Get rms from vertex fit
-         * 
+         *
          *  @return the rms
          */
         float GetRms() const;
 
         /**
          *  @brief  Is this the inner vertex
-         * 
+         *
          *  @return boolean
          */
         bool IsInnerVertex() const;
 
         /**
          *  @brief  Whether the vertex has been initialized
-         * 
+         *
          *  @return boolean
          */
         bool IsInitialized() const;
 
         /**
          *  @brief  Vertex assigment operator
-         * 
+         *
          *  @param  rhs the vertex to assign
          */
         Vertex &operator=(const Vertex &rhs);
@@ -116,7 +116,7 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param  pCluster address of the cluster
      *  @param  fitHalfLayerWindow the fit layer half window
      *  @param  fitLayerPitch the fit layer pitch, units cm
@@ -125,49 +125,49 @@ public:
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param slidingFitResult the input sliding fit result
      */
-    LArPointingCluster(const TwoDSlidingFitResult &slidingFitResult);   
+    LArPointingCluster(const TwoDSlidingFitResult &slidingFitResult);
 
     /**
      *  @brief  Constructor
-     * 
+     *
      *  @param slidingFitResult the input sliding fit result
      */
     LArPointingCluster(const ThreeDSlidingFitResult &slidingFitResult);
 
     /**
      *  @brief  Get the address of the cluster
-     * 
+     *
      *  @return the address of the cluster
      */
     const pandora::Cluster *GetCluster() const;
 
     /**
      *  @brief  Get the inner vertex
-     * 
+     *
      *  @return the inner vertex
      */
     const Vertex &GetInnerVertex() const;
 
     /**
      *  @brief  Get the outer vertex
-     * 
+     *
      *  @return the outer vertex
      */
     const Vertex &GetOuterVertex() const;
 
     /**
      *  @brief  Get length squared of pointing cluster
-     * 
+     *
      *  @return the length squared
      */
     float GetLengthSquared() const;
 
     /**
      *  @brief  Get length of pointing cluster
-     * 
+     *
      *  @return the length
      */
     float GetLength() const;
@@ -175,14 +175,14 @@ public:
 private:
     /**
      *  @brief Build the pointing cluster object from the sliding fit result
-     * 
+     *
      *  @param slidingFitResult the input sliding fit result
      */
-    void BuildPointingCluster(const TwoDSlidingFitResult &slidingFitResult);  
+    void BuildPointingCluster(const TwoDSlidingFitResult &slidingFitResult);
 
     /**
      *  @brief Build the pointing cluster object from the sliding fit result
-     * 
+     *
      *  @param slidingFitResult the input sliding fit result
      */
     void BuildPointingCluster(const ThreeDSlidingFitResult &slidingFitResult);
