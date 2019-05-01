@@ -29,7 +29,7 @@ before_install:
 install:
   - if [[ "${CRON_GCC_BUILD}" == true ]]; then
         echo "Downloading Coverity Scan tool...";
-        wget https://scan.coverity.com/download/linux64 --post-data "token=${COVERITY_SCAN_TOKEN}&project=${COVERITY_REPO}" -O ./coverity_tool.tgz; mkdir cov-analysis-linux64; tar -xf coverity_tool.tgz -C cov-analysis-linux64 --strip-components=2 > /dev/null 2>&1;
+        wget https://scan.coverity.com/download/linux64 --post-data "token=${COVERITY_SCAN_TOKEN}&project=${COVERITY_REPO}" --no-check-certificate -O ./coverity_tool.tgz; mkdir cov-analysis-linux64; tar -xf coverity_tool.tgz -C cov-analysis-linux64 --strip-components=2 > /dev/null 2>&1;
     fi
   - docker exec -it pandora /bin/bash -c "source pull_pandora_pfa.sh"
   - docker exec -it pandora /bin/bash -c "source install_pandora_sdk.sh"
