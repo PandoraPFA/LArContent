@@ -71,6 +71,11 @@ public:
     static bool IsBeamNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Returns true if passed a primary triggered beam MCParticle
+     */
+    static bool IsTriggeredBeamParticle(const pandora::MCParticle *const pMCParticle);
+
+    /**
      *  @brief  Returns true if passed a primary beam MCParticle
      */
     static bool IsBeamParticle(const pandora::MCParticle *const pMCParticle);
@@ -119,6 +124,14 @@ public:
      *  @param  trueNeutrinos to receive the vector of neutrino MC particles
      */
     static void GetTrueNeutrinos(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &trueNeutrinos);
+
+    /**
+     *  @brief  Get triggered test beam MC particles from an input MC particle list
+     *
+     *  @param  pMCParticleList the input MC particle list
+     *  @param  trueTestBeamParticles to receive the vector of neutrino MC particles
+     */
+    static void GetTrueTestBeamParticles(const pandora::MCParticleList *const pMCParticleList, pandora::MCParticleVector &trueTestBeamParticles);
 
     /**
      *  @brief  Get the primary parent mc particle

@@ -49,6 +49,14 @@ bool LArMCParticleHelper::IsBeamNeutrinoFinalState(const MCParticle *const pMCPa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsTriggeredBeamParticle(const MCParticle *const pMCParticle)
+{
+    const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle)); 
+    return (LArMCParticleHelper::IsPrimary(pMCParticle) && (nuance == 2001));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArMCParticleHelper::IsBeamParticle(const MCParticle *const pMCParticle)
 {
     const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
@@ -127,6 +135,20 @@ void LArMCParticleHelper::GetTrueNeutrinos(const MCParticleList *const pMCPartic
     }
 
     std::sort(trueNeutrinos.begin(), trueNeutrinos.end(), LArMCParticleHelper::SortByMomentum);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetTrueTestBeamParticles(const MCParticleList *const pMCParticleList, MCParticleVector &trueTestBeamParticles)
+{
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
+    {
+        const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
+        if (LArMCParticleHelper::IsPrimary(pMCParticle) && (nuance == 2001))
+            trueTestBeamParticles.push_back(pMCParticle);
+    }
+
+    std::sort(trueTestBeamParticles.begin(), trueTestBeamParticles.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
