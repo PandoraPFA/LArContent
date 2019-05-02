@@ -52,52 +52,43 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
         IteratorList iteratorList;
         this->SelectClearElements(elementList, iteratorList);
 
-        bool particlesMade(false);
-        ClusterList deletedClusters, modifiedClusters, clustersToRemoveFromTensor, clustersToAddToTensor;
-        ClusterSet badClusters;
+        if (iteratorList.empty())
+            return false;
 
-        for (IteratorList::const_iterator iIter = iteratorList.begin(), iIterEnd = iteratorList.end(); iIter != iIterEnd; ++iIter)
-        {
-            const TensorType::OverlapResult &overlapResult((*iIter)->GetOverlapResult());
+        // ATTN Cache information as will later modify tensor during reclustering
+        TensorType::ElementList::const_iterator iter(iteratorList.front());
+        const TensorType::OverlapResult overlapResult(iter->GetOverlapResult());
 
-            if (!this->CheckOverlapResult(overlapResult))
-                continue;
+        if (!this->CheckOverlapResult(overlapResult))
+            continue;
 
-            const Cluster *pFragmentCluster(nullptr);
-            this->ProcessTensorElement(pAlgorithm, overlapResult, modifiedClusters, deletedClusters, badClusters, pFragmentCluster);
+        const HitType fragmentHitType(overlapResult.GetFragmentHitType());
+        const Cluster *pClusterU(iter->GetClusterU());
+        const Cluster *pClusterV(iter->GetClusterV());
+        const Cluster *pClusterW(iter->GetClusterW());
 
-            if (!pFragmentCluster)
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+        // ATTN No longer safe to use iterator, hence caching results above
+        const Cluster *pFragmentCluster(nullptr);
+        this->ProcessTensorElement(pAlgorithm, overlapTensor, overlapResult, pFragmentCluster);
 
-            const HitType fragmentHitType(overlapResult.GetFragmentHitType());
-            const Cluster *const pClusterU((TPC_VIEW_U == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterU());
-            const Cluster *const pClusterV((TPC_VIEW_V == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterV());
-            const Cluster *const pClusterW((TPC_VIEW_W == fragmentHitType) ? pFragmentCluster : (*iIter)->GetClusterW());
+        if (!pFragmentCluster)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            if (!(pClusterU->IsAvailable() && pClusterV->IsAvailable() && pClusterW->IsAvailable()))
-                throw StatusCodeException(STATUS_CODE_FAILURE);
+        if (TPC_VIEW_U == fragmentHitType) pClusterU = pFragmentCluster;
+        if (TPC_VIEW_V == fragmentHitType) pClusterV = pFragmentCluster;
+        if (TPC_VIEW_W == fragmentHitType) pClusterW = pFragmentCluster;
 
-            clustersToRemoveFromTensor.push_back(pClusterU);
-            clustersToRemoveFromTensor.push_back(pClusterV);
-            clustersToRemoveFromTensor.push_back(pClusterW);
+        if (!(pClusterU->IsAvailable() && pClusterV->IsAvailable() && pClusterW->IsAvailable()))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            ProtoParticle protoParticle;
-            ProtoParticleVector protoParticleVector;
-            protoParticle.m_clusterListU.push_back(pClusterU);
-            protoParticle.m_clusterListV.push_back(pClusterV);
-            protoParticle.m_clusterListW.push_back(pClusterW);
-            protoParticleVector.push_back(protoParticle);
-            particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);
-        }
-
-        clustersToRemoveFromTensor.insert(clustersToRemoveFromTensor.end(), modifiedClusters.begin(), modifiedClusters.end());
-        clustersToRemoveFromTensor.insert(clustersToRemoveFromTensor.end(), deletedClusters.begin(), deletedClusters.end());
-
-        this->RebuildClusters(pAlgorithm, modifiedClusters, clustersToAddToTensor);
-        this->UpdateTensor(pAlgorithm, overlapTensor, clustersToRemoveFromTensor, clustersToAddToTensor);
-
-        if (particlesMade)
-            return true;
+std::cout << "LArThreeDTrackFragments, U " << pClusterU->GetHadronicEnergy() << ", V " << pClusterV->GetHadronicEnergy() << ", W " << pClusterW->GetHadronicEnergy() << std::endl;
+        ProtoParticle protoParticle;
+        ProtoParticleVector protoParticleVector;
+        protoParticle.m_clusterListU.push_back(pClusterU);
+        protoParticle.m_clusterListV.push_back(pClusterV);
+        protoParticle.m_clusterListW.push_back(pClusterW);
+        protoParticleVector.push_back(protoParticle);
+        return pAlgorithm->CreateThreeDParticles(protoParticleVector);
     }
 
     return false;
@@ -132,32 +123,9 @@ bool ClearTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTrackFragmentsTool::CheckForHitAmbiguities(const TensorType::ElementList &elementList) const
-{
-    CaloHitList allMatchedHits;
-
-    for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
-    {
-        const CaloHitList &fragmentHits(eIter->GetOverlapResult().GetFragmentCaloHitList());
-
-        for (CaloHitList::const_iterator hIter = fragmentHits.begin(), hIterEnd = fragmentHits.end(); hIter != hIterEnd; ++hIter)
-        {
-            if (allMatchedHits.end() != std::find(allMatchedHits.begin(), allMatchedHits.end(), *hIter))
-                return false;
-
-            allMatchedHits.push_back(*hIter);
-        }
-    }
-
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool ClearTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const
 {
     // ATTN This method is currently mirrored in ThreeDTrackFragmentsAlgorithm algorithm
-
     if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
         return false;
 
@@ -216,19 +184,6 @@ void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList 
             }
         }
 
-// --- DEBUG BEGIN ---
-// if(isClearElement)
-// {
-// std::cout << " pU=" << eIter1->GetClusterU() << " pV=" << eIter1->GetClusterV() << " pW=" << eIter1->GetClusterW() << "  (" <<  eIter1->GetClusterU()->IsAvailable() << "," << eIter1->GetClusterV()->IsAvailable() << "," << eIter1->GetClusterW()->IsAvailable() << ")" << std::endl;
-// const ClusterList &clusterList(eIter1->GetOverlapResult().GetFragmentClusterList());
-// for (ClusterList::const_iterator cIter = clusterList.begin(), cIterEnd = clusterList.end(); cIter != cIterEnd; ++cIter)
-// {
-// Cluster *const pCluster = *cIter;
-// std::cout << "   Fragment: " << pCluster << " " << pCluster->IsAvailable() << std::endl;
-// }
-// }
-// --- DEBUG END ---
-
         if (isClearElement)
             iteratorList.push_back(eIter1);
     }
@@ -236,8 +191,8 @@ void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType::OverlapResult &overlapResult,
-    ClusterList &modifiedClusters, ClusterList &deletedClusters, ClusterSet &badClusters, const Cluster *&pFragmentCluster) const
+void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
+    const TensorType::OverlapResult &overlapResult, const Cluster *&pFragmentCluster) const
 {
     pFragmentCluster = nullptr;
 
@@ -247,11 +202,24 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, currentListName));
 
-    ClusterList clusterList(overlapResult.GetFragmentClusterList());
-    clusterList.sort(LArClusterHelper::SortByNHits);
+    ClusterList fragmentClusterList(overlapResult.GetFragmentClusterList());
+    fragmentClusterList.sort(LArClusterHelper::SortByNHits);
     const CaloHitSet caloHitSet(overlapResult.GetFragmentCaloHitList().begin(), overlapResult.GetFragmentCaloHitList().end());
 
-    for (const Cluster *const pCluster : clusterList)
+    // Now update the tensor
+    ClusterList affectedKeyClusters;
+    this->GetAffectedKeyClusters(overlapTensor, fragmentClusterList, affectedKeyClusters);
+
+    for (const Cluster *const pCluster : affectedKeyClusters)
+    {std::cout << "LArThreeDTrackFragments, RemoveAffectedKeyClusters " << pCluster->GetHadronicEnergy() <<std::endl;        pAlgorithm->UpdateUponDeletion(pCluster);}
+
+    for (const Cluster *const pCluster : fragmentClusterList)
+    {std::cout << "LArThreeDTrackFragments, RemoveFragmentClusters " << pCluster->GetHadronicEnergy() << std::endl;    pAlgorithm->UpdateUponDeletion(pCluster);}
+
+    ClusterSet badClusters;
+    ClusterList modifiedClusters, deletedClusters;
+
+    for (const Cluster *const pCluster : fragmentClusterList)
     {
         if (deletedClusters.end() != std::find(deletedClusters.begin(), deletedClusters.end(), pCluster))
             continue;
@@ -299,6 +267,18 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 
     if (!pFragmentCluster)
         throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    ClusterList clustersToAddToTensor;
+    this->RebuildClusters(pAlgorithm, modifiedClusters, clustersToAddToTensor);
+
+    ClusterList newKeyClusters;
+    pAlgorithm->SelectInputClusters(&clustersToAddToTensor, newKeyClusters);
+
+    for (const Cluster *const pCluster : newKeyClusters)
+    {std::cout << "LArThreeDTrackFragments, UpdateNewKeyClusters " << pCluster->GetHadronicEnergy() <<std::endl;        pAlgorithm->UpdateForNewCluster(pCluster);}
+
+    for (const Cluster *const pCluster : affectedKeyClusters)
+    {std::cout << "LArThreeDTrackFragments, UpdateAffectedKeyClusters " << pCluster->GetHadronicEnergy() <<std::endl;        pAlgorithm->UpdateForNewCluster(pCluster);}
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -357,36 +337,18 @@ void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *con
 
     for (const Cluster *const pCluster : modifiedClusters)
     {
+std::cout << "LArThreeDTrackFragments, Rebuild, ModifiedCluster " << pCluster->GetHadronicEnergy() << std::endl;
         if (pCluster->IsAvailable())
             rebuildList.push_back(pCluster);
     }
 
+for (const Cluster *const pCluster : rebuildList)
+   std::cout << "LArThreeDTrackFragments, Rebuild, RebuildList " << (pCluster ? pCluster->GetHadronicEnergy() : -1.f) << std::endl; 
+
     if (!rebuildList.empty())
         pAlgorithm->RebuildClusters(rebuildList, newClusters);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ClearTrackFragmentsTool::UpdateTensor(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
-    const ClusterList &clustersToRemoveFromTensor, const ClusterList &clustersToAddToTensor) const
-{
-    for (ClusterList::const_iterator iter = clustersToRemoveFromTensor.begin(), iterEnd = clustersToRemoveFromTensor.end(); iter != iterEnd; ++iter)
-        pAlgorithm->UpdateUponDeletion(*iter);
-
-    ClusterList newKeyClusters;
-    pAlgorithm->SelectInputClusters(&clustersToAddToTensor, newKeyClusters);
-
-    for (ClusterList::const_iterator iter = newKeyClusters.begin(), iterEnd = newKeyClusters.end(); iter != iterEnd; ++iter)
-        pAlgorithm->UpdateForNewCluster(*iter);
-
-    ClusterList affectedKeyClusters;
-    this->GetAffectedKeyClusters(overlapTensor, clustersToRemoveFromTensor, affectedKeyClusters);
-
-    for (ClusterList::const_iterator iter = affectedKeyClusters.begin(), iterEnd = affectedKeyClusters.end(); iter != iterEnd; ++iter)
-        pAlgorithm->UpdateUponDeletion(*iter);
-
-    for (ClusterList::const_iterator iter = affectedKeyClusters.begin(), iterEnd = affectedKeyClusters.end(); iter != iterEnd; ++iter)
-        pAlgorithm->UpdateForNewCluster(*iter);
+for (const Cluster *const pCluster : newClusters)
+    std::cout << "LArThreeDTrackFragments, Rebuild, NewCluster " << pCluster->GetHadronicEnergy() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
