@@ -204,7 +204,7 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
     fragmentClusterList.sort(LArClusterHelper::SortByNHits);
     const CaloHitSet caloHitSet(overlapResult.GetFragmentCaloHitList().begin(), overlapResult.GetFragmentCaloHitList().end());
 
-    // Now update the tensor
+    // Remove any clusters to be modified (or affected by modifications) from tensor
     ClusterList affectedKeyClusters;
     this->GetAffectedKeyClusters(overlapTensor, fragmentClusterList, affectedKeyClusters);
 
@@ -214,12 +214,12 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
     for (const Cluster *const pCluster : fragmentClusterList)
         pAlgorithm->UpdateUponDeletion(pCluster);
 
-    ClusterSet badClusters;
-    ClusterList modifiedClusters, deletedClusters;
+    ClusterList clustersToRebuild;
+    ClusterSet badClusters, deletedClusters;
 
     for (const Cluster *const pCluster : fragmentClusterList)
     {
-        if (deletedClusters.end() != std::find(deletedClusters.begin(), deletedClusters.end(), pCluster))
+        if (deletedClusters.count(pCluster))
             continue;
 
         if (!pCluster->IsAvailable())
@@ -246,28 +246,31 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 
         this->Recluster(pAlgorithm, pCluster, daughterHits, separateHits, deletedClusters, badClusters, pFragmentCluster);
 
-        if (badClusters.count(pFragmentCluster))
+        // ATTN Fragment cluster will be used to build particle, so it shouldn't ever be bad, or deleted
+        if (badClusters.count(pFragmentCluster) || deletedClusters.count(pFragmentCluster))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        // ATTN Keep track of modified clusters; does not include those for which address has been deleted at any time
-        // Note distinction between list of all deletions and the up-to-date list of bad clusters
-        ClusterList::iterator modifiedIter(std::find(modifiedClusters.begin(), modifiedClusters.end(), pCluster));
-        if (deletedClusters.end() != std::find(deletedClusters.begin(), deletedClusters.end(), pCluster))
+        // ATTN Keep track of clusters to be rebuilt; does not include those for which address has been deleted at any time.
+        // Note distinction between list of all deletions and the up-to-date list of bad clusters.
+        // Fragment cluster will be automatically added to the output particle and never rebuilt.
+        ClusterList::iterator rebuildIter(std::find(clustersToRebuild.begin(), clustersToRebuild.end(), pCluster));
+        if (deletedClusters.count(pCluster))
         {
-            if (modifiedClusters.end() != modifiedIter)
-                modifiedClusters.erase(modifiedIter);
+            if (clustersToRebuild.end() != rebuildIter)
+                clustersToRebuild.erase(rebuildIter);
         }
-        else if (modifiedClusters.end() == modifiedIter)
+        else if ((clustersToRebuild.end() == rebuildIter) && (pCluster != pFragmentCluster))
         {
-            modifiedClusters.push_back(pCluster);
+            clustersToRebuild.push_back(pCluster);
         }
     }
 
     if (!pFragmentCluster)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
+    // Repopulate tensor according to modifications performed above
     ClusterList clustersToAddToTensor;
-    this->RebuildClusters(pAlgorithm, modifiedClusters, clustersToAddToTensor);
+    this->RebuildClusters(pAlgorithm, clustersToRebuild, clustersToAddToTensor);
 
     ClusterList newKeyClusters;
     pAlgorithm->SelectInputClusters(&clustersToAddToTensor, newKeyClusters);
@@ -282,7 +285,7 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const Cluster *const pCluster, const CaloHitList &daughterHits,
-    const CaloHitList &separateHits, ClusterList &deletedClusters, ClusterSet &badClusters, const Cluster *&pFragmentCluster) const
+    const CaloHitList &separateHits, ClusterSet &deletedClusters, ClusterSet &badClusters, const Cluster *&pFragmentCluster) const
 {
     if (separateHits.empty())
     {
@@ -296,7 +299,7 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *const pAl
             if (!badClusters.insert(pCluster).second)
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            if (deletedClusters.end() == std::find(deletedClusters.begin(), deletedClusters.end(), pCluster)) deletedClusters.push_back(pCluster);
+            (void) deletedClusters.insert(pCluster);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pFragmentCluster, pCluster));
         }
     }
