@@ -80,6 +80,17 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *
         if (!(pClusterU->IsAvailable() && pClusterV->IsAvailable() && pClusterW->IsAvailable()))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
+        // ATTN For safety, remove all clusters associated with this fragment particle from the tensor
+        ClusterList fragmentClusterList, affectedKeyClusters;
+        fragmentClusterList.push_back(pClusterU);
+        fragmentClusterList.push_back(pClusterV);
+        fragmentClusterList.push_back(pClusterW);
+        this->GetAffectedKeyClusters(overlapTensor, fragmentClusterList, affectedKeyClusters);
+
+        for (const Cluster *const pCluster : affectedKeyClusters)
+            pAlgorithm->UpdateUponDeletion(pCluster);
+
+        // Now make the particle
         ProtoParticle protoParticle;
         ProtoParticleVector protoParticleVector;
         protoParticle.m_clusterListU.push_back(pClusterU);
@@ -268,10 +279,11 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
     if (!pFragmentCluster)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    // Repopulate tensor according to modifications performed above
+    // Rebuild fragmented clusters into something better defined
     ClusterList clustersToAddToTensor;
     this->RebuildClusters(pAlgorithm, clustersToRebuild, clustersToAddToTensor);
 
+    // ATTN Repopulate tensor according to modifications performed above
     ClusterList newKeyClusters;
     pAlgorithm->SelectInputClusters(&clustersToAddToTensor, newKeyClusters);
 
