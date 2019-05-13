@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArMonitoring/EventValidationAlgorithm.h
+ *  @file   larpandoracontent/LArMonitoring/TestBeamEventValidationAlgorithm.h
  *
  *  @brief  Header file for the event validation algorithm.
  *
  *  $Log: $
  */
-#ifndef LAR_EVENT_VALIDATION_ALGORITHM_H
-#define LAR_EVENT_VALIDATION_ALGORITHM_H 1
+#ifndef LAR_TEST_BEAM_EVENT_VALIDATION_ALGORITHM_H
+#define LAR_TEST_BEAM_EVENT_VALIDATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -24,20 +24,20 @@ namespace lar_content
 {
 
 /**
- *  @brief  EventValidationAlgorithm class
+ *  @brief  TestBeamEventValidationAlgorithm class
  */
-class EventValidationAlgorithm: public EventValidationBaseAlgorithm
+class TestBeamEventValidationAlgorithm: public EventValidationBaseAlgorithm
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    EventValidationAlgorithm();
+    TestBeamEventValidationAlgorithm();
 
     /**
      *  @brief  Destructor
      */
-    ~EventValidationAlgorithm();
+    ~TestBeamEventValidationAlgorithm();
 
 private:
     /**
@@ -67,10 +67,9 @@ private:
 
     typedef std::vector<pandora::HitType> HitTypeVector;
 
-    bool                    m_useTrueNeutrinosOnly;         ///< Whether to consider only mc particles that were neutrino induced
-    bool                    m_testBeamMode;                 ///< Whether pandora is reconstructing test beam particles
+    int                     m_eventNumber;                  ///< The event number
 };
 
 } // namespace lar_content
 
-#endif // LAR_EVENT_VALIDATION_ALGORITHM_H
+#endif // LAR_TEST_BEAM_EVENT_VALIDATION_ALGORITHM_H
