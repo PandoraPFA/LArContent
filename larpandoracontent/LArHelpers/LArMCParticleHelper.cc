@@ -69,10 +69,7 @@ bool LArMCParticleHelper::IsLeadingBeamParticle(const MCParticle *const pMCParti
 {
     // ATTN: Only the parent triggered beam particle has nuance code 2001
     const int parentNuance(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCParticle)));
-
-    bool isLeading(LArMCParticleHelper::IsLeading(pMCParticle) && (parentNuance == 2001 || parentNuance == 2000));
-//    std::cout << "IsLeading : " << isLeading << std::endl;
-    return isLeading;
+    return (LArMCParticleHelper::IsLeading(pMCParticle) && (parentNuance == 2001 || parentNuance == 2000));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
