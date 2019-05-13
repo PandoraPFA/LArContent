@@ -45,14 +45,14 @@ void TestBeamEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
         parameters.m_minHitSharingFraction = m_minHitSharingFraction;
         parameters.m_maxPhotonPropagation = m_maxPhotonPropagation;
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, targetMCParticleToHitsMap, true);
+        LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, targetMCParticleToHitsMap);
         LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
 
         parameters.m_minPrimaryGoodHits = 0;
         parameters.m_minHitsForGoodView = 0;
         parameters.m_minHitSharingFraction = 0.f;
         LArMCParticleHelper::MCContributionMap allMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, allMCParticleToHitsMap, true);
+        LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, allMCParticleToHitsMap);
         LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, allMCParticleToHitsMap);
 
         validationInfo.SetTargetMCParticleToHitsMap(targetMCParticleToHitsMap);
@@ -81,7 +81,7 @@ void TestBeamEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
         }
 
         LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, true);
+        LArMCParticleHelper::GetTestBeamHierarchyPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
         validationInfo.SetPfoToHitsMap(pfoToHitsMap);
     }
 
@@ -102,38 +102,38 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
     if (printToScreen && useInterpretedMatching) std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
     else if (printToScreen) std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
 
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(useInterpretedMatching ?
-        validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
-
-    MCParticleVector mcPrimaryVector;
-    LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetTargetMCParticleToHitsMap()}, mcPrimaryVector);
-
     PfoVector primaryPfoVector;
     LArMonitoringHelper::GetOrderedPfoVector(validationInfo.GetPfoToHitsMap(), primaryPfoVector);
 
-    // Test Beam Hierarchy Validation Bookkeeping
+    // Test Beam Hierarchy Validation Pfo Bookkeeping
     int pfoIndex(0), testBeamPfoIndex(0);
     PfoToIdMap pfoToIdMap, testBeamPfoToIdMap;
 
     for (const Pfo *const pPrimaryPfo : primaryPfoVector)
     {
         pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, ++pfoIndex));
-        const Pfo *const pRecoTestBeam(LArPfoHelper::IsTestBeamFinalState(pPrimaryPfo) ? LArPfoHelper::GetParentPfo(pPrimaryPfo) : nullptr);
+        const Pfo *const pRecoTestBeam(LArPfoHelper::IsTestBeamFinalState(pPrimaryPfo) ? LArPfoHelper::GetParentPfo(pPrimaryPfo) : nullptr); 
 
         if (pRecoTestBeam && !testBeamPfoToIdMap.count(pRecoTestBeam))
             testBeamPfoToIdMap.insert(PfoToIdMap::value_type(pRecoTestBeam, ++testBeamPfoIndex));
     }
 
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(useInterpretedMatching ?
+        validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
+
+    // Test Beam Hierarchy Validation MCParticle Bookkeeping
+    MCParticleVector mcPrimaryVector;
+    LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetTargetMCParticleToHitsMap()}, mcPrimaryVector);
     LArMCParticleHelper::MCParticleIntMap triggeredToLeading, triggeredToLeadingCounter;
 
     // ATTN: At this stage the mcPrimaryVector is ordered from neutrinos, beam and then cosmics.  Here we extract the beam and reorder
     // to ensure the order follows primary parent beam 1, daughter 1 of beam 1, daughter 2 of beam 1, ..., primary parent beam 2,
     // daughter 1 of beam 2, etc... as expected by downstream logic
-    MCParticleVector temporaryMCParticleVector(mcPrimaryVector), triggeredBeamParticles;
+    MCParticleVector mcPrimaryVectorCopy(mcPrimaryVector), triggeredBeamParticles;
     LArMCParticleHelper::MCRelationMap leadingToTriggeredMap;
     mcPrimaryVector.clear();
 
-    for (const MCParticle *const pMCPrimary : temporaryMCParticleVector)
+    for (const MCParticle *const pMCPrimary : mcPrimaryVectorCopy)
     {
         if (LArMCParticleHelper::IsLeadingBeamParticle(pMCPrimary))
          {

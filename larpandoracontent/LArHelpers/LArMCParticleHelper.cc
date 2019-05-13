@@ -69,10 +69,7 @@ bool LArMCParticleHelper::IsLeadingBeamParticle(const MCParticle *const pMCParti
 {
     // ATTN: Only the parent triggered beam particle has nuance code 2001
     const int parentNuance(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCParticle)));
-
-    bool isLeading(LArMCParticleHelper::IsLeading(pMCParticle) && (parentNuance == 2001 || parentNuance == 2000));
-//    std::cout << "IsLeading : " << isLeading << std::endl;
-    return isLeading;
+    return (LArMCParticleHelper::IsLeading(pMCParticle) && (parentNuance == 2001 || parentNuance == 2000));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -276,10 +273,9 @@ const MCParticle *LArMCParticleHelper::GetPrimaryMCParticle(const MCParticle *co
 
 const MCParticle *LArMCParticleHelper::GetLeadingMCParticle(const MCParticle *const pMCParticle, const int hierarchyTierLimit)
 {
-//std::cout << "IsLeading Start" << std::endl;
     // ATTN: If not beam particle return primary particle
     const bool isBeamParticle(LArMCParticleHelper::IsBeamParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle)));
-//std::cout << "isBeamParticle " << isBeamParticle << std::endl;
+
     if (!isBeamParticle)
         return LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
 
@@ -298,8 +294,6 @@ const MCParticle *LArMCParticleHelper::GetLeadingMCParticle(const MCParticle *co
         mcVector.push_back(pParentMCParticle);
     }
 
-//    std::cout << "pParentMCParticle->GetParticleId() " << pParentMCParticle->GetParticleId() << std::endl;
-
     int hierarchyTier(0);
     const MCParticle *pLeadingMCParticle(nullptr);
 
@@ -317,7 +311,7 @@ const MCParticle *LArMCParticleHelper::GetLeadingMCParticle(const MCParticle *co
 
         hierarchyTier++;
     }
-//std::cout << "hierarchyTier " << hierarchyTier << std::endl;
+
     if (!pLeadingMCParticle)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
@@ -426,19 +420,11 @@ void LArMCParticleHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const PrimaryParameters &parameters,
-    std::function<bool(const MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap, const bool testBeamHierarchyMode)
+    std::function<bool(const MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap)
 {
     // Obtain map: [mc particle -> primary mc particle]
     LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
-
-    if (!testBeamHierarchyMode)
-    {
-        LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
-    }
-    else
-    {
-        LArMCParticleHelper::GetMCLeadingMap(pMCParticleList, mcToPrimaryMCMap);
-    }
+    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
 
     // Remove non-reconstructable hits, e.g. those downstream of a neutron
     CaloHitList selectedCaloHitList;
@@ -451,15 +437,37 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
 
     // Obtain vector: primary mc particles
     MCParticleVector mcPrimaryVector;
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
 
-    if (!testBeamHierarchyMode)
-    {
-        LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
-    }
-    else
-    {
-        LArMCParticleHelper::GetLeadingMCParticleList(pMCParticleList, mcPrimaryVector);
-    }
+    // Select MCParticles matching criteria
+    MCParticleVector candidateTargets;
+    LArMCParticleHelper::SelectParticlesMatchingCriteria(mcPrimaryVector, fCriteria, candidateTargets);
+
+    // Ensure the MCParticles have enough "good" hits to be reconstructed
+    LArMCParticleHelper::SelectParticlesByHitCount(candidateTargets, mcToTrueHitListMap, mcToPrimaryMCMap, parameters, selectedMCParticlesToHitsMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const PrimaryParameters &parameters,
+    std::function<bool(const MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap)
+{
+    // Obtain map: [mc particle -> primary mc particle]
+    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+    LArMCParticleHelper::GetMCLeadingMap(pMCParticleList, mcToPrimaryMCMap);
+
+    // Remove non-reconstructable hits, e.g. those downstream of a neutron
+    CaloHitList selectedCaloHitList;
+    LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
+
+    // Obtain maps: [hit -> primary mc particle], [primary mc particle -> list of hits]
+    CaloHitToMCMap hitToPrimaryMCMap;
+    MCContributionMap mcToTrueHitListMap;
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
+
+    // Obtain vector: primary mc particles
+    MCParticleVector mcPrimaryVector;
+    LArMCParticleHelper::GetLeadingMCParticleList(pMCParticleList, mcPrimaryVector);
 
     // Select MCParticles matching criteria
     MCParticleVector candidateTargets;
@@ -469,19 +477,16 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
     LArMCParticleHelper::SelectParticlesByHitCount(candidateTargets, mcToTrueHitListMap, mcToPrimaryMCMap, parameters, selectedMCParticlesToHitsMap);
 
     // ATTN: The parent particle must be in the hierarchy map, event if not reconstructable
-    if (testBeamHierarchyMode)
+    for (const MCParticle *const pMCParticle : candidateTargets)
     {
-        for (const MCParticle *const pMCParticle : candidateTargets)
-        {
-            if (!LArMCParticleHelper::IsBeamParticle(pMCParticle))
-                continue;
+        if (!LArMCParticleHelper::IsBeamParticle(pMCParticle))
+            continue;
 
-            const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
-            if (selectedMCParticlesToHitsMap.find(pParentMCParticle) == selectedMCParticlesToHitsMap.end())
-            {
-                CaloHitList caloHitList;
-                selectedMCParticlesToHitsMap.insert(MCContributionMap::value_type(pParentMCParticle, caloHitList));
-            }
+        const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+        if (selectedMCParticlesToHitsMap.find(pParentMCParticle) == selectedMCParticlesToHitsMap.end())
+        {
+            CaloHitList caloHitList;
+            selectedMCParticlesToHitsMap.insert(MCContributionMap::value_type(pParentMCParticle, caloHitList));
         }
     }
 }
@@ -489,20 +494,43 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap,
-    PfoContributionMap &pfoToReconstructable2DHitsMap, const bool testBeamHierarchyMode)
+    PfoContributionMap &pfoToReconstructable2DHitsMap)
 {
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(pfoList, MCContributionMapVector({selectedMCParticleToHitsMap}), pfoToReconstructable2DHitsMap, testBeamHierarchyMode);
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(pfoList, MCContributionMapVector({selectedMCParticleToHitsMap}), pfoToReconstructable2DHitsMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetTestBeamHierarchyPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap,
+    PfoContributionMap &pfoToReconstructable2DHitsMap)
+{
+    LArMCParticleHelper::GetTestBeamHierarchyPfoToReconstructable2DHitsMap(pfoList, MCContributionMapVector({selectedMCParticleToHitsMap}), pfoToReconstructable2DHitsMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-    PfoContributionMap &pfoToReconstructable2DHitsMap, const bool testBeamHierarchyMode)
+    PfoContributionMap &pfoToReconstructable2DHitsMap)
 {
     for (const ParticleFlowObject *const pPfo : pfoList)
     {
         CaloHitList pfoHitList;
-        LArMCParticleHelper::CollectReconstructable2DHits(pPfo, selectedMCParticleToHitsMaps, pfoHitList, testBeamHierarchyMode);
+        LArMCParticleHelper::CollectReconstructable2DHits(pPfo, selectedMCParticleToHitsMaps, pfoHitList);
+
+        if (!pfoToReconstructable2DHitsMap.insert(PfoContributionMap::value_type(pPfo, pfoHitList)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetTestBeamHierarchyPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps,
+    PfoContributionMap &pfoToReconstructable2DHitsMap)
+{
+    for (const ParticleFlowObject *const pPfo : pfoList)
+    {
+        CaloHitList pfoHitList;
+        LArMCParticleHelper::CollectReconstructableTestBeamHierarchy2DHits(pPfo, selectedMCParticleToHitsMaps, pfoHitList);
 
         if (!pfoToReconstructable2DHitsMap.insert(PfoContributionMap::value_type(pPfo, pfoHitList)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -570,13 +598,25 @@ void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMa
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-    pandora::CaloHitList &reconstructableCaloHitList2D, const bool testBeamHierarchyMode)
+    pandora::CaloHitList &reconstructableCaloHitList2D)
+{
+    // Collect all 2D calo hits in pfo hierarchy
+    PfoList pfoList;
+    LArPfoHelper::GetAllDownstreamPfos(pPfo, pfoList);
+
+    LArMCParticleHelper::CollectReconstructable2DHits(pfoList, selectedMCParticleToHitsMaps, reconstructableCaloHitList2D);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::CollectReconstructableTestBeamHierarchy2DHits(const ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
+    pandora::CaloHitList &reconstructableCaloHitList2D)
 {
     // Collect all 2D calo hits in pfo hierarchy
     PfoList pfoList;
 
-    // ATTN: Only collect downstream pfos for daughter test beam particles, cosmics, neutrinos
-    if (testBeamHierarchyMode && pPfo->GetParentPfoList().empty() && LArPfoHelper::IsTestBeam(pPfo))
+    // ATTN: Only collect downstream pfos for daughter test beam particles & cosmics
+    if (pPfo->GetParentPfoList().empty() && LArPfoHelper::IsTestBeam(pPfo))
     {
         pfoList.push_back(pPfo);
     }
@@ -585,6 +625,14 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
         LArPfoHelper::GetAllDownstreamPfos(pPfo, pfoList);
     }
 
+    LArMCParticleHelper::CollectReconstructable2DHits(pfoList, selectedMCParticleToHitsMaps, reconstructableCaloHitList2D);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::CollectReconstructable2DHits(const PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps,
+    pandora::CaloHitList &reconstructableCaloHitList2D)
+{
     CaloHitList caloHitList2D;
     LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_U, caloHitList2D);
     LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_V, caloHitList2D);
