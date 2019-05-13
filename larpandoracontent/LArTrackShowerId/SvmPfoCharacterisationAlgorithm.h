@@ -25,6 +25,11 @@ public:
      */
     SvmPfoCharacterisationAlgorithm();
 
+    /**
+     *  @brief Destructor
+     */
+    ~SvmPfoCharacterisationAlgorithm();
+
 protected:
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
@@ -43,13 +48,18 @@ protected:
     float                   m_minProbabilityCut;            ///< The minimum probability to label a cluster as track-like
     unsigned int            m_minCaloHitsCut;               ///< The minimum number of calo hits to qualify as a track
 
+    std::string             m_caloHitListName;              ///< Name of input calo hit list
+    std::string             m_mcParticleListName;           ///< Name of input MC particle list
+
     std::string             m_trainingOutputFile;           ///< The training output file
     std::string             m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to svm files
     std::string             m_svmFileName;                  ///< The svm input file
     std::string             m_svmName;                      ///< The name of the svm to find
     std::string             m_svmFileNameNoChargeInfo;      ///< The svm input file for PFOs missing the W view, and thus charge info
     std::string             m_svmNameNoChargeInfo;          ///< The name of the svm to find for PFOs missing the W view, and thus charge info
-
+    bool                    m_writeToTree;
+    //std::string             m_treeName;
+    //std::string             m_fileName;
 };
 
 } // namespace lar_content

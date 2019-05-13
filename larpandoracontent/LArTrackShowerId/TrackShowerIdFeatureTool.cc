@@ -22,12 +22,14 @@
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
 
+#include <vector>
+#include <list>
 using namespace pandora;
 
 namespace lar_content
 {
-
-TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
+  
+  TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
     m_slidingShowerFitWindow(3),
     m_slidingLinearFitWindow(10000)
 {
@@ -248,7 +250,6 @@ StatusCode TwoDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHand
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
     m_slidingLinearFitWindow(3),
@@ -257,6 +258,107 @@ ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//below feature tool added by Mousam
+//-------------------------------------------------------------------------------------------------------------------------------
+TwoDCurvatureFeatureTool::TwoDCurvatureFeatureTool() :
+  m_slidingLinearFitWindow(3)
+{
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------
+void TwoDCurvatureFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+  if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+  
+  std::cout << "test" << std::endl;
+  int curv = 0;
+  //-----------------------Creating containers and lists---------------------------------------------------------------  
+  ClusterList twoDClusterList;
+  LArPfoHelper::GetTwoDClusterList(pInputPfo, twoDClusterList);
+  CartesianVector gradient (0.f, 0.f, 0.f);
+  std::vector<float> gradVec;
+  //-----------------------Calculate tangent vector, then gradient, then push_back into gradVec-------------------------
+  for (const Cluster * cluster : twoDClusterList)
+    {     
+      const TwoDSlidingFitResult slidingFitResult(cluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora())); //m_slidingLinearFitWindow = 3
+      
+      for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
+	{
+	  const LayerFitResult &layerFitResult(mapEntry.second);
+	  
+	  //for each layer get L and T with
+	  
+	  float pL = layerFitResult.GetL();
+	  
+	  float pT = layerFitResult.GetFitT();
+	  
+	  //then calculate dTdL as pT/pL and use it as input to TwoDSlidingFitResult::GetGlobalDirection()
+	  float dTdL = pT / pL;
+	  
+	  slidingFitResult.GetGlobalDirection(dTdL, gradient);
+	  float scalar = gradient.GetZ()/gradient.GetX();	
+	  std::cout << "gradient: " << gradient << std::endl;
+	  std::cout << "scalar: " << scalar << std::endl;
+	  gradVec.push_back(scalar);
+	  //std::cout << "gradVec.size(): " << gradVec.size() << std::endl;
+	  //std::cout << "gradVec is done!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
+	}
+  //--------------------Check through gradVec and characterise the change in gradient and push_back into changes---------------------
+      /*for (int i = 0; i < gradVec.size(); ++i)
+	{
+	std::cout << "gradVec " << i << ": " << gradVec[i] << std::endl;
+	}*/
+      std::vector<int> changes;
+      
+      for (int index = 1; index < gradVec.size(); index++)
+	{
+	  int currGrad;
+	  
+	  if (gradVec[index] > gradVec [index-1])
+	    {
+	      currGrad = 1;
+	      //std::cout << "rai1: " << gradVec[index] << ", mousam1: " << gradVec[index-1] << std::endl;
+	    }
+	  else if (gradVec[index] < gradVec[index-1])
+	    {
+	      currGrad = -1;
+	      //std::cout << "rai2: " << gradVec[index] << ", mousam2: " << gradVec[index-1] << std::endl;
+	    }
+	  else
+	    {
+	      currGrad = 0;
+	      //std::cout << "rai3: " << gradVec[index] << ", mousam3: " << gradVec[index-1] << std::endl;
+	    }
+	  
+	  //std::cout << "currGrad" << currGrad << std::endl;
+	  if (index == 1)
+	    changes.push_back(currGrad);
+	  else if (changes[changes.size()-1] != currGrad)
+	    {
+	      changes.push_back(currGrad);
+	      //std::cout << "balh" << std::endl;
+	    }
+	}  
+  //-----------------curv is the number of unique changes in gradient--------------------------------------------------
+      curv = changes.size() - 1; // - 1 comes from the fact that we dont care about the first element
+      std::cout << "curvature: " << curv << std::endl;
+    }
+  //---------------push_back into feature vector-----------------------------------------------------------------------------
+  featureVector.push_back(curv);
+}
+
+//------------------------------------------------------------------------------------------------------------------------
+
+StatusCode TwoDCurvatureFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+                                                                                                       "SlidingLinearFitWindow", m_slidingLinearFitWindow));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
 const pandora::ParticleFlowObject *const pInputPfo)
@@ -305,8 +407,7 @@ const pandora::ParticleFlowObject *const pInputPfo)
     featureVector.push_back(rms);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
+//------------------------------------------------------------------------------------------------------------------------------------------ 
 void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge,
     float &diffWithStraightLineMean, float &maxFitGapLength, float &rmsSlidingLinearFit) const
 {
@@ -429,7 +530,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+  StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
 
     return STATUS_CODE_SUCCESS;
@@ -438,7 +539,8 @@ StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xml
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDOpeningAngleFeatureTool::ThreeDOpeningAngleFeatureTool()
+ThreeDOpeningAngleFeatureTool::ThreeDOpeningAngleFeatureTool() :
+  m_hitFraction(0.5)
 {
 }
 
@@ -504,11 +606,25 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
         CaloHitList orderedCaloHitList(threeDCaloHitVector.begin(),threeDCaloHitVector.end());
         const unsigned int nhits(orderedCaloHitList.size());
 
+	//This is the original code; it divides hits into first 50% and last 50%
+	/*
         for (const CaloHit *const pCaloHit : orderedCaloHitList)
         {
             CartesianPointVector &targetVector((pointVectorStart.size() < (nhits / 2)) ? pointVectorStart : pointVectorEnd);
             targetVector.push_back(pCaloHit->GetPositionVector());
         }
+	*/
+
+	//Modified code to allow start and end to be any fraction of number of hits; that fraction is set with m_hitFraction
+	int iHit = 1;
+	for (const CaloHit *const pCaloHit : orderedCaloHitList)
+	  {
+	    if((float)iHit / nhits <= m_hitFraction)
+              pointVectorStart.push_back(pCaloHit->GetPositionVector());
+	    if((float)iHit / nhits >= 1.0 - m_hitFraction)
+              pointVectorEnd.push_back(pCaloHit->GetPositionVector());
+	    iHit++;
+	  }
     }
 }
 
@@ -554,8 +670,11 @@ float ThreeDOpeningAngleFeatureTool::OpeningAngle(const CartesianVector &princip
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDOpeningAngleFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode ThreeDOpeningAngleFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+                                                                                                       "HitFraction", m_hitFraction));
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -582,7 +701,6 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
     CaloHitList threeDCaloHitList;
     LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
-
     if ((!threeDClusterList.empty()) && (!threeDCaloHitList.empty()))
     {
         // Run the PCA analysis
@@ -607,13 +725,459 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode ThreeDPCAFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    return STATUS_CODE_SUCCESS;
+  return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+ThreeDPCAVariablesFeatureTool::ThreeDPCAVariablesFeatureTool() :
+  m_pfoFraction(0.2),
+  m_minHits(3),
+  m_segmentWidth(1.0),
+  m_MoliereRadius(10.1),
+  m_MoliereFraction(0.05),
+  m_slidingLinearFitWindow(3) //added by mousam
+  {
+  }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+void ThreeDPCAVariablesFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo) 
+
+{
+  if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+
+  LArMvaHelper::MvaFeature concentration, concentration2, conicalness, invHitDensityY, invHitDensityZ, 
+    invHitDensityYRatio, invHitDensityZRatio, nSegmentsDoubleHits, nSegmentsDoubleHitsRatio, nHits;
+  float conc = 1.f;
+  float conc2 = 1.f;
+  float conic = 1.f;
+  float densY = 0.f;
+  float densZ = 0.f;
+  float densYRatio = 0.f;
+  float densZRatio = 0.f;
+  int nSegDoubleHits = 0;
+  float nSegDoubleHitsRatio = 0.f;
+  nHits = 0;
+  //int curv = 0; //Added by Mousam: for new variable
+  //Need the 3D cluster and hits to calculate PCA components                                                                                                                                           
+  ClusterList threeDClusterList;
+  LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
+
+  CaloHitList threeDCaloHitList;
+  LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
+
+  if ((!threeDClusterList.empty()) && (!threeDCaloHitList.empty()))
+    {
+      //Run the PCA analysis                                                                                                                                                                           
+      CartesianVector centroid(0.f, 0.f, 0.f);
+      LArPcaHelper::EigenVectors eigenVecs;
+      LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+        try
+          {
+	    LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
+          }
+        catch (const StatusCodeException &){}
+	
+	std::map<float,Eigen::Vector3f> pcaPositions;
+
+	//get matrix of eigenvectors and its transpose
+	Eigen::Matrix3f eVecs;
+	eVecs << eigenVecs.at(0).GetX(), eigenVecs.at(1).GetX(), eigenVecs.at(2).GetX(),
+	  eigenVecs.at(0).GetY(), eigenVecs.at(1).GetY(), eigenVecs.at(2).GetY(),
+	  eigenVecs.at(0).GetZ(), eigenVecs.at(1).GetZ(), eigenVecs.at(2).GetZ();
+
+	Eigen::Matrix3f eVecsTranspose = eVecs.transpose();
+
+	Eigen::Vector3f PcaCentroid(centroid.GetX(), centroid.GetY(), centroid.GetZ());
+
+	for (const CaloHit *const pCaloHit : threeDCaloHitList)
+	  {
+	    //get spacepoint in Cartesian coordinates
+	    const CartesianVector spacePt = pCaloHit->GetPositionVector();
+	    Eigen::Vector3f spacePoint(spacePt.GetX(), spacePt.GetY(), spacePt.GetZ());
+
+	    //calculate position of hit in PCA coordinates
+	    Eigen::Vector3f PcaPoint = eVecsTranspose * (spacePoint - PcaCentroid);
+
+	    //it might seem odd to put the PCA x positions in both key and value
+	    //this is done to order hit PCA positions by x coordinate which is the principal axis
+	    pcaPositions.insert(std::pair<float,Eigen::Vector3f>(PcaPoint.x(),PcaPoint));
+
+	  }
+
+	const float paStart = pcaPositions.begin()->first;
+	const float paEnd = pcaPositions.rbegin()->first;
+	const float pfoLengthOnPA = fabs(paEnd - paStart);
+
+	this->CalculateConcentrationConicalness(threeDCaloHitList, eVecsTranspose, PcaCentroid, paStart, pfoLengthOnPA, conc, conc2, conic);
+	
+	this->CalculateDensity(paStart, pfoLengthOnPA, pcaPositions,
+                               densY, densZ, densYRatio, densZRatio);
+
+	this->SegmentsWithDoubleHits(paStart, pcaPositions, nSegDoubleHits, nSegDoubleHitsRatio);
+    }
+  //end of if ((!clusterList.empty()) && (!orderedCaloHitList.empty()))
+  //short logic to filter interesting events
+/*  bool TrueTrack(false);
+  const MCParticle *const BMCParticle(LArMCParticleHelper::GetMainMCParticle(pInputPfo));
+  TrueTrack = ((PHOTON != BMCParticle->GetParticleId()) && (E_MINUS != std::abs(BMCParticle->GetParticleId())));
+  const int TrueTrackInt = TrueTrack ? 1 : 0;
+  
+  std::cout << "starting check" << std::endl;
+
+  if (nSegDoubleHits < 20  && TrueTrackInt == 0)
+    {
+      std::cout << "The nSegDoubleHits value for this PFO is: " << nSegDoubleHits << std::endl;
+      PfoList myPfoList;
+      myPfoList.push_back(pInputPfo);
+      PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
+      PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList, "MyPfoList", RED, true, false);
+      PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
+
+  std::cout << "ending check" << std::endl;*/
+//-------------------------------------------------------------------
+
+  //-------------------------------------------------------------------
+  concentration = conc;
+  concentration2 = conc2;
+  conicalness = conic;
+  invHitDensityY = densY;
+  invHitDensityZ = densZ;
+  invHitDensityYRatio = densYRatio;
+  invHitDensityZRatio = densZRatio;
+  nSegmentsDoubleHits = nSegDoubleHits;
+  nSegmentsDoubleHitsRatio = nSegDoubleHitsRatio;
+  nHits = threeDCaloHitList.size();
+  //curvature = curv;
+
+  featureVector.push_back(concentration);
+  featureVector.push_back(concentration2);
+  featureVector.push_back(conicalness);
+  featureVector.push_back(invHitDensityY);
+  featureVector.push_back(invHitDensityZ);
+  featureVector.push_back(invHitDensityYRatio);
+  featureVector.push_back(invHitDensityZRatio);
+  featureVector.push_back(nSegmentsDoubleHits);
+  featureVector.push_back(nSegmentsDoubleHitsRatio);
+  featureVector.push_back(nHits);  
+  //featureVector.push_back(curv);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+void ThreeDPCAVariablesFeatureTool::CalculateConcentrationConicalness(CaloHitList &threeDCaloHitList, Eigen::Matrix3f &eVecsTranspose, Eigen::Vector3f &PcaCentroid,
+								      const float paStart, const float pfoLengthOnPA, float &concentration, float &concentration2, float &conicalness)
+{
+
+  concentration = 1.f;
+  concentration2 = 1.f;
+  conicalness = 1.f;
+
+  float distanceFromPA = 0.f;
+  float totalCharge = 0.f;
+  float chargeOverDist = 0.f;
+  float chargeTimesDist = 0.f;
+  float chargeStart = 0.f;
+  float chargeEnd = 0.f;
+
+  float conStart = 0.f;
+  float conEnd = 0.f;
+  int nHits = 0;
+  int nHitsStart = 0;
+  int nHitsEnd = 0;
+
+  for (const CaloHit *const pCaloHit : threeDCaloHitList)
+    {
+      nHits++;
+      //get spacepoint in Cartesian coordinates
+      const CartesianVector spacePt = pCaloHit->GetPositionVector();
+      Eigen::Vector3f spacePoint(spacePt.GetX(), spacePt.GetY(), spacePt.GetZ());
+
+      //calculate position of hit in PCA coordinates
+      Eigen::Vector3f PcaPoint = eVecsTranspose * (spacePoint - PcaCentroid);
+
+      distanceFromPA = sqrt(PcaPoint.y() * PcaPoint.y() + PcaPoint.z() * PcaPoint.z());
+
+      const float pCaloHitCharge(pCaloHit->GetInputEnergy());
+
+      if(pCaloHitCharge >= 0)
+	{
+	  totalCharge += pCaloHitCharge;
+
+	  if(distanceFromPA > std::numeric_limits<float>::epsilon())
+	    {
+	    chargeOverDist += pCaloHitCharge / distanceFromPA;
+	    chargeTimesDist += pCaloHitCharge * distanceFromPA;
+	    }
+
+	  if(fabs((PcaPoint.x() - paStart) / pfoLengthOnPA) <= m_pfoFraction)
+	    {
+	      conStart += distanceFromPA * distanceFromPA * pCaloHitCharge;
+	      chargeStart += pCaloHitCharge;
+	      nHitsStart++;
+	    }
+	  if(fabs((PcaPoint.x() - paStart) / pfoLengthOnPA) >= 1.0 - m_pfoFraction)
+	    {
+	      conEnd += distanceFromPA * distanceFromPA * pCaloHitCharge;
+	      chargeEnd += pCaloHitCharge;
+	      nHitsEnd++;
+	    }
+	}
+    }
+
+  if(threeDCaloHitList.size() >= m_minHits && totalCharge > std::numeric_limits<float>::epsilon())
+    {
+    concentration = chargeOverDist / totalCharge;
+    concentration2 = chargeTimesDist / totalCharge;
+    }
+
+  if(nHitsStart >= m_minHits && nHitsEnd >= m_minHits && chargeEnd > std::numeric_limits<float>::epsilon() && sqrt(conStart) / chargeStart > std::numeric_limits<float>::epsilon())
+    conicalness = (sqrt(conEnd) / chargeEnd) / (sqrt(conStart) / chargeStart);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+
+void ThreeDPCAVariablesFeatureTool::CalculateDensity(const float paStart, const float pfoLengthOnPA, std::map<float,Eigen::Vector3f> &pcaPositions, 
+                                                       float &invHitDensityY, float &invHitDensityZ,
+						       float &invHitDensityYRatio, float &invHitDensityZRatio)
+{
+
+  invHitDensityY = 0.f;
+  invHitDensityZ = 0.f;
+  invHitDensityYRatio = 0.f;
+  invHitDensityZRatio = 0.f;
+
+  std::map<float,Eigen::Vector3f>::const_iterator pcaIt;
+
+  float maxY = 0.f;
+  float maxZ = 0.f;
+  float minY = 0.f;
+  float minZ = 0.f;
+
+  int iSegment = 1;
+
+  float areaY = 0.f;
+  float areaZ = 0.f;
+
+  float areaYStart = 0.f;
+  float areaYEnd = 0.f;
+  float areaZStart = 0.f;
+  float areaZEnd = 0.f;
+
+  std::vector<float> pcaY;
+  pcaY.clear();
+  std::vector<float> pcaZ;
+  pcaZ.clear();
+  std::vector<float>::const_iterator pcaSegIt;
+
+  const int nHits = pcaPositions.size();
+  int nHitsStart = 0;
+  int nHitsEnd = 0;
+
+  for(pcaIt = pcaPositions.begin(); pcaIt != pcaPositions.end(); ++pcaIt)
+    {
+      if((pcaIt->first - paStart) / pfoLengthOnPA <= m_pfoFraction)
+	nHitsStart++;
+      if((pcaIt->first - paStart) / pfoLengthOnPA >= 1.0 - m_pfoFraction)
+        nHitsEnd++; 
+
+      if(pcaIt->first - paStart >= iSegment * m_segmentWidth)
+	{
+	  if(pcaY.size() >= 1)
+	    {
+	      sort(pcaY.begin(), pcaY.end());
+	      pcaSegIt = pcaY.begin();
+	      if((*pcaSegIt) < 0)
+		minY = (*pcaSegIt);
+	      sort(pcaY.begin(), pcaY.end(),std::greater<float>());
+	      pcaSegIt = pcaY.begin();
+	      if((*pcaSegIt) > 0)
+		maxY = (*pcaSegIt);
+	    }
+	  if(pcaZ.size() >= 1)
+	    {
+	      sort(pcaZ.begin(), pcaZ.end());
+	      pcaSegIt = pcaZ.begin();
+	      if((*pcaSegIt) < 0)
+		minZ = (*pcaSegIt);
+	      sort(pcaZ.begin(), pcaZ.end(),std::greater<float>());
+	      pcaSegIt = pcaZ.begin();
+	      if((*pcaSegIt) > 0)
+		maxZ = (*pcaSegIt);
+	    }
+
+	  areaY += fabs((maxY - minY) * m_segmentWidth);
+	  areaZ += fabs((maxZ - minZ) * m_segmentWidth);
+	  if((pcaIt->first - paStart) / pfoLengthOnPA <= m_pfoFraction)
+	    {
+	      areaYStart += fabs((maxY - minY) * m_segmentWidth);
+	      areaZStart += fabs((maxZ - minZ) * m_segmentWidth);
+	    }
+	  if((pcaIt->first - paStart) / pfoLengthOnPA >= 1.0 - m_pfoFraction)
+            {
+              areaYEnd += fabs((maxY - minY) * m_segmentWidth);
+              areaZEnd += fabs((maxZ - minZ) * m_segmentWidth);
+            }
+
+	  maxY = 0.f;
+	  maxZ = 0.f;
+	  minY = 0.f;
+	  minZ = 0.f;
+	  pcaY.clear();
+	  pcaZ.clear();
+	  iSegment = 1 + (int)((pcaIt->first - paStart) / m_segmentWidth);
+	}
+
+      pcaY.push_back(pcaIt->second.y());
+      pcaZ.push_back(pcaIt->second.z()); 
+    }
+
+  if(nHits >= m_minHits)
+    {
+      invHitDensityY = areaY / nHits;
+      invHitDensityZ = areaZ / nHits;
+    }
+  if(nHitsStart >= m_minHits && nHitsEnd >= m_minHits)
+    {
+      if(areaYStart / nHitsStart > std::numeric_limits<float>::epsilon())
+        invHitDensityYRatio = (areaYEnd / nHitsEnd) / (areaYStart / nHitsStart);
+      if(areaZStart / nHitsStart > std::numeric_limits<float>::epsilon())
+        invHitDensityZRatio = (areaZEnd / nHitsEnd) / (areaZStart / nHitsStart);
+    }
+
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+  void ThreeDPCAVariablesFeatureTool::SegmentsWithDoubleHits(const float paStart, std::map<float,Eigen::Vector3f> &pcaPositions, 
+                                                             int &nSegmentsDoubleHits, float &nSegmentsDoubleHitsRatio)
+{
+
+  std::map<float,Eigen::Vector3f>::const_iterator pcaIt;
+
+  std::vector<float> pcaYPlus;
+  pcaYPlus.clear();
+  std::vector<float> pcaZPlus;
+  pcaZPlus.clear();
+  std::vector<float> pcaYMinus;
+  pcaYMinus.clear();
+  std::vector<float> pcaZMinus;
+  pcaZMinus.clear();
+  std::vector<float>::const_iterator pcaSegIt;
+
+  nSegmentsDoubleHits = 0;
+  bool segmentDoubleHitsFound = false;
+
+  int iSegment = 1;
+  float prevDist = 0.f;
+
+  for(pcaIt = pcaPositions.begin(); pcaIt != pcaPositions.end(); ++pcaIt)
+    {
+
+      if(pcaIt->first - paStart >= iSegment * m_segmentWidth)
+	{
+	  if(pcaYPlus.size() >= 2)
+	    {
+	      sort(pcaYPlus.begin(), pcaYPlus.end());
+	      prevDist = 0.f;
+
+	      for(pcaSegIt = pcaYPlus.begin(); pcaSegIt != pcaYPlus.end(); ++pcaSegIt)
+		{
+		  if(pcaSegIt != pcaYPlus.begin() && (*pcaSegIt) - prevDist > m_MoliereFraction * m_MoliereRadius && !segmentDoubleHitsFound)
+		    {
+		      nSegmentsDoubleHits++;
+		      segmentDoubleHitsFound = true;
+		    }
+		  prevDist = (*pcaSegIt);
+		}
+	    }
+	  if(pcaZPlus.size() >= 2)
+	    {
+	      sort(pcaZPlus.begin(), pcaZPlus.end());
+	      prevDist = 0.f;
+
+	      for(pcaSegIt = pcaZPlus.begin(); pcaSegIt != pcaZPlus.end(); ++pcaSegIt)
+		{
+		  if(pcaSegIt != pcaZPlus.begin() && (*pcaSegIt) - prevDist > m_MoliereFraction * m_MoliereRadius && !segmentDoubleHitsFound)
+		    {
+		      nSegmentsDoubleHits++;
+		      segmentDoubleHitsFound = true;
+		    }
+		  prevDist = (*pcaSegIt);
+		}
+	    }
+	  if(pcaYMinus.size() >= 2)
+	    {
+	      sort(pcaYMinus.begin(), pcaYMinus.end(), std::greater<float>());
+	      prevDist = 0.f;
+
+	      for(pcaSegIt = pcaYMinus.begin(); pcaSegIt != pcaYMinus.end(); ++pcaSegIt)
+		{
+		  if(pcaSegIt != pcaYMinus.begin() && fabs((*pcaSegIt) - prevDist) > m_MoliereFraction * m_MoliereRadius && !segmentDoubleHitsFound)
+		    {
+		      nSegmentsDoubleHits++;
+		      segmentDoubleHitsFound = true;
+		    }
+		  prevDist = (*pcaSegIt);
+		}
+	    }
+	  if(pcaZMinus.size() >= 2)
+	    {
+	      sort(pcaZMinus.begin(), pcaZMinus.end(), std::greater<float>());
+	      prevDist = 0.f;
+	      for(pcaSegIt = pcaZMinus.begin(); pcaSegIt != pcaZMinus.end(); ++pcaSegIt)
+		{
+		  if(pcaSegIt != pcaZMinus.begin() && fabs((*pcaSegIt) - prevDist) > m_MoliereFraction * m_MoliereRadius && !segmentDoubleHitsFound)
+		    {
+		      nSegmentsDoubleHits++;
+		      segmentDoubleHitsFound = true;
+		    }
+		  prevDist = (*pcaSegIt);
+		}
+	    }
+
+	  pcaYPlus.clear();
+	  pcaZPlus.clear();
+	  pcaYMinus.clear();
+	  pcaZMinus.clear();
+	  segmentDoubleHitsFound = false;
+	  iSegment = 1 + (int)((pcaIt->first - paStart) / m_segmentWidth);
+	}
+
+      if(pcaIt->second.y() > 0)
+	pcaYPlus.push_back(pcaIt->second.y());
+      if(pcaIt->second.z() > 0)
+	pcaZPlus.push_back(pcaIt->second.z());
+      if(pcaIt->second.y() < 0)
+	pcaYMinus.push_back(pcaIt->second.y());
+      if(pcaIt->second.z() < 0)
+	pcaZMinus.push_back(pcaIt->second.z());
+
+    }
+
+  if(iSegment >= m_minHits)
+    {
+      nSegmentsDoubleHitsRatio = (float)nSegmentsDoubleHits / iSegment;
+    } 	
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+StatusCode ThreeDPCAVariablesFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+{
+
+  PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+                                                                                                       "PfoFraction", m_pfoFraction));
+  PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+                                                                                                       "MinHits", m_minHits));
+  PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+												       "SegmentWidth", m_segmentWidth));
+  PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+												       "MoliereFraction", m_MoliereFraction));
+
+  return STATUS_CODE_SUCCESS;
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :
