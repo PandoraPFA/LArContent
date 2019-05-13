@@ -45,14 +45,14 @@ void TestBeamEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
         parameters.m_minHitSharingFraction = m_minHitSharingFraction;
         parameters.m_maxPhotonPropagation = m_maxPhotonPropagation;
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, targetMCParticleToHitsMap, true);
+        LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, targetMCParticleToHitsMap);
         LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
 
         parameters.m_minPrimaryGoodHits = 0;
         parameters.m_minHitsForGoodView = 0;
         parameters.m_minHitSharingFraction = 0.f;
         LArMCParticleHelper::MCContributionMap allMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, allMCParticleToHitsMap, true);
+        LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, allMCParticleToHitsMap);
         LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, allMCParticleToHitsMap);
 
         validationInfo.SetTargetMCParticleToHitsMap(targetMCParticleToHitsMap);
@@ -81,7 +81,7 @@ void TestBeamEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
         }
 
         LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, true);
+        LArMCParticleHelper::GetTestBeamHierarchyPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
         validationInfo.SetPfoToHitsMap(pfoToHitsMap);
     }
 
