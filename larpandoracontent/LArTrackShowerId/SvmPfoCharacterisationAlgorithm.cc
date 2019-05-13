@@ -9,6 +9,7 @@
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
@@ -25,12 +26,26 @@ SvmPfoCharacterisationAlgorithm::SvmPfoCharacterisationAlgorithm() :
     m_useThreeDInformation(true),
     m_minProbabilityCut(0.5f),
     m_minCaloHitsCut(5),
-    m_filePathEnvironmentVariable("FW_SEARCH_PATH")
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
+    m_writeToTree(true)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+SvmPfoCharacterisationAlgorithm::~SvmPfoCharacterisationAlgorithm()
+{
+  if (m_writeToTree)
+    {
+      std::string m_treeName = "FullVar";
+      std::string m_fileName = "FullVar.root";
+      //std::cout << "file name is: " <<  m_fileName << " ----" << std::endl;
+      //std::cout << "tree name is: " <<  m_treeName << " ----" << std::endl;	
+      PandoraMonitoringApi::SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE");
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster) const
 {
     if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
@@ -67,7 +82,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const Cluster *const pCluster
 
 bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const
 {
-
     if (!LArPfoHelper::IsThreeD(pPfo))
     {
         if (m_enableProbability)
@@ -78,14 +92,214 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
         }
         return (pPfo->GetParticleId() == MU_MINUS);
     }
-    //charge related features are only calculated using hits in W view
+
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
-    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures((wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD), this, pPfo));
+
+    //charge related features are only calculated using hits in W view
+    // This won't work unless use 3D info is set to true - dev purposes only
+    const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
+
+    std::string m_treeName = "FullVar"; // TODO This should be a member variable
+
+    // Purity, completeness
+    // ATTN Assume your Pfos of interest are in a PfoList called myPfoList
+
+    // Input lists
+    const PfoList myPfoList(1, pPfo);
+
+    const MCParticleList *pMCParticleList = nullptr;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+    const CaloHitList *pCaloHitList = nullptr;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+
+    // Mapping target MCParticles -> truth associated Hits
+    LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
+    LArMCParticleHelper::PrimaryParameters mcPrimaryParameters;
+    mcPrimaryParameters.m_selectInputHits = false;
+    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, mcPrimaryParameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+
+    LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(myPfoList, targetMCParticleToHitsMap, pfoToHitsMap);
+
+    // Last step
+    LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCHitSharingMap;
+    LArMCParticleHelper::MCParticleToPfoHitSharingMap mcToPfoHitSharingMap;
+    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(pfoToHitsMap, {targetMCParticleToHitsMap}, pfoToMCHitSharingMap, mcToPfoHitSharingMap);
+
+	const CaloHitList &allHitsInPfo(pfoToHitsMap.at(pPfo));
+	//std::cout << "We got a pfo, isNeutrino " << LArPfoHelper::IsNeutrino(pPfo) << ", isNeutrinoFinalState " << LArPfoHelper::IsNeutrinoFinalState(pPfo) << ", nHits " << allHitsInPfo.size()
+	//          << " (U: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, allHitsInPfo) << ", V: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, allHitsInPfo) << ", W: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, allHitsInPfo) << ") " << std::endl;
+	const int nHitsInPfoTotal(allHitsInPfo.size())/*, nHitsInPfoU(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, allHitsInPfo)), nHitsInPfoV(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, allHitsInPfo)), nHitsInPfoW(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, allHitsInPfo))*/;
+
+	int nHitsInBestMCParticleTotal(-1),/* nHitsInBestMCParticleU(-1), nHitsInBestMCParticleV(-1), nHitsInBestMCParticleW(-1),*/ bestMCParticlePdgCode(0), bestMCParticleIsTrack(-1);
+	int nHitsSharedWithBestMCParticleTotal(-1)/*, nHitsSharedWithBestMCParticleU(-1), nHitsSharedWithBestMCParticleV(-1), nHitsSharedWithBestMCParticleW(-1)*/;
+
+	const LArMCParticleHelper::MCParticleToSharedHitsVector &mcParticleToSharedHitsVector(pfoToMCHitSharingMap.at(pPfo));
+
+	for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitListPair : mcParticleToSharedHitsVector)
+	{
+	    const pandora::MCParticle *const pAssociatedMCParticle(mcParticleCaloHitListPair.first);
+
+	    const CaloHitList &allMCHits(targetMCParticleToHitsMap.at(pAssociatedMCParticle));
+	    //std::cout << "Associated MCParticle: " << pAssociatedMCParticle->GetParticleId() << ", nTotalHits " << allMCHits.size()
+	    //          << " (U: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, allMCHits) << ", V: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, allMCHits) << ", W: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, allMCHits) << ") " << std::endl;
+
+	    const CaloHitList &associatedMCHits(mcParticleCaloHitListPair.second);
+	    //std::cout << "Shared with MCParticle: " << pAssociatedMCParticle->GetParticleId() << ", nSharedHits " << associatedMCHits.size()
+	    //          << " (U: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, associatedMCHits) << ", V: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, associatedMCHits) << ", W: " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, associatedMCHits) << ") " << std::endl;
+
+	    // This is the current best matched MCParticle, to be stored
+	    //std::cout << "associatedMCHits.size() " << associatedMCHits.size() << ", nHitsSharedWithBestMCParticleTotal " << nHitsSharedWithBestMCParticleTotal << ", check " << (static_cast<int>(associatedMCHits.size()) > nHitsSharedWithBestMCParticleTotal) << std::endl;
+
+	    if (static_cast<int>(associatedMCHits.size()) > nHitsSharedWithBestMCParticleTotal)
+	    {
+		 nHitsSharedWithBestMCParticleTotal = associatedMCHits.size();
+		 /*nHitsSharedWithBestMCParticleU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, associatedMCHits);
+		 nHitsSharedWithBestMCParticleV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, associatedMCHits);
+		 nHitsSharedWithBestMCParticleW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, associatedMCHits);*/
+
+		 nHitsInBestMCParticleTotal = allMCHits.size();
+		 /*nHitsInBestMCParticleU = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, allMCHits);
+		 nHitsInBestMCParticleV = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, allMCHits);
+		 nHitsInBestMCParticleW = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, allMCHits);*/
+
+		 bestMCParticlePdgCode = pAssociatedMCParticle->GetParticleId();
+		 bestMCParticleIsTrack = ((PHOTON != pAssociatedMCParticle->GetParticleId()) && (E_MINUS != std::abs(pAssociatedMCParticle->GetParticleId())) ? 1 : 0);
+	    }
+	}
+
+    const float completeness((nHitsInBestMCParticleTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
+    const float purity((nHitsInPfoTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInPfoTotal) : 0.f);
+
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "Completeness", completeness);
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "Purity", purity);
+
+	//std::cout << "Done loop: nHitsInPfoTotal " << nHitsInPfoTotal << ", nHitsSharedWithBestMCParticleTotal " << nHitsSharedWithBestMCParticleTotal << ", nHitsInBestMCParticleTotal " << nHitsInBestMCParticleTotal << std::endl;
+	//std::cout << "Completeness " << completeness << ", Purity " << purity << std::endl;
+
+    const int TrueTrackInt = bestMCParticleIsTrack;
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "TrueTrackInt", TrueTrackInt);
+
+    // End purity, completeness
+
+
+    // Start variable writing
+    const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
+
+    const LArMvaHelper::MvaFeatureVector featureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDPCAVariablesFeatureTool>(chosenFeatureToolVector, this, pPfo));
+
+    const double conc(featureVectorOfType.at(0).IsInitialized() ? featureVectorOfType.at(0).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "conc", conc);
+
+    const double conc2(featureVectorOfType.at(1).IsInitialized() ? featureVectorOfType.at(1).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "conc2", conc2);
+    
+    const double conic(featureVectorOfType.at(2).IsInitialized() ? featureVectorOfType.at(2).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "conic", conic);
+    
+    const double densY(featureVectorOfType.at(3).IsInitialized() ? featureVectorOfType.at(3).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "densY", densY);
+    
+    const double densZ(featureVectorOfType.at(4).IsInitialized() ? featureVectorOfType.at(4).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "densZ", densZ);
+    
+    const double densYRatio(featureVectorOfType.at(5).IsInitialized() ? featureVectorOfType.at(5).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "densYRatio", densYRatio);
+    
+    const double densZRatio(featureVectorOfType.at(6).IsInitialized() ? featureVectorOfType.at(6).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "densZRatio", densZRatio);
+    
+    const double nSegDoubleHits(featureVectorOfType.at(7).IsInitialized() ? featureVectorOfType.at(7).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nSegDoubleHits", nSegDoubleHits);
+    
+    const double nSegDoubleHitsRatio(featureVectorOfType.at(8).IsInitialized() ? featureVectorOfType.at(8).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nSegDoubleHitsRatio", nSegDoubleHitsRatio);
+    
+    const double nHits(featureVectorOfType.at(9).IsInitialized() ? featureVectorOfType.at(9).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHits", nHits);
+
+    //const LArMvaHelper::MvaFeatureVector curvFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<TwoDCurvatureFeatureTool>(chosenFeatureToolVector, this, pPfo));
+    
+    const double curv(-1.);//curvFeatureVectorOfType.at(0).Get());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "curv", curv);
+
+    const LArMvaHelper::MvaFeatureVector threeDLinearFitFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDLinearFitFeatureTool>(chosenFeatureToolVector, this, pPfo));
+    
+    const double length(threeDLinearFitFeatureVectorOfType.at(0).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(0).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "length", length);
+
+    const double diff(threeDLinearFitFeatureVectorOfType.at(1).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(1).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "diff", diff);
+
+    const double gap(threeDLinearFitFeatureVectorOfType.at(2).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(2).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "gap", gap);
+
+    const double rms(threeDLinearFitFeatureVectorOfType.at(3).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(3).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rms", rms);
+
+    const LArMvaHelper::MvaFeatureVector threeDVertexDistanceFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDVertexDistanceFeatureTool>(chosenFeatureToolVector, this, pPfo));
+    
+    const double vertexDistance(threeDVertexDistanceFeatureVectorOfType.at(0).IsInitialized() ? threeDVertexDistanceFeatureVectorOfType.at(0).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vertexDistance", vertexDistance);
+
+    const LArMvaHelper::MvaFeatureVector threeDOpeningAngleFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDOpeningAngleFeatureTool>(chosenFeatureToolVector, this, pPfo));
+    
+    const double diffAngle(threeDOpeningAngleFeatureVectorOfType.at(0).IsInitialized() ? threeDOpeningAngleFeatureVectorOfType.at(0).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "diffAngle", diffAngle);
+
+    const LArMvaHelper::MvaFeatureVector threeDPCAFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDPCAFeatureTool>(chosenFeatureToolVector, this, pPfo));
+    
+    const double pca1(threeDPCAFeatureVectorOfType.at(0).IsInitialized() ? threeDPCAFeatureVectorOfType.at(0).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pca1", pca1);
+
+    const double pca2(threeDPCAFeatureVectorOfType.at(1).IsInitialized() ? threeDPCAFeatureVectorOfType.at(1).Get() : -std::numeric_limits<double>::max());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pca2", pca2);
+
+    const int isChargeInfoAvailable(!wClusterList.empty());
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isChargeInfoAvailable", isChargeInfoAvailable);
+
+    double charge1(-std::numeric_limits<double>::max()), charge2(-std::numeric_limits<double>::max());
+
+    if (!wClusterList.empty())
+    {
+        const LArMvaHelper::MvaFeatureVector threeDChargeFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDChargeFeatureTool>(chosenFeatureToolVector, this, pPfo));
+        charge1 = (threeDChargeFeatureVectorOfType.at(0).IsInitialized() ? threeDChargeFeatureVectorOfType.at(0).Get() : -std::numeric_limits<double>::max());
+        charge2 = (threeDChargeFeatureVectorOfType.at(1).IsInitialized() ? threeDChargeFeatureVectorOfType.at(1).Get() : -std::numeric_limits<double>::max());
+    }
+    
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "charge1", charge1);
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "charge2", charge2);
+
+    PandoraMonitoringApi::FillTree(this->GetPandora(), m_treeName.c_str());
+
+    // End variable writing
+
+
+    // Display interesting pfo
+    /*if (nSegDoubleHits == 0 && nHits < 100  && TrueTrackInt == 0)
+    {
+      std::cout << "The nHits value is: " << nHits << std::endl;
+      std::cout << "The conc value is: " << conc << std::endl;
+      std::cout << "The conc2 value is: " << conc2 << std::endl;
+      std::cout << "The conic value is: " << conic << std::endl;
+      std::cout << "The densY value is: " << densY << std::endl;
+      std::cout << "The densZ value is: " << densZ << std::endl;
+      std::cout << "The densYRatio value is: " << densYRatio << std::endl;
+      std::cout << "The densZRatio value is: " << densZRatio << std::endl;
+      std::cout << "The nSegDoubleHits value is: " << nSegDoubleHits << std::endl;
+      std::cout << "The nSegDoubleHitsRatio value is: " << nSegDoubleHitsRatio << std::endl;
+        const PfoList myPfoList1(1, pPfo);
+        PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
+        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList1, "MyPfoList", RED, true, false);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }*/
+    // End display interesting pfo
 
     if (m_trainingSetMode)
     {
-        bool isTrueTrack(false);
+/*      bool isTrueTrack(false);
         bool isMainMCParticleSet(false);
 
         try
@@ -95,6 +309,9 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
             isMainMCParticleSet = (pMCParticle->GetParticleId() != 0);
         }
         catch (const StatusCodeException &) {}
+*/
+        const bool isTrueTrack(1 == bestMCParticleIsTrack);
+        const bool isMainMCParticleSet(0 != bestMCParticlePdgCode);
 
         if (isMainMCParticleSet)
         {
@@ -102,10 +319,11 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
             outputFile.append(m_trainingOutputFile);
             const std::string end=((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
             outputFile.append(end);
-            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
+            // LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector); // TODO Need this for sklearn training
         }
+
         return isTrueTrack;
-    }// training mode
+    } // training mode
 
     //check for failures in the calculation of features, i.e. not initialized features
     for (const LArMvaHelper::MvaFeature &featureValue : featureVector)
@@ -159,6 +377,15 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SvmName", m_svmName));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "WriteToTree", m_writeToTree)); // added by Mousam
+
+    /*PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TreeName", m_treeName)); // added by Mousam
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FileName", m_fileName)); // added by Mousam*/
+
     if (m_useThreeDInformation)
     {
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
@@ -173,6 +400,9 @@ StatusCode SvmPfoCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinProbabilityCut", m_minProbabilityCut));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
 
     if (m_trainingSetMode)
     {
