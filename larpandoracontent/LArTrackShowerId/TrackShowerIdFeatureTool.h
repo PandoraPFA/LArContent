@@ -9,6 +9,7 @@
 #define LAR_TRACK_SHOWER_ID_FEATURE_TOOLS_H 1
 
 #include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
+#include <Eigen/Dense>
 
 namespace lar_content
 {
@@ -116,6 +117,34 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
+/**
+ *   @brief  class for the calculation of curvature/"wiggliness" of pfos
+ */
+class TwoDCurvatureFeatureTool : public PfoCharacterisationFeatureTool
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    TwoDCurvatureFeatureTool();
+
+    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+
+private:
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+ /**
+   *  @brief  Calculation of how much a pfo wiggles
+   *
+   *  @param  pAlgorithm                   address of the calling algorithm
+   *  @param  pInputPfo                    PFO that we are characterising      
+   */
+
+    unsigned int    m_slidingLinearFitWindow;    ///< The sliding linear fit window to calculate the direction
+};
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 
 /**
  *   @brief  LinearFitFeatureTool class for the calculation of variables related to sliding linear fit
@@ -194,6 +223,8 @@ private:
         pandora::CartesianPointVector &pointVectorStart, pandora::CartesianPointVector &pointVectorEnd);
 
     float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary, const pandora::CartesianVector &eigenValues) const;
+
+    float m_hitFraction;           ///< fraction of hits in start and end of pfo
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -214,6 +245,72 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *   @brief  Class for the calculation of variables using PCA coordinates
+ */
+ class ThreeDPCAVariablesFeatureTool : public PfoCharacterisationFeatureTool
+{
+ public:
+  /**
+   *  @brief  Default constructor
+   */
+  ThreeDPCAVariablesFeatureTool();
+
+  void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+
+ private:
+  pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+  /**
+   *  @brief  Calculation of concentration and conicalness
+   *
+   *  @param  threeDCaloHitList            CaloHitList
+   *  @param  eVecsTranspose               Transpose of matrix of eigenvectors from principal compoenent analysis (PCA) 
+   *  @param  PcaCentroid                  Centroid from PCA
+   *  @param  paStart                      Start of pfo on principal axis
+   *  @param  pfoLengthOnPA                Length of pfo on prinicpal axis
+   *  @param  concentration                To receive valus of concentration
+   *  @param  concentration2               To receive valus of concentration2 (alternative version of concentration)
+   *  @param  conicalness                  To receive value of conicalness
+   */
+  void CalculateConcentrationConicalness(pandora::CaloHitList &threeDCaloHitList, Eigen::Matrix3f &eVecsTranspose, Eigen::Vector3f &PcaCentroid,
+                                         const float paStart, const float pfoengthOnPA, float &concentration, float &concentration2, float &conicalness);
+
+  /**
+   *  @brief  Calculation of inverse hit density
+   *
+   *  @param  paStart                      Start of pfo on principal axis
+   *  @param  pfoLengthOnPA                Length of pfo on prinicpal axis 
+   *  @param  pcaPositions                 Map with PCA postions of hits ordered by position on principal axis
+   *  @param  invHitDensityY               To receive inverse hit density in the y PCA coordinate
+   *  @param  invHitDensityZ               To receive inverse hit density in the z PCA coordinate
+   *  @param  invHitDensityYRatio          To receive ratio of inverse hit density between ebd and start in the y PCA coordinate
+   *  @param  invHitDensityZRatio          To receive ratio of inverse hit density between ebd and start in the z PCA coordinate 
+   */
+  void CalculateDensity(const float paStart, const float pfoLengthOnPA, std::map<float,Eigen::Vector3f> &pcaPositions,
+                        float &invHitDensityY, float &invHitDensityZ, float &invHitDensityYRatio, float &invHitDensityZRatio);
+
+  /**
+   *  @brief  Calculation of concentration and conicalness
+   *
+   *  @param  paStart                      Start of pfo on principal axis
+   *  @param  pcaPositions                 Map with PCA postions of hits ordered by position on principal axis
+   *  @param  nSegmentsDoubleHits          To receive number of segments with double hits transverse to principal axis
+   *  @param  nSegmentsDoubleHitsRatio     To receive ratio of number of segments with double hits transverse to principal axis to number of segments
+   */
+  void SegmentsWithDoubleHits(const float paStart, std::map<float,Eigen::Vector3f> &pcaPositions, int &nSegmentsDoubleHits, float &nSegmentsDoubleHitsRatio);
+
+  float        m_pfoFraction;              ///< Fraction of length of pfo used to define start and end
+  unsigned int m_minHits;                  ///< Minimum number of hits for concentration, conicalness and hit densities
+  float        m_segmentWidth;             ///< Width of segments of pfo used for inverse hit density and double hits transverse to principal axis  
+  float        m_MoliereRadius;            ///< Moliere radius of liquid argon (10.1 cm)
+  float        m_MoliereFraction;          ///< Fraction of Moliere radius used in definition of double hits transverse to principal axis
+  int          m_slidingLinearFitWindow;   ///< Number of windows to use for slidinglinearfit
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
