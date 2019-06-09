@@ -34,7 +34,10 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_extrapolationNSteps(200),
     m_extrapolationStepSize(0.1f),
     m_maxCrossingSeparationSquared(2.f * 2.f),
-    m_minNearbyCrossingDistanceSquared(0.5f * 0.5f)
+    m_minNearbyCrossingDistanceSquared(0.5f * 0.5f),
+    m_reducedCandidates(true),
+    m_par1(2),
+    m_par2(26)
 {
 }
 
@@ -109,12 +112,37 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
         ClusterVector sortedClusters(pClusterList->begin(), pClusterList->end());
         std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
+        int count1(0);
+        if (m_reducedCandidates)
+        {
+            for (const Cluster *const pCluster : sortedClusters)
+            {
+                float factor1=1;
+
+                if (pCluster->GetParticleId()==E_MINUS)
+                    factor1=m_par1;
+
+                if (pCluster->GetNCaloHits() < m_minClusterCaloHits*factor1)
+                    continue;
+
+                if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared*factor1*factor1)
+                    continue;
+
+                count1++;
+            }
+        }
+
         for (const Cluster *const pCluster : sortedClusters)
         {
-            if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+            float factor=1;
+
+            if (pCluster->GetParticleId()==E_MINUS && m_reducedCandidates) 
+                factor=(m_par1+1)*0.5+(m_par1-1)*0.5*std::tanh(count1-m_par2);
+
+            if (pCluster->GetNCaloHits() < m_minClusterCaloHits*factor)
                 continue;
 
-            if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
+            if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared*factor*factor)
                 continue;
 
             try
@@ -420,6 +448,15 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ExtrapolationStepSize", m_extrapolationStepSize));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ReducedCandidates", m_reducedCandidates));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Par1", m_par1));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Par2", m_par2));
 
     float maxCrossingSeparation = std::sqrt(m_maxCrossingSeparationSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
