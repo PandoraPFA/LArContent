@@ -25,13 +25,13 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_useXcoordinate(false),
     m_alwaysApplyT0Calculation(true),
     m_halfWindowLayers(30),
-    m_minLengthSquared(4.f),
+    m_minLengthSquared(50.f),
     m_minCosRelativeAngle(0.966),
     m_maxLongitudinalDisplacementX(15.f),
     m_maxTransverseDisplacement(5.f),
     m_relaxCosRelativeAngle(0.906),
     m_relaxTransverseDisplacement(2.5f),
-    m_minNCaloHits3D(10)
+    m_minNCaloHits3D(0)
 {
 }
 
@@ -187,13 +187,14 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
     if (pointingCluster1.GetLengthSquared() < m_minLengthSquared || pointingCluster2.GetLengthSquared() < m_minLengthSquared)
         return;
 
-    // Get number of 3D hits of pointing clusters
+    // Get number of 3D hits in each of the pfos
     CaloHitList caloHitList3D1;
     LArPfoHelper::GetCaloHits(pPfo1, TPC_3D, caloHitList3D1);
+
     CaloHitList caloHitList3D2;
     LArPfoHelper::GetCaloHits(pPfo2, TPC_3D, caloHitList3D2);
 
-    // Check number of 3D hits of pointing clusters
+    // Check number of 3D hits in each of the pfos
     if (caloHitList3D1.size() < m_minNCaloHits3D || caloHitList3D2.size() < m_minNCaloHits3D)
         return;
 
