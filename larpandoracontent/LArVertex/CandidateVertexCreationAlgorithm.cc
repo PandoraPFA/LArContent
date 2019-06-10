@@ -34,7 +34,10 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_extrapolationNSteps(200),
     m_extrapolationStepSize(0.1f),
     m_maxCrossingSeparationSquared(2.f * 2.f),
-    m_minNearbyCrossingDistanceSquared(0.5f * 0.5f)
+    m_minNearbyCrossingDistanceSquared(0.5f * 0.5f),
+    m_reducedCandidates(false),
+    m_selectionCutFactorMax(2.f),
+    m_nClustersPassingMaxCutsPar(26.f)
 {
 }
 
@@ -109,12 +112,40 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
         ClusterVector sortedClusters(pClusterList->begin(), pClusterList->end());
         std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
+        unsigned int nClustersPassingMaxCuts(0);
+        if (m_reducedCandidates)
+        {
+            for (const Cluster *const pCluster : sortedClusters)
+            {
+                float selectionCutFactor(1.f);
+
+                if (pCluster->GetParticleId() == E_MINUS)
+                    selectionCutFactor = m_selectionCutFactorMax;
+
+                if (pCluster->GetNCaloHits() < m_minClusterCaloHits * selectionCutFactor)
+                    continue;
+
+                if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared * selectionCutFactor * selectionCutFactor)
+                    continue;
+
+                nClustersPassingMaxCuts++;
+            }
+        }
+
         for (const Cluster *const pCluster : sortedClusters)
         {
-            if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+            float selectionCutFactor(1.f);
+
+            if (pCluster->GetParticleId() == E_MINUS && m_reducedCandidates)
+            {
+                selectionCutFactor = (m_selectionCutFactorMax + 1.f) * 0.5f +
+                    (m_selectionCutFactorMax - 1.f) * 0.5f * std::tanh(static_cast<float>(nClustersPassingMaxCuts) - m_nClustersPassingMaxCutsPar);
+            }
+
+            if (pCluster->GetNCaloHits() < m_minClusterCaloHits * selectionCutFactor)
                 continue;
 
-            if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared)
+            if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLengthSquared * selectionCutFactor * selectionCutFactor)
                 continue;
 
             try
@@ -420,6 +451,15 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ExtrapolationStepSize", m_extrapolationStepSize));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ReducedCandidates", m_reducedCandidates));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectionCutFactorMax", m_selectionCutFactorMax));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NClustersPassingMaxCutsPar", m_nClustersPassingMaxCutsPar));
 
     float maxCrossingSeparation = std::sqrt(m_maxCrossingSeparationSquared);
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
