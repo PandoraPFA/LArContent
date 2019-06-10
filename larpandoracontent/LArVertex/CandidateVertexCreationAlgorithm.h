@@ -150,8 +150,8 @@ private:
     float                   m_minNearbyCrossingDistanceSquared; ///< The minimum allowed distance between identified crossing positions
 
     bool                    m_reducedCandidates;                ///< Whether to reduce the number of candidates
-    float                   m_par1;
-    float                   m_par2;
+    float                   m_selectionCutFactorMax;            ///< Maximum factor to multiply the base cluster selection cuts
+    float                   m_nClustersPassingMaxCutsPar;       ///< Parameter for number of clusters passing the max base cluster selection cuts
 };
 
 } // namespace lar_content
