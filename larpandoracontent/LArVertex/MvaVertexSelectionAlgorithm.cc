@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArVertex/VertexSelectionBaseAlgorithm.cc
+ *  @file   larpandoracontent/LArVertex/MvaSelectionBaseAlgorithm.cc
  *
- *  @brief  Implementation of the Svm vertex selection algorithm class.
+ *  @brief  Implementation of the mva vertex selection algorithm class.
  *
  *  $Log: $
  */
@@ -21,7 +21,7 @@
 #include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
 
-#include "larpandoracontent/LArVertex/SvmVertexSelectionAlgorithm.h"
+#include "larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h"
 
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
@@ -31,7 +31,9 @@ using namespace pandora;
 
 namespace lar_content
 {
-SvmVertexSelectionAlgorithm::SvmVertexSelectionAlgorithm() :
+
+template<typename T>
+MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
     VertexSelectionBaseAlgorithm(),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_trainingSetMode(false),
@@ -58,7 +60,8 @@ SvmVertexSelectionAlgorithm::SvmVertexSelectionAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
     HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
     ClusterList clustersU, clustersV, clustersW;
@@ -117,8 +120,8 @@ void SvmVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexV
 
     if ((!m_trainingSetMode || m_allowClassifyDuringTraining) && !bestRegionVertices.empty())
     {
-        // Use svm to choose the region.
-        const Vertex *const pBestRegionVertex(this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_svMachineRegion,
+        // Use mva to choose the region.
+        const Vertex *const pBestRegionVertex(this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaRegion,
             m_useRPhiFeatureForRegion));
 
         // Get all the vertices in the best region.
@@ -136,8 +139,8 @@ void SvmVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexV
 
         if (!regionalVertices.empty())
         {
-            // Use svm to choose the vertex and then fine-tune using the RPhi score.
-            const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, m_svMachineVertex, true));
+            // Use mva to choose the vertex and then fine-tune using the RPhi score.
+            const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaVertex, true));
             this->PopulateFinalVertexScoreList(vertexFeatureInfoMap, pBestVertex, vertexVector, vertexScoreList);
         }
     }
@@ -145,7 +148,8 @@ void SvmVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::CalculateShowerClusterList(const ClusterList &inputClusterList, ShowerClusterList &showerClusterList) const
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::CalculateShowerClusterList(const ClusterList &inputClusterList, ShowerClusterList &showerClusterList) const
 {
     ClusterEndPointsMap clusterEndPointsMap;
     ClusterList showerLikeClusters;
@@ -199,7 +203,8 @@ void SvmVertexSelectionAlgorithm::CalculateShowerClusterList(const ClusterList &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::GetShowerLikeClusterEndPoints(const ClusterList &clusterList, ClusterList &showerLikeClusters,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::GetShowerLikeClusterEndPoints(const ClusterList &clusterList, ClusterList &showerLikeClusters,
     ClusterEndPointsMap &clusterEndPointsMap) const
 {
     for (const Cluster *const pCluster : clusterList)
@@ -226,7 +231,8 @@ void SvmVertexSelectionAlgorithm::GetShowerLikeClusterEndPoints(const ClusterLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::PopulateKdTree(const ClusterList &clusterList, HitKDTree2D &kdTree, HitToClusterMap &hitToClusterMap) const
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::PopulateKdTree(const ClusterList &clusterList, HitKDTree2D &kdTree, HitToClusterMap &hitToClusterMap) const
 {
     CaloHitList allCaloHits;
 
@@ -247,7 +253,8 @@ void SvmVertexSelectionAlgorithm::PopulateKdTree(const ClusterList &clusterList,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SvmVertexSelectionAlgorithm::AddClusterToShower(const ClusterEndPointsMap &clusterEndPointsMap, ClusterList &availableShowerLikeClusters,
+template<typename T>
+bool MvaVertexSelectionAlgorithm<T>::AddClusterToShower(const ClusterEndPointsMap &clusterEndPointsMap, ClusterList &availableShowerLikeClusters,
     const Cluster *const pCluster, ClusterList &showerCluster) const
 {
     const auto existingEndPointsIter(clusterEndPointsMap.find(pCluster));
@@ -285,7 +292,8 @@ bool SvmVertexSelectionAlgorithm::AddClusterToShower(const ClusterEndPointsMap &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SvmVertexSelectionAlgorithm::AddClusterToShower(HitKDTree2D &kdTree, const HitToClusterMap &hitToClusterMap,
+template<typename T>
+bool MvaVertexSelectionAlgorithm<T>::AddClusterToShower(HitKDTree2D &kdTree, const HitToClusterMap &hitToClusterMap,
     ClusterList &availableShowerLikeClusters, const Cluster *const pCluster, ClusterList &showerCluster) const
 {
     ClusterSet nearbyClusters;
@@ -320,7 +328,8 @@ bool SvmVertexSelectionAlgorithm::AddClusterToShower(HitKDTree2D &kdTree, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-SvmVertexSelectionAlgorithm::EventFeatureInfo SvmVertexSelectionAlgorithm::CalculateEventFeatures(const ClusterList &clusterListU,
+template<typename T>
+typename MvaVertexSelectionAlgorithm<T>::EventFeatureInfo MvaVertexSelectionAlgorithm<T>::CalculateEventFeatures(const ClusterList &clusterListU,
     const ClusterList &clusterListV, const ClusterList &clusterListW, const VertexVector &vertexVector) const
 {
     float eventEnergy(0.f);
@@ -345,7 +354,8 @@ SvmVertexSelectionAlgorithm::EventFeatureInfo SvmVertexSelectionAlgorithm::Calcu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::IncrementShoweryParameters(const ClusterList &clusterList, unsigned int &nShoweryHits, unsigned int &nHits,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::IncrementShoweryParameters(const ClusterList &clusterList, unsigned int &nShoweryHits, unsigned int &nHits,
     float &eventEnergy) const
 {
     for (const Cluster *const pCluster : clusterList)
@@ -360,14 +370,16 @@ void SvmVertexSelectionAlgorithm::IncrementShoweryParameters(const ClusterList &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool SvmVertexSelectionAlgorithm::IsClusterShowerLike(const Cluster *const pCluster) const
+template<typename T>
+inline bool MvaVertexSelectionAlgorithm<T>::IsClusterShowerLike(const Cluster *const pCluster) const
 {
     return (pCluster->GetParticleId() == E_MINUS && LArClusterHelper::GetLength(pCluster) < m_minShowerSpineLength);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &clusterList, float &eventVolume, float &longitudinality) const
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::GetEventShapeFeatures(const ClusterList &clusterList, float &eventVolume, float &longitudinality) const
 {
     InputFloat xMin, yMin, zMin, xMax, yMax, zMax;
 
@@ -407,7 +419,8 @@ void SvmVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &clust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void SvmVertexSelectionAlgorithm::UpdateSpanCoordinate(const float minPositionCoord, const float maxPositionCoord, InputFloat &minCoord,
+template<typename T>
+inline void MvaVertexSelectionAlgorithm<T>::UpdateSpanCoordinate(const float minPositionCoord, const float maxPositionCoord, InputFloat &minCoord,
     InputFloat &maxCoord) const
 {
     if (!minCoord.IsInitialized() || minPositionCoord < minCoord.Get())
@@ -419,7 +432,8 @@ inline void SvmVertexSelectionAlgorithm::UpdateSpanCoordinate(const float minPos
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float SvmVertexSelectionAlgorithm::GetCoordinateSpan(const InputFloat &minCoord, const InputFloat &maxCoord) const
+template<typename T>
+inline float MvaVertexSelectionAlgorithm<T>::GetCoordinateSpan(const InputFloat &minCoord, const InputFloat &maxCoord) const
 {
    if (minCoord.IsInitialized() && maxCoord.IsInitialized())
         return std::fabs(maxCoord.Get() - minCoord.Get());
@@ -429,7 +443,8 @@ inline float SvmVertexSelectionAlgorithm::GetCoordinateSpan(const InputFloat &mi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::AddEventFeaturesToVector(const EventFeatureInfo &eventFeatureInfo,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::AddEventFeaturesToVector(const EventFeatureInfo &eventFeatureInfo,
     LArMvaHelper::MvaFeatureVector &featureVector) const
 {
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventShoweryness));
@@ -443,7 +458,8 @@ void SvmVertexSelectionAlgorithm::AddEventFeaturesToVector(const EventFeatureInf
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamConstants &beamConstants, const ClusterListMap &clusterListMap,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::PopulateVertexFeatureInfoMap(const BeamConstants &beamConstants, const ClusterListMap &clusterListMap,
     const SlidingFitDataListMap &slidingFitDataListMap, const ShowerClusterListMap &showerClusterListMap, const KDTreeMap &kdTreeMap,
     const Vertex *const pVertex, VertexFeatureInfoMap &vertexFeatureInfoMap) const
 {
@@ -472,7 +488,8 @@ void SvmVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamConstan
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::PopulateInitialScoreList(VertexFeatureInfoMap &vertexFeatureInfoMap, const Vertex *const pVertex,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::PopulateInitialScoreList(VertexFeatureInfoMap &vertexFeatureInfoMap, const Vertex *const pVertex,
                                                            VertexScoreList &initialScoreList) const
 {
     VertexFeatureInfo vertexFeatureInfo = vertexFeatureInfoMap.at(pVertex);
@@ -488,7 +505,8 @@ void SvmVertexSelectionAlgorithm::PopulateInitialScoreList(VertexFeatureInfoMap 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::GetBestRegionVertices(VertexScoreList &initialScoreList, VertexVector &bestRegionVertices) const
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::GetBestRegionVertices(VertexScoreList &initialScoreList, VertexVector &bestRegionVertices) const
 {
     std::sort(initialScoreList.begin(), initialScoreList.end());
 
@@ -521,7 +539,8 @@ void SvmVertexSelectionAlgorithm::GetBestRegionVertices(VertexScoreList &initial
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &vertexVector, const VertexVector &bestRegionVertices,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::ProduceTrainingSets(const VertexVector &vertexVector, const VertexVector &bestRegionVertices,
     VertexFeatureInfoMap &vertexFeatureInfoMap, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const KDTreeMap &kdTreeMap) const
 {
     if (vertexVector.empty())
@@ -561,7 +580,8 @@ void SvmVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &vertex
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::CalculateRPhiScores(VertexVector &vertexVector, VertexFeatureInfoMap &vertexFeatureInfoMap,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::CalculateRPhiScores(VertexVector &vertexVector, VertexFeatureInfoMap &vertexFeatureInfoMap,
     const KDTreeMap &kdTreeMap) const
 {
     float bestFastScore(-std::numeric_limits<float>::max());
@@ -583,7 +603,8 @@ void SvmVertexSelectionAlgorithm::CalculateRPhiScores(VertexVector &vertexVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::string SvmVertexSelectionAlgorithm::GetInteractionType() const
+template<typename T>
+std::string MvaVertexSelectionAlgorithm<T>::GetInteractionType() const
 {
     // Extract input collections
     const MCParticleList *pMCParticleList(nullptr);
@@ -607,7 +628,8 @@ std::string SvmVertexSelectionAlgorithm::GetInteractionType() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::Vertex * SvmVertexSelectionAlgorithm::ProduceTrainingExamples(const VertexVector &vertexVector,
+template<typename T>
+const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::ProduceTrainingExamples(const VertexVector &vertexVector,
     const VertexFeatureInfoMap &vertexFeatureInfoMap, std::bernoulli_distribution &coinFlip, std::mt19937 &generator,
     const std::string &interactionType, const std::string &trainingOutputFile, const LArMvaHelper::MvaFeatureVector &eventFeatureList,
     const float maxRadius, const bool useRPhi) const
@@ -651,7 +673,8 @@ const pandora::Vertex * SvmVertexSelectionAlgorithm::ProduceTrainingExamples(con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVector, const Vertex *&pBestVertex, float &bestVertexDr) const
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::GetBestVertex(const VertexVector &vertexVector, const Vertex *&pBestVertex, float &bestVertexDr) const
 {
     // Extract input collections
     const MCParticleList *pMCParticleList(nullptr);
@@ -684,7 +707,8 @@ void SvmVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo,
     LArMvaHelper::MvaFeatureVector &featureVector, const bool useRPhi) const
 {
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_beamDeweighting));
@@ -699,8 +723,9 @@ void SvmVertexSelectionAlgorithm::AddVertexFeaturesToVector(const VertexFeatureI
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::Vertex * SvmVertexSelectionAlgorithm::CompareVertices(const VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
-    const LArMvaHelper::MvaFeatureVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const
+template<typename T>
+const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::CompareVertices(const VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
+    const LArMvaHelper::MvaFeatureVector &eventFeatureList, const T &t, const bool useRPhi) const
 {
     const Vertex *pBestVertex(vertexVector.front());
     LArMvaHelper::MvaFeatureVector chosenFeatureList;
@@ -717,7 +742,7 @@ const pandora::Vertex * SvmVertexSelectionAlgorithm::CompareVertices(const Verte
         VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
         this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
 
-        if (LArMvaHelper::Classify(supportVectorMachine, eventFeatureList, featureList, chosenFeatureList))
+        if (LArMvaHelper::Classify(t, eventFeatureList, featureList, chosenFeatureList))
         {
             pBestVertex = pVertex;
             chosenFeatureList = featureList;
@@ -729,7 +754,8 @@ const pandora::Vertex * SvmVertexSelectionAlgorithm::CompareVertices(const Verte
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SvmVertexSelectionAlgorithm::PopulateFinalVertexScoreList(const VertexFeatureInfoMap &vertexFeatureInfoMap, const Vertex *const pFavouriteVertex,
+template<typename T>
+void MvaVertexSelectionAlgorithm<T>::PopulateFinalVertexScoreList(const VertexFeatureInfoMap &vertexFeatureInfoMap, const Vertex *const pFavouriteVertex,
     const VertexVector &vertexVector, VertexScoreList &finalVertexScoreList) const
 {
     if (pFavouriteVertex)
@@ -750,7 +776,8 @@ void SvmVertexSelectionAlgorithm::PopulateFinalVertexScoreList(const VertexFeatu
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+template<typename T>
+StatusCode MvaVertexSelectionAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
@@ -762,13 +789,13 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SvmFileName", m_svmFileName));
+        "MvaFileName", m_mvaFileName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RegionSvmName", m_regionSvmName));
+        "RegionMvaName", m_regionMvaName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexSvmName", m_vertexSvmName));
+        "VertexMvaName", m_vertexMvaName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrainingSetMode", m_trainingSetMode));
@@ -778,18 +805,17 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 
     if ((!m_trainingSetMode || m_allowClassifyDuringTraining))
     {
-        if (m_svmFileName.empty() || m_regionSvmName.empty() || m_vertexSvmName.empty())
+        if (m_mvaFileName.empty() || m_regionMvaName.empty() || m_vertexMvaName.empty())
         {
-            std::cout << "SvmVertexSelectionAlgorithm: SvmFileName, RegionSvmName and VertexSvmName must be set if training set mode is" <<
+            std::cout << "MvaVertexSelectionAlgorithm: MvaFileName, RegionMvaName and VertexMvaName must be set if training set mode is" <<
                          "off or we allow classification during training" << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
         }
 
-        const std::string fullSvmFileName(LArFileHelper::FindFileInPath(m_svmFileName, m_filePathEnvironmentVariable));
-        m_svMachineRegion.Initialize(fullSvmFileName, m_regionSvmName);
-        m_svMachineVertex.Initialize(fullSvmFileName, m_vertexSvmName);
+        const std::string fullMvaFileName(LArFileHelper::FindFileInPath(m_mvaFileName, m_filePathEnvironmentVariable));
+        m_mvaRegion.Initialize(fullMvaFileName, m_regionMvaName);
+        m_mvaVertex.Initialize(fullMvaFileName, m_vertexMvaName);
     }
-
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MCVertexXCorrection", m_mcVertexXCorrection));
@@ -802,7 +828,7 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 
     if (m_trainingSetMode && (m_trainingOutputFileRegion.empty() || m_trainingOutputFileVertex.empty()))
     {
-        std::cout << "SvmVertexSelectionAlgorithm: TrainingOutputFileRegion and TrainingOutputFileVertex are required for training set " <<
+        std::cout << "MvaVertexSelectionAlgorithm: TrainingOutputFileRegion and TrainingOutputFileVertex are required for training set " <<
                      "mode" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
@@ -815,7 +841,7 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 
     if (m_trainingSetMode && (m_mcParticleListName.empty() || m_caloHitListName.empty()))
     {
-        std::cout << "SvmVertexSelectionAlgorithm: MCParticleListName and CaloHitListName are required for training set mode" << std::endl;
+        std::cout << "MvaVertexSelectionAlgorithm: MCParticleListName and CaloHitListName are required for training set mode" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
@@ -872,5 +898,8 @@ StatusCode SvmVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
+
+template class MvaVertexSelectionAlgorithm<AdaBoostDecisionTree>;
+template class MvaVertexSelectionAlgorithm<SupportVectorMachine>;
 
 } // namespace lar_content
