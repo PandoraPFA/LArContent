@@ -229,6 +229,7 @@ private:
     float m_maxTransverseDisplacement;
     float m_relaxCosRelativeAngle;
     float m_relaxTransverseDisplacement;
+    int   m_minNCaloHits3D;
 };
 
 } // namespace lar_content
