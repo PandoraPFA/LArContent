@@ -220,15 +220,16 @@ private:
     void CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
         const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMap &pfoToPointingVertexMap) const;
 
-    bool  m_useXcoordinate;
-    bool  m_alwaysApplyT0Calculation;
-    int   m_halfWindowLayers;
-    float m_minLengthSquared;
-    float m_minCosRelativeAngle;
-    float m_maxLongitudinalDisplacementX;
-    float m_maxTransverseDisplacement;
-    float m_relaxCosRelativeAngle;
-    float m_relaxTransverseDisplacement;
+    bool            m_useXcoordinate;
+    bool            m_alwaysApplyT0Calculation;
+    int             m_halfWindowLayers;
+    float           m_minLengthSquared;
+    float           m_minCosRelativeAngle;
+    float           m_maxLongitudinalDisplacementX;
+    float           m_maxTransverseDisplacement;
+    float           m_relaxCosRelativeAngle;
+    float           m_relaxTransverseDisplacement;
+    unsigned int    m_minNCaloHits3D;
 };
 
 } // namespace lar_content
