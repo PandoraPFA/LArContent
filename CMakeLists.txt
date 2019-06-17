@@ -21,7 +21,7 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     # cetbuildtools contains our cmake modules
     # Note that find package will add cetbuildtools Modules to CMAKE_MODULE_PATH
     find_package(cetbuildtools REQUIRED)
-    message(STATUS "larpandoracontent: CMAKE_MODULE_PATH is ${CMAKE_MODULE_PATH}")
+    ##message(STATUS "larpandoracontent: CMAKE_MODULE_PATH is ${CMAKE_MODULE_PATH}")
 
     include(CetCMakeEnv)
     cet_cmake_env()
