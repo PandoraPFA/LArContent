@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArMonitoring/TestBeamEventValidationAlgorithm.h
  *
- *  @brief  Header file for the event validation algorithm.
+ *  @brief  Header file for the test beam event validation algorithm.
  *
  *  $Log: $
  */
@@ -66,8 +66,6 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<pandora::HitType> HitTypeVector;
-
-    int                     m_eventNumber;                  ///< The event number
 };
 
 } // namespace lar_content
