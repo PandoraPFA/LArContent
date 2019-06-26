@@ -30,7 +30,8 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_maxLongitudinalDisplacementX(15.f),
     m_maxTransverseDisplacement(5.f),
     m_relaxCosRelativeAngle(0.906),
-    m_relaxTransverseDisplacement(2.5f)
+    m_relaxTransverseDisplacement(2.5f),
+    m_minNCaloHits3D(0)
 {
 }
 
@@ -184,6 +185,17 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
 
     // Check length of pointing clusters
     if (pointingCluster1.GetLengthSquared() < m_minLengthSquared || pointingCluster2.GetLengthSquared() < m_minLengthSquared)
+        return;
+
+    // Get number of 3D hits in each of the pfos
+    CaloHitList caloHitList3D1;
+    LArPfoHelper::GetCaloHits(pPfo1, TPC_3D, caloHitList3D1);
+
+    CaloHitList caloHitList3D2;
+    LArPfoHelper::GetCaloHits(pPfo2, TPC_3D, caloHitList3D2);
+
+    // Check number of 3D hits in each of the pfos
+    if (caloHitList3D1.size() < m_minNCaloHits3D || caloHitList3D2.size() < m_minNCaloHits3D)
         return;
 
     // Get closest pair of vertices
@@ -770,6 +782,9 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "LooserMaxTransverseDisplacement", m_relaxTransverseDisplacement));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinNCaloHits3D", m_minNCaloHits3D));
 
     return STATUS_CODE_SUCCESS;
 }

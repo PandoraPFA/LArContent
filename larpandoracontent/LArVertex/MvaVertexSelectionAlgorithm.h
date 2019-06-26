@@ -1,15 +1,16 @@
 /**
- *  @file   larpandoracontent/LArVertex/SvmVertexSelectionAlgorithm.h
+ *  @file   larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h
  *
- *  @brief  Header file for the svm vertex selection algorithm class.
+ *  @brief  Header file for the mva vertex selection algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_SVM_VERTEX_SELECTION_ALGORITHM_H
-#define LAR_SVM_VERTEX_SELECTION_ALGORITHM_H 1
+#ifndef LAR_MVA_VERTEX_SELECTION_ALGORITHM_H
+#define LAR_MVA_VERTEX_SELECTION_ALGORITHM_H 1
 
 #include "Api/PandoraContentApi.h"
 
+#include "larpandoracontent/LArObjects/LArAdaBoostDecisionTree.h"
 #include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -28,9 +29,10 @@ template<typename, unsigned int> class KDTreeNodeInfoT;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  SvmVertexSelectionAlgorithm class
+ *  @brief  MvaVertexSelectionAlgorithm class
  */
-class SvmVertexSelectionAlgorithm : public VertexSelectionBaseAlgorithm
+template<typename T>
+class MvaVertexSelectionAlgorithm : public VertexSelectionBaseAlgorithm
 {
 public:
     /**
@@ -98,7 +100,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    SvmVertexSelectionAlgorithm();
+    MvaVertexSelectionAlgorithm();
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -357,13 +359,13 @@ private:
      *  @param  vertexVector the vector of vertices
      *  @param  vertexFeatureInfoMap the vertex feature info map
      *  @param  eventFeatureList the event feature list
-     *  @param  supportVectorMachine the support vector machine classifier
+     *  @param  t the mva
      *  @param  useRPhi whether to include the r/phi feature
      *
      *  @return address of the best vertex
      */
     const pandora::Vertex * CompareVertices(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
-        const LArMvaHelper::MvaFeatureVector &eventFeatureList, const SupportVectorMachine &supportVectorMachine, const bool useRPhi) const;
+        const LArMvaHelper::MvaFeatureVector &eventFeatureList, const T &t, const bool useRPhi) const;
 
     /**
      *  @brief  Populate the final vertex score list using the r/phi score to find the best vertex in the vicinity
@@ -377,18 +379,18 @@ private:
         const pandora::VertexVector &vertexVector, VertexScoreList &finalVertexScoreList) const;
 
     VertexFeatureTool::FeatureToolVector    m_featureToolVector;            ///< The feature tool vector
-    std::string                             m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to svm files
-    std::string                             m_svmFileName;                  ///< The Svm file name
-    std::string                             m_regionSvmName;                ///< The name of the region Svm to find
-    std::string                             m_vertexSvmName;                ///< The name of the vertex Svm to find
-    SupportVectorMachine                    m_svMachineRegion;              ///< The region support vector machine
-    SupportVectorMachine                    m_svMachineVertex;              ///< The vertex support vector machine
+    std::string                             m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to mva files
+    std::string                             m_mvaFileName;                  ///< The mva file name
+    std::string                             m_regionMvaName;                ///< The name of the region mva to find
+    std::string                             m_vertexMvaName;                ///< The name of the vertex mva to find
+    T                                       m_mvaRegion;                    ///< The region mva
+    T                                       m_mvaVertex;                    ///< The vertex mva
 
     bool                  m_trainingSetMode;                      ///< Whether to train
     bool                  m_allowClassifyDuringTraining;          ///< Whether classification is allowed during training
     float                 m_mcVertexXCorrection;                  ///< The correction to the x-coordinate of the MC vertex position
-    std::string           m_trainingOutputFileRegion;             ///< The training output file for the region Svm
-    std::string           m_trainingOutputFileVertex;             ///< The training output file for the vertex Svm
+    std::string           m_trainingOutputFileRegion;             ///< The training output file for the region mva
+    std::string           m_trainingOutputFileVertex;             ///< The training output file for the vertex mva
     std::string           m_mcParticleListName;                   ///< The MC particle list for creating training examples
     std::string           m_caloHitListName;                      ///< The 2D CaloHit list name
 
@@ -413,9 +415,13 @@ private:
     bool                  m_dropFailedRPhiFastScoreCandidates;    ///< Whether to drop candidates that fail the r/phi fast score test
 };
 
+typedef MvaVertexSelectionAlgorithm<AdaBoostDecisionTree> BdtVertexSelectionAlgorithm;
+typedef MvaVertexSelectionAlgorithm<SupportVectorMachine> SvmVertexSelectionAlgorithm;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SvmVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick,
+template<typename T>
+inline MvaVertexSelectionAlgorithm<T>::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick,
     const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
@@ -428,7 +434,8 @@ inline SvmVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const f
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SvmVertexSelectionAlgorithm::EventFeatureInfo::EventFeatureInfo(const float eventShoweryness, const float eventEnergy,
+template<typename T>
+inline MvaVertexSelectionAlgorithm<T>::EventFeatureInfo::EventFeatureInfo(const float eventShoweryness, const float eventEnergy,
     const float eventVolume, const float longitudinality, const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates) :
     m_eventShoweryness(eventShoweryness),
     m_eventEnergy(eventEnergy),
@@ -442,4 +449,4 @@ inline SvmVertexSelectionAlgorithm::EventFeatureInfo::EventFeatureInfo(const flo
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_SVM_VERTEX_SELECTION_ALGORITHM_H
+#endif // #ifndef LAR_MVA_VERTEX_SELECTION_ALGORITHM_H

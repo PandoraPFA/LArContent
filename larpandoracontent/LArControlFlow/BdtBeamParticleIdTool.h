@@ -31,16 +31,16 @@ public:
     /**
      *  @brief  Copy constructor
      *
-     *  @param  rhs the BdtBeamParticleIdTool to copy
+     *  @param  BdtBeamParticleIdTool to copy
      */
-    BdtBeamParticleIdTool(const BdtBeamParticleIdTool &rhs) = default;
+    BdtBeamParticleIdTool(const BdtBeamParticleIdTool&) = default;
 
     /**
      *  @brief  Assignment operator
      *
-     *  @param  rhs the BdtBeamParticleIdTool to assign
+     *  @param  The BdtBeamParticleIdTool to assign
      */
-    BdtBeamParticleIdTool &operator=(const BdtBeamParticleIdTool &rhs) = default;
+    BdtBeamParticleIdTool &operator=(const BdtBeamParticleIdTool&) = default;
 
     /**
      *  @brief  Destructor
@@ -231,16 +231,16 @@ private:
         /**
          *  @brief  Copy constructor
          *
-         *  @param  rhs the SliceFeatures to copy
+         *  @param  The SliceFeatures to copy
          */
-        SliceFeatures(const SliceFeatures &rhs) = default;
+        SliceFeatures(const SliceFeatures&) = default;
 
         /**
          *  @brief  Assignment operator
          *
-         *  @param  rhs the SliceFeatures to assign
+         *  @param  The SliceFeatures to assign
          */
-        SliceFeatures &operator=(const SliceFeatures &rhs) = default;
+        SliceFeatures &operator=(const SliceFeatures&) = default;
 
         /**
          *  @brief  Destructor

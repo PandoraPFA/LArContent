@@ -1,4 +1,12 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_15_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Templated SvmVertexSelection algorithm on mva type and rename to MvaVertexSelection.
+Added functionality to reduce number of candidate vertices in shower-like regions.
+Added extra variable for selecting pfos to use in stitching.
+Removed variable name in arguments of default functions.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_14_08
 --------------------------------------------------------------------------------------------------------------------------------------------
 Simplification and restructuring of the ClearTrackFragments tool to clarify operations and ease future maintenance.
