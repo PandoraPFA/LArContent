@@ -307,7 +307,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
 
         if (isBeamParticle || isCosmicRay)
         {
-            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
+            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetTestBeamHierarchyInteractionType(associatedMCPrimaries));
 #ifdef MONITORING
             const int interactionTypeInt(static_cast<int>(interactionType));
 #endif
