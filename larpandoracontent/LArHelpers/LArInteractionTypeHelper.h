@@ -239,12 +239,36 @@ class LArInteractionTypeHelper
 {
 public:
     /**
-     *  @brief   InteractionType enum
+     *  @brief  InteractionType enum
      */
     enum InteractionType : unsigned int
     {
         INTERACTION_TYPE_TABLE(GET_INTERACTION_TYPE_ENTRY)
         UNKNOWN_INTERACTION_TYPE = 0
+    };
+
+    /**
+     *  @brief  Interaction parameters
+     */
+    class InteractionParameters
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         */
+        InteractionParameters();
+
+        unsigned int m_nNonNeutrons;
+        unsigned int m_nMuons;
+        unsigned int m_nElectrons;
+        unsigned int m_nPhotons;
+        unsigned int m_nProtons;
+        unsigned int m_nPiPlus;
+        unsigned int m_nPiMinus;
+        unsigned int m_nPiZero;
+        unsigned int m_nKaonPlus;
+        unsigned int m_nKaonMinus;
+        unsigned int m_nKaon0L;
     };
 
     /**
@@ -264,6 +288,24 @@ public:
      *  @return interaction type
      */
     static InteractionType GetTestBeamHierarchyInteractionType(const pandora::MCParticleList &mcPrimaryList);
+
+    /**
+     *  @brief  Set parameters describing the number and species of primary interaction products
+     *
+     *  @param  mcPrimaryList the list of primary mc particles
+     *  @param  parameters the parameter block to set
+     */
+    static void SetInteractionParameters(const pandora::MCParticleList &mcPrimaryList, InteractionParameters &parameters);
+
+    /**
+     *  @brief  Get the interaction type of an event under a cosmic ray hypothesis
+     *
+     *  @param  mcPrimaryList the list of primary mc particles
+     *  @param  parameters the parameter block to set
+     *
+     *  @return interaction type
+     */
+    static InteractionType CosmicRayHypothesis(const pandora::MCParticleList &mcPrimaryList, const InteractionParameters &parameters);
 
     /**
      *  @brief  Get a string representation of an interaction type
