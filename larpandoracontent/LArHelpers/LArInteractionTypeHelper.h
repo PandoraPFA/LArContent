@@ -233,13 +233,20 @@ public:
     /**
      *  @brief  Get the interaction type of an event
      *
-     *  @param  nuanceCode the nuance code
      *  @param  mcPrimaryList the list of primary mc particles
-     *  @param  testBeamHierarchyMode
      *
      *  @return interaction type
      */
-    static InteractionType GetInteractionType(const pandora::MCParticleList &mcPrimaryList, const bool testBeamHierarchyMode = false);
+    static InteractionType GetInteractionType(const pandora::MCParticleList &mcPrimaryList);
+
+    /**
+     *  @brief  Get the test beam hierarchy interaction type of an event
+     *
+     *  @param  mcPrimaryList the list of primary mc particles
+     *
+     *  @return interaction type
+     */
+    static InteractionType GetTestBeamHierarchyInteractionType(const pandora::MCParticleList &mcPrimaryList);
 
     /**
      *  @brief  Get a string representation of an interaction type

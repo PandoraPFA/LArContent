@@ -417,7 +417,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
 
         if (isCosmicRay || isLastTestBeamLeading)
         {
-            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries, true));
+            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
 #ifdef MONITORING
             const int interactionTypeInt(static_cast<int>(interactionType));
 #endif
