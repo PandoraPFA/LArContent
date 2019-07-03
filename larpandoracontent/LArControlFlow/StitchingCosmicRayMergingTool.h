@@ -198,26 +198,25 @@ private:
      */
     void StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
         const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const;
-		
-	/**
-	 * @brief Reduce the original pfoVector to one of size 2 if its greater than that
-	 *
-	 * @param pfoVector vector of pfos being stitched
-	 * @param reducedPfoVector the reduced vector of pfos
-	 * @param pPfoToEnlarge the pfo we are enlarging 
-	 * @param pfoToLArTPCMap the pfo to lar tpc map
-	 * 
-	 * @return particleflow object to enlarge
-	 */
-	const pandora::ParticleFlowObject *ReduceToLongestStitch(pandora::PfoVector &pfoVector, pandora::PfoVector &reducedPfoVector,
-		const pandora::ParticleFlowObject *const pPfoToEnlarge, const PfoToLArTPCMap &pfoToLArTPCMap) const;
-	
-	// TODO - need doxygen info
-	pandora::PfoVector SelectLongestStitch(pandora::PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap) const;
-	const pandora::ParticleFlowObject *GetClosestPfo(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::PfoVector &pfoVector) const;
 
-	unsigned int NumberOfTwoDHits(const pandora::ParticleFlowObject *pfo) const;
-	
+    /**
+     * @brief Reduce the original pfoVector to one of size 2 if its greater than that
+     *
+     * @param pfoVector vector of pfos being stitched
+     * @param reducedPfoVector the reduced vector of pfos
+     * @param pPfoToEnlarge the pfo we are enlarging
+     * @param pfoToLArTPCMap the pfo to lar tpc map
+     *
+     * @return particleflow object to enlarge
+     */
+    const pandora::ParticleFlowObject *ReduceToLongestStitch(pandora::PfoVector &pfoVector, pandora::PfoVector &reducedPfoVector,
+        const pandora::ParticleFlowObject *const pPfoToEnlarge, const PfoToLArTPCMap &pfoToLArTPCMap) const;
+
+    // TODO - need doxygen info
+    pandora::PfoVector SelectLongestStitch(pandora::PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap) const;
+    const pandora::ParticleFlowObject *GetClosestPfo(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::PfoVector &pfoVector) const;
+
+    unsigned int NumberOfTwoDHits(const pandora::ParticleFlowObject *pfo) const;
 
     /**
      *  @brief  Find the pair of LArTPCs that contain the pfos being stitched
