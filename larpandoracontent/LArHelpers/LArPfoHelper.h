@@ -88,6 +88,14 @@ public:
     static void GetClusters(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::ClusterList &clusterList);
 
     /**
+     * @brief Get the number of 2D hits of a PFO
+     *
+     * @param pPfo the pfo to check
+     * @return int of number of 2D hits
+     */
+    static unsigned int GetNumberOfTwoDHits(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
      *  @brief Get the list of 2D clusters from an input pfo
      *
      *  @param  pPfo the input Pfo

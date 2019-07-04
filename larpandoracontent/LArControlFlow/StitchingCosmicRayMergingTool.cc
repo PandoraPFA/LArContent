@@ -538,7 +538,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
         std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
 
         PfoVector reducedPfoVector;
-        const ParticleFlowObject *const selectedPfoToEnlarge(this->ReduceToLongestStitch(pfoVector, reducedPfoVector, pPfoToEnlarge, pfoToLArTPCMap));
+        const ParticleFlowObject *const pSelectedPfoToEnlarge(this->ReduceToLongestStitch(pfoVector, pPfoToEnlarge, pfoToLArTPCMap, reducedPfoVector));
 
         LArTPCPair stitchedLArTPCs(nullptr, nullptr);
 
@@ -556,6 +556,9 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
             continue;
         }
+
+    if ((stitchedLArTPCs.first == nullptr) || (stitchedLArTPCs.second == nullptr))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
 
         float x0(0.f);
         const float tpcBoundaryCenterX(LArStitchingHelper::GetTPCBoundaryCenterX(*stitchedLArTPCs.first, *stitchedLArTPCs.second));
@@ -595,31 +598,30 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
         for (const ParticleFlowObject *const pPfoToDelete : reducedPfoVector)
         {
-            if (selectedPfoToEnlarge == pPfoToDelete)
+            if (pSelectedPfoToEnlarge == pPfoToDelete)
                 continue;
 
-            pAlgorithm->StitchPfos(selectedPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
-            stitchedPfosToX0Map.insert(PfoToFloatMap::value_type(selectedPfoToEnlarge, x0));
+            pAlgorithm->StitchPfos(pSelectedPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
+            stitchedPfosToX0Map.insert(PfoToFloatMap::value_type(pSelectedPfoToEnlarge, x0));
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const ParticleFlowObject *StitchingCosmicRayMergingTool::ReduceToLongestStitch(PfoVector &pfoVector, PfoVector &reducedPfoVector,
-    const ParticleFlowObject *const pPfoToEnlarge, const PfoToLArTPCMap &pfoToLArTPCMap) const
+const ParticleFlowObject *StitchingCosmicRayMergingTool::ReduceToLongestStitch(const PfoVector &pfoVector, const ParticleFlowObject *const pPfoToEnlarge,
+    const PfoToLArTPCMap &pfoToLArTPCMap, PfoVector &reducedPfoVector) const
 {
-    if (pfoVector.size() > 2 )
+    if (pfoVector.size() > 2)
     {
-        reducedPfoVector = this->SelectLongestStitch(pfoVector, pfoToLArTPCMap);
+        this->SelectLongestStitch(pfoVector, pfoToLArTPCMap, reducedPfoVector);
         std::sort(reducedPfoVector.begin(), reducedPfoVector.end(), LArPfoHelper::SortByNHits);
 
         return this->GetClosestPfo(pPfoToEnlarge, reducedPfoVector);
     }
     else
     {
-        for (const ParticleFlowObject *const pPfoToShift : pfoVector) reducedPfoVector.push_back(pPfoToShift);
-        std::sort(reducedPfoVector.begin(), reducedPfoVector.end(), LArPfoHelper::SortByNHits);
+        reducedPfoVector = pfoVector;
 
         return pPfoToEnlarge;
     }
@@ -627,36 +629,12 @@ const ParticleFlowObject *StitchingCosmicRayMergingTool::ReduceToLongestStitch(P
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const ParticleFlowObject *StitchingCosmicRayMergingTool::GetClosestPfo(const ParticleFlowObject *const pPfoToEnlarge, const PfoVector &pfoVector) const
+void StitchingCosmicRayMergingTool::SelectLongestStitch(const PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap, PfoVector &reducedPfoVector) const
 {
-    float minDistance(std::numeric_limits<float>::max());
-    for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-    {
-        if (pPfoToShift == pPfoToEnlarge)
-            return pPfoToEnlarge;
+    //ATTN this is the initialization, in case the rest of logic fails
+    reducedPfoVector = pfoVector;
+    reducedPfoVector.resize(2);
 
-        const float thisDistance(LArPfoHelper::GetTwoDSeparation(pPfoToShift, pPfoToEnlarge));
-        if (thisDistance < minDistance)
-            minDistance = thisDistance;
-    }
-
-    //TODO - better way to avoid this loop? maybe create a map pfo,distance?
-    for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-    {
-        if ((LArPfoHelper::GetTwoDSeparation(pPfoToShift, pPfoToEnlarge) - minDistance) < std::numeric_limits<float>::epsilon())
-            return pPfoToShift;
-    }
-
-    //ATTN: should not arrive here, but if we did, return the first element in pfoVector
-    PfoVector::const_iterator iter = pfoVector.begin();
-    return *iter;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-PfoVector StitchingCosmicRayMergingTool::SelectLongestStitch(PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap) const
-{
-    PfoVector selectedPfos;
     int totalHitsStitched(0);
 
     for (const ParticleFlowObject *const pPfoToShift1 : pfoVector)
@@ -666,7 +644,7 @@ PfoVector StitchingCosmicRayMergingTool::SelectLongestStitch(PfoVector &pfoVecto
             if (pPfoToShift2 == pPfoToShift1)
                 continue;
 
-            const unsigned int twoDHitsPfo1(this->NumberOfTwoDHits(pPfoToShift1)), twoDHitsPfo2(this->NumberOfTwoDHits(pPfoToShift2));
+            const unsigned int twoDHitsPfo1(LArPfoHelper::GetNumberOfTwoDHits(pPfoToShift1)), twoDHitsPfo2(LArPfoHelper::GetNumberOfTwoDHits(pPfoToShift2));
 
             PfoToLArTPCMap::const_iterator iter1(pfoToLArTPCMap.find(pPfoToShift1));
             PfoToLArTPCMap::const_iterator iter2(pfoToLArTPCMap.find(pPfoToShift2));
@@ -679,48 +657,36 @@ PfoVector StitchingCosmicRayMergingTool::SelectLongestStitch(PfoVector &pfoVecto
                 if (((twoDHitsPfo1 + twoDHitsPfo2) > totalHitsStitched) && LArStitchingHelper::CanTPCsBeStitched(*pLArTPC1, *pLArTPC2))
                 {
                     totalHitsStitched = twoDHitsPfo1 + twoDHitsPfo2;
+                    reducedPfoVector.clear();
+                    reducedPfoVector.push_back(pPfoToShift1);
+                    reducedPfoVector.push_back(pPfoToShift2);
                 }
             }
         }
     }
-
-    // TODO - better way to save the pfos? a map pfo, total hits created in loop above?
-    for (const ParticleFlowObject *const pPfoToShift1 : pfoVector)
-    {
-        for (const ParticleFlowObject *const pPfoToShift2 : pfoVector)
-        {
-            if (pPfoToShift2 == pPfoToShift1)
-                continue;
-
-            const unsigned int twoDHitsPfo1(this->NumberOfTwoDHits(pPfoToShift1)), twoDHitsPfo2(this->NumberOfTwoDHits(pPfoToShift2));
-
-            if ((twoDHitsPfo1 + twoDHitsPfo2) == totalHitsStitched)
-            {
-                selectedPfos.push_back(pPfoToShift1);
-                selectedPfos.push_back(pPfoToShift2);
-                return selectedPfos;
-            }
-        }
-    }
-
-    //ATTN we shouldnt arrive here, but if we did, just resize to 2 (pfoVector is ordered by number of hits anyway)
-    pfoVector.resize(2);
-    return pfoVector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//This could be replaced by LArPfoHelper Get2DClusters and then LArClusterHelper GetOrderedCaloHitList, or this below could be moved to LArPfoHelper
-unsigned int StitchingCosmicRayMergingTool::NumberOfTwoDHits(const ParticleFlowObject *pfo) const
-{
-    unsigned int totalHits(0);
-    for (ClusterList::const_iterator iter = pfo->GetClusterList().begin(), iterEnd = pfo->GetClusterList().end(); iter != iterEnd; ++iter)
-    {
-        const Cluster *const pCluster = *iter;
 
-        if (TPC_3D != LArClusterHelper::GetClusterHitType(pCluster))
-        totalHits += pCluster->GetNCaloHits();
+const ParticleFlowObject *StitchingCosmicRayMergingTool::GetClosestPfo(const ParticleFlowObject *const pPfoToEnlarge, const PfoVector &pfoVector) const
+{
+    const ParticleFlowObject *pClosestPfo(*pfoVector.begin());
+
+    float minDistance(std::numeric_limits<float>::max());
+    for (const ParticleFlowObject *const pPfoToShift : pfoVector)
+    {
+        if (pPfoToShift == pPfoToEnlarge)
+            return pPfoToEnlarge;
+
+        const float thisDistance(LArPfoHelper::GetTwoDSeparation(pPfoToShift, pPfoToEnlarge));
+        if (thisDistance < minDistance)
+        {
+            minDistance = thisDistance;
+            pClosestPfo = pPfoToShift;
+        }
     }
-    return totalHits;
+
+    return pClosestPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
