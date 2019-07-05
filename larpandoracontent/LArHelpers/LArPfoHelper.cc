@@ -104,7 +104,6 @@ unsigned int LArPfoHelper::GetNumberOfTwoDHits(const ParticleFlowObject *const p
         totalHits += pCluster->GetNCaloHits();
 
     return totalHits;
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

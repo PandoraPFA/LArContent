@@ -557,7 +557,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             continue;
         }
 
-    if ((stitchedLArTPCs.first == nullptr) || (stitchedLArTPCs.second == nullptr))
+        if ((stitchedLArTPCs.first == nullptr) || (stitchedLArTPCs.second == nullptr))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         float x0(0.f);

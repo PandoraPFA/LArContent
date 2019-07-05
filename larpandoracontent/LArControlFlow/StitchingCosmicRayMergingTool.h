@@ -221,15 +221,15 @@ private:
      */
     void SelectLongestStitch(const pandora::PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoVector &reducedPfoVector) const;
 
-	/**
-	 * @brief Get the closest pfo to pfoToEnlarge from pfoVector
-	 *
-	 * @param pPfoToEnlarge pfo we search for the closest one to
-	 * @param pfoVector vector of pfos in which to find the closest to pPfoToEnlarge
-	 *
-	 * @return the pfo closest to pPfoToEnlarge from those contained in pfoVector
-	 */
-	const pandora::ParticleFlowObject *GetClosestPfo(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::PfoVector &pfoVector) const;
+    /**
+     * @brief Get the closest pfo to pfoToEnlarge from pfoVector
+     *
+     * @param pPfoToEnlarge pfo we search for the closest one to
+     * @param pfoVector vector of pfos in which to find the closest to pPfoToEnlarge
+     *
+     * @return the pfo closest to pPfoToEnlarge from those contained in pfoVector
+     */
+    const pandora::ParticleFlowObject *GetClosestPfo(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::PfoVector &pfoVector) const;
 
     /**
      *  @brief  Find the pair of LArTPCs that contain the pfos being stitched
