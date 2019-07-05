@@ -201,6 +201,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
 
         associatedMCPrimaries.push_back(pMCPrimary);
         const int nTargetPrimaries(associatedMCPrimaries.size());
+        ++mcPrimaryIndex;
         const CaloHitList &mcPrimaryHitList(validationInfo.GetAllMCParticleToHitsMap().at(pMCPrimary));
 
         const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
@@ -417,7 +418,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
 
         if (isCosmicRay || isLastTestBeamLeading)
         {
-            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
+            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetTestBeamHierarchyInteractionType(associatedMCPrimaries));
 #ifdef MONITORING
             const int interactionTypeInt(static_cast<int>(interactionType));
 #endif
