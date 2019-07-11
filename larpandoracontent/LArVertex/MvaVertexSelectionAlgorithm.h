@@ -413,6 +413,7 @@ private:
     float                 m_maxTrueVertexRadius;                  ///< The maximum distance at which a vertex candidate can be considered the 'true' vertex
     bool                  m_useRPhiFeatureForRegion;              ///< Whether to use the r/phi feature for the region vertex
     bool                  m_dropFailedRPhiFastScoreCandidates;    ///< Whether to drop candidates that fail the r/phi fast score test
+    bool                  m_testBeamMode;                         ///< Test beam mode
 };
 
 typedef MvaVertexSelectionAlgorithm<AdaBoostDecisionTree> BdtVertexSelectionAlgorithm;
