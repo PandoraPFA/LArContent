@@ -92,8 +92,16 @@ else()
         add_definitions("-DMONITORING")
     endif()
 
-    find_package(Eigen3 3.3 REQUIRED NO_MODULE)
-    include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
+    set(TensorFlow_LIBRARIES $ENV{TENSORFLOW_LIB}/libtensorflow-core.so)
+    set(Protobuf_LIBRARIES $ENV{PROTOBUF_LIB}/libprotobuf.so)
+    set(TensorFlow_INCLUDE_DIRS $ENV{TENSORFLOW_INC} $ENV{TENSORFLOW_INC}/absl $ENV{TENSORFLOW_INC}/eigen)
+    set(Protobuf_INCLUDE_DIRS $ENV{PROTOBUF_INC})
+
+    link_libraries(${TensorFlow_LIBRARIES})
+    include_directories(SYSTEM ${TensorFlow_INCLUDE_DIRS})
+
+    link_libraries(${Protobuf_LIBRARIES})
+    include_directories(SYSTEM ${Protobuf_INCLUDE_DIRS})
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc
