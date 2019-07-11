@@ -5,8 +5,23 @@ else
     PROJECT_LIBRARY_DIR = $(PROJECT_DIR)/lib
 endif
 
-ifndef EIGEN_INC
-    EIGEN_INC = $(PANDORA_DIR)/Eigen3
+# TODO Remove, check eigen
+TENSORFLOW_INC=/cvmfs/larsoft.opensciencegrid.org/products/tensorflow/v1_12_0b/Linux64bit+3.10-2.17-e17-prof/include/
+TENSORFLOW_LIB=/cvmfs/larsoft.opensciencegrid.org/products/tensorflow/v1_12_0b/Linux64bit+3.10-2.17-e17-prof/lib/
+PROTOBUF_INC=/cvmfs/larsoft.opensciencegrid.org/products/protobuf/v3_5_2a/Linux64bit+3.10-2.17-e17/include/
+PROTOBUF_LIB=/cvmfs/larsoft.opensciencegrid.org/products/protobuf/v3_5_2a/Linux64bit+3.10-2.17-e17/lib/
+
+ifndef TENSORFLOW_INC
+    TENSORFLOW_INC = $(PANDORA_DIR)/TensorFlow/include
+endif
+ifndef TENSORFLOW_LIB
+    TENSORFLOW_LIB = $(PANDORA_DIR)/TensorFlow/lib
+endif
+ifndef PROTOBUF_INC
+    PROTOBUF_INC = $(PANDORA_DIR)/Protobuf/include
+endif
+ifndef PROTOBUF_LIB
+    PROTOBUF_LIB = $(PANDORA_DIR)/Protobuf/lib
 endif
 
 CC = g++
@@ -16,6 +31,8 @@ ifdef BUILD_32BIT_COMPATIBLE
 endif
 
 LIBS = -L$(PANDORA_DIR)/lib -lPandoraSDK
+LIBS += -L$(TENSORFLOW_LIB) -ltensorflow-core
+LIBS += -L$(PROTOBUF_LIB) -lprotobuf
 ifdef MONITORING
     LIBS += -lPandoraMonitoring
 endif
@@ -28,7 +45,11 @@ PROJECT_LIBRARY = $(PROJECT_LIBRARY_DIR)/libLArContent.so
 
 INCLUDES  = -I$(PROJECT_INCLUDE_DIR)
 INCLUDES += -I$(PANDORA_DIR)/PandoraSDK/include
-INCLUDES += -isystem $(EIGEN_INC)/
+INCLUDES += -isystem $(EIGEN_INC)
+INCLUDES += -isystem $(TENSORFLOW_INC)
+INCLUDES += -isystem $(TENSORFLOW_INC)/absl
+INCLUDES += -isystem $(TENSORFLOW_INC)/eigen
+INCLUDES += -isystem $(PROTOBUF_INC)
 ifdef MONITORING
     INCLUDES += -I$(PANDORA_DIR)/PandoraMonitoring/include
 endif
