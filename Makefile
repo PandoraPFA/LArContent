@@ -5,12 +5,6 @@ else
     PROJECT_LIBRARY_DIR = $(PROJECT_DIR)/lib
 endif
 
-# TODO Remove, check eigen
-TENSORFLOW_INC=/cvmfs/larsoft.opensciencegrid.org/products/tensorflow/v1_12_0b/Linux64bit+3.10-2.17-e17-prof/include/
-TENSORFLOW_LIB=/cvmfs/larsoft.opensciencegrid.org/products/tensorflow/v1_12_0b/Linux64bit+3.10-2.17-e17-prof/lib/
-PROTOBUF_INC=/cvmfs/larsoft.opensciencegrid.org/products/protobuf/v3_5_2a/Linux64bit+3.10-2.17-e17/include/
-PROTOBUF_LIB=/cvmfs/larsoft.opensciencegrid.org/products/protobuf/v3_5_2a/Linux64bit+3.10-2.17-e17/lib/
-
 ifndef TENSORFLOW_INC
     TENSORFLOW_INC = $(PANDORA_DIR)/TensorFlow/include
 endif
@@ -45,7 +39,6 @@ PROJECT_LIBRARY = $(PROJECT_LIBRARY_DIR)/libLArContent.so
 
 INCLUDES  = -I$(PROJECT_INCLUDE_DIR)
 INCLUDES += -I$(PANDORA_DIR)/PandoraSDK/include
-INCLUDES += -isystem $(EIGEN_INC)
 INCLUDES += -isystem $(TENSORFLOW_INC)
 INCLUDES += -isystem $(TENSORFLOW_INC)/absl
 INCLUDES += -isystem $(TENSORFLOW_INC)/eigen

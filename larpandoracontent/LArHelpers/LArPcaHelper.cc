@@ -10,7 +10,7 @@
 #include "larpandoracontent/LArHelpers/LArObjectHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
-#include <Eigen/Dense>
+#include <Eigen_tf/Dense>
 
 using namespace pandora;
 
@@ -100,8 +100,8 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
         zi2  += z * z * weight;
     }
 
-    // Using Eigen package
-    Eigen::Matrix3f sig;
+    // Using Eigen_tf package
+    Eigen_tf::Matrix3f sig;
 
     sig <<  xi2, xiyi, xizi,
            xiyi,  yi2, yizi,
@@ -109,9 +109,9 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
 
     sig *= 1. / sumWeight;
 
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigenMat(sig);
+    Eigen_tf::SelfAdjointEigenSolver<Eigen_tf::Matrix3f> eigenMat(sig);
 
-    if (eigenMat.info() != Eigen::ComputationInfo::Success)
+    if (eigenMat.info() != Eigen_tf::ComputationInfo::Success)
     {
         std::cout << "LArPcaHelper::RunPca - decomposition failure, nThreeDHits = " << pointVector.size() << std::endl;
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -132,7 +132,7 @@ void LArPcaHelper::RunPca(const WeightedPointVector &pointVector, CartesianVecto
     outputEigenValues = CartesianVector(eigenValColVector.at(0).first, eigenValColVector.at(1).first, eigenValColVector.at(2).first);
 
     // Get the principal axes
-    const Eigen::Matrix3f &eigenVecs(eigenMat.eigenvectors());
+    const Eigen_tf::Matrix3f &eigenVecs(eigenMat.eigenvectors());
 
     for (const EigenValColPair &pair : eigenValColVector)
         outputEigenVectors.emplace_back(eigenVecs(0, pair.second), eigenVecs(1, pair.second), eigenVecs(2, pair.second));
