@@ -35,7 +35,12 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     cet_report_compiler_flags()
 
     find_ups_product( pandora )
-    find_ups_product( eigen )
+    if(DEFINED ENV{TENSORFLOW_DIR})
+        find_ups_product( protobuf )
+        find_ups_product( tensorflow )
+        cet_find_library(TENSORFLOW NAMES tensorflow-core PATHS ENV TENSORFLOW_LIB NO_DEFAULT_PATH )
+        cet_find_library(PROTOBUF NAMES protobuf PATHS ENV PROTOBUF_LIB NO_DEFAULT_PATH )
+    endif()
 
     cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
     cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
