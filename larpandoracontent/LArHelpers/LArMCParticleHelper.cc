@@ -143,8 +143,7 @@ void LArMCParticleHelper::GetTrueTestBeamParticles(const MCParticleList *const p
 {
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
-        const int nuance(LArMCParticleHelper::GetNuanceCode(pMCParticle));
-        if (LArMCParticleHelper::IsPrimary(pMCParticle) && (nuance == 2001))
+        if (LArMCParticleHelper::IsTriggeredBeamParticle(pMCParticle))
             trueTestBeamParticles.push_back(pMCParticle);
     }
 

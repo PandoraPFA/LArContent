@@ -614,15 +614,18 @@ std::string MvaVertexSelectionAlgorithm<T>::GetInteractionType() const
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
-    // ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
     LArMCParticleHelper::MCContributionMap targetMCParticlesToGoodHitsMap;
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
-        LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticlesToGoodHitsMap);
 
     if (m_testBeamMode)
     {
         LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
             LArMCParticleHelper::IsTriggeredBeamParticle, targetMCParticlesToGoodHitsMap);
+    }
+    else
+    {
+        // ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
+            LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticlesToGoodHitsMap);
     }
 
     MCParticleList mcPrimaryList;
@@ -689,7 +692,6 @@ void MvaVertexSelectionAlgorithm<T>::GetBestVertex(const VertexVector &vertexVec
 
     // Obtain vector: true targets
     MCParticleVector mcTargetVector;
-    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcTargetVector);
 
     if (m_testBeamMode)
     {
@@ -705,7 +707,7 @@ void MvaVertexSelectionAlgorithm<T>::GetBestVertex(const VertexVector &vertexVec
         float mcVertexDr(std::numeric_limits<float>::max());
         for (const MCParticle *const pMCTarget : mcTargetVector)
         {
-            const CartesianVector mcTargetPosition((m_testBeamMode && std::fabs(pMCTarget->GetParticleId()) == 11) ? pMCTarget->GetVertex() :
+            const CartesianVector &mcTargetPosition((m_testBeamMode && std::fabs(pMCTarget->GetParticleId()) == 11) ? pMCTarget->GetVertex() :
                 pMCTarget->GetEndpoint());
             const CartesianVector mcTargetCorrectedPosition(mcTargetPosition.GetX() + m_mcVertexXCorrection, mcTargetPosition.GetY(),
                 mcTargetPosition.GetZ());
