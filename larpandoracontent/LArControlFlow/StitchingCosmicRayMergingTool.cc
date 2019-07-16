@@ -635,7 +635,7 @@ void StitchingCosmicRayMergingTool::SelectLongestStitch(const PfoVector &pfoVect
     reducedPfoVector = pfoVector;
     reducedPfoVector.resize(2);
 
-    int totalHitsStitched(0);
+    unsigned int totalHitsStitched(0);
 
     for (PfoVector::const_iterator iterPfo1 = pfoVector.begin(), iterPfoEnd = pfoVector.end(); iterPfo1 != iterPfoEnd; ++iterPfo1)
     {
