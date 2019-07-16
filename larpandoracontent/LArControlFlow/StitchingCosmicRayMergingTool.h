@@ -200,6 +200,38 @@ private:
         const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const;
 
     /**
+     * @brief Reduce the original pfoVector to one of size 2 if its greater than that
+     *
+     * @param pfoVector vector of pfos being stitched
+     * @param reducedPfoVector the reduced vector of pfos
+     * @param pPfoToEnlarge the pfo we are enlarging
+     * @param pfoToLArTPCMap the pfo to lar tpc map
+     *
+     * @return particleflow object to enlarge
+     */
+    const pandora::ParticleFlowObject *ReduceToLongestStitch(const pandora::PfoVector &pfoVector, const pandora::ParticleFlowObject *const pPfoToEnlarge,
+        const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoVector &reducedPfoVector) const;
+
+    /**
+     * @brief Select the longest stitch if the pfoVector of pfos to stitch provided is larger than 2
+	 *
+     * @param pfoVector vector of pfos being stitched
+     * @param pfoToLArTPCMap the pfo to lar tpc map
+     * @param reducedPfoVector the pfo vector we returned with size just 2 if pfo vector was larger
+     */
+    void SelectLongestStitch(const pandora::PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoVector &reducedPfoVector) const;
+
+    /**
+     * @brief Get the closest pfo to pfoToEnlarge from pfoVector
+     *
+     * @param pPfoToEnlarge pfo we search for the closest one to
+     * @param pfoVector vector of pfos in which to find the closest to pPfoToEnlarge
+     *
+     * @return the pfo closest to pPfoToEnlarge from those contained in pfoVector
+     */
+    const pandora::ParticleFlowObject *GetClosestPfo(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::PfoVector &pfoVector) const;
+
+    /**
      *  @brief  Find the pair of LArTPCs that contain the pfos being stitched
      *
      *  @param  pfoVector vector of pfos being stitched

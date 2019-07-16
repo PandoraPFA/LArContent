@@ -94,6 +94,20 @@ void LArPfoHelper::GetClusters(const ParticleFlowObject *const pPfo, const HitTy
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+unsigned int LArPfoHelper::GetNumberOfTwoDHits(const ParticleFlowObject *const pPfo)
+{
+    unsigned int totalHits(0);
+
+    ClusterList clusterList;
+    LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
+    for (const Cluster *const pCluster : clusterList)
+        totalHits += pCluster->GetNCaloHits();
+
+    return totalHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetTwoDClusterList(const ParticleFlowObject *const pPfo, ClusterList &clusterList)
 {
     for (const Cluster *const pCluster : pPfo->GetClusterList())
