@@ -282,6 +282,13 @@ private:
     const pandora::Pandora *CreateWorkerInstance(const pandora::LArTPCMap &larTPCMap, const pandora::DetectorGapList &gapList,
         const std::string &settingsFile, const std::string &name) const;
 
+    /**
+     *  @brief  Register custom content, such as algorithms or algorithm tools, with a specified pandora instance
+     *
+     *  @param  pPandora the address of the pandora instance
+     */
+    virtual pandora::StatusCode RegisterCustomContent(const pandora::Pandora *const pPandora) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
