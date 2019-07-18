@@ -54,7 +54,8 @@ MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
     m_rPhiFineTuningRadius(2.f),
     m_maxTrueVertexRadius(1.f),
     m_useRPhiFeatureForRegion(false),
-    m_dropFailedRPhiFastScoreCandidates(true)
+    m_dropFailedRPhiFastScoreCandidates(true),
+    m_testBeamMode(false)
 {
 }
 
@@ -613,13 +614,22 @@ std::string MvaVertexSelectionAlgorithm<T>::GetInteractionType() const
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
 
-    // ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
-    LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
-        LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
+    LArMCParticleHelper::MCContributionMap targetMCParticlesToGoodHitsMap;
+
+    if (m_testBeamMode)
+    {
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
+            LArMCParticleHelper::IsTriggeredBeamParticle, targetMCParticlesToGoodHitsMap);
+    }
+    else
+    {
+        // ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
+            LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticlesToGoodHitsMap);
+    }
 
     MCParticleList mcPrimaryList;
-    for (const auto &mapEntry : nuMCParticlesToGoodHitsMap) mcPrimaryList.push_back(mapEntry.first);
+    for (const auto &mapEntry : targetMCParticlesToGoodHitsMap) mcPrimaryList.push_back(mapEntry.first);
     mcPrimaryList.sort(LArMCParticleHelper::SortByMomentum);
 
     const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(mcPrimaryList));
@@ -680,19 +690,29 @@ void MvaVertexSelectionAlgorithm<T>::GetBestVertex(const VertexVector &vertexVec
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
-    // Obtain vector: true neutrinos
-    MCParticleVector mcNeutrinoVector;
-    LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcNeutrinoVector);
+    // Obtain vector: true targets
+    MCParticleVector mcTargetVector;
+
+    if (m_testBeamMode)
+    {
+        LArMCParticleHelper::GetTrueTestBeamParticles(pMCParticleList, mcTargetVector);
+    }
+    else
+    {
+        LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcTargetVector);
+    }
 
     for (const Vertex *const pVertex : vertexVector)
     {
         float mcVertexDr(std::numeric_limits<float>::max());
-        for (const MCParticle *const pMCNeutrino : mcNeutrinoVector)
+        for (const MCParticle *const pMCTarget : mcTargetVector)
         {
-            const CartesianVector mcNeutrinoPosition(pMCNeutrino->GetEndpoint().GetX() + m_mcVertexXCorrection, pMCNeutrino->GetEndpoint().GetY(),
-                pMCNeutrino->GetEndpoint().GetZ());
+            const CartesianVector &mcTargetPosition((m_testBeamMode && std::fabs(pMCTarget->GetParticleId()) == 11) ? pMCTarget->GetVertex() :
+                pMCTarget->GetEndpoint());
+            const CartesianVector mcTargetCorrectedPosition(mcTargetPosition.GetX() + m_mcVertexXCorrection, mcTargetPosition.GetY(),
+                mcTargetPosition.GetZ());
+            const float dr = (mcTargetCorrectedPosition - pVertex->GetPosition()).GetMagnitude();
 
-            const float dr = (mcNeutrinoPosition - pVertex->GetPosition()).GetMagnitude();
             if (dr < mcVertexDr)
                 mcVertexDr = dr;
         }
@@ -895,6 +915,9 @@ StatusCode MvaVertexSelectionAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DropFailedRPhiFastScoreCandidates", m_dropFailedRPhiFastScoreCandidates));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TestBeamMode", m_testBeamMode));
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
