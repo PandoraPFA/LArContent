@@ -83,13 +83,13 @@ bool ShowerOverlapResult::operator<(const ShowerOverlapResult &rhs) const
     if (std::fabs(m_matchedFraction - rhs.m_matchedFraction) > std::numeric_limits<float>::epsilon())
         return (m_matchedFraction < rhs.m_matchedFraction);
 
+    if (std::fabs(m_xOverlap.GetXSpanW() - rhs.m_xOverlap.GetXSpanW()) > std::numeric_limits<float>::epsilon())
+        return (m_xOverlap.GetXSpanW() < rhs.m_xOverlap.GetXSpanW());
+
     if (std::fabs(m_xOverlap.GetXSpanU() - rhs.m_xOverlap.GetXSpanU()) > std::numeric_limits<float>::epsilon())
         return (m_xOverlap.GetXSpanU() < rhs.m_xOverlap.GetXSpanU());
 
-    if (std::fabs(m_xOverlap.GetXSpanV() - rhs.m_xOverlap.GetXSpanV()) > std::numeric_limits<float>::epsilon())
-        return (m_xOverlap.GetXSpanV() < rhs.m_xOverlap.GetXSpanV());
-
-    return (m_xOverlap.GetXSpanW() < rhs.m_xOverlap.GetXSpanW());
+    return (m_xOverlap.GetXSpanV() < rhs.m_xOverlap.GetXSpanV());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
