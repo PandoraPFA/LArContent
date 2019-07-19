@@ -1,4 +1,11 @@
 -------------------------------------------------------------------------------------------------------------------------------------------- 
+TAG v03_15_02
+-------------------------------------------------------------------------------------------------------------------------------------------- 
+Added test beam interaction training mode functionality to machine learning vertex selection algorithm.
+Extended the comparison operator for the LArShowerOverlapResult to resolve reproducibility issue.
+Added ability to register custom content in algorithms deriving from the Master algorithm.
+
+-------------------------------------------------------------------------------------------------------------------------------------------- 
 TAG v03_15_01
 -------------------------------------------------------------------------------------------------------------------------------------------- 
 Modification to stitching logic such that stitches are only made from the pair of associated pfos with the largest number of hits.
