@@ -135,6 +135,19 @@ void EventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pM
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCHitSharingMap;
     LArMCParticleHelper::MCParticleToPfoHitSharingMap mcToPfoHitSharingMap;
     LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(validationInfo.GetPfoToHitsMap(), {validationInfo.GetAllMCParticleToHitsMap()}, pfoToMCHitSharingMap, mcToPfoHitSharingMap);
+
+    // ATTN : Ensure all mc primaries have an entry in mcToPfoHitSharingMap, even if no associated pfos.
+    MCParticleVector mcPrimaryVector;
+    LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetAllMCParticleToHitsMap()}, mcPrimaryVector);
+    for (const MCParticle *pMCParticle : mcPrimaryVector)
+    {
+        if (mcToPfoHitSharingMap.find(pMCParticle) == mcToPfoHitSharingMap.end())
+        {
+            LArMCParticleHelper::PfoToSharedHitsVector pfoToSharedHitsVector;
+            mcToPfoHitSharingMap.insert(LArMCParticleHelper::MCParticleToPfoHitSharingMap::value_type(pMCParticle, pfoToSharedHitsVector));
+        }
+    }
+
     validationInfo.SetMCToPfoHitSharingMap(mcToPfoHitSharingMap);
 
     LArMCParticleHelper::MCParticleToPfoHitSharingMap interpretedMCToPfoHitSharingMap;
