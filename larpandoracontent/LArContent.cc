@@ -41,6 +41,8 @@
 #include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
+#include "larpandoracontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
+
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
@@ -267,7 +269,8 @@
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
     d("LArBdtVertexSelection",                  BdtVertexSelectionAlgorithm)                                                    \
-    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)
+    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)                                                    \
+    d("LArDeepLearningTrackShowerId",           DeepLearningTrackShowerIdAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \

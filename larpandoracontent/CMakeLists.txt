@@ -3,6 +3,7 @@ include_directories( $ENV{EIGEN_INC} )
 set( subdir_list LArCheating
                  LArControlFlow
 		 LArCustomParticles
+                 LArDeepLearning
 		 LArHelpers
 		 LArMonitoring
 		 LArObjects
