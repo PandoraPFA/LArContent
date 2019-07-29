@@ -29,6 +29,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 //    std::string                                 m_caloHitListName;          ///< Name of input calo hit list
+    std::string m_modelFileName; ///< Model file name
 };
 
 } // namespace lar_content

@@ -96,8 +96,8 @@ else()
     include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
 
     find_package(Torch REQUIRED)
-    include_directories(${Torch_INCLUDE_DIRS})
-    link_libraries(${Torch_LIBRARIES})
+    include_directories(${TORCH_INCLUDE_DIRECTORIES})
+    link_libraries(${TORCH_LIBRARIES})
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc
