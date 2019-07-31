@@ -62,6 +62,7 @@ private:
     float               m_minCellLengthScale;               ///< The minimum length scale for calo hit
     float               m_maxCellLengthScale;               ///< The maximum length scale for calo hit
     float               m_searchRegion1D;                   ///< Search region, applied to each dimension, for look-up from kd-trees
+    int                 m_maxEventHits;                     ///< The maximum number of hits in an event to proceed with the reconstruction
 
     bool                m_onlyAvailableCaloHits;            ///< Whether to only include available calo hits
     std::string         m_inputCaloHitListName;             ///< The input calo hit list name
