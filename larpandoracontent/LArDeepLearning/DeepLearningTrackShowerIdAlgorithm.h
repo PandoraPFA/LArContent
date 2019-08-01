@@ -28,8 +28,14 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-//    std::string                                 m_caloHitListName;          ///< Name of input calo hit list
-    std::string m_modelFileName; ///< Model file name
+    pandora::StringVector     m_caloHitListNames;    ///< Name of input calo hit list
+    std::string               m_modelFileName;       ///< Model file name
+    float                     m_xMin;                ///< Min X used in training model
+    float                     m_xMax;                ///< Max X used in training model
+    float                     m_zMin;                ///< Min Z used in training model
+    float                     m_zMax;                ///< Max Z used in training model
+    int                       m_nBins;               ///< Number of bins used in training model (assumption is same number in X and Z)
+    bool                      m_visualize;           ///< Whether to visualize the track shower ID scores
 };
 
 } // namespace lar_content
