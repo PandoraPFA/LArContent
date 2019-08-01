@@ -44,6 +44,11 @@ private:
     void ProcessCaloHits();
 
     /**
+     *  @brief Build empty calo hit lists
+     */
+    void PopulateVoidCaloHitLists() noexcept;
+
+    /**
      *  @brief Clean up the input CaloHitList
      *
      *  @param inputList the input CaloHitList
