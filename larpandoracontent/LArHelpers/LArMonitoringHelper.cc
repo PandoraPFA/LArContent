@@ -240,11 +240,13 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
     // Make a new row for each MCParticle
     for (unsigned int mcParticleId = 0; mcParticleId < orderedMCParticleVector.size(); ++mcParticleId)
     {
-        LArMCParticleHelper::MCParticleToPfoHitSharingMap::const_iterator it = mcParticleToPfoHitSharingMap.find(orderedMCParticleVector.at(mcParticleId));
-        if (it == mcParticleToPfoHitSharingMap.end())
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        const MCParticle *const pMCParticle(orderedMCParticleVector.at(mcParticleId));
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap::const_iterator it = mcParticleToPfoHitSharingMap.find(pMCParticle);
+        LArMCParticleHelper::PfoToSharedHitsVector pfoToSharedHitsVector;
 
-        const MCParticle *const pMCParticle(it->first);
+        if (it != mcParticleToPfoHitSharingMap.end())
+            pfoToSharedHitsVector = it->second;
+
         const LArFormattingHelper::Color mcCol(
             LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle) ?
                 LArFormattingHelper::LIGHT_GREEN : (LArMCParticleHelper::IsBeamParticle(pMCParticle) ?
@@ -258,7 +260,7 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
         // Get the matched Pfos
         unsigned int nPfosShown(0);
         unsigned int nOtherHits(0);
-        for (const auto &pfoNSharedHitsPair : it->second)
+        for (const auto &pfoNSharedHitsPair : pfoToSharedHitsVector)
         {
             for (unsigned int pfoId = 0; pfoId < orderedPfoVector.size(); ++pfoId)
             {
@@ -292,7 +294,7 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
 
         if (nOtherHits != 0)
         {
-            table.AddElement(it->second.size() - nPfosShown);
+            table.AddElement(pfoToSharedHitsVector.size() - nPfosShown);
             table.AddElement(nOtherHits);
         }
         else
