@@ -78,7 +78,7 @@ public:
     void StitchPfos(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::ParticleFlowObject *const pPfoToDelete,
         PfoToLArTPCMap &pfoToLArTPCMap) const;
 
-private:
+protected:
     /**
      *  @brief  LArTPCHitList class
      */
