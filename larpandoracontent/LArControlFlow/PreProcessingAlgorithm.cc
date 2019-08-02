@@ -24,6 +24,7 @@ PreProcessingAlgorithm::PreProcessingAlgorithm() :
     m_minCellLengthScale(std::numeric_limits<float>::epsilon()),
     m_maxCellLengthScale(3.f),
     m_searchRegion1D(0.1f),
+    m_maxEventHits(std::numeric_limits<unsigned int>::max()),
     m_onlyAvailableCaloHits(true),
     m_inputCaloHitListName("Input")
 {
@@ -51,8 +52,13 @@ StatusCode PreProcessingAlgorithm::Run()
     {
         this->ProcessCaloHits();
     }
-    catch (StatusCodeException &)
+    catch (const StatusCodeException &statusCodeException)
     {
+        if (STATUS_CODE_OUT_OF_RANGE == statusCodeException.GetStatusCode())
+        {
+            std::cout << "PreProcessingAlgorithm: Excessive number of hits in event, skipping the reconstruction" << std::endl;
+            this->PopulateVoidCaloHitLists();
+        }
     }
 
     if (!m_currentCaloHitListReplacement.empty())
@@ -76,6 +82,9 @@ void PreProcessingAlgorithm::ProcessCaloHits()
 
     if (pCaloHitList->empty())
         return;
+
+    if (pCaloHitList->size() > m_maxEventHits)
+        throw StatusCodeException(STATUS_CODE_OUT_OF_RANGE);
 
     CaloHitList selectedCaloHitListU, selectedCaloHitListV, selectedCaloHitListW;
 
@@ -150,6 +159,32 @@ void PreProcessingAlgorithm::ProcessCaloHits()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void PreProcessingAlgorithm::PopulateVoidCaloHitLists() noexcept
+{
+    CaloHitList emptyList;
+
+    try
+    {
+        if (!m_filteredCaloHitListName.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, emptyList, m_filteredCaloHitListName));
+
+        if (!m_outputCaloHitListNameU.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, emptyList, m_outputCaloHitListNameU));
+
+        if (!m_outputCaloHitListNameV.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, emptyList, m_outputCaloHitListNameV));
+
+        if (!m_outputCaloHitListNameW.empty())
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, emptyList, m_outputCaloHitListNameW));
+    }
+    catch (...)
+    {
+        std::cout << "PreProcessingAlgorithm: Unable to create void calo hit lists" << std::endl;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void PreProcessingAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputList, CaloHitList &outputList)
 {
     HitKDTree2D kdTree;
@@ -216,6 +251,9 @@ StatusCode PreProcessingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SearchRegion1D", m_searchRegion1D));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxEventHits", m_maxEventHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OnlyAvailableCaloHits", m_onlyAvailableCaloHits));
