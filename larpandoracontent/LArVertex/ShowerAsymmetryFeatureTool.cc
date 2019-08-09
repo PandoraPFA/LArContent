@@ -61,7 +61,8 @@ float ShowerAsymmetryFeatureTool::GetShowerAsymmetryForView(const CartesianVecto
             showerFit.GetLocalPosition(vertexPosition2D, rL, rT);
 
             CartesianVector showerDirection(0.f, 0.f, 0.f);
-            showerFit.GetGlobalFitDirection(rL, showerDirection);
+            if (STATUS_CODE_SUCCESS != showerFit.GetGlobalFitDirection(rL, showerDirection))
+                continue;
 
             const float projectedVtxPosition = vertexPosition2D.GetDotProduct(showerDirection);
 
