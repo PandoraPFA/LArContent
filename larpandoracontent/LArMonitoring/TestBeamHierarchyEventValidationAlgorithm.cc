@@ -313,12 +313,15 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
             if (isRecoTestBeamHierarchy && isGoodMatch) ++nPrimaryTBHierarchyMatches;
             if (!isRecoTestBeamHierarchy && isGoodMatch) ++nPrimaryCRMatches;
 
-            // Account for splitting of test beam particle into separate reconstructed primary pfos
-            const Pfo *const pRecoTB(LArPfoHelper::GetParentPfo(pfoToSharedHits.first));
-            const bool isSplitRecoTBHierarchy(!recoTestBeamHierarchies.empty() && !recoTestBeamHierarchies.count(pRecoTB));
-            if (!isSplitRecoTBHierarchy && isGoodMatch) ++nPrimaryGoodTBHierarchyMatches;
-            if (isSplitRecoTBHierarchy && isLeadingBeamParticle && isGoodMatch) ++nPrimaryTBHierarchySplits;
-            recoTestBeamHierarchies.insert(pRecoTB);
+            if (isRecoTestBeamHierarchy)
+            {
+                // Account for splitting of test beam particle into separate reconstructed primary pfos
+                const Pfo *const pRecoTB(LArPfoHelper::GetParentPfo(pfoToSharedHits.first));
+                const bool isSplitRecoTBHierarchy(!recoTestBeamHierarchies.empty() && !recoTestBeamHierarchies.count(pRecoTB));
+                if (!isSplitRecoTBHierarchy && isGoodMatch) ++nPrimaryGoodTBHierarchyMatches;
+                if (isSplitRecoTBHierarchy && isLeadingBeamParticle && isGoodMatch) ++nPrimaryTBHierarchySplits;
+                recoTestBeamHierarchies.insert(pRecoTB);
+            }
 
             for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << "    ";
 

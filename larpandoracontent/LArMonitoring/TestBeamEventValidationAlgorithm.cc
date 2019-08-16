@@ -99,7 +99,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
     MCParticleVector mcPrimaryVector;
     LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetTargetMCParticleToHitsMap()}, mcPrimaryVector);
 
-    // Neutrino Validation Bookkeeping
+    // Test Beam Validation Bookkeeping
     PfoVector primaryPfoVector;
     LArMonitoringHelper::GetOrderedPfoVector(validationInfo.GetPfoToHitsMap(), primaryPfoVector);
 

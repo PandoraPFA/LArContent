@@ -254,7 +254,6 @@ void EventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInf
                 recoNeutrinos.insert(pRecoNeutrino);
             }
 
-            // If not in test beam mode proceed as standard
             if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
             if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
 
