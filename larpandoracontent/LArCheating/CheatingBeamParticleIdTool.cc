@@ -25,23 +25,23 @@ CheatingBeamParticleIdTool::CheatingBeamParticleIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const /*pAlgorithm*/, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const /*pAlgorithm*/, const SliceHypotheses &testBeamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
-    if (nuSliceHypotheses.size() != crSliceHypotheses.size())
+    if (testBeamSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+    for (unsigned int sliceIndex = 0, nSlices = testBeamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
         float beamParticleWeight(0.f), totalWeight(0.f);
-        const PfoList &neutrinoPfoList(nuSliceHypotheses.at(sliceIndex));
+        const PfoList &neutrinoPfoList(testBeamSliceHypotheses.at(sliceIndex));
 
-        for (const Pfo *const pNeutrinoPfo : neutrinoPfoList)
+        for (const Pfo *const pTestBeamPfo : neutrinoPfoList)
         {
-            if (!LArPfoHelper::IsNeutrino(pNeutrinoPfo))
+            if (!LArPfoHelper::IsTestBeam(pTestBeamPfo))
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
             PfoList downstreamPfos;
-            LArPfoHelper::GetAllDownstreamPfos(pNeutrinoPfo, downstreamPfos);
+            LArPfoHelper::GetAllDownstreamPfos(pTestBeamPfo, downstreamPfos);
 
             float thisBeamParticleWeight(0.f), thisTotalWeight(0.f);
             CheatingSliceIdBaseTool::GetTargetParticleWeight(&downstreamPfos, thisBeamParticleWeight, thisTotalWeight, LArMCParticleHelper::IsBeamParticle);
@@ -54,7 +54,7 @@ void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *cons
 
         if (beamWeightFraction > m_minWeightFraction)
         {
-            const PfoList &sliceOutput(nuSliceHypotheses.at(sliceIndex));
+            const PfoList &sliceOutput(testBeamSliceHypotheses.at(sliceIndex));
             selectedPfos.insert(selectedPfos.end(), sliceOutput.begin(), sliceOutput.end());
         }
         else
