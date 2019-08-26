@@ -1,10 +1,16 @@
 -------------------------------------------------------------------------------------------------------------------------------------------- 
-TAG v03_15_03
+TAG v03_15_04
 -------------------------------------------------------------------------------------------------------------------------------------------- 
 Modification to inheritance structure of master algorithm to allow users to register custom content in daughter pandora instances.
 Added ability to skip event reconstruction if an excessive number of hits are present in the event.
 Adjusted use of MCParticle to Pfo matching map to avoid exception being thrown in monitoring algorithms.
 Fix coverity stripping in untar.
+Restructuring of the event validation algorithms and introduction of ProtoDUNE test beam hierarchy validation algorithm.
+
+-------------------------------------------------------------------------------------------------------------------------------------------- 
+TAG v03_15_03
+-------------------------------------------------------------------------------------------------------------------------------------------- 
+Null commit required to syncronise redmine and github versioning.
 
 -------------------------------------------------------------------------------------------------------------------------------------------- 
 TAG v03_15_02
