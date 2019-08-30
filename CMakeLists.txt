@@ -36,10 +36,18 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
 
     find_ups_product( pandora )
     find_ups_product( eigen )
+    find_ups_product( root )
 
     cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
     cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
     add_definitions("-DMONITORING")
+
+    #    cet_find_library( ROOTLIBS NAMES root PATHS ENV ROOT_LIB )
+
+    find_package(ROOT REQUIRED)
+    include_directories(${ROOT_INCLUDE_DIR})
+    include_directories(${ROOT_LIBRARY_DIR})
+    link_libraries(${ROOT_LIBRARIES})
 
     # ADD SOURCE CODE SUBDIRECTORIES HERE
     add_subdirectory(larpandoracontent)
@@ -94,6 +102,15 @@ else()
 
     find_package(Eigen3 3.3 REQUIRED NO_MODULE)
     include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
+
+    find_package( ROOT REQUIRED )
+    foreach( pkg ROOT )
+        if( ${pkg}_FOUND )
+            include_directories( ${${pkg}_INCLUDE_DIRS} )
+            link_libraries( ${${pkg}_LIBRARIES} )
+            add_definitions( ${${pkg}_DEFINITIONS} )
+        endif()
+    endforeach()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc
