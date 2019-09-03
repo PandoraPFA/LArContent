@@ -33,9 +33,9 @@ void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *cons
     for (unsigned int sliceIndex = 0, nSlices = testBeamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
         float beamParticleWeight(0.f), totalWeight(0.f);
-        const PfoList &neutrinoPfoList(testBeamSliceHypotheses.at(sliceIndex));
+        const PfoList &testBeamPfoList(testBeamSliceHypotheses.at(sliceIndex));
 
-        for (const Pfo *const pTestBeamPfo : neutrinoPfoList)
+        for (const Pfo *const pTestBeamPfo : testBeamPfoList)
         {
             if (!LArPfoHelper::IsTestBeam(pTestBeamPfo))
                 throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
