@@ -177,7 +177,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
     FloatVector mcPrimaryE, mcPrimaryPX, mcPrimaryPY, mcPrimaryPZ;
     FloatVector mcPrimaryVtxX, mcPrimaryVtxY, mcPrimaryVtxZ, mcPrimaryEndX, mcPrimaryEndY, mcPrimaryEndZ;
     IntVector nPrimaryMatchedPfos, nPrimaryMatchedTBHierarchyPfos, nPrimaryMatchedCRPfos;
-    IntVector bestMatchPfoId, bestMatchPfoPdg, bestMatchPfoTier, bestMatchPfoIsTestBeam;
+    IntVector bestMatchPfoId, bestMatchPfoPdg, bestMatchPfoTier, bestMatchPfoIsTestBeam, bestMatchPfoIsTestBeamHierarchy;
     IntVector bestMatchPfoRecoTBId, bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW;
     IntVector bestMatchPfoNSharedHitsTotal, bestMatchPfoNSharedHitsU, bestMatchPfoNSharedHitsV, bestMatchPfoNSharedHitsW;
 
@@ -286,6 +286,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
                 bestMatchPfoPdg.push_back(pfoToSharedHits.first->GetParticleId());
                 bestMatchPfoTier.push_back(pfoHierarchyTier);
                 bestMatchPfoIsTestBeam.push_back(isRecoTestBeam ? 1 : 0);
+                bestMatchPfoIsTestBeamHierarchy.push_back(isRecoTestBeamHierarchy ? 1 : 0);
                 bestMatchPfoRecoTBId.push_back(recoTBId);
                 bestMatchPfoNHitsTotal.push_back(pfoHitList.size());
                 bestMatchPfoNHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoHitList));
@@ -348,7 +349,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
             for (int tier = 0; tier < mcHierarchyTier; tier++) targetSS << "    ";
             targetSS << "-No matched Pfo" << std::endl;
             bestMatchPfoId.push_back(-1); bestMatchPfoPdg.push_back(0); bestMatchPfoTier.push_back(-1);
-            bestMatchPfoIsTestBeam.push_back(0); bestMatchPfoRecoTBId.push_back(-1);
+            bestMatchPfoIsTestBeam.push_back(0); bestMatchPfoIsTestBeamHierarchy.push_back(0); bestMatchPfoRecoTBId.push_back(-1);
             bestMatchPfoNHitsTotal.push_back(0); bestMatchPfoNHitsU.push_back(0); bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0);
             bestMatchPfoNSharedHitsTotal.push_back(0); bestMatchPfoNSharedHitsU.push_back(0); bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
         }
@@ -413,6 +414,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetCRMatches", nTargetCRMatches));
 
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoIsTestBeam", &bestMatchPfoIsTestBeam));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoIsTestBeamHierarchy", &bestMatchPfoIsTestBeamHierarchy));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoRecoTBId", &bestMatchPfoRecoTBId));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetGoodTBHierarchyMatches", nTargetGoodTBHierarchyMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetTBHierarchySplits", nTargetTBHierarchySplits));
@@ -484,8 +486,8 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
             mcPrimaryE.clear(); mcPrimaryPX.clear(); mcPrimaryPY.clear(); mcPrimaryPZ.clear();
             mcPrimaryVtxX.clear(); mcPrimaryVtxY.clear(); mcPrimaryVtxZ.clear(); mcPrimaryEndX.clear(); mcPrimaryEndY.clear(); mcPrimaryEndZ.clear();
             nPrimaryMatchedPfos.clear(); nPrimaryMatchedTBHierarchyPfos.clear(); nPrimaryMatchedCRPfos.clear();
-            bestMatchPfoId.clear(); bestMatchPfoPdg.clear(); bestMatchPfoTier.clear(); bestMatchPfoIsTestBeam.clear(); bestMatchPfoRecoTBId.clear();
-            bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear();
+            bestMatchPfoId.clear(); bestMatchPfoPdg.clear(); bestMatchPfoTier.clear(); bestMatchPfoIsTestBeam.clear(); bestMatchPfoIsTestBeamHierarchy.clear(); 
+            bestMatchPfoRecoTBId.clear(); bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear();
             bestMatchPfoNSharedHitsTotal.clear(); bestMatchPfoNSharedHitsU.clear(); bestMatchPfoNSharedHitsV.clear(); bestMatchPfoNSharedHitsW.clear();
         }
     }
