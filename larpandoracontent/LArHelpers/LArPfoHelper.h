@@ -312,6 +312,25 @@ public:
     static const pandora::Vertex *GetVertex(const pandora::ParticleFlowObject *const pPfo);
 
     /**
+     *  @brief  Get the pfo test beam interaction vertex
+     *
+     *  @param  pPfo the address of the Pfo
+     *
+     *  @return address of pfo vertex
+     */
+    static const pandora::Vertex *GetTestBeamInteractionVertex(const pandora::ParticleFlowObject *const pPfo);
+
+    /**
+     *  @brief  Get the vertex with a specific vertex label in a given vertex list
+     *
+     *  @param  vertexList vertex list
+     *  @param  vertexLabel target vertex label type
+     *
+     *  @return address of the desired vertex
+     */
+    static const pandora::Vertex *GetVertexType(const pandora::VertexList &vertexList, const pandora::VertexLabel &vertexLabel);
+
+    /**
      *  @brief  Apply 3D sliding fit to a set of 3D points and return track trajectory
      *
      *  @param  pointVector  the input list of 3D positions
