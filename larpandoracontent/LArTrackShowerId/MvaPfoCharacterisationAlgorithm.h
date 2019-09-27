@@ -35,6 +35,8 @@ public:
     ~MvaPfoCharacterisationAlgorithm();
 
 protected:
+
+    pandora::StatusCode Run();
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -62,6 +64,7 @@ protected:
     std::string             m_mvaFileNameNoChargeInfo;      ///< The mva input file for PFOs missing the W view, and thus charge info
     std::string             m_mvaNameNoChargeInfo;          ///< The name of the mva to find for PFOs missing the W view, and thus charge info
     bool                    m_writeToTree;
+    int                     m_eventNumber;                  ///< Event Number 
 };
 
 typedef MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree> BdtPfoCharacterisationAlgorithm;
