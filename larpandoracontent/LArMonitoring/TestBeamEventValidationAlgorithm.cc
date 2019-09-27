@@ -211,7 +211,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
 #ifdef MONITORING
                 try
                 {
-                    const Vertex *const pRecoVertex(LArPfoHelper::GetVertex(pfoToSharedHits.first));
+                    const Vertex *const pRecoVertex(isRecoTestBeam ? LArPfoHelper::GetTestBeamInteractionVertex(pfoToSharedHits.first) : LArPfoHelper::GetVertex(pfoToSharedHits.first));
                     recoVertexX = pRecoVertex->GetPosition().GetX();
                     recoVertexY = pRecoVertex->GetPosition().GetY();
                     recoVertexZ = pRecoVertex->GetPosition().GetZ();
