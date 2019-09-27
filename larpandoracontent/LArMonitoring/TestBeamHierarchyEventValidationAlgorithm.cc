@@ -272,7 +272,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
             const CaloHitList &pfoHitList(validationInfo.GetPfoToHitsMap().at(pfoToSharedHits.first));
 
             const bool isRecoTestBeam(LArPfoHelper::IsTestBeam(pfoToSharedHits.first));
-            const bool isRecoTestBeamHierarchy(LArPfoHelper::IsTestBeam(LArPfoHelper::GetParentPfo(pfoToSharedHits.first)));
+            const bool isRecoTestBeamHierarchy(LArPfoHelper::IsTestBeamFinalState(pfoToSharedHits.first));
             const bool isGoodMatch(this->IsGoodMatch(mcPrimaryHitList, pfoHitList, sharedHitList));
 
             // Tier (0) : Primary, (1) : Daughter, (2) : Granddaughter etc...  Note that the tier only increases for visible particle
@@ -299,7 +299,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
 #ifdef MONITORING
                 try
                 {
-                    const Vertex *const pRecoVertex(LArPfoHelper::GetVertex(pfoToSharedHits.first));
+                    const Vertex *const pRecoVertex(isRecoTestBeamHierarchy ? LArPfoHelper::GetTestBeamInteractionVertex(LArPfoHelper::GetParentPfo(pfoToSharedHits.first)) : LArPfoHelper::GetVertex(pfoToSharedHits.first));
                     recoVertexX = pRecoVertex->GetPosition().GetX();
                     recoVertexY = pRecoVertex->GetPosition().GetY();
                     recoVertexZ = pRecoVertex->GetPosition().GetZ();
