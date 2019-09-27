@@ -31,6 +31,8 @@ public:
     ~SvmPfoCharacterisationAlgorithm();
 
 protected:
+
+    pandora::StatusCode Run();
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -60,6 +62,7 @@ protected:
     bool                    m_writeToTree;
     //std::string             m_treeName;
     //std::string             m_fileName;
+    int                     m_eventNumber;                  ///< Event Number 
 };
 
 } // namespace lar_content

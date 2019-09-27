@@ -271,7 +271,7 @@ void TwoDCurvatureFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector
   if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
     std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
   
-  std::cout << "test" << std::endl;
+  //std::cout << "test" << std::endl;
   int curv = 0;
   //-----------------------Creating containers and lists---------------------------------------------------------------  
   ClusterList twoDClusterList;
@@ -281,7 +281,7 @@ void TwoDCurvatureFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector
   //-----------------------Calculate tangent vector, then gradient, then push_back into gradVec-------------------------
   for (const Cluster * cluster : twoDClusterList)
     {     
-      const TwoDSlidingFitResult slidingFitResult(cluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora())); //m_slidingLinearFitWindow = 3
+      const TwoDSlidingFitResult slidingFitResult(cluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
       
       for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
 	{
@@ -298,11 +298,8 @@ void TwoDCurvatureFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector
 	  
 	  slidingFitResult.GetGlobalDirection(dTdL, gradient);
 	  float scalar = gradient.GetZ()/gradient.GetX();	
-	  std::cout << "gradient: " << gradient << std::endl;
-	  std::cout << "scalar: " << scalar << std::endl;
+
 	  gradVec.push_back(scalar);
-	  //std::cout << "gradVec.size(): " << gradVec.size() << std::endl;
-	  //std::cout << "gradVec is done!!!!!!!!!!!!!!!!!!!!!!!!!!!" << std::endl;
 	}
   //--------------------Check through gradVec and characterise the change in gradient and push_back into changes---------------------
       /*for (int i = 0; i < gradVec.size(); ++i)
@@ -342,7 +339,7 @@ void TwoDCurvatureFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector
 	}  
   //-----------------curv is the number of unique changes in gradient--------------------------------------------------
       curv = changes.size() - 1; // - 1 comes from the fact that we dont care about the first element
-      std::cout << "curvature: " << curv << std::endl;
+      //std::cout << "curvature: " << curv << std::endl;
     }
   //---------------push_back into feature vector-----------------------------------------------------------------------------
   featureVector.push_back(curv);
