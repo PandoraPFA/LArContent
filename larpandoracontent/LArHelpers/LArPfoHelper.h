@@ -328,7 +328,7 @@ public:
      *
      *  @return address of the desired vertex
      */
-    static const pandora::Vertex *GetVertexType(const pandora::VertexList &vertexList, const pandora::VertexLabel &vertexLabel);
+    static const pandora::Vertex *GetVertexWithLabel(const pandora::VertexList &vertexList, const pandora::VertexLabel vertexLabel);
 
     /**
      *  @brief  Apply 3D sliding fit to a set of 3D points and return track trajectory

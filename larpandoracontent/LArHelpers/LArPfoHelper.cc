@@ -477,7 +477,7 @@ const Vertex *LArPfoHelper::GetVertex(const ParticleFlowObject *const pPfo)
     // ATTN : Test beam parent pfos contain an interaction and start vertex
     if (LArPfoHelper::IsTestBeam(pPfo) && pPfo->GetParentPfoList().empty())
     {
-        pVertex = LArPfoHelper::GetVertexType(pPfo->GetVertexList(), VERTEX_START);
+        pVertex = LArPfoHelper::GetVertexWithLabel(pPfo->GetVertexList(), VERTEX_START);
     }
     else
     {
@@ -498,9 +498,9 @@ const Vertex *LArPfoHelper::GetVertex(const ParticleFlowObject *const pPfo)
 const Vertex *LArPfoHelper::GetTestBeamInteractionVertex(const ParticleFlowObject *const pPfo)
 {
     if (pPfo->GetVertexList().empty() || !pPfo->GetParentPfoList().empty() || !LArPfoHelper::IsTestBeam(pPfo))
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const Vertex *pInteractionVertex(LArPfoHelper::GetVertexType(pPfo->GetVertexList(), VERTEX_INTERACTION));
+    const Vertex *pInteractionVertex(LArPfoHelper::GetVertexWithLabel(pPfo->GetVertexList(), VERTEX_INTERACTION));
 
     if (VERTEX_3D != pInteractionVertex->GetVertexType())
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -510,7 +510,7 @@ const Vertex *LArPfoHelper::GetTestBeamInteractionVertex(const ParticleFlowObjec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Vertex *LArPfoHelper::GetVertexType(const VertexList &vertexList, const VertexLabel &vertexLabel)
+const Vertex *LArPfoHelper::GetVertexWithLabel(const VertexList &vertexList, const VertexLabel vertexLabel)
 {
     const Vertex *pTargetVertex(nullptr);
 
