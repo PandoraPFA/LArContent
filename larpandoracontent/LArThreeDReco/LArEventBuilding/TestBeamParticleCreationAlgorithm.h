@@ -18,12 +18,6 @@ namespace lar_content
  */
 class TestBeamParticleCreationAlgorithm : public pandora::Algorithm
 {
-public:
-    /**
-     *  @brief  Constructor
-     */
-    TestBeamParticleCreationAlgorithm();
-
 private:
     pandora::StatusCode Run();
 
@@ -57,9 +51,6 @@ private:
 
     std::string    m_parentVertexListName;      ///< The parent vertex list name
     std::string    m_daughterVertexListName;    ///< The daughter vertex list name
-
-    bool           m_keepInteractionVertex;     ///< Keep the vertex for the test beam particle at the interaction point
-    bool           m_keepStartVertex;           ///< Keep the vertex for the test beam particle at the position of hit at minimum z
 };
 
 } // namespace lar_content

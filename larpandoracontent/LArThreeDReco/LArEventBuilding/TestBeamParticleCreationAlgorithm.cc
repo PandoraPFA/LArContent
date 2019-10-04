@@ -17,14 +17,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-TestBeamParticleCreationAlgorithm::TestBeamParticleCreationAlgorithm() :
-    m_keepInteractionVertex(true),
-    m_keepStartVertex(false)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode TestBeamParticleCreationAlgorithm::Run()
 {
     const PfoList *pParentNuPfoList(nullptr);
@@ -118,38 +110,34 @@ StatusCode TestBeamParticleCreationAlgorithm::SetupTestBeamVertex(const Pfo *con
         std::cout << "TestBeamParticleCreationAlgorithm::SetupTestBeamVertex - Test beam particle has no initial vertex" << std::endl;
     }
 
-    if (m_keepStartVertex)
+    // Set start vertex
+    std::string vertexListName;
+    const VertexList *pVertexList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
+    PandoraContentApi::Vertex::Parameters parameters;
+    parameters.m_position = testBeamStartVertex;
+    parameters.m_vertexLabel = VERTEX_START;
+    parameters.m_vertexType = VERTEX_3D;
+    const Vertex *pTestBeamStartVertex(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pTestBeamStartVertex));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_parentVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pTestBeamPfo, pTestBeamStartVertex));
+
+    // Retain interaction vertex
+    try
     {
-        std::string vertexListName;
-        const VertexList *pVertexList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
-
-        PandoraContentApi::Vertex::Parameters parameters;
-        parameters.m_position = testBeamStartVertex;
-        parameters.m_vertexLabel = VERTEX_START;
-        parameters.m_vertexType = VERTEX_3D;
-        const Vertex *pTestBeamStartVertex(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pTestBeamStartVertex));
-
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_parentVertexListName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_parentVertexListName));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pTestBeamPfo, pTestBeamStartVertex));
+        const Vertex *const pNuVertex(LArPfoHelper::GetVertex(pNuPfo));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pNuPfo, pNuVertex));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pTestBeamPfo, pNuVertex));
+        // ATTN This vertex already lives in m_parentVertexListName
     }
-    else
+    catch (const StatusCodeException &)
     {
-        try
-        {
-            const Vertex *const pNuVertex(LArPfoHelper::GetVertex(pNuPfo));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pNuPfo, pNuVertex));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pTestBeamPfo, pNuVertex));
-            // ATTN This vertex already lives in m_parentVertexListName
-        }
-        catch (const StatusCodeException &)
-        {
-            std::cout << "TestBeamParticleCreationAlgorithm::SetupTestBeamVertex - Cannot transfer interaction vertex to test beam particle" << std::endl;
-        }
+        std::cout << "TestBeamParticleCreationAlgorithm::SetupTestBeamVertex - Cannot transfer interaction vertex to test beam particle" << std::endl;
     }
 
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_parentVertexListName));
     return STATUS_CODE_SUCCESS;
 }
 
@@ -171,18 +159,6 @@ StatusCode TestBeamParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xml
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "DaughterVertexListName", m_daughterVertexListName));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "KeepInteractionVertex", m_keepInteractionVertex));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "KeepStartVertex", m_keepStartVertex));
-
-    if (m_keepInteractionVertex == m_keepStartVertex)
-    {
-        std::cout << "TestBeamParticleCreationAlgorithm::ReadSettings - Must persist exactly one vertex per test beam particle." << std::endl;
-        return STATUS_CODE_INVALID_PARAMETER;
-    }
 
     return STATUS_CODE_SUCCESS;
 }
