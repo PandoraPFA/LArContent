@@ -27,7 +27,11 @@
 
 #include <random>
 
+#include "TH3F.h"
+#include "TFile.h"
+
 using namespace pandora;
+
 
 namespace lar_content
 {
@@ -38,7 +42,7 @@ MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_trainingSetMode(false),
     m_allowClassifyDuringTraining(false),
-    m_mcVertexXCorrection(0.f),
+    m_mcVertexXCorrection(1.f),
     m_minClusterCaloHits(12),
     m_slidingFitWindow(100),
     m_minShowerSpineLength(15.f),
@@ -55,8 +59,19 @@ MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
     m_maxTrueVertexRadius(1.f),
     m_useRPhiFeatureForRegion(false),
     m_dropFailedRPhiFastScoreCandidates(true),
-    m_testBeamMode(false)
+    m_testBeamMode(false),
+    m_cheatingMode(false)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+MvaVertexSelectionAlgorithm<T>::~MvaVertexSelectionAlgorithm()
+{
+  //  PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "FeaturesRegion", m_fileName.c_str(), "UPDATE"));
+  //  PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "FeaturesVertex", m_fileName.c_str(), "UPDATE"));
+  //  PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "VertexDistance", m_fileName.c_str(), "UPDATE"));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,6 +80,16 @@ template<typename T>
 void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
     HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
+
+  if (m_cheatingMode)
+  {
+    const Vertex *pBestVertex(nullptr);
+    float bestVertexDr(std::numeric_limits<float>::max());
+    this->GetBestVertex(vertexVector, pBestVertex, bestVertexDr);
+    vertexScoreList.emplace_back(pBestVertex, 1.0f);
+  }
+  else
+  {
     ClusterList clustersU, clustersV, clustersW;
     this->GetClusterLists(m_inputClusterListNames, clustersU, clustersV, clustersW);
 
@@ -141,10 +166,11 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
         if (!regionalVertices.empty())
         {
             // Use mva to choose the vertex and then fine-tune using the RPhi score.
-            const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaVertex, true));
-            this->PopulateFinalVertexScoreList(vertexFeatureInfoMap, pBestVertex, vertexVector, vertexScoreList);
+	      const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaVertex, true));
+	      this->PopulateFinalVertexScoreList(vertexFeatureInfoMap, pBestVertex, vertexVector, vertexScoreList);
         }
     }
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -480,8 +506,8 @@ void MvaVertexSelectionAlgorithm<T>::PopulateVertexFeatureInfoMap(const BeamCons
     const double showerAsymmetry(LArMvaHelper::CalculateFeaturesOfType<ShowerAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
         slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
 
-    //const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
-    //    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
+    //    const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
+    //  slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
 
     VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry);
     vertexFeatureInfoMap.emplace(pVertex, vertexFeatureInfo);
@@ -618,14 +644,14 @@ std::string MvaVertexSelectionAlgorithm<T>::GetInteractionType() const
 
     if (m_testBeamMode)
     {
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
+	LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
             LArMCParticleHelper::IsTriggeredBeamParticle, targetMCParticlesToGoodHitsMap);
     }
     else
     {
-        // ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
-            LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticlesToGoodHitsMap);
+	// ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
+	LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
+	    LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticlesToGoodHitsMap);
     }
 
     MCParticleList mcPrimaryList;
@@ -644,6 +670,7 @@ const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::ProduceTrainingExamples(
     const std::string &interactionType, const std::string &trainingOutputFile, const LArMvaHelper::MvaFeatureVector &eventFeatureList,
     const float maxRadius, const bool useRPhi) const
 {
+
     const Vertex *pBestVertex(nullptr);
     float bestVertexDr(std::numeric_limits<float>::max());
 
@@ -653,6 +680,40 @@ const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::ProduceTrainingExamples(
     VertexFeatureInfo bestVertexFeatureInfo(vertexFeatureInfoMap.at(pBestVertex));
     this->AddVertexFeaturesToVector(bestVertexFeatureInfo, bestVertexFeatureList, useRPhi);
 
+    /*	// LORENA - tree variables
+	int totalHits(0); 
+	const CaloHitList *pCaloHitList = NULL;                                                                                                             
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));                                                                                                                                                  
+															
+	if (!pCaloHitList || pCaloHitList->empty())
+	{
+	  if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())                                                                      
+	    std::cout << "VertexSelectionBaseAlgorithm: unable to find calo hit list " << m_caloHitListName << std::endl;                         
+	}         
+	else
+	{ 
+           totalHits += pCaloHitList->size();                                                                                                            
+        } 
+        int counter(0);                                                                                                                                     
+        for (const LArMvaHelper::MvaFeature feature : eventFeatureList) 
+	{
+	  char name[12];
+	  sprintf(name,"EventVar%d",counter);
+	  PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, name, feature.Get()));                                                   
+	  ++counter;                                                                                                                                    
+        }
+        counter = 0;                                                                                                                                       
+        for (const LArMvaHelper::MvaFeature feature : bestVertexFeatureList)                                                                                
+	{
+	  char name[12];
+	  sprintf(name,"VertexVar%d",counter);
+	  PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, name, feature.Get()));                                                   
+	  ++counter;                                                                                                                                    
+        } 
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "BestVertexCandidate", 1)); 
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), treeName)); */
+
+
     for (const Vertex *const pVertex : vertexVector)
     {
         if (pVertex == pBestVertex)
@@ -661,6 +722,18 @@ const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::ProduceTrainingExamples(
         LArMvaHelper::MvaFeatureVector featureList;
         VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
         this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
+
+	  // LORENA - other vertex features                                                                                                             
+	  /*counter = 0;                                                                                                                                
+            for (const LArMvaHelper::MvaFeature feature : featureList)        
+	    {
+	      char name[12];
+	      sprintf(name,"VertexVar%d",counter);
+	      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, name, feature.Get())); 
+	      ++counter;                                                                                                                            
+	    }                                                                                                                                             
+	    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), treeName, "BestVertexCandidate", 0));                                              
+	    PANDORA_MONITORING_API(FillTree(this->GetPandora(), treeName));*/ 
 
         if (pBestVertex && (bestVertexDr < maxRadius))
         {
@@ -681,6 +754,39 @@ const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::ProduceTrainingExamples(
     return pBestVertex;
 }
 
+// ***********************************************************************************
+//LORENA - SCE stuff
+
+template<typename T>
+float MvaVertexSelectionAlgorithm<T>::TransformX(float xPosition) const
+{
+    const float newPos(2.50f - (2.50f/2.56f)*(xPosition/100.0f));
+	return newPos;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+/// Transform Y to SCE Y coordinate:  [0.0,6.08] --> [0.0,6.0]
+
+template<typename T>
+float MvaVertexSelectionAlgorithm<T>::TransformY(float yPosition) const
+{
+    const float newPos((2.50f/2.33f)*((yPosition/100.0f)+1.165f));
+	return newPos;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+/// Transform Z to SCE Z coordinate:  [0.0,6.97] --> [0.0,7.2]
+
+template<typename T>
+float MvaVertexSelectionAlgorithm<T>::TransformZ(float zPosition) const
+{
+    const float newPos((10.0f/10.37f)*(zPosition/100.0f));
+	return newPos;
+}
+
+// ***********************************************************************************
+
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
@@ -694,35 +800,73 @@ void MvaVertexSelectionAlgorithm<T>::GetBestVertex(const VertexVector &vertexVec
     MCParticleVector mcTargetVector;
 
     if (m_testBeamMode)
-    {
-        LArMCParticleHelper::GetTrueTestBeamParticles(pMCParticleList, mcTargetVector);
-    }
+      {
+	LArMCParticleHelper::GetTrueTestBeamParticles(pMCParticleList, mcTargetVector);
+      }
     else
-    {
-        LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcTargetVector);
-    }
+      {
+	LArMCParticleHelper::GetTrueNeutrinos(pMCParticleList, mcTargetVector);
+      }
+    
+    // LORENA - SCE
+    TFile infile("/var/clus/usera/escudero/LAr/test/UbooneMCC9/SpaceCharge/SCEoffsets_dataDriven_combined_fwd_Jan18.root", "READ");
 
+    if(!infile.IsOpen())
+    {
+	std::cout << "Could not find the space charge effect file !\n";
+    }
+    
+    TH3F* m_hDx = (TH3F*)infile.Get("hDx");
+    TH3F* m_hDy = (TH3F*)infile.Get("hDy");
+    TH3F* m_hDz = (TH3F*)infile.Get("hDz");
+    int nuanceCode(-1);
+    
     for (const Vertex *const pVertex : vertexVector)
     {
-        float mcVertexDr(std::numeric_limits<float>::max());
-        for (const MCParticle *const pMCTarget : mcTargetVector)
-        {
-            const CartesianVector &mcTargetPosition((m_testBeamMode && std::fabs(pMCTarget->GetParticleId()) == 11) ? pMCTarget->GetVertex() :
-                pMCTarget->GetEndpoint());
-            const CartesianVector mcTargetCorrectedPosition(mcTargetPosition.GetX() + m_mcVertexXCorrection, mcTargetPosition.GetY(),
-                mcTargetPosition.GetZ());
-            const float dr = (mcTargetCorrectedPosition - pVertex->GetPosition()).GetMagnitude();
+      float mcVertexDr(std::numeric_limits<float>::max());
+      for (const MCParticle *const pMCTarget : mcTargetVector)
+      {
+	const CartesianVector &mcTargetPosition((m_testBeamMode && std::fabs(pMCTarget->GetParticleId()) == 11) ? pMCTarget->GetVertex() : pMCTarget->GetEndpoint());		
 
-            if (dr < mcVertexDr)
-                mcVertexDr = dr;
-        }
+	// ***********************************************************************************
+	//LORENA - This now needs to be corrected by SCE 
+	const CartesianVector mcTargetTruePosition(mcTargetPosition.GetX(), mcTargetPosition.GetY(), mcTargetPosition.GetZ());
+	const CartesianVector transformedPosition(TransformX(mcTargetTruePosition.GetX()), TransformY(mcTargetTruePosition.GetY()),TransformZ(mcTargetTruePosition.GetZ()) );
+	const CartesianVector positionOffset(m_hDx->Interpolate(transformedPosition.GetX(),transformedPosition.GetY(),transformedPosition.GetZ()), 
+					     m_hDy->Interpolate(transformedPosition.GetX(),transformedPosition.GetY(),transformedPosition.GetZ()),
+					     m_hDz->Interpolate(transformedPosition.GetX(),transformedPosition.GetY(),transformedPosition.GetZ()));
+	
+	const CartesianVector mcTargetSCECorrectedPosition(mcTargetTruePosition.GetX() - positionOffset.GetX(), 
+							     mcTargetTruePosition.GetY() + positionOffset.GetY(), 
+							     mcTargetTruePosition.GetZ() + positionOffset.GetZ());
+	
+	const CartesianVector mcPosition(mcTargetSCECorrectedPosition.GetX() + m_mcVertexXCorrection , mcTargetSCECorrectedPosition.GetY(), mcTargetSCECorrectedPosition.GetZ());							  
+	
+	// ***********************************************************************************
+	
+	const float dr = (mcPosition - pVertex->GetPosition()).GetMagnitude();
+	const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(pMCTarget));
 
-        if (mcVertexDr < bestVertexDr)
-        {
-            bestVertexDr = mcVertexDr;
-            pBestVertex = pVertex;
-        }
+	if (dr < mcVertexDr)
+	  {
+	    mcVertexDr = dr;
+	    nuanceCode = mcNuanceCode;
+	  }
+	
+      }
+      if (mcVertexDr < bestVertexDr)
+	{
+	  bestVertexDr = mcVertexDr;
+	  pBestVertex = pVertex;
+	}
     }
+
+    //LORENA - Fill tree for best DR study
+    //    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "VertexDistance", "drBest", bestVertexDr));  
+    //    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "VertexDistance", "nuanceCode", nuanceCode));  
+    //    PANDORA_MONITORING_API(FillTree(this->GetPandora(), "VertexDistance"));
+    
+    infile.Close();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -752,23 +896,23 @@ const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::CompareVertices(const Ve
 
     VertexFeatureInfo chosenVertexFeatureInfo(vertexFeatureInfoMap.at(pBestVertex));
     this->AddVertexFeaturesToVector(chosenVertexFeatureInfo, chosenFeatureList, useRPhi);
-
+    
     for (const Vertex *const pVertex : vertexVector)
     {
         if (pVertex == pBestVertex)
             continue;
-
-        LArMvaHelper::MvaFeatureVector featureList;
-        VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
-        this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
-
-        if (LArMvaHelper::Classify(t, eventFeatureList, featureList, chosenFeatureList))
-        {
-            pBestVertex = pVertex;
-            chosenFeatureList = featureList;
-        }
+			
+	LArMvaHelper::MvaFeatureVector featureList;
+	VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
+	this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
+	
+	if (LArMvaHelper::Classify(t, eventFeatureList, featureList, chosenFeatureList))
+	  {
+	    pBestVertex = pVertex;
+	    chosenFeatureList = featureList;
+	  }
     }
-
+    
     return pBestVertex;
 }
 
@@ -915,10 +1059,10 @@ StatusCode MvaVertexSelectionAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DropFailedRPhiFastScoreCandidates", m_dropFailedRPhiFastScoreCandidates));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TestBeamMode", m_testBeamMode));
-
+		
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+	"CheatingMode", m_cheatingMode));	
+    
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
 

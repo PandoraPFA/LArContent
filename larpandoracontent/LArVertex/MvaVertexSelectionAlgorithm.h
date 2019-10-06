@@ -101,6 +101,7 @@ public:
      *  @brief  Default constructor
      */
     MvaVertexSelectionAlgorithm();
+    ~MvaVertexSelectionAlgorithm();
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -344,6 +345,11 @@ private:
      */
     void GetBestVertex(const pandora::VertexVector &vertexVector, const pandora::Vertex *&pBestVertex, float &bestVertexDr) const;
 
+    // LORENA - SCE stuff
+    float TransformX(float xPosition) const;
+    float TransformY(float yPosition) const;
+    float TransformZ(float zPosition) const;
+	
     /**
      *  @brief  Add the vertex features to a vector in the correct order
      *
@@ -381,6 +387,7 @@ private:
     VertexFeatureTool::FeatureToolVector    m_featureToolVector;            ///< The feature tool vector
     std::string                             m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to mva files
     std::string                             m_mvaFileName;                  ///< The mva file name
+    std::string                             m_fileName;                     ///< The TTree file name
     std::string                             m_regionMvaName;                ///< The name of the region mva to find
     std::string                             m_vertexMvaName;                ///< The name of the vertex mva to find
     T                                       m_mvaRegion;                    ///< The region mva
@@ -414,6 +421,7 @@ private:
     bool                  m_useRPhiFeatureForRegion;              ///< Whether to use the r/phi feature for the region vertex
     bool                  m_dropFailedRPhiFastScoreCandidates;    ///< Whether to drop candidates that fail the r/phi fast score test
     bool                  m_testBeamMode;                         ///< Test beam mode
+    bool                  m_cheatingMode;                         ///< Cheating mode
 };
 
 typedef MvaVertexSelectionAlgorithm<AdaBoostDecisionTree> BdtVertexSelectionAlgorithm;
