@@ -131,8 +131,8 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
 
         if ((!m_trainingSetMode || m_allowClassifyDuringTraining) && !bestRegionVertices.empty())
         {
-	    // Use mva to choose the region.
-	    const Vertex *const pBestRegionVertex(this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaRegion,
+            // Use mva to choose the region.
+            const Vertex *const pBestRegionVertex(this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaRegion,
                 m_useRPhiFeatureForRegion));
 
             // Get all the vertices in the best region.
@@ -140,16 +140,16 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
             for (const Vertex *const pVertex : vertexVector)
             {
                 if (pVertex == pBestRegionVertex)
-	            continue;
+                    continue;
 
                 if ((pBestRegionVertex->GetPosition() - pVertex->GetPosition()).GetMagnitude() < m_regionRadius)
-	            regionalVertices.push_back(pVertex);
+                    regionalVertices.push_back(pVertex);
             }
 
             this->CalculateRPhiScores(regionalVertices, vertexFeatureInfoMap, kdTreeMap);
 
             if (!regionalVertices.empty())
-	    {
+            {
                 // Use mva to choose the vertex and then fine-tune using the RPhi score.
                 const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaVertex, true));
                 this->PopulateFinalVertexScoreList(vertexFeatureInfoMap, pBestVertex, vertexVector, vertexScoreList);
