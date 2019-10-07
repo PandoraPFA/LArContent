@@ -55,7 +55,8 @@ MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
     m_maxTrueVertexRadius(1.f),
     m_useRPhiFeatureForRegion(false),
     m_dropFailedRPhiFastScoreCandidates(true),
-    m_testBeamMode(false)
+    m_testBeamMode(false),
+    m_cheatingMode(false)
 {
 }
 
@@ -65,84 +66,94 @@ template<typename T>
 void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
     HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
-    ClusterList clustersU, clustersV, clustersW;
-    this->GetClusterLists(m_inputClusterListNames, clustersU, clustersV, clustersW);
-
-    SlidingFitDataList slidingFitDataListU, slidingFitDataListV, slidingFitDataListW;
-    this->CalculateClusterSlidingFits(clustersU, m_minClusterCaloHits, m_slidingFitWindow, slidingFitDataListU);
-    this->CalculateClusterSlidingFits(clustersV, m_minClusterCaloHits, m_slidingFitWindow, slidingFitDataListV);
-    this->CalculateClusterSlidingFits(clustersW, m_minClusterCaloHits, m_slidingFitWindow, slidingFitDataListW);
-
-    ShowerClusterList showerClusterListU, showerClusterListV, showerClusterListW;
-    this->CalculateShowerClusterList(clustersU, showerClusterListU);
-    this->CalculateShowerClusterList(clustersV, showerClusterListV);
-    this->CalculateShowerClusterList(clustersW, showerClusterListW);
-
-    // Create maps from hit types to objects for passing to feature tools.
-    const ClusterListMap clusterListMap{{TPC_VIEW_U, clustersU},
-                                        {TPC_VIEW_V, clustersV},
-                                        {TPC_VIEW_W, clustersW}};
-
-    const SlidingFitDataListMap slidingFitDataListMap{{TPC_VIEW_U, slidingFitDataListU},
-                                                      {TPC_VIEW_V, slidingFitDataListV},
-                                                      {TPC_VIEW_W, slidingFitDataListW}};
-
-    const ShowerClusterListMap showerClusterListMap{{TPC_VIEW_U, showerClusterListU},
-                                                    {TPC_VIEW_V, showerClusterListV},
-                                                    {TPC_VIEW_W, showerClusterListW}};
-
-    const KDTreeMap kdTreeMap{{TPC_VIEW_U, kdTreeU},
-                              {TPC_VIEW_V, kdTreeV},
-                              {TPC_VIEW_W, kdTreeW}};
-
-    // Calculate the event feature list and the vertex feature map.
-    EventFeatureInfo eventFeatureInfo(this->CalculateEventFeatures(clustersU, clustersV, clustersW, vertexVector));
-
-    LArMvaHelper::MvaFeatureVector eventFeatureList;
-    this->AddEventFeaturesToVector(eventFeatureInfo, eventFeatureList);
-
-    VertexFeatureInfoMap vertexFeatureInfoMap;
-    for (const Vertex *const pVertex : vertexVector)
+    if (m_cheatingMode)
     {
-        this->PopulateVertexFeatureInfoMap(beamConstants, clusterListMap, slidingFitDataListMap, showerClusterListMap, kdTreeMap, pVertex,
-            vertexFeatureInfoMap);
+        const Vertex *pBestVertex(nullptr);
+        float bestVertexDr(std::numeric_limits<float>::max());
+        this->GetBestVertex(vertexVector, pBestVertex, bestVertexDr);
+        vertexScoreList.emplace_back(pBestVertex, 1.0f);
     }
-
-    // Use a simple score to get the list of vertices representing good regions.
-    VertexScoreList initialScoreList;
-    for (const Vertex *const pVertex : vertexVector)
-        PopulateInitialScoreList(vertexFeatureInfoMap, pVertex, initialScoreList);
-
-    VertexVector bestRegionVertices;
-    this->GetBestRegionVertices(initialScoreList, bestRegionVertices);
-
-    if (m_trainingSetMode)
-        this->ProduceTrainingSets(vertexVector, bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, kdTreeMap);
-
-    if ((!m_trainingSetMode || m_allowClassifyDuringTraining) && !bestRegionVertices.empty())
+    else
     {
-        // Use mva to choose the region.
-        const Vertex *const pBestRegionVertex(this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaRegion,
-            m_useRPhiFeatureForRegion));
+        ClusterList clustersU, clustersV, clustersW;
+        this->GetClusterLists(m_inputClusterListNames, clustersU, clustersV, clustersW);
 
-        // Get all the vertices in the best region.
-        VertexVector regionalVertices{pBestRegionVertex};
+        SlidingFitDataList slidingFitDataListU, slidingFitDataListV, slidingFitDataListW;
+        this->CalculateClusterSlidingFits(clustersU, m_minClusterCaloHits, m_slidingFitWindow, slidingFitDataListU);
+        this->CalculateClusterSlidingFits(clustersV, m_minClusterCaloHits, m_slidingFitWindow, slidingFitDataListV);
+        this->CalculateClusterSlidingFits(clustersW, m_minClusterCaloHits, m_slidingFitWindow, slidingFitDataListW);
+
+        ShowerClusterList showerClusterListU, showerClusterListV, showerClusterListW;
+        this->CalculateShowerClusterList(clustersU, showerClusterListU);
+        this->CalculateShowerClusterList(clustersV, showerClusterListV);
+        this->CalculateShowerClusterList(clustersW, showerClusterListW);
+
+        // Create maps from hit types to objects for passing to feature tools.
+        const ClusterListMap clusterListMap{{TPC_VIEW_U, clustersU},
+                                            {TPC_VIEW_V, clustersV},
+                                            {TPC_VIEW_W, clustersW}};
+
+        const SlidingFitDataListMap slidingFitDataListMap{{TPC_VIEW_U, slidingFitDataListU},
+                                                          {TPC_VIEW_V, slidingFitDataListV},
+                                                          {TPC_VIEW_W, slidingFitDataListW}};
+
+        const ShowerClusterListMap showerClusterListMap{{TPC_VIEW_U, showerClusterListU},
+                                                        {TPC_VIEW_V, showerClusterListV},
+                                                        {TPC_VIEW_W, showerClusterListW}};
+
+        const KDTreeMap kdTreeMap{{TPC_VIEW_U, kdTreeU},
+                                  {TPC_VIEW_V, kdTreeV},
+                                  {TPC_VIEW_W, kdTreeW}};
+
+        // Calculate the event feature list and the vertex feature map.
+        EventFeatureInfo eventFeatureInfo(this->CalculateEventFeatures(clustersU, clustersV, clustersW, vertexVector));
+
+        LArMvaHelper::MvaFeatureVector eventFeatureList;
+        this->AddEventFeaturesToVector(eventFeatureInfo, eventFeatureList);
+
+        VertexFeatureInfoMap vertexFeatureInfoMap;
         for (const Vertex *const pVertex : vertexVector)
         {
-            if (pVertex == pBestRegionVertex)
-                continue;
-
-            if ((pBestRegionVertex->GetPosition() - pVertex->GetPosition()).GetMagnitude() < m_regionRadius)
-                regionalVertices.push_back(pVertex);
+            this->PopulateVertexFeatureInfoMap(beamConstants, clusterListMap, slidingFitDataListMap, showerClusterListMap, kdTreeMap, pVertex,
+                vertexFeatureInfoMap);
         }
 
-        this->CalculateRPhiScores(regionalVertices, vertexFeatureInfoMap, kdTreeMap);
+        // Use a simple score to get the list of vertices representing good regions.
+        VertexScoreList initialScoreList;
+        for (const Vertex *const pVertex : vertexVector)
+            PopulateInitialScoreList(vertexFeatureInfoMap, pVertex, initialScoreList);
 
-        if (!regionalVertices.empty())
+        VertexVector bestRegionVertices;
+        this->GetBestRegionVertices(initialScoreList, bestRegionVertices);
+
+        if (m_trainingSetMode)
+            this->ProduceTrainingSets(vertexVector, bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, kdTreeMap);
+
+        if ((!m_trainingSetMode || m_allowClassifyDuringTraining) && !bestRegionVertices.empty())
         {
-            // Use mva to choose the vertex and then fine-tune using the RPhi score.
-            const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaVertex, true));
-            this->PopulateFinalVertexScoreList(vertexFeatureInfoMap, pBestVertex, vertexVector, vertexScoreList);
+	    // Use mva to choose the region.
+	    const Vertex *const pBestRegionVertex(this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaRegion,
+                m_useRPhiFeatureForRegion));
+
+            // Get all the vertices in the best region.
+            VertexVector regionalVertices{pBestRegionVertex};
+            for (const Vertex *const pVertex : vertexVector)
+            {
+                if (pVertex == pBestRegionVertex)
+	            continue;
+
+                if ((pBestRegionVertex->GetPosition() - pVertex->GetPosition()).GetMagnitude() < m_regionRadius)
+	            regionalVertices.push_back(pVertex);
+            }
+
+            this->CalculateRPhiScores(regionalVertices, vertexFeatureInfoMap, kdTreeMap);
+
+            if (!regionalVertices.empty())
+	    {
+                // Use mva to choose the vertex and then fine-tune using the RPhi score.
+                const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaVertex, true));
+                this->PopulateFinalVertexScoreList(vertexFeatureInfoMap, pBestVertex, vertexVector, vertexScoreList);
+            }
         }
     }
 }

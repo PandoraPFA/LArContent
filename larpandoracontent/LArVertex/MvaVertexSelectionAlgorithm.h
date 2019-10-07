@@ -414,6 +414,7 @@ private:
     bool                  m_useRPhiFeatureForRegion;              ///< Whether to use the r/phi feature for the region vertex
     bool                  m_dropFailedRPhiFastScoreCandidates;    ///< Whether to drop candidates that fail the r/phi fast score test
     bool                  m_testBeamMode;                         ///< Test beam mode
+    bool                  m_cheatingMode;                         ///< Cheating mode
 };
 
 typedef MvaVertexSelectionAlgorithm<AdaBoostDecisionTree> BdtVertexSelectionAlgorithm;
