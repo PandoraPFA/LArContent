@@ -21,7 +21,8 @@ void CheatingVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &ve
     const Vertex *pBestVertex(nullptr);
     float bestVertexDr(std::numeric_limits<float>::max());
     this->GetBestVertex(vertexVector, pBestVertex, bestVertexDr);
-    vertexScoreList.emplace_back(pBestVertex, 1.0f);
+    if (pBestVertex)
+        vertexScoreList.emplace_back(pBestVertex, 1.0f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
