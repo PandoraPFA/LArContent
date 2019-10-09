@@ -175,7 +175,8 @@ StatusCode MvaVertexSelectionAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VertexMvaName", m_vertexMvaName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle));
+    // ATTN : Need access to base class member variables at this point, so call read settings prior to end of this function
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, TrainedVertexSelectionAlgorithm::ReadSettings(xmlHandle));
 
     if ((!m_trainingSetMode || m_allowClassifyDuringTraining))
     {

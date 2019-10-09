@@ -21,6 +21,8 @@ class CheatingVertexSelectionAlgorithm : public TrainedVertexSelectionAlgorithm
 private:
     void GetVertexScoreList(const pandora::VertexVector &vertexVector, const BeamConstants &beamConstants, HitKDTree2D &kdTreeU,
         HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const;
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
 } // namespace lar_content
