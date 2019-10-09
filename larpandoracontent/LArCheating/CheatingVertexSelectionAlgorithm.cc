@@ -24,4 +24,11 @@ void CheatingVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &ve
     vertexScoreList.emplace_back(pBestVertex, 1.0f);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CheatingVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    return TrainedVertexSelectionAlgorithm::ReadSettings(xmlHandle);
+}
+
 } // namespace lar_content
