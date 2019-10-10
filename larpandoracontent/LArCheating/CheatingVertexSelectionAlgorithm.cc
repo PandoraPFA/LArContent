@@ -29,7 +29,16 @@ void CheatingVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &ve
 
 StatusCode CheatingVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    return TrainedVertexSelectionAlgorithm::ReadSettings(xmlHandle);
+    // ATTN : Need access to base class member variables at this point, so call read settings prior to end of this function
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, TrainedVertexSelectionAlgorithm::ReadSettings(xmlHandle));
+
+    if (m_mcParticleListName.empty())
+    {
+        std::cout << "CheatingVertexSelectionAlgorithm: MCParticleListName required for cheated vertex selection" << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+
+    return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content
