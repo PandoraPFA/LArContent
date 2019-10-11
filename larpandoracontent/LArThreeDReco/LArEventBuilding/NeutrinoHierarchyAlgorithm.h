@@ -240,6 +240,8 @@ private:
     std::string                     m_neutrinoPfoListName;      ///< The neutrino pfo list name
     pandora::StringVector           m_daughterPfoListNames;     ///< The list of daughter pfo list names
 
+    std::string                     m_neutrinoVertexListName;   ///< The neutrino vertex list name - if not specified will assume current list
+
     unsigned int                    m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
     bool                            m_displayPfoInfoMap;        ///< Whether to display the pfo info map (if monitoring is enabled)
 };
