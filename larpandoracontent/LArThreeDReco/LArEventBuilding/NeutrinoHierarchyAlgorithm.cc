@@ -187,9 +187,8 @@ void NeutrinoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *con
     }
 
     // Handle exceptional case where vertex selected far from any other particle passing creation thresholds
-    if (0 == callDepth && 0 == pNeutrinoPfo->GetNDaughterPfos())
+    if ((0 == callDepth) && (0 == pNeutrinoPfo->GetNDaughterPfos()))
     {
-std::cout << "No vertex pfo associations. Move the vertex to match that of largest pfo." << std::endl;
         this->AdjustVertexAndPfoInfo(pNeutrinoPfo, candidateDaughterPfoList, pfoInfoMap);
         return this->ProcessPfoInfoMap(pNeutrinoPfo, candidateDaughterPfoList, pfoInfoMap, callDepth + 1);
     }
@@ -229,7 +228,7 @@ void NeutrinoHierarchyAlgorithm::AdjustVertexAndPfoInfo(const ParticleFlowObject
     PfoVector candidateDaughterPfoVector(candidateDaughterPfoList.begin(), candidateDaughterPfoList.end());
     std::sort(candidateDaughterPfoVector.begin(), candidateDaughterPfoVector.end(), LArPfoHelper::SortByNHits);
 
-    // TODO Consider deleting the neutrino pfo if there are no daughter pfo candidates?
+    // TODO Consider deleting the neutrino pfo if there are no daughter pfo candidates
     if (candidateDaughterPfoVector.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
@@ -242,26 +241,28 @@ void NeutrinoHierarchyAlgorithm::AdjustVertexAndPfoInfo(const ParticleFlowObject
     const Vertex *pOldNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
     const CartesianVector newVertexPosition(LArClusterHelper::GetClosestPosition(pOldNeutrinoVertex->GetPosition(), daughterClusterList3D.front()));
 
-    std::string vertexListName;
-    const VertexList *pVertexList(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
-
     PandoraContentApi::Vertex::Parameters parameters;
     parameters.m_position = newVertexPosition;
     parameters.m_vertexLabel = pOldNeutrinoVertex->GetVertexLabel();
     parameters.m_vertexType = pOldNeutrinoVertex->GetVertexType();
     parameters.m_x0 = pOldNeutrinoVertex->GetX0();
 
+    std::string neutrinoVertexListName(m_neutrinoVertexListName);
+    if (neutrinoVertexListName.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Vertex>(*this, neutrinoVertexListName));
+
+    std::string temporaryVertexListName;
+    const VertexList *pTemporaryVertexList(nullptr);
     const Vertex *pNewNeutrinoVertex(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTemporaryVertexList, temporaryVertexListName));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pNewNeutrinoVertex));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, "NeutrinoVertices3D")); //TODO
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, neutrinoVertexListName));
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pNeutrinoPfo, pOldNeutrinoVertex));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pNeutrinoPfo, pNewNeutrinoVertex));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pOldNeutrinoVertex, "NeutrinoVertices3D")); //TODO
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pOldNeutrinoVertex, neutrinoVertexListName));
 
     pfoInfoMap.clear();
-
     for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolVector)
         pPfoRelationTool->Run(this, pNewNeutrinoVertex, pfoInfoMap);
 }
@@ -472,6 +473,9 @@ StatusCode NeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "DaughterPfoListNames", m_daughterPfoListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NeutrinoVertexListName", m_neutrinoVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
