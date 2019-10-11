@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArMonitoring/EventValidationAlgorithm.h
+ *  @file   larpandoracontent/LArMonitoring/NeutrinoEventValidationAlgorithm.h
  *
- *  @brief  Header file for the event validation algorithm.
+ *  @brief  Header file for the neutrino event validation algorithm.
  *
  *  $Log: $
  */
-#ifndef LAR_EVENT_VALIDATION_ALGORITHM_H
-#define LAR_EVENT_VALIDATION_ALGORITHM_H 1
+#ifndef LAR_NEUTRINO_EVENT_VALIDATION_ALGORITHM_H
+#define LAR_NEUTRINO_EVENT_VALIDATION_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -24,20 +24,20 @@ namespace lar_content
 {
 
 /**
- *  @brief  EventValidationAlgorithm class
+ *  @brief  NeutrinoEventValidationAlgorithm class
  */
-class EventValidationAlgorithm: public EventValidationBaseAlgorithm
+class NeutrinoEventValidationAlgorithm: public EventValidationBaseAlgorithm
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    EventValidationAlgorithm();
+    NeutrinoEventValidationAlgorithm();
 
     /**
      *  @brief  Destructor
      */
-    ~EventValidationAlgorithm();
+    ~NeutrinoEventValidationAlgorithm();
 
 private:
     /**
@@ -72,4 +72,4 @@ private:
 
 } // namespace lar_content
 
-#endif // LAR_EVENT_VALIDATION_ALGORITHM_H
+#endif // LAR_NEUTRINO_EVENT_VALIDATION_ALGORITHM_H

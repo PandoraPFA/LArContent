@@ -26,7 +26,7 @@ namespace lar_content
  */
 class EventValidationBaseAlgorithm: public pandora::Algorithm
 {
-public:
+protected:
     /**
      *  @brief  Default constructor
      */
