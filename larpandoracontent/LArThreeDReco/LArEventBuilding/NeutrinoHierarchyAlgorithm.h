@@ -209,9 +209,10 @@ private:
      *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
      *  @param  candidateDaughterPfoList the list of candidate daughter pfos
      *  @param  pfoInfoMap the pfo info map
+     *  @param  callDepth depth of callstack for this function, tracking recursive use
      */
     void ProcessPfoInfoMap(const pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::PfoList &candidateDaughterPfoList,
-        const PfoInfoMap &pfoInfoMap) const;
+        PfoInfoMap &pfoInfoMap, const unsigned int callDepth = 0) const;
 
     /**
      *  @brief  Display the information in a pfo info map, visualising pfo parent/daughter links
@@ -248,7 +249,7 @@ public:
      *  @param  pNeutrinoVertex the address of the three dimensional neutrino interaction vertex
      *  @param  pfoInfoMap mapping from pfos to three dimensional clusters, sliding fits, vertices, etc.
      */
-    virtual void Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap) = 0;
+    virtual void Run(const NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
