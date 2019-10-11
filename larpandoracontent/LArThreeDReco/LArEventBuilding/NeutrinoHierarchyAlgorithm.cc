@@ -189,46 +189,8 @@ void NeutrinoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *con
     // Handle exceptional case where vertex selected far from any other particle passing creation thresholds
     if (0 == callDepth && 0 == pNeutrinoPfo->GetNDaughterPfos())
     {
-        // Need to decide upon a new vertex position based off the pfos created
-        const Vertex *pOldNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
-
-        // TODO Consider deleting the neutrino pfo?
-        if (candidateDaughterPfoVector.empty())
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-        // Adjust neutrino vertex and go again
-        std::cout << "No vertex pfo associations. Move the vertex to match that of largest pfo." << std::endl;
-        ClusterList candidateDaughterClusterList3D;
-        LArPfoHelper::GetThreeDClusterList(candidateDaughterPfoVector.front(), candidateDaughterClusterList3D);
-
-        if (candidateDaughterClusterList3D.empty())
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-
-        const CartesianVector newVertexPosition(LArClusterHelper::GetClosestPosition(pOldNeutrinoVertex->GetPosition(), candidateDaughterClusterList3D.front()));
-
-        std::string vertexListName;
-        const VertexList *pVertexList(nullptr);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
-
-        PandoraContentApi::Vertex::Parameters parameters;
-        parameters.m_position = newVertexPosition;
-        parameters.m_vertexLabel = pOldNeutrinoVertex->GetVertexLabel();
-        parameters.m_vertexType = pOldNeutrinoVertex->GetVertexType();
-        parameters.m_x0 = pOldNeutrinoVertex->GetX0();
-
-        const Vertex *pNewNeutrinoVertex(nullptr);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pNewNeutrinoVertex));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, "NeutrinoVertices3D")); //TODO
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pNeutrinoPfo, pOldNeutrinoVertex));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pNeutrinoPfo, pNewNeutrinoVertex));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pOldNeutrinoVertex, "NeutrinoVertices3D")); //TODO
-
-        pfoInfoMap.clear();
-
-        for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolVector)
-            pPfoRelationTool->Run(this, pNewNeutrinoVertex, pfoInfoMap);
-
+std::cout << "No vertex pfo associations. Move the vertex to match that of largest pfo." << std::endl;
+        this->AdjustVertexAndPfoInfo(pNeutrinoPfo, candidateDaughterPfoList, pfoInfoMap);
         return this->ProcessPfoInfoMap(pNeutrinoPfo, candidateDaughterPfoList, pfoInfoMap, callDepth + 1);
     }
 
@@ -257,6 +219,51 @@ void NeutrinoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *con
         // TODO Most appropriate decision - add as daughter of either i) nearest pfo, or ii) the neutrino (current approach)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pRemainingPfo));
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoHierarchyAlgorithm::AdjustVertexAndPfoInfo(const ParticleFlowObject *const pNeutrinoPfo, const PfoList &candidateDaughterPfoList,
+    PfoInfoMap &pfoInfoMap) const
+{
+    PfoVector candidateDaughterPfoVector(candidateDaughterPfoList.begin(), candidateDaughterPfoList.end());
+    std::sort(candidateDaughterPfoVector.begin(), candidateDaughterPfoVector.end(), LArPfoHelper::SortByNHits);
+
+    // TODO Consider deleting the neutrino pfo if there are no daughter pfo candidates?
+    if (candidateDaughterPfoVector.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    ClusterList daughterClusterList3D;
+    LArPfoHelper::GetThreeDClusterList(candidateDaughterPfoVector.front(), daughterClusterList3D);
+
+    if (daughterClusterList3D.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const Vertex *pOldNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
+    const CartesianVector newVertexPosition(LArClusterHelper::GetClosestPosition(pOldNeutrinoVertex->GetPosition(), daughterClusterList3D.front()));
+
+    std::string vertexListName;
+    const VertexList *pVertexList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
+    PandoraContentApi::Vertex::Parameters parameters;
+    parameters.m_position = newVertexPosition;
+    parameters.m_vertexLabel = pOldNeutrinoVertex->GetVertexLabel();
+    parameters.m_vertexType = pOldNeutrinoVertex->GetVertexType();
+    parameters.m_x0 = pOldNeutrinoVertex->GetX0();
+
+    const Vertex *pNewNeutrinoVertex(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pNewNeutrinoVertex));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, "NeutrinoVertices3D")); //TODO
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pNeutrinoPfo, pOldNeutrinoVertex));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pNeutrinoPfo, pNewNeutrinoVertex));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pOldNeutrinoVertex, "NeutrinoVertices3D")); //TODO
+
+    pfoInfoMap.clear();
+
+    for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolVector)
+        pPfoRelationTool->Run(this, pNewNeutrinoVertex, pfoInfoMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

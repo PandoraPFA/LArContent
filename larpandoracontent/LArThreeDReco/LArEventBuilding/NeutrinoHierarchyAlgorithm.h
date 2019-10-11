@@ -215,6 +215,16 @@ private:
         PfoInfoMap &pfoInfoMap, const unsigned int callDepth = 0) const;
 
     /**
+     *  @brief  Adjust neutrino vertex to ensure agreement with at least one pfo (first in sorted input list)
+     *
+     *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
+     *  @param  candidateDaughterPfoList the list of candidate daughter pfos
+     *  @param  pfoInfoMap the pfo info map
+     */
+    void AdjustVertexAndPfoInfo(const pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::PfoList &candidateDaughterPfoList,
+        PfoInfoMap &pfoInfoMap) const;
+
+    /**
      *  @brief  Display the information in a pfo info map, visualising pfo parent/daughter links
      *
      *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
