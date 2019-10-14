@@ -234,6 +234,7 @@ void NeutrinoHierarchyAlgorithm::AdjustVertexAndPfoInfo(const ParticleFlowObject
 
     ClusterList daughterClusterList3D;
     LArPfoHelper::GetThreeDClusterList(candidateDaughterPfoVector.front(), daughterClusterList3D);
+    daughterClusterList3D.sort(LArClusterHelper::SortByNHits);
 
     if (daughterClusterList3D.empty())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
