@@ -236,8 +236,9 @@ void NeutrinoHierarchyAlgorithm::AdjustVertexAndPfoInfo(const ParticleFlowObject
     LArPfoHelper::GetThreeDClusterList(candidateDaughterPfoVector.front(), daughterClusterList3D);
     daughterClusterList3D.sort(LArClusterHelper::SortByNHits);
 
+    // If no 3D hits, must leave vertex where it was
     if (daughterClusterList3D.empty())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return;
 
     const Vertex *pOldNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
     const CartesianVector newVertexPosition(LArClusterHelper::GetClosestPosition(pOldNeutrinoVertex->GetPosition(), daughterClusterList3D.front()));
