@@ -8,6 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -171,7 +172,7 @@ void NeutrinoHierarchyAlgorithm::GetInitialPfoInfoMap(const PfoList &pfoList, Pf
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void NeutrinoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *const pNeutrinoPfo, const PfoList &candidateDaughterPfoList,
-    const PfoInfoMap &pfoInfoMap) const
+    PfoInfoMap &pfoInfoMap, const unsigned int callDepth) const
 {
     PfoVector candidateDaughterPfoVector(candidateDaughterPfoList.begin(), candidateDaughterPfoList.end());
     std::sort(candidateDaughterPfoVector.begin(), candidateDaughterPfoVector.end(), LArPfoHelper::SortByNHits);
@@ -183,6 +184,13 @@ void NeutrinoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *con
 
         if ((pfoInfoMap.end() != iter) && (iter->second->IsNeutrinoVertexAssociated()))
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pDaughterPfo));
+    }
+
+    // Handle exceptional case where vertex selected far from any other particle passing creation thresholds
+    if ((0 == callDepth) && (0 == pNeutrinoPfo->GetNDaughterPfos()))
+    {
+        this->AdjustVertexAndPfoInfo(pNeutrinoPfo, candidateDaughterPfoList, pfoInfoMap);
+        return this->ProcessPfoInfoMap(pNeutrinoPfo, candidateDaughterPfoList, pfoInfoMap, callDepth + 1);
     }
 
     // Add primary pfo->daughter pfo links
@@ -210,6 +218,55 @@ void NeutrinoHierarchyAlgorithm::ProcessPfoInfoMap(const ParticleFlowObject *con
         // TODO Most appropriate decision - add as daughter of either i) nearest pfo, or ii) the neutrino (current approach)
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pNeutrinoPfo, pRemainingPfo));
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void NeutrinoHierarchyAlgorithm::AdjustVertexAndPfoInfo(const ParticleFlowObject *const pNeutrinoPfo, const PfoList &candidateDaughterPfoList,
+    PfoInfoMap &pfoInfoMap) const
+{
+    PfoVector candidateDaughterPfoVector(candidateDaughterPfoList.begin(), candidateDaughterPfoList.end());
+    std::sort(candidateDaughterPfoVector.begin(), candidateDaughterPfoVector.end(), LArPfoHelper::SortByNHits);
+
+    // TODO Consider deleting the neutrino pfo if there are no daughter pfo candidates
+    if (candidateDaughterPfoVector.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    ClusterList daughterClusterList3D;
+    LArPfoHelper::GetThreeDClusterList(candidateDaughterPfoVector.front(), daughterClusterList3D);
+    daughterClusterList3D.sort(LArClusterHelper::SortByNHits);
+
+    // If no 3D hits, must leave vertex where it was
+    if (daughterClusterList3D.empty())
+        return;
+
+    const Vertex *pOldNeutrinoVertex(LArPfoHelper::GetVertex(pNeutrinoPfo));
+    const CartesianVector newVertexPosition(LArClusterHelper::GetClosestPosition(pOldNeutrinoVertex->GetPosition(), daughterClusterList3D.front()));
+
+    PandoraContentApi::Vertex::Parameters parameters;
+    parameters.m_position = newVertexPosition;
+    parameters.m_vertexLabel = pOldNeutrinoVertex->GetVertexLabel();
+    parameters.m_vertexType = pOldNeutrinoVertex->GetVertexType();
+    parameters.m_x0 = pOldNeutrinoVertex->GetX0();
+
+    std::string neutrinoVertexListName(m_neutrinoVertexListName);
+    if (neutrinoVertexListName.empty())
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Vertex>(*this, neutrinoVertexListName));
+
+    std::string temporaryVertexListName;
+    const VertexList *pTemporaryVertexList(nullptr);
+    const Vertex *pNewNeutrinoVertex(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTemporaryVertexList, temporaryVertexListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pNewNeutrinoVertex));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, neutrinoVertexListName));
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromPfo(*this, pNeutrinoPfo, pOldNeutrinoVertex));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pNeutrinoPfo, pNewNeutrinoVertex));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pOldNeutrinoVertex, neutrinoVertexListName));
+
+    pfoInfoMap.clear();
+    for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolVector)
+        pPfoRelationTool->Run(this, pNewNeutrinoVertex, pfoInfoMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -418,6 +475,9 @@ StatusCode NeutrinoHierarchyAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "DaughterPfoListNames", m_daughterPfoListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NeutrinoVertexListName", m_neutrinoVertexListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));

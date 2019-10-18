@@ -209,9 +209,20 @@ private:
      *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
      *  @param  candidateDaughterPfoList the list of candidate daughter pfos
      *  @param  pfoInfoMap the pfo info map
+     *  @param  callDepth depth of callstack for this function, tracking recursive use
      */
     void ProcessPfoInfoMap(const pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::PfoList &candidateDaughterPfoList,
-        const PfoInfoMap &pfoInfoMap) const;
+        PfoInfoMap &pfoInfoMap, const unsigned int callDepth = 0) const;
+
+    /**
+     *  @brief  Adjust neutrino vertex to ensure agreement with at least one pfo (first in sorted input list)
+     *
+     *  @param  pNeutrinoPfo the address of the (original) parent neutrino pfo
+     *  @param  candidateDaughterPfoList the list of candidate daughter pfos
+     *  @param  pfoInfoMap the pfo info map
+     */
+    void AdjustVertexAndPfoInfo(const pandora::ParticleFlowObject *const pNeutrinoPfo, const pandora::PfoList &candidateDaughterPfoList,
+        PfoInfoMap &pfoInfoMap) const;
 
     /**
      *  @brief  Display the information in a pfo info map, visualising pfo parent/daughter links
@@ -228,6 +239,8 @@ private:
 
     std::string                     m_neutrinoPfoListName;      ///< The neutrino pfo list name
     pandora::StringVector           m_daughterPfoListNames;     ///< The list of daughter pfo list names
+
+    std::string                     m_neutrinoVertexListName;   ///< The neutrino vertex list name - if not specified will assume current list
 
     unsigned int                    m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
     bool                            m_displayPfoInfoMap;        ///< Whether to display the pfo info map (if monitoring is enabled)
@@ -248,7 +261,7 @@ public:
      *  @param  pNeutrinoVertex the address of the three dimensional neutrino interaction vertex
      *  @param  pfoInfoMap mapping from pfos to three dimensional clusters, sliding fits, vertices, etc.
      */
-    virtual void Run(NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap) = 0;
+    virtual void Run(const NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
