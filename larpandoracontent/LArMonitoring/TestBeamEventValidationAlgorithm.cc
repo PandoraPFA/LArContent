@@ -209,7 +209,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
                 bestMatchPfoNSharedHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList));
                 bestMatchPfoNSharedHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList));
                 bestMatchPfoNSharedHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList));
-                bestMatchPfoX0.push_back(pfoToSharedHits.first->GetPropertiesMap().count("X0") ? pfoToSharedHits.first->GetPropertiesMap().at("X0") : 0.f);
+                bestMatchPfoX0.push_back(pfoToSharedHits.first->GetPropertiesMap().count("X0") ? pfoToSharedHits.first->GetPropertiesMap().at("X0") : std::numeric_limits<float>::max());
 #ifdef MONITORING
                 try
                 {
@@ -249,7 +249,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             bestMatchPfoNHitsTotal.push_back(0); bestMatchPfoNHitsU.push_back(0);
             bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0); bestMatchPfoNSharedHitsTotal.push_back(0);
             bestMatchPfoNSharedHitsU.push_back(0); bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
-            bestMatchPfoX0.push_back(0.f);
+            bestMatchPfoX0.push_back(std::numeric_limits<float>::max());
         }
 
         nPrimaryMatchedPfos.push_back(nPrimaryMatches);
