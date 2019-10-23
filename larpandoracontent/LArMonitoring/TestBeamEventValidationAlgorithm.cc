@@ -128,6 +128,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
     IntVector bestMatchPfoId, bestMatchPfoPdg, bestMatchPfoIsTB;
     IntVector bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW;
     IntVector bestMatchPfoNSharedHitsTotal, bestMatchPfoNSharedHitsU, bestMatchPfoNSharedHitsV, bestMatchPfoNSharedHitsW;
+    FloatVector bestMatchPfoX0;
 
     std::stringstream targetSS;
 
@@ -208,6 +209,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
                 bestMatchPfoNSharedHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList));
                 bestMatchPfoNSharedHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList));
                 bestMatchPfoNSharedHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList));
+                bestMatchPfoX0.push_back(pfoToSharedHits.first->GetPropertiesMap().count("X0") ? pfoToSharedHits.first->GetPropertiesMap().at("X0") : 0.f);
 #ifdef MONITORING
                 try
                 {
@@ -247,6 +249,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             bestMatchPfoNHitsTotal.push_back(0); bestMatchPfoNHitsU.push_back(0);
             bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0); bestMatchPfoNSharedHitsTotal.push_back(0);
             bestMatchPfoNSharedHitsU.push_back(0); bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
+            bestMatchPfoX0.push_back(0.f);
         }
 
         nPrimaryMatchedPfos.push_back(nPrimaryMatches);
@@ -300,6 +303,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsU", &bestMatchPfoNSharedHitsU));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsV", &bestMatchPfoNSharedHitsV));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsW", &bestMatchPfoNSharedHitsW));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoX0", &bestMatchPfoX0));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetMatches", nTargetMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetTBMatches", nTargetTBMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetCRMatches", nTargetCRMatches));
@@ -368,6 +372,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             bestMatchPfoId.clear(); bestMatchPfoPdg.clear(); bestMatchPfoIsTB.clear();
             bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear();
             bestMatchPfoNSharedHitsTotal.clear(); bestMatchPfoNSharedHitsU.clear(); bestMatchPfoNSharedHitsV.clear(); bestMatchPfoNSharedHitsW.clear();
+            bestMatchPfoX0.clear();
         }
     }
 
