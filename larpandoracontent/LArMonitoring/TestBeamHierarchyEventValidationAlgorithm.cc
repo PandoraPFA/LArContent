@@ -293,8 +293,8 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
                 bestMatchPfoNSharedHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList));
                 bestMatchPfoNSharedHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList));
                 bestMatchPfoNSharedHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList));
-                bestMatchPfoX0.push_back(pfoToSharedHits.first->GetPropertiesMap().count("X0") ? pfoToSharedHits.first->GetPropertiesMap().at("X0") : std::numeric_limits<float>::max());
-                
+                bestMatchPfoX0.push_back(pfoToSharedHits.first->GetPropertiesMap().count("X0") ? pfoToSharedHits.first->GetPropertiesMap().at("X0") : 0.f);
+
 #ifdef MONITORING
                 try
                 {
