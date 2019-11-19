@@ -600,6 +600,48 @@ void LArClusterHelper::GetCoordinateVector(const Cluster *const pCluster, Cartes
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound, 
+        const pandora::CartesianVector &upperBound, pandora::CaloHitList &caloHitList)
+{
+    const bool useX(std::fabs(upperBound.GetX() - lowerBound.GetX()) > std::numeric_limits<float>::epsilon());
+    const bool useY(std::fabs(upperBound.GetY() - lowerBound.GetY()) > std::numeric_limits<float>::epsilon());
+    const bool useZ(std::fabs(upperBound.GetZ() - lowerBound.GetZ()) > std::numeric_limits<float>::epsilon());
+    if (!useX && !useY && !useZ)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    const float minX(std::min(lowerBound.GetX(), upperBound.GetX()));
+    const float maxX(std::max(lowerBound.GetX(), upperBound.GetX()));
+    const float minY(std::min(lowerBound.GetY(), upperBound.GetY()));
+    const float maxY(std::max(lowerBound.GetY(), upperBound.GetY()));
+    const float minZ(std::min(lowerBound.GetZ(), upperBound.GetZ()));
+    const float maxZ(std::max(lowerBound.GetZ(), upperBound.GetZ()));
+
+    for (const OrderedCaloHitList::value_type &layerEntry : pCluster->GetOrderedCaloHitList())
+    {
+        for (const CaloHit *const pCaloHit : *layerEntry.second)
+        {
+            const CartesianVector &hitPosition = pCaloHit->GetPositionVector();
+            if (useX && 
+                (hitPosition.GetX() < minX - std::numeric_limits<float>::epsilon() ||
+                 hitPosition.GetX() > maxX + std::numeric_limits<float>::epsilon()))
+                    continue;
+            else if (useY && 
+                (hitPosition.GetY() < minY - std::numeric_limits<float>::epsilon() ||
+                 hitPosition.GetY() > maxY + std::numeric_limits<float>::epsilon()))
+                    continue;
+            else if (useZ && 
+                (hitPosition.GetZ() < minZ - std::numeric_limits<float>::epsilon() ||
+                 hitPosition.GetZ() > maxZ + std::numeric_limits<float>::epsilon()))
+                    continue;
+
+            caloHitList.push_back(pCaloHit);
+        }
+    }
+    caloHitList.sort(LArClusterHelper::SortHitsByPosition);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArClusterHelper::SortByNOccupiedLayers(const Cluster *const pLhs, const Cluster *const pRhs)
 {
     const unsigned int nOccupiedLayersLhs(pLhs->GetOrderedCaloHitList().size());
@@ -704,6 +746,18 @@ bool LArClusterHelper::SortHitsByPosition(const CaloHit *const pLhs, const CaloH
 
     // Use pulse height to resolve ties
     return SortHitsByPulseHeight(pLhs, pRhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortHitsByPositionInX(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs)
+{
+    const CartesianVector deltaPosition(pRhs->GetPositionVector() - pLhs->GetPositionVector());
+
+    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
+
+    return SortHitsByPositionInX(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

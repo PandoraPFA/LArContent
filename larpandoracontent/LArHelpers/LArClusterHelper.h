@@ -264,6 +264,17 @@ public:
     static void GetCoordinateVector(const pandora::Cluster *const pCluster, pandora::CartesianPointVector &coordinateVector);
 
     /**
+     *  @brief  Get list of Calo hits from an input cluster that are contained in a bounding box.  The hits are sorted by position
+     *
+     *  @param  pCluster address of the cluster
+     *  @param  lowerBound one opposing corner of the bounding box
+     *  @param  upperBound the other opposing corner of the bounding box
+     *  @param  caloHitList the CaloHitList to be filled
+     */
+    static void GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound, 
+        const pandora::CartesianVector &upperBound, pandora::CaloHitList &caloHitList);
+
+    /**
      *  @brief  Get average Z positions of the calo hits in a cluster in range xmin to xmax
      *
      *  @param  pCluster address of the cluster
@@ -330,6 +341,15 @@ public:
      *  @param  pRhs address of second calo hit
      */
     static bool SortHitsByPosition(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+
+    /**
+     *  @brief  Sort calo hits by their position (use X, followed by Z, followed by Y)
+     *
+     *  @param  pLhs address of first calo hit
+     *  @param  pRhs address of second calo hit
+     */
+    static bool SortHitsByPositionInX(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+
 
    /**
      *  @brief  Sort calo hits by their pulse height
