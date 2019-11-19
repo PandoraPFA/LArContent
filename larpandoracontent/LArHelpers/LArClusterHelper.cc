@@ -600,6 +600,19 @@ void LArClusterHelper::GetCoordinateVector(const Cluster *const pCluster, Cartes
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArClusterHelper::GetCaloHitVector(const Cluster *const pCluster, CaloHitVector &caloHitVector)
+{
+    for (const OrderedCaloHitList::value_type &layerEntry : pCluster->GetOrderedCaloHitList())
+    {
+        for (const CaloHit *const pCaloHit : *layerEntry.second)
+            caloHitVector.push_back(pCaloHit);
+    }
+
+    std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArClusterHelper::SortByNOccupiedLayers(const Cluster *const pLhs, const Cluster *const pRhs)
 {
     const unsigned int nOccupiedLayersLhs(pLhs->GetOrderedCaloHitList().size());
