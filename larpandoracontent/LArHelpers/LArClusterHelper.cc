@@ -605,10 +605,10 @@ void LArClusterHelper::GetCaloHitList(const Cluster *const pCluster, CaloHitList
     for (const OrderedCaloHitList::value_type &layerEntry : pCluster->GetOrderedCaloHitList())
     {
         for (const CaloHit *const pCaloHit : *layerEntry.second)
-            caloHitList.insert(pCaloHit);
+            caloHitList.push_back(pCaloHit);
     }
 
-    std::sort(caloHitList.begin(), caloHitList.end(), LArClusterHelper::SortHitsByPosition);
+    caloHitList.sort(LArClusterHelper::SortHitsByPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
