@@ -33,6 +33,7 @@ LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
     m_minHitsForGoodView(5),
     m_minPrimaryGoodViews(2),
     m_selectInputHits(true),
+    m_foldToPrimaries(true),
     m_maxPhotonPropagation(2.5f),
     m_minHitSharingFraction(0.9f)
 {
@@ -41,10 +42,56 @@ LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+
+  void LArMCParticleHelper::GetMCToPfoCompletenessPurityMaps(const MCContributionMap& mcParticleToHitsMap, const PfoContributionMap& pfoToHitsMap, const MCParticleToPfoHitSharingMap& mcParticleToPfoHitSharingMap, MCParticleToPfoCompletenessPurityMap& mcParticleToPfoCompletenessMap, MCParticleToPfoCompletenessPurityMap& mcParticleToPfoPurityMap) {
+
+    for(const MCParticleToPfoHitSharingMap::value_type &entry : mcParticleToPfoHitSharingMap){
+
+      const PfoToSharedHitsVector pfoToSharedHitsVector(entry.second);
+
+      PfoToCompletenessPurityVector pfoToCompletenessVector;
+      PfoToCompletenessPurityVector pfoToPurityVector;
+
+      if(mcParticleToHitsMap.find(entry.first) == mcParticleToHitsMap.end()) continue;
+
+      const unsigned int totMCParticleHits(mcParticleToHitsMap.at(entry.first).size());
+
+      for(const PfoCaloHitListPair &pfoSharedHits : pfoToSharedHitsVector) {
+
+        if(pfoToHitsMap.find(pfoSharedHits.first) == pfoToHitsMap.end()) continue;
+
+	const unsigned int sharedHits(pfoSharedHits.second.size());
+	const unsigned int totPfoHits(pfoToHitsMap.at(pfoSharedHits.first).size()); 
+
+	const double completeness(static_cast<double>(sharedHits)/static_cast<double>(totMCParticleHits));
+	const double purity(static_cast<double>(sharedHits)/static_cast<double>(totPfoHits));
+
+	pfoToCompletenessVector.push_back({pfoSharedHits.first, completeness});
+	pfoToPurityVector.push_back({pfoSharedHits.first, purity});
+      }
+
+      mcParticleToPfoCompletenessMap[entry.first] = pfoToCompletenessVector;
+      mcParticleToPfoPurityMap[entry.first] = pfoToPurityVector;
+
+    }
+    return;
+  }
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArMCParticleHelper::IsBeamNeutrinoFinalState(const MCParticle *const pMCParticle)
 {
     const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
     return (LArMCParticleHelper::IsPrimary(pMCParticle) && LArMCParticleHelper::IsNeutrino(pParentMCParticle));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsDownstreamOfBeamNeutrino(const MCParticle *const pMCParticle)
+{
+    const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+    return (LArMCParticleHelper::IsNeutrino(pParentMCParticle));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -335,6 +382,8 @@ void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+
+
 void LArMCParticleHelper::GetMCLeadingMap(const MCParticleList *const pMCParticleList, MCRelationMap &mcLeadingMap)
 {
     for (const MCParticle *const pMCParticle : *pMCParticleList)
@@ -346,6 +395,17 @@ void LArMCParticleHelper::GetMCLeadingMap(const MCParticleList *const pMCParticl
         }
         catch (const StatusCodeException &) {}
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+  void LArMCParticleHelper::GetMCToSelfMap(const MCParticleList *const pMCParticleList, MCRelationMap &mcToSelfMap)
+{
+  for(const MCParticle *const pMCParticle : *pMCParticleList)
+  {
+    mcToSelfMap[pMCParticle] = pMCParticle;
+  }    
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -402,6 +462,7 @@ void LArMCParticleHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
 
                 if (mcToPrimaryMCMap.end() == mcIter)
                     continue;
+		
 
                 pPrimaryParticle = mcIter->second;
             }
@@ -422,30 +483,48 @@ void LArMCParticleHelper::GetMCParticleToCaloHitMatches(const CaloHitList *const
 void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const PrimaryParameters &parameters,
     std::function<bool(const MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap)
 {
-    // Obtain map: [mc particle -> primary mc particle]
-    LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
-    LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+
+    // Obtain map: [MC particle -> self] (to prevent folding to primary MC particle)
+    // or [MC particle -> primary mc particle] (to fold to primary MC particle)
+    LArMCParticleHelper::MCRelationMap mcToTargetMCMap;
+    parameters.m_foldToPrimaries ? LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToTargetMCMap) : LArMCParticleHelper::GetMCToSelfMap(pMCParticleList, mcToTargetMCMap);
 
     // Remove non-reconstructable hits, e.g. those downstream of a neutron
+    // Both cases of m_foldToPrimaries need to input [MC -> MC primary] to complete the above
     CaloHitList selectedCaloHitList;
-    LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
+    if(parameters.m_foldToPrimaries) {
+      LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToTargetMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation); 
+    } else {
+      LArMCParticleHelper::MCRelationMap mcToPrimaryMCMap;
+      LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
+      LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
+    }
 
-    // Obtain maps: [hit -> primary mc particle], [primary mc particle -> list of hits]
-    CaloHitToMCMap hitToPrimaryMCMap;
-    MCContributionMap mcToTrueHitListMap;
-    LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToPrimaryMCMap, hitToPrimaryMCMap, mcToTrueHitListMap);
+    // Obtain maps: [hit -> MC particle (either primary or a downstream MC particle)], [MC particle -> list of hits]
+    CaloHitToMCMap hitToTargetMCMap;
+    MCContributionMap targetMCToTrueHitListMap;
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToTargetMCMap, hitToTargetMCMap, targetMCToTrueHitListMap);
 
-    // Obtain vector: primary mc particles
-    MCParticleVector mcPrimaryVector;
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, mcPrimaryVector);
+
+    // Obtain vector: all or primary mc particles
+    MCParticleVector targetMCVector;
+    if(parameters.m_foldToPrimaries){ 
+      std::cout << "TRUE" << std::endl;
+      LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, targetMCVector);
+    } else {
+      std::cout << "FALSE" << std::endl;
+      std::copy(pMCParticleList->begin(), pMCParticleList->end(), std::back_inserter(targetMCVector));
+    }
 
     // Select MCParticles matching criteria
     MCParticleVector candidateTargets;
-    LArMCParticleHelper::SelectParticlesMatchingCriteria(mcPrimaryVector, fCriteria, candidateTargets);
-
+    LArMCParticleHelper::SelectParticlesMatchingCriteria(targetMCVector, fCriteria, candidateTargets);
+    
     // Ensure the MCParticles have enough "good" hits to be reconstructed
-    LArMCParticleHelper::SelectParticlesByHitCount(candidateTargets, mcToTrueHitListMap, mcToPrimaryMCMap, parameters, selectedMCParticlesToHitsMap);
+    LArMCParticleHelper::SelectParticlesByHitCount(candidateTargets, targetMCToTrueHitListMap, mcToTargetMCMap, parameters, selectedMCParticlesToHitsMap);
+
 }
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -487,8 +566,24 @@ void LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(cons
         {
             CaloHitList caloHitList;
             selectedMCParticlesToHitsMap.insert(MCContributionMap::value_type(pParentMCParticle, caloHitList));
+
         }
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetUnfoldedPfoToReconstructable2DHitsMap(const PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap, PfoContributionMap &pfoToReconstructable2DHitsMap)
+{
+
+  for(const ParticleFlowObject *const pPfo : pfoList) {
+    CaloHitList pfoHitList;
+    LArMCParticleHelper::CollectReconstructable2DHits(PfoList{pPfo}, {selectedMCParticleToHitsMap}, pfoHitList);
+
+    if (!pfoToReconstructable2DHitsMap.insert(PfoContributionMap::value_type(pPfo, pfoHitList)).second)
+      throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+  }
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -646,7 +741,7 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const PfoList &pfoList, c
     {
         bool isTargetHit(false);
         for (const MCContributionMap &mcParticleToHitsMap : selectedMCParticleToHitsMaps)
-        {
+        { 
             // ATTN This map is unordered, but this does not impact search for specific target hit
             for (const MCContributionMap::value_type &mapEntry : mcParticleToHitsMap)
             {
@@ -685,6 +780,7 @@ void LArMCParticleHelper::SelectCaloHits(const CaloHitList *const pCaloHitList, 
 
             if (mcToPrimaryMCMap.end() == mcIter)
                 continue;
+	    
 
             const MCParticle *const pPrimaryParticle = mcIter->second;
 
@@ -807,13 +903,13 @@ void LArMCParticleHelper::SelectParticlesByHitCount(const MCParticleVector &cand
 bool LArMCParticleHelper::PassMCParticleChecks(const MCParticle *const pOriginalPrimary, const MCParticle *const pThisMCParticle,
     const MCParticle *const pHitMCParticle, const float maxPhotonPropagation)
 {
-    if (NEUTRON == std::abs(pThisMCParticle->GetParticleId()))
-        return false;
+  if (NEUTRON == std::abs(pThisMCParticle->GetParticleId()))
+    return false;
 
-    if ((PHOTON == pThisMCParticle->GetParticleId()) && (PHOTON != pOriginalPrimary->GetParticleId()) && (E_MINUS != std::abs(pOriginalPrimary->GetParticleId())))
+  if ((PHOTON == pThisMCParticle->GetParticleId()) && (PHOTON != GetPrimaryMCParticle(pThisMCParticle)->GetParticleId()) && (E_MINUS != std::abs(GetPrimaryMCParticle(pThisMCParticle)->GetParticleId())))
     {
-        if ((pThisMCParticle->GetEndpoint() - pThisMCParticle->GetVertex()).GetMagnitude() > maxPhotonPropagation)
-            return false;
+      if ((pThisMCParticle->GetEndpoint() - pThisMCParticle->GetVertex()).GetMagnitude() > maxPhotonPropagation)
+	return false;
     }
 
     if (pThisMCParticle == pHitMCParticle)
