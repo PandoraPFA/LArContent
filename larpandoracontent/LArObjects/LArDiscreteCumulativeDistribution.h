@@ -38,8 +38,16 @@ public:
      *
      *  @return input data vector size
      */
-    size_t GetInputDataSize() const;
+    size_t GetInputVectorSize() const;
 
+    /**
+     *  @brief  Get X value for specific element from input vector
+     *
+     *  @param the index in the input vector
+     *
+     *  @return X (input vector)
+     */
+    float GetXFromInputVector(int index) const;
 
 
 private:
@@ -63,9 +71,16 @@ inline void DiscreteCumulativeDistribution::CollectInputData(T1 x, T2 y)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline size_t DiscreteCumulativeDistribution::GetInputDataSize() const
+inline size_t DiscreteCumulativeDistribution::GetInputVectorSize() const
 {
     return m_InputDataHolder.size();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float DiscreteCumulativeDistribution::GetXFromInputVector(int index) const
+{
+    return m_InputDataHolder.at(index).first;
 }
 
 /**
