@@ -42,6 +42,7 @@ StatusCode MCParticleMonitoringAlgorithm::Run()
 
     LArMCParticleHelper::PrimaryParameters parameters;
     parameters.m_minHitSharingFraction = 0.f;
+    parameters.m_selectInputHits = false;
 
     LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
     LArMCParticleHelper::MCContributionMap beamMCParticlesToGoodHitsMap;
