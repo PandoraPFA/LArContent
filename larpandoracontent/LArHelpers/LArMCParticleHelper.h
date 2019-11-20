@@ -47,6 +47,10 @@ public:
     typedef std::map<const pandora::ParticleFlowObject*, MCParticleToSharedHitsVector> PfoToMCParticleHitSharingMap;
     typedef std::map<const pandora::MCParticle*, PfoToSharedHitsVector> MCParticleToPfoHitSharingMap;
 
+    typedef std::pair<const pandora::ParticleFlowObject*, double> PfoCompletenessPurityPair;
+    typedef std::vector<PfoCompletenessPurityPair> PfoToCompletenessPurityVector;
+    typedef std::map<const pandora::MCParticle*, PfoToCompletenessPurityVector> MCParticleToPfoCompletenessPurityMap;
+
     /**
      *  @brief   PrimaryParameters class
      */
@@ -62,14 +66,25 @@ public:
         unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
         unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
         bool          m_selectInputHits;          ///< whether to select input hits
+	bool          m_foldToPrimaries;          ///< whether to fold all hits to primary pfos and MC particles
         float         m_maxPhotonPropagation;     ///< the maximum photon propagation length
         float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
     };
 
     /**
+     *  @brief Fills the pfoToMCParticleCompletenessMap and pfoToMCParticlePurityMap each with vectors of pairs of MCParticles and completeness/purity
+     */
+    static void GetMCToPfoCompletenessPurityMaps(const MCContributionMap& mcParticleToHitsMap, const PfoContributionMap& pfoToHitsMap, const MCParticleToPfoHitSharingMap& mcParticleToPfoHitSharingMap, MCParticleToPfoCompletenessPurityMap& mcParticleToPfoCompletenessMap, MCParticleToPfoCompletenessPurityMap& mcParticleToPfoPurityMap);
+
+    /**
      *  @brief  Returns true if passed a primary neutrino final state MCParticle
      */
     static bool IsBeamNeutrinoFinalState(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Returns true if passed a neutrino final state MCParticle (used to prevent folding to MC primaries)
+     */
+    static bool IsDownstreamOfBeamNeutrino(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Returns true if passed a primary triggered beam MCParticle
@@ -167,7 +182,7 @@ public:
     static const pandora::MCParticle *GetPrimaryMCParticle(const pandora::MCParticle *const pMCParticle);
 
     /**
-     *  @brief  Get the leasding particle in the hierarchy, for use at ProtoDUNE
+     *  @brief  Get the leading particle in the hierarchy, for use at ProtoDUNE
      *
      *  @param  pMCParticle the input mc particle
      *
@@ -215,6 +230,14 @@ public:
      *  @param  mcLeadingMap the output mapping between mc particles and their leading parent
      */
     static void GetMCLeadingMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcLeadingMap);
+
+    /**
+     *  @brief  Get mapping from individual mc particles (in a provided list) to themselves
+     *
+     *  @param  pMCParticleList the input mc particle list
+     *  @param  mcToSelfMap the output mapping between mc particles and themselves
+     */
+    static void GetMCToSelfMap(const pandora::MCParticleList *const pMCParticleList, MCRelationMap &mcToSelfMap);
 
     /**
      *  @brief  Find the mc particle making the largest contribution to 2D clusters in a specified pfo
@@ -267,6 +290,15 @@ public:
      */
     static void SelectReconstructableTestBeamHierarchyMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList,
         const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap);
+
+    /**
+     *  @brief  Get unfolded mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
+     *
+     *  @param  pfoList the input list of Pfos
+     *  @param  selectedMCParticleToHitsMap the input mapping from selected reconstructable MCParticles to their hits
+     *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     */
+    static void GetUnfoldedPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap, PfoContributionMap &pfoToReconstructable2DHitsMap);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
