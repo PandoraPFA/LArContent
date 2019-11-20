@@ -30,8 +30,8 @@ public:
      *  @param  x independent variable
      *  @param  y dependent variable
      */
-    template <typename T1, T2>
-    void CollectInputData(T1 x, T2 y) const;
+    template <typename T1, typename T2>
+    void CollectInputData(T1 x, T2 y);
 
     /**
      *  @brief  Get size of input data vector
@@ -52,13 +52,13 @@ private:
     //float       m_uMinX;                        ///< The min x value in the u view
 };
 
-template <typename T1, T2>
-inline void DiscreteCumulativeDistribution::CollectInputData(T1 x, T2 y) const
+template <typename T1, typename T2>
+inline void DiscreteCumulativeDistribution::CollectInputData(T1 x, T2 y)
 {
     float X = static_cast<float>(x);
     float Y = static_cast<float>(y);
 
-    m_InputDataHolder.emplace_back(x,y);
+    m_InputDataHolder.emplace_back(X,Y);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
