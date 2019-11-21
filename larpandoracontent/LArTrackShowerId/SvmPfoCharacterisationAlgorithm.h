@@ -41,8 +41,8 @@ protected:
     PfoCharacterisationFeatureTool::FeatureToolVector       m_featureToolVectorThreeD;   ///< The feature tool map for 3D info
     PfoCharacterisationFeatureTool::FeatureToolVector       m_featureToolVectorNoChargeInfo; ///< The feature tool map for missing W view
 
-    SupportVectorMachine    m_supportVectorMachine;              ///< The support vector machine
-    SupportVectorMachine    m_supportVectorMachineNoChargeInfo;  ///< The support vector machine for missing W view
+    AdaBoostDecisionTree    m_adaBoostDecisionTree;              ///< The Boosted Decision Tree
+    AdaBoostDecisionTree    m_adaBoostDecisionTreeNoChargeInfo;  ///< The Boosted Decision Tree for missing W view
 
     bool                    m_trainingSetMode;              ///< Whether to train
     bool                    m_enableProbability;            ///< Whether to use probabilities instead of binary classification
