@@ -249,112 +249,83 @@ StatusCode TwoDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHand
     return STATUS_CODE_SUCCESS;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//below feature tool added by Mousam
+//-------------------------------------------------------------------------------------------------------------------------------
+PfoHierarchyFeatureTool::PfoHierarchyFeatureTool() 
+{
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------
+void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+  	if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    	std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+  
+    LArMvaHelper::MvaFeature nAllDaughter, nHits3DDaughterTotal, daughterParentNhitsRatio;
+
+    CaloHitList nHits3DParentList;    
+    size_t nHits3DDaughter(0);
+    PfoList newPfoList(1, pInputPfo);
+    size_t nHits3DParent(1.f);
+    PfoList allDaughtersPfoList;
+    float nHits3DDaughterTotalNumber(0);
+
+    //std::cout << "isPrimary: " << isPrimary << std::endl;
+    //std::cout << "nAllDaughter1: " << nAllDaughter << std::endl;
+
+    //if (isPrimary == 1)
+    //{
+    LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, nHits3DParentList);
+    nHits3DParent = nHits3DParentList.size();
+    LArPfoHelper::GetAllDownstreamPfos(newPfoList, allDaughtersPfoList);
+    nAllDaughter = allDaughtersPfoList.size() - 1;
+    //std::cout << "nAllDaughter: " << nAllDaughter << std::endl;
+    if (nAllDaughter.Get() > 0.0)
+    {
+    	allDaughtersPfoList.pop_front();
+		for(const ParticleFlowObject *const pDaughterPfo : allDaughtersPfoList)
+			{
+        		CaloHitList nHits3DDaughterList;
+               	LArPfoHelper::GetCaloHits(pDaughterPfo, TPC_3D, nHits3DDaughterList);
+                nHits3DDaughter = nHits3DDaughterList.size();
+                nHits3DDaughterTotalNumber += nHits3DDaughter;
+                    //std::cout << "nHits3DDaughter: " << nHits3DDaughter << std::endl;
+					//std::cout << "pdgCodeDaughter: " <<  pDaughterPfo->GetParticleId() << std::endl;
+			}
+        //std::cout << "nAllDaughter2: " << nAllDaughter << std::endl;
+    }
+    else if (nAllDaughter.Get() == 0.0)
+	{
+     	nHits3DDaughter = 0.0;
+    }
+	
+        //std::cout << "Ratio: " << (static_cast<double>(nHits3DDaughterTotal))/(static_cast<double>(nHits3DParent)) << std::endl;
+   
+    //}	
+    nHits3DDaughterTotal = nHits3DDaughterTotalNumber;
+    daughterParentNhitsRatio = ((nHits3DDaughterTotal.Get()))/(static_cast<double>(nHits3DParent));
+  
+  //---------------push_back into feature vector-----------------------------------------------------------------------------
+	featureVector.push_back(nAllDaughter);
+	featureVector.push_back(nHits3DDaughterTotal);
+	featureVector.push_back(daughterParentNhitsRatio);
+}
+
+StatusCode PfoHierarchyFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+{
+
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
     m_slidingLinearFitWindow(3),
     m_slidingLinearFitWindowLarge(10000)
 {
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//below feature tool added by Mousam
-//-------------------------------------------------------------------------------------------------------------------------------
-TwoDCurvatureFeatureTool::TwoDCurvatureFeatureTool() :
-  m_slidingLinearFitWindow(3)
-{
-}
-
-//-------------------------------------------------------------------------------------------------------------------------------
-void TwoDCurvatureFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
-{
-  if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-    std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-  
-  //std::cout << "test" << std::endl;
-  int curv = 0;
-  //-----------------------Creating containers and lists---------------------------------------------------------------  
-  ClusterList twoDClusterList;
-  LArPfoHelper::GetTwoDClusterList(pInputPfo, twoDClusterList);
-  CartesianVector gradient (0.f, 0.f, 0.f);
-  std::vector<float> gradVec;
-  //-----------------------Calculate tangent vector, then gradient, then push_back into gradVec-------------------------
-  for (const Cluster * cluster : twoDClusterList)
-    {     
-      const TwoDSlidingFitResult slidingFitResult(cluster, m_slidingLinearFitWindow, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-      
-      for (const auto &mapEntry : slidingFitResult.GetLayerFitResultMap())
-	{
-	  const LayerFitResult &layerFitResult(mapEntry.second);
-	  
-	  //for each layer get L and T with
-	  
-	  float pL = layerFitResult.GetL();
-	  
-	  float pT = layerFitResult.GetFitT();
-	  
-	  //then calculate dTdL as pT/pL and use it as input to TwoDSlidingFitResult::GetGlobalDirection()
-	  float dTdL = pT / pL;
-	  
-	  slidingFitResult.GetGlobalDirection(dTdL, gradient);
-	  float scalar = gradient.GetZ()/gradient.GetX();	
-
-	  gradVec.push_back(scalar);
-	}
-  //--------------------Check through gradVec and characterise the change in gradient and push_back into changes---------------------
-      /*for (int i = 0; i < gradVec.size(); ++i)
-	{
-	std::cout << "gradVec " << i << ": " << gradVec[i] << std::endl;
-	}*/
-      std::vector<int> changes;
-      
-      for (int index = 1; index < gradVec.size(); index++)
-	{
-	  int currGrad;
-	  
-	  if (gradVec[index] > gradVec [index-1])
-	    {
-	      currGrad = 1;
-	      //std::cout << "rai1: " << gradVec[index] << ", mousam1: " << gradVec[index-1] << std::endl;
-	    }
-	  else if (gradVec[index] < gradVec[index-1])
-	    {
-	      currGrad = -1;
-	      //std::cout << "rai2: " << gradVec[index] << ", mousam2: " << gradVec[index-1] << std::endl;
-	    }
-	  else
-	    {
-	      currGrad = 0;
-	      //std::cout << "rai3: " << gradVec[index] << ", mousam3: " << gradVec[index-1] << std::endl;
-	    }
-	  
-	  //std::cout << "currGrad" << currGrad << std::endl;
-	  if (index == 1)
-	    changes.push_back(currGrad);
-	  else if (changes[changes.size()-1] != currGrad)
-	    {
-	      changes.push_back(currGrad);
-	      //std::cout << "balh" << std::endl;
-	    }
-	}  
-  //-----------------curv is the number of unique changes in gradient--------------------------------------------------
-      curv = changes.size() - 1; // - 1 comes from the fact that we dont care about the first element
-      //std::cout << "curvature: " << curv << std::endl;
-    }
-  //---------------push_back into feature vector-----------------------------------------------------------------------------
-  featureVector.push_back(curv);
-}
-
-//------------------------------------------------------------------------------------------------------------------------
-
-StatusCode TwoDCurvatureFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-                                                                                                       "SlidingLinearFitWindow", m_slidingLinearFitWindow));
-
-    return STATUS_CODE_SUCCESS;
-}
-
 //------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
@@ -581,6 +552,11 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
             }
             catch (const StatusCodeException &){}
         }
+		else
+		{
+		throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+		}    
+
     }
 
     featureVector.push_back(diffAngle);
@@ -859,7 +835,7 @@ void ThreeDPCAVariablesFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
   featureVector.push_back(invHitDensityZRatio);
   featureVector.push_back(nSegmentsDoubleHits);
   featureVector.push_back(nSegmentsDoubleHitsRatio);
-  featureVector.push_back(nHits);  
+  featureVector.push_back(nHits); 
   //featureVector.push_back(curv);
 }
 
