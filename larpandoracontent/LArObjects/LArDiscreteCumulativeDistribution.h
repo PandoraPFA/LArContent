@@ -49,6 +49,11 @@ public:
      */
     float GetXFromInputVector(int index) const;
 
+    /**
+     *  @brief  Create the cumulative distribution from the collected data
+     */
+    void CreateCumulativeDistribution();
+
 
 private:
 
@@ -81,6 +86,29 @@ inline size_t DiscreteCumulativeDistribution::GetInputVectorSize() const
 inline float DiscreteCumulativeDistribution::GetXFromInputVector(int index) const
 {
     return m_InputDataHolder.at(index).first;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void DiscreteCumulativeDistribution::CreateCumulativeDistribution()
+{
+    for (size_t iData = 0; iData < m_InputDataHolder.size(); iData++)
+    {
+        float x = m_InputDataHolder[iData].first;
+        float y = m_InputDataHolder[iData].second;
+        if (0 != m_CumulativeDataVector.size()) y += m_CumulativeDataVector.back().second;
+        m_CumulativeDataVector.emplace_back(x,y);
+    }
+    float yLast(0.);
+    if (0 != m_CumulativeDataVector.size())
+    {
+        yLast = m_CumulativeDataVector.back().second;
+        for (size_t iData = 0; iData < m_CumulativeDataVector.size(); ++iData)
+        {
+            m_CumulativeDataVector[iData].second /= yLast;
+        }
+    }
+    std::cout<<"In size: " << m_InputDataHolder.size() << "  out size: " << m_CumulativeDataVector.size() << std::endl;
 }
 
 /**
