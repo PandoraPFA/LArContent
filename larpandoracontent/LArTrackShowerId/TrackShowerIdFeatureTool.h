@@ -8,7 +8,8 @@
 #ifndef LAR_TRACK_SHOWER_ID_FEATURE_TOOLS_H
 #define LAR_TRACK_SHOWER_ID_FEATURE_TOOLS_H 1
 
-#include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
+//#include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
+#include "larpandoracontent/LArObjects/LArAdaBoostDecisionTree.h"
 #include <Eigen/Dense>
 
 namespace lar_content
@@ -120,13 +121,13 @@ private:
 /**
  *   @brief  class for the calculation of curvature/"wiggliness" of pfos
  */
-class TwoDCurvatureFeatureTool : public PfoCharacterisationFeatureTool
+class PfoHierarchyFeatureTool : public PfoCharacterisationFeatureTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    TwoDCurvatureFeatureTool();
+    PfoHierarchyFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
@@ -140,7 +141,6 @@ private:
    *  @param  pInputPfo                    PFO that we are characterising      
    */
 
-    unsigned int    m_slidingLinearFitWindow;    ///< The sliding linear fit window to calculate the direction
 };
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -253,9 +253,9 @@ private:
 /**
  *   @brief  Class for the calculation of variables using PCA coordinates
  */
- class ThreeDPCAVariablesFeatureTool : public PfoCharacterisationFeatureTool
+class ThreeDPCAVariablesFeatureTool : public PfoCharacterisationFeatureTool
 {
- public:
+public:
   /**
    *  @brief  Default constructor
    */
