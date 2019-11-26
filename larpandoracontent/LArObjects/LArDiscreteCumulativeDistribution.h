@@ -43,11 +43,27 @@ public:
     /**
      *  @brief  Get X value for specific element from input vector
      *
-     *  @param the index in the input vector
+     *  @param index the index in the DCD
      *
-     *  @return X (input vector)
+     *  @return X value for element in DCD
      */
     float GetXFromInputVector(int index) const;
+
+    /**
+     *  @brief  Get size of the DCD
+     *
+     *  @return size of DCD
+     */
+    size_t GetSize() const;
+
+    /**
+     *  @brief  Get X value for specific element from input vector
+     *
+     *  @param index the index in the input vector
+     *  @param x the x-value for the element in DCD
+     *  @param y the y-value for the element in DCD
+     */
+    void GetXandY(int index, float &x, float &y) const;
 
     /**
      *  @brief  Create the cumulative distribution from the collected data
@@ -86,6 +102,23 @@ inline size_t DiscreteCumulativeDistribution::GetInputVectorSize() const
 inline float DiscreteCumulativeDistribution::GetXFromInputVector(int index) const
 {
     return m_InputDataHolder.at(index).first;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline size_t DiscreteCumulativeDistribution::GetSize() const
+{
+    return m_CumulativeDataVector.size();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void DiscreteCumulativeDistribution::GetXandY(int index, float &x, float &y) const
+{
+    x = m_CumulativeDataVector.at(index).first;
+    y = m_CumulativeDataVector.at(index).second;
+
+    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
