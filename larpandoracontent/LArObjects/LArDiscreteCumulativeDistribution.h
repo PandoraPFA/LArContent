@@ -8,6 +8,8 @@
 #ifndef LAR_DISCRETE_CUMULATIVE_DISTRIBUTION_H
 #define LAR_DISCRETE_CUMULATIVE_DISTRIBUTION_H 1
 
+#include <vector>
+
 namespace lar_content
 {
 
