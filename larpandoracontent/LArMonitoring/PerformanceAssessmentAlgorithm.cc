@@ -26,20 +26,16 @@ namespace lar_content {
     m_eventTreeName(),
     m_targetMCParticleTreeName(),
     m_fileName(), 
+    m_neutronFileName(),
+    m_photonFileName(),
     m_eventNumber(0)
   {
   }
 
   PerformanceAssessmentAlgorithm::~PerformanceAssessmentAlgorithm() 
   {
-    if(m_writeToTree) {
 
-    try {
-      PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_eventTreeName, m_fileName, "UPDATE"));
-    }
-    catch (const StatusCodeException &) {
-      std::cout << "UNABLE TO WRITE TREE" << std::endl; 
-    }
+    if(m_writeToTree) {
 
     try {
       PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_targetMCParticleTreeName, m_fileName, "UPDATE"));
@@ -48,11 +44,19 @@ namespace lar_content {
       std::cout << "UNABLE TO WRITE TREE" << std::endl; 
     }
 
+    //PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "PhotonTree", m_photonFileName, "UPDATE"));
+    //PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "NeutronTree", m_neutronFileName, "UPDATE"));
+
     }
 
   }
 
-
+//------------------------------------------------------------------------------------------------------------------------------------------
+  StatusCode PerformanceAssessmentAlgorithm::Run(){
+   return STATUS_CODE_SUCCESS;
+  }
+  /**
+  
   StatusCode PerformanceAssessmentAlgorithm::Run() {
              
     const MCParticleList *pMCParticleList = nullptr;
@@ -63,7 +67,6 @@ namespace lar_content {
 
     const PfoList *pPfoList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
-
 
     
     // Construct target MC particle to reconstructable hits map
@@ -119,60 +122,46 @@ namespace lar_content {
 
     ++m_eventNumber;
 
+    CartesianVector zAxis(0,0,1);
 
     for(const MCParticle *const pMCParticle : orderedTargetMCParticleVector) {
 
-      int uHits(0);
-      int vHits(0);
-      int wHits(0);
+      std::vector<int> sharedHitsVector;
+      std::vector<double> completenessVector;
+      std::vector<double> purityVector;
+     
+      for(auto pfoSharedHitPair : mcParticleToPfoHitSharingMap.at(pMCParticle)) {
 
-      for(const CaloHit *const caloHit : nuMCParticlesToGoodHitsMap.at(pMCParticle)) { 
-	if(caloHit->GetHitType() == TPC_VIEW_U) {
-	  ++uHits;
-	} else if(caloHit->GetHitType() == TPC_VIEW_V) {
-	  ++vHits;
-	} else {
-	  ++wHits;
+	sharedHitsVector.push_back(pfoSharedHitPair.second);
+
+	for(auto pfoCompletenessPair : mcParticleToPfoCompletenessMap.at(pMCParticle)) {
+	  if(pfoSharedHitPair.first == pfoCompletenessPair.first)
+	    completenessVector.push_back(pfoCompletenessPair.second);
+	}
+
+	for(auto pfoPurityPair : mcParticleToPfoPurityMap.at(pMCParticle)) {
+	  if(pfoSharedHitPair.first == pfoPurityPair.first)
+	    purityVector.push_back(pfoPurityPair.second);
 	}
       }
 
-      int matchesMade = mcParticleToPfoHitSharingMap.at(pMCParticle).size();
+      float angleFromZ = fabs(pMCParticle->GetMomentum().GetOpeningAngle(zAxis));
 
-      std::vector<double> completenessVector;
-      std::vector<double> purityVector;
-
-      for(auto entry : mcParticleToPfoCompletenessMap.at(pMCParticle)) {
-	completenessVector.push_back(entry.second);
-      }
-
-      for(auto entry : mcParticleToPfoPurityMap.at(pMCParticle)) {
-	purityVector.push_back(entry.second);
-      }
 
       PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "EventNumber", m_eventNumber));
+
       PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "MCParticleID", pMCParticle->GetParticleId()));
-      
       PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "Energy", pMCParticle->GetEnergy()));
-
       PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "totHits", static_cast<int>(nuMCParticlesToGoodHitsMap.at(pMCParticle).size())));
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "uHits", uHits));
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "vHits", vHits));
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "wHits", wHits));   
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "angleFromZ", angleFromZ));
 
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "MatchesMade", matchesMade));
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "Completeness", &completenessVector));
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "Purity", &purityVector));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "SharedHitsVector", &sharedHitsVector));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "CompletenessVector", &completenessVector));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_targetMCParticleTreeName, "PurityVector", &purityVector));
 
       PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_targetMCParticleTreeName));
 
     }
-
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_eventTreeName, "EventNumber", m_eventNumber));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_eventTreeName, "MCParticleNumber", static_cast<int>(orderedTargetMCParticleVector.size())));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_eventTreeName, "PfoNumber", static_cast<int>(orderedPfoVector.size())));
-
-
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_eventTreeName));
 
     }
 
@@ -206,8 +195,6 @@ namespace lar_content {
       PandoraMonitoringApi::Pause(this->GetPandora());
     }
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
-
 
 
 
@@ -245,10 +232,9 @@ namespace lar_content {
       PandoraMonitoringApi::Pause(this->GetPandora());
     }
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    
-
+  */
 //------------------------------------------------------------------------------------------------------------------------------------------
-
+/**
     unsigned int reconstructedMCParticles(0);
 
     for(const MCParticle *const pMCParticle : orderedTargetMCParticleVector) {
@@ -266,7 +252,21 @@ namespace lar_content {
 	continue;
       }
 
-      std::string mcTag = "MC Particle: (PDG: " + std::to_string(pMCParticle->GetParticleId()) + " Hierarchy Tier: " + std::to_string(LArMCParticleHelper::GetHierarchyTier(pMCParticle)) + ")";
+      int uHits(0);
+      int vHits(0);
+      int wHits(0);
+
+      for(const CaloHit *const caloHit : nuMCParticlesToGoodHitsMap.at(pMCParticle)) { 
+	if(caloHit->GetHitType() == TPC_VIEW_U) {
+	  ++uHits;
+	} else if(caloHit->GetHitType() == TPC_VIEW_V) {
+	  ++vHits;
+	} else {
+	  ++wHits;
+	}
+      }
+
+      std::string mcTag = "MC Particle: (PDG: " + std::to_string(pMCParticle->GetParticleId()) + " Hierarchy Tier: " + std::to_string(LArMCParticleHelper::GetHierarchyTier(pMCParticle)) + " uHits: " + std::to_string(uHits) + " vHits: " + std::to_string(vHits) + " wHits: " + std::to_string(wHits) + ")";
       std::cout << mcTag << std::endl;
 
       std::cout << completenessIter->second.size() << " match(es) made: ";
@@ -319,6 +319,109 @@ namespace lar_content {
     return STATUS_CODE_SUCCESS;
 
   }
+*/
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+  void PerformanceAssessmentAlgorithm::FillUpstreamContainers(const MCParticleList *const pMCParticleList, MCParticleList &neutronUpstreamMCParticles, MCParticleList &photonUpstreamMCParticles, std::map<const MCParticle*, float> &photonUpstreamMCParticlesToPropagationMap) {
+
+    // fill above lists and map
+    for(const MCParticle *const pMCParticle : *pMCParticleList) {
+
+      MCParticleVector chainVector;
+      GetMCParticleChainVector(pMCParticle, chainVector);
+
+
+      
+      // sort from highest to lowest tier to find the closest propagation photon
+      std::sort(chainVector.begin(), chainVector.end(), [](const MCParticle *const lhs, const MCParticle *const rhs){ return LArMCParticleHelper::GetHierarchyTier(lhs) > LArMCParticleHelper::GetHierarchyTier(rhs);});
+
+      for(const MCParticle *const pChainMCParticle : chainVector) {
+
+	if (NEUTRON == std::abs(pChainMCParticle->GetParticleId())) {
+	  if(std::find(neutronUpstreamMCParticles.begin(), neutronUpstreamMCParticles.end(), pMCParticle) == neutronUpstreamMCParticles.end())
+	    neutronUpstreamMCParticles.push_back(pMCParticle);
+	}
+
+        if ((PHOTON == pChainMCParticle->GetParticleId()) && (PHOTON != LArMCParticleHelper::GetPrimaryMCParticle(pChainMCParticle)->GetParticleId()) && (E_MINUS != std::abs(LArMCParticleHelper::LArMCParticleHelper::GetPrimaryMCParticle(pChainMCParticle)->GetParticleId()))) {
+	  if(std::find(photonUpstreamMCParticles.begin(), photonUpstreamMCParticles.end(), pMCParticle) == photonUpstreamMCParticles.end()) {
+	    photonUpstreamMCParticlesToPropagationMap[pMCParticle] = (pChainMCParticle->GetEndpoint() - pChainMCParticle->GetVertex()).GetMagnitude();
+	    photonUpstreamMCParticles.push_back(pMCParticle);
+	  }
+	}
+      }
+    }
+  }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+  void PerformanceAssessmentAlgorithm::FillPhotonTree(const LArMCParticleHelper::MCContributionMap &photonUpstreamMCParticleHitMap, const MCParticleList &neutronUpstreamMCParticles, const std::map<const MCParticle*, float> &photonUpstreamMCParticlesToPropagationMap) {
+
+    // Fill photon propagation length tree
+    MCParticleVector orderedPhotonUpstreamMCParticleVector;
+    LArMonitoringHelper::GetOrderedMCParticleVector({photonUpstreamMCParticleHitMap}, orderedPhotonUpstreamMCParticleVector);
+
+    for(const MCParticle *const pMCParticle : orderedPhotonUpstreamMCParticleVector) {
+
+      int isNeutronUpstream = std::find(neutronUpstreamMCParticles.begin(), neutronUpstreamMCParticles.end(), pMCParticle) != neutronUpstreamMCParticles.end();
+                                                                 
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "PhotonTree", "ParticleId", pMCParticle->GetParticleId()));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "PhotonTree", "PhotonPropLength", photonUpstreamMCParticlesToPropagationMap.at(pMCParticle)));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "PhotonTree", "totHits", static_cast<int>(photonUpstreamMCParticleHitMap.at(pMCParticle).size())));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "PhotonTree", "isNeutronUpstream", isNeutronUpstream));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "PhotonTree", "Hierarchy", LArMCParticleHelper::GetHierarchyTier(pMCParticle)));
+
+      PANDORA_MONITORING_API(FillTree(this->GetPandora(), "PhotonTree"));
+
+    }
+
+  }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+  void PerformanceAssessmentAlgorithm::FillNeutronTree(const LArMCParticleHelper::MCContributionMap &neutronUpstreamMCParticleHitMap) {
+
+    // Fill neutron upstream tree
+    MCParticleVector orderedNeutronUpstreamMCParticleVector;
+    LArMonitoringHelper::GetOrderedMCParticleVector({neutronUpstreamMCParticleHitMap}, orderedNeutronUpstreamMCParticleVector);
+
+    for(const MCParticle *const pMCParticle : orderedNeutronUpstreamMCParticleVector) {
+                                                                 
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "NeutronTree", "ParticleId", pMCParticle->GetParticleId()));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "NeutronTree", "totHits", static_cast<int>(neutronUpstreamMCParticleHitMap.at(pMCParticle).size())));
+      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "NeutronTree", "Hierarchy", LArMCParticleHelper::GetHierarchyTier(pMCParticle)));
+
+      PANDORA_MONITORING_API(FillTree(this->GetPandora(), "NeutronTree"));
+
+    }
+
+  }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+  void PerformanceAssessmentAlgorithm::PerformPhotonNeutronTest(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList) {
+
+    // Obtain lists containing all MC particles with neutrons upstream
+    // and those with photon upstream
+    MCParticleList neutronUpstreamMCParticles;
+    MCParticleList photonUpstreamMCParticles;
+
+    std::map<const MCParticle*, float> photonUpstreamMCParticlesToPropagationMap;
+
+    FillUpstreamContainers(pMCParticleList, neutronUpstreamMCParticles, photonUpstreamMCParticles, photonUpstreamMCParticlesToPropagationMap);
+
+    // Get mc particle to hit map for those mc particles with photons upstream
+    LArMCParticleHelper::MCContributionMap photonUpstreamMCParticleHitMap;
+    LArMCParticleHelper::SelectReconstructableMCParticles(&photonUpstreamMCParticles, pCaloHitList, m_parameters, LArMCParticleHelper::IsDownstreamOfBeamNeutrino, photonUpstreamMCParticleHitMap);
+
+    // Get mc particle to hit map for those mc particles with neutrons upstream
+    LArMCParticleHelper::MCContributionMap neutronUpstreamMCParticleHitMap;
+    LArMCParticleHelper::SelectReconstructableMCParticles(&neutronUpstreamMCParticles, pCaloHitList, m_parameters, LArMCParticleHelper::IsDownstreamOfBeamNeutrino, neutronUpstreamMCParticleHitMap);
+
+    FillPhotonTree(photonUpstreamMCParticleHitMap, neutronUpstreamMCParticles, photonUpstreamMCParticlesToPropagationMap);
+
+    FillNeutronTree(neutronUpstreamMCParticleHitMap);
+
+  }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -350,6 +453,53 @@ namespace lar_content {
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+  void PerformanceAssessmentAlgorithm::GetMCParticleChainVector(const MCParticle *const pMCParticle, MCParticleVector &mcParticleChainVector) {
+  
+    const unsigned int mcParticleTier = LArMCParticleHelper::GetHierarchyTier(pMCParticle);
+
+    if(!mcParticleTier)
+      return;
+
+    const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
+    mcParticleChainVector.push_back(pPrimaryMCParticle); 
+
+    
+    // Loop through each tier in the chain, each time finding and adding the mc particle in the chain
+    for(unsigned int i(0); i <= (mcParticleTier - LArMCParticleHelper::GetHierarchyTier(pPrimaryMCParticle)); ++i) {
+
+      for(const MCParticle *const pChainMCParticleDaughter : mcParticleChainVector[i]->GetDaughterList()) {
+
+	if(IsUpstream(pChainMCParticleDaughter, pMCParticle)) {
+	  mcParticleChainVector.push_back(pChainMCParticleDaughter);
+	  break;
+	}
+
+      }
+
+      std::sort(mcParticleChainVector.begin(), mcParticleChainVector.end(), [](const MCParticle *const lhs, const MCParticle *const rhs){ return LArMCParticleHelper::GetHierarchyTier(lhs) < LArMCParticleHelper::GetHierarchyTier(rhs);});
+
+    }
+    
+  }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+  bool PerformanceAssessmentAlgorithm::IsUpstream(const MCParticle *const pChainMCParticleDaughter, const MCParticle *const pEndOfChainMCParticle) {
+
+    if (pEndOfChainMCParticle == pChainMCParticleDaughter)
+      return true;
+
+    for(const MCParticle *const pDaughter : pChainMCParticleDaughter->GetDaughterList()) {
+      if(PerformanceAssessmentAlgorithm::IsUpstream(pDaughter, pEndOfChainMCParticle))
+	return true;
+    }
+
+    return false;
+
+  }
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 
   StatusCode PerformanceAssessmentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle) {
@@ -386,13 +536,16 @@ namespace lar_content {
         "PrintToScreen", m_printToScreen));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EventTreeName", m_eventTreeName));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TargetMCParticleTreeName", m_targetMCParticleTreeName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FileName", m_fileName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NeutronFileName", m_neutronFileName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PhotonFileName", m_photonFileName));
 
 
   return STATUS_CODE_SUCCESS;

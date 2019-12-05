@@ -489,8 +489,10 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
     LArMCParticleHelper::MCRelationMap mcToTargetMCMap;
     parameters.m_foldToPrimaries ? LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToTargetMCMap) : LArMCParticleHelper::GetMCToSelfMap(pMCParticleList, mcToTargetMCMap);
 
+
     // Remove non-reconstructable hits, e.g. those downstream of a neutron
     // Both cases of m_foldToPrimaries need to input [MC -> MC primary] to complete the above
+    /**
     CaloHitList selectedCaloHitList;
     if(parameters.m_foldToPrimaries) {
       LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToTargetMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation); 
@@ -499,20 +501,22 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
       LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToPrimaryMCMap);
       LArMCParticleHelper::SelectCaloHits(pCaloHitList, mcToPrimaryMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
     }
+    */
 
     // Obtain maps: [hit -> MC particle (either primary or a downstream MC particle)], [MC particle -> list of hits]
     CaloHitToMCMap hitToTargetMCMap;
     MCContributionMap targetMCToTrueHitListMap;
-    LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToTargetMCMap, hitToTargetMCMap, targetMCToTrueHitListMap);
+    //LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToTargetMCMap, hitToTargetMCMap, targetMCToTrueHitListMap);
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToTargetMCMap, hitToTargetMCMap, targetMCToTrueHitListMap);
 
 
     // Obtain vector: all or primary mc particles
     MCParticleVector targetMCVector;
     if(parameters.m_foldToPrimaries){ 
-      std::cout << "TRUE" << std::endl;
+      //std::cout << "TRUE" << std::endl;
       LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, targetMCVector);
     } else {
-      std::cout << "FALSE" << std::endl;
+      //std::cout << "FALSE" << std::endl;
       std::copy(pMCParticleList->begin(), pMCParticleList->end(), std::back_inserter(targetMCVector));
     }
 
@@ -903,8 +907,8 @@ void LArMCParticleHelper::SelectParticlesByHitCount(const MCParticleVector &cand
 bool LArMCParticleHelper::PassMCParticleChecks(const MCParticle *const pOriginalPrimary, const MCParticle *const pThisMCParticle,
     const MCParticle *const pHitMCParticle, const float maxPhotonPropagation)
 {
-  if (NEUTRON == std::abs(pThisMCParticle->GetParticleId()))
-    return false;
+  //if (NEUTRON == std::abs(pThisMCParticle->GetParticleId()))
+  //return false;
 
   if ((PHOTON == pThisMCParticle->GetParticleId()) && (PHOTON != GetPrimaryMCParticle(pThisMCParticle)->GetParticleId()) && (E_MINUS != std::abs(GetPrimaryMCParticle(pThisMCParticle)->GetParticleId())))
     {
