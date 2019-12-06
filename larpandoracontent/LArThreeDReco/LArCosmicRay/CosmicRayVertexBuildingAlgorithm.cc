@@ -181,28 +181,28 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
             if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            if (!foundVtx || (minPosition.GetY() > std::max(maxPosition.GetY(), vtxPosition.GetY())))
+            if (!foundVtx || (minPosition.GetX() > std::max(maxPosition.GetX(), vtxPosition.GetX())))
             {
                 foundVtx = true;
                 vtxPosition = minPosition;
                 vtxDirection = minDirection;
             }
 
-            if (!foundVtx || (maxPosition.GetY() > std::max(minPosition.GetY(), vtxPosition.GetY())))
+            if (!foundVtx || (maxPosition.GetX() > std::max(minPosition.GetX(), vtxPosition.GetX())))
             {
                 foundVtx = true;
                 vtxPosition = maxPosition;
                 vtxDirection = maxDirection;
             }
 
-            if (!foundEnd || (minPosition.GetY() < std::min(maxPosition.GetY(), endPosition.GetY())))
+            if (!foundEnd || (minPosition.GetX() < std::min(maxPosition.GetX(), endPosition.GetX())))
             {
                 foundEnd = true;
                 endPosition = minPosition;
                 endDirection = minDirection;
             }
 
-            if (!foundEnd || (maxPosition.GetY() < std::min(minPosition.GetY(), endPosition.GetY())))
+            if (!foundEnd || (maxPosition.GetX() < std::min(minPosition.GetX(), endPosition.GetX())))
             {
                 foundEnd = true;
                 endPosition = maxPosition;
