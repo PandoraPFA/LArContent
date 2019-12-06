@@ -20,12 +20,20 @@ end_product_list
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
 qualifier	pandora 	eigen notes
+e19:py3:debug	e19:py3:debug   -nq-
+e19:py3:prof	e19:py3:prof    -nq-
+e19:debug	e19:debug	-nq-
+e19:prof	e19:prof	-nq-
 e17:py3:debug	e17:py3:debug   -nq-
 e17:py3:prof	e17:py3:prof    -nq-
-c2:py3:debug	c2:py3:debug    -nq-
-c2:py3:prof	c2:py3:prof     -nq-
 e17:debug	e17:debug	-nq-
 e17:prof	e17:prof	-nq-
+c7:py3:debug	c7:py3:debug    -nq-
+c7:py3:prof	c7:py3:prof     -nq-
+c7:debug	c7:debug	-nq-
+c7:prof		c7:prof		-nq-
+c2:py3:debug	c2:py3:debug    -nq-
+c2:py3:prof	c2:py3:prof     -nq-
 c2:debug	c2:debug	-nq-
 c2:prof		c2:prof		-nq-
 end_qualifier_list
