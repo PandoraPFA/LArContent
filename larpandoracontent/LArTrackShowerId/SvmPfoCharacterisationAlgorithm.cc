@@ -686,7 +686,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     //std::cout << "finished" << std::endl;
     PandoraMonitoringApi::FillTree(this->GetPandora(), m_treeName.c_str());
 
-	std::cout << "happy" << std::endl;
 
     // TODO Apply trained BDT output
     // TODO FInalise variables, training, etc.
