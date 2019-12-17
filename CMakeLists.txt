@@ -69,7 +69,7 @@ else()
     # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
     set(${PROJECT_NAME}_VERSION_MAJOR 03)
     set(${PROJECT_NAME}_VERSION_MINOR 15)
-    set(${PROJECT_NAME}_VERSION_PATCH 10)
+    set(${PROJECT_NAME}_VERSION_PATCH 11)
     set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
