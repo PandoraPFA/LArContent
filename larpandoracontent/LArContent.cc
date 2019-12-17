@@ -275,7 +275,8 @@
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
-    d("LArNeutrinoId",                          NeutrinoIdTool)                                                                 \
+    d("LArBdtNeutrinoId",                       BdtNeutrinoIdTool)                                                              \
+    d("LArSvmNeutrinoId",                       SvmNeutrinoIdTool)                                                              \
     d("LArSimpleNeutrinoId",                    SimpleNeutrinoIdTool)                                                           \
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArCosmicRayTaggingMonitoring",          CosmicRayTaggingMonitoringTool)                                                 \
