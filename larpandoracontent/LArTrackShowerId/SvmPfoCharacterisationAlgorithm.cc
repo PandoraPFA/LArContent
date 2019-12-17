@@ -56,8 +56,8 @@ SvmPfoCharacterisationAlgorithm::~SvmPfoCharacterisationAlgorithm()
 {
   if (m_writeToTree)
     {
-      std::string m_treeName = "quick_test_test";
-      std::string m_fileName = "quick_test_test.root";
+      std::string m_treeName = "jhanzeb";
+      std::string m_fileName = "jhanzeb.root";
       PandoraMonitoringApi::SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE");
     }
 }
@@ -118,7 +118,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     // This won't work unless use 3D info is set to true - dev purposes only
     const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
 
-    std::string m_treeName = "quick_test_test"; // TODO This should be a member variable
+    std::string m_treeName = "jhanzeb"; // TODO This should be a member variable
 
     // Purity, completeness
     // ATTN Assume your Pfos of interest are in a PfoList called myPfoList
@@ -398,9 +398,9 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 	bool checkVar(true);
     double m_slidingFitWindow(5);
     double m_slidingShowerFitWindow(10);
-    double m_maxShowerLengthCut(80.f);
-    double m_dTdLWidthRatioCut(0.045f);
-    double m_vertexDistanceRatioCut(0.6f);
+    double m_maxShowerLengthCut(500.f);
+    double m_dTdLWidthRatioCut(0.08f);
+    double m_vertexDistanceRatioCut(500.f);
     double m_showerWidthRatioCut(0.2f);
 
 
