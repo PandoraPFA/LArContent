@@ -24,6 +24,8 @@
 #include <fstream>
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/ParticleEfficiencyAlgorithm.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -128,7 +130,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     // ATTN Assume your Pfos of interest are in a PfoList called myPfoList
 
     // Input lists
-    const PfoList myPfoList(1, pPfo);
+    const PfoList myPfoList(pPfo);
 
     const MCParticleList *pMCParticleList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
@@ -159,12 +161,39 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
     // Mapping target MCParticles -> truth associated Hits
     LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-    LArMCParticleHelper::PrimaryParameters mcPrimaryParameters;
-    mcPrimaryParameters.m_selectInputHits = false;
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, mcPrimaryParameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+    //LArMCParticleHelper::PrimaryParameters mcPrimaryParameters;
+    //mcPrimaryParameters.m_selectInputHits = false;
+    //ParticleEfficiencyAlgorithm::FillMCToRecoHitsMap(pMCParticleList, pCaloHitList, targetMCParticleToHitsMap);
+
+    // Obtain map: [MC particle -> self] (to prevent folding to primary MC particle)
+    // or [MC particle -> primary mc particle] (to fold to primary MC particle)
+    LArMCParticleHelper::MCRelationMap mcToTargetMCMap;
+    m_recoParameters.m_foldToPrimaries ? LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToTargetMCMap) : GetMCToSelfMap(pMCParticleList, mcToTargetMCMap);
+
+    //REMOVED NEUTRON AND PHOTON CONSIDERATION
+
+    // Obtain maps: [hits -> MC particle (either primary or a downstream MC particle)], [MC particle -> list of hits]
+    LArMCParticleHelper::CaloHitToMCMap trueHitToTargetMCMap;
+    //LArMCParticleHelper::MCContributionMap targetMCToTrueHitListMap;
+    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToTargetMCMap, trueHitToTargetMCMap, targetMCParticleToHitsMap);
+
+    // Obtain vector: all or primary mc particles
+    MCParticleVector targetMCVector;
+    if(m_recoParameters.m_foldToPrimaries){ 
+      LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, targetMCVector);
+    } else {
+      std::copy(pMCParticleList->begin(), pMCParticleList->end(), std::back_inserter(targetMCVector));
+    }
+
+    //REMOVED WHETHER PARTICLE MATCHES SOME CRITERIA (e.g whether downstream of neutrino) - not needed for created neutrino events
+
+    // Remove hits that do not meet minimum hit count and share criteria
+    this->SelectParticlesByHitCount(targetMCVector, targetMCParticleToHitsMap, mcToTargetMCMap, mcToRecoHitsMap);
+
+
 
     LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(myPfoList, targetMCParticleToHitsMap, pfoToHitsMap);
+    LArMCParticleHelper::GetUnfoldedPfoToReconstructable2DHitsMap(myPfoList, targetMCParticleToHitsMap, pfoToHitsMap);
 
     // Last step
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCHitSharingMap;
