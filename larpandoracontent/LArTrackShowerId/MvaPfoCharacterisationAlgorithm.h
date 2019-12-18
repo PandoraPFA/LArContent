@@ -65,6 +65,12 @@ protected:
     std::string             m_mvaNameNoChargeInfo;          ///< The name of the mva to find for PFOs missing the W view, and thus charge info
     bool                    m_writeToTree;
     int                     m_eventNumber;                  ///< Event Number 
+
+    unsigned int  m_minPrimaryGoodHits;       ///< the minimum number of primary good Hits
+    unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
+    unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
+	bool          m_foldToPrimaries;          ///< whether to fold all hits to primary pfos and MC particles
+    float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
 };
 
 typedef MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree> BdtPfoCharacterisationAlgorithm;
