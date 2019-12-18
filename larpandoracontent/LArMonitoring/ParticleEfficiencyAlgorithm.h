@@ -47,7 +47,7 @@ namespace lar_content {
         unsigned int  m_minPrimaryGoodHits;       ///< the minimum number of primary good Hits
         unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
         unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
-	bool          m_foldToPrimaries;          ///< whether to fold all hits to primary pfos and MC particles
+	    bool          m_foldToPrimaries;          ///< whether to fold all hits to primary pfos and MC particles
         float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
     };
 
