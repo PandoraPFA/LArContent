@@ -374,7 +374,7 @@ void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticl
         try
         {
             const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
-            mcPrimaryMap[pMCParticle] = pPrimaryMCParticle;
+            mcPrimaryMap[pMCParticle] = pPrimaryMCParticle;SelectReconstructableMCParticles
         }
         catch (const StatusCodeException &) {}
     }
