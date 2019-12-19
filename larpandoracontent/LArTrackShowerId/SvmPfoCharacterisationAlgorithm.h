@@ -29,12 +29,30 @@ public:
      *  @brief Destructor
      */
     ~SvmPfoCharacterisationAlgorithm();
+class RecoParameters
+{
+public:
+        /**
+         *  @brief  Constructor
+         */
+     RecoParameters();
 
+     unsigned int  m_minPrimaryGoodHits;       ///< the minimum number of primary good Hits
+     unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
+     unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
+	 bool          m_foldToPrimaries;          ///< whether to fold all hits to primary pfos and MC particles
+     float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
+    };
 protected:
 
     pandora::StatusCode Run();
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
+    void FillMCToRecoHitsMap(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, LArMCParticleHelper::MCContributionMap &mcToRecoHitsMap) const;
+    void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap, LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap) const;
+
+    void SelectGoodCaloHits(const pandora::CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap, pandora::CaloHitList &selectedGoodCaloHitList) const;
+    void GetMCToSelfMap(const pandora::MCParticleList *const pMCParticleList, LArMCParticleHelper::MCRelationMap &mcToSelfMap) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     ClusterCharacterisationFeatureTool::FeatureToolVector   m_featureToolVector;         ///< The feature tool map
@@ -63,12 +81,7 @@ protected:
     //std::string             m_treeName;
     //std::string             m_fileName;
     int                     m_eventNumber;                  ///< Event Number 
-
-    unsigned int  m_minPrimaryGoodHits;       ///< the minimum number of primary good Hits
-    unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
-    unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
-	bool          m_foldToPrimaries;          ///< whether to fold all hits to primary pfos and MC particles
-    float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
+    RecoParameters m_recoParameters;
 };
 
 } // namespace lar_content
