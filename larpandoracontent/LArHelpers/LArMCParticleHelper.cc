@@ -374,7 +374,7 @@ void LArMCParticleHelper::GetMCPrimaryMap(const MCParticleList *const pMCParticl
         try
         {
             const MCParticle *const pPrimaryMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle);
-            mcPrimaryMap[pMCParticle] = pPrimaryMCParticle;SelectReconstructableMCParticles
+            mcPrimaryMap[pMCParticle] = pPrimaryMCParticle;
         }
         catch (const StatusCodeException &) {}
     }
@@ -503,7 +503,7 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
     }
     */
 
-    // Obtain maps: [hit -> MC particle (either primary or a downstream MC particle)], [MC particle -> list of hits]
+    // Obtain maps: [hit -> MC particle (either primary or a downs/storage/epp2/phrwdg/Dune/newVarPandora/PandoraPFA/LArContent-feature/Daresbury/larpandoracontent/LArHelpers/LArMCParticleHelper.cc:378:9: error: expected ‘;’ before ‘}’ token
     CaloHitToMCMap hitToTargetMCMap;
     MCContributionMap targetMCToTrueHitListMap;
     //LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToTargetMCMap, hitToTargetMCMap, targetMCToTrueHitListMap);
