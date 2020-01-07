@@ -21,6 +21,7 @@ namespace lar_content
 
 CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
     m_useParentShowerVertex(false),
+    m_isDualPhase(false),
     m_halfWindowLayers(30)
 {
 }
@@ -174,41 +175,74 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
             else
             {
                 LArClusterHelper::GetExtremalCoordinates(pCluster, minPosition, maxPosition);
-                minDirection = (maxPosition - minPosition).GetUnitVector();
-                maxDirection = (minPosition - maxPosition).GetUnitVector();
+                    minDirection = (maxPosition - minPosition).GetUnitVector();
+                    maxDirection = (minPosition - maxPosition).GetUnitVector();
             }
 
             if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            if (!foundVtx || (minPosition.GetY() > std::max(maxPosition.GetY(), vtxPosition.GetY())))
+            if (m_isDualPhase) //X is the vertical direction in Dual-Phase geometry
             {
-                foundVtx = true;
-                vtxPosition = minPosition;
-                vtxDirection = minDirection;
-            }
+                if (!foundVtx || (minPosition.GetX() > std::max(maxPosition.GetX(), vtxPosition.GetX())))
+                {
+                    foundVtx = true;
+                    vtxPosition = minPosition;
+                    vtxDirection = minDirection;
+                    }
 
-            if (!foundVtx || (maxPosition.GetY() > std::max(minPosition.GetY(), vtxPosition.GetY())))
-            {
-                foundVtx = true;
-                vtxPosition = maxPosition;
-                vtxDirection = maxDirection;
-            }
+                if (!foundVtx || (maxPosition.GetX() > std::max(minPosition.GetX(), vtxPosition.GetX())))
+                {
+                    foundVtx = true;
+                    vtxPosition = maxPosition;
+                    vtxDirection = maxDirection;
+                    }
 
-            if (!foundEnd || (minPosition.GetY() < std::min(maxPosition.GetY(), endPosition.GetY())))
-            {
-                foundEnd = true;
-                endPosition = minPosition;
-                endDirection = minDirection;
-            }
+                if (!foundEnd || (minPosition.GetX() < std::min(maxPosition.GetX(), endPosition.GetX())))
+                {
+                    foundEnd = true;
+                    endPosition = minPosition;
+                    endDirection = minDirection;
+                }
 
-            if (!foundEnd || (maxPosition.GetY() < std::min(minPosition.GetY(), endPosition.GetY())))
-            {
-                foundEnd = true;
-                endPosition = maxPosition;
-                endDirection = maxDirection;
+                if (!foundEnd || (maxPosition.GetX() < std::min(minPosition.GetX(), endPosition.GetX())))
+                {
+                    foundEnd = true;
+                    endPosition = maxPosition;
+                    endDirection = maxDirection;
+                }
             }
-        }
+            else
+            {
+                if (!foundVtx || (minPosition.GetY() > std::max(maxPosition.GetY(), vtxPosition.GetY())))
+                {
+                    foundVtx = true;
+                    vtxPosition = minPosition;
+                    vtxDirection = minDirection;
+                }
+		
+                if (!foundVtx || (maxPosition.GetY() > std::max(minPosition.GetY(), vtxPosition.GetY())))
+                {
+                    foundVtx = true;
+                    vtxPosition = maxPosition;
+                    vtxDirection = maxDirection;
+                }
+		
+                if (!foundEnd || (minPosition.GetY() < std::min(maxPosition.GetY(), endPosition.GetY())))
+                {
+                    foundEnd = true;
+                    endPosition = minPosition;
+                    endDirection = minDirection;
+                }
+		
+                if (!foundEnd || (maxPosition.GetY() < std::min(minPosition.GetY(), endPosition.GetY())))
+                {
+                    foundEnd = true;
+                    endPosition = maxPosition;
+                    endDirection = maxDirection;
+                }
+            }   
+        }    
         catch(StatusCodeException &statusCodeException)
         {
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
@@ -315,6 +349,9 @@ StatusCode CosmicRayVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	"IsDualPhase", m_isDualPhase));
 
     return STATUS_CODE_SUCCESS;
 }
