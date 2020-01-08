@@ -243,6 +243,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
                 }
             }   
         }    
+
         catch(StatusCodeException &statusCodeException)
         {
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
