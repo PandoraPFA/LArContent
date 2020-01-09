@@ -44,6 +44,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_shouldPerformSliceId(true),
     m_printOverallRecoStatus(false),
     m_visualizeOverallRecoStatus(false),
+    m_shouldRemoveOutOfTimeHits(true),
     m_pSlicingWorkerInstance(nullptr),
     m_pSliceNuWorkerInstance(nullptr),
     m_pSliceCRWorkerInstance(nullptr),
@@ -453,7 +454,7 @@ StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHit
 {
     for (const VolumeIdToHitListMap::value_type &mapEntry : volumeIdToHitListMap)
     {
-        for (const CaloHit *const pCaloHit : mapEntry.second.m_truncatedHitList)
+        for (const CaloHit *const pCaloHit : (m_shouldRemoveOutOfTimeHits ? mapEntry.second.m_truncatedHitList : mapEntry.second.m_allHitList))
         {
             if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
                 continue;
@@ -1145,6 +1146,9 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VisualizeOverallRecoStatus", m_visualizeOverallRecoStatus));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShouldRemoveOutOfTimeHits", m_shouldRemoveOutOfTimeHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FullWidthCRWorkerWireGaps", m_fullWidthCRWorkerWireGaps));
