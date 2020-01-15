@@ -175,73 +175,46 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
             else
             {
                 LArClusterHelper::GetExtremalCoordinates(pCluster, minPosition, maxPosition);
-                    minDirection = (maxPosition - minPosition).GetUnitVector();
-                    maxDirection = (minPosition - maxPosition).GetUnitVector();
+                minDirection = (maxPosition - minPosition).GetUnitVector();
+                maxDirection = (minPosition - maxPosition).GetUnitVector();
             }
 
             if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            if (m_isDualPhase) //X is the vertical direction in Dual-Phase geometry
+            // ATTN X is the vertical coordinate in Dual-Phase geometry
+            const float minVerticalCoordinate(m_isDualPhase ? minPosition.GetX() : minPosition.GetY());
+            const float maxVerticalCoordinate(m_isDualPhase ? maxPosition.GetX() : maxPosition.GetY());
+            const float vtxVerticalCoordinate(m_isDualPhase ? vtxPosition.GetX() : vtxPosition.GetY());
+            const float endVerticalCoordinate(m_isDualPhase ? endPosition.GetX() : endPosition.GetY());
+
+            if (!foundVtx || (minVerticalCoordinate > std::max(maxVerticalCoordinate, vtxVerticalCoordinate)))
             {
-                if (!foundVtx || (minPosition.GetX() > std::max(maxPosition.GetX(), vtxPosition.GetX())))
-                {
-                    foundVtx = true;
-                    vtxPosition = minPosition;
-                    vtxDirection = minDirection;
-                    }
-
-                if (!foundVtx || (maxPosition.GetX() > std::max(minPosition.GetX(), vtxPosition.GetX())))
-                {
-                    foundVtx = true;
-                    vtxPosition = maxPosition;
-                    vtxDirection = maxDirection;
-                    }
-
-                if (!foundEnd || (minPosition.GetX() < std::min(maxPosition.GetX(), endPosition.GetX())))
-                {
-                    foundEnd = true;
-                    endPosition = minPosition;
-                    endDirection = minDirection;
-                }
-
-                if (!foundEnd || (maxPosition.GetX() < std::min(minPosition.GetX(), endPosition.GetX())))
-                {
-                    foundEnd = true;
-                    endPosition = maxPosition;
-                    endDirection = maxDirection;
-                }
+                foundVtx = true;
+                vtxPosition = minPosition;
+                vtxDirection = minDirection;
             }
-            else
+
+            if (!foundVtx || (maxVerticalCoordinate > std::max(minVerticalCoordinate, vtxVerticalCoordinate)))
             {
-                if (!foundVtx || (minPosition.GetY() > std::max(maxPosition.GetY(), vtxPosition.GetY())))
-                {
-                    foundVtx = true;
-                    vtxPosition = minPosition;
-                    vtxDirection = minDirection;
-                }
-		
-                if (!foundVtx || (maxPosition.GetY() > std::max(minPosition.GetY(), vtxPosition.GetY())))
-                {
-                    foundVtx = true;
-                    vtxPosition = maxPosition;
-                    vtxDirection = maxDirection;
-                }
-		
-                if (!foundEnd || (minPosition.GetY() < std::min(maxPosition.GetY(), endPosition.GetY())))
-                {
-                    foundEnd = true;
-                    endPosition = minPosition;
-                    endDirection = minDirection;
-                }
-		
-                if (!foundEnd || (maxPosition.GetY() < std::min(minPosition.GetY(), endPosition.GetY())))
-                {
-                    foundEnd = true;
-                    endPosition = maxPosition;
-                    endDirection = maxDirection;
-                }
-            }   
+                foundVtx = true;
+                vtxPosition = maxPosition;
+                vtxDirection = maxDirection;
+            }
+
+            if (!foundEnd || (minVerticalCoordinate < std::min(maxVerticalCoordinate, endVerticalCoordinate)))
+            {
+                foundEnd = true;
+                endPosition = minPosition;
+                endDirection = minDirection;
+            }
+
+            if (!foundEnd || (maxVerticalCoordinate < std::min(minVerticalCoordinate, endVerticalCoordinate)))
+            {
+                foundEnd = true;
+                endPosition = maxPosition;
+                endDirection = maxDirection;
+            }
         }    
         catch(StatusCodeException &statusCodeException)
         {
