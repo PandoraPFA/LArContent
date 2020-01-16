@@ -64,8 +64,8 @@ SvmPfoCharacterisationAlgorithm::~SvmPfoCharacterisationAlgorithm()
 {
   if (m_writeToTree)
     {
-      std::string m_treeName = "jhanzeb";
-      std::string m_fileName = "jhanzeb.root";
+      std::string m_treeName = "test_me";
+      std::string m_fileName = "test_me.root";
       PandoraMonitoringApi::SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE");
     }
 }
@@ -118,7 +118,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
         }
         return (pPfo->GetParticleId() == MU_MINUS);
     }
-
+	//std::cout << "testing testing testings" << std::endl;
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
 
@@ -126,7 +126,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     // This won't work unless use 3D info is set to true - dev purposes only
     const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
 
-    std::string m_treeName = "jhanzeb"; // TODO This should be a member variable
+    std::string m_treeName = "test_me"; // TODO This should be a member variable
 
     // Purity, completeness
     // ATTN Assume your Pfos of interest are in a PfoList called myPfoList
@@ -154,6 +154,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
   	CaloHitList threeDCaloHitList;
   	LArPfoHelper::GetCaloHits(pPfo, TPC_3D, threeDCaloHitList);
 	int nHits = threeDCaloHitList.size();
+    //std::cout << "nHits: " << nHits << std::endl;
     PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHits", nHits);
 	
 	//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -173,17 +174,28 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 	const int nHitsInPfoTotal(allHitsInPfo.size());
 	int nHitsInBestMCParticleTotal(-1), bestMCParticlePdgCode(0), bestMCParticleIsTrack(-1);
 	int nHitsSharedWithBestMCParticleTotal(-1);
-        CartesianVector threeDVertexPosition(0.f, 0.f, 0.f); // Mousam Vertex
-        float mcEnergy = 0.f;
+    CartesianVector threeDVertexPosition(0.f, 0.f, 0.f); // Mousam Vertex
+    float mcEnergy = 0.f;
+    float hitsShower = 0;
+	float hitsTrack = 0;
 	const LArMCParticleHelper::MCParticleToSharedHitsVector &mcParticleToSharedHitsVector(pfoToMCHitSharingMap.at(pPfo));
 	for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitListPair : mcParticleToSharedHitsVector)
 	{
 	    const pandora::MCParticle *const pAssociatedMCParticle(mcParticleCaloHitListPair.first);
-
+		//std::cout << "MCParticle: " << pAssociatedMCParticle->GetParticleId() << std::endl;
 	    const CaloHitList &allMCHits(targetMCParticleToHitsMap.at(pAssociatedMCParticle));
-	  
+		//std::cout << "allMCHits: " << allMCHits.size() << std::endl;	  
 	    const CaloHitList &associatedMCHits(mcParticleCaloHitListPair.second);
 
+		if ((abs(pAssociatedMCParticle->GetParticleId()) == 11) || (pAssociatedMCParticle->GetParticleId()) == 22)
+		{
+			hitsShower = hitsShower + associatedMCHits.size();
+		}
+		else
+		{
+			hitsTrack = hitsTrack + associatedMCHits.size();
+		}
+		//std::cout << "associatedMCHits: " << associatedMCHits.size() << std::endl;
 	    if (static_cast<int>(associatedMCHits.size()) > nHitsSharedWithBestMCParticleTotal)
 	    {
 		 nHitsSharedWithBestMCParticleTotal = associatedMCHits.size();
@@ -195,7 +207,14 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 		 threeDVertexPosition = pAssociatedMCParticle->GetVertex(); // Mousam Vertex
          mcEnergy = pAssociatedMCParticle->GetEnergy();
 	    }
-	}
+	}		
+	//std::cout << "hitsShower: " << hitsShower << ", hitsTrack: " << hitsTrack << std::endl;
+	float trackShowerHitsRatio; 
+	trackShowerHitsRatio = hitsTrack/(hitsTrack + hitsShower);
+	//std::cout << "trackShowerHitsRatio: " << trackShowerHitsRatio << std::endl;
+	int newTrueTrackInt = (trackShowerHitsRatio >= 0.5 ? 1 : 0);
+	//std::cout << "newTrueTrackInt: " << newTrueTrackInt << std::endl;
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "newTrueTrackInt", newTrueTrackInt);
     //---------------------------------------------Get Pfo Energy---------------------------------------------------   
     PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mcEnergy", mcEnergy);  
     //----------------------------------------------Get Momentum------------------------------------------------
@@ -247,7 +266,30 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
     const float completeness((nHitsInBestMCParticleTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
     const float purity((nHitsInPfoTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInPfoTotal) : 0.f);
     int pdgCode = bestMCParticlePdgCode;
+	
+	float trueKineticEnergy (0.f);
 
+	if (abs(pdgCode) == 11)
+		trueKineticEnergy = (mcEnergy - 0.000511);
+	else if (abs(pdgCode) == 13)
+		trueKineticEnergy = (mcEnergy - 0.106);
+	else if (abs(pdgCode) == 2212)
+		trueKineticEnergy = (mcEnergy - 0.938);
+	else if (abs(pdgCode) == 211)
+		trueKineticEnergy = (mcEnergy - 0.140);
+	else if (abs(pdgCode) == 3312)
+		trueKineticEnergy = (mcEnergy - 1.322);
+	else if (abs(pdgCode) == 3222)
+		trueKineticEnergy = (mcEnergy - 1.189);
+	else if (abs(pdgCode) == 2112)
+		trueKineticEnergy = (mcEnergy - 0.940);
+	else if (abs(pdgCode) == 22)
+		trueKineticEnergy = (mcEnergy);
+	else if (abs(pdgCode) == 321)
+		trueKineticEnergy = (mcEnergy - 0.493);
+	else if (abs(pdgCode) == 311)
+		trueKineticEnergy = (mcEnergy - 0.498);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueKineticEnergy", trueKineticEnergy);
     PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "Completeness", completeness);
     PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "Purity", purity);
     PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pdgCode", pdgCode);
@@ -605,6 +647,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 		PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "sklearnScore", score);
 		int sklearnTrackInt = ( m_minProbabilityCut <= score ? 1 : 0);
 		PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "sklearnTrackInt", sklearnTrackInt);
+		//std::cout << "sklearnTrackInt: " << sklearnTrackInt << std::endl;
 		return (m_minProbabilityCut <= score);
     }
 
