@@ -63,6 +63,23 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         if (m_enableCrossingCandidates)
             this->CreateCrossingCandidates(clusterVectorU, clusterVectorV, clusterVectorW);
 
+        const VertexList *pInputVertexList(NULL);
+        std::string vertexListName("DlVertices3D");
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, vertexListName.c_str(), pInputVertexList));
+        const Vertex * const pDlVertex(pInputVertexList->front());
+        CartesianVector DlVertexPosition(pDlVertex->GetPosition());
+
+        if(DlVertexPosition.GetX()!=0 && DlVertexPosition.GetY()!=0 && DlVertexPosition.GetZ()!=0)
+        {
+            CartesianVector position3D(DlVertexPosition.GetX(), DlVertexPosition.GetY(), DlVertexPosition.GetZ());
+            PandoraContentApi::Vertex::Parameters parameters;
+            parameters.m_position = position3D;
+            parameters.m_vertexLabel = VERTEX_INTERACTION;
+            parameters.m_vertexType = VERTEX_3D;
+            const Vertex *pVertex(NULL);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+        }
+
         if (!pVertexList->empty())
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
