@@ -20,6 +20,7 @@
 #include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
+#include "larpandoracontent/LArVertex/MyDlVtxFeatureTool.h"
 
 #include "larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h"
 
@@ -483,7 +484,10 @@ void MvaVertexSelectionAlgorithm<T>::PopulateVertexFeatureInfoMap(const BeamCons
     //const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
     //    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
 
-    VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry);
+    const double myDlVtxFeature(LArMvaHelper::CalculateFeaturesOfType<MyDlVtxFeatureTool>(m_featureToolVector, this, pVertex,
+        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
+
+    VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry, myDlVtxFeature);
     vertexFeatureInfoMap.emplace(pVertex, vertexFeatureInfo);
 }
 
@@ -500,8 +504,10 @@ void MvaVertexSelectionAlgorithm<T>::PopulateInitialScoreList(VertexFeatureInfoM
     const float localAsymmetryScore(vertexFeatureInfo.m_localAsymmetry / m_localAsymmetryConstant);
     const float globalAsymmetryScore(vertexFeatureInfo.m_globalAsymmetry / m_globalAsymmetryConstant);
     const float showerAsymmetryScore(vertexFeatureInfo.m_showerAsymmetry / m_showerAsymmetryConstant);
+    const float myDlVtxFeatureScore(vertexFeatureInfo.m_myDlVtxFeature);
 
-    initialScoreList.emplace_back(pVertex, beamDeweightingScore + energyKickScore + localAsymmetryScore + globalAsymmetryScore + showerAsymmetryScore);
+    initialScoreList.emplace_back(pVertex, beamDeweightingScore + energyKickScore + localAsymmetryScore + globalAsymmetryScore + showerAsymmetryScore
+                                           + myDlVtxFeatureScore);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -736,6 +742,7 @@ void MvaVertexSelectionAlgorithm<T>::AddVertexFeaturesToVector(const VertexFeatu
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_globalAsymmetry));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_localAsymmetry));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_showerAsymmetry));
+    featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_myDlVtxFeature));
 
     if (useRPhi)
         featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_rPhiFeature));

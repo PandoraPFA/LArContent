@@ -50,9 +50,11 @@ public:
          *  @param  localAsymmetry the local asymmetry feature
          *  @param  globalAsymmetry the global asymmetry feature
          *  @param  showerAsymmetry the shower asymmetry feature
+         *  @param  myDlVtxFeature the DlVtx feature
          */
         VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick, const float localAsymmetry,
-                          const float globalAsymmetry, const float showerAsymmetry);
+                          const float globalAsymmetry, const float showerAsymmetry,
+                          const float myDlVtxFeature);
 
         float    m_beamDeweighting;    ///< The beam deweighting feature
         float    m_rPhiFeature;        ///< The r/phi feature
@@ -60,6 +62,7 @@ public:
         float    m_localAsymmetry;     ///< The local asymmetry feature
         float    m_globalAsymmetry;    ///< The global asymmetry feature
         float    m_showerAsymmetry;    ///< The shower asymmetry feature
+        float    m_myDlVtxFeature;     ///< The DlVtx feature
     };
 
     typedef std::map<const pandora::Vertex *const, VertexFeatureInfo> VertexFeatureInfoMap;
@@ -423,13 +426,15 @@ typedef MvaVertexSelectionAlgorithm<SupportVectorMachine> SvmVertexSelectionAlgo
 
 template<typename T>
 inline MvaVertexSelectionAlgorithm<T>::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick,
-    const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry) :
+    const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry,
+    const float myDlVtxFeature) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
     m_energyKick(energyKick),
     m_localAsymmetry(localAsymmetry),
     m_globalAsymmetry(globalAsymmetry),
-    m_showerAsymmetry(showerAsymmetry)
+    m_showerAsymmetry(showerAsymmetry),
+    m_myDlVtxFeature(myDlVtxFeature)
 {
 }
 
