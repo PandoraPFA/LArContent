@@ -178,6 +178,9 @@
 
 #include "larpandoracontent/LArContent.h"
 
+#include "larpandoracontent/LArVertex/MyDlVtxAlgorithm.h"
+#include "larpandoracontent/LArVertex/MyDlVtxFeatureTool.h"
+
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArEventValidation",                     EventValidationAlgorithm)                                                       \
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
@@ -267,7 +270,8 @@
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
     d("LArBdtVertexSelection",                  BdtVertexSelectionAlgorithm)                                                    \
-    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)
+    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)                                                    \
+    d("LArMyDlVtx",                             MyDlVtxAlgorithm)  
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
@@ -322,7 +326,8 @@
     d("LArThreeDVertexDistanceFeatureTool",     ThreeDVertexDistanceFeatureTool)                                                \
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
-    d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)
+    d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
+    d("LArMyDlVtxFeature",                      MyDlVtxFeatureTool)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)
