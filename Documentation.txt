@@ -1,0 +1,52 @@
+Instructions for creating Pfo Characterisation SKLearn BDT model
+
+Using SvmPfoCharacterisationAlgorithm
+
+1) Prepare a traning and testing sample set which us representative of events you are interested in. 
+
+2) Run over your training set with the option TrainingSetMode as "true" by editting the corresponding neutrino settings file (For example, for DUNEFD, edit the PandoraSettings_DUNEFD_Neutrino.xml file). Also, provide the output file name (for example, training_sample). Once you run over your set, this will produce two training txt files with names, "training_sample.txt" and "training_samplenoChargeInfo.txt" which contains lines similar to the following:
+
+05/30/17_16:10:06,98.7135,0.00741252,0.00355123,0.00949093,0.00658028,0.0324565,0.0307609,0.000491683,1
+
+which has the format: 
+
+timestamp, feature1 value, feature2 value, feature3 value,..., featureN value, true value
+
+Timestamp is the date and time when the values were recorded. feature1 value, feature 2 value,..., featureN value are values for different features which are calculated for each pfo. True value is the value used to train for latter classification. True value = 1 for tracks and 0 for showers.
+
+Currently, there are 13 features which are being calculated and are ordered in the following way:
+
+feature1  = length
+feature2  = diff
+feature3  = gap
+feature4  = rms
+feature5  = vertexDistance
+feature6  = diffAngle
+feature7  = pca1
+feature8  = pca2
+feature9  = charge1
+feature10 = charge2
+feature11 = nAllDaughter
+feature12 = nHits3DDaughterTotal
+feature13 = daughterParentNhitsRatio
+
+For more information about how these variables are calculated and others that are available, see LArTrackShowerId/TrackShowerIdFeatureTool.
+
+If during feature value calculation, the pfo has charge info in W plane then it records the pfo in "training_sample.txt" file. Else, the pfo is recorded in "training_samplenoChargeInfo.txt" file.
+
+***Note: The following steps are specific for SKLearn BDT implementation.***
+
+3) Open the python script "TrainingPandoraBdt.py" and edit "trainingFile" such that it points to the location of the training files. Also edit "bdtName" value which will be the name of the output file according to "xmlFileName" and "pklFileName". Run this python script, remembering to input the "treeDepth" and "nTrees" as command line arguments. This will produce two output files, one .xml and one .pkl file. Do this for both training txt files separately. At the end of this step, you should have four output files (two xml and two pkl files, for training file with and without charge information).
+
+4) Open both xml output files and edit the <Name> option at the very top. The suggested names are "PfoCharacterisation" and "PfoCharacterisationNoChargeInfo" for charge and no charge info, respectively. Finally, make sure that your algorithm is calling these xml files for pfo characterisation by editting the neutrino settings file, like in this case:
+
+
+<algorithm type = "LArSvmPfoCharacterisation">
+		...
+        <SvmFileName>BdtExample_NTrees_800_TreeDepth_3.xml</SvmFileName>
+        <SvmName>PfoCharacterisation</SvmName>
+        <SvmFileNameNoChargeInfo>BdtExampleNoChargeInfo_NTrees_800_TreeDepth_3.xml</SvmFileNameNoChargeInfo>
+        <SvmNameNoChargeInfo>PfoCharacterisationNoChargeInfo</SvmNameNoChargeInfo>
+		...
+</algorithm>
+
