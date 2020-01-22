@@ -85,8 +85,6 @@ protected:
     std::string             m_mvaName;                      ///< The name of the mva to find
     std::string             m_mvaFileNameNoChargeInfo;      ///< The mva input file for PFOs missing the W view, and thus charge info
     std::string             m_mvaNameNoChargeInfo;          ///< The name of the mva to find for PFOs missing the W view, and thus charge info
-    bool                    m_writeToTree;
-    int                     m_eventNumber;                  ///< Event Number 
     RecoParameters          m_recoParameters;
 };
 
