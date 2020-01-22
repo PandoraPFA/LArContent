@@ -1,0 +1,64 @@
+<pandora>
+    <!-- GLOBAL SETTINGS -->
+    <IsMonitoringEnabled>true</IsMonitoringEnabled>
+    <ShouldDisplayAlgorithmInfo>false</ShouldDisplayAlgorithmInfo> <!-- change -->
+    <SingleHitTypeClusteringMode>true</SingleHitTypeClusteringMode>
+
+    <!-- ALGORITHM SETTINGS -->
+    <algorithm type = "LArEventReading"/>
+    <algorithm type = "LArPreProcessing">
+        <OutputCaloHitListNameU>CaloHitListU</OutputCaloHitListNameU>
+        <OutputCaloHitListNameV>CaloHitListV</OutputCaloHitListNameV>
+        <OutputCaloHitListNameW>CaloHitListW</OutputCaloHitListNameW>
+        <FilteredCaloHitListName>CaloHitList2D</FilteredCaloHitListName>
+        <CurrentCaloHitListReplacement>CaloHitList2D</CurrentCaloHitListReplacement>
+    </algorithm>
+    <!--algorithm type = "LArMCParticleMonitoring">
+        <CaloHitListName>CaloHitList2D</CaloHitListName>
+        <MCParticleListName>Input</MCParticleListName>
+	<MinHitsForDisplay>1</MinHitsForDisplay>
+    </algorithm>
+    <algorithm type = "LArVisualMonitoring">
+        <CaloHitListNames>CaloHitListU CaloHitListV CaloHitListW</CaloHitListNames>
+	<MCParticleListNames>Input</MCParticleListNames>
+        <ShowDetector>true</ShowDetector>
+    </algorithm-->
+    <algorithm type = "LArMaster">
+        <CRSettingsFile>PandoraSettings_Cosmic_Standard.xml</CRSettingsFile>
+        <NuSettingsFile>PandoraSettings_Neutrino_DUNEFD.xml</NuSettingsFile>
+        <SlicingSettingsFile>PandoraSettings_Slicing_Standard.xml</SlicingSettingsFile>
+        <StitchingTools>
+            <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>true</ThreeDStitchingMode></tool>
+            <tool type = "LArStitchingCosmicRayMerging"><ThreeDStitchingMode>false</ThreeDStitchingMode></tool>
+        </StitchingTools>
+        <CosmicRayTaggingTools>
+            <tool type = "LArCosmicRayTagging"/>
+        </CosmicRayTaggingTools>
+        <SliceIdTools>
+            <tool type = "LArSimpleNeutrinoId"/>
+        </SliceIdTools>
+        <InputHitListName>Input</InputHitListName>
+        <RecreatedPfoListName>RecreatedPfos</RecreatedPfoListName>
+        <RecreatedClusterListName>RecreatedClusters</RecreatedClusterListName>
+        <RecreatedVertexListName>RecreatedVertices</RecreatedVertexListName>
+        <VisualizeOverallRecoStatus>false</VisualizeOverallRecoStatus>
+		<InputMCParticleListName>Input</InputMCParticleListName>
+        <PassMCParticlesToWorkerInstances>true</PassMCParticlesToWorkerInstances>
+    </algorithm>
+    <algorithm type = "LArEventValidation">
+        <CaloHitListName>CaloHitList2D</CaloHitListName>
+        <MCParticleListName>Input</MCParticleListName>
+        <PfoListName>RecreatedPfos</PfoListName>
+        <UseTrueNeutrinosOnly>false</UseTrueNeutrinosOnly>
+        <PrintAllToScreen>false</PrintAllToScreen>
+        <PrintMatchingToScreen>false</PrintMatchingToScreen>
+        <WriteToTree>false</WriteToTree> <!-- change -->
+        <OutputTree>test_mousam</OutputTree>
+        <OutputFile>test_mousam.root</OutputFile>
+    </algorithm>
+
+    <!--algorithm type = "LArVisualMonitoring">
+        <ShowCurrentPfos>true</ShowCurrentPfos>
+        <ShowDetector>true</ShowDetector>
+    </algorithm-->
+</pandora>
