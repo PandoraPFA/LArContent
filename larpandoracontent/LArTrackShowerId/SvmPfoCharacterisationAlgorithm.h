@@ -77,10 +77,6 @@ protected:
     std::string             m_svmName;                      ///< The name of the svm to find
     std::string             m_svmFileNameNoChargeInfo;      ///< The svm input file for PFOs missing the W view, and thus charge info
     std::string             m_svmNameNoChargeInfo;          ///< The name of the svm to find for PFOs missing the W view, and thus charge info
-    bool                    m_writeToTree;
-    //std::string             m_treeName;
-    //std::string             m_fileName;
-    int                     m_eventNumber;                  ///< Event Number 
     RecoParameters m_recoParameters;
 };
 
