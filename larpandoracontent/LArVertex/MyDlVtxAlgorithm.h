@@ -48,7 +48,7 @@ private:
     pandora::CartesianVector GetDlVtxForView(const pandora::ClusterList *pClusterList, const std::string &view, 
                              const pandora::CartesianVector &positionInput, const double &length) const;
 
-    pandora::CartesianVector DeepLearning(double out2darr[128][128], const std::string &view, const double &length) const;
+    pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2darr, const std::string &view, const double &length) const;
 
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list

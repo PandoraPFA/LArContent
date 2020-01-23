@@ -165,7 +165,8 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
     }
 
     double minx=0, minz=0, npixels=128, nstepx=0, nstepz=0;
-    double out2darr[128][128], zC=0, xC=0;
+    double zC=0, xC=0;
+    std::vector<std::vector<double>> out2darr(128, std::vector<double>(128, 0.f));
     double lengthX(0), lengthZ(0), length1(0);
 
     if(length==0)
@@ -214,10 +215,6 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
         }
     }
 
-    for(i=0;i<npixels;i++)
-        for(j=0;j<npixels;j++)
-            out2darr[i][j]=0;
-
     for(i=0;i<l;i++)
     {
          zC=(int)((zarr[i]-minz)/nstepz); xC=(int)((xarr[i]-minx)/nstepx);
@@ -261,7 +258,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
-CartesianVector MyDlVtxAlgorithm::DeepLearning(double out2darr[128][128], const std::string &view, const double &length) const
+CartesianVector MyDlVtxAlgorithm::DeepLearning(const std::vector<std::vector<double>> &out2darr, const std::string &view, const double &length) const
 {
     int k(0);
     if(length==0) k=0;
