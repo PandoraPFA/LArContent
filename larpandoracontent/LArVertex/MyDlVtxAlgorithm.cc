@@ -43,8 +43,8 @@ MyDlVtxAlgorithm::~MyDlVtxAlgorithm()
 StatusCode MyDlVtxAlgorithm::Initialize()
 {
     // Load the model file. 
-    std::string view[3];
-    view[0]="W";view[1]="V";view[2]="U";
+    m_pModule = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    std::vector<std::string> view = {"W", "V", "U"};
 
     for(int j=0; j<3;j++)
     {
@@ -135,7 +135,7 @@ StatusCode MyDlVtxAlgorithm::Run()
 CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pClusterList, std::string view,
                 CartesianVector positionInput, double length) const
 {
-    double *xarr, *zarr, *sigma, *height;
+    std::vector<double> xarr, zarr, sigma, height;
     int i(0), j(0), l(0), count1(0), count2(0);
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -146,10 +146,8 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
     }
     if(count1==0||count2==0){CartesianVector position(0.f, 0.f, 0.f); return(position);}
 
-    xarr  = new double[count1]; zarr   = new double[count1];
-    sigma = new double[count1]; height = new double[count1];
-
-    for(i=0; i<count1; i++) {xarr[i]=0; zarr[i]=0; sigma[i]=0; height[i]=0;}
+    xarr.resize(count1, 0.f) ; zarr.resize(count1, 0.f)  ;
+    sigma.resize(count1, 0.f); height.resize(count1, 0.f);
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
@@ -172,10 +170,10 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 
     if(length==0)
     {
-        minx=(*std::min_element(xarr,xarr+l))-10.0;
-        minz=(*std::min_element(zarr,zarr+l))-10.0;
-        lengthX=(*std::max_element(xarr,xarr+l)) - (*std::min_element(xarr,xarr+l))+20.0;
-        lengthZ=(*std::max_element(zarr,zarr+l)) - (*std::min_element(zarr,zarr+l))+20.0;
+        minx=(*std::min_element(xarr.begin(),xarr.end()))-10.0;
+        minz=(*std::min_element(zarr.begin(),zarr.end()))-10.0;
+        lengthX=(*std::max_element(xarr.begin(),xarr.end())) - (*std::min_element(xarr.begin(),xarr.end()))+20.0;
+        lengthZ=(*std::max_element(zarr.begin(),zarr.end())) - (*std::min_element(zarr.begin(),zarr.end()))+20.0;
         length1=std::max(lengthX, lengthZ);
         nstepx=length1/npixels;
         nstepz=length1/npixels;
@@ -190,16 +188,16 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 
     if(length==0)
     {
-        delete[] xarr; delete[] zarr; delete[] sigma; delete[] height; count1=0; l=0;
+        std::vector<double>().swap(xarr);std::vector<double>().swap(zarr);
+        std::vector<double>().swap(sigma);std::vector<double>().swap(height); count1=0; l=0;
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
             count1+=(*iter)->GetNCaloHits();
         }
         if(count1==0){CartesianVector position(0.f, 0.f, 0.f); return(position);}
 
-        xarr  = new double[count1]; zarr   = new double[count1];
-        sigma = new double[count1]; height = new double[count1];
-        for(i=0; i<count1; i++) {xarr[i]=0; zarr[i]=0; sigma[i]=0; height[i]=0;}
+        xarr.resize(count1, 0.f) ; zarr.resize(count1, 0.f)  ;
+        sigma.resize(count1, 0.f); height.resize(count1, 0.f);
 
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
@@ -259,7 +257,6 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
     double recoZ(minz+(pixelPosition.GetZ())*nstepz);
     CartesianVector position(recoX, 0.f, recoZ);
 
-    delete[] xarr; delete[] zarr; delete[] sigma; delete[] height;
     return(position);
 }
 

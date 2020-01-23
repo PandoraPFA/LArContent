@@ -55,7 +55,7 @@ private:
     pandora::StringVector   m_inputClusterListNames;          ///< The list of cluster list names
     std::string             m_filePathEnvironmentVariable;    ///< The environment variable providing paths to model files
     std::string             m_modelFileNamePrefix;            ///< The model file name prefix
-    std::shared_ptr<torch::jit::script::Module> m_pModule[9]; ///< Array of Pointers to Torch models.
+    std::vector<std::shared_ptr<torch::jit::script::Module>> m_pModule; ///< Vector of Pointers to Torch models.
 
 };
 
