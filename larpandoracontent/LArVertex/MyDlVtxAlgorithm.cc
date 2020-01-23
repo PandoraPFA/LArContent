@@ -43,7 +43,7 @@ MyDlVtxAlgorithm::~MyDlVtxAlgorithm()
 StatusCode MyDlVtxAlgorithm::Initialize()
 {
     // Load the model file. 
-    m_pModule = {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL};
+    m_pModule = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
     std::vector<std::string> view = {"W", "V", "U"};
 
     for(int j=0; j<3;j++)
@@ -115,14 +115,14 @@ StatusCode MyDlVtxAlgorithm::Run()
                     positionW2, positionV2, positionU2, position3D, chiSquared);
     }
 
-    const VertexList *pVertexList(NULL); std::string temporaryListName;
+    const VertexList *pVertexList(nullptr); std::string temporaryListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
     PandoraContentApi::Vertex::Parameters parameters;
     parameters.m_position = position3D;
     parameters.m_vertexLabel = VERTEX_INTERACTION;
     parameters.m_vertexType = VERTEX_3D;
-    const Vertex *pVertex(NULL);
+    const Vertex *pVertex(nullptr);
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
