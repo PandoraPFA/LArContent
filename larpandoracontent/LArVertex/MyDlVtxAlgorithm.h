@@ -45,10 +45,10 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode Initialize();
 
-    pandora::CartesianVector GetDlVtxForView(const pandora::ClusterList *pClusterList, std::string view, 
-                             pandora::CartesianVector positionInput, double length) const;
+    pandora::CartesianVector GetDlVtxForView(const pandora::ClusterList *pClusterList, const std::string &view, 
+                             const pandora::CartesianVector &positionInput, const double &length) const;
 
-    pandora::CartesianVector DeepLearning(double out2darr[128][128], std::string view, double length) const;
+    pandora::CartesianVector DeepLearning(double out2darr[128][128], const std::string &view, const double &length) const;
 
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list

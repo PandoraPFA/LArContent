@@ -132,8 +132,8 @@ StatusCode MyDlVtxAlgorithm::Run()
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
-CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pClusterList, std::string view,
-                CartesianVector positionInput, double length) const
+CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pClusterList, const std::string &view,
+                const CartesianVector &positionInput, const double &length) const
 {
     std::vector<double> xarr, zarr, sigma, height;
     int i(0), j(0), l(0), count1(0), count2(0);
@@ -261,7 +261,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
-CartesianVector MyDlVtxAlgorithm::DeepLearning(double out2darr[128][128], std::string view, double length) const
+CartesianVector MyDlVtxAlgorithm::DeepLearning(double out2darr[128][128], const std::string &view, const double &length) const
 {
     int k(0);
     if(length==0) k=0;
