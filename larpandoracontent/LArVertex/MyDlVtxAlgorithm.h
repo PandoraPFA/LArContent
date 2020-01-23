@@ -45,9 +45,28 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode Initialize();
 
+    /**
+     *  @brief  Get the DL Vertex position for chosen view
+     *
+     *  @param  pClusterList, address of the input cluster list for the specific view
+     *  @param  view, string recording what view the clusters are of
+     *  @param  positionInput, DL vertex position already calculated for chosen view or (0.f, 0.f, 0.f)
+     *  @param  length, square length of the image
+     *
+     *  @return The position of the DL vertex for chosen view
+     */
     pandora::CartesianVector GetDlVtxForView(const pandora::ClusterList *pClusterList, const std::string &view, 
                              const pandora::CartesianVector &positionInput, const double &length) const;
 
+    /**
+     *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
+     *
+     *  @param  out2darr, the image
+     *  @param  view, string recording what view the image represents
+     *  @param  length, square length of the image
+     *
+     *  @return The pixel position of the DL vertex for chosen view
+     */
     pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2darr, const std::string &view, const double &length) const;
 
     // Member variables here
