@@ -79,10 +79,10 @@ StatusCode MyDlVtxAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], clustersU));
 
     std::string viewW="W", viewV="V", viewU="U";
-    CartesianVector positionInput(0.f, 0.f, 0.f); 
-    CartesianVector positionW(this->GetDlVtxForView(clustersW, viewW, positionInput, 0.f));
-    CartesianVector positionV(this->GetDlVtxForView(clustersV, viewV, positionInput, 0.f));
-    CartesianVector positionU(this->GetDlVtxForView(clustersU, viewU, positionInput, 0.f));
+    CartesianVector positionInput(0.f, 0.f, 0.f); int vertReconCount(0);
+    CartesianVector positionW(this->GetDlVtxForView(clustersW, viewW, positionInput, 0.f, vertReconCount));
+    CartesianVector positionV(this->GetDlVtxForView(clustersV, viewV, positionInput, 0.f, vertReconCount));
+    CartesianVector positionU(this->GetDlVtxForView(clustersU, viewU, positionInput, 0.f, vertReconCount));
 
     CartesianVector position3D0(0.f, 0.f, 0.f); float chiSquared0(0);
     LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
@@ -92,9 +92,9 @@ StatusCode MyDlVtxAlgorithm::Run()
     CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D0, TPC_VIEW_V));
     CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D0, TPC_VIEW_U));
 
-    CartesianVector positionW1(this->GetDlVtxForView(clustersW, viewW, position3DW, 50.0f));
-    CartesianVector positionV1(this->GetDlVtxForView(clustersV, viewV, position3DV, 50.0f));
-    CartesianVector positionU1(this->GetDlVtxForView(clustersU, viewU, position3DU, 50.0f));
+    CartesianVector positionW1(this->GetDlVtxForView(clustersW, viewW, position3DW, 50.0f, vertReconCount));
+    CartesianVector positionV1(this->GetDlVtxForView(clustersV, viewV, position3DV, 50.0f, vertReconCount));
+    CartesianVector positionU1(this->GetDlVtxForView(clustersU, viewU, position3DU, 50.0f, vertReconCount));
 
     CartesianVector position3D1(0.f, 0.f, 0.f); float chiSquared1(0);
     LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
@@ -104,12 +104,12 @@ StatusCode MyDlVtxAlgorithm::Run()
     CartesianVector position3DV1(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D1, TPC_VIEW_V));
     CartesianVector position3DU1(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D1, TPC_VIEW_U));
 
-    CartesianVector positionW2(this->GetDlVtxForView(clustersW, viewW, position3DW1, 40.0f));
-    CartesianVector positionV2(this->GetDlVtxForView(clustersV, viewV, position3DV1, 40.0f));
-    CartesianVector positionU2(this->GetDlVtxForView(clustersU, viewU, position3DU1, 40.0f));
+    CartesianVector positionW2(this->GetDlVtxForView(clustersW, viewW, position3DW1, 40.0f, vertReconCount));
+    CartesianVector positionV2(this->GetDlVtxForView(clustersV, viewV, position3DV1, 40.0f, vertReconCount));
+    CartesianVector positionU2(this->GetDlVtxForView(clustersU, viewU, position3DU1, 40.0f, vertReconCount));
 
     CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
-    if(positionW2.GetX()!=0 && positionV2.GetX()!=0 && positionU2.GetX()!=0)
+    if(vertReconCount==9)
     {
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
                     positionW2, positionV2, positionU2, position3D, chiSquared);
@@ -133,7 +133,7 @@ StatusCode MyDlVtxAlgorithm::Run()
 
 //---------------------------------------------------------------------------------------------------------------------------------
 CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pClusterList, const std::string &view,
-                const CartesianVector &positionInput, const double &length) const
+                const CartesianVector &positionInput, const double &length, int &vertReconCount) const
 {
     std::vector<double> xarr, zarr, sigma, height;
     int i(0), j(0), l(0), count1(0), count2(0);
@@ -253,7 +253,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
     double recoX(minx+(pixelPosition.GetX())*nstepx);
     double recoZ(minz+(pixelPosition.GetZ())*nstepz);
     CartesianVector position(recoX, 0.f, recoZ);
-
+    vertReconCount+=1;
     return(position);
 }
 

@@ -56,7 +56,7 @@ private:
      *  @return The position of the DL vertex for chosen view
      */
     pandora::CartesianVector GetDlVtxForView(const pandora::ClusterList *pClusterList, const std::string &view, 
-                             const pandora::CartesianVector &positionInput, const double &length) const;
+                             const pandora::CartesianVector &positionInput, const double &length, int &vertReconCount) const;
 
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
