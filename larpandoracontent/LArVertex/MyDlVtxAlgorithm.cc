@@ -30,6 +30,7 @@ MyDlVtxAlgorithm::MyDlVtxAlgorithm() :
     m_outputVertexListName(),
     m_inputClusterListNames(),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
+    m_numClusterCaloHitsPar(5),
     m_pModule()
 {
 }
@@ -140,8 +141,8 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        if( ((*iter)->GetNCaloHits()<5) && (length==0)) continue;
-        if( ((*iter)->GetNCaloHits()>=5) ) count2+=(*iter)->GetNCaloHits();
+        if( ((*iter)->GetNCaloHits()<m_numClusterCaloHitsPar) && (length==0)) continue;
+        if( ((*iter)->GetNCaloHits()>=m_numClusterCaloHitsPar) ) count2+=(*iter)->GetNCaloHits();
         count1+=(*iter)->GetNCaloHits();
     }
     if(count1==0||count2==0){CartesianVector position(0.f, 0.f, 0.f); return(position);}
@@ -151,7 +152,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        if( ((*iter)->GetNCaloHits()<5) && (length==0)) continue;
+        if( ((*iter)->GetNCaloHits()<m_numClusterCaloHitsPar) && (length==0)) continue;
         const OrderedCaloHitList &orderedCaloHitList1((*iter)->GetOrderedCaloHitList());
         for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
         {
@@ -312,6 +313,9 @@ StatusCode MyDlVtxAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NumClusterCaloHitsPar", m_numClusterCaloHitsPar));
 
     return STATUS_CODE_SUCCESS;
 }

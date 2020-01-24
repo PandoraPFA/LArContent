@@ -20,7 +20,8 @@ namespace lar_content
 
 MyDlVtxFeatureTool::MyDlVtxFeatureTool() :
     m_myDlVtxConstant(17),
-    m_inputVertexListName()
+    m_inputVertexListName(),
+    m_numClusterCaloHitsPar(5)
 {
 }
 
@@ -49,7 +50,7 @@ void MyDlVtxFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, cons
         ClusterList clustersW(clusterListMap.at(TPC_VIEW_W));
         ClusterList sortedLongClusters;
         for (const Cluster *const pCluster : clustersW)
-            if (pCluster->GetNCaloHits() > 4) 
+            if (pCluster->GetNCaloHits() >= m_numClusterCaloHitsPar) 
                 sortedLongClusters.push_back(pCluster);
 
         if(sortedLongClusters.empty())
@@ -77,6 +78,9 @@ StatusCode MyDlVtxFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
         "InputVertexListName", m_inputVertexListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NumClusterCaloHitsPar", m_numClusterCaloHitsPar));
 
     return STATUS_CODE_SUCCESS;
 }

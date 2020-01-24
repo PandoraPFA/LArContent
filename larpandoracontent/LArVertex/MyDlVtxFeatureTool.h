@@ -41,6 +41,7 @@ private:
 
     float           m_myDlVtxConstant ;          ///< The DlVtx constant
     std::string     m_inputVertexListName;       ///< The name of the input vertex list
+    unsigned int    m_numClusterCaloHitsPar;     ///< The number of cluster calo hits parameter 
 };
 
 } // namespace lar_content
