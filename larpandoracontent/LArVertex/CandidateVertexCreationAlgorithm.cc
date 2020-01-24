@@ -68,13 +68,11 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         std::string vertexListName(m_inputVertexListName);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, vertexListName.c_str(), pInputVertexList));
         const Vertex * const pDlVertex(pInputVertexList->front());
-        CartesianVector DlVertexPosition(pDlVertex->GetPosition());
 
-        if(DlVertexPosition.GetX()!=0 && DlVertexPosition.GetY()!=0 && DlVertexPosition.GetZ()!=0)
+        if(pDlVertex->GetPosition().GetX()!=0 && pDlVertex->GetPosition().GetY()!=0 && pDlVertex->GetPosition().GetZ()!=0)
         {
-            CartesianVector position3D(DlVertexPosition.GetX(), DlVertexPosition.GetY(), DlVertexPosition.GetZ());
             PandoraContentApi::Vertex::Parameters parameters;
-            parameters.m_position = position3D;
+            parameters.m_position = pDlVertex->GetPosition();
             parameters.m_vertexLabel = VERTEX_INTERACTION;
             parameters.m_vertexType = VERTEX_3D;
             const Vertex *pVertex(NULL);
