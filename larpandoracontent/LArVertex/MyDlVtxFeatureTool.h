@@ -40,6 +40,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float           m_myDlVtxConstant ;          ///< The DlVtx constant
+    std::string     m_inputVertexListName;       ///< The name of the input vertex list
 };
 
 } // namespace lar_content

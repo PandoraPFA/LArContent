@@ -152,6 +152,8 @@ private:
     bool                    m_reducedCandidates;                ///< Whether to reduce the number of candidates
     float                   m_selectionCutFactorMax;            ///< Maximum factor to multiply the base cluster selection cuts
     float                   m_nClustersPassingMaxCutsPar;       ///< Parameter for number of clusters passing the max base cluster selection cuts
+
+    std::string             m_inputVertexListName;              ///< The name of the input vertex list
 };
 
 } // namespace lar_content

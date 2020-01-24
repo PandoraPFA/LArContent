@@ -37,7 +37,8 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_minNearbyCrossingDistanceSquared(0.5f * 0.5f),
     m_reducedCandidates(false),
     m_selectionCutFactorMax(2.f),
-    m_nClustersPassingMaxCutsPar(26.f)
+    m_nClustersPassingMaxCutsPar(26.f),
+    m_inputVertexListName()
 {
 }
 
@@ -64,7 +65,7 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
             this->CreateCrossingCandidates(clusterVectorU, clusterVectorV, clusterVectorW);
 
         const VertexList *pInputVertexList(NULL);
-        std::string vertexListName("DlVertices3D");
+        std::string vertexListName(m_inputVertexListName);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, vertexListName.c_str(), pInputVertexList));
         const Vertex * const pDlVertex(pInputVertexList->front());
         CartesianVector DlVertexPosition(pDlVertex->GetPosition());
@@ -487,6 +488,9 @@ StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNearbyCrossingDistance", minNearbyCrossingDistance));
     m_minNearbyCrossingDistanceSquared = minNearbyCrossingDistance * minNearbyCrossingDistance;
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputVertexListName", m_inputVertexListName));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -19,7 +19,8 @@ namespace lar_content
 {
 
 MyDlVtxFeatureTool::MyDlVtxFeatureTool() :
-    m_myDlVtxConstant(17)
+    m_myDlVtxConstant(17),
+    m_inputVertexListName()
 {
 }
 
@@ -33,7 +34,7 @@ void MyDlVtxFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, cons
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     const VertexList *pInputVertexList(NULL);
-    std::string vertexListName("DlVertices3D");
+    std::string vertexListName(m_inputVertexListName);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, vertexListName.c_str(), pInputVertexList));
     const Vertex * const pDlVertex(pInputVertexList->front());
 
@@ -73,6 +74,9 @@ StatusCode MyDlVtxFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MyDlVtxConstant", m_myDlVtxConstant));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "InputVertexListName", m_inputVertexListName));
 
     return STATUS_CODE_SUCCESS;
 }
