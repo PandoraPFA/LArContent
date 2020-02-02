@@ -81,9 +81,9 @@ StatusCode MyDlVtxAlgorithm::Run()
 
     std::string viewW="W", viewV="V", viewU="U";
     CartesianVector positionInput(0.f, 0.f, 0.f); int vertReconCount(0);
-    CartesianVector positionW(this->GetDlVtxForView(clustersW, viewW, positionInput, 0.f, vertReconCount));
-    CartesianVector positionV(this->GetDlVtxForView(clustersV, viewV, positionInput, 0.f, vertReconCount));
-    CartesianVector positionU(this->GetDlVtxForView(clustersU, viewU, positionInput, 0.f, vertReconCount));
+    CartesianVector positionW(this->GetDlVtxForView(clustersW, viewW, positionInput, -1.0f, vertReconCount));
+    CartesianVector positionV(this->GetDlVtxForView(clustersV, viewV, positionInput, -1.0f, vertReconCount));
+    CartesianVector positionU(this->GetDlVtxForView(clustersU, viewU, positionInput, -1.0f, vertReconCount));
 
     CartesianVector position3D0(0.f, 0.f, 0.f); float chiSquared0(0);
     LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
@@ -141,7 +141,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        if( ((*iter)->GetNCaloHits()<m_numClusterCaloHitsPar) && (length==0)) continue;
+        if( ((*iter)->GetNCaloHits()<m_numClusterCaloHitsPar) && (length<=0)) continue;
         if( ((*iter)->GetNCaloHits()>=m_numClusterCaloHitsPar) ) count2+=(*iter)->GetNCaloHits();
         count1+=(*iter)->GetNCaloHits();
     }
@@ -152,7 +152,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
-        if( ((*iter)->GetNCaloHits()<m_numClusterCaloHitsPar) && (length==0)) continue;
+        if( ((*iter)->GetNCaloHits()<m_numClusterCaloHitsPar) && (length<=0)) continue;
         const OrderedCaloHitList &orderedCaloHitList1((*iter)->GetOrderedCaloHitList());
         for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
         {
@@ -170,7 +170,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
     std::vector<std::vector<double>> out2darr(128, std::vector<double>(128, 0.f));
     double lengthX(0), lengthZ(0), length1(0);
 
-    if(length==0)
+    if(length<=0)
     {
         minx=(*std::min_element(xarr.begin(),xarr.end()))-10.0;
         minz=(*std::min_element(zarr.begin(),zarr.end()))-10.0;
@@ -188,7 +188,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
         nstepz=length/npixels;
     }
 
-    if(length==0)
+    if(length<=0)
     {
         std::vector<double>().swap(xarr);std::vector<double>().swap(zarr);
         std::vector<double>().swap(sigma);std::vector<double>().swap(height); count1=0; l=0;
@@ -262,7 +262,7 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
 CartesianVector MyDlVtxAlgorithm::DeepLearning(const std::vector<std::vector<double>> &out2darr, const std::string &view, const double &length) const
 {
     int k(0);
-    if(length==0) k=0;
+    if(length<=0) k=0;
     else if(fabs(length-50)<0.1) k=1;
     else if(fabs(length-40)<0.1) k=2;
 
