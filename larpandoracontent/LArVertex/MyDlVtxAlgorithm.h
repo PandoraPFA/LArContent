@@ -52,6 +52,7 @@ private:
      *  @param  view, string recording what view the clusters are of
      *  @param  positionInput, DL vertex position already calculated for chosen view or (0.f, 0.f, 0.f)
      *  @param  length, square length of the image
+     *  @param  vertReconCount, count of the reconstructed 2D DL vertices
      *
      *  @return The position of the DL vertex for chosen view
      */
