@@ -109,25 +109,25 @@ StatusCode MyDlVtxAlgorithm::Run()
     CartesianVector positionV2(this->GetDlVtxForView(clustersV, viewV, position3DV1, 40.0f, vertReconCount));
     CartesianVector positionU2(this->GetDlVtxForView(clustersU, viewU, position3DU1, 40.0f, vertReconCount));
 
-    CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
     if(vertReconCount==9)
     {
+        CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
                     positionW2, positionV2, positionU2, position3D, chiSquared);
+
+        const VertexList *pVertexList(nullptr); std::string temporaryListName;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
+
+        PandoraContentApi::Vertex::Parameters parameters;
+        parameters.m_position = position3D;
+        parameters.m_vertexLabel = VERTEX_INTERACTION;
+        parameters.m_vertexType = VERTEX_3D;
+        const Vertex *pVertex(nullptr);
+
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
     }
-
-    const VertexList *pVertexList(nullptr); std::string temporaryListName;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
-
-    PandoraContentApi::Vertex::Parameters parameters;
-    parameters.m_position = position3D;
-    parameters.m_vertexLabel = VERTEX_INTERACTION;
-    parameters.m_vertexType = VERTEX_3D;
-    const Vertex *pVertex(nullptr);
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
 
     return STATUS_CODE_SUCCESS;
 }

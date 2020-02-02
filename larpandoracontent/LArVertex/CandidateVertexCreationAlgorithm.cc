@@ -66,11 +66,12 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
 
         const VertexList *pInputVertexList(NULL);
         std::string vertexListName(m_inputVertexListName);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, vertexListName.c_str(), pInputVertexList));
-        const Vertex * const pDlVertex(pInputVertexList->front());
+        const StatusCode statusCode(PandoraContentApi::GetList(*this, vertexListName.c_str(), pInputVertexList));
 
-        if(pDlVertex->GetPosition().GetX()!=0 && pDlVertex->GetPosition().GetY()!=0 && pDlVertex->GetPosition().GetZ()!=0)
+        if(STATUS_CODE_SUCCESS == statusCode)
         {
+            const Vertex * const pDlVertex(pInputVertexList->front());
+
             PandoraContentApi::Vertex::Parameters parameters;
             parameters.m_position = pDlVertex->GetPosition();
             parameters.m_vertexLabel = VERTEX_INTERACTION;
