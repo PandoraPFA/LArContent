@@ -39,9 +39,7 @@ void MyDlVtxFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, cons
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*pAlgorithm, vertexListName.c_str(), pInputVertexList));
     const Vertex * const pDlVertex(pInputVertexList->front());
 
-    CartesianVector DlVertexPosition(pDlVertex->GetPosition());
-
-    if(DlVertexPosition.GetX()==0 && DlVertexPosition.GetY()==0 && DlVertexPosition.GetZ()==0)
+    if(pDlVertex->GetPosition().GetX()==0 && pDlVertex->GetPosition().GetY()==0 && pDlVertex->GetPosition().GetZ()==0)
         featureVector.push_back(0.f);
     else
     {
