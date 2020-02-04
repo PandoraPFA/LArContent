@@ -215,7 +215,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
                 endPosition = maxPosition;
                 endDirection = maxDirection;
             }
-        }    
+        }
         catch(StatusCodeException &statusCodeException)
         {
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
