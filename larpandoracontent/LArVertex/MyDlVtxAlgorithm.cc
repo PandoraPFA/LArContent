@@ -225,8 +225,8 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
          for(j=0;j<npixels;j++)
          {
              double tempval(0),sigmaZ(0.5),inputvalue1(0),dist(0);
-             tempval=height[i]*(0.5*erfc(-((minx+(j+1)*nstepx)-xarr[i])/sqrt(2*sigma[i]*sigma[i]))
-                                   - 0.5*erfc(-((minx+j*nstepx)-xarr[i])/sqrt(2*sigma[i]*sigma[i])));
+             tempval=height[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xarr[i])/std::sqrt(2*sigma[i]*sigma[i]))
+                                   - 0.5*std::erfc(-((minx+j*nstepx)-xarr[i])/std::sqrt(2*sigma[i]*sigma[i])));
 
              for(int a=npixels-1;a>-1;a--)
              {
@@ -236,10 +236,10 @@ CartesianVector MyDlVtxAlgorithm::GetDlVtxForView(const pandora::ClusterList *pC
                      inputvalue1=0;
                  else if(dist<nstepz&&dist>0)
                      inputvalue1=std::min((nstepz-dist),sigmaZ)*tempval;
-                 else if(dist<0 && fabs(dist)<nstepz)
-                     {if(fabs(dist)>sigmaZ) inputvalue1=0; else inputvalue1=std::min((sigmaZ-fabs(dist)),nstepz)*tempval;}
-                 else if(dist<0 && fabs(dist)>nstepz)
-                     {if(fabs(dist)>sigmaZ) inputvalue1=0; else inputvalue1=std::min((sigmaZ-fabs(dist)),nstepz)*tempval;}
+                 else if(dist<0 && std::fabs(dist)<nstepz)
+                     {if(std::fabs(dist)>sigmaZ) inputvalue1=0; else inputvalue1=std::min((sigmaZ-std::fabs(dist)),nstepz)*tempval;}
+                 else if(dist<0 && std::fabs(dist)>nstepz)
+                     {if(std::fabs(dist)>sigmaZ) inputvalue1=0; else inputvalue1=std::min((sigmaZ-std::fabs(dist)),nstepz)*tempval;}
 
                  out2darr[j][a]+=inputvalue1;
              }
@@ -263,8 +263,8 @@ CartesianVector MyDlVtxAlgorithm::DeepLearning(const std::vector<std::vector<dou
 {
     int k(0);
     if(length<=0) k=0;
-    else if(fabs(length-50)<0.1) k=1;
-    else if(fabs(length-40)<0.1) k=2;
+    else if(std::fabs(length-50)<0.1) k=1;
+    else if(std::fabs(length-40)<0.1) k=2;
 
     /* Get the index for model */
     int index(0);
