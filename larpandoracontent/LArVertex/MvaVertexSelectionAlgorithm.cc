@@ -56,7 +56,8 @@ MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
     m_maxTrueVertexRadius(1.f),
     m_useRPhiFeatureForRegion(false),
     m_dropFailedRPhiFastScoreCandidates(true),
-    m_testBeamMode(false)
+    m_testBeamMode(false),
+    m_useMyDlVtxFeature(false)
 {
 }
 
@@ -484,8 +485,10 @@ void MvaVertexSelectionAlgorithm<T>::PopulateVertexFeatureInfoMap(const BeamCons
     //const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
     //    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
 
-    const double myDlVtxFeature(LArMvaHelper::CalculateFeaturesOfType<MyDlVtxFeatureTool>(m_featureToolVector, this, pVertex,
-        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
+    double myDlVtxFeature(0.f);
+    if(m_useMyDlVtxFeature)
+        myDlVtxFeature=LArMvaHelper::CalculateFeaturesOfType<MyDlVtxFeatureTool>(m_featureToolVector, this, pVertex,
+            slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get();
 
     VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry, myDlVtxFeature);
     vertexFeatureInfoMap.emplace(pVertex, vertexFeatureInfo);
@@ -742,7 +745,9 @@ void MvaVertexSelectionAlgorithm<T>::AddVertexFeaturesToVector(const VertexFeatu
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_globalAsymmetry));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_localAsymmetry));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_showerAsymmetry));
-    featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_myDlVtxFeature));
+
+    if (m_useMyDlVtxFeature)
+        featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_myDlVtxFeature));
 
     if (useRPhi)
         featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_rPhiFeature));
@@ -925,6 +930,9 @@ StatusCode MvaVertexSelectionAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TestBeamMode", m_testBeamMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseMyDlVtxFeature", m_useMyDlVtxFeature));
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
