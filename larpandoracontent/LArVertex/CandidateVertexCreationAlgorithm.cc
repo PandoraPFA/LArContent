@@ -70,10 +70,10 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
 
         if(STATUS_CODE_SUCCESS == statusCode)
         {
-            const Vertex * const pDlVertex(pInputVertexList->front());
+            const Vertex * const pDLVertex(pInputVertexList->front());
 
             PandoraContentApi::Vertex::Parameters parameters;
-            parameters.m_position = pDlVertex->GetPosition();
+            parameters.m_position = pDLVertex->GetPosition();
             parameters.m_vertexLabel = VERTEX_INTERACTION;
             parameters.m_vertexType = VERTEX_3D;
             const Vertex *pVertex(NULL);

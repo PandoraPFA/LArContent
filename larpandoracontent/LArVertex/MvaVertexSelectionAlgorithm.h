@@ -50,11 +50,11 @@ public:
          *  @param  localAsymmetry the local asymmetry feature
          *  @param  globalAsymmetry the global asymmetry feature
          *  @param  showerAsymmetry the shower asymmetry feature
-         *  @param  myDlVtxFeature the DlVtx feature
+         *  @param  DLVertexFeature the DLVertex feature
          */
         VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick, const float localAsymmetry,
                           const float globalAsymmetry, const float showerAsymmetry,
-                          const float myDlVtxFeature);
+                          const float DLVertexFeature);
 
         float    m_beamDeweighting;    ///< The beam deweighting feature
         float    m_rPhiFeature;        ///< The r/phi feature
@@ -62,7 +62,7 @@ public:
         float    m_localAsymmetry;     ///< The local asymmetry feature
         float    m_globalAsymmetry;    ///< The global asymmetry feature
         float    m_showerAsymmetry;    ///< The shower asymmetry feature
-        float    m_myDlVtxFeature;     ///< The DlVtx feature
+        float    m_DLVertexFeature;    ///< The DLVertex feature
     };
 
     typedef std::map<const pandora::Vertex *const, VertexFeatureInfo> VertexFeatureInfoMap;
@@ -418,7 +418,7 @@ private:
     bool                  m_dropFailedRPhiFastScoreCandidates;    ///< Whether to drop candidates that fail the r/phi fast score test
     bool                  m_testBeamMode;                         ///< Test beam mode
 
-    bool                  m_useMyDlVtxFeature;                    ///< Whether to use myDlVtxFeature 
+    bool                  m_useDLVertexFeature;                   ///< Whether to use DLVertexFeature 
 };
 
 typedef MvaVertexSelectionAlgorithm<AdaBoostDecisionTree> BdtVertexSelectionAlgorithm;
@@ -429,14 +429,14 @@ typedef MvaVertexSelectionAlgorithm<SupportVectorMachine> SvmVertexSelectionAlgo
 template<typename T>
 inline MvaVertexSelectionAlgorithm<T>::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick,
     const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry,
-    const float myDlVtxFeature) :
+    const float DLVertexFeature) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
     m_energyKick(energyKick),
     m_localAsymmetry(localAsymmetry),
     m_globalAsymmetry(globalAsymmetry),
     m_showerAsymmetry(showerAsymmetry),
-    m_myDlVtxFeature(myDlVtxFeature)
+    m_DLVertexFeature(DLVertexFeature)
 {
 }
 

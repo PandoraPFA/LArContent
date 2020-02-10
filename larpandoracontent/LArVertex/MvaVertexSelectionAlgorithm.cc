@@ -20,7 +20,7 @@
 #include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
-#include "larpandoracontent/LArVertex/MyDlVtxFeatureTool.h"
+#include "larpandoracontent/LArVertex/DLVertexFeatureTool.h"
 
 #include "larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h"
 
@@ -57,7 +57,7 @@ MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
     m_useRPhiFeatureForRegion(false),
     m_dropFailedRPhiFastScoreCandidates(true),
     m_testBeamMode(false),
-    m_useMyDlVtxFeature(false)
+    m_useDLVertexFeature(false)
 {
 }
 
@@ -485,12 +485,12 @@ void MvaVertexSelectionAlgorithm<T>::PopulateVertexFeatureInfoMap(const BeamCons
     //const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
     //    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
 
-    double myDlVtxFeature(0.f);
-    if(m_useMyDlVtxFeature)
-        myDlVtxFeature=LArMvaHelper::CalculateFeaturesOfType<MyDlVtxFeatureTool>(m_featureToolVector, this, pVertex,
+    double DLVertexFeature(0.f);
+    if(m_useDLVertexFeature)
+        DLVertexFeature=LArMvaHelper::CalculateFeaturesOfType<DLVertexFeatureTool>(m_featureToolVector, this, pVertex,
             slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get();
 
-    VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry, myDlVtxFeature);
+    VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry, DLVertexFeature);
     vertexFeatureInfoMap.emplace(pVertex, vertexFeatureInfo);
 }
 
@@ -507,10 +507,10 @@ void MvaVertexSelectionAlgorithm<T>::PopulateInitialScoreList(VertexFeatureInfoM
     const float localAsymmetryScore(vertexFeatureInfo.m_localAsymmetry / m_localAsymmetryConstant);
     const float globalAsymmetryScore(vertexFeatureInfo.m_globalAsymmetry / m_globalAsymmetryConstant);
     const float showerAsymmetryScore(vertexFeatureInfo.m_showerAsymmetry / m_showerAsymmetryConstant);
-    const float myDlVtxFeatureScore(vertexFeatureInfo.m_myDlVtxFeature);
+    const float DLVertexFeatureScore(vertexFeatureInfo.m_DLVertexFeature);
 
     initialScoreList.emplace_back(pVertex, beamDeweightingScore + energyKickScore + localAsymmetryScore + globalAsymmetryScore + showerAsymmetryScore
-                                           + myDlVtxFeatureScore);
+                                           + DLVertexFeatureScore);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -746,8 +746,8 @@ void MvaVertexSelectionAlgorithm<T>::AddVertexFeaturesToVector(const VertexFeatu
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_localAsymmetry));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_showerAsymmetry));
 
-    if (m_useMyDlVtxFeature)
-        featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_myDlVtxFeature));
+    if (m_useDLVertexFeature)
+        featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_DLVertexFeature));
 
     if (useRPhi)
         featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_rPhiFeature));
@@ -932,7 +932,7 @@ StatusCode MvaVertexSelectionAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
         "TestBeamMode", m_testBeamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseMyDlVtxFeature", m_useMyDlVtxFeature));
+        "UseDLVertexFeature", m_useDLVertexFeature));
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
