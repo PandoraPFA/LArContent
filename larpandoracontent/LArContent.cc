@@ -178,8 +178,8 @@
 
 #include "larpandoracontent/LArContent.h"
 
-#include "larpandoracontent/LArVertex/MyDlVtxAlgorithm.h"
-#include "larpandoracontent/LArVertex/MyDlVtxFeatureTool.h"
+#include "larpandoracontent/LArVertex/DLVertexCreationAlgorithm.h"
+#include "larpandoracontent/LArVertex/DLVertexFeatureTool.h"
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArEventValidation",                     EventValidationAlgorithm)                                                       \
@@ -271,7 +271,8 @@
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
     d("LArBdtVertexSelection",                  BdtVertexSelectionAlgorithm)                                                    \
     d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)                                                    \
-    d("LArMyDlVtx",                             MyDlVtxAlgorithm)  
+    d("LArDLVertexCreation",                    DLVertexCreationAlgorithm)                                                     
+
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
@@ -327,7 +328,7 @@
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
-    d("LArMyDlVtxFeature",                      MyDlVtxFeatureTool)
+    d("LArDLVertexFeature",                     DLVertexFeatureTool)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)
