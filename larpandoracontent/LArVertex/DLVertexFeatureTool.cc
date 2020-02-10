@@ -42,8 +42,8 @@ void DLVertexFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, con
         featureVector.push_back(0.f);
     else
     {
-        const Vertex * const pDlVertex(pInputVertexList->front());
-        float score((pVertex->GetPosition()-pDlVertex->GetPosition()).GetMagnitude());
+        const Vertex * const pDLVertex(pInputVertexList->front());
+        float score((pVertex->GetPosition()-pDLVertex->GetPosition()).GetMagnitude());
 
         ClusterList clustersW(clusterListMap.at(TPC_VIEW_W));
         ClusterList sortedLongClusters;
