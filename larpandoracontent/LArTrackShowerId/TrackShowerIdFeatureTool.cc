@@ -8,27 +8,22 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
-
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
-
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
-
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
-
 #include <vector>
 #include <list>
 using namespace pandora;
 
 namespace lar_content
 {
-  
   TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
     m_slidingShowerFitWindow(3),
     m_slidingLinearFitWindow(10000)
@@ -249,9 +244,6 @@ StatusCode TwoDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHand
     return STATUS_CODE_SUCCESS;
 }
 
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//below feature tool added by Mousam
 //-------------------------------------------------------------------------------------------------------------------------------
 PfoHierarchyFeatureTool::PfoHierarchyFeatureTool() 
 {
@@ -272,16 +264,10 @@ void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
     PfoList allDaughtersPfoList;
     float nHits3DDaughterTotalNumber(0);
 
-    //std::cout << "isPrimary: " << isPrimary << std::endl;
-    //std::cout << "nAllDaughter1: " << nAllDaughter << std::endl;
-
-    //if (isPrimary == 1)
-    //{
     LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, nHits3DParentList);
     nHits3DParent = nHits3DParentList.size();
     LArPfoHelper::GetAllDownstreamPfos(newPfoList, allDaughtersPfoList);
     nAllDaughter = allDaughtersPfoList.size() - 1;
-    //std::cout << "nAllDaughter: " << nAllDaughter << std::endl;
     if (nAllDaughter.Get() > 0.0)
     {
     	allDaughtersPfoList.pop_front();
@@ -291,19 +277,13 @@ void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
                	LArPfoHelper::GetCaloHits(pDaughterPfo, TPC_3D, nHits3DDaughterList);
                 nHits3DDaughter = nHits3DDaughterList.size();
                 nHits3DDaughterTotalNumber += nHits3DDaughter;
-                    //std::cout << "nHits3DDaughter: " << nHits3DDaughter << std::endl;
-					//std::cout << "pdgCodeDaughter: " <<  pDaughterPfo->GetParticleId() << std::endl;
 			}
-        //std::cout << "nAllDaughter2: " << nAllDaughter << std::endl;
     }
     else if (nAllDaughter.Get() == 0.0)
 	{
      	nHits3DDaughter = 0.0;
     }
-	
-        //std::cout << "Ratio: " << (static_cast<double>(nHits3DDaughterTotal))/(static_cast<double>(nHits3DParent)) << std::endl;
-   
-    //}	
+
     nHits3DDaughterTotal = nHits3DDaughterTotalNumber;
     daughterParentNhitsRatio = ((nHits3DDaughterTotal.Get()))/(static_cast<double>(nHits3DParent));
   
@@ -578,26 +558,15 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
         std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), ThreeDChargeFeatureTool::VertexComparator(nuVertex));
         CaloHitList orderedCaloHitList(threeDCaloHitVector.begin(),threeDCaloHitVector.end());
         const unsigned int nhits(orderedCaloHitList.size());
-
-	//This is the original code; it divides hits into first 50% and last 50%
-	/*
-        for (const CaloHit *const pCaloHit : orderedCaloHitList)
-        {
-            CartesianPointVector &targetVector((pointVectorStart.size() < (nhits / 2)) ? pointVectorStart : pointVectorEnd);
-            targetVector.push_back(pCaloHit->GetPositionVector());
-        }
-	*/
-
-	//Modified code to allow start and end to be any fraction of number of hits; that fraction is set with m_hitFraction
-	int iHit = 1;
-	for (const CaloHit *const pCaloHit : orderedCaloHitList)
-	  {
-	    if((float)iHit / nhits <= m_hitFraction)
-              pointVectorStart.push_back(pCaloHit->GetPositionVector());
-	    if((float)iHit / nhits >= 1.0 - m_hitFraction)
-              pointVectorEnd.push_back(pCaloHit->GetPositionVector());
-	    iHit++;
-	  }
+		int iHit = 1;
+		for (const CaloHit *const pCaloHit : orderedCaloHitList)
+	  		{
+	    		if((float)iHit / nhits <= m_hitFraction)
+              		pointVectorStart.push_back(pCaloHit->GetPositionVector());
+	    		if((float)iHit / nhits >= 1.0 - m_hitFraction)
+              		pointVectorEnd.push_back(pCaloHit->GetPositionVector());
+	    		iHit++;
+	  		}
     }
 }
 
@@ -733,7 +702,6 @@ void ThreeDPCAVariablesFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
   int nSegDoubleHits = 0;
   float nSegDoubleHitsRatio = 0.f;
   nHits = 0;
-  //int curv = 0; //Added by Mousam: for new variable
   //Need the 3D cluster and hits to calculate PCA components                                                                                                                                           
   ClusterList threeDClusterList;
   LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
@@ -791,27 +759,6 @@ void ThreeDPCAVariablesFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
 
 	this->SegmentsWithDoubleHits(paStart, pcaPositions, nSegDoubleHits, nSegDoubleHitsRatio);
     }
-  //end of if ((!clusterList.empty()) && (!orderedCaloHitList.empty()))
-  //short logic to filter interesting events
-/*  bool TrueTrack(false);
-  const MCParticle *const BMCParticle(LArMCParticleHelper::GetMainMCParticle(pInputPfo));
-  TrueTrack = ((PHOTON != BMCParticle->GetParticleId()) && (E_MINUS != std::abs(BMCParticle->GetParticleId())));
-  const int TrueTrackInt = TrueTrack ? 1 : 0;
-  
-  std::cout << "starting check" << std::endl;
-
-  if (nSegDoubleHits < 20  && TrueTrackInt == 0)
-    {
-      std::cout << "The nSegDoubleHits value for this PFO is: " << nSegDoubleHits << std::endl;
-      PfoList myPfoList;
-      myPfoList.push_back(pInputPfo);
-      PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f);
-      PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &myPfoList, "MyPfoList", RED, true, false);
-      PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    }
-
-  std::cout << "ending check" << std::endl;*/
-//-------------------------------------------------------------------
 
   //-------------------------------------------------------------------
   concentration = conc;
@@ -824,7 +771,6 @@ void ThreeDPCAVariablesFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
   nSegmentsDoubleHits = nSegDoubleHits;
   nSegmentsDoubleHitsRatio = nSegDoubleHitsRatio;
   nHits = threeDCaloHitList.size();
-  //curvature = curv;
 
   featureVector.push_back(concentration);
   featureVector.push_back(concentration2);
@@ -836,7 +782,6 @@ void ThreeDPCAVariablesFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
   featureVector.push_back(nSegmentsDoubleHits);
   featureVector.push_back(nSegmentsDoubleHitsRatio);
   featureVector.push_back(nHits); 
-  //featureVector.push_back(curv);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

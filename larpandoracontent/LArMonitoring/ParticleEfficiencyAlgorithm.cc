@@ -7,29 +7,23 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-
 #include "larpandoracontent/LArMonitoring/ParticleEfficiencyAlgorithm.h"
-
-
 
 using namespace pandora;
 
-namespace lar_content {
-
-  ParticleEfficiencyAlgorithm::RecoParameters::RecoParameters() :
+namespace lar_content 
+	{
+  	ParticleEfficiencyAlgorithm::RecoParameters::RecoParameters() :
     m_minPrimaryGoodHits(15),
     m_minHitsForGoodView(5),
     m_minPrimaryGoodViews(2),
     m_foldToPrimaries(false),
     m_minHitSharingFraction(0.9f)
-  {
-  }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
+  	{
+  	}
 //------------------------------------------------------------------------------------------------------------------------------------------
 
   ParticleEfficiencyAlgorithm::ParticleEfficiencyAlgorithm() :
@@ -44,20 +38,20 @@ namespace lar_content {
   }
 
 
-  ParticleEfficiencyAlgorithm::~ParticleEfficiencyAlgorithm() 
-  {
-    if(m_writeToTree) {
-      try {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
-      }
-      catch (const StatusCodeException &) {
-        std::cout << "UNABLE TO WRITE TREE" << std::endl; 
-      }
-    }
-  }
-
-
-
+  ParticleEfficiencyAlgorithm::~ParticleEfficiencyAlgorithm()
+	{
+    	if(m_writeToTree) 
+		{
+			try 
+			{
+        		PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
+      		}
+      		catch (const StatusCodeException &) 
+			{
+        		std::cout << "UNABLE TO WRITE TREE" << std::endl; 
+      		}
+    	}
+  	}
 
   StatusCode ParticleEfficiencyAlgorithm::Run() {
 

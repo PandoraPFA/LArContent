@@ -1,19 +1,17 @@
 #include "Pandora/AlgorithmHeaders.h"
-
-
 #include "larpandoracontent/LArMonitoring/PullDataAlgorithm.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 using namespace pandora;
 
-namespace lar_content {
-
-  PullDataAlgorithm::PullDataAlgorithm() :
+namespace lar_content 
+	{
+  	PullDataAlgorithm::PullDataAlgorithm() :
     m_eventNumber(4500),
     m_treeName(),
     m_fileName()
-  {
-  }
+  	{
+  	}
 
   PullDataAlgorithm::~PullDataAlgorithm() {
     try {
