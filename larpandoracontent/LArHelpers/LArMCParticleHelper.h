@@ -7,11 +7,8 @@
  */
 #ifndef LAR_MC_PARTICLE_HELPER_H
 #define LAR_MC_PARTICLE_HELPER_H 1
-
 #include "Pandora/PandoraInternal.h"
-
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
-
 #include <unordered_map>
 #include <functional>
 
@@ -66,7 +63,7 @@ public:
         unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
         unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
         bool          m_selectInputHits;          ///< whether to select input hits
-	bool          m_foldToPrimaries;          ///< whether to fold all hits to primary pfos and MC particles
+		bool          m_foldToPrimaries;          ///< whether to fold all hits to primary pfos and MC particles
         float         m_maxPhotonPropagation;     ///< the maximum photon propagation length
         float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
     };

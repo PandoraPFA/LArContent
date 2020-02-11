@@ -40,42 +40,34 @@ LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-
   void LArMCParticleHelper::GetMCToPfoCompletenessPurityMaps(const MCContributionMap& mcParticleToHitsMap, const PfoContributionMap& pfoToHitsMap, const MCParticleToPfoHitSharingMap& mcParticleToPfoHitSharingMap, MCParticleToPfoCompletenessPurityMap& mcParticleToPfoCompletenessMap, MCParticleToPfoCompletenessPurityMap& mcParticleToPfoPurityMap) {
 
-    for(const MCParticleToPfoHitSharingMap::value_type &entry : mcParticleToPfoHitSharingMap){
+    for(const MCParticleToPfoHitSharingMap::value_type &entry : mcParticleToPfoHitSharingMap)
+	{
+		const PfoToSharedHitsVector pfoToSharedHitsVector(entry.second);
+      	PfoToCompletenessPurityVector pfoToCompletenessVector;
+      	PfoToCompletenessPurityVector pfoToPurityVector;
+      	
+		if(mcParticleToHitsMap.find(entry.first) == mcParticleToHitsMap.end()) continue;
 
-      const PfoToSharedHitsVector pfoToSharedHitsVector(entry.second);
+      	const unsigned int totMCParticleHits(mcParticleToHitsMap.at(entry.first).size());
 
-      PfoToCompletenessPurityVector pfoToCompletenessVector;
-      PfoToCompletenessPurityVector pfoToPurityVector;
+		for(const PfoCaloHitListPair &pfoSharedHits : pfoToSharedHitsVector) 
+		{
+			if(pfoToHitsMap.find(pfoSharedHits.first) == pfoToHitsMap.end()) continue;
+			const unsigned int sharedHits(pfoSharedHits.second.size());
+			const unsigned int totPfoHits(pfoToHitsMap.at(pfoSharedHits.first).size()); 
+			const double completeness(static_cast<double>(sharedHits)/static_cast<double>(totMCParticleHits));
+			const double purity(static_cast<double>(sharedHits)/static_cast<double>(totPfoHits));
+			pfoToCompletenessVector.push_back({pfoSharedHits.first, completeness});
+			pfoToPurityVector.push_back({pfoSharedHits.first, purity});
+      	}
 
-      if(mcParticleToHitsMap.find(entry.first) == mcParticleToHitsMap.end()) continue;
-
-      const unsigned int totMCParticleHits(mcParticleToHitsMap.at(entry.first).size());
-
-      for(const PfoCaloHitListPair &pfoSharedHits : pfoToSharedHitsVector) {
-
-        if(pfoToHitsMap.find(pfoSharedHits.first) == pfoToHitsMap.end()) continue;
-
-	const unsigned int sharedHits(pfoSharedHits.second.size());
-	const unsigned int totPfoHits(pfoToHitsMap.at(pfoSharedHits.first).size()); 
-
-	const double completeness(static_cast<double>(sharedHits)/static_cast<double>(totMCParticleHits));
-	const double purity(static_cast<double>(sharedHits)/static_cast<double>(totPfoHits));
-
-	pfoToCompletenessVector.push_back({pfoSharedHits.first, completeness});
-	pfoToPurityVector.push_back({pfoSharedHits.first, purity});
-      }
-
-      mcParticleToPfoCompletenessMap[entry.first] = pfoToCompletenessVector;
-      mcParticleToPfoPurityMap[entry.first] = pfoToPurityVector;
-
-    }
-    return;
-  }
+		mcParticleToPfoCompletenessMap[entry.first] = pfoToCompletenessVector;
+      	mcParticleToPfoPurityMap[entry.first] = pfoToPurityVector;
+    	}
+		return;
+  	}
 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
