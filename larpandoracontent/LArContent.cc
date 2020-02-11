@@ -197,7 +197,7 @@
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
     d("LArPfoValidation",                       PfoValidationAlgorithm)                                                         \
-    d("LArPullData",                       PullDataAlgorithm)                                                         \
+    d("LArPullData",                       		PullDataAlgorithm)                                                         		\
     d("LArPerformanceAssessment",               PerformanceAssessmentAlgorithm)                                                 \
     d("LArParticleEfficiency",                  ParticleEfficiencyAlgorithm)                                                    \
     d("LArMCParticleMonitoring",                MCParticleMonitoringAlgorithm)                                                  \
