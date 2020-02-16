@@ -137,7 +137,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
 CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::ClusterList *pClusterList, const std::string &view,
                 const CartesianVector &positionInput, const double &length, int &vertReconCount) const
 {
-    std::vector<double> xarr, zarr, sigma, height;
+    std::vector<double> xVec, zVec, sigma, height;
     int i(0), j(0), l(0), count1(0), count2(0);
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -148,7 +148,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
     }
     if(count1==0||count2==0){CartesianVector position(0.f, 0.f, 0.f); return(position);}
 
-    xarr.resize(count1, 0.f) ; zarr.resize(count1, 0.f)  ;
+    xVec.resize(count1, 0.f) ; zVec.resize(count1, 0.f)  ;
     sigma.resize(count1, 0.f); height.resize(count1, 0.f);
 
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -160,7 +160,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
             for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
             {
                 const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
-                xarr[l]=positionVector1.GetX(); zarr[l]=positionVector1.GetZ();
+                xVec[l]=positionVector1.GetX(); zVec[l]=positionVector1.GetZ();
                 sigma[l]=(*hitIter1)->GetCellSize1(); height[l]=(*hitIter1)->GetInputEnergy(); l++;
             }
         }
@@ -168,15 +168,15 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 
     double minx=0, minz=0, nstepx=0, nstepz=0;
     double zC=0, xC=0;
-    std::vector<std::vector<double>> out2darr(m_npixels, std::vector<double>(m_npixels, 0.f));
+    std::vector<std::vector<double>> out2dVec(m_npixels, std::vector<double>(m_npixels, 0.f));
     double lengthX(0), lengthZ(0), length1(0);
 
     if(length<=0)
     {
-        minx=(*std::min_element(xarr.begin(),xarr.end()))-10.0;
-        minz=(*std::min_element(zarr.begin(),zarr.end()))-10.0;
-        lengthX=(*std::max_element(xarr.begin(),xarr.end())) - (*std::min_element(xarr.begin(),xarr.end()))+20.0;
-        lengthZ=(*std::max_element(zarr.begin(),zarr.end())) - (*std::min_element(zarr.begin(),zarr.end()))+20.0;
+        minx=(*std::min_element(xVec.begin(),xVec.end()))-10.0;
+        minz=(*std::min_element(zVec.begin(),zVec.end()))-10.0;
+        lengthX=(*std::max_element(xVec.begin(),xVec.end())) - (*std::min_element(xVec.begin(),xVec.end()))+20.0;
+        lengthZ=(*std::max_element(zVec.begin(),zVec.end())) - (*std::min_element(zVec.begin(),zVec.end()))+20.0;
         length1=std::max(lengthX, lengthZ);
         nstepx=length1/m_npixels;
         nstepz=length1/m_npixels;
@@ -191,7 +191,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 
     if(length<=0)
     {
-        std::vector<double>().swap(xarr);std::vector<double>().swap(zarr);
+        std::vector<double>().swap(xVec);std::vector<double>().swap(zVec);
         std::vector<double>().swap(sigma);std::vector<double>().swap(height); count1=0; l=0;
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
         {
@@ -199,7 +199,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
         }
         if(count1==0){CartesianVector position(0.f, 0.f, 0.f); return(position);}
 
-        xarr.resize(count1, 0.f) ; zarr.resize(count1, 0.f)  ;
+        xVec.resize(count1, 0.f) ; zVec.resize(count1, 0.f)  ;
         sigma.resize(count1, 0.f); height.resize(count1, 0.f);
 
         for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
@@ -210,7 +210,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
                 for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
                 {
                     const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
-                    xarr[l]=positionVector1.GetX(); zarr[l]=positionVector1.GetZ();
+                    xVec[l]=positionVector1.GetX(); zVec[l]=positionVector1.GetZ();
                     sigma[l]=(*hitIter1)->GetCellSize1(); height[l]=(*hitIter1)->GetInputEnergy(); l++;
                 }
             }
@@ -219,19 +219,19 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 
     for(i=0;i<l;i++)
     {
-         zC=(int)((zarr[i]-minz)/nstepz); xC=(int)((xarr[i]-minx)/nstepx);
+         zC=(int)((zVec[i]-minz)/nstepz); xC=(int)((xVec[i]-minx)/nstepx);
          if(xC>m_npixels||xC<0||zC>m_npixels||zC<0) continue;
          if(zC==m_npixels) zC--;
 
          for(j=0;j<m_npixels;j++)
          {
              double tempval(0),sigmaZ(0.5),inputvalue1(0),dist(0);
-             tempval=height[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xarr[i])/std::sqrt(2*sigma[i]*sigma[i]))
-                                   - 0.5*std::erfc(-((minx+j*nstepx)-xarr[i])/std::sqrt(2*sigma[i]*sigma[i])));
+             tempval=height[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i]))
+                                   - 0.5*std::erfc(-((minx+j*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i])));
 
              for(int a=m_npixels-1;a>-1;a--)
              {
-                 dist=(minz+(a+1)*nstepz)-(zarr[i]+sigmaZ/2.0);
+                 dist=(minz+(a+1)*nstepz)-(zVec[i]+sigmaZ/2.0);
 
                  if(dist>nstepz)
                      inputvalue1=0;
@@ -242,14 +242,14 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
                  else if(dist<0 && std::fabs(dist)>nstepz)
                      {if(std::fabs(dist)>sigmaZ) inputvalue1=0; else inputvalue1=std::min((sigmaZ-std::fabs(dist)),nstepz)*tempval;}
 
-                 out2darr[j][a]+=inputvalue1;
+                 out2dVec[j][a]+=inputvalue1;
              }
          }
     }
 
     /*******************************************************************************************/
     /* Use Deep Learning here on the created image to get the 2D vertex coordinate for 1 view. */ 
-    CartesianVector pixelPosition(this->DeepLearning(out2darr,view,length));
+    CartesianVector pixelPosition(this->DeepLearning(out2dVec,view,length));
     /*******************************************************************************************/
 
     double recoX(minx+(pixelPosition.GetX())*nstepx);
@@ -260,7 +260,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
-CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::vector<double>> &out2darr, const std::string &view, const double &length) const
+CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view, const double &length) const
 {
     int k(0);
     if(length<=0) k=0;
@@ -282,7 +282,7 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::v
     for(i=m_npixels-1;i>-1;i--)
         for(j=0;j<m_npixels;j++)
         {
-            accessor[0][0][i][j]=out2darr[j][i]/100.0;
+            accessor[0][0][i][j]=out2dVec[j][i]/100.0;
         }
 
     std::vector<torch::jit::IValue> inputs;

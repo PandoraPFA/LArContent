@@ -62,13 +62,13 @@ private:
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
      *
-     *  @param  out2darr, the image
+     *  @param  out2dVec, the image
      *  @param  view, string recording what view the image represents
      *  @param  length, square length of the image
      *
      *  @return The pixel position of the DL vertex for chosen view
      */
-    pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2darr, const std::string &view, const double &length) const;
+    pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view, const double &length) const;
 
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list
