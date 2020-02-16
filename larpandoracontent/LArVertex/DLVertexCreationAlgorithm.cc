@@ -31,6 +31,7 @@ DLVertexCreationAlgorithm::DLVertexCreationAlgorithm() :
     m_inputClusterListNames(),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_numClusterCaloHitsPar(5),
+    m_npixels(128),
     m_pModule()
 {
 }
@@ -165,9 +166,9 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
         }
     }
 
-    double minx=0, minz=0, npixels=128, nstepx=0, nstepz=0;
+    double minx=0, minz=0, nstepx=0, nstepz=0;
     double zC=0, xC=0;
-    std::vector<std::vector<double>> out2darr(128, std::vector<double>(128, 0.f));
+    std::vector<std::vector<double>> out2darr(m_npixels, std::vector<double>(m_npixels, 0.f));
     double lengthX(0), lengthZ(0), length1(0);
 
     if(length<=0)
@@ -177,15 +178,15 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
         lengthX=(*std::max_element(xarr.begin(),xarr.end())) - (*std::min_element(xarr.begin(),xarr.end()))+20.0;
         lengthZ=(*std::max_element(zarr.begin(),zarr.end())) - (*std::min_element(zarr.begin(),zarr.end()))+20.0;
         length1=std::max(lengthX, lengthZ);
-        nstepx=length1/npixels;
-        nstepz=length1/npixels;
+        nstepx=length1/m_npixels;
+        nstepz=length1/m_npixels;
     }
     else
     {
         minx=positionInput.GetX()-length/2.0;
         minz=positionInput.GetZ()-length/2.0;
-        nstepx=length/npixels;
-        nstepz=length/npixels;
+        nstepx=length/m_npixels;
+        nstepz=length/m_npixels;
     }
 
     if(length<=0)
@@ -219,16 +220,16 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
     for(i=0;i<l;i++)
     {
          zC=(int)((zarr[i]-minz)/nstepz); xC=(int)((xarr[i]-minx)/nstepx);
-         if(xC>npixels||xC<0||zC>npixels||zC<0) continue;
-         if(zC==npixels) zC--;
+         if(xC>m_npixels||xC<0||zC>m_npixels||zC<0) continue;
+         if(zC==m_npixels) zC--;
 
-         for(j=0;j<npixels;j++)
+         for(j=0;j<m_npixels;j++)
          {
              double tempval(0),sigmaZ(0.5),inputvalue1(0),dist(0);
              tempval=height[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xarr[i])/std::sqrt(2*sigma[i]*sigma[i]))
                                    - 0.5*std::erfc(-((minx+j*nstepx)-xarr[i])/std::sqrt(2*sigma[i]*sigma[i])));
 
-             for(int a=npixels-1;a>-1;a--)
+             for(int a=m_npixels-1;a>-1;a--)
              {
                  dist=(minz+(a+1)*nstepz)-(zarr[i]+sigmaZ/2.0);
 
@@ -274,13 +275,12 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::v
 
     /* Convert image to Torch "Tensor" */
     int i=0,j=0;
-    const int npixels=128;
 
-    torch::Tensor input = torch::zeros({1, 1, npixels, npixels}, torch::TensorOptions().dtype(torch::kFloat32));
+    torch::Tensor input = torch::zeros({1, 1, m_npixels, m_npixels}, torch::TensorOptions().dtype(torch::kFloat32));
     auto accessor = input.accessor<float, 4>();
 
-    for(i=npixels-1;i>-1;i--)
-        for(j=0;j<npixels;j++)
+    for(i=m_npixels-1;i>-1;i--)
+        for(j=0;j<m_npixels;j++)
         {
             accessor[0][0][i][j]=out2darr[j][i]/100.0;
         }
@@ -316,6 +316,9 @@ StatusCode DLVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NumClusterCaloHitsPar", m_numClusterCaloHitsPar));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Npixels", m_npixels));
 
     return STATUS_CODE_SUCCESS;
 }
