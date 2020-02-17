@@ -102,7 +102,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
         positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, lenVec[i], vertReconCount);
     }
 
-    if(vertReconCount==9)
+    if(vertReconCount==3*lenVec.size())
     {
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
                     positionW, positionV, positionU, position3D, chiSquared);
