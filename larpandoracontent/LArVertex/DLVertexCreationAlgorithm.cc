@@ -139,7 +139,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
         if( ((*iter)->GetNCaloHits()>=m_numClusterCaloHitsPar) ) count2+=(*iter)->GetNCaloHits();
         count1+=(*iter)->GetNCaloHits();
     }
-    if(count1==0||count2==0){CartesianVector position(0.f, 0.f, 0.f); return(position);}
+    if(count1==0||count2==0) return(CartesianVector(0.f, 0.f, 0.f));
 
     xVec.resize(count1, 0.f) ; zVec.resize(count1, 0.f)  ;
     sigma.resize(count1, 0.f); height.resize(count1, 0.f);
@@ -190,7 +190,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
         {
             count1+=(*iter)->GetNCaloHits();
         }
-        if(count1==0){CartesianVector position(0.f, 0.f, 0.f); return(position);}
+        if(count1==0) return(CartesianVector(0.f, 0.f, 0.f));
 
         xVec.resize(count1, 0.f) ; zVec.resize(count1, 0.f)  ;
         sigma.resize(count1, 0.f); height.resize(count1, 0.f);
@@ -262,16 +262,12 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::v
     if(view=="U") index=3*lenVecIndex+2;
 
     /* Convert image to Torch "Tensor" */
-    int i=0,j=0;
-
     torch::Tensor input = torch::zeros({1, 1, m_npixels, m_npixels}, torch::TensorOptions().dtype(torch::kFloat32));
     auto accessor = input.accessor<float, 4>();
 
-    for(i=m_npixels-1;i>-1;i--)
-        for(j=0;j<m_npixels;j++)
-        {
+    for(int i=m_npixels-1;i>-1;i--)
+        for(int j=0;j<m_npixels;j++)
             accessor[0][0][i][j]=out2dVec[j][i]/100.0;
-        }
 
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(input);
