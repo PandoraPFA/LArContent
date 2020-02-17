@@ -51,24 +51,24 @@ private:
      *  @param  pClusterList, address of the input cluster list for the specific view
      *  @param  view, string recording what view the clusters are of
      *  @param  positionInput, DL vertex position already calculated for chosen view or (0.f, 0.f, 0.f)
-     *  @param  length, length of the image
+     *  @param  lenVecIndex, index for m_lenVec
      *  @param  vertReconCount, count of the reconstructed 2D DL vertices
      *
      *  @return The position of the DL vertex for chosen view
      */
     pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *pClusterList, const std::string &view, 
-                             const pandora::CartesianVector &positionInput, const double &length, int &vertReconCount) const;
+                             const pandora::CartesianVector &positionInput, const int &lenVecIndex, int &vertReconCount) const;
 
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
      *
      *  @param  out2dVec, the image
      *  @param  view, string recording what view the image represents
-     *  @param  length, length of the image
+     *  @param  lenVecIndex, index for m_lenVec
      *
      *  @return The pixel position of the DL vertex for chosen view
      */
-    pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view, const double &length) const;
+    pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view, const int &lenVecIndex) const;
 
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list

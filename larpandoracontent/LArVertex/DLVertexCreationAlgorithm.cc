@@ -50,7 +50,7 @@ StatusCode DLVertexCreationAlgorithm::Initialize()
     m_pModule = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
     std::vector<std::string> view = {"W", "V", "U"};
 
-    for(int j=0; j<3;j++)
+    for(int j=0; j<m_lenVec.size();j++)
     {
         for(int i=0; i<3;i++)
         {
@@ -84,9 +84,9 @@ StatusCode DLVertexCreationAlgorithm::Run()
 
     std::string viewW="W", viewV="V", viewU="U";
     CartesianVector positionInput(0.f, 0.f, 0.f); int vertReconCount(0);
-    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, m_lenVec[0], vertReconCount));
-    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, m_lenVec[0], vertReconCount));
-    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, m_lenVec[0], vertReconCount));
+    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, 0, vertReconCount));
+    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, 0, vertReconCount));
+    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, 0, vertReconCount));
 
     CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
     for(int i=1; i<m_lenVec.size(); i++)
@@ -98,9 +98,9 @@ StatusCode DLVertexCreationAlgorithm::Run()
         CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V));
         CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U));
 
-        positionW=this->GetDLVertexForView(clustersW, viewW, position3DW, m_lenVec[i], vertReconCount);
-        positionV=this->GetDLVertexForView(clustersV, viewV, position3DV, m_lenVec[i], vertReconCount);
-        positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, m_lenVec[i], vertReconCount);
+        positionW=this->GetDLVertexForView(clustersW, viewW, position3DW, i, vertReconCount);
+        positionV=this->GetDLVertexForView(clustersV, viewV, position3DV, i, vertReconCount);
+        positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, i, vertReconCount);
     }
 
     if(vertReconCount==3*m_lenVec.size())
@@ -127,8 +127,9 @@ StatusCode DLVertexCreationAlgorithm::Run()
 
 //---------------------------------------------------------------------------------------------------------------------------------
 CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::ClusterList *pClusterList, const std::string &view,
-                const CartesianVector &positionInput, const double &length, int &vertReconCount) const
+                const CartesianVector &positionInput, const int &lenVecIndex, int &vertReconCount) const
 {
+    double length(m_lenVec[lenVecIndex]);
     std::vector<double> xVec, zVec, sigma, height;
     int i(0), j(0), l(0), count1(0), count2(0);
 
@@ -241,7 +242,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 
     /*******************************************************************************************/
     /* Use Deep Learning here on the created image to get the 2D vertex coordinate for 1 view. */ 
-    CartesianVector pixelPosition(this->DeepLearning(out2dVec,view,length));
+    CartesianVector pixelPosition(this->DeepLearning(out2dVec,view,lenVecIndex));
     /*******************************************************************************************/
 
     double recoX(minx+(pixelPosition.GetX())*nstepx);
@@ -252,18 +253,13 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
-CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view, const double &length) const
+CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view, const int &lenVecIndex) const
 {
-    int k(0);
-    if(length<=0) k=0;
-    else if(std::fabs(length-50)<0.1) k=1;
-    else if(std::fabs(length-40)<0.1) k=2;
-
     /* Get the index for model */
     int index(0);
-    if(view=="W") index=3*k+0;
-    if(view=="V") index=3*k+1;
-    if(view=="U") index=3*k+2;
+    if(view=="W") index=3*lenVecIndex+0;
+    if(view=="V") index=3*lenVecIndex+1;
+    if(view=="U") index=3*lenVecIndex+2;
 
     /* Convert image to Torch "Tensor" */
     int i=0,j=0;
