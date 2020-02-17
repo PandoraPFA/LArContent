@@ -51,7 +51,7 @@ private:
      *  @param  pClusterList, address of the input cluster list for the specific view
      *  @param  view, string recording what view the clusters are of
      *  @param  positionInput, DL vertex position already calculated for chosen view or (0.f, 0.f, 0.f)
-     *  @param  length, square length of the image
+     *  @param  length, length of the image
      *  @param  vertReconCount, count of the reconstructed 2D DL vertices
      *
      *  @return The position of the DL vertex for chosen view
@@ -64,7 +64,7 @@ private:
      *
      *  @param  out2dVec, the image
      *  @param  view, string recording what view the image represents
-     *  @param  length, square length of the image
+     *  @param  length, length of the image
      *
      *  @return The pixel position of the DL vertex for chosen view
      */
@@ -77,7 +77,7 @@ private:
     std::string             m_modelFileNamePrefix;            ///< The model file name prefix
     unsigned int            m_numClusterCaloHitsPar;          ///< The number of cluster calo hits parameter 
     unsigned int            m_npixels;                        ///< The number of pixels, N, in the N*N square image 
-    std::vector<float>      m_lenVec;                         ///< Vector of square lengths of the images
+    std::vector<float>      m_lenVec;                         ///< Vector of lengths of the images
     std::vector<std::shared_ptr<torch::jit::script::Module>> m_pModule; ///< Vector of Pointers to Torch models.
 
 };
