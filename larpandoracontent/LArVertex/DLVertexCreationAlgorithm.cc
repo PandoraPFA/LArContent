@@ -9,17 +9,9 @@
 #include "Pandora/AlgorithmHeaders.h" 
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 
 #include "larpandoracontent/LArVertex/DLVertexCreationAlgorithm.h"
-
-#include <algorithm>
-
-#include <iostream>
-#include <fstream>
-#include <torch/script.h>
-#include <memory>
 
 using namespace pandora;
 
