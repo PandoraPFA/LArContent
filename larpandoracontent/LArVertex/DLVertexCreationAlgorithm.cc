@@ -80,41 +80,32 @@ StatusCode DLVertexCreationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[1], clustersV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], clustersU));
 
+    std::vector<float> lenVec={-1.0f, 50.0f, 40.0f};
     std::string viewW="W", viewV="V", viewU="U";
     CartesianVector positionInput(0.f, 0.f, 0.f); int vertReconCount(0);
-    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, -1.0f, vertReconCount));
-    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, -1.0f, vertReconCount));
-    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, -1.0f, vertReconCount));
+    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, lenVec[0], vertReconCount));
+    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, lenVec[0], vertReconCount));
+    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, lenVec[0], vertReconCount));
 
-    CartesianVector position3D0(0.f, 0.f, 0.f); float chiSquared0(0);
-    LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
-                positionW, positionV, positionU, position3D0, chiSquared0);
+    CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
+    for(int i=1; i<lenVec.size(); i++)
+    {
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
+                    positionW, positionV, positionU, position3D, chiSquared);
 
-    CartesianVector position3DW(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D0, TPC_VIEW_W));
-    CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D0, TPC_VIEW_V));
-    CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D0, TPC_VIEW_U));
+        CartesianVector position3DW(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
+        CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V));
+        CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U));
 
-    CartesianVector positionW1(this->GetDLVertexForView(clustersW, viewW, position3DW, 50.0f, vertReconCount));
-    CartesianVector positionV1(this->GetDLVertexForView(clustersV, viewV, position3DV, 50.0f, vertReconCount));
-    CartesianVector positionU1(this->GetDLVertexForView(clustersU, viewU, position3DU, 50.0f, vertReconCount));
-
-    CartesianVector position3D1(0.f, 0.f, 0.f); float chiSquared1(0);
-    LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
-                positionW1, positionV1, positionU1, position3D1, chiSquared1);
-
-    CartesianVector position3DW1(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D1, TPC_VIEW_W));
-    CartesianVector position3DV1(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D1, TPC_VIEW_V));
-    CartesianVector position3DU1(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D1, TPC_VIEW_U));
-
-    CartesianVector positionW2(this->GetDLVertexForView(clustersW, viewW, position3DW1, 40.0f, vertReconCount));
-    CartesianVector positionV2(this->GetDLVertexForView(clustersV, viewV, position3DV1, 40.0f, vertReconCount));
-    CartesianVector positionU2(this->GetDLVertexForView(clustersU, viewU, position3DU1, 40.0f, vertReconCount));
+        positionW=this->GetDLVertexForView(clustersW, viewW, position3DW, lenVec[i], vertReconCount);
+        positionV=this->GetDLVertexForView(clustersV, viewV, position3DV, lenVec[i], vertReconCount);
+        positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, lenVec[i], vertReconCount);
+    }
 
     if(vertReconCount==9)
     {
-        CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
-                    positionW2, positionV2, positionU2, position3D, chiSquared);
+                    positionW, positionV, positionU, position3D, chiSquared);
 
         const VertexList *pVertexList(nullptr); std::string temporaryListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
