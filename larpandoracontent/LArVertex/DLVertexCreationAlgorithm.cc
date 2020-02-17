@@ -32,6 +32,7 @@ DLVertexCreationAlgorithm::DLVertexCreationAlgorithm() :
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_numClusterCaloHitsPar(5),
     m_npixels(128),
+    m_lenVec(),
     m_pModule()
 {
 }
@@ -44,6 +45,7 @@ DLVertexCreationAlgorithm::~DLVertexCreationAlgorithm()
 //------------------------------------------------------------------------------------------------------------------------------------------
 StatusCode DLVertexCreationAlgorithm::Initialize()
 {
+    if(m_lenVec.empty()) m_lenVec={-1.0f, 50.0f, 40.0f};
     // Load the model file. 
     m_pModule = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
     std::vector<std::string> view = {"W", "V", "U"};
@@ -80,15 +82,14 @@ StatusCode DLVertexCreationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[1], clustersV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], clustersU));
 
-    std::vector<float> lenVec={-1.0f, 50.0f, 40.0f};
     std::string viewW="W", viewV="V", viewU="U";
     CartesianVector positionInput(0.f, 0.f, 0.f); int vertReconCount(0);
-    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, lenVec[0], vertReconCount));
-    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, lenVec[0], vertReconCount));
-    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, lenVec[0], vertReconCount));
+    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, m_lenVec[0], vertReconCount));
+    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, m_lenVec[0], vertReconCount));
+    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, m_lenVec[0], vertReconCount));
 
     CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
-    for(int i=1; i<lenVec.size(); i++)
+    for(int i=1; i<m_lenVec.size(); i++)
     {
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
                     positionW, positionV, positionU, position3D, chiSquared);
@@ -97,12 +98,12 @@ StatusCode DLVertexCreationAlgorithm::Run()
         CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V));
         CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U));
 
-        positionW=this->GetDLVertexForView(clustersW, viewW, position3DW, lenVec[i], vertReconCount);
-        positionV=this->GetDLVertexForView(clustersV, viewV, position3DV, lenVec[i], vertReconCount);
-        positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, lenVec[i], vertReconCount);
+        positionW=this->GetDLVertexForView(clustersW, viewW, position3DW, m_lenVec[i], vertReconCount);
+        positionV=this->GetDLVertexForView(clustersV, viewV, position3DV, m_lenVec[i], vertReconCount);
+        positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, m_lenVec[i], vertReconCount);
     }
 
-    if(vertReconCount==3*lenVec.size())
+    if(vertReconCount==3*m_lenVec.size())
     {
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
                     positionW, positionV, positionU, position3D, chiSquared);
@@ -310,6 +311,9 @@ StatusCode DLVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Npixels", m_npixels));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "LenVec", m_lenVec));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -77,6 +77,7 @@ private:
     std::string             m_modelFileNamePrefix;            ///< The model file name prefix
     unsigned int            m_numClusterCaloHitsPar;          ///< The number of cluster calo hits parameter 
     unsigned int            m_npixels;                        ///< The number of pixels, N, in the N*N square image 
+    std::vector<float>      m_lenVec;                         ///< Vector of square lengths of the images
     std::vector<std::shared_ptr<torch::jit::script::Module>> m_pModule; ///< Vector of Pointers to Torch models.
 
 };
