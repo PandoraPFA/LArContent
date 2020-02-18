@@ -8,7 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 #include "larpandoracontent/LArVertex/DLVertexFeatureTool.h"
