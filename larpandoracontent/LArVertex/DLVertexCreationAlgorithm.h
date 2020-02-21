@@ -68,7 +68,22 @@ private:
      *
      *  @return The pixel position of the DL vertex for chosen view
      */
-    pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view, const int &lenVecIndex) const;
+    pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
+                             const int &lenVecIndex) const;
+
+    /**
+     *  @brief  Create the training files.
+     *
+     *  @param  out2dVec, the image
+     *  @param  view, string recording what view the image represents
+     *  @param  lenVecIndex, index for m_lenVec
+     *  @param  minx, the minimum x coordinate represented by the image
+     *  @param  nstepx, the length of a pixel in the x direction
+     *  @param  minz, the minimum z coordinate represented by the image
+     *  @param  nstepz, the length of a pixel in the z direction
+     */
+    void CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
+         const int &lenVecIndex, const float &minx, const float &nstepx, const float &minz, const float &nstepz) const;
 
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list
@@ -78,8 +93,9 @@ private:
     unsigned int            m_numClusterCaloHitsPar;          ///< The number of cluster calo hits parameter 
     unsigned int            m_npixels;                        ///< The number of pixels, N, in the N*N square image 
     std::vector<float>      m_lenVec;                         ///< Vector of lengths of the images
-    std::vector<std::shared_ptr<torch::jit::script::Module>> m_pModule; ///< Vector of Pointers to Torch models.
-
+    bool                    m_trainingSetMode;                ///< Whether to train
+    int                     m_trainingLenVecIndex;            ///< Index for m_lenVec to use for output training images
+    std::vector<std::shared_ptr<torch::jit::script::Module>> m_pModule; ///< Vector of Pointers to Torch models
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
