@@ -321,8 +321,8 @@ void DLVertexCreationAlgorithm::CreateTrainingFiles(const std::vector<std::vecto
     double xC=((VertexPosition.GetX()-minx)/nstepx);double zC=((VertexPosition.GetZ()-minz)/nstepz);
     if((int)xC>m_npixels||(int)xC<0||(int)zC>m_npixels||(int)zC<0) return;
 
-    std::ofstream outputStream1("data"+view, std::ios::app);
-    std::ofstream outputStream2("labels"+view, std::ios::app);
+    std::ofstream outputStream1("data"+view+".txt", std::ios::app);
+    std::ofstream outputStream2("labels"+view+".txt", std::ios::app);
 
     for(int i=m_npixels-1;i>-1;i--)
     {
