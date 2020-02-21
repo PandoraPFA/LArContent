@@ -28,6 +28,7 @@ DLVertexCreationAlgorithm::DLVertexCreationAlgorithm() :
     m_lenVec(),
     m_trainingSetMode(false),
     m_trainingLenVecIndex(0),
+    m_lenBuffer(10.0),
     m_pModule()
 {
 }
@@ -164,10 +165,10 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 
     if(length<=0)
     {
-        minx=(*std::min_element(xVec.begin(),xVec.end()))-10.0;
-        minz=(*std::min_element(zVec.begin(),zVec.end()))-10.0;
-        lengthX=(*std::max_element(xVec.begin(),xVec.end())) - (*std::min_element(xVec.begin(),xVec.end()))+20.0;
-        lengthZ=(*std::max_element(zVec.begin(),zVec.end())) - (*std::min_element(zVec.begin(),zVec.end()))+20.0;
+        minx=(*std::min_element(xVec.begin(),xVec.end()))-m_lenBuffer;
+        minz=(*std::min_element(zVec.begin(),zVec.end()))-m_lenBuffer;
+        lengthX=(*std::max_element(xVec.begin(),xVec.end())) - (*std::min_element(xVec.begin(),xVec.end()))+2*m_lenBuffer;
+        lengthZ=(*std::max_element(zVec.begin(),zVec.end())) - (*std::min_element(zVec.begin(),zVec.end()))+2*m_lenBuffer;
         length1=std::max(lengthX, lengthZ);
         nstepx=length1/m_npixels;
         nstepz=length1/m_npixels;
@@ -368,6 +369,9 @@ StatusCode DLVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrainingLenVecIndex", m_trainingLenVecIndex));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "LenBuffer", m_lenBuffer));
 
     return STATUS_CODE_SUCCESS;
 }

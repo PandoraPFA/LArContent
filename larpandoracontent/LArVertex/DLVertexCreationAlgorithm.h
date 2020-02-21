@@ -95,6 +95,7 @@ private:
     std::vector<float>      m_lenVec;                         ///< Vector of lengths of the images
     bool                    m_trainingSetMode;                ///< Whether to train
     int                     m_trainingLenVecIndex;            ///< Index for m_lenVec to use for output training images
+    float                   m_lenBuffer;                      ///< Length of the buffer for scaled images
     std::vector<std::shared_ptr<torch::jit::script::Module>> m_pModule; ///< Vector of Pointers to Torch models
 };
 
