@@ -66,9 +66,9 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
 
         const VertexList *pInputVertexList(NULL);
         std::string vertexListName(m_inputVertexListName);
-        const StatusCode statusCode(PandoraContentApi::GetList(*this, vertexListName.c_str(), pInputVertexList));
+        const StatusCode statusCode1(PandoraContentApi::GetList(*this, vertexListName.c_str(), pInputVertexList));
 
-        if(STATUS_CODE_SUCCESS == statusCode)
+        if(STATUS_CODE_SUCCESS == statusCode1)
         {
             const Vertex * const pDLVertex(pInputVertexList->front());
 
