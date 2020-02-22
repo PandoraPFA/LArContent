@@ -241,7 +241,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 
     if(m_trainingSetMode && (m_trainingLenVecIndex==lenVecIndex))
     {
-        this->CreateTrainingFiles(out2dVec,view,lenVecIndex,minx,nstepx,minz,nstepz);
+        this->CreateTrainingFiles(out2dVec,view,minx,nstepx,minz,nstepz);
         return(CartesianVector(0.f, 0.f, 0.f));
     }
     else
@@ -292,7 +292,7 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::v
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DLVertexCreationAlgorithm::CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
-     const int &lenVecIndex, const float &minx, const float &nstepx, const float &minz, const float &nstepz) const
+     const float &minx, const float &nstepx, const float &minz, const float &nstepz) const
 {
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));

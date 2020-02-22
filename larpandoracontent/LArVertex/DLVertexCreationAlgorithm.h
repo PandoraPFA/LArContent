@@ -76,14 +76,13 @@ private:
      *
      *  @param  out2dVec, the image
      *  @param  view, string recording what view the image represents
-     *  @param  lenVecIndex, index for m_lenVec
      *  @param  minx, the minimum x coordinate represented by the image
      *  @param  nstepx, the length of a pixel in the x direction
      *  @param  minz, the minimum z coordinate represented by the image
      *  @param  nstepz, the length of a pixel in the z direction
      */
     void CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
-         const int &lenVecIndex, const float &minx, const float &nstepx, const float &minz, const float &nstepz) const;
+         const float &minx, const float &nstepx, const float &minz, const float &nstepz) const;
 
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list
