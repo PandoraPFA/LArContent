@@ -53,11 +53,13 @@ private:
      *  @param  positionInput, DL vertex position already calculated for chosen view or (0.f, 0.f, 0.f)
      *  @param  lenVecIndex, index for m_lenVec
      *  @param  vertReconCount, count of the reconstructed 2D DL vertices
+     *  @param  ssBuf, buffer for training file writing
      *
      *  @return The position of the DL vertex for chosen view
      */
     pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *pClusterList, const std::string &view, 
-                             const pandora::CartesianVector &positionInput, const int &lenVecIndex, int &vertReconCount) const;
+                             const pandora::CartesianVector &positionInput, const int &lenVecIndex, int &vertReconCount,
+                             std::stringstream ssBuf[6]) const;
 
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
@@ -80,9 +82,19 @@ private:
      *  @param  nstepx, the length of a pixel in the x direction
      *  @param  minz, the minimum z coordinate represented by the image
      *  @param  nstepz, the length of a pixel in the z direction
+     *  @param  ssBuf, buffer for training file writing
+     *
+     *  @return A flag recording if the end of the function was reached
      */
-    void CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
-         const float &minx, const float &nstepx, const float &minz, const float &nstepz) const;
+    int CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
+         const float &minx, const float &nstepx, const float &minz, const float &nstepz, std::stringstream ssBuf[6]) const;
+
+    /**
+     *  @brief  Write the training files.
+     *
+     *  @param  ssBuf, buffer for training file writing
+     */
+    void WriteTrainingFiles(std::stringstream ssBuf[6]) const;
 
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list

@@ -79,12 +79,18 @@ StatusCode DLVertexCreationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[1], clustersV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], clustersU));
 
+    std::stringstream ssBuf[6];
     std::string viewW="W", viewV="V", viewU="U";
     CartesianVector positionInput(0.f, 0.f, 0.f); int vertReconCount(0);
-    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, 0, vertReconCount));
-    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, 0, vertReconCount));
-    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, 0, vertReconCount));
-    if(m_trainingSetMode && (m_trainingLenVecIndex==0)) return STATUS_CODE_SUCCESS;
+    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, 0, vertReconCount, ssBuf));
+    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, 0, vertReconCount, ssBuf));
+    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, 0, vertReconCount, ssBuf));
+    if(m_trainingSetMode && (m_trainingLenVecIndex==0)) 
+    {
+        if(vertReconCount==(3+m_trainingLenVecIndex*3))
+            this->WriteTrainingFiles(ssBuf);
+        return STATUS_CODE_SUCCESS;
+    }
 
     CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
     for(int i=1; i<m_lenVec.size(); i++)
@@ -96,10 +102,15 @@ StatusCode DLVertexCreationAlgorithm::Run()
         CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V));
         CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U));
 
-        positionW=this->GetDLVertexForView(clustersW, viewW, position3DW, i, vertReconCount);
-        positionV=this->GetDLVertexForView(clustersV, viewV, position3DV, i, vertReconCount);
-        positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, i, vertReconCount);
-        if(m_trainingSetMode && (m_trainingLenVecIndex==i)) return STATUS_CODE_SUCCESS;
+        positionW=this->GetDLVertexForView(clustersW, viewW, position3DW, i, vertReconCount, ssBuf);
+        positionV=this->GetDLVertexForView(clustersV, viewV, position3DV, i, vertReconCount, ssBuf);
+        positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, i, vertReconCount, ssBuf);
+        if(m_trainingSetMode && (m_trainingLenVecIndex==i))
+        {
+            if(vertReconCount==(3+m_trainingLenVecIndex*3))
+                this->WriteTrainingFiles(ssBuf);
+            return STATUS_CODE_SUCCESS;
+        }
     }
 
     if(vertReconCount==3*m_lenVec.size())
@@ -126,7 +137,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
 
 //---------------------------------------------------------------------------------------------------------------------------------
 CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::ClusterList *pClusterList, const std::string &view,
-                const CartesianVector &positionInput, const int &lenVecIndex, int &vertReconCount) const
+                const CartesianVector &positionInput, const int &lenVecIndex, int &vertReconCount, std::stringstream ssBuf[6]) const
 {
     double length(m_lenVec[lenVecIndex]);
     std::vector<double> xVec, zVec, sigma, height;
@@ -241,7 +252,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::Clu
 
     if(m_trainingSetMode && (m_trainingLenVecIndex==lenVecIndex))
     {
-        this->CreateTrainingFiles(out2dVec,view,minx,nstepx,minz,nstepz);
+        vertReconCount+=(this->CreateTrainingFiles(out2dVec,view,minx,nstepx,minz,nstepz,ssBuf));
         return(CartesianVector(0.f, 0.f, 0.f));
     }
     else
@@ -291,8 +302,8 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::v
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-void DLVertexCreationAlgorithm::CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
-     const float &minx, const float &nstepx, const float &minz, const float &nstepz) const
+int DLVertexCreationAlgorithm::CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
+     const float &minx, const float &nstepx, const float &minz, const float &nstepz, std::stringstream ssBuf[6]) const
 {
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
@@ -312,31 +323,44 @@ void DLVertexCreationAlgorithm::CreateTrainingFiles(const std::vector<std::vecto
                   ((targetVertex.GetX()>-362.6620483395)&&(targetVertex.GetX()<-3.24703979450001 )));
     flag=flag &&  ((targetVertex.GetY()<603.92376709   )&&(targetVertex.GetY()>-603.92376709     ));
     flag=flag &&  ((targetVertex.GetZ()<1393.463745117 )&&(targetVertex.GetZ()>-0.876220703000058));
-    if(!flag) return;
+    if(!flag) return(0);
 
-    CartesianVector VertexPosition(0.f, 0.f, 0.f);
-    if(view=="W") VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_W));
-    if(view=="V") VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_V));
-    if(view=="U") VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_U));
+    CartesianVector VertexPosition(0.f, 0.f, 0.f); int index(0);
+    if(view=="W") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_W));index=0;}
+    if(view=="V") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_V));index=1;}
+    if(view=="U") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_U));index=2;}
 
     double xC=((VertexPosition.GetX()-minx)/nstepx);double zC=((VertexPosition.GetZ()-minz)/nstepz);
-    if((int)xC>m_npixels||(int)xC<0||(int)zC>m_npixels||(int)zC<0) return;
-
-    std::ofstream outputStream1("data"+view+".txt", std::ios::app);
-    std::ofstream outputStream2("labels"+view+".txt", std::ios::app);
+    if((int)xC>m_npixels||(int)xC<0||(int)zC>m_npixels||(int)zC<0) return(0);
 
     for(int i=m_npixels-1;i>-1;i--)
     {
         for(int j=0;j<m_npixels;j++)
         {
-                outputStream1 << out2dVec[j][i] << " ";
+                ssBuf[index] << out2dVec[j][i] << " ";
         }
-                outputStream1 << std::endl;
+                ssBuf[index] << "\n";
     }
-    outputStream2 << xC << " " << zC << std::endl;
+    ssBuf[3+index] << xC << " " << zC << "\n";
 
-    outputStream1.close();
-    outputStream2.close();
+    return(1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+void DLVertexCreationAlgorithm::WriteTrainingFiles(std::stringstream ssBuf[6]) const
+{
+    std::vector<std::string> view = {"W", "V", "U"};
+    for(int i=0; i<3;i++)
+    {
+        std::ofstream outputStream1("data"+view[i]+".txt", std::ios::app);
+        std::ofstream outputStream2("labels"+view[i]+".txt", std::ios::app);
+        
+        outputStream1 << ssBuf[i].rdbuf();
+        outputStream2 << ssBuf[3+i].rdbuf();
+
+        outputStream1.close();
+        outputStream2.close();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
