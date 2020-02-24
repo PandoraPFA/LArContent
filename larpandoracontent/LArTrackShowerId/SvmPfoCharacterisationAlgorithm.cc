@@ -128,8 +128,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 
     const MCParticleList *pMCParticleList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
-	
-	//----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
@@ -146,16 +144,14 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 	const int nHitsInPfoTotal(allHitsInPfo.size());
 	int nHitsInBestMCParticleTotal(-1), bestMCParticlePdgCode(0);
 	int nHitsSharedWithBestMCParticleTotal(-1);
-    CartesianVector threeDVertexPosition(0.f, 0.f, 0.f); // Mousam Vertex
+    CartesianVector threeDVertexPosition(0.f, 0.f, 0.f);
     float hitsShower = 0;
 	float hitsTrack = 0;
 	const LArMCParticleHelper::MCParticleToSharedHitsVector &mcParticleToSharedHitsVector(pfoToMCHitSharingMap.at(pPfo));
 	for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitListPair : mcParticleToSharedHitsVector)
 	{
 	    const pandora::MCParticle *const pAssociatedMCParticle(mcParticleCaloHitListPair.first);
-		//std::cout << "MCParticle: " << pAssociatedMCParticle->GetParticleId() << std::endl;
 	    const CaloHitList &allMCHits(targetMCParticleToHitsMap.at(pAssociatedMCParticle));
-		//std::cout << "allMCHits: " << allMCHits.size() << std::endl;	  
 	    const CaloHitList &associatedMCHits(mcParticleCaloHitListPair.second);
 
 		if ((abs(pAssociatedMCParticle->GetParticleId()) == 11) || (pAssociatedMCParticle->GetParticleId()) == 22)
@@ -166,7 +162,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 		{
 			hitsTrack = hitsTrack + associatedMCHits.size();
 		}
-		//std::cout << "associatedMCHits: " << associatedMCHits.size() << std::endl;
 	    if (static_cast<int>(associatedMCHits.size()) > nHitsSharedWithBestMCParticleTotal)
 	    {
 		 nHitsSharedWithBestMCParticleTotal = associatedMCHits.size();
@@ -174,32 +169,24 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 		 nHitsInBestMCParticleTotal = allMCHits.size();
 
 		 bestMCParticlePdgCode = pAssociatedMCParticle->GetParticleId();               
-		 threeDVertexPosition = pAssociatedMCParticle->GetVertex(); // Mousam Vertex
+		 threeDVertexPosition = pAssociatedMCParticle->GetVertex();
 	    }
 	}		
 
 	float trackShowerHitsRatio; 
 	trackShowerHitsRatio = hitsTrack/(hitsTrack + hitsShower);
-
 	int trueTrackInt = (trackShowerHitsRatio >= 0.5 ? 1 : 0);
     int pdgCode = bestMCParticlePdgCode;
-
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueTrackInt", trueTrackInt);
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pdgCode", pdgCode);
     
-	//-----------------------------------------------------------------------------------------------------------
-
-    const float completeness((nHitsInBestMCParticleTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
+	const float completeness((nHitsInBestMCParticleTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
     const float purity((nHitsInPfoTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInPfoTotal) : 0.f);
 
-    //------------------------------Vertex-----------------------------------------------------------------------
+    //------------------------------ Calculating Vertex----------------------------------------------------
+
     float xVertexPos = threeDVertexPosition.GetX();
     float yVertexPos = threeDVertexPosition.GetY();
     float zVertexPos = threeDVertexPosition.GetZ();
 
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "xVertexPos", xVertexPos);
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "yVertexPos", yVertexPos);
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "zVertexPos", zVertexPos);
 	//----------------------------mischaracterised Pfos----------------------------------------------------
 
 	CaloHitList checkHitListW;
@@ -243,11 +230,19 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 	}
 	
 	float showerProbability = (static_cast<float>(showerCount))/(static_cast<float>(hitToMCMap.size()));
-
 	mischaracterisedPfo = ((((showerProbability < 0.5) && (trueTrackInt == 0)) || ((showerProbability > 0.5) && (trueTrackInt == 1))) ? 1 : 0);
+
+	// Writing other useful info
+
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "trueTrackInt", trueTrackInt);
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pdgCode", pdgCode);
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "xVertexPos", xVertexPos);
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "yVertexPos", yVertexPos);
+    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "zVertexPos", zVertexPos);
     PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mischaracterisedPfo", mischaracterisedPfo);
-    //--------------------------------------------------------------------------------------------------------------------------------------
-    // Start variable writing
+
+    // Writing the 13 BDT input variables
+
     const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
 
     const LArMvaHelper::MvaFeatureVector threeDLinearFitFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDLinearFitFeatureTool>(chosenFeatureToolVector, this, pPfo));
