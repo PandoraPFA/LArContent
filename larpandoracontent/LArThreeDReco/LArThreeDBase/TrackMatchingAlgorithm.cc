@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewTrackMatchingAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional tracks tracks algorithm base class.
+ *  @brief  Implementation of the three view track matching algorithm class.
  *
  *  $Log: $
  */
@@ -14,7 +14,7 @@
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TrackMatchingAlgorithm.h"
 
 using namespace pandora;
 
@@ -22,7 +22,7 @@ namespace lar_content
 {
 
 template<typename T>
-ThreeDTracksBaseAlgorithm<T>::ThreeDTracksBaseAlgorithm() :
+ThreeViewTrackMatchingAlgorithm<T>::ThreeViewTrackMatchingAlgorithm() :
     m_slidingFitWindow(20),
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f)
@@ -32,14 +32,14 @@ ThreeDTracksBaseAlgorithm<T>::ThreeDTracksBaseAlgorithm() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-ThreeDTracksBaseAlgorithm<T>::~ThreeDTracksBaseAlgorithm()
+ThreeViewTrackMatchingAlgorithm<T>::~ThreeViewTrackMatchingAlgorithm()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitResult(const Cluster *const pCluster) const
+const TwoDSlidingFitResult &ThreeViewTrackMatchingAlgorithm<T>::GetCachedSlidingFitResult(const Cluster *const pCluster) const
 {
     TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
 
@@ -52,7 +52,7 @@ const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitRes
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPositionMap)
+bool ThreeViewTrackMatchingAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPositionMap)
 {
     bool changesMade(false);
 
@@ -63,10 +63,10 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
     for (const Cluster *pCurrentCluster : splitClusters)
     {
         CartesianPointVector splitPositions(splitPositionMap.at(pCurrentCluster));
-        std::sort(splitPositions.begin(), splitPositions.end(), ThreeDTracksBaseAlgorithm::SortSplitPositions);
+        std::sort(splitPositions.begin(), splitPositions.end(), ThreeViewTrackMatchingAlgorithm::SortSplitPositions);
 
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCurrentCluster));
-        const std::string clusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
+        const std::string &clusterListName(this->GetClusterListName(hitType));
 
         if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -98,7 +98,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster,
+bool ThreeViewTrackMatchingAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster,
     const Cluster *&pHighXCluster) const
 {
     CartesianVector lowXEnd(0.f, 0.f, 0.f), highXEnd(0.f, 0.f, 0.f);
@@ -159,7 +159,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool ThreeDTracksBaseAlgorithm<T>::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
+bool ThreeViewTrackMatchingAlgorithm<T>::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
 {
     return (lhs.GetX() < rhs.GetX());
 }
@@ -167,7 +167,7 @@ bool ThreeDTracksBaseAlgorithm<T>::SortSplitPositions(const pandora::CartesianVe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
+void ThreeViewTrackMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     try
     {
@@ -181,22 +181,22 @@ void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNew
         return;
     }
 
-    ThreeDBaseAlgorithm<T>::UpdateForNewCluster(pNewCluster);
+    ThreeViewMatchingAlgorithm<T>::UpdateForNewCluster(pNewCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
+void ThreeViewTrackMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     this->RemoveFromSlidingFitCache(pDeletedCluster);
-    ThreeDBaseAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
+    ThreeViewMatchingAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDTracksBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+void ThreeViewTrackMatchingAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
@@ -218,7 +218,7 @@ void ThreeDTracksBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+void ThreeViewTrackMatchingAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
     // TODO Correct these placeholder parameters
     pfoParameters.m_particleId = MU_MINUS; // Track
@@ -234,7 +234,7 @@ void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoPa
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
+void ThreeViewTrackMatchingAlgorithm<T>::PreparationStep()
 {
     this->PreparationStep(this->m_clusterListU);
     this->PreparationStep(this->m_clusterListV);
@@ -244,7 +244,7 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::PreparationStep(ClusterList &clusterList)
+void ThreeViewTrackMatchingAlgorithm<T>::PreparationStep(ClusterList &clusterList)
 {
     for (ClusterList::iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
     {
@@ -268,16 +268,16 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep(ClusterList &clusterList)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::TidyUp()
+void ThreeViewTrackMatchingAlgorithm<T>::TidyUp()
 {
     m_slidingFitResultMap.clear();
-    return ThreeDBaseAlgorithm<T>::TidyUp();
+    return ThreeViewMatchingAlgorithm<T>::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCluster)
+void ThreeViewTrackMatchingAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCluster)
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
@@ -289,7 +289,7 @@ void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *const pCluster)
+void ThreeViewTrackMatchingAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *const pCluster)
 {
     TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pCluster);
 
@@ -300,7 +300,7 @@ void ThreeDTracksBaseAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *cons
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-StatusCode ThreeDTracksBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeViewTrackMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
@@ -313,11 +313,11 @@ StatusCode ThreeDTracksBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandl
         "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
-    return ThreeDBaseAlgorithm<T>::ReadSettings(xmlHandle);
+    return ThreeViewMatchingAlgorithm<T>::ReadSettings(xmlHandle);
 }
 
-template class ThreeDTracksBaseAlgorithm<TransverseOverlapResult>;
-template class ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>;
-template class ThreeDTracksBaseAlgorithm<FragmentOverlapResult>;
+template class ThreeViewTrackMatchingAlgorithm<TransverseOverlapResult>;
+template class ThreeViewTrackMatchingAlgorithm<LongitudinalOverlapResult>;
+template class ThreeViewTrackMatchingAlgorithm<FragmentOverlapResult>;
 
 } // namespace lar_content

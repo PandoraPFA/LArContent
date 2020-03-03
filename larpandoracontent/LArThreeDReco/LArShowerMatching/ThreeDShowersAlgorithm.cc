@@ -57,7 +57,7 @@ void ThreeDShowersAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluste
         return;
     }
 
-    ThreeDBaseAlgorithm<ShowerOverlapResult>::UpdateForNewCluster(pNewCluster);
+    ThreeViewMatchingAlgorithm<ShowerOverlapResult>::UpdateForNewCluster(pNewCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ void ThreeDShowersAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluste
 void ThreeDShowersAlgorithm::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     this->RemoveFromSlidingFitCache(pDeletedCluster);
-    ThreeDBaseAlgorithm<ShowerOverlapResult>::UpdateUponDeletion(pDeletedCluster);
+    ThreeViewMatchingAlgorithm<ShowerOverlapResult>::UpdateUponDeletion(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -87,21 +87,6 @@ void ThreeDShowersAlgorithm::SelectInputClusters(const ClusterList *const pInput
 
         selectedClusterList.push_back(pCluster);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDShowersAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
-{
-    // TODO Correct these placeholder parameters
-    pfoParameters.m_particleId = E_MINUS; // Shower
-    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-    pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -141,7 +126,7 @@ void ThreeDShowersAlgorithm::PreparationStep(ClusterList &clusterList)
 void ThreeDShowersAlgorithm::TidyUp()
 {
     m_slidingFitResultMap.clear();
-    return ThreeDBaseAlgorithm<ShowerOverlapResult>::TidyUp();
+    return ThreeViewMatchingAlgorithm<ShowerOverlapResult>::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -389,7 +374,7 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         ShowerTensorTool *const pShowerTensorTool(dynamic_cast<ShowerTensorTool*>(*iter));
 
-        if (NULL == pShowerTensorTool)
+        if (!pShowerTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pShowerTensorTool);
@@ -418,7 +403,7 @@ StatusCode ThreeDShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinShowerMatchedPoints", m_minShowerMatchedPoints));
 
-    return ThreeDBaseAlgorithm<ShowerOverlapResult>::ReadSettings(xmlHandle);
+    return ThreeViewMatchingAlgorithm<ShowerOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

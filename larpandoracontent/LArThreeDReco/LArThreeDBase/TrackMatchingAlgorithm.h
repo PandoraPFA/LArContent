@@ -1,16 +1,16 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewTrackMatchingAlgorithm.h
  *
- *  @brief  Header file for the three dimensional tracks algorithm base class.
+ *  @brief  Header file for the three view track matching algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_TRACKS_BASE_ALGORITHM_H
-#define LAR_THREE_D_TRACKS_BASE_ALGORITHM_H 1
+#ifndef LAR_THREE_VIEW_TRACK_MATCHING_ALGORITHM_H
+#define LAR_THREE_VIEW_TRACK_MATCHING_ALGORITHM_H 1
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingAlgorithm.h"
 
 #include <unordered_map>
 
@@ -25,18 +25,18 @@ typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointVecto
  *  @brief  ThreeDTransverseTracksAlgorithm class
  */
 template<typename T>
-class ThreeDTracksBaseAlgorithm : public ThreeDBaseAlgorithm<T>
+class ThreeViewTrackMatchingAlgorithm : public ThreeViewMatchingAlgorithm<T>
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ThreeDTracksBaseAlgorithm();
+    ThreeViewTrackMatchingAlgorithm();
 
     /**
      *  @brief  Destructor
      */
-    virtual ~ThreeDTracksBaseAlgorithm();
+    virtual ~ThreeViewTrackMatchingAlgorithm();
 
     /**
      *  @brief  Get a sliding fit result from the algorithm cache
@@ -125,11 +125,11 @@ protected:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-inline unsigned int ThreeDTracksBaseAlgorithm<T>::GetSlidingFitWindow() const
+inline unsigned int ThreeViewTrackMatchingAlgorithm<T>::GetSlidingFitWindow() const
 {
     return m_slidingFitWindow;
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_D_TRACKS_BASE_ALGORITHM_H
+#endif // #ifndef LAR_THREE_VIEW_TRACK_MATCHING_ALGORITHM_H

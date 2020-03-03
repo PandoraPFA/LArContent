@@ -229,7 +229,7 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
     {
         LongitudinalTensorTool *const pLongitudinalTensorTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
 
-        if (NULL == pLongitudinalTensorTool)
+        if (!pLongitudinalTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pLongitudinalTensorTool);
@@ -250,7 +250,7 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
     if (m_samplingPitch < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_INVALID_PARAMETER;
 
-    return ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>::ReadSettings(xmlHandle);
+    return ThreeViewTrackMatchingAlgorithm<LongitudinalOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

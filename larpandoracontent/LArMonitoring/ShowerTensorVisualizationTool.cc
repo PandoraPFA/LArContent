@@ -92,9 +92,9 @@ bool ShowerTensorVisualizationTool::Run(ThreeDShowersAlgorithm *const pAlgorithm
 
         if (m_showContext)
         {
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListU()), "InputClusterListU", GRAY));
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListV()), "InputClusterListV", GRAY));
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListW()), "InputClusterListW", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_U)), "InputClusterListU", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_V)), "InputClusterListV", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_W)), "InputClusterListW", GRAY));
         }
 
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));

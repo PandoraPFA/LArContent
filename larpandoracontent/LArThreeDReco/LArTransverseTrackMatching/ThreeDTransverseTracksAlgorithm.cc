@@ -318,7 +318,7 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     {
         TransverseTensorTool *const pTransverseTensorTool(dynamic_cast<TransverseTensorTool*>(*iter));
 
-        if (NULL == pTransverseTensorTool)
+        if (!pTransverseTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pTransverseTensorTool);
@@ -348,7 +348,7 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSamplingPointsPerLayer", m_minSamplingPointsPerLayer));
 
-    return ThreeDTracksBaseAlgorithm<TransverseOverlapResult>::ReadSettings(xmlHandle);
+    return ThreeViewTrackMatchingAlgorithm<TransverseOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

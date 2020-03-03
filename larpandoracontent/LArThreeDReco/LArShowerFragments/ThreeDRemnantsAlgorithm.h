@@ -13,7 +13,7 @@
 
 #include "larpandoracontent/LArObjects/LArOverlapTensor.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingAlgorithm.h"
 
 namespace lar_content
 {
@@ -25,7 +25,7 @@ class RemnantTensorTool;
 /**
  *  @brief  ThreeDRemnantsAlgorithm class
  */
-class ThreeDRemnantsAlgorithm : public ThreeDBaseAlgorithm<float>
+class ThreeDRemnantsAlgorithm : public ThreeViewMatchingAlgorithm<float>
 {
 public:
     /**
@@ -34,7 +34,6 @@ public:
     ThreeDRemnantsAlgorithm();
 
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
-    void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 private:
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);

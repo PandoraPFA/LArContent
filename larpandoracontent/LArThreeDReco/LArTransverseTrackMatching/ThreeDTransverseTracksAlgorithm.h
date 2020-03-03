@@ -13,7 +13,7 @@
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TrackMatchingAlgorithm.h"
 
 namespace lar_content
 {
@@ -25,7 +25,7 @@ class TransverseTensorTool;
 /**
  *  @brief  ThreeDTransverseTracksAlgorithm class
  */
-class ThreeDTransverseTracksAlgorithm : public ThreeDTracksBaseAlgorithm<TransverseOverlapResult>
+class ThreeDTransverseTracksAlgorithm : public ThreeViewTrackMatchingAlgorithm<TransverseOverlapResult>
 {
 public:
     /**

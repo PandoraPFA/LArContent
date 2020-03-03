@@ -171,8 +171,7 @@ bool MissingTrackSegmentTool::PassesParticleChecks(ThreeDTransverseTracksAlgorit
 void MissingTrackSegmentTool::GetCandidateClusters(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
     ClusterList &candidateClusters) const
 {
-    const ClusterList &clusterList((TPC_VIEW_U == particle.m_shortHitType) ? pAlgorithm->GetInputClusterListU() :
-        (TPC_VIEW_V == particle.m_shortHitType) ? pAlgorithm->GetInputClusterListV() : pAlgorithm->GetInputClusterListW());
+    const ClusterList &clusterList(pAlgorithm->GetInputClusterList(particle.m_shortHitType));
 
     for (ClusterList::const_iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; ++iter)
     {

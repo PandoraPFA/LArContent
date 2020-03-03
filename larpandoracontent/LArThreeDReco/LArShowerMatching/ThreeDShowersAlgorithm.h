@@ -13,7 +13,7 @@
 #include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingAlgorithm.h"
 
 namespace lar_content
 {
@@ -25,7 +25,7 @@ class ShowerTensorTool;
 /**
  *  @brief  ThreeDShowersAlgorithm class
  */
-class ThreeDShowersAlgorithm : public ThreeDBaseAlgorithm<ShowerOverlapResult>
+class ThreeDShowersAlgorithm : public ThreeViewMatchingAlgorithm<ShowerOverlapResult>
 {
 public:
     /**
@@ -43,7 +43,6 @@ public:
     void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
-    void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 private:
     /**

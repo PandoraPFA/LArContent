@@ -46,21 +46,6 @@ void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInpu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantsAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
-{
-    // TODO Correct these placeholder parameters
-    pfoParameters.m_particleId = E_MINUS; // Shower
-    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-    pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     // Requirements on X matching
@@ -134,7 +119,7 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         RemnantTensorTool *const pRemnantTensorTool(dynamic_cast<RemnantTensorTool*>(*iter));
 
-        if (NULL == pRemnantTensorTool)
+        if (!pRemnantTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pRemnantTensorTool);
@@ -152,7 +137,7 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    return ThreeDBaseAlgorithm<float>::ReadSettings(xmlHandle);
+    return ThreeViewMatchingAlgorithm<float>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

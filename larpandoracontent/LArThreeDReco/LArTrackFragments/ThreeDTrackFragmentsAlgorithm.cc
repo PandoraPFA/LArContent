@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional fragments algorithm base class.
+ *  @brief  Implementation of the three dimensional fragments algorithm class.
  *
  *  $Log: $
  */
@@ -165,8 +165,7 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
     const TwoDSlidingFitResult &fitResult2((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) :
         (TPC_VIEW_V == missingHitType) ? this->GetCachedSlidingFitResult(pClusterW) : this->GetCachedSlidingFitResult(pClusterV));
 
-    const ClusterList &inputClusterList((TPC_VIEW_U == missingHitType) ? this->GetInputClusterListU() :
-        (TPC_VIEW_V == missingHitType) ? this->GetInputClusterListV() : this->GetInputClusterListW());
+    const ClusterList &inputClusterList(this->GetInputClusterList(missingHitType));
 
     const Cluster *pBestMatchedCluster(NULL);
     const StatusCode statusCode(this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult));
@@ -644,7 +643,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     {
         FragmentTensorTool *const pFragmentTensorTool(dynamic_cast<FragmentTensorTool*>(*iter));
 
-        if (NULL == pFragmentTensorTool)
+        if (!pFragmentTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pFragmentTensorTool);
@@ -670,7 +669,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHand
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedHits", m_minMatchedHits));
 
-    return ThreeDTracksBaseAlgorithm<FragmentOverlapResult>::ReadSettings(xmlHandle);
+    return ThreeViewTrackMatchingAlgorithm<FragmentOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

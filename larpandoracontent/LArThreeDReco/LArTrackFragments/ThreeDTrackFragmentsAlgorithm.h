@@ -13,7 +13,7 @@
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TrackMatchingAlgorithm.h"
 
 #include <unordered_map>
 
@@ -27,7 +27,7 @@ class FragmentTensorTool;
 /**
  *  @brief  ThreeDTrackFragmentsAlgorithm class
  */
-class ThreeDTrackFragmentsAlgorithm : public ThreeDTracksBaseAlgorithm<FragmentOverlapResult>
+class ThreeDTrackFragmentsAlgorithm : public ThreeViewTrackMatchingAlgorithm<FragmentOverlapResult>
 {
 public:
     /**
