@@ -10,7 +10,6 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
 #include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 

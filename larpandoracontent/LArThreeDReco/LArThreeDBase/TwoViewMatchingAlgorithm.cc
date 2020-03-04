@@ -10,7 +10,6 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingAlgorithm.h"
@@ -84,7 +83,7 @@ void TwoViewMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDelet
     if (m_clusterList2.end() != iter2)
         m_clusterList2.erase(iter2);
 
-    m_overlapTensor.RemoveCluster(pDeletedCluster);
+    m_overlapMatrix.RemoveCluster(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -168,7 +167,7 @@ void TwoViewMatchingAlgorithm<T>::SelectAllInputClusters()
 template <typename T>
 void TwoViewMatchingAlgorithm<T>::TidyUp()
 {
-    m_overlapTensor.Clear();
+    m_overlapMatrix.Clear();
     m_hitTypeToIndexMap.clear();
 
     m_pInputClusterList1 = nullptr;
@@ -207,7 +206,6 @@ StatusCode TwoViewMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle
     return MatchingBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
-template class TwoViewMatchingAlgorithm<TransverseOverlapResult>;
-template class TwoViewMatchingAlgorithm<LongitudinalOverlapResult>;
+template class TwoViewMatchingAlgorithm<float>;
 
 } // namespace lar_content

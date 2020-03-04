@@ -10,7 +10,7 @@
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/MatchingBaseAlgorithm.h"
 
-#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
+#include "larpandoracontent/LArObjects/LArOverlapMatrix.h"
 
 #include <unordered_map>
 
@@ -24,7 +24,7 @@ template<typename T>
 class TwoViewMatchingAlgorithm : public MatchingBaseAlgorithm
 {
 public:
-    typedef OverlapTensor<T> TensorType;
+    typedef OverlapMatrix<T> MatrixType;
 
     /**
      *  @brief  Default constructor
@@ -70,7 +70,7 @@ protected:
     pandora::ClusterList        m_clusterList1;                 ///< The selected modified cluster list 1
     pandora::ClusterList        m_clusterList2;                 ///< The selected modified cluster list 2
 
-    TensorType                  m_overlapTensor;                ///< The overlap matrix TODO
+    MatrixType                  m_overlapMatrix;                ///< The overlap matrix
 
 private:
     typedef std::unordered_map<pandora::HitType, unsigned int> HitTypeToIndexMap;
