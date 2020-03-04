@@ -11,7 +11,6 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewTrackMatchingAlgorithm.h"
@@ -47,121 +46,6 @@ const TwoDSlidingFitResult &ThreeViewTrackMatchingAlgorithm<T>::GetCachedSliding
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return iter->second;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-bool ThreeViewTrackMatchingAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPositionMap)
-{
-    bool changesMade(false);
-
-    ClusterList splitClusters;
-    for (const auto &mapEntry : splitPositionMap) splitClusters.push_back(mapEntry.first);
-    splitClusters.sort(LArClusterHelper::SortByNHits);
-
-    for (const Cluster *pCurrentCluster : splitClusters)
-    {
-        CartesianPointVector splitPositions(splitPositionMap.at(pCurrentCluster));
-        std::sort(splitPositions.begin(), splitPositions.end(), ThreeViewTrackMatchingAlgorithm::SortSplitPositions);
-
-        const HitType hitType(LArClusterHelper::GetClusterHitType(pCurrentCluster));
-        const std::string &clusterListName(this->GetClusterListName(hitType));
-
-        if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
-
-        for (CartesianPointVector::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
-        {
-            const Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
-            this->UpdateUponDeletion(pCurrentCluster);
-
-            if (this->MakeClusterSplit(*sIter, pCurrentCluster, pLowXCluster, pHighXCluster))
-            {
-                changesMade = true;
-                this->UpdateForNewCluster(pLowXCluster);
-                this->UpdateForNewCluster(pHighXCluster);
-                pCurrentCluster = pHighXCluster;
-            }
-            else
-            {
-                this->UpdateForNewCluster(pCurrentCluster);
-            }
-        }
-    }
-
-    return changesMade;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-bool ThreeViewTrackMatchingAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster,
-    const Cluster *&pHighXCluster) const
-{
-    CartesianVector lowXEnd(0.f, 0.f, 0.f), highXEnd(0.f, 0.f, 0.f);
-
-    try
-    {
-        LArPointingCluster pointingCluster(pCurrentCluster);
-        const bool innerIsLowX(pointingCluster.GetInnerVertex().GetPosition().GetX() < pointingCluster.GetOuterVertex().GetPosition().GetX());
-        lowXEnd = (innerIsLowX ? pointingCluster.GetInnerVertex().GetPosition() : pointingCluster.GetOuterVertex().GetPosition());
-        highXEnd = (innerIsLowX ? pointingCluster.GetOuterVertex().GetPosition() : pointingCluster.GetInnerVertex().GetPosition());
-    }
-    catch (const StatusCodeException &) {return false;}
-
-    const CartesianVector lowXUnitVector((lowXEnd - splitPosition).GetUnitVector());
-    const CartesianVector highXUnitVector((highXEnd - splitPosition).GetUnitVector());
-
-    CaloHitList caloHitList;
-    pCurrentCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-
-    std::string originalListName, fragmentListName;
-    const ClusterList clusterList(1, pCurrentCluster);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, originalListName, fragmentListName));
-
-    pLowXCluster = NULL;
-    pHighXCluster = NULL;
-
-    for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
-    {
-        const CaloHit *const pCaloHit = *hIter;
-        const CartesianVector unitVector((pCaloHit->GetPositionVector() - splitPosition).GetUnitVector());
-
-        const float dotProductLowX(unitVector.GetDotProduct(lowXUnitVector));
-        const float dotProductHighX(unitVector.GetDotProduct(highXUnitVector));
-        const Cluster *&pClusterToModify((dotProductLowX > dotProductHighX) ? pLowXCluster : pHighXCluster);
-
-        if (NULL == pClusterToModify)
-        {
-            PandoraContentApi::Cluster::Parameters parameters;
-            parameters.m_caloHitList.push_back(pCaloHit);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pClusterToModify));
-        }
-        else
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pClusterToModify, pCaloHit));
-        }
-    }
-
-    if ((NULL == pLowXCluster) || (NULL == pHighXCluster))
-    {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, originalListName, fragmentListName));
-        return false;
-    }
-
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, fragmentListName, originalListName));
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-bool ThreeViewTrackMatchingAlgorithm<T>::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
-{
-    return (lhs.GetX() < rhs.GetX());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
