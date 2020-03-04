@@ -1,14 +1,14 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeViewRemnantsAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional remnants algorithm class.
+ *  @brief  Implementation of the three view remnants algorithm class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeViewRemnantsAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -18,7 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ThreeDRemnantsAlgorithm::ThreeDRemnantsAlgorithm() :
+ThreeViewRemnantsAlgorithm::ThreeViewRemnantsAlgorithm() :
     m_nMaxTensorToolRepeats(1000),
     m_minClusterCaloHits(5),
     m_xOverlapWindow(2.f),
@@ -28,7 +28,7 @@ ThreeDRemnantsAlgorithm::ThreeDRemnantsAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+void ThreeViewRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
@@ -46,7 +46,7 @@ void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInpu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
+void ThreeViewRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     // Requirements on X matching
     float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
@@ -87,7 +87,7 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantsAlgorithm::ExamineTensor()
+void ThreeViewRemnantsAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
@@ -109,7 +109,7 @@ void ThreeDRemnantsAlgorithm::ExamineTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeViewRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,

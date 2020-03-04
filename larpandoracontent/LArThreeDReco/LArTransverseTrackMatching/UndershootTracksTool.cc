@@ -32,7 +32,7 @@ UndershootTracksTool::UndershootTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
+void UndershootTracksTool::GetIteratorListModifications(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
     ModificationList &modificationList) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
@@ -126,7 +126,7 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool UndershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const CartesianVector &splitPosition,
+bool UndershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const CartesianVector &splitPosition,
     const bool isALowestInX) const
 {
     try

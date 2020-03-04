@@ -24,7 +24,7 @@ ConnectedRemnantsTool::ConnectedRemnantsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ConnectedRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool ConnectedRemnantsTool::Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;

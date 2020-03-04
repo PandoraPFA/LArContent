@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeViewShowersAlgorithm.h
  *
- *  @brief  Header file for the three dimensional showers algorithm class.
+ *  @brief  Header file for the three view showers algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_SHOWERS_ALGORITHM_H
-#define LAR_THREE_D_SHOWERS_ALGORITHM_H 1
+#ifndef LAR_THREE_VIEW_SHOWERS_ALGORITHM_H
+#define LAR_THREE_VIEW_SHOWERS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -23,15 +23,15 @@ class ShowerTensorTool;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDShowersAlgorithm class
+ *  @brief  ThreeViewShowersAlgorithm class
  */
-class ThreeDShowersAlgorithm : public ThreeViewMatchingAlgorithm<ShowerOverlapResult>
+class ThreeViewShowersAlgorithm : public ThreeViewMatchingAlgorithm<ShowerOverlapResult>
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ThreeDShowersAlgorithm();
+    ThreeViewShowersAlgorithm();
 
     /**
      *  @brief  Get a sliding shower fit result from the algorithm cache
@@ -174,7 +174,7 @@ private:
 class ShowerTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeDShowersAlgorithm::TensorType TensorType;
+    typedef ThreeViewShowersAlgorithm::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
@@ -185,9 +185,9 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_D_SHOWERS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_VIEW_SHOWERS_ALGORITHM_H

@@ -23,7 +23,7 @@ MatchedEndPointsTool::MatchedEndPointsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MatchedEndPointsTool::Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool MatchedEndPointsTool::Run(ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;

@@ -8,7 +8,7 @@
 #ifndef CLEAR_TRACK_FRAGMENTS_TOOL_H
 #define CLEAR_TRACK_FRAGMENTS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeViewTrackFragmentsAlgorithm.h"
 
 namespace lar_content
 {
@@ -24,7 +24,7 @@ public:
      */
     ClearTrackFragmentsTool();
 
-    bool Run(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -36,7 +36,7 @@ private:
      *
      *  @return boolean
      */
-    bool FindTrackFragments(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor) const;
+    bool FindTrackFragments(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor) const;
 
     /**
      *  @brief  Get the list of elements connected to a given cluster and check its suitability (no ambiguities)
@@ -74,7 +74,7 @@ private:
      *  @param  overlapResult the overlap result
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
+    void ProcessTensorElement(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
         const TensorType::OverlapResult &overlapResult, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
@@ -88,7 +88,7 @@ private:
      *  @param  badClusters the set of clusters that should not be dereferenced
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void Recluster(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster, const pandora::CaloHitList &daughterHits,
+    void Recluster(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster, const pandora::CaloHitList &daughterHits,
         const pandora::CaloHitList &separateHits, pandora::ClusterSet &deletedClusters, pandora::ClusterSet &badClusters, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
@@ -98,7 +98,7 @@ private:
      *  @param  modifiedClusters the list of clusters to rebuild
      *  @param  newClusters the list of new clusters
      */
-    void RebuildClusters(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const pandora::ClusterList &modifiedClusters, pandora::ClusterList &newClusters) const;
+    void RebuildClusters(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const pandora::ClusterList &modifiedClusters, pandora::ClusterList &newClusters) const;
 
     /**
      *  @brief  Get a list of the tensor key clusters for which tensor elements have been impacted by fragmentation operations

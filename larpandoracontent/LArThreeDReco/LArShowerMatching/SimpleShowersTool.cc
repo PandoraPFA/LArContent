@@ -24,7 +24,7 @@ SimpleShowersTool::SimpleShowersTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SimpleShowersTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool SimpleShowersTool::Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;

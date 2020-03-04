@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeViewTrackFragmentsAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional fragments algorithm class.
+ *  @brief  Implementation of the three view fragments algorithm class.
  *
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeViewTrackFragmentsAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ThreeDTrackFragmentsAlgorithm::ThreeDTrackFragmentsAlgorithm() :
+ThreeViewTrackFragmentsAlgorithm::ThreeViewTrackFragmentsAlgorithm() :
     m_nMaxTensorToolRepeats(1000),
     m_minXOverlap(3.f),
     m_minXOverlapFraction(0.8f),
@@ -30,7 +30,7 @@ ThreeDTrackFragmentsAlgorithm::ThreeDTrackFragmentsAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluster)
+void ThreeViewTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     try
     {
@@ -99,7 +99,7 @@ void ThreeDTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const pNe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::RebuildClusters(const ClusterList &rebuildList, ClusterList &newClusters) const
+void ThreeViewTrackFragmentsAlgorithm::RebuildClusters(const ClusterList &rebuildList, ClusterList &newClusters) const
 {
     const ClusterList *pNewClusterList = NULL;
     std::string oldClusterListName, newClusterListName;
@@ -115,7 +115,7 @@ void ThreeDTrackFragmentsAlgorithm::RebuildClusters(const ClusterList &rebuildLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::PerformMainLoop()
+void ThreeViewTrackFragmentsAlgorithm::PerformMainLoop()
 {
     ClusterVector clusterVectorU(m_clusterListU.begin(), m_clusterListU.end());
     ClusterVector clusterVectorV(m_clusterListV.begin(), m_clusterListV.end());
@@ -145,7 +145,7 @@ void ThreeDTrackFragmentsAlgorithm::PerformMainLoop()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
+void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     const HitType missingHitType(
         ((NULL != pClusterU) && (NULL != pClusterV) && (NULL == pClusterW)) ? TPC_VIEW_W :
@@ -215,7 +215,7 @@ void ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+StatusCode ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
     const ClusterList &inputClusterList, const Cluster *&pBestMatchedCluster, FragmentOverlapResult &fragmentOverlapResult) const
 {
     const Cluster *const pCluster1(fitResult1.GetCluster());
@@ -264,7 +264,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::CalculateOverlapResult(const TwoDSlidi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
+StatusCode ThreeViewTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2,
     CartesianPointVector &projectedPositions) const
 {
     const Cluster *const pCluster1(fitResult1.GetCluster());
@@ -405,7 +405,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetProjectedPositions(const TwoDSlidin
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClusterList, const CartesianPointVector &projectedPositions,
+StatusCode ThreeViewTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inputClusterList, const CartesianPointVector &projectedPositions,
     HitToClusterMap &hitToClusterMap, CaloHitList &matchedHits) const
 {
     CaloHitVector availableCaloHits;
@@ -456,7 +456,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &inpu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,
+StatusCode ThreeViewTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &matchedHits, const HitToClusterMap &hitToClusterMap,
     ClusterList &matchedClusters, const Cluster *&pBestMatchedCluster) const
 {
     ClusterToMatchedHitsMap clusterToMatchedHitsMap;
@@ -506,7 +506,7 @@ StatusCode ThreeDTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitList &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPointVector &projectedPositions, const CaloHitList &matchedHits,
+void ThreeViewTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPointVector &projectedPositions, const CaloHitList &matchedHits,
     const ClusterList &matchedClusters, FragmentOverlapResult &fragmentOverlapResult) const
 {
     float chi2Sum(0.f);
@@ -539,7 +539,7 @@ void ThreeDTrackFragmentsAlgorithm::GetFragmentOverlapResult(const CartesianPoin
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointVector &projectedPositions, const ClusterList &matchedClusters) const
+bool ThreeViewTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointVector &projectedPositions, const ClusterList &matchedClusters) const
 {
     if (projectedPositions.empty() || matchedClusters.empty())
         return false;
@@ -594,7 +594,7 @@ bool ThreeDTrackFragmentsAlgorithm::CheckMatchedClusters(const CartesianPointVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDTrackFragmentsAlgorithm::CheckOverlapResult(const FragmentOverlapResult &overlapResult) const
+bool ThreeViewTrackFragmentsAlgorithm::CheckOverlapResult(const FragmentOverlapResult &overlapResult) const
 {
     // ATTN This method is currently mirrored in ClearTrackFragments tool
     if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
@@ -608,7 +608,7 @@ bool ThreeDTrackFragmentsAlgorithm::CheckOverlapResult(const FragmentOverlapResu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTrackFragmentsAlgorithm::ExamineTensor()
+void ThreeViewTrackFragmentsAlgorithm::ExamineTensor()
 {
     unsigned int repeatCounter(0);
 
@@ -630,7 +630,7 @@ void ThreeDTrackFragmentsAlgorithm::ExamineTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeViewTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "ClusterRebuilding", m_reclusteringAlgorithmName));

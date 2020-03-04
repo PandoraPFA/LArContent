@@ -49,7 +49,7 @@ private:
         pandora::CartesianVector    m_splitPosition2;       ///< The candidate split position in view 2
     };
 
-    void GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ModificationList &modificationList) const;
+    void GetIteratorListModifications(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ModificationList &modificationList) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -82,7 +82,7 @@ private:
      *
      *  @return boolean
      */
-    bool IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const bool isA1LowestInX,
+    bool IsThreeDKink(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const bool isA1LowestInX,
         const bool isA2LowestInX) const;
 
     bool            m_splitMode;                        ///< Whether to run in cluster splitting mode, as opposed to cluster merging mode

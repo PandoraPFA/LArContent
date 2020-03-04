@@ -8,7 +8,7 @@
 #ifndef CONNECTED_REMNANTS_TOOL_H
 #define CONNECTED_REMNANTS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeViewRemnantsAlgorithm.h"
 
 namespace lar_content
 {
@@ -24,7 +24,7 @@ public:
      */
     ConnectedRemnantsTool();
 
-    bool Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

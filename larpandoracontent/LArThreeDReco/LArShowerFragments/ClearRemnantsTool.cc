@@ -15,7 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-bool ClearRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool ClearRemnantsTool::Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -31,7 +31,7 @@ bool ClearRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorTyp
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearRemnantsTool::CreateThreeDParticles(ThreeDRemnantsAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
+void ClearRemnantsTool::CreateThreeDParticles(ThreeViewRemnantsAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
     bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;

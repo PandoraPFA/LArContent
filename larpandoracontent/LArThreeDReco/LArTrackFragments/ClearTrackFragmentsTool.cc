@@ -25,7 +25,7 @@ ClearTrackFragmentsTool::ClearTrackFragmentsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool ClearTrackFragmentsTool::Run(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -35,7 +35,7 @@ bool ClearTrackFragmentsTool::Run(ThreeDTrackFragmentsAlgorithm *const pAlgorith
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTrackFragmentsTool::FindTrackFragments(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor) const
+bool ClearTrackFragmentsTool::FindTrackFragments(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor) const
 {
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
@@ -134,7 +134,7 @@ bool ClearTrackFragmentsTool::GetAndCheckElementList(const TensorType &overlapTe
 
 bool ClearTrackFragmentsTool::CheckOverlapResult(const TensorType::OverlapResult &overlapResult) const
 {
-    // ATTN This method is currently mirrored in ThreeDTrackFragmentsAlgorithm algorithm
+    // ATTN This method is currently mirrored in ThreeViewTrackFragmentsAlgorithm algorithm
     if (overlapResult.GetMatchedFraction() < m_minMatchedSamplingPointFraction)
         return false;
 
@@ -200,7 +200,7 @@ void ClearTrackFragmentsTool::SelectClearElements(const TensorType::ElementList 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
+void ClearTrackFragmentsTool::ProcessTensorElement(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
     const TensorType::OverlapResult &overlapResult, const Cluster *&pFragmentCluster) const
 {
     pFragmentCluster = nullptr;
@@ -295,7 +295,7 @@ void ClearTrackFragmentsTool::ProcessTensorElement(ThreeDTrackFragmentsAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const Cluster *const pCluster, const CaloHitList &daughterHits,
+void ClearTrackFragmentsTool::Recluster(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const Cluster *const pCluster, const CaloHitList &daughterHits,
     const CaloHitList &separateHits, ClusterSet &deletedClusters, ClusterSet &badClusters, const Cluster *&pFragmentCluster) const
 {
     if (separateHits.empty())
@@ -343,7 +343,7 @@ void ClearTrackFragmentsTool::Recluster(ThreeDTrackFragmentsAlgorithm *const pAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTrackFragmentsTool::RebuildClusters(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, const ClusterList &modifiedClusters, ClusterList &newClusters) const
+void ClearTrackFragmentsTool::RebuildClusters(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const ClusterList &modifiedClusters, ClusterList &newClusters) const
 {
     ClusterList rebuildList;
 

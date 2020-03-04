@@ -1,19 +1,19 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeViewTrackFragmentsAlgorithm.h
  *
- *  @brief  Header file for the three dimensional fragments algorithm base class.
+ *  @brief  Header file for the three view fragments algorithm base class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_TRACK_FRAGMENTS_ALGORITHM_H
-#define LAR_THREE_D_TRACK_FRAGMENTS_ALGORITHM_H 1
+#ifndef LAR_THREE_VIEW_TRACK_FRAGMENTS_ALGORITHM_H
+#define LAR_THREE_VIEW_TRACK_FRAGMENTS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewTrackMatchingAlgorithm.h"
 
 #include <unordered_map>
 
@@ -25,15 +25,15 @@ class FragmentTensorTool;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDTrackFragmentsAlgorithm class
+ *  @brief  ThreeViewTrackFragmentsAlgorithm class
  */
-class ThreeDTrackFragmentsAlgorithm : public ThreeViewTrackMatchingAlgorithm<FragmentOverlapResult>
+class ThreeViewTrackFragmentsAlgorithm : public ThreeViewTrackMatchingAlgorithm<FragmentOverlapResult>
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ThreeDTrackFragmentsAlgorithm();
+    ThreeViewTrackFragmentsAlgorithm();
 
     void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
 
@@ -160,7 +160,7 @@ protected:
 class FragmentTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeDTrackFragmentsAlgorithm::TensorType TensorType;
+    typedef ThreeViewTrackFragmentsAlgorithm::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
@@ -171,9 +171,9 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_D_TRACK_FRAGMENTS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_VIEW_TRACK_FRAGMENTS_ALGORITHM_H

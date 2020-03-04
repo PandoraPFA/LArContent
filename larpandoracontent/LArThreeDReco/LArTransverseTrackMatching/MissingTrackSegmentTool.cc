@@ -41,7 +41,7 @@ MissingTrackSegmentTool::MissingTrackSegmentTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MissingTrackSegmentTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool MissingTrackSegmentTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -57,7 +57,7 @@ bool MissingTrackSegmentTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackSegmentTool::FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
+void MissingTrackSegmentTool::FindTracks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
     ProtoParticleVector &protoParticleVector, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterSet usedClusters;
@@ -133,7 +133,7 @@ void MissingTrackSegmentTool::SelectElements(const TensorType::ElementList &elem
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MissingTrackSegmentTool::PassesParticleChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
+bool MissingTrackSegmentTool::PassesParticleChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
     ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const
 {
     try
@@ -168,7 +168,7 @@ bool MissingTrackSegmentTool::PassesParticleChecks(ThreeDTransverseTracksAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackSegmentTool::GetCandidateClusters(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
+void MissingTrackSegmentTool::GetCandidateClusters(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
     ClusterList &candidateClusters) const
 {
     const ClusterList &clusterList(pAlgorithm->GetInputClusterList(particle.m_shortHitType));
@@ -189,7 +189,7 @@ void MissingTrackSegmentTool::GetCandidateClusters(ThreeDTransverseTracksAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const ClusterList &candidateClusterList,
+void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const ClusterList &candidateClusterList,
     TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
   const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -222,7 +222,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeDTransverseTracksAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
+void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
     const TwoDSlidingFitResultMap &slidingFitResultMap, SegmentOverlapMap &segmentOverlapMap) const
 {
     const TwoDSlidingFitResult &fitResult1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCluster1));
