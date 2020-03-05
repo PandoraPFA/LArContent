@@ -52,17 +52,6 @@ public:
     virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 protected:
-    virtual void PreparationStep();
-
-    /**
-     *  @brief  Preparation step for a specific cluster list
-     *
-     *  @param  clusterList the cluster list
-     */
-    virtual void PreparationStep(pandora::ClusterList &clusterList);
-
-    virtual void TidyUp();
-
     /**
      *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
      *
@@ -77,6 +66,15 @@ protected:
      */
     void RemoveFromSlidingFitCache(const pandora::Cluster *const pCluster);
 
+    /**
+     *  @brief  Preparation step for a specific cluster list
+     *
+     *  @param  clusterList the cluster list
+     */
+    virtual void PreparationStep(pandora::ClusterList &clusterList);
+
+    virtual void PreparationStep();
+    virtual void TidyUp();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:

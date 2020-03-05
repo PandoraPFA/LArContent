@@ -57,7 +57,7 @@ void ThreeViewTrackMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *cons
     {
         this->AddToSlidingFitCache(pNewCluster);
     }
-    catch (StatusCodeException &statusCodeException)
+    catch (const StatusCodeException &statusCodeException)
     {
         if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
             throw statusCodeException;
@@ -82,10 +82,8 @@ void ThreeViewTrackMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const
 template <typename T>
 void ThreeViewTrackMatchingAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
-    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : *pInputClusterList)
     {
-        const Cluster *const pCluster = *iter;
-
         if (!pCluster->IsAvailable())
             continue;
 
@@ -118,49 +116,6 @@ void ThreeViewTrackMatchingAlgorithm<T>::SetPfoParameters(const ProtoParticle &p
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeViewTrackMatchingAlgorithm<T>::PreparationStep()
-{
-    this->PreparationStep(this->m_clusterListU);
-    this->PreparationStep(this->m_clusterListV);
-    this->PreparationStep(this->m_clusterListW);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void ThreeViewTrackMatchingAlgorithm<T>::PreparationStep(ClusterList &clusterList)
-{
-    for (ClusterList::iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
-    {
-        const Cluster *const pCluster(*iter);
-
-        try
-        {
-            this->AddToSlidingFitCache(pCluster);
-            ++iter;
-        }
-        catch (StatusCodeException &statusCodeException)
-        {
-            clusterList.erase(iter++);
-
-            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                throw statusCodeException;
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void ThreeViewTrackMatchingAlgorithm<T>::TidyUp()
-{
-    m_slidingFitResultMap.clear();
-    return ThreeViewMatchingAlgorithm<T>::TidyUp();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
 void ThreeViewTrackMatchingAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCluster)
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -179,6 +134,47 @@ void ThreeViewTrackMatchingAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster
 
     if (m_slidingFitResultMap.end() != iter)
         m_slidingFitResultMap.erase(iter);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void ThreeViewTrackMatchingAlgorithm<T>::PreparationStep(ClusterList &clusterList)
+{
+    for (ClusterList::iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
+    {
+        try
+        {
+            this->AddToSlidingFitCache(*iter);
+            ++iter;
+        }
+        catch (const StatusCodeException &statusCodeException)
+        {
+            clusterList.erase(iter++);
+
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void ThreeViewTrackMatchingAlgorithm<T>::PreparationStep()
+{
+    this->PreparationStep(this->m_clusterListU);
+    this->PreparationStep(this->m_clusterListV);
+    this->PreparationStep(this->m_clusterListW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void ThreeViewTrackMatchingAlgorithm<T>::TidyUp()
+{
+    m_slidingFitResultMap.clear();
+    return ThreeViewMatchingAlgorithm<T>::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

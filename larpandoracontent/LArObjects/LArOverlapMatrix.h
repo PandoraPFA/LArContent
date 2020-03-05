@@ -94,7 +94,7 @@ public:
      *
      *  @return boolean
      */
-    bool DefaultAmbiguityFunction(const pandora::ClusterList &clusterListU, const pandora::ClusterList &clusterListV, 
+    bool DefaultAmbiguityFunction(const pandora::ClusterList &clusterList1, const pandora::ClusterList &clusterList2,
         const pandora::Cluster *&pCluster1, const pandora::Cluster *&pCluster2) const;
 
     /**
