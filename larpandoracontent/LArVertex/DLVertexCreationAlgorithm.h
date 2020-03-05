@@ -53,7 +53,7 @@ private:
      *  @brief  Get the DL Vertex position for chosen view
      *
      *  @param  pClusterList, address of the input cluster list for the specific view
-     *  @param  view, string recording what view the clusters are of
+     *  @param  view, pandora::HitType recording what view the clusters are of
      *  @param  positionInput, DL vertex position already calculated for chosen view or (0.f, 0.f, 0.f)
      *  @param  imgLenVecIndex, index for m_imgLenVec
      *  @param  vertReconCount, count of the reconstructed 2D DL vertices
@@ -61,7 +61,7 @@ private:
      *
      *  @return The position of the DL vertex for chosen view
      */
-    pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *const pClusterList, const std::string &view, 
+    pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *const pClusterList, const pandora::HitType &view, 
         const pandora::CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount,
         std::stringstream ssBuf[6]) const;
 
@@ -69,19 +69,19 @@ private:
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
      *
      *  @param  out2dVec, the image
-     *  @param  view, string recording what view the image represents
+     *  @param  view, pandora::HitType recording what view the image represents
      *  @param  imgLenVecIndex, index for m_imgLenVec
      *
      *  @return The pixel position of the DL vertex for chosen view
      */
-    pandora::CartesianVector DeepLearning(const TwoDImage &out2dVec, const std::string &view,
+    pandora::CartesianVector DeepLearning(const TwoDImage &out2dVec, const pandora::HitType &view,
         const int imgLenVecIndex) const;
 
     /**
      *  @brief  Create the training files
      *
      *  @param  out2dVec, the image
-     *  @param  view, string recording what view the image represents
+     *  @param  view, pandora::HitType recording what view the image represents
      *  @param  minx, the minimum x coordinate represented by the image
      *  @param  nstepx, the length of a pixel in the x direction
      *  @param  minz, the minimum z coordinate represented by the image
@@ -90,7 +90,7 @@ private:
      *
      *  @return A flag recording if the end of the function was reached
      */
-    int CreateTrainingFiles(const TwoDImage &out2dVec, const std::string &view,
+    int CreateTrainingFiles(const TwoDImage &out2dVec, const pandora::HitType &view,
         const float minx, const float nstepx, const float minz, const float nstepz, std::stringstream ssBuf[6]) const;
 
     /**
