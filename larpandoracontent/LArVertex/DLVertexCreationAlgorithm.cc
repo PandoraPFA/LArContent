@@ -300,7 +300,7 @@ int DLVertexCreationAlgorithm::CreateTrainingFiles(const TwoDImage &out2dVec, co
             pMCParticle->GetEndpoint().GetZ());
     }
 
-    if (this->DetectorCheck(targetVertex)) {std::cout<<"vtx nid "<<std::endl; return(0);}
+    if (this->DetectorCheck(targetVertex)) return(0);
 
     CartesianVector VertexPosition(0.f, 0.f, 0.f); int index(0);
     if (view=="W") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_W));index=0;}
