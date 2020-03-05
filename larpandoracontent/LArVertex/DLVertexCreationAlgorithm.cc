@@ -116,7 +116,6 @@ StatusCode DLVertexCreationAlgorithm::Run()
         }
     }
 
-    position3D = CartesianVector(0.f, 0.f, 0.f);
     if (vertReconCount == m_numViews*m_imgLenVec.size())
     {
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
@@ -210,13 +209,13 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
 
          for (int j=0; j<m_npixels; j++)
          {
-             double tempval(0),inputvalue1(0),dist(0);
-             tempval=height[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i]))
+             double tempval(0), inputvalue1(0), dist(0);
+             tempval = height[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i]))
                  - 0.5*std::erfc(-((minx+j*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i])));
 
              for (int k=m_npixels-1; k>-1; k--)
              {
-                 dist=(minz+(k+1)*nstepz)-(zVec[i]+m_hitWidthZ/2.0);
+                 dist = (minz+(k+1)*nstepz)-(zVec[i]+m_hitWidthZ/2.0);
 
                  if (dist>nstepz)
                      inputvalue1=0;
@@ -227,7 +226,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
                  else if (dist<0 && std::fabs(dist)>nstepz)
                      {if (std::fabs(dist)>m_hitWidthZ) inputvalue1=0; else inputvalue1=std::min((m_hitWidthZ-std::fabs(dist)),nstepz)*tempval;}
 
-                 out2dVec[j][k]+=inputvalue1;
+                 out2dVec[j][k] += inputvalue1;
              }
          }
     }
@@ -239,10 +238,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
     }
     else
     {
-        /*******************************************************************************************/
-        /* Use Deep Learning here on the created image to get the 2D vertex coordinate for 1 view. */ 
-        CartesianVector pixelPosition(this->DeepLearning(out2dVec,view,imgLenVecIndex));
-        /*******************************************************************************************/
+        const CartesianVector pixelPosition(this->DeepLearning(out2dVec,view,imgLenVecIndex));
 
         const double recoX(minx+(pixelPosition.GetX())*nstepx);
         const double recoZ(minz+(pixelPosition.GetZ())*nstepz);
@@ -258,9 +254,9 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const TwoDImage &out2dVe
 {
     /* Get the index for model */
     int index(0);
-    if (view=="W") index=m_numViews*imgLenVecIndex+0;
-    if (view=="V") index=m_numViews*imgLenVecIndex+1;
-    if (view=="U") index=m_numViews*imgLenVecIndex+2;
+    if (view=="W") index = m_numViews*imgLenVecIndex+0;
+    if (view=="V") index = m_numViews*imgLenVecIndex+1;
+    if (view=="U") index = m_numViews*imgLenVecIndex+2;
 
     /* Convert image to Torch "Tensor" */
     torch::Tensor input = torch::zeros({1, 1, m_npixels, m_npixels}, torch::TensorOptions().dtype(torch::kFloat32));
@@ -367,13 +363,13 @@ bool DLVertexCreationAlgorithm::DetectorCheck(const pandora::CartesianVector &po
     }
 
     bool volumeCheck(true), gapCheck(true);
-    volumeCheck=volumeCheck && ( (position3D.GetX()<parentMaxX) && (position3D.GetX()>parentMinX) );
-    volumeCheck=volumeCheck && ( (position3D.GetY()<parentMaxY) && (position3D.GetY()>parentMinY) );
-    volumeCheck=volumeCheck && ( (position3D.GetZ()<parentMaxZ) && (position3D.GetZ()>parentMinZ) );
+    volumeCheck = volumeCheck && ( (position3D.GetX()<parentMaxX) && (position3D.GetX()>parentMinX) );
+    volumeCheck = volumeCheck && ( (position3D.GetY()<parentMaxY) && (position3D.GetY()>parentMinY) );
+    volumeCheck = volumeCheck && ( (position3D.GetZ()<parentMaxZ) && (position3D.GetZ()>parentMinZ) );
 
-    gapCheck=gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_W, 0.f);
-    gapCheck=gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_V, 0.f);
-    gapCheck=gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_U, 0.f);
+    gapCheck = gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_W, 0.f);
+    gapCheck = gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_V, 0.f);
+    gapCheck = gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_U, 0.f);
 
     return((!volumeCheck) || gapCheck);
 }
