@@ -53,8 +53,7 @@ public:
          *  @param  DLVertexFeature the DLVertex feature
          */
         VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick, const float localAsymmetry,
-                          const float globalAsymmetry, const float showerAsymmetry,
-                          const float DLVertexFeature);
+            const float globalAsymmetry, const float showerAsymmetry, const float DLVertexFeature);
 
         float    m_beamDeweighting;    ///< The beam deweighting feature
         float    m_rPhiFeature;        ///< The r/phi feature
@@ -428,8 +427,7 @@ typedef MvaVertexSelectionAlgorithm<SupportVectorMachine> SvmVertexSelectionAlgo
 
 template<typename T>
 inline MvaVertexSelectionAlgorithm<T>::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick,
-    const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry,
-    const float DLVertexFeature) :
+        const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry, const float DLVertexFeature) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
     m_energyKick(energyKick),

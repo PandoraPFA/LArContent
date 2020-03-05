@@ -485,9 +485,9 @@ void MvaVertexSelectionAlgorithm<T>::PopulateVertexFeatureInfoMap(const BeamCons
     //const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
     //    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
 
-    double DLVertexFeature(0.f);
-    if(m_useDLVertexFeature)
-        DLVertexFeature=LArMvaHelper::CalculateFeaturesOfType<DLVertexFeatureTool>(m_featureToolVector, this, pVertex,
+    double DLVertexFeature(0);
+    if (m_useDLVertexFeature)
+        DLVertexFeature = LArMvaHelper::CalculateFeaturesOfType<DLVertexFeatureTool>(m_featureToolVector, this, pVertex,
             slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get();
 
     VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry, DLVertexFeature);
@@ -510,7 +510,7 @@ void MvaVertexSelectionAlgorithm<T>::PopulateInitialScoreList(VertexFeatureInfoM
     const float DLVertexFeatureScore(vertexFeatureInfo.m_DLVertexFeature);
 
     initialScoreList.emplace_back(pVertex, beamDeweightingScore + energyKickScore + localAsymmetryScore + globalAsymmetryScore + showerAsymmetryScore
-                                           + DLVertexFeatureScore);
+        + DLVertexFeatureScore);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

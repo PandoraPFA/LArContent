@@ -37,8 +37,7 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
     m_minNearbyCrossingDistanceSquared(0.5f * 0.5f),
     m_reducedCandidates(false),
     m_selectionCutFactorMax(2.f),
-    m_nClustersPassingMaxCutsPar(26.f),
-    m_inputVertexListName()
+    m_nClustersPassingMaxCutsPar(26.f)
 {
 }
 
@@ -64,19 +63,17 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         if (m_enableCrossingCandidates)
             this->CreateCrossingCandidates(clusterVectorU, clusterVectorV, clusterVectorW);
 
-        const VertexList *pInputVertexList(NULL);
-        std::string vertexListName(m_inputVertexListName);
-        const StatusCode statusCode1(PandoraContentApi::GetList(*this, vertexListName.c_str(), pInputVertexList));
+        const VertexList *pInputVertexList(nullptr);
 
-        if(STATUS_CODE_SUCCESS == statusCode1)
+        if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_inputVertexListName.c_str(), pInputVertexList))
         {
-            const Vertex * const pDLVertex(pInputVertexList->front());
+            const Vertex *const pDLVertex(pInputVertexList->front());
 
             PandoraContentApi::Vertex::Parameters parameters;
             parameters.m_position = pDLVertex->GetPosition();
             parameters.m_vertexLabel = VERTEX_INTERACTION;
             parameters.m_vertexType = VERTEX_3D;
-            const Vertex *pVertex(NULL);
+            const Vertex *pVertex(nullptr);
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
         }
 

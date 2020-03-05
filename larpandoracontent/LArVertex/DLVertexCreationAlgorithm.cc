@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/DLVertexCreationAlgorithm.cc
+ *  @file   larpandoracontent/LArVertex/DLVertexCreationAlgorithm.cc
  * 
  *  @brief  Implementation of the DLVertexCreation algorithm class.
  * 
@@ -14,22 +14,27 @@
 
 #include "larpandoracontent/LArVertex/DLVertexCreationAlgorithm.h"
 
+#include <torch/script.h>
+
 using namespace pandora;
 
 namespace lar_content
 {
 
 DLVertexCreationAlgorithm::DLVertexCreationAlgorithm() :
-    m_outputVertexListName(),
-    m_inputClusterListNames(),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_numClusterCaloHitsPar(5),
     m_npixels(128),
-    m_lenVec(),
+    m_imgLenVec({-1.0f, 50.0f, 40.0f}),
     m_trainingSetMode(false),
-    m_trainingLenVecIndex(0),
+    m_trainingImgLenVecIndex(0),
     m_lenBuffer(10.0),
-    m_pModule()
+    m_numViews(3),
+    m_trainingDataFileName("data"),
+    m_trainingLabelsFileName("labels"),
+    m_vertexXCorrection(0.f),
+    m_hitWidthZ(0.5),
+    m_vecPModule({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr})
 {
 }
 
@@ -41,22 +46,20 @@ DLVertexCreationAlgorithm::~DLVertexCreationAlgorithm()
 //------------------------------------------------------------------------------------------------------------------------------------------
 StatusCode DLVertexCreationAlgorithm::Initialize()
 {
-    if(m_lenVec.empty()) m_lenVec={-1.0f, 50.0f, 40.0f};
     // Load the model file. 
-    m_pModule = {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
-    std::vector<std::string> view = {"W", "V", "U"};
+    const StringVector view{"W", "V", "U"};
 
-    int numModels(m_trainingSetMode?m_trainingLenVecIndex:m_lenVec.size());
-    for(int j=0; j<numModels;j++)
+    const unsigned int numModels(m_trainingSetMode ? m_trainingImgLenVecIndex : m_imgLenVec.size());
+    for (int iModel=0; iModel<numModels; iModel++)
     {
-        for(int i=0; i<3;i++)
+        for (int iView=0; iView<m_numViews; iView++)
         {
-            std::string fileNameString(m_modelFileNamePrefix+std::to_string(j)+view[i]+".pt");
-            std::string fullFileNameString(LArFileHelper::FindFileInPath(fileNameString, m_filePathEnvironmentVariable));
+            const std::string fileNameString(m_modelFileNamePrefix+std::to_string(iModel)+view[iView]+".pt");
+            const std::string fullFileNameString(LArFileHelper::FindFileInPath(fileNameString, m_filePathEnvironmentVariable));
 
             try
             {
-                m_pModule[3*j+i] = torch::jit::load(fullFileNameString);
+                m_vecPModule[m_numViews*iModel+iView] = torch::jit::load(fullFileNameString);
             }
             catch (const c10::Error &e)
             {
@@ -74,49 +77,50 @@ StatusCode DLVertexCreationAlgorithm::Run()
 {
     torch::manual_seed(0);
 
-    const ClusterList *clustersU, *clustersV, *clustersW;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[2], clustersW));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[1], clustersV));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], clustersU));
+    const ClusterList *pClusterListU, *pClusterListV, *pClusterListW;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[2], pClusterListW));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[1], pClusterListV));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], pClusterListU));
 
     std::stringstream ssBuf[6];
-    std::string viewW="W", viewV="V", viewU="U";
-    CartesianVector positionInput(0.f, 0.f, 0.f); int vertReconCount(0);
-    CartesianVector positionW(this->GetDLVertexForView(clustersW, viewW, positionInput, 0, vertReconCount, ssBuf));
-    CartesianVector positionV(this->GetDLVertexForView(clustersV, viewV, positionInput, 0, vertReconCount, ssBuf));
-    CartesianVector positionU(this->GetDLVertexForView(clustersU, viewU, positionInput, 0, vertReconCount, ssBuf));
-    if(m_trainingSetMode && (m_trainingLenVecIndex==0)) 
+    const std::string viewW("W"), viewV("V"), viewU("U");
+    const CartesianVector positionInput(0.f, 0.f, 0.f); unsigned int vertReconCount(0);
+    CartesianVector positionW(this->GetDLVertexForView(pClusterListW, viewW, positionInput, 0, vertReconCount, ssBuf));
+    CartesianVector positionV(this->GetDLVertexForView(pClusterListV, viewV, positionInput, 0, vertReconCount, ssBuf));
+    CartesianVector positionU(this->GetDLVertexForView(pClusterListU, viewU, positionInput, 0, vertReconCount, ssBuf));
+    if (m_trainingSetMode && (m_trainingImgLenVecIndex==0)) 
     {
-        if(vertReconCount==(3+m_trainingLenVecIndex*3))
+        if (vertReconCount == ((1+m_trainingImgLenVecIndex)*m_numViews))
             this->WriteTrainingFiles(ssBuf);
         return STATUS_CODE_SUCCESS;
     }
 
-    CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0);
-    for(int i=1; i<m_lenVec.size(); i++)
+    CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0.f);
+    for (int imgLenVecIndex=1; imgLenVecIndex<m_imgLenVec.size(); imgLenVecIndex++)
     {
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
-                    positionW, positionV, positionU, position3D, chiSquared);
+            positionW, positionV, positionU, position3D, chiSquared);
 
-        CartesianVector position3DW(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
-        CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V));
-        CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U));
+        const CartesianVector position3DW(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
+        const CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V));
+        const CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U));
 
-        positionW=this->GetDLVertexForView(clustersW, viewW, position3DW, i, vertReconCount, ssBuf);
-        positionV=this->GetDLVertexForView(clustersV, viewV, position3DV, i, vertReconCount, ssBuf);
-        positionU=this->GetDLVertexForView(clustersU, viewU, position3DU, i, vertReconCount, ssBuf);
-        if(m_trainingSetMode && (m_trainingLenVecIndex==i))
+        positionW=this->GetDLVertexForView(pClusterListW, viewW, position3DW, imgLenVecIndex, vertReconCount, ssBuf);
+        positionV=this->GetDLVertexForView(pClusterListV, viewV, position3DV, imgLenVecIndex, vertReconCount, ssBuf);
+        positionU=this->GetDLVertexForView(pClusterListU, viewU, position3DU, imgLenVecIndex, vertReconCount, ssBuf);
+        if (m_trainingSetMode && (m_trainingImgLenVecIndex==imgLenVecIndex))
         {
-            if(vertReconCount==(3+m_trainingLenVecIndex*3))
+            if (vertReconCount == ((1+m_trainingImgLenVecIndex)*m_numViews))
                 this->WriteTrainingFiles(ssBuf);
             return STATUS_CODE_SUCCESS;
         }
     }
 
-    if(vertReconCount==3*m_lenVec.size())
+    position3D = CartesianVector(0.f, 0.f, 0.f);
+    if (vertReconCount == m_numViews*m_imgLenVec.size())
     {
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
-                    positionW, positionV, positionU, position3D, chiSquared);
+            positionW, positionV, positionU, position3D, chiSquared);
 
         const VertexList *pVertexList(nullptr); std::string temporaryListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
@@ -136,174 +140,152 @@ StatusCode DLVertexCreationAlgorithm::Run()
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
-CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const pandora::ClusterList *pClusterList, const std::string &view,
-                const CartesianVector &positionInput, const int &lenVecIndex, int &vertReconCount, std::stringstream ssBuf[6]) const
+CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList *const pClusterList, const std::string &view,
+    const CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount, 
+    std::stringstream ssBuf[6]) const
 {
-    double length(m_lenVec[lenVecIndex]);
+    const double length(m_imgLenVec[imgLenVecIndex]);
+    const bool useScaledImg(length <= 0);
     std::vector<double> xVec, zVec, sigma, height;
-    int i(0), j(0), l(0), count1(0), count2(0);
+    int iHits(0), allHitsCount(0), filtHitsCount(0);
+    double minx(std::numeric_limits<double>::max()), minz(std::numeric_limits<double>::max());
+    double maxx(-std::numeric_limits<double>::max()), maxz(-std::numeric_limits<double>::max());
 
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : *pClusterList) 
     {
-        if( ((*iter)->GetNCaloHits()<m_numClusterCaloHitsPar) && (length<=0)) continue;
-        if( ((*iter)->GetNCaloHits()>=m_numClusterCaloHitsPar) ) count2+=(*iter)->GetNCaloHits();
-        count1+=(*iter)->GetNCaloHits();
+        allHitsCount += pCluster->GetNCaloHits();
+        if (pCluster->GetNCaloHits() >= m_numClusterCaloHitsPar) filtHitsCount += pCluster->GetNCaloHits();
     }
-    if(count1==0||count2==0) return(CartesianVector(0.f, 0.f, 0.f));
+    if (allHitsCount==0 || filtHitsCount==0) return(CartesianVector(0.f, 0.f, 0.f));
 
-    xVec.resize(count1, 0.f) ; zVec.resize(count1, 0.f)  ;
-    sigma.resize(count1, 0.f); height.resize(count1, 0.f);
+    xVec.resize(allHitsCount, 0.f) ; zVec.resize(allHitsCount, 0.f)  ;
+    sigma.resize(allHitsCount, 0.f); height.resize(allHitsCount, 0.f);
 
-    for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : *pClusterList) 
     {
-        if( ((*iter)->GetNCaloHits()<m_numClusterCaloHitsPar) && (length<=0)) continue;
-        const OrderedCaloHitList &orderedCaloHitList1((*iter)->GetOrderedCaloHitList());
-        for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
+        const OrderedCaloHitList &orderedCaloHitList1(pCluster->GetOrderedCaloHitList());
+        for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(); iter1 != orderedCaloHitList1.end(); ++iter1)
         {
-            for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
+            for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(); hitIter1 != iter1->second->end(); ++hitIter1)
             {
                 const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
-                xVec[l]=positionVector1.GetX(); zVec[l]=positionVector1.GetZ();
-                sigma[l]=(*hitIter1)->GetCellSize1(); height[l]=(*hitIter1)->GetInputEnergy(); l++;
+                xVec[iHits] = positionVector1.GetX(); zVec[iHits] = positionVector1.GetZ();
+                sigma[iHits] = (*hitIter1)->GetCellSize1(); height[iHits] = (*hitIter1)->GetInputEnergy();
+                if(pCluster->GetNCaloHits() >= m_numClusterCaloHitsPar)
+                {
+                    minx = std::min(minx,xVec[iHits]); minz = std::min(minz,zVec[iHits]);
+                    maxx = std::max(maxx,xVec[iHits]); maxz = std::max(maxz,zVec[iHits]);
+                }
+                iHits++;
             }
         }
     }
 
-    double minx=0, minz=0, nstepx=0, nstepz=0;
-    double zC=0, xC=0;
-    std::vector<std::vector<double>> out2dVec(m_npixels, std::vector<double>(m_npixels, 0.f));
-    double lengthX(0), lengthZ(0), length1(0);
+    double nstepx(0), nstepz(0), lengthX(0), lengthZ(0), length1(0);
+    TwoDImage out2dVec(m_npixels, std::vector<double>(m_npixels, 0));
 
-    if(length<=0)
+    if (useScaledImg)
     {
-        minx=(*std::min_element(xVec.begin(),xVec.end()))-m_lenBuffer;
-        minz=(*std::min_element(zVec.begin(),zVec.end()))-m_lenBuffer;
-        lengthX=(*std::max_element(xVec.begin(),xVec.end())) - (*std::min_element(xVec.begin(),xVec.end()))+2*m_lenBuffer;
-        lengthZ=(*std::max_element(zVec.begin(),zVec.end())) - (*std::min_element(zVec.begin(),zVec.end()))+2*m_lenBuffer;
-        length1=std::max(lengthX, lengthZ);
-        nstepx=length1/m_npixels;
-        nstepz=length1/m_npixels;
+        minx -= m_lenBuffer; minz -= m_lenBuffer;
+        maxx += m_lenBuffer; maxz += m_lenBuffer;
+        lengthX = maxx - minx;
+        lengthZ = maxz - minz;
+        length1 = std::max(lengthX, lengthZ);
+        nstepx = length1 / m_npixels;
+        nstepz = length1 / m_npixels;
     }
     else
     {
-        minx=positionInput.GetX()-length/2.0;
-        minz=positionInput.GetZ()-length/2.0;
-        nstepx=length/m_npixels;
-        nstepz=length/m_npixels;
+        minx = positionInput.GetX() - length/2.0;
+        minz = positionInput.GetZ() - length/2.0;
+        nstepx = length / m_npixels;
+        nstepz = length / m_npixels;
     }
 
-    if(length<=0)
+    for (int i=0; i<allHitsCount; i++)
     {
-        std::vector<double>().swap(xVec);std::vector<double>().swap(zVec);
-        std::vector<double>().swap(sigma);std::vector<double>().swap(height); count1=0; l=0;
-        for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-        {
-            count1+=(*iter)->GetNCaloHits();
-        }
-        if(count1==0) return(CartesianVector(0.f, 0.f, 0.f));
+         const int ZPixPosit = (int)((zVec[i]-minz)/nstepz);
+         const int XPixPosit = (int)((xVec[i]-minx)/nstepx);
+         if (XPixPosit>m_npixels||XPixPosit<0||ZPixPosit>m_npixels||ZPixPosit<0) continue;
 
-        xVec.resize(count1, 0.f) ; zVec.resize(count1, 0.f)  ;
-        sigma.resize(count1, 0.f); height.resize(count1, 0.f);
-
-        for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
-        {
-            const OrderedCaloHitList &orderedCaloHitList1((*iter)->GetOrderedCaloHitList());
-            for (OrderedCaloHitList::const_iterator iter1 = orderedCaloHitList1.begin(), iter1End = orderedCaloHitList1.end(); iter1 != iter1End; ++iter1)
-            {
-                for (CaloHitList::const_iterator hitIter1 = iter1->second->begin(), hitIter1End = iter1->second->end(); hitIter1 != hitIter1End; ++hitIter1)
-                {
-                    const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
-                    xVec[l]=positionVector1.GetX(); zVec[l]=positionVector1.GetZ();
-                    sigma[l]=(*hitIter1)->GetCellSize1(); height[l]=(*hitIter1)->GetInputEnergy(); l++;
-                }
-            }
-        }
-    }
-
-    for(i=0;i<l;i++)
-    {
-         zC=(int)((zVec[i]-minz)/nstepz); xC=(int)((xVec[i]-minx)/nstepx);
-         if(xC>m_npixels||xC<0||zC>m_npixels||zC<0) continue;
-         if(zC==m_npixels) zC--;
-
-         for(j=0;j<m_npixels;j++)
+         for (int j=0; j<m_npixels; j++)
          {
-             double tempval(0),sigmaZ(0.5),inputvalue1(0),dist(0);
+             double tempval(0),inputvalue1(0),dist(0);
              tempval=height[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i]))
-                                   - 0.5*std::erfc(-((minx+j*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i])));
+                 - 0.5*std::erfc(-((minx+j*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i])));
 
-             for(int a=m_npixels-1;a>-1;a--)
+             for (int k=m_npixels-1; k>-1; k--)
              {
-                 dist=(minz+(a+1)*nstepz)-(zVec[i]+sigmaZ/2.0);
+                 dist=(minz+(k+1)*nstepz)-(zVec[i]+m_hitWidthZ/2.0);
 
-                 if(dist>nstepz)
+                 if (dist>nstepz)
                      inputvalue1=0;
-                 else if(dist<nstepz&&dist>0)
-                     inputvalue1=std::min((nstepz-dist),sigmaZ)*tempval;
-                 else if(dist<0 && std::fabs(dist)<nstepz)
-                     {if(std::fabs(dist)>sigmaZ) inputvalue1=0; else inputvalue1=std::min((sigmaZ-std::fabs(dist)),nstepz)*tempval;}
-                 else if(dist<0 && std::fabs(dist)>nstepz)
-                     {if(std::fabs(dist)>sigmaZ) inputvalue1=0; else inputvalue1=std::min((sigmaZ-std::fabs(dist)),nstepz)*tempval;}
+                 else if (dist<nstepz&&dist>0)
+                     inputvalue1=std::min((nstepz-dist),m_hitWidthZ)*tempval;
+                 else if (dist<0 && std::fabs(dist)<nstepz)
+                     {if (std::fabs(dist)>m_hitWidthZ) inputvalue1=0; else inputvalue1=std::min((m_hitWidthZ-std::fabs(dist)),nstepz)*tempval;}
+                 else if (dist<0 && std::fabs(dist)>nstepz)
+                     {if (std::fabs(dist)>m_hitWidthZ) inputvalue1=0; else inputvalue1=std::min((m_hitWidthZ-std::fabs(dist)),nstepz)*tempval;}
 
-                 out2dVec[j][a]+=inputvalue1;
+                 out2dVec[j][k]+=inputvalue1;
              }
          }
     }
 
-    if(m_trainingSetMode && (m_trainingLenVecIndex==lenVecIndex))
+    if (m_trainingSetMode && (m_trainingImgLenVecIndex==imgLenVecIndex))
     {
-        vertReconCount+=(this->CreateTrainingFiles(out2dVec,view,minx,nstepx,minz,nstepz,ssBuf));
+        vertReconCount += (this->CreateTrainingFiles(out2dVec,view,minx,nstepx,minz,nstepz,ssBuf));
         return(CartesianVector(0.f, 0.f, 0.f));
     }
     else
     {
         /*******************************************************************************************/
         /* Use Deep Learning here on the created image to get the 2D vertex coordinate for 1 view. */ 
-        CartesianVector pixelPosition(this->DeepLearning(out2dVec,view,lenVecIndex));
+        CartesianVector pixelPosition(this->DeepLearning(out2dVec,view,imgLenVecIndex));
         /*******************************************************************************************/
 
-        double recoX(minx+(pixelPosition.GetX())*nstepx);
-        double recoZ(minz+(pixelPosition.GetZ())*nstepz);
-        CartesianVector position(recoX, 0.f, recoZ);
-        vertReconCount+=1;
+        const double recoX(minx+(pixelPosition.GetX())*nstepx);
+        const double recoZ(minz+(pixelPosition.GetZ())*nstepz);
+        const CartesianVector position(recoX, 0.f, recoZ);
+        vertReconCount += 1;
         return(position);
     }
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------
-CartesianVector DLVertexCreationAlgorithm::DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
-                const int &lenVecIndex) const
+CartesianVector DLVertexCreationAlgorithm::DeepLearning(const TwoDImage &out2dVec, const std::string &view,
+    const int imgLenVecIndex) const
 {
     /* Get the index for model */
     int index(0);
-    if(view=="W") index=3*lenVecIndex+0;
-    if(view=="V") index=3*lenVecIndex+1;
-    if(view=="U") index=3*lenVecIndex+2;
+    if (view=="W") index=m_numViews*imgLenVecIndex+0;
+    if (view=="V") index=m_numViews*imgLenVecIndex+1;
+    if (view=="U") index=m_numViews*imgLenVecIndex+2;
 
     /* Convert image to Torch "Tensor" */
     torch::Tensor input = torch::zeros({1, 1, m_npixels, m_npixels}, torch::TensorOptions().dtype(torch::kFloat32));
     auto accessor = input.accessor<float, 4>();
 
-    for(int i=m_npixels-1;i>-1;i--)
-        for(int j=0;j<m_npixels;j++)
-            accessor[0][0][i][j]=out2dVec[j][i]/100.0;
+    for (int i=m_npixels-1; i>-1; i--)
+        for (int j=0; j<m_npixels; j++)
+            accessor[0][0][i][j] = out2dVec[j][i]/100.0;
 
     std::vector<torch::jit::IValue> inputs;
     inputs.push_back(input);
 
     /* Use the Model on the "Tensor" */
-    at::Tensor output = m_pModule[index]->forward(inputs).toTensor();
+    at::Tensor output = m_vecPModule[index]->forward(inputs).toTensor();
 
     /* Get predicted vertex. */
     auto outputAccessor = output.accessor<float, 2>();
-    CartesianVector position(outputAccessor[0][0], 0.f, outputAccessor[0][1]);
+    const CartesianVector position(outputAccessor[0][0], 0.f, outputAccessor[0][1]);
 
     return(position);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-int DLVertexCreationAlgorithm::CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
-     const float &minx, const float &nstepx, const float &minz, const float &nstepz, std::stringstream ssBuf[6]) const
+int DLVertexCreationAlgorithm::CreateTrainingFiles(const TwoDImage &out2dVec, const std::string &view,
+    const float minx, const float nstepx, const float minz, const float nstepz, std::stringstream ssBuf[6]) const
 {
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
@@ -314,34 +296,31 @@ int DLVertexCreationAlgorithm::CreateTrainingFiles(const std::vector<std::vector
         if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
             continue;
 
-        targetVertex.SetValues(pMCParticle->GetEndpoint().GetX(), pMCParticle->GetEndpoint().GetY(), 
-                                            pMCParticle->GetEndpoint().GetZ());
+        targetVertex.SetValues(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), 
+            pMCParticle->GetEndpoint().GetZ());
     }
 
-    int flag(1);
-    flag=flag && (((targetVertex.GetX()<362.6620483395 )&&(targetVertex.GetX()>3.24703979450001  )) ||
-                  ((targetVertex.GetX()>-362.6620483395)&&(targetVertex.GetX()<-3.24703979450001 )));
-    flag=flag &&  ((targetVertex.GetY()<603.92376709   )&&(targetVertex.GetY()>-603.92376709     ));
-    flag=flag &&  ((targetVertex.GetZ()<1393.463745117 )&&(targetVertex.GetZ()>-0.876220703000058));
-    if(!flag) return(0);
+    if (this->DetectorCheck(targetVertex)) {std::cout<<"vtx nid "<<std::endl; return(0);}
 
     CartesianVector VertexPosition(0.f, 0.f, 0.f); int index(0);
-    if(view=="W") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_W));index=0;}
-    if(view=="V") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_V));index=1;}
-    if(view=="U") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_U));index=2;}
+    if (view=="W") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_W));index=0;}
+    if (view=="V") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_V));index=1;}
+    if (view=="U") {VertexPosition=(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, TPC_VIEW_U));index=2;}
 
-    double xC=((VertexPosition.GetX()-minx)/nstepx);double zC=((VertexPosition.GetZ()-minz)/nstepz);
-    if((int)xC>m_npixels||(int)xC<0||(int)zC>m_npixels||(int)zC<0) return(0);
+    const double MCXPixPosit((VertexPosition.GetX()-minx)/nstepx);
+    const double MCZPixPosit((VertexPosition.GetZ()-minz)/nstepz);
+    if ((int)MCXPixPosit>m_npixels||(int)MCXPixPosit<0||(int)MCZPixPosit>m_npixels||(int)MCZPixPosit<0)
+        return(0);
 
-    for(int i=m_npixels-1;i>-1;i--)
+    for (int i=m_npixels-1; i>-1; i--)
     {
-        for(int j=0;j<m_npixels;j++)
+        for (int j=0; j<m_npixels; j++)
         {
-                ssBuf[index] << out2dVec[j][i] << " ";
+            ssBuf[index] << out2dVec[j][i] << " ";
         }
-                ssBuf[index] << "\n";
+            ssBuf[index] << "\n";
     }
-    ssBuf[3+index] << xC << " " << zC << "\n";
+    ssBuf[m_numViews+index] << MCXPixPosit << " " << MCZPixPosit << "\n";
 
     return(1);
 }
@@ -349,18 +328,54 @@ int DLVertexCreationAlgorithm::CreateTrainingFiles(const std::vector<std::vector
 //------------------------------------------------------------------------------------------------------------------------------------------
 void DLVertexCreationAlgorithm::WriteTrainingFiles(std::stringstream ssBuf[6]) const
 {
-    std::vector<std::string> view = {"W", "V", "U"};
-    for(int i=0; i<3;i++)
+    const StringVector view{"W", "V", "U"};
+    for (int iView=0; iView<m_numViews; iView++)
     {
-        std::ofstream outputStream1("data"+view[i]+".txt", std::ios::app);
-        std::ofstream outputStream2("labels"+view[i]+".txt", std::ios::app);
+        std::ofstream outputStream1(m_trainingDataFileName+view[iView]+".txt", std::ios::app);
+        std::ofstream outputStream2(m_trainingLabelsFileName+view[iView]+".txt", std::ios::app);
         
-        outputStream1 << ssBuf[i].rdbuf();
-        outputStream2 << ssBuf[3+i].rdbuf();
+        outputStream1 << ssBuf[iView].rdbuf();
+        outputStream2 << ssBuf[m_numViews+iView].rdbuf();
 
         outputStream1.close();
         outputStream2.close();
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool DLVertexCreationAlgorithm::DetectorCheck(const pandora::CartesianVector &position3D) const
+{
+    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
+    const LArTPC *const pFirstLArTPC(larTPCMap.begin()->second);
+
+    float parentMinX(pFirstLArTPC->GetCenterX() - 0.5f * pFirstLArTPC->GetWidthX());
+    float parentMaxX(pFirstLArTPC->GetCenterX() + 0.5f * pFirstLArTPC->GetWidthX());
+    float parentMinY(pFirstLArTPC->GetCenterY() - 0.5f * pFirstLArTPC->GetWidthY());
+    float parentMaxY(pFirstLArTPC->GetCenterY() + 0.5f * pFirstLArTPC->GetWidthY());
+    float parentMinZ(pFirstLArTPC->GetCenterZ() - 0.5f * pFirstLArTPC->GetWidthZ());
+    float parentMaxZ(pFirstLArTPC->GetCenterZ() + 0.5f * pFirstLArTPC->GetWidthZ());
+
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pLArTPC(mapEntry.second);
+        parentMinX = std::min(parentMinX, pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX());
+        parentMaxX = std::max(parentMaxX, pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX());
+        parentMinY = std::min(parentMinY, pLArTPC->GetCenterY() - 0.5f * pLArTPC->GetWidthY());
+        parentMaxY = std::max(parentMaxY, pLArTPC->GetCenterY() + 0.5f * pLArTPC->GetWidthY());
+        parentMinZ = std::min(parentMinZ, pLArTPC->GetCenterZ() - 0.5f * pLArTPC->GetWidthZ());
+        parentMaxZ = std::max(parentMaxZ, pLArTPC->GetCenterZ() + 0.5f * pLArTPC->GetWidthZ());
+    }
+
+    bool volumeCheck(true), gapCheck(true);
+    volumeCheck=volumeCheck && ( (position3D.GetX()<parentMaxX) && (position3D.GetX()>parentMinX) );
+    volumeCheck=volumeCheck && ( (position3D.GetY()<parentMaxY) && (position3D.GetY()>parentMinY) );
+    volumeCheck=volumeCheck && ( (position3D.GetZ()<parentMaxZ) && (position3D.GetZ()>parentMinZ) );
+
+    gapCheck=gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_W, 0.f);
+    gapCheck=gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_V, 0.f);
+    gapCheck=gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_U, 0.f);
+
+    return((!volumeCheck) || gapCheck);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -386,16 +401,28 @@ StatusCode DLVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "Npixels", m_npixels));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "LenVec", m_lenVec));
+        "ImgLenVec", m_imgLenVec));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrainingSetMode", m_trainingSetMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TrainingLenVecIndex", m_trainingLenVecIndex));
+        "TrainingImgLenVecIndex", m_trainingImgLenVecIndex));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "LenBuffer", m_lenBuffer));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TrainingDataFileName", m_trainingDataFileName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TrainingLabelsFileName", m_trainingLabelsFileName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "VertexXCorrection", m_vertexXCorrection));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "HitWidthZ", m_hitWidthZ));
 
     return STATUS_CODE_SUCCESS;
 }

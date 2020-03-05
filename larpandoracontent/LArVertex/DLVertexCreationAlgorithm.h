@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/DLVertexCreationAlgorithm.h
+ *  @file   larpandoracontent/LArVertex/DLVertexCreationAlgorithm.h
  * 
  *  @brief  Header file for the DLVertexCreation algorithm class.
  * 
@@ -10,7 +10,18 @@
 
 #include "Pandora/Algorithm.h"
 
-#include <torch/script.h>
+#include <memory>
+
+namespace torch
+{
+    namespace jit
+    {
+        namespace script
+        {
+            struct Module;
+        }
+    }
+}
 
 namespace lar_content
 {
@@ -22,15 +33,6 @@ class DLVertexCreationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
-     *  @brief  Factory class for instantiating algorithm
-     */
-    class Factory : public pandora::AlgorithmFactory
-    {
-    public:
-        pandora::Algorithm *CreateAlgorithm() const;
-    };
-
-    /**
       * @brief Default constructor
       */
     DLVertexCreationAlgorithm();
@@ -39,6 +41,8 @@ public:
      *  @brief  Destructor
      */
     ~DLVertexCreationAlgorithm();
+
+    typedef std::vector<std::vector<double>> TwoDImage;
 
 private:
     pandora::StatusCode Run();
@@ -51,30 +55,30 @@ private:
      *  @param  pClusterList, address of the input cluster list for the specific view
      *  @param  view, string recording what view the clusters are of
      *  @param  positionInput, DL vertex position already calculated for chosen view or (0.f, 0.f, 0.f)
-     *  @param  lenVecIndex, index for m_lenVec
+     *  @param  imgLenVecIndex, index for m_imgLenVec
      *  @param  vertReconCount, count of the reconstructed 2D DL vertices
      *  @param  ssBuf, buffer for training file writing
      *
      *  @return The position of the DL vertex for chosen view
      */
-    pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *pClusterList, const std::string &view, 
-                             const pandora::CartesianVector &positionInput, const int &lenVecIndex, int &vertReconCount,
-                             std::stringstream ssBuf[6]) const;
+    pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *const pClusterList, const std::string &view, 
+        const pandora::CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount,
+        std::stringstream ssBuf[6]) const;
 
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
      *
      *  @param  out2dVec, the image
      *  @param  view, string recording what view the image represents
-     *  @param  lenVecIndex, index for m_lenVec
+     *  @param  imgLenVecIndex, index for m_imgLenVec
      *
      *  @return The pixel position of the DL vertex for chosen view
      */
-    pandora::CartesianVector DeepLearning(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
-                             const int &lenVecIndex) const;
+    pandora::CartesianVector DeepLearning(const TwoDImage &out2dVec, const std::string &view,
+        const int imgLenVecIndex) const;
 
     /**
-     *  @brief  Create the training files.
+     *  @brief  Create the training files
      *
      *  @param  out2dVec, the image
      *  @param  view, string recording what view the image represents
@@ -86,15 +90,24 @@ private:
      *
      *  @return A flag recording if the end of the function was reached
      */
-    int CreateTrainingFiles(const std::vector<std::vector<double>> &out2dVec, const std::string &view,
-         const float &minx, const float &nstepx, const float &minz, const float &nstepz, std::stringstream ssBuf[6]) const;
+    int CreateTrainingFiles(const TwoDImage &out2dVec, const std::string &view,
+        const float minx, const float nstepx, const float minz, const float nstepz, std::stringstream ssBuf[6]) const;
 
     /**
-     *  @brief  Write the training files.
+     *  @brief  Write the training files
      *
      *  @param  ssBuf, buffer for training file writing
      */
     void WriteTrainingFiles(std::stringstream ssBuf[6]) const;
+
+    /**
+     *  @brief  Check if a 3D position is in the detector 
+     *
+     *  @param  position3D, the 3D position to check
+     *
+     *  @return A flag recording if the 3D position is in the detector 
+     */
+    bool DetectorCheck(const pandora::CartesianVector &position3D) const;
 
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list
@@ -103,19 +116,17 @@ private:
     std::string             m_modelFileNamePrefix;            ///< The model file name prefix
     unsigned int            m_numClusterCaloHitsPar;          ///< The number of cluster calo hits parameter 
     unsigned int            m_npixels;                        ///< The number of pixels, N, in the N*N square image 
-    std::vector<float>      m_lenVec;                         ///< Vector of lengths of the images
+    pandora::FloatVector    m_imgLenVec;                      ///< Vector of lengths of the images
     bool                    m_trainingSetMode;                ///< Whether to train
-    int                     m_trainingLenVecIndex;            ///< Index for m_lenVec to use for output training images
+    int                     m_trainingImgLenVecIndex;         ///< Index for m_imgLenVec to use for output training images
     float                   m_lenBuffer;                      ///< Length of the buffer for scaled images
-    std::vector<std::shared_ptr<torch::jit::script::Module>> m_pModule; ///< Vector of Pointers to Torch models
+    unsigned int            m_numViews;                       ///< Number of available 2D views
+    std::string             m_trainingDataFileName;           ///< The name of the training data output file
+    std::string             m_trainingLabelsFileName;         ///< The name of the training labels output file
+    float                   m_vertexXCorrection;              ///< The correction to the x-coordinate of the MC vertex position
+    double                  m_hitWidthZ;                      ///< The width of the hits in the z-direction
+    std::vector<std::shared_ptr<torch::jit::script::Module>> m_vecPModule; ///< Vector of Pointers to Torch models
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::Algorithm *DLVertexCreationAlgorithm::Factory::CreateAlgorithm() const
-{
-    return new DLVertexCreationAlgorithm();
-}
 
 } // namespace lar_content
 
