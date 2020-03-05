@@ -144,7 +144,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
 {
     const double length(m_imgLenVec[imgLenVecIndex]);
     const bool useScaledImg(length <= 0);
-    std::vector<double> xVec, zVec, sigma, height;
+    DoubleVector xVec, zVec, sigma, height;
     int iHits(0), allHitsCount(0), filtHitsCount(0);
     double minx(std::numeric_limits<double>::max()), minz(std::numeric_limits<double>::max());
     double maxx(-std::numeric_limits<double>::max()), maxz(-std::numeric_limits<double>::max());
@@ -169,7 +169,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
                 const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
                 xVec[iHits] = positionVector1.GetX(); zVec[iHits] = positionVector1.GetZ();
                 sigma[iHits] = (*hitIter1)->GetCellSize1(); height[iHits] = (*hitIter1)->GetInputEnergy();
-                if( (pCluster->GetNCaloHits()>=m_numClusterCaloHitsPar) && useScaledImg)
+                if( (pCluster->GetNCaloHits()>=m_numClusterCaloHitsPar) && useScaledImg )
                 {
                     minx = std::min(minx,xVec[iHits]); minz = std::min(minz,zVec[iHits]);
                     maxx = std::max(maxx,xVec[iHits]); maxz = std::max(maxz,zVec[iHits]);
@@ -179,8 +179,8 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
         }
     }
 
-    double nstepx(0), nstepz(0), lengthX(0), lengthZ(0), length1(0);
-    TwoDImage out2dVec(m_npixels, std::vector<double>(m_npixels, 0));
+    double nstepx(0), nstepz(0), lengthX(0), lengthZ(0), scalImgLen(0);
+    TwoDImage out2dVec(m_npixels, DoubleVector(m_npixels, 0));
 
     if (useScaledImg)
     {
@@ -188,9 +188,9 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
         maxx += m_lenBuffer; maxz += m_lenBuffer;
         lengthX = maxx - minx;
         lengthZ = maxz - minz;
-        length1 = std::max(lengthX, lengthZ);
-        nstepx = length1 / m_npixels;
-        nstepz = length1 / m_npixels;
+        scalImgLen = std::max(lengthX, lengthZ);
+        nstepx = scalImgLen / m_npixels;
+        nstepz = scalImgLen / m_npixels;
     }
     else
     {
@@ -253,9 +253,9 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const TwoDImage &out2dVe
 {
     /* Get the index for model */
     int index(0);
-    if (view==TPC_VIEW_W) index = m_numViews*imgLenVecIndex+0;
-    if (view==TPC_VIEW_V) index = m_numViews*imgLenVecIndex+1;
-    if (view==TPC_VIEW_U) index = m_numViews*imgLenVecIndex+2;
+    if (view == TPC_VIEW_W) index = m_numViews*imgLenVecIndex+0;
+    if (view == TPC_VIEW_V) index = m_numViews*imgLenVecIndex+1;
+    if (view == TPC_VIEW_U) index = m_numViews*imgLenVecIndex+2;
 
     /* Convert image to Torch "Tensor" */
     torch::Tensor input = torch::zeros({1, 1, m_npixels, m_npixels}, torch::TensorOptions().dtype(torch::kFloat32));
@@ -298,10 +298,10 @@ int DLVertexCreationAlgorithm::CreateTrainingFiles(const TwoDImage &out2dVec, co
     if (this->DetectorCheck(targetVertex)) return(0);
 
     int index(0);
-    if (view==TPC_VIEW_W) index = 0;
-    if (view==TPC_VIEW_V) index = 1;
-    if (view==TPC_VIEW_U) index = 2;
-    CartesianVector VertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, view));
+    if (view == TPC_VIEW_W) index = 0;
+    if (view == TPC_VIEW_V) index = 1;
+    if (view == TPC_VIEW_U) index = 2;
+    const CartesianVector VertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, view));
 
     const double MCXPixPosit((VertexPosition.GetX()-minx)/nstepx);
     const double MCZPixPosit((VertexPosition.GetZ()-minz)/nstepz);

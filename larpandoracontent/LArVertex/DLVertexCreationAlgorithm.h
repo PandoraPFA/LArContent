@@ -42,12 +42,13 @@ public:
      */
     ~DLVertexCreationAlgorithm();
 
-    typedef std::vector<std::vector<double>> TwoDImage;
-
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode Initialize();
+
+    typedef std::vector<std::vector<double>> TwoDImage;
+    typedef std::vector<double> DoubleVector;
 
     /**
      *  @brief  Get the DL Vertex position for chosen view
