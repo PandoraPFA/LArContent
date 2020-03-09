@@ -24,9 +24,7 @@ namespace lar_content
 class ProtoParticle
 {
 public:
-    pandora::ClusterList    m_clusterListU;                 ///< List of 2D U clusters in a 3D proto particle
-    pandora::ClusterList    m_clusterListV;                 ///< List of 2D V clusters in a 3D proto particle
-    pandora::ClusterList    m_clusterListW;                 ///< List of 2D W clusters in a 3D proto particle
+    pandora::ClusterList    m_clusterList;                  ///< List of 2D clusters in a 3D proto particle
 };
 
 typedef std::vector<ProtoParticle> ProtoParticleVector;

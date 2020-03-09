@@ -48,7 +48,10 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
             continue;
 
         // TODO Add real logic here
+
         ProtoParticle protoParticle;
+        protoParticle.m_clusterList.push_back(iter->GetCluster1());
+        protoParticle.m_clusterList.push_back(iter->GetCluster2());
     }
 
     particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);

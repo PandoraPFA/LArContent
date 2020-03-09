@@ -78,9 +78,9 @@ void TracksCrossingGapsTool::FindTracks(ThreeViewTransverseTracksAlgorithm *cons
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterListU.push_back((*iIter)->GetClusterU());
-            protoParticle.m_clusterListV.push_back((*iIter)->GetClusterV());
-            protoParticle.m_clusterListW.push_back((*iIter)->GetClusterW());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterW());
             protoParticleVector.push_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());

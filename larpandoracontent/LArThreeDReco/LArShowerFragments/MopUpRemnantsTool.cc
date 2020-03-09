@@ -57,9 +57,9 @@ void MopUpRemnantsTool::FindBestShowers(const TensorType &overlapTensor, ProtoPa
             continue;
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.push_back(eIter->GetClusterU());
-        protoParticle.m_clusterListV.push_back(eIter->GetClusterV());
-        protoParticle.m_clusterListW.push_back(eIter->GetClusterW());
+        protoParticle.m_clusterList.push_back(eIter->GetClusterU());
+        protoParticle.m_clusterList.push_back(eIter->GetClusterV());
+        protoParticle.m_clusterList.push_back(eIter->GetClusterW());
         protoParticleVector.push_back(protoParticle);
     }
 }

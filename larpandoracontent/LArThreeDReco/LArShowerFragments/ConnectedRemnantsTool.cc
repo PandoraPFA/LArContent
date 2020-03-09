@@ -73,9 +73,9 @@ void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor
         const Cluster *const pClusterW = clusterVectorW.front();
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.push_back(pClusterU);
-        protoParticle.m_clusterListV.push_back(pClusterV);
-        protoParticle.m_clusterListW.push_back(pClusterW);
+        protoParticle.m_clusterList.push_back(pClusterU);
+        protoParticle.m_clusterList.push_back(pClusterV);
+        protoParticle.m_clusterList.push_back(pClusterW);
         protoParticleVector.push_back(protoParticle);
 
         this->FillMergeMap(pClusterU, clusterVectorU, clusterMergeMap);

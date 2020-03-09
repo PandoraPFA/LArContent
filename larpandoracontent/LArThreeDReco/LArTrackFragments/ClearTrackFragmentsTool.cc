@@ -93,9 +93,9 @@ bool ClearTrackFragmentsTool::FindTrackFragments(ThreeViewTrackFragmentsAlgorith
         // Now make the particle
         ProtoParticle protoParticle;
         ProtoParticleVector protoParticleVector;
-        protoParticle.m_clusterListU.push_back(pClusterU);
-        protoParticle.m_clusterListV.push_back(pClusterV);
-        protoParticle.m_clusterListW.push_back(pClusterW);
+        protoParticle.m_clusterList.push_back(pClusterU);
+        protoParticle.m_clusterList.push_back(pClusterV);
+        protoParticle.m_clusterList.push_back(pClusterW);
         protoParticleVector.push_back(protoParticle);
         return pAlgorithm->CreateThreeDParticles(protoParticleVector);
     }
