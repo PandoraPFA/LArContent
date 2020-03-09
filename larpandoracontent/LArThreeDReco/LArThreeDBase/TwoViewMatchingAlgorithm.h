@@ -74,7 +74,7 @@ protected:
 
 private:
     typedef std::unordered_map<pandora::HitType, unsigned int> HitTypeToIndexMap;
-    HitTypeToIndexMap           m_hitTypeToIndexMap;             ///< The hit type to index map
+    HitTypeToIndexMap           m_hitTypeToIndexMap;            ///< The hit type to index map
 
     std::string                 m_inputClusterListName1;        ///< The name of the view 1 cluster list
     std::string                 m_inputClusterListName2;        ///< The name of the view 2 cluster list

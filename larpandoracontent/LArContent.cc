@@ -120,6 +120,9 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
 
+#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewClearTracksTool.h"
+
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
 #include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
@@ -228,6 +231,7 @@
     d("LArThreeDShowers",                       ThreeViewShowersAlgorithm)                                                      \
     d("LArThreeDTrackFragments",                ThreeViewTrackFragmentsAlgorithm)                                               \
     d("LArThreeDTransverseTracks",              ThreeViewTransverseTracksAlgorithm)                                             \
+    d("LArTwoViewTransverseTracks",             TwoViewTransverseTracksAlgorithm)                                               \
     d("LArCutClusterCharacterisation",          CutClusterCharacterisationAlgorithm)                                            \
     d("LArCutPfoCharacterisation",              CutPfoCharacterisationAlgorithm)                                                \
     d("LArShowerGrowing",                       ShowerGrowingAlgorithm)                                                         \
@@ -315,6 +319,7 @@
     d("LArTracksCrossingGaps",                  TracksCrossingGapsTool)                                                         \
     d("LArTrackSplitting",                      TrackSplittingTool)                                                             \
     d("LArUndershootTracks",                    UndershootTracksTool)                                                           \
+    d("LArTwoViewClearTracks",                  TwoViewClearTracksTool)                                                         \
     d("LArEnergyKickFeature",                   EnergyKickFeatureTool)                                                          \
     d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \
     d("LArLocalAsymmetryFeature",               LocalAsymmetryFeatureTool)                                                      \
