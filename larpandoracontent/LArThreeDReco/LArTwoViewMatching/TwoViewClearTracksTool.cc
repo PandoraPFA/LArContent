@@ -15,7 +15,7 @@ namespace lar_content
 {
 
 TwoViewClearTracksTool::TwoViewClearTracksTool() :
-    m_minXOverlap(1.f)
+    m_minXOverlap(0.1f)
 {
 }
 
@@ -52,6 +52,7 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
         ProtoParticle protoParticle;
         protoParticle.m_clusterList.push_back(iter->GetCluster1());
         protoParticle.m_clusterList.push_back(iter->GetCluster2());
+        protoParticleVector.push_back(protoParticle);
     }
 
     particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);

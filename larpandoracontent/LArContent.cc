@@ -52,6 +52,7 @@
 #include "larpandoracontent/LArMonitoring/ShowerTensorVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/TestBeamEventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/TestBeamHierarchyEventValidationAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/TransverseMatrixVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
@@ -286,6 +287,7 @@
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArCosmicRayTaggingMonitoring",          CosmicRayTaggingMonitoringTool)                                                 \
     d("LArShowerTensorVisualization",           ShowerTensorVisualizationTool)                                                  \
+    d("LArTransverseMatrixVisualization",       TransverseMatrixVisualizationTool)                                              \
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArCheatingBeamParticleId",              CheatingBeamParticleIdTool)                                                     \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
