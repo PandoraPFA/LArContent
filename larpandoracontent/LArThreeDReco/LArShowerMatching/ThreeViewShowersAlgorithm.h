@@ -148,7 +148,7 @@ private:
     void GetBestHitOverlapFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMapPair &positionMaps,
         unsigned int &nSampledHits, unsigned int &nMatchedHits) const;
 
-    void ExamineTensor();
+    void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<ShowerTensorTool*> TensorToolVector;

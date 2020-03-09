@@ -49,7 +49,7 @@ public:
     virtual void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
-    virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
+    virtual void SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 protected:
     /**

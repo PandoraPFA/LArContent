@@ -307,7 +307,7 @@ void ThreeViewShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewShowersAlgorithm::ExamineTensor()
+void ThreeViewShowersAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 

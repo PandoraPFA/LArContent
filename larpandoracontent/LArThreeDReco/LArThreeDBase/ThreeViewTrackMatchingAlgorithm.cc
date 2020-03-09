@@ -100,17 +100,9 @@ void ThreeViewTrackMatchingAlgorithm<T>::SelectInputClusters(const ClusterList *
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeViewTrackMatchingAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+void ThreeViewTrackMatchingAlgorithm<T>::SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
-    // TODO Correct these placeholder parameters
     pfoParameters.m_particleId = MU_MINUS; // Track
-    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-    pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

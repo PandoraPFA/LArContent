@@ -608,7 +608,7 @@ bool ThreeViewTrackFragmentsAlgorithm::CheckOverlapResult(const FragmentOverlapR
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewTrackFragmentsAlgorithm::ExamineTensor()
+void ThreeViewTrackFragmentsAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 

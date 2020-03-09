@@ -106,7 +106,7 @@ public:
     virtual bool CreateThreeDParticles(const ProtoParticleVector &protoParticleVector);
 
     /**
-     *  @brief  Calculate Pfo properties from proto particle
+     *  @brief  Set Pfo properties
      *
      *  @param  protoParticle the input proto particle
      *  @param  pfoParameters the output pfo parameters
@@ -114,11 +114,18 @@ public:
     virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
     /**
+     *  @brief  Set pfo particle id
+     *
+     *  @param  pfoParameters the output pfo parameters
+     */
+    virtual void SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
+
+    /**
      *  @brief  Merge clusters together
      *
      *  @param  clusterMergeMap the cluster merge map
      *
-     *  @return whether changes to the tensor have been made
+     *  @return whether changes to the overlap container have been made
      */
     virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
 
@@ -127,7 +134,7 @@ public:
      *
      *  @param  splitPositionMap the split position map
      *
-     *  @return whether changes to the tensor have been made
+     *  @return whether changes to the overlap container have been made
      */
     virtual bool MakeClusterSplits(const SplitPositionMap &splitPositionMap);
 
@@ -164,14 +171,14 @@ protected:
     virtual void PreparationStep();
 
     /**
-     *  @brief  Main loop over cluster combinations in order to populate the tensor. Responsible for calling CalculateOverlapResult.
+     *  @brief  Main loop over cluster combinations in order to populate the overlap container. Responsible for calling CalculateOverlapResult.
      */
     virtual void PerformMainLoop() = 0;
 
     /**
-     *  @brief  Examine contents of tensor, collect together best-matching 2D particles and modify clusters as required
+     *  @brief  Examine contents of overlap container, collect together best-matching 2D particles and modify clusters as required
      */
-    virtual void ExamineTensor() = 0;
+    virtual void ExamineOverlapContainer() = 0;
 
     /**
      *  @brief  Tidy member variables in derived class

@@ -59,8 +59,7 @@ bool MatchingBaseAlgorithm::CreateThreeDParticles(const ProtoParticleVector &pro
 
 void MatchingBaseAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
-    // TODO Correct these placeholder parameters
-    pfoParameters.m_particleId = E_MINUS; // Shower
+    this->SetPfoParticleId(pfoParameters);
     pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
     pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
     pfoParameters.m_energy = 0.f;
@@ -68,6 +67,13 @@ void MatchingBaseAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle,
     pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
     pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
     pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MatchingBaseAlgorithm::SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+{
+    pfoParameters.m_particleId = E_MINUS; // Shower
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -246,7 +252,7 @@ StatusCode MatchingBaseAlgorithm::Run()
         this->SelectAllInputClusters();
         this->PreparationStep();
         this->PerformMainLoop();
-        this->ExamineTensor();
+        this->ExamineOverlapContainer();
         this->TidyUp();
     }
     catch (StatusCodeException &statusCodeException)

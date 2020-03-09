@@ -87,7 +87,7 @@ void ThreeViewRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pCl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewRemnantsAlgorithm::ExamineTensor()
+void ThreeViewRemnantsAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 

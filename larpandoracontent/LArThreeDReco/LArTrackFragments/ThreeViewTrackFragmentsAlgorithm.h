@@ -133,7 +133,7 @@ protected:
      */
     bool CheckOverlapResult(const FragmentOverlapResult &overlapResult) const;
 
-    void ExamineTensor();
+    void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::unordered_map<const pandora::Cluster*, unsigned int> ClusterToMatchedHitsMap;

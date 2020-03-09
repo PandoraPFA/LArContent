@@ -37,7 +37,7 @@ public:
 
 private:
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
-    void ExamineTensor();
+    void ExamineOverlapContainer();
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

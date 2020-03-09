@@ -61,7 +61,7 @@ private:
         const TwoDSlidingFitResult &slidingFitResultW, const pandora::CartesianVector &vtxMerged3D, const pandora::CartesianVector &endMerged3D,
         TrackOverlapResult &overlapResult) const;
 
-    void ExamineTensor();
+    void ExamineOverlapContainer();
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

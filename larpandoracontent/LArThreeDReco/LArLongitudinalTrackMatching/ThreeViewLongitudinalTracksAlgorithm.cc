@@ -197,7 +197,7 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlid
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewLongitudinalTracksAlgorithm::ExamineTensor()
+void ThreeViewLongitudinalTracksAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 
