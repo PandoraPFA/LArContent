@@ -73,7 +73,7 @@ protected:
     MatrixType                  m_overlapMatrix;                ///< The overlap matrix
 
 private:
-    typedef std::unordered_map<pandora::HitType, unsigned int> HitTypeToIndexMap;
+    typedef std::unordered_map<pandora::HitType, unsigned int, std::hash<int> > HitTypeToIndexMap;
     HitTypeToIndexMap           m_hitTypeToIndexMap;            ///< The hit type to index map
 
     std::string                 m_inputClusterListName1;        ///< The name of the view 1 cluster list
