@@ -100,6 +100,15 @@ else()
     link_libraries(${ROOT_LIBRARIES} ${ROOT_COMPONENT_LIBRARIES})
     add_definitions(${ROOT_DEFINITIONS})
 
+	if(TORCHLIB)
+	find_package(Torch REQUIRED)
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+	include_directories(${TORCH_INCLUDE_DIRECTORIES})
+	link_libraries(${TORCH_LIBRARIES})
+	message(//////////////////////)
+	message(torch libraries linked)
+	message(//////////////////////)
+	endif()
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc
     set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing -std=c++11 ${CMAKE_CXX_FLAGS}")
