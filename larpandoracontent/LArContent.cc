@@ -278,7 +278,7 @@
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
     d("LArBdtVertexSelection",                  BdtVertexSelectionAlgorithm)                                                    \
     d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)													\
-    d("LArDeepLearning",                  		DeepLearningTrackShowerIdAlgorithm)
+    d("LArDeepLearningTrackShowerId",           DeepLearningTrackShowerIdAlgorithm)
       
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
