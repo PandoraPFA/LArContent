@@ -307,7 +307,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
         const bool isMainMCParticleSet(0 != bestMCParticlePdgCode);
         if (isMainMCParticleSet)
         {
-			if (completeness >= 0.8 && purity >= 0.8 && mischaracterisedPfo == 0 && (abs(xVertexPos) <= 340) && (abs(yVertexPos) <= 584) && (zVertexPos >= 200 && zVertexPos <= 1194))
+			if (completeness >= 0.8 && purity >= 0.8 && mischaracterisedPfo == 0 && (std::abs(xVertexPos) <= 340) && (std::abs(yVertexPos) <= 584) && (zVertexPos >= 200 && zVertexPos <= 1194))
 			{
             	std::string outputFile;
             	outputFile.append(m_trainingOutputFile);
