@@ -110,6 +110,15 @@ private:
      */
     bool DetectorCheck(const pandora::CartesianVector &position3D) const;
 
+    /**
+     *  @brief  Check if the event view passes conditions
+     *
+     *  @param  pClusterList, address of the input cluster list for the specific view
+     *
+     *  @return A flag recording if the event view passed the conditions
+     */
+    bool EventViewCheck(const pandora::ClusterList *const pClusterList) const;
+
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list
     pandora::StringVector   m_inputClusterListNames;          ///< The list of cluster list names

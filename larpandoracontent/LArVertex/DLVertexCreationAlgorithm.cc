@@ -82,6 +82,10 @@ StatusCode DLVertexCreationAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[1], pClusterListV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], pClusterListU));
 
+    if (this->EventViewCheck(pClusterListW)) return STATUS_CODE_SUCCESS;
+    if (this->EventViewCheck(pClusterListV)) return STATUS_CODE_SUCCESS;
+    if (this->EventViewCheck(pClusterListU)) return STATUS_CODE_SUCCESS;
+
     std::stringstream ssBuf[6];
     const CartesianVector positionInput(0.f, 0.f, 0.f); unsigned int vertReconCount(0);
     CartesianVector positionW(this->GetDLVertexForView(pClusterListW, TPC_VIEW_W, positionInput, 0, vertReconCount, ssBuf));
@@ -372,6 +376,20 @@ bool DLVertexCreationAlgorithm::DetectorCheck(const pandora::CartesianVector &po
     gapCheck = gapCheck && LArGeometryHelper::IsInGap3D(this->GetPandora(), position3D, TPC_VIEW_U, 0.f);
 
     return((!volumeCheck) || gapCheck);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool DLVertexCreationAlgorithm::EventViewCheck(const pandora::ClusterList *const pClusterList) const
+{
+    int allHitsCount(0), filtHitsCount(0);
+
+    for (const Cluster *const pCluster : *pClusterList) 
+    {
+        allHitsCount += pCluster->GetNCaloHits();
+        if (pCluster->GetNCaloHits() >= m_numClusterCaloHitsPar) filtHitsCount += pCluster->GetNCaloHits();
+    }
+
+    return(allHitsCount==0 || filtHitsCount==0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
