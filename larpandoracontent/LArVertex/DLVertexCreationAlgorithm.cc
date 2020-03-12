@@ -151,16 +151,12 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
     const double length(m_imgLenVec[imgLenVecIndex]);
     const bool useScaledImg(length <= 0);
     DoubleVector xVec, zVec, sigma, height;
-    int iHits(0), allHitsCount(0), filtHitsCount(0);
+    int iHits(0), allHitsCount(0);
     double minx(std::numeric_limits<double>::max()), minz(std::numeric_limits<double>::max());
     double maxx(-std::numeric_limits<double>::max()), maxz(-std::numeric_limits<double>::max());
 
     for (const Cluster *const pCluster : *pClusterList) 
-    {
         allHitsCount += pCluster->GetNCaloHits();
-        if (pCluster->GetNCaloHits() >= m_numClusterCaloHitsPar) filtHitsCount += pCluster->GetNCaloHits();
-    }
-    if (allHitsCount==0 || filtHitsCount==0) return(CartesianVector(0.f, 0.f, 0.f));
 
     xVec.resize(allHitsCount, 0.f) ; zVec.resize(allHitsCount, 0.f)  ;
     sigma.resize(allHitsCount, 0.f); height.resize(allHitsCount, 0.f);
