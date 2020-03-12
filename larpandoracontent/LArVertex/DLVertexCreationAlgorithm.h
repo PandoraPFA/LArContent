@@ -119,6 +119,13 @@ private:
      */
     bool EventViewCheck(const pandora::ClusterList *const pClusterList) const;
 
+    /**
+     *  @brief  Check if the event passes training conditions
+     *
+     *  @return A flag recording if the event passed the training conditions
+     */
+    bool TrainEventCheck() const;
+
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list
     pandora::StringVector   m_inputClusterListNames;          ///< The list of cluster list names

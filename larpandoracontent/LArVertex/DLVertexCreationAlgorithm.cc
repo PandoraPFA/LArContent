@@ -85,6 +85,8 @@ StatusCode DLVertexCreationAlgorithm::Run()
     if (this->EventViewCheck(pClusterListW)) return STATUS_CODE_SUCCESS;
     if (this->EventViewCheck(pClusterListV)) return STATUS_CODE_SUCCESS;
     if (this->EventViewCheck(pClusterListU)) return STATUS_CODE_SUCCESS;
+    if (m_trainingSetMode)
+        if (this->TrainEventCheck()) return STATUS_CODE_SUCCESS;
 
     std::stringstream ssBuf[6];
     const CartesianVector positionInput(0.f, 0.f, 0.f); unsigned int vertReconCount(0);
@@ -299,8 +301,6 @@ int DLVertexCreationAlgorithm::CreateTrainingFiles(const TwoDImage &out2dVec, co
             pMCParticle->GetEndpoint().GetZ());
     }
 
-    if (this->DetectorCheck(targetVertex)) return(0);
-
     int index(0);
     if (view == TPC_VIEW_W) index = 0;
     if (view == TPC_VIEW_V) index = 1;
@@ -390,6 +390,25 @@ bool DLVertexCreationAlgorithm::EventViewCheck(const pandora::ClusterList *const
     }
 
     return(allHitsCount==0 || filtHitsCount==0);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+bool DLVertexCreationAlgorithm::TrainEventCheck() const
+{
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+
+    CartesianVector targetVertex(0.f, 0.f, 0.f);
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
+    {
+        if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
+            continue;
+
+        targetVertex.SetValues(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), 
+            pMCParticle->GetEndpoint().GetZ());
+    }
+
+    return(this->DetectorCheck(targetVertex));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
