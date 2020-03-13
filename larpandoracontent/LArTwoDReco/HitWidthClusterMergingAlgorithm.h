@@ -32,30 +32,7 @@ public:
     HitWidthClusterMergingAlgorithm();
 
 
-private:
-  
-    struct SortByHigherXExtrema{
-
-        SortByHigherXExtrema(const float maxConstituentHitWidth) : m_maxConstituentHitWidth(maxConstituentHitWidth) {}
-
-        bool operator() (const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs) 
-        {
-
-	    LArHitWidthHelper::ConstituentHitVector lhsConstituentHitVector(LArHitWidthHelper::GetConstituentHits(pLhs, m_maxConstituentHitWidth));
-	    LArHitWidthHelper::ConstituentHitVector rhsConstituentHitVector(LArHitWidthHelper::GetConstituentHits(pRhs, m_maxConstituentHitWidth));
-
-	    pandora::CartesianVector lhsHigherXExtrema(LArHitWidthHelper::GetExtremalCoordinatesHigherX(lhsConstituentHitVector));
-	    pandora::CartesianVector rhsHigherXExtrema(LArHitWidthHelper::GetExtremalCoordinatesHigherX(rhsConstituentHitVector));
-
-	    float lhsMaxX(lhsHigherXExtrema.GetX()), rhsMaxX(rhsHigherXExtrema.GetX());
-    
-	    return (lhsMaxX < rhsMaxX);
-	}
-
-	const float m_maxConstituentHitWidth;
-    };
-    
-
+private:  
   
   void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
@@ -75,12 +52,18 @@ private:
 
 
   std::string m_clusterListName;
+
+  float m_maxConstituentHitWidth;
+
+  bool m_useSlidingLinearFit;
+  float m_layerFitHalfWindow;
+
   float m_minClusterWeight;
   float m_maxXMergeDistance; //Distance either side of point
   float m_maxZMergeDistance; //Distance either side of point
   float m_maxMergeCosOpeningAngle; 
 
-  float m_maxConstituentHitWidth;
+
 
   LArHitWidthHelper::ClusterToParametersMap m_clusterToFitParametersMap;
 
