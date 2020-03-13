@@ -126,6 +126,13 @@ private:
      */
     bool TrainEventCheck() const;
 
+    /**
+     *  @brief  Get the MC vertex position
+     *
+     *  @return The MC vertex position
+     */
+    pandora::CartesianVector GetMCVertexPosition() const;
+
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list
     pandora::StringVector   m_inputClusterListNames;          ///< The list of cluster list names

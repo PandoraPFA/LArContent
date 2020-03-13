@@ -284,18 +284,7 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const TwoDImage &out2dVe
 int DLVertexCreationAlgorithm::CreateTrainingFiles(const TwoDImage &out2dVec, const HitType &view,
     const float minx, const float nstepx, const float minz, const float nstepz, std::stringstream ssBuf[6]) const
 {
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
-
-    CartesianVector targetVertex(0.f, 0.f, 0.f);
-    for (const MCParticle *const pMCParticle : *pMCParticleList)
-    {
-        if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
-            continue;
-
-        targetVertex.SetValues(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), 
-            pMCParticle->GetEndpoint().GetZ());
-    }
+    CartesianVector targetVertex(this->GetMCVertexPosition());
 
     int index(0);
     if (view == TPC_VIEW_W) index = 0;
@@ -391,6 +380,14 @@ bool DLVertexCreationAlgorithm::EventViewCheck(const pandora::ClusterList *const
 //------------------------------------------------------------------------------------------------------------------------------------------
 bool DLVertexCreationAlgorithm::TrainEventCheck() const
 {
+    CartesianVector targetVertex(this->GetMCVertexPosition());
+
+    return(this->DetectorCheck(targetVertex));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+pandora::CartesianVector DLVertexCreationAlgorithm::GetMCVertexPosition() const
+{
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
@@ -404,7 +401,7 @@ bool DLVertexCreationAlgorithm::TrainEventCheck() const
             pMCParticle->GetEndpoint().GetZ());
     }
 
-    return(this->DetectorCheck(targetVertex));
+    return(targetVertex);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
