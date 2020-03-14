@@ -77,15 +77,19 @@ StatusCode DLVertexCreationAlgorithm::Run()
 {
     torch::manual_seed(0);
 
-    const ClusterList *pClusterListU, *pClusterListV, *pClusterListW;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[2], pClusterListW));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[1], pClusterListV));
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], pClusterListU));
+    const ClusterList *pClusterList0, *pClusterList1, *pClusterList2;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[0], pClusterList0));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[1], pClusterList1));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListNames[2], pClusterList2));
+
+    const HitType hitType0(LArClusterHelper::GetClusterHitType(pClusterList0->front()));
+    const HitType hitType1(LArClusterHelper::GetClusterHitType(pClusterList1->front()));
+    const HitType hitType2(LArClusterHelper::GetClusterHitType(pClusterList2->front()));
 
     std::vector<unsigned int> allHitsCountVec{0, 0, 0};
-    if (this->EventViewCheck(pClusterListW, allHitsCountVec[0])) return STATUS_CODE_SUCCESS;
-    if (this->EventViewCheck(pClusterListV, allHitsCountVec[1])) return STATUS_CODE_SUCCESS;
-    if (this->EventViewCheck(pClusterListU, allHitsCountVec[2])) return STATUS_CODE_SUCCESS;
+    if (this->EventViewCheck(pClusterList0, allHitsCountVec[0])) return STATUS_CODE_SUCCESS;
+    if (this->EventViewCheck(pClusterList1, allHitsCountVec[1])) return STATUS_CODE_SUCCESS;
+    if (this->EventViewCheck(pClusterList2, allHitsCountVec[2])) return STATUS_CODE_SUCCESS;
     CartesianVector MCVertexPosition(0.f, 0.f, 0.f);
     if (m_trainingSetMode)
     {
@@ -95,9 +99,9 @@ StatusCode DLVertexCreationAlgorithm::Run()
 
     std::stringstream ssBuf[6];
     const CartesianVector positionInput(0.f, 0.f, 0.f); unsigned int vertReconCount(0);
-    CartesianVector positionW(this->GetDLVertexForView(pClusterListW,TPC_VIEW_W,positionInput,0,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[0]));
-    CartesianVector positionV(this->GetDLVertexForView(pClusterListV,TPC_VIEW_V,positionInput,0,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[1]));
-    CartesianVector positionU(this->GetDLVertexForView(pClusterListU,TPC_VIEW_U,positionInput,0,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[2]));
+    CartesianVector position0(this->GetDLVertexForView(pClusterList0,hitType0,positionInput,0,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[0]));
+    CartesianVector position1(this->GetDLVertexForView(pClusterList1,hitType1,positionInput,0,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[1]));
+    CartesianVector position2(this->GetDLVertexForView(pClusterList2,hitType2,positionInput,0,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[2]));
     if (m_trainingSetMode && (m_trainingImgLenVecIndex==0)) 
     {
         if (vertReconCount == ((1+m_trainingImgLenVecIndex)*m_numViews))
@@ -108,16 +112,16 @@ StatusCode DLVertexCreationAlgorithm::Run()
     CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0.f);
     for (int imgLenVecIndex=1; imgLenVecIndex<m_imgLenVec.size(); imgLenVecIndex++)
     {
-        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
-            positionW, positionV, positionU, position3D, chiSquared);
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType0, hitType1, hitType2,
+            position0, position1, position2, position3D, chiSquared);
 
-        const CartesianVector position3DW(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_W));
-        const CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V));
-        const CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U));
+        const CartesianVector position3D0(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, hitType0));
+        const CartesianVector position3D1(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, hitType1));
+        const CartesianVector position3D2(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, hitType2));
 
-        positionW=this->GetDLVertexForView(pClusterListW,TPC_VIEW_W,position3DW,imgLenVecIndex,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[0]);
-        positionV=this->GetDLVertexForView(pClusterListV,TPC_VIEW_V,position3DV,imgLenVecIndex,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[1]);
-        positionU=this->GetDLVertexForView(pClusterListU,TPC_VIEW_U,position3DU,imgLenVecIndex,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[2]);
+        position0=this->GetDLVertexForView(pClusterList0,hitType0,position3D0,imgLenVecIndex,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[0]);
+        position1=this->GetDLVertexForView(pClusterList1,hitType1,position3D1,imgLenVecIndex,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[1]);
+        position2=this->GetDLVertexForView(pClusterList2,hitType2,position3D2,imgLenVecIndex,vertReconCount,ssBuf,MCVertexPosition,allHitsCountVec[2]);
         if (m_trainingSetMode && (m_trainingImgLenVecIndex==imgLenVecIndex))
         {
             if (vertReconCount == ((1+m_trainingImgLenVecIndex)*m_numViews))
@@ -128,8 +132,8 @@ StatusCode DLVertexCreationAlgorithm::Run()
 
     if (vertReconCount == m_numViews*m_imgLenVec.size())
     {
-        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), TPC_VIEW_W, TPC_VIEW_V, TPC_VIEW_U,
-            positionW, positionV, positionU, position3D, chiSquared);
+        LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType0, hitType1, hitType2,
+            position0, position1, position2, position3D, chiSquared);
 
         const VertexList *pVertexList(nullptr); std::string temporaryListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
