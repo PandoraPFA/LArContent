@@ -59,12 +59,13 @@ private:
      *  @param  imgLenVecIndex, index for m_imgLenVec
      *  @param  vertReconCount, count of the reconstructed 2D DL vertices
      *  @param  ssBuf, buffer for training file writing
+     *  @param  MCVertexPosition, the MC vertex position to use in training mode
      *
      *  @return The position of the DL vertex for chosen view
      */
     pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *const pClusterList, const pandora::HitType &view, 
         const pandora::CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount,
-        std::stringstream ssBuf[6]) const;
+        std::stringstream ssBuf[6], const pandora::CartesianVector &MCVertexPosition) const;
 
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
@@ -88,11 +89,12 @@ private:
      *  @param  minz, the minimum z coordinate represented by the image
      *  @param  nstepz, the length of a pixel in the z direction
      *  @param  ssBuf, buffer for training file writing
+     *  @param  MCVertexPosition, the MC vertex position to use in training mode
      *
      *  @return A flag recording if the end of the function was reached
      */
-    int CreateTrainingFiles(const TwoDImage &out2dVec, const pandora::HitType &view,
-        const float minx, const float nstepx, const float minz, const float nstepz, std::stringstream ssBuf[6]) const;
+    int CreateTrainingFiles(const TwoDImage &out2dVec, const pandora::HitType &view, const float minx, const float nstepx,
+        const float minz, const float nstepz, std::stringstream ssBuf[6], const pandora::CartesianVector &MCVertexPosition) const;
 
     /**
      *  @brief  Write the training files
@@ -118,13 +120,6 @@ private:
      *  @return A flag recording if the event view passed the conditions
      */
     bool EventViewCheck(const pandora::ClusterList *const pClusterList) const;
-
-    /**
-     *  @brief  Check if the event passes training conditions
-     *
-     *  @return A flag recording if the event passed the training conditions
-     */
-    bool TrainEventCheck() const;
 
     /**
      *  @brief  Get the MC vertex position

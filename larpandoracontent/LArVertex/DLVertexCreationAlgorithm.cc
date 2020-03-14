@@ -85,14 +85,18 @@ StatusCode DLVertexCreationAlgorithm::Run()
     if (this->EventViewCheck(pClusterListW)) return STATUS_CODE_SUCCESS;
     if (this->EventViewCheck(pClusterListV)) return STATUS_CODE_SUCCESS;
     if (this->EventViewCheck(pClusterListU)) return STATUS_CODE_SUCCESS;
+    CartesianVector MCVertexPosition(0.f, 0.f, 0.f);
     if (m_trainingSetMode)
-        if (this->TrainEventCheck()) return STATUS_CODE_SUCCESS;
+    {
+        MCVertexPosition = this->GetMCVertexPosition();
+        if (this->DetectorCheck(MCVertexPosition)) return STATUS_CODE_SUCCESS;
+    }
 
     std::stringstream ssBuf[6];
     const CartesianVector positionInput(0.f, 0.f, 0.f); unsigned int vertReconCount(0);
-    CartesianVector positionW(this->GetDLVertexForView(pClusterListW, TPC_VIEW_W, positionInput, 0, vertReconCount, ssBuf));
-    CartesianVector positionV(this->GetDLVertexForView(pClusterListV, TPC_VIEW_V, positionInput, 0, vertReconCount, ssBuf));
-    CartesianVector positionU(this->GetDLVertexForView(pClusterListU, TPC_VIEW_U, positionInput, 0, vertReconCount, ssBuf));
+    CartesianVector positionW(this->GetDLVertexForView(pClusterListW, TPC_VIEW_W, positionInput, 0, vertReconCount, ssBuf, MCVertexPosition));
+    CartesianVector positionV(this->GetDLVertexForView(pClusterListV, TPC_VIEW_V, positionInput, 0, vertReconCount, ssBuf, MCVertexPosition));
+    CartesianVector positionU(this->GetDLVertexForView(pClusterListU, TPC_VIEW_U, positionInput, 0, vertReconCount, ssBuf, MCVertexPosition));
     if (m_trainingSetMode && (m_trainingImgLenVecIndex==0)) 
     {
         if (vertReconCount == ((1+m_trainingImgLenVecIndex)*m_numViews))
@@ -110,9 +114,9 @@ StatusCode DLVertexCreationAlgorithm::Run()
         const CartesianVector position3DV(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_V));
         const CartesianVector position3DU(LArGeometryHelper::ProjectPosition(this->GetPandora(), position3D, TPC_VIEW_U));
 
-        positionW=this->GetDLVertexForView(pClusterListW, TPC_VIEW_W, position3DW, imgLenVecIndex, vertReconCount, ssBuf);
-        positionV=this->GetDLVertexForView(pClusterListV, TPC_VIEW_V, position3DV, imgLenVecIndex, vertReconCount, ssBuf);
-        positionU=this->GetDLVertexForView(pClusterListU, TPC_VIEW_U, position3DU, imgLenVecIndex, vertReconCount, ssBuf);
+        positionW=this->GetDLVertexForView(pClusterListW, TPC_VIEW_W, position3DW, imgLenVecIndex, vertReconCount, ssBuf, MCVertexPosition);
+        positionV=this->GetDLVertexForView(pClusterListV, TPC_VIEW_V, position3DV, imgLenVecIndex, vertReconCount, ssBuf, MCVertexPosition);
+        positionU=this->GetDLVertexForView(pClusterListU, TPC_VIEW_U, position3DU, imgLenVecIndex, vertReconCount, ssBuf, MCVertexPosition);
         if (m_trainingSetMode && (m_trainingImgLenVecIndex==imgLenVecIndex))
         {
             if (vertReconCount == ((1+m_trainingImgLenVecIndex)*m_numViews))
@@ -146,7 +150,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
 //---------------------------------------------------------------------------------------------------------------------------------
 CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList *const pClusterList, const HitType &view,
     const CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount, 
-    std::stringstream ssBuf[6]) const
+    std::stringstream ssBuf[6], const CartesianVector &MCVertexPosition) const
 {
     const double length(m_imgLenVec[imgLenVecIndex]);
     const bool useScaledImg(length <= 0);
@@ -234,7 +238,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
 
     if (m_trainingSetMode && (m_trainingImgLenVecIndex==imgLenVecIndex))
     {
-        vertReconCount += (this->CreateTrainingFiles(out2dVec,view,minx,nstepx,minz,nstepz,ssBuf));
+        vertReconCount += (this->CreateTrainingFiles(out2dVec,view,minx,nstepx,minz,nstepz,ssBuf,MCVertexPosition));
         return(CartesianVector(0.f, 0.f, 0.f));
     }
     else
@@ -281,16 +285,14 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const TwoDImage &out2dVe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-int DLVertexCreationAlgorithm::CreateTrainingFiles(const TwoDImage &out2dVec, const HitType &view,
-    const float minx, const float nstepx, const float minz, const float nstepz, std::stringstream ssBuf[6]) const
+int DLVertexCreationAlgorithm::CreateTrainingFiles(const TwoDImage &out2dVec, const HitType &view, const float minx, const float nstepx,
+    const float minz, const float nstepz, std::stringstream ssBuf[6], const CartesianVector &MCVertexPosition) const
 {
-    CartesianVector targetVertex(this->GetMCVertexPosition());
-
     int index(0);
     if (view == TPC_VIEW_W) index = 0;
     if (view == TPC_VIEW_V) index = 1;
     if (view == TPC_VIEW_U) index = 2;
-    const CartesianVector VertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), targetVertex, view));
+    const CartesianVector VertexPosition(LArGeometryHelper::ProjectPosition(this->GetPandora(), MCVertexPosition, view));
 
     const double MCXPixPosit((VertexPosition.GetX()-minx)/nstepx);
     const double MCZPixPosit((VertexPosition.GetZ()-minz)/nstepz);
@@ -378,30 +380,22 @@ bool DLVertexCreationAlgorithm::EventViewCheck(const pandora::ClusterList *const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool DLVertexCreationAlgorithm::TrainEventCheck() const
-{
-    CartesianVector targetVertex(this->GetMCVertexPosition());
-
-    return(this->DetectorCheck(targetVertex));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 pandora::CartesianVector DLVertexCreationAlgorithm::GetMCVertexPosition() const
 {
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
-    CartesianVector targetVertex(0.f, 0.f, 0.f);
+    CartesianVector MCVertexPosition(0.f, 0.f, 0.f);
     for (const MCParticle *const pMCParticle : *pMCParticleList)
     {
         if (!LArMCParticleHelper::IsNeutrino(pMCParticle))
             continue;
 
-        targetVertex.SetValues(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), 
+        MCVertexPosition.SetValues(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), 
             pMCParticle->GetEndpoint().GetZ());
     }
 
-    return(targetVertex);
+    return(MCVertexPosition);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
