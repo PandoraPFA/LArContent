@@ -60,12 +60,13 @@ private:
      *  @param  vertReconCount, count of the reconstructed 2D DL vertices
      *  @param  ssBuf, buffer for training file writing
      *  @param  MCVertexPosition, the MC vertex position to use in training mode
+     *  @param  allHitsCount, counter for the number of hits in the specific view
      *
      *  @return The position of the DL vertex for chosen view
      */
     pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *const pClusterList, const pandora::HitType &view, 
         const pandora::CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount,
-        std::stringstream ssBuf[6], const pandora::CartesianVector &MCVertexPosition) const;
+        std::stringstream ssBuf[6], const pandora::CartesianVector &MCVertexPosition, const unsigned int allHitsCount) const;
 
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
@@ -116,10 +117,11 @@ private:
      *  @brief  Check if the event view passes conditions
      *
      *  @param  pClusterList, address of the input cluster list for the specific view
+     *  @param  allHitsCount, counter for the number of hits in the specific view
      *
      *  @return A flag recording if the event view passed the conditions
      */
-    bool EventViewCheck(const pandora::ClusterList *const pClusterList) const;
+    bool EventViewCheck(const pandora::ClusterList *const pClusterList, unsigned int &allHitsCount) const;
 
     /**
      *  @brief  Get the MC vertex position
