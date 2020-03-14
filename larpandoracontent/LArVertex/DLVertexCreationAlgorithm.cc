@@ -155,13 +155,13 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
 {
     const double length(m_imgLenVec[imgLenVecIndex]);
     const bool useScaledImg(length <= 0);
-    DoubleVector xVec, zVec, sigma, height;
+    DoubleVector xVec, zVec, sigmaVec, heightVec;
     int iHits(0);
     double minx(std::numeric_limits<double>::max()), minz(std::numeric_limits<double>::max());
     double maxx(-std::numeric_limits<double>::max()), maxz(-std::numeric_limits<double>::max());
 
     xVec.resize(allHitsCount, 0.f) ; zVec.resize(allHitsCount, 0.f)  ;
-    sigma.resize(allHitsCount, 0.f); height.resize(allHitsCount, 0.f);
+    sigmaVec.resize(allHitsCount, 0.f); heightVec.resize(allHitsCount, 0.f);
 
     for (const Cluster *const pCluster : *pClusterList) 
     {
@@ -172,7 +172,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
             {
                 const CartesianVector &positionVector1((*hitIter1)->GetPositionVector());
                 xVec[iHits] = positionVector1.GetX(); zVec[iHits] = positionVector1.GetZ();
-                sigma[iHits] = (*hitIter1)->GetCellSize1(); height[iHits] = (*hitIter1)->GetInputEnergy();
+                sigmaVec[iHits] = (*hitIter1)->GetCellSize1(); heightVec[iHits] = (*hitIter1)->GetInputEnergy();
                 if( (pCluster->GetNCaloHits()>=m_numClusterCaloHitsPar) && useScaledImg )
                 {
                     minx = std::min(minx,xVec[iHits]); minz = std::min(minz,zVec[iHits]);
@@ -213,8 +213,8 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
          for (int j=0; j<m_npixels; j++)
          {
              double tempval(0), inputvalue1(0), dist(0);
-             tempval = height[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i]))
-                 - 0.5*std::erfc(-((minx+j*nstepx)-xVec[i])/std::sqrt(2*sigma[i]*sigma[i])));
+             tempval = heightVec[i]*(0.5*std::erfc(-((minx+(j+1)*nstepx)-xVec[i])/std::sqrt(2*sigmaVec[i]*sigmaVec[i]))
+                 - 0.5*std::erfc(-((minx+j*nstepx)-xVec[i])/std::sqrt(2*sigmaVec[i]*sigmaVec[i])));
 
              for (int k=m_npixels-1; k>-1; k--)
              {
