@@ -67,7 +67,7 @@ void TestBeamEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
         }
 
         LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
+        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, m_primaryParameters.m_foldBackHierarchy);
 
         validationInfo.SetPfoToHitsMap(pfoToHitsMap);
     }

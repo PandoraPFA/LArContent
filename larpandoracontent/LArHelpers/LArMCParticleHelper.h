@@ -64,7 +64,24 @@ public:
         bool          m_selectInputHits;          ///< whether to select input hits
         float         m_maxPhotonPropagation;     ///< the maximum photon propagation length
         float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
+	bool          m_foldBackHierarchy;        ///< whether to fold the hierarchy back to the primary (neutrino) or leading particles (test beam)
     };
+
+    /**
+     *  @brief  Returns true if passed particle whose primary meets the passed criteria
+     *
+     *  @param  pMCParticle the input mc particle
+     *  @param  fCriteria the given criteria
+     */
+    static bool DoesPrimaryMeetCriteria(const pandora::MCParticle *const pMCParticle, std::function<bool(const pandora::MCParticle *const)> fCriteria);
+
+    /**
+     *  @brief  Returns true if passed particle whose leading meets the passed criteria
+     *
+     *  @param  pMCParticle the input mc particle
+     *  @param  fCriteria the given criteria
+     */
+    static bool DoesLeadingMeetCriteria(const pandora::MCParticle *const pMCParticle, std::function<bool(const pandora::MCParticle *const)> fCriteria);
 
     /**
      *  @brief  Returns true if passed a primary neutrino final state MCParticle
@@ -265,17 +282,6 @@ public:
         const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap);
 
     /**
-     * @brief Select reconstructable mc particles that match given criteria
-     *
-     *  @param  pMCParticleList the address of the list of MCParticles
-     *  @param  pCaloHitList the address of the list of CaloHits
-     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
-     *  @param  mcToRecoHitsMap the output mapping from selected mcparticles to their hits
-     */
-    static void SelectUnfoldedReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList,
-        const PrimaryParameters &parameters, MCContributionMap &mcToRecoHitsMap);
-
-    /**
      *  @brief  Select leading, reconstructable mc particles in the relevant hierarchy that match given criteria.
      *
      *  @param  pMCParticleList the address of the list of MCParticles
@@ -288,24 +294,15 @@ public:
         const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap);
 
     /**
-     *  @brief  Get unfolded mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
-     *
-     *  @param  pfoList the input list of Pfos
-     *  @param  selectedMCParticleToHitsMap the input mapping from selected reconstructable MCParticles to their hits
-     *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
-     */
-    static void GetUnfoldedPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap,
-        PfoContributionMap &pfoToReconstructable2DHitsMap);
-
-    /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
      *
      *  @param  pfoList the input list of Pfos
      *  @param  selectedMCParticleToHitsMap the input mapping from selected reconstructable MCParticles to their hits
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     *  @param  foldToPrimaries whether to fold the particle hierarchy back to primaries
      */
     static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap,
-        PfoContributionMap &pfoToReconstructable2DHitsMap);
+	PfoContributionMap &pfoToReconstructable2DHitsMap, bool foldBackHierachy);
 
     /**
      *  @brief  Get mapping from Pfo in reconstructed test beam hierarchy to reconstructable 2D hits (=good hits belonging to a selected
@@ -316,7 +313,7 @@ public:
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
      */
     static void GetTestBeamHierarchyPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap,
-        PfoContributionMap &pfoToReconstructable2DHitsMap);
+	PfoContributionMap &pfoToReconstructable2DHitsMap, bool foldBackHierachy);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
@@ -324,9 +321,10 @@ public:
      *  @param  pfoList the input list of Pfos
      *  @param  selectedMCParticleToHitsMaps the input vector of mappings from selected reconstructable MCParticles to their hits
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
+     *  @param  foldToPrimaries whether to fold the particle hierarchy back to primaries
      */
     static void GetPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        PfoContributionMap &pfoToReconstructable2DHitsMap);
+        PfoContributionMap &pfoToReconstructable2DHitsMap, bool foldBackHierachy);
 
     /**
      *  @brief  Get mapping from Pfo in reconstructed test beam hierarchy to reconstructable 2D hits (=good hits belonging to a selected
@@ -337,7 +335,7 @@ public:
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
      */
     static void GetTestBeamHierarchyPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        PfoContributionMap &pfoToReconstructable2DHitsMap);
+	PfoContributionMap &pfoToReconstructable2DHitsMap, bool foldBackHierachy);
 
     /**
      *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
@@ -370,9 +368,10 @@ private:
      *  @param  pPfo the input pfo
      *  @param  selectedMCParticleToHitsMaps the input mappings from selected reconstructable MCParticles to hits
      *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
+     *  @param  foldToPrimaries whether to fold the particle hierarchy back to primaries
      */
     static void CollectReconstructable2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        pandora::CaloHitList &reconstructableCaloHitList2D);
+	pandora::CaloHitList &reconstructableCaloHitList2D, bool foldBackHierachy);
 
     /**
      *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
@@ -383,7 +382,7 @@ private:
      *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
      */
     static void CollectReconstructableTestBeamHierarchy2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        pandora::CaloHitList &reconstructableCaloHitList2D);
+	pandora::CaloHitList &reconstructableCaloHitList2D, bool foldBackHierachy);
 
     /**
      *  @brief  For a given Pfo list, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
@@ -416,7 +415,7 @@ private:
      *  @param  selectedParticles the output vector of particles selected
      */
     static void SelectParticlesMatchingCriteria(const pandora::MCParticleVector &inputMCParticles, std::function<bool(const pandora::MCParticle *const)> fCriteria,
-        pandora::MCParticleVector &selectedParticles);
+        pandora::MCParticleVector &selectedParticles, const bool foldBackHierachy, bool isTestBeam);
 
     /**
      *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable

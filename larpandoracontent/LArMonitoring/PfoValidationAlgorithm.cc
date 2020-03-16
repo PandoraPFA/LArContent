@@ -59,7 +59,7 @@ StatusCode PfoValidationAlgorithm::Run()
     }
 
     LArMCParticleHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap);
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_parameters.m_foldBackHierarchy);
 
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
     LArMCParticleHelper::MCParticleToPfoHitSharingMap mcParticleToPfoHitSharingMap;
