@@ -54,6 +54,7 @@ private:
   std::string m_clusterListName;
 
   float m_maxConstituentHitWidth;
+  float m_hitWidthScalingFactor;
 
   bool m_useSlidingLinearFit;
   float m_layerFitHalfWindow;
@@ -61,7 +62,8 @@ private:
   float m_minClusterWeight;
   float m_maxXMergeDistance; //Distance either side of point
   float m_maxZMergeDistance; //Distance either side of point
-  float m_maxMergeCosOpeningAngle; 
+  float m_maxMergeCosOpeningAngle;
+  float m_maxDirectionDeviationCosAngle;
 
 
 
