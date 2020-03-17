@@ -16,7 +16,7 @@ namespace lar_content
 {
 
 /**
- *  @brief  ThreeDTransverseTracksAlgorithm class
+ *  @brief  ThreeViewTrackMatchingAlgorithm class
  */
 template<typename T>
 class ThreeViewTrackMatchingAlgorithm : public ThreeViewMatchingAlgorithm<T>
