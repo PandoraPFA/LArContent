@@ -21,6 +21,7 @@ namespace lar_content
 
 CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
     m_useParentShowerVertex(false),
+    m_isDualPhase(false),
     m_halfWindowLayers(30)
 {
 }
@@ -181,28 +182,34 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
             if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            if (!foundVtx || (minPosition.GetY() > std::max(maxPosition.GetY(), vtxPosition.GetY())))
+            // ATTN X is the vertical coordinate in Dual-Phase geometry
+            const float minVerticalCoordinate(m_isDualPhase ? minPosition.GetX() : minPosition.GetY());
+            const float maxVerticalCoordinate(m_isDualPhase ? maxPosition.GetX() : maxPosition.GetY());
+            const float vtxVerticalCoordinate(m_isDualPhase ? vtxPosition.GetX() : vtxPosition.GetY());
+            const float endVerticalCoordinate(m_isDualPhase ? endPosition.GetX() : endPosition.GetY());
+
+            if (!foundVtx || (minVerticalCoordinate > std::max(maxVerticalCoordinate, vtxVerticalCoordinate)))
             {
                 foundVtx = true;
                 vtxPosition = minPosition;
                 vtxDirection = minDirection;
             }
 
-            if (!foundVtx || (maxPosition.GetY() > std::max(minPosition.GetY(), vtxPosition.GetY())))
+            if (!foundVtx || (maxVerticalCoordinate > std::max(minVerticalCoordinate, vtxVerticalCoordinate)))
             {
                 foundVtx = true;
                 vtxPosition = maxPosition;
                 vtxDirection = maxDirection;
             }
 
-            if (!foundEnd || (minPosition.GetY() < std::min(maxPosition.GetY(), endPosition.GetY())))
+            if (!foundEnd || (minVerticalCoordinate < std::min(maxVerticalCoordinate, endVerticalCoordinate)))
             {
                 foundEnd = true;
                 endPosition = minPosition;
                 endDirection = minDirection;
             }
 
-            if (!foundEnd || (maxPosition.GetY() < std::min(minPosition.GetY(), endPosition.GetY())))
+            if (!foundEnd || (maxVerticalCoordinate < std::min(minVerticalCoordinate, endVerticalCoordinate)))
             {
                 foundEnd = true;
                 endPosition = maxPosition;
@@ -315,6 +322,9 @@ StatusCode CosmicRayVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_halfWindowLayers));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+	"IsDualPhase", m_isDualPhase));
 
     return STATUS_CODE_SUCCESS;
 }

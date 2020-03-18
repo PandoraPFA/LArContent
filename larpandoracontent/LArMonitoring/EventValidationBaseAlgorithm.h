@@ -189,14 +189,11 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool                    m_selectInputHits;              ///< Whether to use only hits passing mc-based quality (is "reconstructable") checks
-    float                   m_minHitSharingFraction;        ///< Minimum fraction of energy deposited by selected primary in a single "good" hit
-    float                   m_maxPhotonPropagation;         ///< Maximum distance travelled by photon, downstream of a track, in mc particle hierarchy
+    LArMCParticleHelper::PrimaryParameters  m_primaryParameters;        ///< The mc particle primary selection parameters
+    int                                     m_fileIdentifier;           ///< The input file identifier
+    int                                     m_eventNumber;              ///< The event number
 
-    int                     m_fileIdentifier;               ///< The input file identifier
-    int                     m_eventNumber;                  ///< The event number
-
-    std::string             m_treeName;                     ///< Name of output tree
+    std::string                             m_treeName;                 ///< Name of output tree
 
 private:
     pandora::StatusCode Run();
