@@ -52,7 +52,6 @@ bool LArMCParticleHelper::DoesPrimaryMeetCriteria(const MCParticle *const pMCPar
     catch (const StatusCodeException &) {}
 
     return false;
-    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,7 +66,6 @@ bool LArMCParticleHelper::DoesLeadingMeetCriteria(const MCParticle *const pMCPar
     catch (const StatusCodeException &) {}
 
     return false;
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -485,7 +483,7 @@ void LArMCParticleHelper::SelectReconstructableMCParticles(const MCParticleList 
     }
     else
     {
-        (void) std::copy(pMCParticleList->begin(), pMCParticleList->end(), std::back_inserter(targetMCVector));
+        std::copy(pMCParticleList->begin(), pMCParticleList->end(), std::back_inserter(targetMCVector));
     }
 
     // Select MCParticles matching criteria
@@ -523,7 +521,7 @@ void LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(cons
     }
     else
     {
-        (void) std::copy(pMCParticleList->begin(), pMCParticleList->end(), std::back_inserter(targetMCVector));
+        std::copy(pMCParticleList->begin(), pMCParticleList->end(), std::back_inserter(targetMCVector));
     }
 
     // Select MCParticles matching criteria
@@ -664,11 +662,11 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
     // else collect hits directly belonging to pfo
     if (foldBackHierarchy)
     {
-	LArPfoHelper::GetAllDownstreamPfos(pPfo, pfoList);
+        LArPfoHelper::GetAllDownstreamPfos(pPfo, pfoList);
     }
     else
     {
-	pfoList.push_back(pPfo);
+        pfoList.push_back(pPfo);
     }
 
     LArMCParticleHelper::CollectReconstructable2DHits(pfoList, selectedMCParticleToHitsMaps, reconstructableCaloHitList2D);
@@ -836,26 +834,25 @@ void LArMCParticleHelper::SelectParticlesMatchingCriteria(const MCParticleVector
     {
         if (foldBackHierarchy)
         {
-	    if (!fCriteria(pMCParticle))
-	        continue;
-	}
-	else
-	{
-	    if(isTestBeam)
-	    {
-	        if (!LArMCParticleHelper::DoesLeadingMeetCriteria(pMCParticle, fCriteria))
-		    continue;
-	    }
-	    else
-	    {
-	        if (!LArMCParticleHelper::DoesPrimaryMeetCriteria(pMCParticle, fCriteria))
-		    continue;
-	    }
-	}
-	
+            if (!fCriteria(pMCParticle))
+                continue;
+        }
+        else
+        {
+            if(isTestBeam)
+            {
+                if (!LArMCParticleHelper::DoesLeadingMeetCriteria(pMCParticle, fCriteria))
+                    continue;
+            }
+            else
+            {
+                if (!LArMCParticleHelper::DoesPrimaryMeetCriteria(pMCParticle, fCriteria))
+                    continue;
+            }
+        }
         selectedParticles.push_back(pMCParticle);
     }
-}
+}   
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -903,8 +900,6 @@ bool LArMCParticleHelper::PassMCParticleChecks(const MCParticle *const pOriginal
 {
     if (NEUTRON == std::abs(pThisMCParticle->GetParticleId()))
         return false;
-
-    
 
     if ((PHOTON == pThisMCParticle->GetParticleId()) && (PHOTON != pOriginalPrimary->GetParticleId()) && (E_MINUS != std::abs(pOriginalPrimary->GetParticleId())))
     {
