@@ -13,7 +13,8 @@
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewTrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
 
 namespace lar_content
 {
@@ -25,7 +26,7 @@ class LongitudinalTensorTool;
 /**
  *  @brief  ThreeViewLongitudinalTracksAlgorithm class
  */
-class ThreeViewLongitudinalTracksAlgorithm : public ThreeViewTrackMatchingAlgorithm<LongitudinalOverlapResult>
+class ThreeViewLongitudinalTracksAlgorithm : public NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<LongitudinalOverlapResult> >
 {
 public:
     /**
@@ -82,7 +83,7 @@ private:
 class LongitudinalTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeViewLongitudinalTracksAlgorithm::TensorType TensorType;
+    typedef ThreeViewLongitudinalTracksAlgorithm::ContainerType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**

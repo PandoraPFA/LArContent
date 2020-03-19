@@ -11,7 +11,8 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewTrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingContainer.h"
 
 namespace lar_content
 {
@@ -23,16 +24,19 @@ class TransverseMatrixTool;
 /**
  *  @brief  TwoViewTransverseTracksAlgorithm class
  */
-class TwoViewTransverseTracksAlgorithm : public TwoViewTrackMatchingAlgorithm<float>
+class TwoViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<TwoViewMatchingContainer<float> >
 {
 public:
+    typedef NViewTrackMatchingAlgorithm<TwoViewMatchingContainer<float> > BaseAlgorithm;
+
     /**
      *  @brief  Default constructor
      */
     TwoViewTransverseTracksAlgorithm();
 
 private:
-    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
+    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2
+        , const pandora::Cluster *const pCluster3 = nullptr); // TODO
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -50,7 +54,7 @@ private:
 class TransverseMatrixTool : public pandora::AlgorithmTool
 {
 public:
-    typedef TwoViewTransverseTracksAlgorithm::MatrixType MatrixType;
+    typedef TwoViewTransverseTracksAlgorithm::ContainerType::MatrixType MatrixType;
     typedef std::vector<MatrixType::ElementList::const_iterator> IteratorList;
 
     /**
