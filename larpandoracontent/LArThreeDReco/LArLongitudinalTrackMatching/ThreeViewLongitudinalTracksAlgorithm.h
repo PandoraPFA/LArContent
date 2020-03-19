@@ -29,6 +29,8 @@ class LongitudinalTensorTool;
 class ThreeViewLongitudinalTracksAlgorithm : public NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<LongitudinalOverlapResult> >
 {
 public:
+    typedef NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<LongitudinalOverlapResult> > BaseAlgorithm;
+
     /**
      *  @brief  Default constructor
      */

@@ -31,6 +31,8 @@ class FragmentTensorTool;
 class ThreeViewTrackFragmentsAlgorithm : public NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<FragmentOverlapResult> >
 {
 public:
+    typedef NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<FragmentOverlapResult> > BaseAlgorithm;
+
     /**
      *  @brief  Default constructor
      */
