@@ -57,7 +57,7 @@ void ThreeViewShowersAlgorithm::UpdateForNewCluster(const Cluster *const pNewClu
         return;
     }
 
-    ThreeViewMatchingAlgorithm<ShowerOverlapResult>::UpdateForNewCluster(pNewCluster);
+    BaseAlgorithm::UpdateForNewCluster(pNewCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ void ThreeViewShowersAlgorithm::UpdateForNewCluster(const Cluster *const pNewClu
 void ThreeViewShowersAlgorithm::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     this->RemoveFromSlidingFitCache(pDeletedCluster);
-    ThreeViewMatchingAlgorithm<ShowerOverlapResult>::UpdateUponDeletion(pDeletedCluster);
+    BaseAlgorithm::UpdateUponDeletion(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,9 +93,9 @@ void ThreeViewShowersAlgorithm::SelectInputClusters(const ClusterList *const pIn
 
 void ThreeViewShowersAlgorithm::PreparationStep()
 {
-    this->PreparationStep(this->m_clusterListU);
-    this->PreparationStep(this->m_clusterListV);
-    this->PreparationStep(this->m_clusterListW);
+    ClusterList clusterList;
+    this->GetMatchingContainer().GetAllSelectedClusters(clusterList);
+    this->PreparationStep(clusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,7 +126,7 @@ void ThreeViewShowersAlgorithm::PreparationStep(ClusterList &clusterList)
 void ThreeViewShowersAlgorithm::TidyUp()
 {
     m_slidingFitResultMap.clear();
-    return ThreeViewMatchingAlgorithm<ShowerOverlapResult>::TidyUp();
+    return BaseAlgorithm::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -158,7 +158,7 @@ void ThreeViewShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClu
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
     if (overlapResult.IsInitialized())
-        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+        this->GetMatchingContainer().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -313,7 +313,7 @@ void ThreeViewShowersAlgorithm::ExamineOverlapContainer()
 
     for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, m_overlapTensor))
+        if ((*iter)->Run(this, this->GetMatchingContainer().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 
@@ -403,7 +403,7 @@ StatusCode ThreeViewShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinShowerMatchedPoints", m_minShowerMatchedPoints));
 
-    return ThreeViewMatchingAlgorithm<ShowerOverlapResult>::ReadSettings(xmlHandle);
+    return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

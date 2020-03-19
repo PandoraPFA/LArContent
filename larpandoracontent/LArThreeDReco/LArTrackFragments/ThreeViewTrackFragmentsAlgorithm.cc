@@ -5,7 +5,7 @@
  *
  *  $Log: $
  */
-
+/*
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -673,3 +673,4 @@ StatusCode ThreeViewTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlH
 }
 
 } // namespace lar_content
+*/

@@ -13,7 +13,8 @@
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewTrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
 
 #include <unordered_map>
 
@@ -27,7 +28,7 @@ class FragmentTensorTool;
 /**
  *  @brief  ThreeViewTrackFragmentsAlgorithm class
  */
-class ThreeViewTrackFragmentsAlgorithm : public ThreeViewTrackMatchingAlgorithm<FragmentOverlapResult>
+class ThreeViewTrackFragmentsAlgorithm : public NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<FragmentOverlapResult> >
 {
 public:
     /**
@@ -160,7 +161,7 @@ protected:
 class FragmentTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeViewTrackFragmentsAlgorithm::TensorType TensorType;
+    typedef ThreeViewTrackFragmentsAlgorithm::ContainerType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
