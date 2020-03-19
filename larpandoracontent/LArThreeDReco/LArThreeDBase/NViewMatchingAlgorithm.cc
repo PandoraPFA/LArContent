@@ -105,7 +105,7 @@ StatusCode NViewMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_matchingContainer.ReadSettings(xmlHandle));
 
-    return MatchingBaseAlgorithm::ReadSettings(xmlHandle); 
+    return MatchingBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

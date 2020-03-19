@@ -37,7 +37,7 @@ public:
     const std::string &GetClusterListName(const pandora::HitType hitType) const;
     const pandora::ClusterList &GetInputClusterList(const pandora::HitType hitType) const;
     const pandora::ClusterList &GetSelectedClusterList(const pandora::HitType hitType) const;
-    
+
 protected:
     /**
      *  @brief  Get the matching container
