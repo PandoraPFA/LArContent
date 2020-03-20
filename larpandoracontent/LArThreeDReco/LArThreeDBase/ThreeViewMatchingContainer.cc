@@ -13,6 +13,7 @@
 #include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/MatchingBaseAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
 
 using namespace pandora;
@@ -22,7 +23,7 @@ namespace lar_content
 
 template <typename T>
 ThreeViewMatchingContainer<T>::ThreeViewMatchingContainer(MatchingBaseAlgorithm *const pAlgorithm) :
-    MatchingContainer(pAlgorithm),
+    m_pAlgorithm(pAlgorithm),
     m_pInputClusterListU(nullptr),
     m_pInputClusterListV(nullptr),
     m_pInputClusterListW(nullptr)
@@ -39,7 +40,7 @@ ThreeViewMatchingContainer<T>::~ThreeViewMatchingContainer()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-ThreeViewMatchingContainer<T>::TensorType &ThreeViewMatchingContainer<T>::GetOverlapTensor();
+typename ThreeViewMatchingContainer<T>::TensorType &ThreeViewMatchingContainer<T>::GetOverlapTensor()
 {
     return m_overlapTensor;
 }

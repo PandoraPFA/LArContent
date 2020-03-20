@@ -22,7 +22,7 @@ namespace lar_content
 
 template <typename T>
 TwoViewMatchingContainer<T>::TwoViewMatchingContainer(MatchingBaseAlgorithm *const pAlgorithm) :
-    MatchingContainer(pAlgorithm),
+    m_pAlgorithm(pAlgorithm),
     m_pInputClusterList1(nullptr),
     m_pInputClusterList2(nullptr)
 {
@@ -70,11 +70,11 @@ void TwoViewMatchingContainer<T>::UpdateForNewCluster(const Cluster *const pNewC
     {
         if (1 == iter->second)
         {
-            m_pAlgorithm->CalculateOverlapResult(pNewCluster, pCluster2);
+            m_pAlgorithm->CalculateOverlapResult(pNewCluster, pCluster2,  nullptr); // TODO
         }
         else
         {
-            m_pAlgorithm->CalculateOverlapResult(pCluster2, pNewCluster);
+            m_pAlgorithm->CalculateOverlapResult(pCluster2, pNewCluster, nullptr); // TODO
         }
     }
 }
@@ -177,8 +177,8 @@ void TwoViewMatchingContainer<T>::SelectAllInputClusters()
     if (!m_pInputClusterList2->empty())
         m_hitTypeToIndexMap.insert(HitTypeToIndexMap::value_type(LArClusterHelper::GetClusterHitType(m_pInputClusterList2->front()), 2));
 
-    this->SelectInputClusters(m_pInputClusterList1, m_clusterList1);
-    this->SelectInputClusters(m_pInputClusterList2, m_clusterList2);
+    m_pAlgorithm->SelectInputClusters(m_pInputClusterList1, m_clusterList1);
+    m_pAlgorithm->SelectInputClusters(m_pInputClusterList2, m_clusterList2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -210,7 +210,7 @@ void TwoViewMatchingContainer<T>::PerformMainLoop()
     for (const Cluster *const pCluster1 : clusterVector1)
     {
         for (const Cluster *const pCluster2 : clusterVector2)
-            m_pAlgorithm->CalculateOverlapResult(pCluster1, pCluster2);
+            m_pAlgorithm->CalculateOverlapResult(pCluster1, pCluster2, nullptr); // TODO
     }
 }
 
