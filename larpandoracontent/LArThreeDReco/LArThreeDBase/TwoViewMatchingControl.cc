@@ -147,15 +147,6 @@ const pandora::ClusterList &TwoViewMatchingControl<T>::GetSelectedClusterList(co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewMatchingControl<T>::GetAllSelectedClusters(ClusterList &clusterList) const
-{
-    clusterList.insert(clusterList.end(), m_clusterList1.begin(), m_clusterList1.end());
-    clusterList.insert(clusterList.end(), m_clusterList2.begin(), m_clusterList2.end());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
 void TwoViewMatchingControl<T>::SelectAllInputClusters()
 {
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
@@ -179,6 +170,15 @@ void TwoViewMatchingControl<T>::SelectAllInputClusters()
 
     m_pAlgorithm->SelectInputClusters(m_pInputClusterList1, m_clusterList1);
     m_pAlgorithm->SelectInputClusters(m_pInputClusterList2, m_clusterList2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void TwoViewMatchingControl<T>::PrepareAllInputClusters()
+{
+    m_pAlgorithm->PrepareInputClusters(m_clusterList1);
+    m_pAlgorithm->PrepareInputClusters(m_clusterList2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

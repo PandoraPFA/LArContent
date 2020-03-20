@@ -88,13 +88,39 @@ public:
      *  @return the selected cluster list
      */
     virtual const pandora::ClusterList &GetSelectedClusterList(const pandora::HitType hitType) const = 0;
+// TODO sort out nclusters for overlap result
+    /**
+     *  @brief  Calculate cluster overlap result and store in container
+     *
+     *  @param  pCluster1 address of cluster1
+     *  @param  pCluster2 address of cluster2
+     *  @param  pCluster3 address of cluster3
+     */
+    virtual void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3) = 0;
 
     /**
-     *  @brief  Get the list of all selected clusters for all hit types
+     *  @brief  Select a subset of input clusters for processing in this algorithm
      *
-     *  @param  clusterList to receive the selected cluster list
+     *  @param  pInputClusterList address of an input cluster list
+     *  @param  selectedClusterList to receive the selected cluster list
      */
-    virtual void GetAllSelectedClusters(pandora::ClusterList &clusterList) const = 0;
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+
+    /**
+     *  @brief  Perform any preparatory steps required on the input clusters, e.g. caching expensive fit results
+     *
+     *  @param  preparedClusterList to receive the prepared cluster list, non const so as to be able to modify input selected list
+     */
+    virtual void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
+
+    /**
+     *  @brief  Merge clusters together
+     *
+     *  @param  clusterMergeMap the cluster merge map
+     *
+     *  @return whether changes to the overlap container have been made
+     */
+    virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
 
     /**
      *  @brief  Create particles using findings from recent algorithm processing
@@ -120,32 +146,6 @@ public:
      */
     virtual void SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
-    /**
-     *  @brief  Merge clusters together
-     *
-     *  @param  clusterMergeMap the cluster merge map
-     *
-     *  @return whether changes to the overlap container have been made
-     */
-    virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
-// TODO avoid repetition in interface, sort out nclusters for overlap result
-    /**
-     *  @brief  Calculate cluster overlap result and store in container
-     *
-     *  @param  pCluster1 address of cluster1
-     *  @param  pCluster2 address of cluster2
-     *  @param  pCluster3 address of cluster3
-     */
-    virtual void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3) = 0;
-
-    /**
-     *  @brief  Select a subset of input clusters for processing in this algorithm
-     *
-     *  @param  pInputClusterList address of an input cluster list
-     *  @param  selectedClusterList to receive the selected cluster list
-     */
-    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const = 0;
-
 protected:
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
@@ -155,7 +155,7 @@ protected:
     /**
      *  @brief  Perform any preparatory steps required, e.g. caching expensive fit results for clusters
      */
-    virtual void PreparationStep();
+    virtual void PrepareAllInputClusters() = 0;
 
     /**
      *  @brief  Main loop over cluster combinations in order to populate the overlap container. Responsible for calling CalculateOverlapResult.
@@ -170,7 +170,7 @@ protected:
     /**
      *  @brief  Tidy member variables in derived class
      */
-    virtual void TidyUp();
+    virtual void TidyUp() = 0;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

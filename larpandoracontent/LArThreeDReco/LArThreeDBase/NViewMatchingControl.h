@@ -76,16 +76,14 @@ protected:
     virtual const pandora::ClusterList &GetSelectedClusterList(const pandora::HitType hitType) const = 0;
 
     /**
-     *  @brief  Get the list of all selected clusters for all hit types
-     *
-     *  @param  clusterList to receive the selected cluster list
-     */
-    virtual void GetAllSelectedClusters(pandora::ClusterList &clusterList) const = 0;
-
-    /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
      */
     virtual void SelectAllInputClusters() = 0;
+
+    /**
+     *  @brief  Perform any preparatory steps required on the input clusters, e.g. caching expensive fit results
+     */
+    virtual void PrepareAllInputClusters() = 0;
 
     /**
      *  @brief  Main loop over cluster combinations in order to populate the overlap container. Responsible for calling CalculateOverlapResult.
