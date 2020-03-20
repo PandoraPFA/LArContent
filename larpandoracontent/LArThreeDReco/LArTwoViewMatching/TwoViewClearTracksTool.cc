@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewClearTracksTool.cc
  *
- *  @brief  Implementation of the two vierw clear tracks tool class.
+ *  @brief  Implementation of the two view clear tracks tool class.
  *
  *  $Log: $
  */
