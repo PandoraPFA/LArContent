@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeViewLongitudinalTracksAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional longitudinal tracks algorithm class.
+ *  @brief  Implementation of the three view longitudinal tracks algorithm class.
  *
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
-#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeViewLongitudinalTracksAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ThreeDLongitudinalTracksAlgorithm::ThreeDLongitudinalTracksAlgorithm() :
+ThreeViewLongitudinalTracksAlgorithm::ThreeViewLongitudinalTracksAlgorithm() :
     m_nMaxTensorToolRepeats(1000),
     m_vertexChi2Cut(10.f),
     m_reducedChi2Cut(5.f),
@@ -28,7 +28,7 @@ ThreeDLongitudinalTracksAlgorithm::ThreeDLongitudinalTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
+void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     LongitudinalOverlapResult overlapResult;
     this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
@@ -39,7 +39,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
+void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
     LongitudinalOverlapResult &longitudinalOverlapResult)
 {
     const TwoDSlidingFitResult &slidingFitResultU(this->GetCachedSlidingFitResult(pClusterU));
@@ -146,7 +146,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
+void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
     const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D, const CartesianVector &endMerged3D, TrackOverlapResult &overlapResult) const
 {
     // Calculate start and end positions of linear trajectory
@@ -197,7 +197,7 @@ void ThreeDLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSliding
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
+void ThreeViewLongitudinalTracksAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 
@@ -219,7 +219,7 @@ void ThreeDLongitudinalTracksAlgorithm::ExamineTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeViewLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
@@ -229,7 +229,7 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
     {
         LongitudinalTensorTool *const pLongitudinalTensorTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
 
-        if (NULL == pLongitudinalTensorTool)
+        if (!pLongitudinalTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pLongitudinalTensorTool);
@@ -250,7 +250,7 @@ StatusCode ThreeDLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xml
     if (m_samplingPitch < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_INVALID_PARAMETER;
 
-    return ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>::ReadSettings(xmlHandle);
+    return ThreeViewTrackMatchingAlgorithm<LongitudinalOverlapResult>::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

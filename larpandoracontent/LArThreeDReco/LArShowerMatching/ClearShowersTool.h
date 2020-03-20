@@ -8,7 +8,7 @@
 #ifndef CLEAR_SHOWERS_TOOL_H
 #define CLEAR_SHOWERS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeViewShowersAlgorithm.h"
 
 namespace lar_content
 {
@@ -46,7 +46,7 @@ public:
     static bool IsLargerThanDirectConnections(IteratorList::const_iterator iIter, const TensorType::ElementList &elementList,
         const unsigned int minMatchedSamplingPointRatio, const float minXOverlapSpanRatio, const pandora::ClusterSet &usedClusters);
 
-    bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

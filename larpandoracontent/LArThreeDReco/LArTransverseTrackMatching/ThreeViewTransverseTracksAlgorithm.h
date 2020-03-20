@@ -1,19 +1,19 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h
  *
- *  @brief  Header file for the three dimensional transverse tracks algorithm class.
+ *  @brief  Header file for the three view transverse tracks algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_TRANSVERSE_TRACKS_ALGORITHM_H
-#define LAR_THREE_D_TRANSVERSE_TRACKS_ALGORITHM_H 1
+#ifndef LAR_THREE_VIEW_TRANSVERSE_TRACKS_ALGORITHM_H
+#define LAR_THREE_VIEW_TRANSVERSE_TRACKS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewTrackMatchingAlgorithm.h"
 
 namespace lar_content
 {
@@ -23,15 +23,15 @@ class TransverseTensorTool;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDTransverseTracksAlgorithm class
+ *  @brief  ThreeViewTransverseTracksAlgorithm class
  */
-class ThreeDTransverseTracksAlgorithm : public ThreeDTracksBaseAlgorithm<TransverseOverlapResult>
+class ThreeViewTransverseTracksAlgorithm : public ThreeViewTrackMatchingAlgorithm<TransverseOverlapResult>
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ThreeDTransverseTracksAlgorithm();
+    ThreeViewTransverseTracksAlgorithm();
 
 private:
     typedef std::map<unsigned int, TransverseOverlapResult> FitSegmentToOverlapResultMap;
@@ -100,7 +100,7 @@ private:
     void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
         FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const;
 
-    void ExamineTensor();
+    void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<TransverseTensorTool*> TensorToolVector;
@@ -124,7 +124,7 @@ private:
 class TransverseTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeDTransverseTracksAlgorithm::TensorType TensorType;
+    typedef ThreeViewTransverseTracksAlgorithm::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
@@ -135,9 +135,9 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_D_TRANSVERSE_TRACKS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_VIEW_TRANSVERSE_TRACKS_ALGORITHM_H

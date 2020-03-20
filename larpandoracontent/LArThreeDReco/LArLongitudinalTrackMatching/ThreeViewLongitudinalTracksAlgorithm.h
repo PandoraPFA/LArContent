@@ -1,19 +1,19 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeViewLongitudinalTracksAlgorithm.h
  *
- *  @brief  Header file for the three dimensional longitudinal tracks algorithm class.
+ *  @brief  Header file for the three view longitudinal tracks algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_LONGITUDINAL_TRACKS_ALGORITHM_H
-#define LAR_THREE_D_LONGITUDINAL_TRACKS_ALGORITHM_H 1
+#ifndef LAR_THREE_VIEW_LONGITUDINAL_TRACKS_ALGORITHM_H
+#define LAR_THREE_VIEW_LONGITUDINAL_TRACKS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewTrackMatchingAlgorithm.h"
 
 namespace lar_content
 {
@@ -23,15 +23,15 @@ class LongitudinalTensorTool;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDLongitudinalTracksAlgorithm class
+ *  @brief  ThreeViewLongitudinalTracksAlgorithm class
  */
-class ThreeDLongitudinalTracksAlgorithm : public ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>
+class ThreeViewLongitudinalTracksAlgorithm : public ThreeViewTrackMatchingAlgorithm<LongitudinalOverlapResult>
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ThreeDLongitudinalTracksAlgorithm();
+    ThreeViewLongitudinalTracksAlgorithm();
 
 private:
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
@@ -61,7 +61,7 @@ private:
         const TwoDSlidingFitResult &slidingFitResultW, const pandora::CartesianVector &vtxMerged3D, const pandora::CartesianVector &endMerged3D,
         TrackOverlapResult &overlapResult) const;
 
-    void ExamineTensor();
+    void ExamineOverlapContainer();
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -82,7 +82,7 @@ private:
 class LongitudinalTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeDLongitudinalTracksAlgorithm::TensorType TensorType;
+    typedef ThreeViewLongitudinalTracksAlgorithm::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
@@ -93,9 +93,9 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_D_LONGITUDINAL_TRACKS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_VIEW_LONGITUDINAL_TRACKS_ALGORITHM_H

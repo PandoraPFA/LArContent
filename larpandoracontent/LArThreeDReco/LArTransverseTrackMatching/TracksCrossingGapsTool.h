@@ -9,7 +9,7 @@
 #define TRACKS_CROSSING_GAPS_TOOL_H 1
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
-#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {
@@ -25,7 +25,7 @@ public:
      */
     TracksCrossingGapsTool();
 
-    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -37,7 +37,7 @@ private:
      *  @param  overlapTensor the overlap tensor
      *  @param  protoParticleVector to receive the list of proto particles
      */
-    void FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+    void FindTracks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
 
     /**
      *  @brief  Select a list of track-like elements crossing a gap in one or more views from a set of connected tensor elements
@@ -47,7 +47,7 @@ private:
      *  @param  usedClusters the set of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to long track-like elements
      */
-    void SelectElements(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
+    void SelectElements(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
         const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const;
 
     /**
@@ -59,7 +59,7 @@ private:
      *  @param  xOverlapFractionV to receive the effective overlap fraction in the v view
      *  @param  xOverlapFractionW to receive the effective overlap fraction in the w view
      */
-    void CalculateEffectiveOverlapFractions(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
+    void CalculateEffectiveOverlapFractions(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
         float &xOverlapFractionU, float &xOverlapFractionV, float &xOverlapFractionW) const;
 
     /**
@@ -74,7 +74,7 @@ private:
      *  @param  xMinEffW to receive the effective min w coordinate
      *  @param  xMaxEffW to receive the effective max w coordinate
      */
-    void CalculateEffectiveOverlapSpan(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
+    void CalculateEffectiveOverlapSpan(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
         float &xMinEffU, float &xMaxEffU, float &xMinEffV, float &xMaxEffV, float &xMinEffW, float &xMaxEffW) const;
 
     /**
@@ -89,7 +89,7 @@ private:
      *
      *  @return boolean
      */
-    bool PassesGapChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const float xSample,
+    bool PassesGapChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const float xSample,
         bool &gapInU, bool &gapInV, bool &gapInW) const;
 
     /**

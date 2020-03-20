@@ -24,7 +24,7 @@ MissingTrackTool::MissingTrackTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MissingTrackTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool MissingTrackTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -94,9 +94,9 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
                 continue;
 
             ProtoParticle protoParticle;
-            if (includeU) protoParticle.m_clusterListU.push_back(eIter->GetClusterU());
-            if (includeV) protoParticle.m_clusterListV.push_back(eIter->GetClusterV());
-            if (includeW) protoParticle.m_clusterListW.push_back(eIter->GetClusterW());
+            if (includeU) protoParticle.m_clusterList.push_back(eIter->GetClusterU());
+            if (includeV) protoParticle.m_clusterList.push_back(eIter->GetClusterV());
+            if (includeW) protoParticle.m_clusterList.push_back(eIter->GetClusterW());
 
             protoParticleVector.push_back(protoParticle);
             usedClusters.insert(eIter->GetClusterU());

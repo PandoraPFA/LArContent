@@ -21,7 +21,7 @@ MopUpRemnantsTool::MopUpRemnantsTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MopUpRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool MopUpRemnantsTool::Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -57,9 +57,9 @@ void MopUpRemnantsTool::FindBestShowers(const TensorType &overlapTensor, ProtoPa
             continue;
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.push_back(eIter->GetClusterU());
-        protoParticle.m_clusterListV.push_back(eIter->GetClusterV());
-        protoParticle.m_clusterListW.push_back(eIter->GetClusterW());
+        protoParticle.m_clusterList.push_back(eIter->GetClusterU());
+        protoParticle.m_clusterList.push_back(eIter->GetClusterV());
+        protoParticle.m_clusterList.push_back(eIter->GetClusterW());
         protoParticleVector.push_back(protoParticle);
     }
 }
