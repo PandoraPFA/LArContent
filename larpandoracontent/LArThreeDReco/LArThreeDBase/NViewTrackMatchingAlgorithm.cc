@@ -11,9 +11,12 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingContainer.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
 
 using namespace pandora;
 
@@ -180,7 +183,7 @@ void NViewTrackMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pN
         return;
     }
 
-    TwoViewMatchingAlgorithm<T>::UpdateForNewCluster(pNewCluster);
+    NViewMatchingAlgorithm<T>::UpdateForNewCluster(pNewCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,7 +192,7 @@ template<typename T>
 void NViewTrackMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     this->RemoveFromSlidingFitCache(pDeletedCluster);
-    TwoViewMatchingAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
+    NViewMatchingAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -281,7 +284,7 @@ template<typename T>
 void NViewTrackMatchingAlgorithm<T>::TidyUp()
 {
     m_slidingFitResultMap.clear();
-    return TwoViewMatchingAlgorithm<T>::TidyUp();
+    return NViewMatchingAlgorithm<T>::TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -306,7 +309,6 @@ StatusCode NViewTrackMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class NViewTrackMatchingAlgorithm<TwoViewMatchingContainer<float> >;
-
 template class NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<float> >;
 template class NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<TransverseOverlapResult> >;
 template class NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<LongitudinalOverlapResult> >;

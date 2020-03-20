@@ -123,6 +123,21 @@ public:
      */
     virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
 
+    /**
+     *  @brief  Calculate cluster overlap result and store in container
+     *
+     *  @param  pClusters addresses of n clusters
+     */
+    virtual void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3) = 0; // TODO
+
+    /**
+     *  @brief  Select a subset of input clusters for processing in this algorithm
+     *
+     *  @param  pInputClusterList address of an input cluster list
+     *  @param  selectedClusterList to receive the selected cluster list
+     */
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const = 0;
+
 protected:
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
