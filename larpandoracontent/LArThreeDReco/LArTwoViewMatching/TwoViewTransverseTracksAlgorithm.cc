@@ -41,7 +41,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
 
     if (xOverlap > std::numeric_limits<float>::epsilon())
-        this->GetMatchingContainer().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, xOverlap);
+        this->GetMatchingControl().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, xOverlap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -52,7 +52,7 @@ void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 
     for (MatrixToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, this->GetMatchingContainer().GetOverlapMatrix()))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapMatrix()))
         {
             iter = m_algorithmToolVector.begin();
 

@@ -38,7 +38,7 @@ void ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *c
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
     if (overlapResult.IsInitialized())
-        this->GetMatchingContainer().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+        this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -291,7 +291,7 @@ void ThreeViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 
     for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, this->GetMatchingContainer().GetOverlapTensor()))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 

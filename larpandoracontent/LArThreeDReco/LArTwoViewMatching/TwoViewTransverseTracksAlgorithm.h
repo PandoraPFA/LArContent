@@ -12,7 +12,7 @@
 #include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingContainer.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 
 namespace lar_content
 {
@@ -24,10 +24,10 @@ class TransverseMatrixTool;
 /**
  *  @brief  TwoViewTransverseTracksAlgorithm class
  */
-class TwoViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<TwoViewMatchingContainer<float> >
+class TwoViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> >
 {
 public:
-    typedef NViewTrackMatchingAlgorithm<TwoViewMatchingContainer<float> > BaseAlgorithm;
+    typedef NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> > BaseAlgorithm;
 
     /**
      *  @brief  Default constructor
@@ -54,7 +54,7 @@ private:
 class TransverseMatrixTool : public pandora::AlgorithmTool
 {
 public:
-    typedef TwoViewTransverseTracksAlgorithm::ContainerType::MatrixType MatrixType;
+    typedef TwoViewTransverseTracksAlgorithm::MatchingType::MatrixType MatrixType;
     typedef std::vector<MatrixType::ElementList::const_iterator> IteratorList;
 
     /**

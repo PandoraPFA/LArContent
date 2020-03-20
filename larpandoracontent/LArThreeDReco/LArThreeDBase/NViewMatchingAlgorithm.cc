@@ -14,8 +14,8 @@
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingContainer.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 using namespace pandora;
 
@@ -24,7 +24,7 @@ namespace lar_content
 
 template <typename T>
 NViewMatchingAlgorithm<T>::NViewMatchingAlgorithm() :
-    m_matchingContainer(this)
+    m_matchingControl(this)
 {
 }
 
@@ -40,7 +40,7 @@ NViewMatchingAlgorithm<T>::~NViewMatchingAlgorithm()
 template <typename T>
 void NViewMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
-    m_matchingContainer.UpdateForNewCluster(pNewCluster);
+    m_matchingControl.UpdateForNewCluster(pNewCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -48,7 +48,7 @@ void NViewMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewClu
 template <typename T>
 void NViewMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
-    m_matchingContainer.UpdateUponDeletion(pDeletedCluster);
+    m_matchingControl.UpdateUponDeletion(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -56,7 +56,7 @@ void NViewMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeleted
 template<typename T>
 const std::string &NViewMatchingAlgorithm<T>::GetClusterListName(const HitType hitType) const
 {
-    return m_matchingContainer.GetClusterListName(hitType);
+    return m_matchingControl.GetClusterListName(hitType);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -64,7 +64,7 @@ const std::string &NViewMatchingAlgorithm<T>::GetClusterListName(const HitType h
 template<typename T>
 const pandora::ClusterList &NViewMatchingAlgorithm<T>::GetInputClusterList(const HitType hitType) const
 {
-    return m_matchingContainer.GetInputClusterList(hitType);
+    return m_matchingControl.GetInputClusterList(hitType);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -72,7 +72,7 @@ const pandora::ClusterList &NViewMatchingAlgorithm<T>::GetInputClusterList(const
 template<typename T>
 const pandora::ClusterList &NViewMatchingAlgorithm<T>::GetSelectedClusterList(const HitType hitType) const
 {
-    return m_matchingContainer.GetSelectedClusterList(hitType);
+    return m_matchingControl.GetSelectedClusterList(hitType);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,7 +80,7 @@ const pandora::ClusterList &NViewMatchingAlgorithm<T>::GetSelectedClusterList(co
 template <typename T>
 void NViewMatchingAlgorithm<T>::SelectAllInputClusters()
 {
-    m_matchingContainer.SelectAllInputClusters();
+    m_matchingControl.SelectAllInputClusters();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -88,7 +88,7 @@ void NViewMatchingAlgorithm<T>::SelectAllInputClusters()
 template <typename T>
 void NViewMatchingAlgorithm<T>::TidyUp()
 {
-    m_matchingContainer.TidyUp();
+    m_matchingControl.TidyUp();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -96,7 +96,7 @@ void NViewMatchingAlgorithm<T>::TidyUp()
 template <typename T>
 void NViewMatchingAlgorithm<T>::PerformMainLoop()
 {
-    m_matchingContainer.PerformMainLoop();
+    m_matchingControl.PerformMainLoop();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -104,18 +104,18 @@ void NViewMatchingAlgorithm<T>::PerformMainLoop()
 template <typename T>
 StatusCode NViewMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_matchingContainer.ReadSettings(xmlHandle));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_matchingControl.ReadSettings(xmlHandle));
 
     return MatchingBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template class NViewMatchingAlgorithm<TwoViewMatchingContainer<float> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingContainer<float> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingContainer<ShowerOverlapResult> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingContainer<TransverseOverlapResult> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingContainer<LongitudinalOverlapResult> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingContainer<FragmentOverlapResult> >;
+template class NViewMatchingAlgorithm<TwoViewMatchingControl<float> >;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<float> >;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> >;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> >;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult> >;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult> >;
 
 } // namespace lar_content

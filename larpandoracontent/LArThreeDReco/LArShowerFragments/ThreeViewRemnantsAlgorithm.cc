@@ -82,7 +82,7 @@ void ThreeViewRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pCl
 
     // ATTN Essentially a boolean result; actual value matters only so as to ensure that overlap results can be sorted
     const float hackValue(pseudoChi2 + pClusterU->GetElectromagneticEnergy() + pClusterV->GetElectromagneticEnergy() + pClusterW->GetElectromagneticEnergy());
-    this->GetMatchingContainer().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, hackValue);
+    this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, hackValue);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ void ThreeViewRemnantsAlgorithm::ExamineOverlapContainer()
 
     for (RemnantTensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, this->GetMatchingContainer().GetOverlapTensor()))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 

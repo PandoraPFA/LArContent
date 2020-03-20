@@ -14,7 +14,7 @@
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 #include <unordered_map>
 
@@ -28,10 +28,10 @@ class FragmentTensorTool;
 /**
  *  @brief  ThreeViewTrackFragmentsAlgorithm class
  */
-class ThreeViewTrackFragmentsAlgorithm : public NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<FragmentOverlapResult> >
+class ThreeViewTrackFragmentsAlgorithm : public NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult> >
 {
 public:
-    typedef NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<FragmentOverlapResult> > BaseAlgorithm;
+    typedef NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult> > BaseAlgorithm;
 
     /**
      *  @brief  Default constructor
@@ -163,7 +163,7 @@ protected:
 class FragmentTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeViewTrackFragmentsAlgorithm::ContainerType::TensorType TensorType;
+    typedef ThreeViewTrackFragmentsAlgorithm::MatchingType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**

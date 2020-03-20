@@ -14,7 +14,7 @@
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 namespace lar_content
 {
@@ -26,10 +26,10 @@ class ShowerTensorTool;
 /**
  *  @brief  ThreeViewShowersAlgorithm class
  */
-class ThreeViewShowersAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingContainer<ShowerOverlapResult> >
+class ThreeViewShowersAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> >
 {
 public:
-    typedef NViewMatchingAlgorithm<ThreeViewMatchingContainer<ShowerOverlapResult> > BaseAlgorithm;
+    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> > BaseAlgorithm;
 
     /**
      *  @brief  Default constructor
@@ -177,7 +177,7 @@ private:
 class ShowerTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeViewShowersAlgorithm::ContainerType::TensorType TensorType;
+    typedef ThreeViewShowersAlgorithm::MatchingType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**

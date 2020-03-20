@@ -15,8 +15,8 @@
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingContainer.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 using namespace pandora;
 
@@ -274,7 +274,7 @@ template<typename T>
 void NViewTrackMatchingAlgorithm<T>::PreparationStep()
 {
     ClusterList clusterList;
-    this->GetMatchingContainer().GetAllSelectedClusters(clusterList);
+    this->GetMatchingControl().GetAllSelectedClusters(clusterList);
     this->PreparationStep(clusterList);
 }
 
@@ -308,10 +308,10 @@ StatusCode NViewTrackMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template class NViewTrackMatchingAlgorithm<TwoViewMatchingContainer<float> >;
-template class NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<float> >;
-template class NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<TransverseOverlapResult> >;
-template class NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<LongitudinalOverlapResult> >;
-template class NViewTrackMatchingAlgorithm<ThreeViewMatchingContainer<FragmentOverlapResult> >;
+template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> >;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<float> >;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> >;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult> >;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult> >;
 
 } // namespace lar_content
