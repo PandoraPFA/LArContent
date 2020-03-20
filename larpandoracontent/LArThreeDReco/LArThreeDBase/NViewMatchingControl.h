@@ -33,6 +33,7 @@ public:
      */
     virtual ~NViewMatchingControl();
 
+protected:
     /**
      *  @brief  Update to reflect addition of a new cluster to the problem space
      *
@@ -103,7 +104,6 @@ public:
      */
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
 
-protected:
     MatchingBaseAlgorithm  *m_pAlgorithm;   ///< The address of the matching base algorithm
 };
 

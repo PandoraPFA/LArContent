@@ -90,6 +90,13 @@ public:
     virtual const pandora::ClusterList &GetSelectedClusterList(const pandora::HitType hitType) const = 0;
 
     /**
+     *  @brief  Get the list of all selected clusters for all hit types
+     *
+     *  @param  clusterList to receive the selected cluster list
+     */
+    virtual void GetAllSelectedClusters(pandora::ClusterList &clusterList) const = 0;
+
+    /**
      *  @brief  Create particles using findings from recent algorithm processing
      *
      *  @param  protoParticleVector the proto particle vector

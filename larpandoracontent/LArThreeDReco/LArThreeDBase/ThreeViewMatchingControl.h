@@ -43,6 +43,7 @@ public:
      */
     TensorType &GetOverlapTensor();
 
+private:
     void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     const std::string &GetClusterListName(const pandora::HitType hitType) const;
@@ -54,7 +55,6 @@ public:
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-private:
     MatchingBaseAlgorithm      *m_pAlgorithm;                   ///< The address of the matching base algorithm
 
     const pandora::ClusterList *m_pInputClusterListU;           ///< Address of the input cluster list U
@@ -70,6 +70,9 @@ private:
     std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
     std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
     std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
+
+    template <typename U>
+    friend class NViewMatchingAlgorithm;
 };
 
 } // namespace lar_content
