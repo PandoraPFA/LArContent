@@ -52,7 +52,7 @@ TrackTwoViewOverlapResult &TrackTwoViewOverlapResult::operator=(const TrackTwoVi
 
 TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult() :
     TrackTwoViewOverlapResult(),
-    m_twoViewXOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
+    m_twoViewXOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
@@ -68,7 +68,7 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const TwoViewXOve
 
 TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const TwoViewTransverseOverlapResult &rhs) :
     TrackTwoViewOverlapResult(rhs),
-    m_xOverlap(rhs.IsInitialized() ? rhs.GetTwoViewXOverlap() : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
+    m_twoViewXOverlap(rhs.IsInitialized() ? rhs.GetTwoViewXOverlap() : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
@@ -90,7 +90,7 @@ TwoViewTransverseOverlapResult &TwoViewTransverseOverlapResult::operator=(const 
     }
     else
     {
-        m_twoViewXOverlap = TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+        m_twoViewXOverlap = TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f);
     }
 
     return *this;

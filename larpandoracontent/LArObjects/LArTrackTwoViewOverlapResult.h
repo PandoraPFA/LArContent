@@ -120,6 +120,17 @@ inline bool TrackTwoViewOverlapResult::IsInitialized() const
     return m_isInitialized;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const TwoViewXOverlap &TwoViewTransverseOverlapResult::GetTwoViewXOverlap() const
+{
+    if (m_isInitialized)
+        return m_twoViewXOverlap;
+
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+}
+
 } // namespace lar_content
 
-#endif // #ifndef LAR_TRACK_OVERLAP_RESULT_H
+#endif // #ifndef LAR_TRACK_TWO_VIEW_OVERLAP_RESULT_H
