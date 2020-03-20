@@ -34,43 +34,42 @@ public:
 
 private:  
   
-  void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
 
-  void PopulateClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
+    void PopulateClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
 
-  void CleanupClusterAssociations(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
+    void CleanupClusterAssociations(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
 
-  bool AreClustersAssociated(const LArHitWidthHelper::ClusterParameters &currentFitParameters, const LArHitWidthHelper::ClusterParameters &testFitParameters) const;
+    bool AreClustersAssociated(const LArHitWidthHelper::ClusterParameters &currentFitParameters, const LArHitWidthHelper::ClusterParameters &testFitParameters) const;
 
-  bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster,  const pandora::Cluster *const pTestCluster) const;
+    bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster,  const pandora::Cluster *const pTestCluster) const;
 
-  pandora::CartesianVector GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterFitParameters) const;
+    pandora::CartesianVector GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, const pandora::CartesianVector &fitReferencePoint) const;
 
-  pandora::CartesianVector GetClusterZIntercept(const LArHitWidthHelper::ClusterParameters &clusterFitParameters) const;
+    pandora::CartesianVector GetClusterZIntercept(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, const pandora::CartesianVector &fitReferencePoint) const;
 
-  void GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, bool isTransverse, pandora::CartesianVector &direction, pandora::CartesianVector &intercept, float &chiSquared) const;
-
-
-  std::string m_clusterListName;
-
-  float m_maxConstituentHitWidth;
-  float m_hitWidthScalingFactor;
-
-  bool m_useSlidingLinearFit;
-  float m_layerFitHalfWindow;
-
-  float m_minClusterWeight;
-  float m_maxXMergeDistance; //Distance either side of point
-  float m_maxZMergeDistance; //Distance either side of point
-  float m_maxMergeCosOpeningAngle;
-  float m_maxDirectionDeviationCosAngle;
+    void GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, bool isTransverse, pandora::CartesianVector &direction, pandora::CartesianVector &intercept, float &chiSquared, const pandora::CartesianVector &fitReferencePoint) const;
 
 
+    std::string m_clusterListName;
 
-  LArHitWidthHelper::ClusterToParametersMap m_clusterToFitParametersMap;
+    float m_maxConstituentHitWidth;
+    float m_hitWidthScalingFactor;
 
-  pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    bool m_useSlidingLinearFit;
+    float m_layerFitHalfWindow;
 
+    float m_fittingWeight;
+
+    float m_minClusterWeight;
+    float m_maxXMergeDistance; //Distance either side of point
+    float m_maxZMergeDistance; //Distance either side of point
+    float m_maxMergeCosOpeningAngle;
+    float m_maxDirectionDeviationCosAngle;
+
+    LArHitWidthHelper::ClusterToParametersMap m_clusterToFitParametersMap;
+
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
 } //namespace lar_content
