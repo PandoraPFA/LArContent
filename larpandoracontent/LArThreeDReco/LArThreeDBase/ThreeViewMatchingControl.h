@@ -69,6 +69,8 @@ private:
     std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
     std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
 
+    friend class ThreeViewTrackFragmentsAlgorithm;              ///< ATTN This is for legacy purposes only
+
     template <typename U>
     friend class NViewMatchingAlgorithm;
 };

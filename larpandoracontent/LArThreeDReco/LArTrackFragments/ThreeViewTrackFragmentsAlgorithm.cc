@@ -49,12 +49,14 @@ void ThreeViewTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const 
     if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-// TODO   ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
-//
-//    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pNewCluster))
-//        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-//
-//    clusterList.push_back(pNewCluster);
+    // ATTN This is non-standard usage, supported here only (for legacy purposes)
+    MatchingType &matchingControl(this->GetMatchingControl());
+    ClusterList &clusterList((TPC_VIEW_U == hitType) ? matchingControl.m_clusterListU : (TPC_VIEW_V == hitType) ? matchingControl.m_clusterListV : matchingControl.m_clusterListW);
+
+    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pNewCluster))
+        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+
+    clusterList.push_back(pNewCluster);
 
     ClusterList clusterList1(this->GetSelectedClusterList((TPC_VIEW_U == hitType) ? TPC_VIEW_V : TPC_VIEW_U));
     ClusterList clusterList2(this->GetSelectedClusterList((TPC_VIEW_W == hitType) ? TPC_VIEW_V : TPC_VIEW_W));
