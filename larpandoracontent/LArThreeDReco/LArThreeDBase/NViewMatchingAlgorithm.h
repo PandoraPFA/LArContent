@@ -20,7 +20,7 @@ template<typename T>
 class NViewMatchingAlgorithm : public MatchingBaseAlgorithm
 {
 public:
-    typedef T ContainerType;
+    typedef T MatchingType;
 
     /**
      *  @brief  Default constructor
@@ -40,24 +40,24 @@ public:
 
 protected:
     /**
-     *  @brief  Get the matching container
+     *  @brief  Get the matching control
      */
-    ContainerType &GetMatchingContainer();
+    MatchingType &GetMatchingControl();
 
     virtual void SelectAllInputClusters();
     virtual void PerformMainLoop();
     virtual void TidyUp();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    ContainerType   m_matchingContainer;     ///< The matching container
+    MatchingType    m_matchingControl;     ///< The matching control
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-inline T &NViewMatchingAlgorithm<T>::GetMatchingContainer()
+inline T &NViewMatchingAlgorithm<T>::GetMatchingControl()
 {
-    return m_matchingContainer;
+    return m_matchingControl;
 }
 
 } // namespace lar_content

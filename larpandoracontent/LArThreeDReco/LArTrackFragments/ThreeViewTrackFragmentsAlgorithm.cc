@@ -173,7 +173,7 @@ void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *con
     if (!newOverlapResult.IsInitialized())
         return;
 
-    ContainerType::TensorType &overlapTensor(this->GetMatchingContainer().GetOverlapTensor());
+    MatchingType::TensorType &overlapTensor(this->GetMatchingControl().GetOverlapTensor());
 
     if (STATUS_CODE_SUCCESS == statusCode)
     {
@@ -613,7 +613,7 @@ void ThreeViewTrackFragmentsAlgorithm::ExamineOverlapContainer()
 
     for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, this->GetMatchingContainer().GetOverlapTensor()))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 

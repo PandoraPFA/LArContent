@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingContainer.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.cc
  *
- *  @brief  Implementation of the two view matching container class.
+ *  @brief  Implementation of the two view matching control class.
  *
  *  $Log: $
  */
@@ -13,7 +13,7 @@
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/MatchingBaseAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingContainer.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 
 using namespace pandora;
 
@@ -21,7 +21,7 @@ namespace lar_content
 {
 
 template <typename T>
-TwoViewMatchingContainer<T>::TwoViewMatchingContainer(MatchingBaseAlgorithm *const pAlgorithm) :
+TwoViewMatchingControl<T>::TwoViewMatchingControl(MatchingBaseAlgorithm *const pAlgorithm) :
     m_pAlgorithm(pAlgorithm),
     m_pInputClusterList1(nullptr),
     m_pInputClusterList2(nullptr)
@@ -31,14 +31,14 @@ TwoViewMatchingContainer<T>::TwoViewMatchingContainer(MatchingBaseAlgorithm *con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-TwoViewMatchingContainer<T>::~TwoViewMatchingContainer()
+TwoViewMatchingControl<T>::~TwoViewMatchingControl()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-typename TwoViewMatchingContainer<T>::MatrixType &TwoViewMatchingContainer<T>::GetOverlapMatrix()
+typename TwoViewMatchingControl<T>::MatrixType &TwoViewMatchingControl<T>::GetOverlapMatrix()
 {
     return m_overlapMatrix;
 }
@@ -46,7 +46,7 @@ typename TwoViewMatchingContainer<T>::MatrixType &TwoViewMatchingContainer<T>::G
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewMatchingContainer<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
+void TwoViewMatchingControl<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
     HitTypeToIndexMap::const_iterator iter = m_hitTypeToIndexMap.find(hitType);
@@ -82,7 +82,7 @@ void TwoViewMatchingContainer<T>::UpdateForNewCluster(const Cluster *const pNewC
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewMatchingContainer<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
+void TwoViewMatchingControl<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     ClusterList::iterator iter1 = std::find(m_clusterList1.begin(), m_clusterList1.end(), pDeletedCluster);
     ClusterList::iterator iter2 = std::find(m_clusterList2.begin(), m_clusterList2.end(), pDeletedCluster);
@@ -99,7 +99,7 @@ void TwoViewMatchingContainer<T>::UpdateUponDeletion(const Cluster *const pDelet
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const std::string &TwoViewMatchingContainer<T>::GetClusterListName(const HitType hitType) const
+const std::string &TwoViewMatchingControl<T>::GetClusterListName(const HitType hitType) const
 {
     HitTypeToIndexMap::const_iterator iter = m_hitTypeToIndexMap.find(hitType);
     if (m_hitTypeToIndexMap.end() == iter)
@@ -114,7 +114,7 @@ const std::string &TwoViewMatchingContainer<T>::GetClusterListName(const HitType
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const pandora::ClusterList &TwoViewMatchingContainer<T>::GetInputClusterList(const HitType hitType) const
+const pandora::ClusterList &TwoViewMatchingControl<T>::GetInputClusterList(const HitType hitType) const
 {
     HitTypeToIndexMap::const_iterator iter = m_hitTypeToIndexMap.find(hitType);
     if (m_hitTypeToIndexMap.end() == iter)
@@ -132,7 +132,7 @@ const pandora::ClusterList &TwoViewMatchingContainer<T>::GetInputClusterList(con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const pandora::ClusterList &TwoViewMatchingContainer<T>::GetSelectedClusterList(const HitType hitType) const
+const pandora::ClusterList &TwoViewMatchingControl<T>::GetSelectedClusterList(const HitType hitType) const
 {
     HitTypeToIndexMap::const_iterator iter = m_hitTypeToIndexMap.find(hitType);
     if (m_hitTypeToIndexMap.end() == iter)
@@ -147,7 +147,7 @@ const pandora::ClusterList &TwoViewMatchingContainer<T>::GetSelectedClusterList(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewMatchingContainer<T>::GetAllSelectedClusters(ClusterList &clusterList) const
+void TwoViewMatchingControl<T>::GetAllSelectedClusters(ClusterList &clusterList) const
 {
     clusterList.insert(clusterList.end(), m_clusterList1.begin(), m_clusterList1.end());
     clusterList.insert(clusterList.end(), m_clusterList2.begin(), m_clusterList2.end());
@@ -156,7 +156,7 @@ void TwoViewMatchingContainer<T>::GetAllSelectedClusters(ClusterList &clusterLis
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewMatchingContainer<T>::SelectAllInputClusters()
+void TwoViewMatchingControl<T>::SelectAllInputClusters()
 {
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
         m_inputClusterListName1, m_pInputClusterList1));
@@ -166,7 +166,7 @@ void TwoViewMatchingContainer<T>::SelectAllInputClusters()
     if (!m_pInputClusterList1 || !m_pInputClusterList2)
     {
         if (PandoraContentApi::GetSettings(*m_pAlgorithm)->ShouldDisplayAlgorithmInfo())
-            std::cout << "TwoViewMatchingContainer: one or more input cluster lists unavailable." << std::endl;
+            std::cout << "TwoViewMatchingControl: one or more input cluster lists unavailable." << std::endl;
 
         throw StatusCodeException(STATUS_CODE_SUCCESS);
     }
@@ -184,7 +184,7 @@ void TwoViewMatchingContainer<T>::SelectAllInputClusters()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewMatchingContainer<T>::TidyUp()
+void TwoViewMatchingControl<T>::TidyUp()
 {
     m_overlapMatrix.Clear();
     m_hitTypeToIndexMap.clear();
@@ -199,7 +199,7 @@ void TwoViewMatchingContainer<T>::TidyUp()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewMatchingContainer<T>::PerformMainLoop()
+void TwoViewMatchingControl<T>::PerformMainLoop()
 {
     // TODO Support looping over all pairs of lists from an input vector of list names
     ClusterVector clusterVector1(m_clusterList1.begin(), m_clusterList1.end());
@@ -217,7 +217,7 @@ void TwoViewMatchingContainer<T>::PerformMainLoop()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-StatusCode TwoViewMatchingContainer<T>::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode TwoViewMatchingControl<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName1", m_inputClusterListName1));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName2", m_inputClusterListName2));
@@ -225,6 +225,6 @@ StatusCode TwoViewMatchingContainer<T>::ReadSettings(const TiXmlHandle xmlHandle
     return STATUS_CODE_SUCCESS;
 }
 
-template class TwoViewMatchingContainer<float>;
+template class TwoViewMatchingControl<float>;
 
 } // namespace lar_content

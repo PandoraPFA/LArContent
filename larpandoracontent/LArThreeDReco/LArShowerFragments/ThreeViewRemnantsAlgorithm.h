@@ -12,7 +12,7 @@
 #include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 namespace lar_content
 {
@@ -24,10 +24,10 @@ class RemnantTensorTool;
 /**
  *  @brief  ThreeViewRemnantsAlgorithm class
  */
-class ThreeViewRemnantsAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingContainer<float> >
+class ThreeViewRemnantsAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<float> >
 {
 public:
-    typedef NViewMatchingAlgorithm<ThreeViewMatchingContainer<float> > BaseAlgorithm;
+    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<float> > BaseAlgorithm;
 
     /**
      *  @brief  Default constructor
@@ -59,7 +59,7 @@ private:
 class RemnantTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeViewRemnantsAlgorithm::ContainerType::TensorType TensorType;
+    typedef ThreeViewRemnantsAlgorithm::MatchingType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**

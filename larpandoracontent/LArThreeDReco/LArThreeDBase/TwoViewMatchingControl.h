@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingContainer.h
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h
  *
- *  @brief  Header file for the two view matching container class.
+ *  @brief  Header file for the two view matching control class.
  *
  *  $Log: $
  */
-#ifndef LAR_TWO_VIEW_MATCHING_CONTAINER_H
-#define LAR_TWO_VIEW_MATCHING_CONTAINER_H 1
+#ifndef LAR_TWO_VIEW_MATCHING_CONTROL_H
+#define LAR_TWO_VIEW_MATCHING_CONTROL_H 1
 
 #include "larpandoracontent/LArObjects/LArOverlapMatrix.h"
 
@@ -20,10 +20,10 @@ class MatchingBaseAlgorithm;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  TwoViewMatchingContainer class
+ *  @brief  TwoViewMatchingControl class
  */
 template<typename T>
-class TwoViewMatchingContainer
+class TwoViewMatchingControl
 {
 public:
     typedef OverlapMatrix<T> MatrixType;
@@ -33,12 +33,12 @@ public:
      *
      *  @param  pAlgorithm address of the matching base algorithm
      */
-    TwoViewMatchingContainer(MatchingBaseAlgorithm *const pAlgorithm);
+    TwoViewMatchingControl(MatchingBaseAlgorithm *const pAlgorithm);
 
     /**
      *  @brief  Destructor
      */
-    virtual ~TwoViewMatchingContainer();
+    virtual ~TwoViewMatchingControl();
 
     /**
      *  @brief  Get the overlap matrix
@@ -137,4 +137,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_TWO_VIEW_MATCHING_CONTAINER_H
+#endif // #ifndef LAR_TWO_VIEW_MATCHING_CONTROL_H

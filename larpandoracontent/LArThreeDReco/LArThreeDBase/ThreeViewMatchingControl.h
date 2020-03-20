@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingContainer.h
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h
  *
- *  @brief  Header file for the three view matching container class.
+ *  @brief  Header file for the three view matching control class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_VIEW_MATCHING_CONTAINER_H
-#define LAR_THREE_VIEW_MATCHING_CONTAINER_H 1
+#ifndef LAR_THREE_VIEW_MATCHING_CONTROL_H
+#define LAR_THREE_VIEW_MATCHING_CONTROL_H 1
 
 #include "larpandoracontent/LArObjects/LArOverlapTensor.h"
 
@@ -18,10 +18,10 @@ class MatchingBaseAlgorithm;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeViewMatchingContainer class
+ *  @brief  ThreeViewMatchingControl class
  */
 template<typename T>
-class ThreeViewMatchingContainer
+class ThreeViewMatchingControl
 {
 public:
     typedef OverlapTensor<T> TensorType;
@@ -31,12 +31,12 @@ public:
      *
      *  @param  pAlgorithm address of the matching base algorithm
      */
-    ThreeViewMatchingContainer(MatchingBaseAlgorithm *const pAlgorithm);
+    ThreeViewMatchingControl(MatchingBaseAlgorithm *const pAlgorithm);
 
     /**
      *  @brief  Destructor
      */
-    virtual ~ThreeViewMatchingContainer();
+    virtual ~ThreeViewMatchingControl();
 
     /**
      *  @brief  Get the overlap tensor
@@ -135,4 +135,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_VIEW_MATCHING_CONTAINER_H
+#endif // #ifndef LAR_THREE_VIEW_MATCHING_CONTROL_H
