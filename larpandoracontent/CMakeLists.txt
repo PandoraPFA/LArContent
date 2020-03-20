@@ -20,6 +20,7 @@ set( subdir_list LArCheating
 		 LArThreeDReco/LArThreeDBase
 		 LArThreeDReco/LArTrackFragments
 		 LArThreeDReco/LArTransverseTrackMatching
+		 LArThreeDReco/LArTwoViewMatching
 		 LArTrackShowerId
 		 LArTwoDReco
 		 LArTwoDReco/LArClusterAssociation
