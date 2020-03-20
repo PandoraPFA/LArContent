@@ -274,7 +274,7 @@ template<typename T>
 void NViewTrackMatchingAlgorithm<T>::PreparationStep()
 {
     ClusterList clusterList;
-    this->GetMatchingControl().GetAllSelectedClusters(clusterList);
+    this->GetAllSelectedClusters(clusterList);
     this->PreparationStep(clusterList);
 }
 

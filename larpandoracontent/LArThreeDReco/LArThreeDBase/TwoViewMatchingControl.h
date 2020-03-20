@@ -45,6 +45,7 @@ public:
      */
     MatrixType &GetOverlapMatrix();
 
+private:
     void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     const std::string &GetClusterListName(const pandora::HitType hitType) const;
@@ -56,7 +57,6 @@ public:
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-private:
     const pandora::ClusterList *m_pInputClusterList1;           ///< Address of the input cluster list 1
     const pandora::ClusterList *m_pInputClusterList2;           ///< Address of the input cluster list 2
 
@@ -70,6 +70,9 @@ private:
 
     std::string                 m_inputClusterListName1;        ///< The name of the view 1 cluster list
     std::string                 m_inputClusterListName2;        ///< The name of the view 2 cluster list
+
+    template <typename U>
+    friend class NViewMatchingAlgorithm;
 };
 
 } // namespace lar_content

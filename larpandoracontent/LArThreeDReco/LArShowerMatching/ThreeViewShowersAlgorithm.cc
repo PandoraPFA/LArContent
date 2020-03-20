@@ -94,7 +94,7 @@ void ThreeViewShowersAlgorithm::SelectInputClusters(const ClusterList *const pIn
 void ThreeViewShowersAlgorithm::PreparationStep()
 {
     ClusterList clusterList;
-    this->GetMatchingControl().GetAllSelectedClusters(clusterList);
+    this->GetAllSelectedClusters(clusterList);
     this->PreparationStep(clusterList);
 }
 
