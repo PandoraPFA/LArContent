@@ -5,7 +5,7 @@
  *
  *  $Log: $
  */
-/* TODO
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -49,50 +49,47 @@ void ThreeViewTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const 
     if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
+// TODO   ClusterList &clusterList((TPC_VIEW_U == hitType) ? m_clusterListU : (TPC_VIEW_V == hitType) ? m_clusterListV : m_clusterListW);
+//
+//    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pNewCluster))
+//        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+//
+//    clusterList.push_back(pNewCluster);
 
-    if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pNewCluster))
-        throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+    ClusterList clusterList1(this->GetSelectedClusterList((TPC_VIEW_U == hitType) ? TPC_VIEW_V : TPC_VIEW_U));
+    ClusterList clusterList2(this->GetSelectedClusterList((TPC_VIEW_W == hitType) ? TPC_VIEW_V : TPC_VIEW_W));
+    clusterList1.sort(LArClusterHelper::SortByNHits);
+    clusterList2.sort(LArClusterHelper::SortByNHits);
 
-    clusterList.push_back(pNewCluster);
-
-    const ClusterList &clusterList1((TPC_VIEW_U == hitType) ? m_clusterListV : m_clusterListU);
-    const ClusterList &clusterList2((TPC_VIEW_W == hitType) ? m_clusterListV : m_clusterListW);
-
-    ClusterVector clusterVector1(clusterList1.begin(), clusterList1.end());
-    ClusterVector clusterVector2(clusterList2.begin(), clusterList2.end());
-    std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
-    std::sort(clusterVector2.begin(), clusterVector2.end(), LArClusterHelper::SortByNHits);
-
-    for (const Cluster *const pCluster1 : clusterVector1)
+    for (const Cluster *const pCluster1 : clusterList1)
     {
         if (TPC_VIEW_U == hitType)
         {
-            this->CalculateOverlapResult(pNewCluster, pCluster1, NULL);
+            this->CalculateOverlapResult(pNewCluster, pCluster1, nullptr);
         }
         else if (TPC_VIEW_V == hitType)
         {
-            this->CalculateOverlapResult(pCluster1, pNewCluster, NULL);
+            this->CalculateOverlapResult(pCluster1, pNewCluster, nullptr);
         }
         else
         {
-            this->CalculateOverlapResult(pCluster1, NULL, pNewCluster);
+            this->CalculateOverlapResult(pCluster1, nullptr, pNewCluster);
         }
     }
 
-    for (const Cluster *const pCluster2 : clusterVector2)
+    for (const Cluster *const pCluster2 : clusterList2)
     {
         if (TPC_VIEW_U == hitType)
         {
-            this->CalculateOverlapResult(pNewCluster, NULL, pCluster2);
+            this->CalculateOverlapResult(pNewCluster, nullptr, pCluster2);
         }
         else if (TPC_VIEW_V == hitType)
         {
-            this->CalculateOverlapResult(NULL, pNewCluster, pCluster2);
+            this->CalculateOverlapResult(nullptr, pNewCluster, pCluster2);
         }
         else
         {
-            this->CalculateOverlapResult(NULL, pCluster2, pNewCluster);
+            this->CalculateOverlapResult(nullptr, pCluster2, pNewCluster);
         }
     }
 }
@@ -101,7 +98,7 @@ void ThreeViewTrackFragmentsAlgorithm::UpdateForNewCluster(const Cluster *const 
 
 void ThreeViewTrackFragmentsAlgorithm::RebuildClusters(const ClusterList &rebuildList, ClusterList &newClusters) const
 {
-    const ClusterList *pNewClusterList = NULL;
+    const ClusterList *pNewClusterList = nullptr;
     std::string oldClusterListName, newClusterListName;
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeReclustering(*this, TrackList(), rebuildList,
@@ -117,29 +114,29 @@ void ThreeViewTrackFragmentsAlgorithm::RebuildClusters(const ClusterList &rebuil
 
 void ThreeViewTrackFragmentsAlgorithm::PerformMainLoop()
 {
-    ClusterVector clusterVectorU(m_clusterListU.begin(), m_clusterListU.end());
-    ClusterVector clusterVectorV(m_clusterListV.begin(), m_clusterListV.end());
-    ClusterVector clusterVectorW(m_clusterListW.begin(), m_clusterListW.end());
-    std::sort(clusterVectorU.begin(), clusterVectorU.end(), LArClusterHelper::SortByNHits);
-    std::sort(clusterVectorV.begin(), clusterVectorV.end(), LArClusterHelper::SortByNHits);
-    std::sort(clusterVectorW.begin(), clusterVectorW.end(), LArClusterHelper::SortByNHits);
+    ClusterList clusterListU(this->GetSelectedClusterList(TPC_VIEW_U));
+    ClusterList clusterListV(this->GetSelectedClusterList(TPC_VIEW_V));
+    ClusterList clusterListW(this->GetSelectedClusterList(TPC_VIEW_W));
+    clusterListU.sort(LArClusterHelper::SortByNHits);
+    clusterListV.sort(LArClusterHelper::SortByNHits);
+    clusterListW.sort(LArClusterHelper::SortByNHits);
 
-    for (const Cluster *const pClusterU : clusterVectorU)
+    for (const Cluster *const pClusterU : clusterListU)
     {
-        for (const Cluster *const pClusterV : clusterVectorV)
-            this->CalculateOverlapResult(pClusterU, pClusterV, NULL);
+        for (const Cluster *const pClusterV : clusterListV)
+            this->CalculateOverlapResult(pClusterU, pClusterV, nullptr);
     }
 
-    for (const Cluster *const pClusterU : clusterVectorU)
+    for (const Cluster *const pClusterU : clusterListU)
     {
-        for (const Cluster *const pClusterW : clusterVectorW)
-            this->CalculateOverlapResult(pClusterU, NULL, pClusterW);
+        for (const Cluster *const pClusterW : clusterListW)
+            this->CalculateOverlapResult(pClusterU, nullptr, pClusterW);
     }
 
-    for (const Cluster *const pClusterV : clusterVectorV)
+    for (const Cluster *const pClusterV : clusterListV)
     {
-        for (const Cluster *const pClusterW : clusterVectorW)
-            this->CalculateOverlapResult(NULL, pClusterV, pClusterW);
+        for (const Cluster *const pClusterW : clusterListW)
+            this->CalculateOverlapResult(nullptr, pClusterV, pClusterW);
     }
 }
 
@@ -148,16 +145,16 @@ void ThreeViewTrackFragmentsAlgorithm::PerformMainLoop()
 void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     const HitType missingHitType(
-        ((NULL != pClusterU) && (NULL != pClusterV) && (NULL == pClusterW)) ? TPC_VIEW_W :
-        ((NULL != pClusterU) && (NULL == pClusterV) && (NULL != pClusterW)) ? TPC_VIEW_V :
-        ((NULL == pClusterU) && (NULL != pClusterV) && (NULL != pClusterW)) ? TPC_VIEW_U : HIT_CUSTOM);
+        ((nullptr != pClusterU) && (nullptr != pClusterV) && (nullptr == pClusterW)) ? TPC_VIEW_W :
+        ((nullptr != pClusterU) && (nullptr == pClusterV) && (nullptr != pClusterW)) ? TPC_VIEW_V :
+        ((nullptr == pClusterU) && (nullptr != pClusterV) && (nullptr != pClusterW)) ? TPC_VIEW_U : HIT_CUSTOM);
 
     if (HIT_CUSTOM == missingHitType)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     // Calculate new overlap result and replace old overlap result where necessary
     FragmentOverlapResult oldOverlapResult, newOverlapResult;
-    const Cluster *pMatchedClusterU(NULL), *pMatchedClusterV(NULL), *pMatchedClusterW(NULL);
+    const Cluster *pMatchedClusterU(nullptr), *pMatchedClusterV(nullptr), *pMatchedClusterW(nullptr);
 
     const TwoDSlidingFitResult &fitResult1((TPC_VIEW_U == missingHitType) ? this->GetCachedSlidingFitResult(pClusterV) :
         this->GetCachedSlidingFitResult(pClusterU));
@@ -167,7 +164,7 @@ void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *con
 
     const ClusterList &inputClusterList(this->GetInputClusterList(missingHitType));
 
-    const Cluster *pBestMatchedCluster(NULL);
+    const Cluster *pBestMatchedCluster(nullptr);
     const StatusCode statusCode(this->CalculateOverlapResult(fitResult1, fitResult2, inputClusterList, pBestMatchedCluster, newOverlapResult));
 
     if ((STATUS_CODE_SUCCESS != statusCode) && (STATUS_CODE_NOT_FOUND != statusCode))
@@ -176,18 +173,20 @@ void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *con
     if (!newOverlapResult.IsInitialized())
         return;
 
+    ContainerType::TensorType &overlapTensor(this->GetMatchingContainer().GetOverlapTensor());
+
     if (STATUS_CODE_SUCCESS == statusCode)
     {
-        pMatchedClusterU = ((NULL != pClusterU) ? pClusterU : pBestMatchedCluster);
-        pMatchedClusterV = ((NULL != pClusterV) ? pClusterV : pBestMatchedCluster);
-        pMatchedClusterW = ((NULL != pClusterW) ? pClusterW : pBestMatchedCluster);
+        pMatchedClusterU = ((nullptr != pClusterU) ? pClusterU : pBestMatchedCluster);
+        pMatchedClusterV = ((nullptr != pClusterV) ? pClusterV : pBestMatchedCluster);
+        pMatchedClusterW = ((nullptr != pClusterW) ? pClusterW : pBestMatchedCluster);
 
-        if (NULL == pMatchedClusterU || NULL == pMatchedClusterV || NULL == pMatchedClusterW)
+        if (nullptr == pMatchedClusterU || nullptr == pMatchedClusterV || nullptr == pMatchedClusterW)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         try
         {
-            oldOverlapResult = m_overlapTensor.GetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW);
+            oldOverlapResult = overlapTensor.GetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW);
         }
         catch (StatusCodeException &)
         {
@@ -196,11 +195,11 @@ void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *con
 
     if (!oldOverlapResult.IsInitialized())
     {
-        m_overlapTensor.SetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
+        overlapTensor.SetOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
     }
     else if (newOverlapResult.GetFragmentCaloHitList().size() > oldOverlapResult.GetFragmentCaloHitList().size())
     {
-        m_overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
+        overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
     }
     else if (newOverlapResult.GetFragmentCaloHitList().size() == oldOverlapResult.GetFragmentCaloHitList().size())
     {
@@ -209,7 +208,7 @@ void ThreeViewTrackFragmentsAlgorithm::CalculateOverlapResult(const Cluster *con
         for (const CaloHit *const pCaloHit : oldOverlapResult.GetFragmentCaloHitList()) oldEnergySum += pCaloHit->GetHadronicEnergy();
 
         if (newEnergySum > oldEnergySum)
-            m_overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
+            overlapTensor.ReplaceOverlapResult(pMatchedClusterU, pMatchedClusterV, pMatchedClusterW, newOverlapResult);
     }
 }
 
@@ -429,7 +428,7 @@ StatusCode ThreeViewTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &i
 
     for (const CartesianVector &projectedPosition : projectedPositions)
     {
-        const CaloHit *pClosestCaloHit(NULL);
+        const CaloHit *pClosestCaloHit(nullptr);
         float closestDistanceSquared(std::numeric_limits<float>::max()), tieBreakerBestEnergy(0.f);
 
         for (const CaloHit *const pCaloHit : availableCaloHits)
@@ -444,7 +443,7 @@ StatusCode ThreeViewTrackFragmentsAlgorithm::GetMatchedHits(const ClusterList &i
             }
         }
 
-        if ((closestDistanceSquared < m_maxPointDisplacementSquared) && (NULL != pClosestCaloHit) && (matchedHits.end() == std::find(matchedHits.begin(), matchedHits.end(), pClosestCaloHit)))
+        if ((closestDistanceSquared < m_maxPointDisplacementSquared) && (nullptr != pClosestCaloHit) && (matchedHits.end() == std::find(matchedHits.begin(), matchedHits.end(), pClosestCaloHit)))
             matchedHits.push_back(pClosestCaloHit);
     }
 
@@ -478,7 +477,7 @@ StatusCode ThreeViewTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitLis
     if (matchedClusters.empty())
         return STATUS_CODE_NOT_FOUND;
 
-    pBestMatchedCluster = NULL;
+    pBestMatchedCluster = nullptr;
     unsigned int bestClusterMatchedHits(0);
     float tieBreakerBestEnergy(0.f);
 
@@ -498,7 +497,7 @@ StatusCode ThreeViewTrackFragmentsAlgorithm::GetMatchedClusters(const CaloHitLis
         }
     }
 
-    if (NULL == pBestMatchedCluster)
+    if (nullptr == pBestMatchedCluster)
         return STATUS_CODE_NOT_FOUND;
 
     return STATUS_CODE_SUCCESS;
@@ -614,7 +613,7 @@ void ThreeViewTrackFragmentsAlgorithm::ExamineOverlapContainer()
 
     for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, m_overlapTensor))
+        if ((*iter)->Run(this, this->GetMatchingContainer().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 
@@ -669,8 +668,7 @@ StatusCode ThreeViewTrackFragmentsAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedHits", m_minMatchedHits));
 
-    return ThreeViewTrackMatchingAlgorithm<FragmentOverlapResult>::ReadSettings(xmlHandle);
+    return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content
-*/
