@@ -35,7 +35,6 @@ typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> Cluste
 /**
  *  @brief  MatchingBaseAlgorithm class
  */
-
 class MatchingBaseAlgorithm : public pandora::Algorithm
 {
 public:
