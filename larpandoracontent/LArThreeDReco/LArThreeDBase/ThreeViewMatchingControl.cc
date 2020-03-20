@@ -165,16 +165,6 @@ const pandora::ClusterList &ThreeViewMatchingControl<T>::GetSelectedClusterList(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeViewMatchingControl<T>::GetAllSelectedClusters(ClusterList &clusterList) const
-{
-    clusterList.insert(clusterList.end(), m_clusterListU.begin(), m_clusterListU.end());
-    clusterList.insert(clusterList.end(), m_clusterListV.begin(), m_clusterListV.end());
-    clusterList.insert(clusterList.end(), m_clusterListW.begin(), m_clusterListW.end());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
 void ThreeViewMatchingControl<T>::SelectAllInputClusters()
 {
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
@@ -195,6 +185,16 @@ void ThreeViewMatchingControl<T>::SelectAllInputClusters()
     m_pAlgorithm->SelectInputClusters(m_pInputClusterListU, m_clusterListU);
     m_pAlgorithm->SelectInputClusters(m_pInputClusterListV, m_clusterListV);
     m_pAlgorithm->SelectInputClusters(m_pInputClusterListW, m_clusterListW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeViewMatchingControl<T>::PrepareAllInputClusters()
+{
+    m_pAlgorithm->PrepareInputClusters(m_clusterListU);
+    m_pAlgorithm->PrepareInputClusters(m_clusterListV);
+    m_pAlgorithm->PrepareInputClusters(m_clusterListW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

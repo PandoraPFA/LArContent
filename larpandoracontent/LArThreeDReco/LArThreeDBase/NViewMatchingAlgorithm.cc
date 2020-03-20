@@ -77,18 +77,18 @@ const pandora::ClusterList &NViewMatchingAlgorithm<T>::GetSelectedClusterList(co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
-void NViewMatchingAlgorithm<T>::GetAllSelectedClusters(pandora::ClusterList &clusterList) const
+template <typename T>
+void NViewMatchingAlgorithm<T>::SelectAllInputClusters()
 {
-    return m_matchingControl.GetAllSelectedClusters(clusterList);
+    m_matchingControl.SelectAllInputClusters();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void NViewMatchingAlgorithm<T>::SelectAllInputClusters()
+void NViewMatchingAlgorithm<T>::PrepareAllInputClusters()
 {
-    m_matchingControl.SelectAllInputClusters();
+    m_matchingControl.PrepareAllInputClusters();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

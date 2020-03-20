@@ -51,8 +51,8 @@ private:
     const std::string &GetClusterListName(const pandora::HitType hitType) const;
     const pandora::ClusterList &GetInputClusterList(const pandora::HitType hitType) const;
     const pandora::ClusterList &GetSelectedClusterList(const pandora::HitType hitType) const;
-    void GetAllSelectedClusters(pandora::ClusterList &clusterList) const;
     void SelectAllInputClusters();
+    void PrepareAllInputClusters();
     void PerformMainLoop();
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

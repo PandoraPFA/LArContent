@@ -218,6 +218,28 @@ void NViewTrackMatchingAlgorithm<T>::SelectInputClusters(const ClusterList *cons
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
+void NViewTrackMatchingAlgorithm<T>::PrepareInputClusters(ClusterList &preparedClusterList)
+{
+    for (ClusterList::iterator iter = preparedClusterList.begin(), iterEnd = preparedClusterList.end(); iter != iterEnd; )
+    {
+        try
+        {
+            this->AddToSlidingFitCache(*iter);
+            ++iter;
+        }
+        catch (const StatusCodeException &statusCodeException)
+        {
+            preparedClusterList.erase(iter++);
+
+            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
+                throw statusCodeException;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
 void NViewTrackMatchingAlgorithm<T>::SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
     pfoParameters.m_particleId = MU_MINUS; // Track
@@ -244,38 +266,6 @@ void NViewTrackMatchingAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *co
 
     if (m_slidingFitResultMap.end() != iter)
         m_slidingFitResultMap.erase(iter);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void NViewTrackMatchingAlgorithm<T>::PreparationStep(ClusterList &clusterList)
-{
-    for (ClusterList::iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
-    {
-        try
-        {
-            this->AddToSlidingFitCache(*iter);
-            ++iter;
-        }
-        catch (const StatusCodeException &statusCodeException)
-        {
-            clusterList.erase(iter++);
-
-            if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                throw statusCodeException;
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void NViewTrackMatchingAlgorithm<T>::PreparationStep()
-{
-    ClusterList clusterList;
-    this->GetAllSelectedClusters(clusterList);
-    this->PreparationStep(clusterList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

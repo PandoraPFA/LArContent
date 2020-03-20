@@ -91,18 +91,9 @@ void ThreeViewShowersAlgorithm::SelectInputClusters(const ClusterList *const pIn
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewShowersAlgorithm::PreparationStep()
+void ThreeViewShowersAlgorithm::PrepareInputClusters(ClusterList &preparedClusterList)
 {
-    ClusterList clusterList;
-    this->GetAllSelectedClusters(clusterList);
-    this->PreparationStep(clusterList);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeViewShowersAlgorithm::PreparationStep(ClusterList &clusterList)
-{
-    for (ClusterList::iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
+    for (ClusterList::iterator iter = preparedClusterList.begin(), iterEnd = preparedClusterList.end(); iter != iterEnd; )
     {
         const Cluster *const pCluster(*iter);
 
@@ -113,7 +104,7 @@ void ThreeViewShowersAlgorithm::PreparationStep(ClusterList &clusterList)
         }
         catch (StatusCodeException &statusCodeException)
         {
-            clusterList.erase(iter++);
+            preparedClusterList.erase(iter++);
 
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;

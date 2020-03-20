@@ -83,6 +83,7 @@ public:
     virtual void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+    virtual void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
     virtual void SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 protected:
@@ -100,14 +101,6 @@ protected:
      */
     void RemoveFromSlidingFitCache(const pandora::Cluster *const pCluster);
 
-    /**
-     *  @brief  Preparation step for a specific cluster list
-     *
-     *  @param  clusterList the cluster list
-     */
-    virtual void PreparationStep(pandora::ClusterList &clusterList);
-
-    virtual void PreparationStep();
     virtual void TidyUp();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

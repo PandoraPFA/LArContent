@@ -37,7 +37,6 @@ public:
     const std::string &GetClusterListName(const pandora::HitType hitType) const;
     const pandora::ClusterList &GetInputClusterList(const pandora::HitType hitType) const;
     const pandora::ClusterList &GetSelectedClusterList(const pandora::HitType hitType) const;
-    void GetAllSelectedClusters(pandora::ClusterList &clusterList) const;
 
 protected:
     /**
@@ -46,6 +45,7 @@ protected:
     MatchingType &GetMatchingControl();
 
     virtual void SelectAllInputClusters();
+    virtual void PrepareAllInputClusters();
     virtual void PerformMainLoop();
     virtual void TidyUp();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

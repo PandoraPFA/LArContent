@@ -46,6 +46,7 @@ public:
     void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+    void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
 private:
     /**
@@ -84,15 +85,6 @@ private:
         float       m_xOverlapSpan;  ///< The x-overlap span
         float       m_nPoints;       ///< The number of sampling points to be used
     };
-
-    void PreparationStep();
-
-    /**
-     *  @brief  Preparation step for a specific cluster list
-     *
-     *  @param  clusterList the cluster list
-     */
-    void PreparationStep(pandora::ClusterList &clusterList);
 
     void TidyUp();
 

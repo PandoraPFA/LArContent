@@ -29,6 +29,60 @@ MatchingBaseAlgorithm::~MatchingBaseAlgorithm()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void MatchingBaseAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+{
+    if (!pInputClusterList)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    selectedClusterList = *pInputClusterList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MatchingBaseAlgorithm::PrepareInputClusters(ClusterList &/*preparedClusterList*/)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool MatchingBaseAlgorithm::MakeClusterMerges(const ClusterMergeMap &clusterMergeMap)
+{
+    ClusterSet deletedClusters;
+
+    ClusterList parentClusters;
+    for (const auto &mapEntry : clusterMergeMap) parentClusters.push_back(mapEntry.first);
+    parentClusters.sort(LArClusterHelper::SortByNHits);
+
+    for (const Cluster *const pParentCluster : parentClusters)
+    {
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pParentCluster));
+        const std::string &clusterListName(this->GetClusterListName(hitType));
+
+        if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        ClusterList daughterClusters(clusterMergeMap.at(pParentCluster));
+        daughterClusters.sort(LArClusterHelper::SortByNHits);
+
+        for (const Cluster *const pDaughterCluster : daughterClusters)
+        {
+            if (deletedClusters.count(pParentCluster) || deletedClusters.count(pDaughterCluster))
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+
+            this->UpdateUponDeletion(pDaughterCluster);
+            this->UpdateUponDeletion(pParentCluster);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
+
+            this->UpdateForNewCluster(pParentCluster);
+            deletedClusters.insert(pDaughterCluster);
+        }
+    }
+
+    return !(deletedClusters.empty());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool MatchingBaseAlgorithm::CreateThreeDParticles(const ProtoParticleVector &protoParticleVector)
 {
     bool particlesMade(false);
@@ -75,68 +129,12 @@ void MatchingBaseAlgorithm::SetPfoParticleId(PandoraContentApi::ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MatchingBaseAlgorithm::MakeClusterMerges(const ClusterMergeMap &clusterMergeMap)
-{
-    ClusterSet deletedClusters;
-
-    ClusterList parentClusters;
-    for (const auto &mapEntry : clusterMergeMap) parentClusters.push_back(mapEntry.first);
-    parentClusters.sort(LArClusterHelper::SortByNHits);
-
-    for (const Cluster *const pParentCluster : parentClusters)
-    {
-        const HitType hitType(LArClusterHelper::GetClusterHitType(pParentCluster));
-        const std::string &clusterListName(this->GetClusterListName(hitType));
-
-        if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        ClusterList daughterClusters(clusterMergeMap.at(pParentCluster));
-        daughterClusters.sort(LArClusterHelper::SortByNHits);
-
-        for (const Cluster *const pDaughterCluster : daughterClusters)
-        {
-            if (deletedClusters.count(pParentCluster) || deletedClusters.count(pDaughterCluster))
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-
-            this->UpdateUponDeletion(pDaughterCluster);
-            this->UpdateUponDeletion(pParentCluster);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
-
-            this->UpdateForNewCluster(pParentCluster);
-            deletedClusters.insert(pDaughterCluster);
-        }
-    }
-
-    return !(deletedClusters.empty());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MatchingBaseAlgorithm::SelectAllInputClusters()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MatchingBaseAlgorithm::PreparationStep()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void MatchingBaseAlgorithm::TidyUp()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode MatchingBaseAlgorithm::Run()
 {
     try
     {
         this->SelectAllInputClusters();
-        this->PreparationStep();
+        this->PrepareAllInputClusters();
         this->PerformMainLoop();
         this->ExamineOverlapContainer();
         this->TidyUp();
