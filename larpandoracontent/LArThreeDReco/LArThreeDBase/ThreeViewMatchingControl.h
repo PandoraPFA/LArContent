@@ -55,8 +55,6 @@ private:
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    MatchingBaseAlgorithm      *m_pAlgorithm;                   ///< The address of the matching base algorithm
-
     const pandora::ClusterList *m_pInputClusterListU;           ///< Address of the input cluster list U
     const pandora::ClusterList *m_pInputClusterListV;           ///< Address of the input cluster list V
     const pandora::ClusterList *m_pInputClusterListW;           ///< Address of the input cluster list W
