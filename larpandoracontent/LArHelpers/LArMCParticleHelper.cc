@@ -681,7 +681,6 @@ void LArMCParticleHelper::CollectReconstructableTestBeamHierarchy2DHits(const Pa
     PfoList pfoList;
     // If foldBackHierarchy collect all 2D calo hits in pfo hierarchy
     // else collect hits directly belonging to pfo
-
     if (foldBackHierarchy)
     {
         // ATTN: Only collect downstream pfos for daughter test beam particles & cosmics
