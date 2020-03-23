@@ -34,7 +34,7 @@ LArMCParticleHelper::PrimaryParameters::PrimaryParameters() :
     m_minPrimaryGoodViews(2),
     m_selectInputHits(true),
     m_maxPhotonPropagation(2.5f),
-    m_minHitSharingFraction(0.9f), 
+    m_minHitSharingFraction(0.9f),
     m_foldBackHierarchy(true)
 {
 }
