@@ -101,8 +101,9 @@ private:
      *  @brief  Write the training files
      *
      *  @param  ssBuf, buffer for training file writing
+     *  @param  interactionType, the interaction type
      */
-    void WriteTrainingFiles(std::stringstream ssBuf[6]) const;
+    void WriteTrainingFiles(std::stringstream ssBuf[6], const int interactionType) const;
 
     /**
      *  @brief  Check if a 3D position is in the detector 
@@ -130,6 +131,13 @@ private:
      */
     pandora::CartesianVector GetMCVertexPosition() const;
 
+    /**
+     *  @brief  Get the interaction type 
+     *
+     *  @return the interaction type 
+     */
+    int GetInteractionType() const;
+
     // Member variables here
     std::string             m_outputVertexListName;           ///< The name under which to save the output vertex list
     pandora::StringVector   m_inputClusterListNames;          ///< The list of cluster list names
@@ -146,6 +154,9 @@ private:
     std::string             m_trainingLabelsFileName;         ///< The name of the training labels output file
     float                   m_vertexXCorrection;              ///< The correction to the x-coordinate of the MC vertex position
     double                  m_hitWidthZ;                      ///< The width of the hits in the z-direction
+    std::string             m_mcParticleListName;             ///< The MC particle list
+    std::string             m_caloHitListName;                ///< The 2D CaloHit list name
+    std::string             m_interactionTypeFileName;        ///< The name of the interaction type output file
     std::vector<std::shared_ptr<torch::jit::script::Module>> m_vecPModule; ///< Vector of Pointers to Torch models
 };
 

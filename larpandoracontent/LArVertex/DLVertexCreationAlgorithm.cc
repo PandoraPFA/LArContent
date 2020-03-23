@@ -12,6 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 
 #include "larpandoracontent/LArVertex/DLVertexCreationAlgorithm.h"
 
@@ -35,6 +36,9 @@ DLVertexCreationAlgorithm::DLVertexCreationAlgorithm() :
     m_trainingLabelsFileName("labels"),
     m_vertexXCorrection(0.f),
     m_hitWidthZ(0.5),
+    m_mcParticleListName("Input"),
+    m_caloHitListName("CaloHitList2D"),
+    m_interactionTypeFileName("interactionType"),
     m_vecPModule({nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr, nullptr})
 {
 }
@@ -92,10 +96,12 @@ StatusCode DLVertexCreationAlgorithm::Run()
     if (this->EventViewCheck(pClusterList1, allHitsCountVec[1])) return STATUS_CODE_SUCCESS;
     if (this->EventViewCheck(pClusterList2, allHitsCountVec[2])) return STATUS_CODE_SUCCESS;
     CartesianVector MCVertexPosition(0.f, 0.f, 0.f);
+    int interactionType(-1);
     if (m_trainingSetMode)
     {
         MCVertexPosition = this->GetMCVertexPosition();
         if (this->DetectorCheck(MCVertexPosition)) return STATUS_CODE_SUCCESS;
+        interactionType = this->GetInteractionType();
     }
 
     std::stringstream ssBuf[6];
@@ -106,7 +112,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
     if (m_trainingSetMode && (m_trainingImgLenVecIndex==0)) 
     {
         if (vertReconCount == ((1+m_trainingImgLenVecIndex)*m_numViews))
-            this->WriteTrainingFiles(ssBuf);
+            this->WriteTrainingFiles(ssBuf, interactionType);
         return STATUS_CODE_SUCCESS;
     }
 
@@ -126,7 +132,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
         if (m_trainingSetMode && (m_trainingImgLenVecIndex==imgLenVecIndex))
         {
             if (vertReconCount == ((1+m_trainingImgLenVecIndex)*m_numViews))
-                this->WriteTrainingFiles(ssBuf);
+                this->WriteTrainingFiles(ssBuf, interactionType);
             return STATUS_CODE_SUCCESS;
         }
     }
@@ -316,7 +322,7 @@ int DLVertexCreationAlgorithm::CreateTrainingFiles(const TwoDImage &out2dVec, co
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-void DLVertexCreationAlgorithm::WriteTrainingFiles(std::stringstream ssBuf[6]) const
+void DLVertexCreationAlgorithm::WriteTrainingFiles(std::stringstream ssBuf[6], const int interactionType) const
 {
     const StringVector view{"W", "V", "U"};
     for (int iView=0; iView<m_numViews; iView++)
@@ -330,6 +336,10 @@ void DLVertexCreationAlgorithm::WriteTrainingFiles(std::stringstream ssBuf[6]) c
         outputStream1.close();
         outputStream2.close();
     }
+
+    std::ofstream outputStream11(m_interactionTypeFileName, std::ios::app);
+    outputStream11 << interactionType << std::endl;
+    outputStream11.close();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -386,7 +396,7 @@ bool DLVertexCreationAlgorithm::EventViewCheck(const pandora::ClusterList *const
 pandora::CartesianVector DLVertexCreationAlgorithm::GetMCVertexPosition() const
 {
     const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
     CartesianVector MCVertexPosition(0.f, 0.f, 0.f);
     for (const MCParticle *const pMCParticle : *pMCParticleList)
@@ -399,6 +409,29 @@ pandora::CartesianVector DLVertexCreationAlgorithm::GetMCVertexPosition() const
     }
 
     return(MCVertexPosition);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+int DLVertexCreationAlgorithm::GetInteractionType() const
+{
+    // Extract input collections
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+
+    // ATTN Assumes single neutrino is parent of all neutrino-induced mc particles
+    LArMCParticleHelper::MCContributionMap nuMCParticlesToGoodHitsMap;
+    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, LArMCParticleHelper::PrimaryParameters(),
+        LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
+
+    MCParticleList mcPrimaryList;
+    for (const auto &mapEntry : nuMCParticlesToGoodHitsMap) mcPrimaryList.push_back(mapEntry.first);
+    mcPrimaryList.sort(LArMCParticleHelper::SortByMomentum);
+
+    const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(mcPrimaryList));
+    return((int)(interactionType));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -446,6 +479,15 @@ StatusCode DLVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "HitWidthZ", m_hitWidthZ));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MCParticleListName", m_mcParticleListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "CaloHitListName", m_caloHitListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "InteractionTypeFileName", m_interactionTypeFileName));
 
     return STATUS_CODE_SUCCESS;
 }
