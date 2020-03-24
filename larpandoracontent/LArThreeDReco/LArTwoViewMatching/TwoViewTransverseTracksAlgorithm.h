@@ -11,6 +11,8 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
+
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 
@@ -24,7 +26,7 @@ class TransverseMatrixTool;
 /**
  *  @brief  TwoViewTransverseTracksAlgorithm class
  */
-class TwoViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> >
+class TwoViewTransverseTracksAlgorithm : public TwoViewTrackMatchingAlgorithm<TwoViewTransverseOverlapResult>
 {
 public:
     typedef NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> > BaseAlgorithm;
