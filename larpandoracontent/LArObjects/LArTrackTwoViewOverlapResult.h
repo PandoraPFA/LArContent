@@ -31,6 +31,14 @@ public:
     TrackTwoViewOverlapResult();
 
     /**
+     *  @brief  constructor
+     *
+     *  @param matchingScore
+     */
+    TrackTwoViewOverlapResult(const float matchingScore);
+
+
+    /**
      *  @brief  Copy constructor
      *
      *  @param  rhs
@@ -58,6 +66,7 @@ public:
 
 protected:
     bool            m_isInitialized;                ///< Whether the track overlap result has been initialized
+    float           m_matchingScore;                ///< The compatability score for the two objects associated with the overlap result
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

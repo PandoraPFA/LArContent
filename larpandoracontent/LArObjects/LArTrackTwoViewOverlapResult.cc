@@ -18,7 +18,15 @@ namespace lar_content
 {
 
 TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() :
-    m_isInitialized(true) //TODO set to false when alternative constructor is written
+    m_isInitialized(false) 
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) :
+    m_isInitialized(true),
+    m_matchingScore(matchingScore)
 {
 }
 
