@@ -31,6 +31,14 @@ public:
     TrackTwoViewOverlapResult();
 
     /**
+     *  @brief  constructor
+     *
+     *  @param matchingScore
+     */
+    TrackTwoViewOverlapResult(const float matchingScore);
+
+
+    /**
      *  @brief  Copy constructor
      *
      *  @param  rhs
@@ -50,6 +58,28 @@ public:
     bool IsInitialized() const;
 
     /**
+     *  @brief  Get the matching score of the overlap result
+     *
+     *  @return matching score
+     */
+    float GetMatchingScore() const;
+
+
+    /**
+     *  @brief  Track two view overlap result less than operator
+     *
+     *  @param  rhs the track two view overlap result for comparison
+     */
+    bool operator<(const TrackTwoViewOverlapResult &rhs) const;
+
+    /**
+     *  @brief  Track two view overlap result greater than operator
+     *
+     *  @param  rhs the track two view overlap result for comparison
+     */
+    bool operator>(const TrackTwoViewOverlapResult &rhs) const;
+
+    /**
      *  @brief  Track overlap result assigment operator
      *
      *  @param  rhs the track overlap result to assign
@@ -58,6 +88,7 @@ public:
 
 protected:
     bool            m_isInitialized;                ///< Whether the track overlap result has been initialized
+    float           m_matchingScore;                ///< The compatability score for the two objects associated with the overlap result
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -78,7 +109,7 @@ public:
      *
      *  @param  twoViewXOverlap
      */
-    TwoViewTransverseOverlapResult(const TwoViewXOverlap &twoViewXOverlap);
+    TwoViewTransverseOverlapResult(const float matchingScore, const TwoViewXOverlap &twoViewXOverlap);
 
     /**
      *  @brief  Copy constructor
@@ -118,6 +149,17 @@ typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResu
 inline bool TrackTwoViewOverlapResult::IsInitialized() const
 {
     return m_isInitialized;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TrackTwoViewOverlapResult::GetMatchingScore() const
+{
+    if (m_isInitialized)
+        return m_matchingScore;
+   
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
