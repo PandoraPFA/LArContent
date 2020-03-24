@@ -58,6 +58,20 @@ public:
     bool IsInitialized() const;
 
     /**
+     *  @brief  Track two view overlap result less than operator
+     *
+     *  @param  rhs the track two view overlap result for comparison
+     */
+    bool operator<(const TrackTwoViewOverlapResult &rhs) const;
+
+    /**
+     *  @brief  Track two view overlap result greater than operator
+     *
+     *  @param  rhs the track two view overlap result for comparison
+     */
+    bool operator>(const TrackTwoViewOverlapResult &rhs) const;
+
+    /**
      *  @brief  Track overlap result assigment operator
      *
      *  @param  rhs the track overlap result to assign

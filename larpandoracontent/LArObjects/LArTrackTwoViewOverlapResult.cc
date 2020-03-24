@@ -45,6 +45,35 @@ TrackTwoViewOverlapResult::~TrackTwoViewOverlapResult()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool TrackTwoViewOverlapResult::operator<(const TrackTwoViewOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    if (!m_isInitialized && !rhs.IsInitialized())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (!m_isInitialized)
+        return true;
+
+    if (!rhs.IsInitialized())
+        return false;
+
+    return (m_matchingScore < rhs.m_matchingScore);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackTwoViewOverlapResult::operator>(const TrackTwoViewOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    return !(*this < rhs);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 TrackTwoViewOverlapResult &TrackTwoViewOverlapResult::operator=(const TrackTwoViewOverlapResult &rhs)
 {
     if (this == &rhs)
