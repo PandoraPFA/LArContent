@@ -17,6 +17,8 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 #include "larpandoracontent/LArObjects/LArOverlapMatrix.h"
+#include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
+
 
 #include <algorithm>
 
@@ -258,5 +260,7 @@ void OverlapMatrix<T>::ExploreConnections(const Cluster *const pCluster, const b
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class OverlapMatrix<float>;
+template class OverlapMatrix<TwoViewTransverseOverlapResult>;
+
 
 } // namespace lar_content
