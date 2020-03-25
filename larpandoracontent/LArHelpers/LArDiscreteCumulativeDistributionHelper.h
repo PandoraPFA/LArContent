@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <iostream>
 #include "larpandoracontent/LArHelpers/LArDiscreteCumulativeDistributionHelper.h"
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 namespace lar_content
 {
@@ -62,4 +63,16 @@ float LArDiscreteCumulativeDistributionHelper::FindY(const DiscreteCumulativeDis
     }
     return y;
 }
+
+void LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(const pandora::CaloHitList &caloHitList, const DiscreteCumulativeDistribution &distribution)
+{
+    caloHitList.sort(LArClusterHelper::SortHitsByPositionInX);
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        distribution.CollectInputData(pCaloHit->GetPositionVector().GetX(), pCaloHit->GetInputEnergy());
+    }
+    distribution.CreateCumulativeDistribution();
+    return;
+}
+
 } // namespace lar_content
