@@ -52,7 +52,7 @@ public:
      *  @return
      */
     static CreateDistributionFromCaloHits(const pandora::CaloHitList &caloHitList, 
-            const DiscreteCumulativeDistribution &distribution);
+            const LArDiscreteCumulativeDistribution &distribution);
 
 
 
