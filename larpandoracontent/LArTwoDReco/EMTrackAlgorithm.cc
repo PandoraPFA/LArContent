@@ -19,10 +19,23 @@ namespace lar_content
 
 
 EMTrackAlgorithm::EMTrackAlgorithm() :
-    m_minCaloHits(30)
+    m_caloHitListName(),
+    m_caloHitToParentClusterMap(),
+    m_minCaloHits(30),
+    m_maxXSeparation(10),
+    m_maxZSeparation(10)
 {
 }
 
+EMTrackAlgorithm::ClusterAssociation::ClusterAssociation(const Cluster *const pAssociatedCluster, const CartesianVector &innerMergePoint, const CartesianVector &innerMergeDirection, const CartesianVector &outerMergePoint, const CartesianVector &outerMergeDirection) :
+    m_pAssociatedCluster(pAssociatedCluster),
+    m_innerMergePoint(innerMergePoint),
+    m_innerMergeDirection(innerMergeDirection),
+    m_outerMergePoint(outerMergePoint),
+    m_outerMergeDirection(outerMergeDirection)
+{
+}
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode EMTrackAlgorithm::Run()
@@ -31,19 +44,237 @@ StatusCode EMTrackAlgorithm::Run()
     const ClusterList *pClusterList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
-    // Get filtered clusters
+    const CaloHitList *pCaloHitList = NULL;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+    //std::sort(pCaloHitList->begin(), pCaloHitList->end(), LArClusterHelper::SortHitsByPosition); //cannot do this - can sort a vector
+
+    
+    // Get target clusters
     ClusterVector clusterVector;
     SelectCleanClusters(pClusterList, clusterVector);
 
     PandoraMonitoringApi::Create(this->GetPandora());
     PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
+
+    ClusterToClusterAssociationMap clusterToClusterAssociationMap;
+    FillClusterToClusterAssociationMap(clusterVector, clusterToClusterAssociationMap);
     
-    ClusterToAssociatedClusterMap clusterToAssociatedClusterMap;
-    FillClusterToAssociatedClusterMap(clusterVector, clusterToAssociatedClusterMap);
+    
+    for (const Cluster *const innerCluster : clusterVector)
+    {
+        const ClusterToClusterAssociationMap::const_iterator associationIter(clusterToClusterAssociationMap.find(innerCluster));
+        
+        if (associationIter == clusterToClusterAssociationMap.end())
+            continue;
+
+        // Get a list of associated calo hits.
+        CaloHitToParentClusterMap caloHitToParentClusterMap;
+        CaloHitVector extrapolatedCaloHitVector;
+        GetExtrapolatedCaloHits(innerCluster, associationIter->second, pCaloHitList, pClusterList, extrapolatedCaloHitVector, caloHitToParentClusterMap);
+
+        if (!IsTrackContinuous(associationIter->second, extrapolatedCaloHitVector))
+            continue;
+
+
+
+        AddHitsToCluster(innerCluster, caloHitToParentClusterMap, extrapolatedCaloHitVector);
+
+        ClusterList theCluster;
+        theCluster.push_back(innerCluster);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "AFTER", GREEN);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    }
+
+    
     
     return STATUS_CODE_SUCCESS;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+
+void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const CaloHitVector &extrapolatedCaloHitVector)
+{
+    for (const CaloHit *const pCaloHit : extrapolatedCaloHitVector)
+    {
+        CaloHitToParentClusterMap::const_iterator caloHitParentIter(caloHitToParentClusterMap.find(pCaloHit));
+
+        if (caloHitParentIter == caloHitToParentClusterMap.end())
+        {
+            PandoraContentApi::AddToCluster(*this, pClusterToEnlarge, pCaloHit);
+        }
+        else
+        {
+            try
+            {
+                PandoraContentApi::RemoveFromCluster(*this, caloHitParentIter->first, pCaloHit);
+            }
+            catch (const StatusCodeException &statusCodeException)
+            {
+                if (statusCodeException == STATUS_CODE_NOT_ALLOWED)
+                    PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, caloHitParentIter->first);
+                //ATTN REMOVE FROM THE CALO
+        this->MoveToNextEventFile();
+        }
+
+        
+    }
+
+}
+
+//-------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssociation, CaloHitVector &extrapolatedCaloHitVector)
+{
+
+    std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), LArClusterHelper::SortHitsByPosition);
+
+    float m_separationDistance(10);
+    
+    CartesianVector pointAlongTrack(clusterAssociation.GetInnerMergePoint());
+    for(const CaloHit *const pCaloHit : extrapolatedCaloHitVector)
+    {
+        CartesianVector hitPosition(pCaloHit->GetPositionVector());
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointAlongTrack, "POINT ALONG TRACK", BLACK, 2);
+        if (pointAlongTrack.GetDistanceSquared(hitPosition) > m_separationDistance)
+            return false;
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "HIT POSITION", RED, 2);
+        pointAlongTrack = hitPosition;
+        //PandoraMonitoringApi::Pause(this->GetPandora());
+    }
+    
+    //std::cout << "END DISTANCE: " << pointAlongTrack.GetDistanceSquared(clusterAssociation.GetOuterMergePoint()) << std::endl;;
+    
+    return true;
+}
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EMTrackAlgorithm::GetExtrapolatedCaloHits(const Cluster *const innerCluster, const ClusterAssociation &clusterAssociation, const CaloHitList *const pCaloHitList, const ClusterList *const pClusterList, CaloHitVector &extrapolatedCaloHitVector, CaloHitToParentClusterMap &caloHitToParentClusterMap)
+{
+
+    CartesianVector innerPoint(clusterAssociation.GetInnerMergePoint());
+    CartesianVector outerPoint(clusterAssociation.GetOuterMergePoint());
+    
+    float gradient(0), zIntercept(0);
+    ConnectByLine(innerPoint, outerPoint, gradient, zIntercept);
+
+    /////////////////////////////
+    //MONITORING PURPOSES
+    
+    CartesianVector point1(innerPoint.GetX(), 0, gradient*(innerPoint.GetX()) + zIntercept);
+    CartesianVector point2(outerPoint.GetX(), 0, gradient*(outerPoint.GetX()) + zIntercept);
+
+    PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &point1, &point2, "CONNECTING LINE", BLUE, 2, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &innerPoint, "INNER", BLUE, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &outerPoint, "OUTER", BLUE, 2);
+
+    ClusterList innerClusterList;
+    innerClusterList.push_back(innerCluster);
+    ClusterList outerClusterList;
+    outerClusterList.push_back(clusterAssociation.GetAssociatedCluster());
+
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &innerClusterList, "INNER CLUSTER", BLACK);
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &outerClusterList, "OUTER CLUSTER", BLACK);
+
+    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    /////////////////////////////
+
+    float m_distanceFromLine(0.35);
+    float minX(std::min(innerPoint.GetX(), outerPoint.GetX()));
+    float maxX(std::max(innerPoint.GetX(), outerPoint.GetX()));
+    float minZ(std::min(innerPoint.GetZ(), outerPoint.GetZ()));
+    float maxZ(std::max(innerPoint.GetZ(), outerPoint.GetZ()));
+
+    
+    for (const Cluster *const pCluster : *pClusterList) 
+    {
+
+        // do not consider hits from 'merging clusters'
+        if (pCluster == innerCluster || pCluster == clusterAssociation.GetAssociatedCluster())
+            continue;
+        
+        
+        OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        for (OrderedCaloHitList::const_iterator iterJ = orderedCaloHitList.begin(); iterJ != orderedCaloHitList.end(); ++iterJ){
+            for(CaloHitList::const_iterator hitIter = iterJ->second->begin(); hitIter != iterJ->second->end(); ++hitIter)
+            {
+                const CaloHit *const pCaloHit = *hitIter;
+                const CartesianVector hitPosition(pCaloHit->GetPositionVector());
+
+
+                if (hitPosition.GetX() < minX || hitPosition.GetX() > maxX)
+                    continue;
+
+                if (hitPosition.GetZ() < minZ || hitPosition.GetZ() > maxZ)
+                    continue;
+                
+                float distanceFromLine(std::fabs((gradient*(hitPosition.GetX()) - hitPosition.GetZ() + zIntercept)/(std::sqrt(1 + std::pow(gradient, 2)))));
+                
+                if (distanceFromLine > m_distanceFromLine)
+                {
+                    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "POTENTIAL HIT", RED, 2);
+                    continue;
+                }
+
+
+                /////////////////////////////
+                PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "POTENTIAL HIT", GREEN, 2);
+                //std::cout << "DISTANCE FROM LINE" << distanceFromLine << std::endl;
+                //PandoraMonitoringApi::Pause(this->GetPandora());
+                /////////////////////////////
+                
+                extrapolatedCaloHitVector.push_back(pCaloHit);
+                caloHitToParentClusterMap[pCaloHit] = pCluster;
+
+            }
+        }
+    }
+
+    
+    // now collect any unclustered hits
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
+            continue;
+
+        const CartesianVector hitPosition(pCaloHit->GetPositionVector());
+
+        if (hitPosition.GetX() < minX || hitPosition.GetX() > maxX)
+            continue;
+
+        if (hitPosition.GetZ() < minZ || hitPosition.GetZ() > maxZ)
+            continue;
+                
+        float distanceFromLine(std::fabs((gradient*(hitPosition.GetX()) - hitPosition.GetZ() + zIntercept)/(std::sqrt(1 + std::pow(gradient, 2)))));
+
+        if (distanceFromLine > m_distanceFromLine)
+        {
+            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "POTENTIAL HIT", RED, 2);
+            continue;
+        }
+
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "POTENTIAL HIT", GREEN, 2);
+        extrapolatedCaloHitVector.push_back(pCaloHit);                  
+    }
+
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EMTrackAlgorithm::ConnectByLine(const CartesianVector &innerCoordinate, const CartesianVector &outerCoordinate, float &gradient, float &zIntercept)
+{
+    gradient = (outerCoordinate.GetZ() - innerCoordinate.GetZ())/(outerCoordinate.GetX() - innerCoordinate.GetX());
+    zIntercept = outerCoordinate.GetZ() - gradient*outerCoordinate.GetX();
+}
+
+
+
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EMTrackAlgorithm::SelectCleanClusters(const ClusterList *pClusterList, ClusterVector &clusterVector)
@@ -63,7 +294,7 @@ void EMTrackAlgorithm::SelectCleanClusters(const ClusterList *pClusterList, Clus
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 
-void EMTrackAlgorithm::FillClusterToAssociatedClusterMap(const ClusterVector &clusterVector, ClusterToAssociatedClusterMap &clusterToAssociatedClusterMap)
+void EMTrackAlgorithm::FillClusterToClusterAssociationMap(const ClusterVector &clusterVector, ClusterToClusterAssociationMap &clusterToClusterAssociationMap)
 {
 
     TwoDSlidingFitResultMap slidingFitResultMap;
@@ -75,14 +306,14 @@ void EMTrackAlgorithm::FillClusterToAssociatedClusterMap(const ClusterVector &cl
         try {(void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, TwoDSlidingFitResult(pCluster, slidingFitWindow, slidingFitPitch)));}
         catch (StatusCodeException &) {}
     }
-
+    
     
     for (ClusterVector::const_iterator iterI = clusterVector.begin(); iterI != clusterVector.end(); ++iterI)
     {
         const Cluster *const pCurrentCluster = *iterI;
-        TwoDSlidingFitResultMap::const_iterator fitIterI = slidingFitResultMap.find(pCurrentCluster);
-
-        if (slidingFitResultMap.end() == fitIterI)
+        
+        TwoDSlidingFitResultMap::const_iterator currentFitIter = slidingFitResultMap.find(pCurrentCluster);
+        if (currentFitIter == slidingFitResultMap.end())
             continue;
 
         for (ClusterVector::const_iterator iterJ = iterI; iterJ != clusterVector.end(); ++iterJ)
@@ -92,114 +323,133 @@ void EMTrackAlgorithm::FillClusterToAssociatedClusterMap(const ClusterVector &cl
             if (pCurrentCluster == pTestCluster)
                 continue;
 
-            TwoDSlidingFitResultMap::const_iterator fitIterJ = slidingFitResultMap.find(pTestCluster);
-
-            if (slidingFitResultMap.end() == fitIterJ)
+            TwoDSlidingFitResultMap::const_iterator testFitIter = slidingFitResultMap.find(pTestCluster);
+            if (testFitIter == slidingFitResultMap.end())
                 continue;
 
-            if (!AreClustersAssociated(fitIterI->second, fitIterJ->second))
-                continue;
+            CartesianVector currentPoint(0,0,0), testPoint(0,0,0);
+            CartesianVector currentDirection(0,0,0), testDirection(0,0,0);
+            GetClusterMergingCoordinates(currentFitIter->second, currentPoint, currentDirection, testFitIter->second, testPoint, testDirection);
 
-            clusterToAssociatedClusterMap[pCurrentCluster] = pTestCluster;
+            if (AreClustersAssociated(currentPoint, currentDirection, testPoint, testDirection))
+            {
+                // ensure that each cluster has maximum one association, which is the closest association
+                clusterToClusterAssociationMap.insert(ClusterToClusterAssociationMap::value_type(pCurrentCluster, ClusterAssociation(pTestCluster, currentPoint, currentDirection, testPoint, testDirection)));
+                break;
+            }
+            else
+            {
+                continue;
+            }
         }
     }     
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool EMTrackAlgorithm::AreClustersAssociated(const TwoDSlidingFitResult &currentClusterFit, const TwoDSlidingFitResult &testClusterFit)
+bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint, const CartesianVector &currentDirection, const CartesianVector &testPoint, const CartesianVector &testDirection)
 {
 
-    CartesianVector currentPoint(0,0,0), testPoint(0,0,0);
-    CartesianVector currentDirection(0,0,0), testDirection(0,0,0);
-    GetClusterMergingCoordinates(currentClusterFit, currentPoint, currentDirection, testClusterFit, testPoint, testDirection);
 
-    ClusterList currentCluster;
-    currentCluster.push_back(currentClusterFit.GetCluster());
-    currentCluster.push_back(testClusterFit.GetCluster());
-    //ClusterList testCluster;
-    //testCluster.push_back(testClusterFit.GetCluster());   
     
     // check that opening angle is not too large
-    if (std::fabs(currentDirection.GetCosOpeningAngle(testDirection)) < 0.97)
+    if (currentDirection.GetCosOpeningAngle(testDirection*(-1.0)) < 0.97)
     {
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "ANGLE: " + std::to_string(std::fabs(currentDirection.GetCosOpeningAngle(testDirection))), RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "ANGLE: " + std::to_string(std::fabs(currentDirection.GetCosOpeningAngle(testDirection))), RED);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
     
     // check that clusters are reasonably far away
     if (std::sqrt(currentPoint.GetDistanceSquared(testPoint) < 50))
     {
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "DISTANCE: " + std::to_string(std::sqrt(currentPoint.GetDistanceSquared(testPoint))), RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "DISTANCE: " + std::to_string(std::sqrt(currentPoint.GetDistanceSquared(testPoint))), RED);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
-        
+
+    
     // check that fit allows you to get from one merge point to other merge point
     float separationDistance(std::sqrt(currentPoint.GetDistanceSquared(testPoint)));
     CartesianVector extrapolatedCurrentPoint(currentPoint + currentDirection*separationDistance);
     CartesianVector extrapolatedTestPoint(testPoint + testDirection*separationDistance);
 
+    //CartesianVector testTR(testPoint.GetX() + m_maxXSeparation, 0, testPoint.GetZ() + m_maxZSeparation);
+    //CartesianVector testTL(testPoint.GetX() - m_maxXSeparation, 0, testPoint.GetZ() + m_maxZSeparation);
+    //CartesianVector testBR(testPoint.GetX() + m_maxXSeparation, 0, testPoint.GetZ() - m_maxZSeparation);
+    //CartesianVector testBL(testPoint.GetX() - m_maxXSeparation, 0, testPoint.GetZ() - m_maxZSeparation);
 
-    float m_maxXSeparation(5);
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTR, &testTL, "TEST BOX", RED, 2, 2);
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTR, &testBR, "TEST BOX", RED, 2, 2);
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTL, &testBL, "TEST BOX", RED, 2, 2);
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testBR, &testBL, "TEST BOX", RED, 2, 2);
+
+    
     if (extrapolatedCurrentPoint.GetX() > testPoint.GetX() + m_maxXSeparation || extrapolatedCurrentPoint.GetX() < testPoint.GetX() - m_maxXSeparation)
     {
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", BLUE, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", BLUE, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
 
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "X TOO FAR", RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "EXTRAPOLATED CURRENT X TOO FAR", RED);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
 
+        if (extrapolatedCurrentPoint.GetZ() > testPoint.GetZ() + m_maxZSeparation || extrapolatedCurrentPoint.GetZ() < testPoint.GetZ() - m_maxZSeparation)
+    {
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", BLUE, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
+
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "EXTRAPOLATED CURRENT Z TOO FAR", RED);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        return false;
+    }
+
+    //CartesianVector currentTR(currentPoint.GetX() + m_maxXSeparation, 0, currentPoint.GetZ() + m_maxZSeparation);
+    //CartesianVector currentTL(currentPoint.GetX() - m_maxXSeparation, 0, currentPoint.GetZ() + m_maxZSeparation);
+    //CartesianVector currentBR(currentPoint.GetX() + m_maxXSeparation, 0, currentPoint.GetZ() - m_maxZSeparation);
+    //CartesianVector currentBL(currentPoint.GetX() - m_maxXSeparation, 0, currentPoint.GetZ() - m_maxZSeparation);
+
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTR, &currentTL, "CURRENT BOX", RED, 2, 2);
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTR, &currentBR, "CURRENT BOX", RED, 2, 2);
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTL, &currentBL, "CURRENT BOX", RED, 2, 2);
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentBR, &currentBL, "CURRENT BOX", RED, 2, 2);
+
+
+    
     if (extrapolatedTestPoint.GetX() > currentPoint.GetX() + m_maxXSeparation || extrapolatedTestPoint.GetX() < currentPoint.GetX() - m_maxXSeparation)
     {
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", BLUE, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", BLUE, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
 
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "X TOO FAR", RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "EXTRAPOLATED TEST X TOO FAR", RED);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
 
-    float m_maxZSeparation(5);
-    if (extrapolatedCurrentPoint.GetZ() > testPoint.GetZ() + m_maxZSeparation || extrapolatedCurrentPoint.GetZ() < testPoint.GetZ() - m_maxZSeparation)
-    {
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", BLUE, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
-
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "Z TOO FAR", RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        return false;
-    }
 
     if (extrapolatedTestPoint.GetZ() > currentPoint.GetZ() + m_maxZSeparation || extrapolatedTestPoint.GetZ() < currentPoint.GetZ() - m_maxZSeparation)
     {
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", BLUE, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", BLUE, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
 
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "Z TOO FAR", RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "EXTRAPOLATED TEST Z TOO FAR", RED);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
 
     
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "PASSED!", GREEN);
-
-
-
-
+    //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "PASSED!", GREEN);
     
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
     
     return true;
 }
@@ -273,10 +523,18 @@ bool EMTrackAlgorithm::AreClustersAssociated(const TwoDSlidingFitResult &current
 StatusCode EMTrackAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
 
-
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "CaloHitListName", m_caloHitListName));
+    
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCaloHits", m_minCaloHits));
-    
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxXSeparation", m_maxXSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxZSeparation", m_maxZSeparation));
+
     return STATUS_CODE_SUCCESS;
 }
 
