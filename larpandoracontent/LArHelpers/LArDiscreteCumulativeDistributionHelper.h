@@ -8,7 +8,7 @@
 
 #include <algorithm>
 #include <iostream>
-#include "larpandoracontent/LArHelpers/LArDiscreteCumulativeDistributionHelper.h"
+#include "larpandoracontent/LArObjects/LArDiscreteCumulativeDistribution.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 namespace lar_content
