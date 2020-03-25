@@ -36,8 +36,21 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     if ((xSpan1 < std::numeric_limits<float>::epsilon()) || (xSpan2 < std::numeric_limits<float>::epsilon()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    // TODO Create a fully-fledged overlap result object and fill it with useful information
-    const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
+    const float xOverlapMin(std::max(xMin1, xMin2));
+    const float xOverlapMax(std::min(xMax1, xMax2));
+    const float xOverlap(xOverlapMax - xOverlapMin);
+
+    float zMin1(0.f), zMax1(0.f);
+    float zMin2(0.f), zMax2(0.f);
+    LArClusterHelper::GetClusterSpanZ(pCluster1, xMin1, xMax1, zMin1, zMax1);
+    LArClusterHelper::GetClusterSpanZ(pCluster2, xMin2, xMax2, zMin2, zMax2);
+    CartesianVector boundingBoxMin1(xOverlapMin, 0.f, zMin1), boundingBoxMax1(xOverlapMax, 0.f, zMax1);
+    CartesianVector boundingBoxMin2(xOverlapMin, 0.f, zMin2), boundingBoxMax2(xOverlapMax, 0.f, zMax2);
+    pandora::CaloHitList overlapHits1, overlapHits2;
+    LArClusterHelper::GetCaloHitListInBoundingBox(pCluster1, boundingBoxMin1, boundingBoxMax1, overlapHits1);
+    LArClusterHelper::GetCaloHitListInBoundingBox(pCluster2, boundingBoxMin2, boundingBoxMax2, overlapHits2);
+
+
     TwoViewXOverlap twoViewXOverlap(xMin1, xMax1, xMin2, xMax2, xOverlap);
     TwoViewTransverseOverlapResult twoViewTransverseOverlapResult(twoViewXOverlap);
 
