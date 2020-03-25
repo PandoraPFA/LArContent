@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArHelpers/LArDiscreteCumulativeDistributionHelper.h
+ *  @file   larpandoracontent/LArHelpers/DiscreteCumulativeDistributionHelper.h
  *
  *  @brief  Header file for the discrete cumulative distribution helper helper class.
  *
@@ -13,13 +13,13 @@
 #include "Objects/CaloHit.h"
 
 /**
- *  @brief  LArDiscreteCumulativeDistributionHelper class
+ *  @brief  DiscreteCumulativeDistributionHelper class
  */
 
 namespace lar_content
 {
 
-class LArDiscreteCumulativeDistributionHelper
+class DiscreteCumulativeDistributionHelper
 {
 public:
     /**
@@ -30,8 +30,8 @@ public:
      *
      *  @return the KS test statistic
      */
-    static float CalculateKSTestStatistic(const LArDiscreteCumulativeDistribution &distributionA, 
-            const LArDiscreteCumulativeDistribution &distributionB);
+    static float CalculateKSTestStatistic(const DiscreteCumulativeDistribution &distributionA, 
+            const DiscreteCumulativeDistribution &distributionB);
 
     /**
      *  @brief  Find the Y value for a particular X value
@@ -41,7 +41,7 @@ public:
      *
      *  @return the Y value
      */
-    static void FindY(const LArDiscreteCumulativeDistribution &distribution, const float &x);
+    static void FindY(const DiscreteCumulativeDistribution &distribution, const float &x);
 
     /**
      *  @brief  Fill and create a cumulatie distribution using a CaloHitList
@@ -52,7 +52,7 @@ public:
      *  @return
      */
     static CreateDistributionFromCaloHits(const pandora::CaloHitList &caloHitList, 
-            const LArDiscreteCumulativeDistribution &distribution);
+            const DiscreteCumulativeDistribution &distribution);
 
 
 
