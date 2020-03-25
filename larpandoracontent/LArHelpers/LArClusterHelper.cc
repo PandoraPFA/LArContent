@@ -613,6 +613,30 @@ void LArClusterHelper::GetCaloHitList(const Cluster *const pCluster, CaloHitList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound, 
+        const pandora::CartesianVector &upperBound , pandora::CaloHitList &caloHitList)
+{
+    for (const OrderedCaloHitList::value_type &layerEntry : pCluster->GetOrderedCaloHitList())
+    {
+        for (const CaloHit *const pCaloHit : *layerEntry.second)
+        {
+            //std::cout<<"x: " << pCaloHit->GetPositionVector().GetX() << "  y: " << pCaloHit->GetPositionVector().GetY() << "  z: " << pCaloHit->GetPositionVector().GetZ() << std::endl;
+
+            const CartesianVector hitPosition = pCaloHit->GetPositionVector();
+            if (hitPosition.GetX() > std::min(lowerBound.GetX(),upperBound.GetX()) &&
+                hitPosition.GetX() < std::max(lowerBound.GetX(),upperBound.GetX()) &&
+                //hitPosition.GetY() - std::min(lowerBound.GetY(),upperBound.GetY()) >= std::numeric_limits<float>::epsilon() &&
+                //std::max(lowerBound.GetY(),upperBound.GetY()) - hitPosition.GetY() >= std::numeric_limits<float>::epsilon() &&
+                hitPosition.GetZ() > std::min(lowerBound.GetZ(),upperBound.GetZ()) &&
+                hitPosition.GetZ() < std::max(lowerBound.GetZ(),upperBound.GetZ()))
+                caloHitList.push_back(pCaloHit);
+        }
+    }
+    caloHitList.sort(LArClusterHelper::SortHitsByPosition);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArClusterHelper::SortByNOccupiedLayers(const Cluster *const pLhs, const Cluster *const pRhs)
 {
     const unsigned int nOccupiedLayersLhs(pLhs->GetOrderedCaloHitList().size());
@@ -718,6 +742,26 @@ bool LArClusterHelper::SortHitsByPosition(const CaloHit *const pLhs, const CaloH
     // Use pulse height to resolve ties
     return SortHitsByPulseHeight(pLhs, pRhs);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArClusterHelper::SortHitsByPositionInX(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs)
+{
+    const CartesianVector deltaPosition(pRhs->GetPositionVector() - pLhs->GetPositionVector());
+
+    if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
+
+    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
+
+    if (std::fabs(deltaPosition.GetY()) > std::numeric_limits<float>::epsilon())
+        return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
+
+    // Use pulse height to resolve ties
+    return SortHitsByPulseHeight(pLhs, pRhs);
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
