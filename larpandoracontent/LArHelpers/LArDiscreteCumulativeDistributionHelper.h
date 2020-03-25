@@ -41,7 +41,7 @@ public:
      *
      *  @return the Y value
      */
-    static FindY(const DiscreteCumulativeDistribution &distribution, const float &x);
+    static void FindY(const DiscreteCumulativeDistribution &distribution, const float &x);
 
     /**
      *  @brief  Fill and create a cumulatie distribution using a CaloHitList
