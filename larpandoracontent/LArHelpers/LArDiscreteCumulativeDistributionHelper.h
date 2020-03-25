@@ -59,3 +59,4 @@ public:
 };
 
 } // namespace lar_content
+#endif // #ifndef LAR_DISCRETE_CUMULATIVE_DISTRIBUTION_HELPER_H
