@@ -7,10 +7,8 @@
  */
 
 #include <algorithm>
-#include <iostream>
-#include "larpandoracontent/LArObjects/LArDiscreteCumulativeDistribution.h"
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "Objects/CaloHit.h"
+
+#include "larpandoracontent/LArHelpers/LArDiscreteCumulativeDistributionHelper.h"
 
 namespace lar_content
 {
