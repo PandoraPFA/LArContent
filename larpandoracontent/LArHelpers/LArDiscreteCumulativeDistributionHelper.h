@@ -19,7 +19,7 @@
 namespace lar_content
 {
 
-class DiscreteCumulativeDistributionHelper
+class LArDiscreteCumulativeDistributionHelper
 {
 public:
     /**
