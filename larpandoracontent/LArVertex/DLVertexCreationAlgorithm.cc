@@ -337,9 +337,9 @@ void DLVertexCreationAlgorithm::WriteTrainingFiles(std::stringstream ssBuf[6], c
         outputStream2.close();
     }
 
-    std::ofstream outputStream11(m_interactionTypeFileName, std::ios::app);
-    outputStream11 << interactionType << std::endl;
-    outputStream11.close();
+    std::ofstream outputStream3(m_interactionTypeFileName, std::ios::app);
+    outputStream3 << interactionType << std::endl;
+    outputStream3.close();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
