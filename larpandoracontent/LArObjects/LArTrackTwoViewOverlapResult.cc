@@ -33,7 +33,8 @@ TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const TrackTwoViewOverlapResult &rhs) :
-    m_isInitialized(rhs.m_isInitialized)
+    m_isInitialized(rhs.m_isInitialized),
+    m_matchingScore(rhs.m_matchingScore)
 {
 }
 
@@ -80,6 +81,7 @@ TrackTwoViewOverlapResult &TrackTwoViewOverlapResult::operator=(const TrackTwoVi
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     m_isInitialized = rhs.m_isInitialized;
+    m_matchingScore = rhs.m_matchingScore;
 
     return *this;
 }
@@ -123,10 +125,13 @@ TwoViewTransverseOverlapResult &TwoViewTransverseOverlapResult::operator=(const 
 
     if (rhs.IsInitialized())
     {
+        m_isInitialized = rhs.m_isInitialized;
+        m_matchingScore = rhs.m_matchingScore;
         m_twoViewXOverlap = rhs.GetTwoViewXOverlap();
     }
     else
     {
+        m_matchingScore = 0.f;
         m_twoViewXOverlap = TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f);
     }
 
