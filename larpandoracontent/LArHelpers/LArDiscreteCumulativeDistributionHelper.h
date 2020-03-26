@@ -51,8 +51,8 @@ public:
      *
      *  @return
      */
-    static void CreateDistributionFromCaloHits(const pandora::CaloHitList &caloHitList, 
-            const DiscreteCumulativeDistribution &distribution);
+    static void CreateDistributionFromCaloHits(pandora::CaloHitList caloHitList, 
+            DiscreteCumulativeDistribution &distribution);
 
 
 
