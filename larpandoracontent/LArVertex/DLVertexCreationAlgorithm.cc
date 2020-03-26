@@ -92,9 +92,9 @@ StatusCode DLVertexCreationAlgorithm::Run()
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pClusterList2->front()));
 
     std::vector<unsigned int> allHitsCountVec{0, 0, 0};
-    if (this->EventViewCheck(pClusterList0, allHitsCountVec[0])) return STATUS_CODE_SUCCESS;
-    if (this->EventViewCheck(pClusterList1, allHitsCountVec[1])) return STATUS_CODE_SUCCESS;
-    if (this->EventViewCheck(pClusterList2, allHitsCountVec[2])) return STATUS_CODE_SUCCESS;
+    if (!(this->EventViewCheck(pClusterList0, allHitsCountVec[0]))) return STATUS_CODE_SUCCESS;
+    if (!(this->EventViewCheck(pClusterList1, allHitsCountVec[1]))) return STATUS_CODE_SUCCESS;
+    if (!(this->EventViewCheck(pClusterList2, allHitsCountVec[2]))) return STATUS_CODE_SUCCESS;
     CartesianVector MCVertexPosition(0.f, 0.f, 0.f);
     int interactionType(-1);
     if (m_trainingSetMode)
@@ -389,7 +389,7 @@ bool DLVertexCreationAlgorithm::EventViewCheck(const pandora::ClusterList *const
         if (pCluster->GetNCaloHits() >= m_numClusterCaloHitsPar) filtHitsCount += pCluster->GetNCaloHits();
     }
 
-    return(allHitsCount==0 || filtHitsCount==0);
+    return(!(allHitsCount==0 || filtHitsCount==0));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
