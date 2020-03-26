@@ -58,6 +58,14 @@ public:
     bool IsInitialized() const;
 
     /**
+     *  @brief  Get the matching score of the overlap result
+     *
+     *  @return matching score
+     */
+    float GetMatchingScore() const;
+
+
+    /**
      *  @brief  Track two view overlap result less than operator
      *
      *  @param  rhs the track two view overlap result for comparison
@@ -141,6 +149,17 @@ typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResu
 inline bool TrackTwoViewOverlapResult::IsInitialized() const
 {
     return m_isInitialized;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TrackTwoViewOverlapResult::GetMatchingScore() const
+{
+    if (m_isInitialized)
+        return m_matchingScore;
+   
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
