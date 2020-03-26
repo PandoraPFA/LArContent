@@ -287,7 +287,7 @@ CartesianVector DLVertexCreationAlgorithm::DeepLearning(const TwoDImage &out2dVe
     at::Tensor output = m_vecPModule[index]->forward(inputs).toTensor();
 
     /* Get predicted vertex. */
-    auto outputAccessor = output.accessor<float, 2>();
+    const auto &outputAccessor(output.accessor<float, 2>());
     const CartesianVector position(outputAccessor[0][0], 0.f, outputAccessor[0][1]);
 
     return(position);
