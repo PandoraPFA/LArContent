@@ -7,6 +7,7 @@
  */
 
 #include <algorithm>
+#include <iostream>
 
 #include "larpandoracontent/LArHelpers/LArDiscreteCumulativeDistributionHelper.h"
 
