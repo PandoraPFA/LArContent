@@ -101,7 +101,7 @@ public:
      *
      *  @param  twoViewXOverlap
      */
-    TwoViewTransverseOverlapResult(const TwoViewXOverlap &twoViewXOverlap);
+    TwoViewTransverseOverlapResult(const float matchingScore, const TwoViewXOverlap &twoViewXOverlap);
 
     /**
      *  @brief  Copy constructor

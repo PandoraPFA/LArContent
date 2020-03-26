@@ -95,8 +95,8 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const TwoViewXOverlap &twoViewXOverlap) :
-    TrackTwoViewOverlapResult(),
+TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const TwoViewXOverlap &twoViewXOverlap) :
+    TrackTwoViewOverlapResult(matchingScore),
     m_twoViewXOverlap(twoViewXOverlap)
 {
 }
