@@ -54,7 +54,28 @@ public:
     static void CreateDistributionFromCaloHits(pandora::CaloHitList caloHitList, 
             DiscreteCumulativeDistribution &distribution);
 
+    /**
+     *  @brief  Full computation of PValue(trueKs>measuredKs|distA==distB)
+     *
+     *  @param  distributionA the first discrete cumulatie distribution
+     *  @param  distributionB the second discrete cumulatie distribution
+     *
+     *  @return PValue(trueKs>measuredKs|distA==distB)
+     */
+    static float CalculatePValueWithKSTestStatistic(const DiscreteCumulativeDistribution &distributionA, 
+	    const DiscreteCumulativeDistribution &distributionB);
 
+    /**
+     *  @brief  Computation of one term of the sum in PValue(trueKs>measuredKs|distA==distB)
+     *                                                                                                                                                                                                   
+     *  @param  indice of the sum term
+     *  @param  measuredKs
+     *  @param  distributionA the first discrete cumulatie distribution                                                                                                                                       *  @param  distributionB the second discrete cumulatie distribution
+     *
+     *  @return sum term of PValue(trueKs>measuredKs|distA==distB)
+     */
+    static float CalculatePValueSumTerm(const int i, const float &ks, 
+	    const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB);
 
 };
 

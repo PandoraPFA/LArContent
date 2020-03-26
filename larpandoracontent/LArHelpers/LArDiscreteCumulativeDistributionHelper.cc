@@ -75,4 +75,32 @@ void LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(pan
     return;
 }
 
+float LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
+{   
+    float ks(CalculateKSTestStatistic(distributionA, distributionB));
+
+    float sum(CalculatePvalueSumTerm(1, distributionA, distributionB));
+    float prev_sumTerm(std::numeric_limits<float>::epsilon());
+    float sumTerm(std::numeric_limits<float>::max());
+
+    int i(1);
+    while ((abs(prev_sumTerm+sumTerm)/sum)>std::numeric_limits<float>::epsilon())
+    {
+        i++;
+        prev_sumTerm = sumTerm;
+	sumTerm = CalculatePvalueSumTerm(i, ks, distributionA, distributionB);	
+	sum += sumTerm;
+    }
+
+    float PValue(1-2*sum);
+
+    retun PValue;
+}
+
+float LArDiscreteCumulativeDistributionHelper::CalculatePValueSumTerm(const int i, const float &ks, const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
+{
+    float sumTerm(pow(-1,i-1)*exp(-2*pow(i*ks*sqrt(distributionA.GetSize()*distributionB.GetSize()/(distributionA.GetSize()+distributionB.GetSize())),2)));
+
+    return sumTerm;
+}
 } // namespace lar_content
