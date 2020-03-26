@@ -51,7 +51,18 @@ float LArDiscreteCumulativeDistributionHelper::CalculateKSTestStatistic(const Di
 
 float LArDiscreteCumulativeDistributionHelper::FindY(const DiscreteCumulativeDistribution &distribution, const float &x)
 {
-    float y = 0;
+    //TODO throw status code when distribution is empty
+    float y(0.f);
+    float xMin(0.f), xMax(0.f);
+    distribution.GetXandY(0, xMin, y);
+    distribution.GetXandY(distribution.GetSize()-1, xMax, y);
+
+    if (x < xMin)
+        return 0.f;
+
+    if (x > xMax)
+        return 1.;
+
     for (size_t iElement = 0; iElement < distribution.GetSize(); ++iElement)
     {
         float xElement(0), yElement(0);
@@ -79,7 +90,7 @@ float LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatisti
 {   
     float ks(CalculateKSTestStatistic(distributionA, distributionB));
 
-    float sum(CalculatePvalueSumTerm(1, distributionA, distributionB));
+    float sum(CalculatePValueSumTerm(1, ks, distributionA, distributionB));
     float prev_sumTerm(std::numeric_limits<float>::epsilon());
     float sumTerm(std::numeric_limits<float>::max());
 
@@ -88,13 +99,13 @@ float LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatisti
     {
         i++;
         prev_sumTerm = sumTerm;
-	sumTerm = CalculatePvalueSumTerm(i, ks, distributionA, distributionB);	
+	sumTerm = CalculatePValueSumTerm(i, ks, distributionA, distributionB);	
 	sum += sumTerm;
     }
 
     float PValue(1-2*sum);
 
-    retun PValue;
+    return PValue;
 }
 
 float LArDiscreteCumulativeDistributionHelper::CalculatePValueSumTerm(const int i, const float &ks, const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
