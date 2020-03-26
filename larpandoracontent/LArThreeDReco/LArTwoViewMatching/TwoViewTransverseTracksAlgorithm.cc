@@ -8,8 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArObjects/LArDiscreteCumulativeDistribution.h"
+
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArDiscreteCumulativeDistributionHelper.h"
+
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
@@ -39,6 +43,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     const float xOverlapMin(std::max(xMin1, xMin2));
     const float xOverlapMax(std::min(xMax1, xMax2));
     const float xOverlap(xOverlapMax - xOverlapMin);
+    TwoViewXOverlap twoViewXOverlap(xMin1, xMax1, xMin2, xMax2, xOverlap);
 
     float zMin1(0.f), zMax1(0.f);
     float zMin2(0.f), zMax2(0.f);
@@ -50,9 +55,12 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     LArClusterHelper::GetCaloHitListInBoundingBox(pCluster1, boundingBoxMin1, boundingBoxMax1, overlapHits1);
     LArClusterHelper::GetCaloHitListInBoundingBox(pCluster2, boundingBoxMin2, boundingBoxMax2, overlapHits2);
 
+    DiscreteCumulativeDistribution disCumulDist1, disCumulDist2;
+    LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(overlapHits1, disCumulDist1);
+    LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(overlapHits2, disCumulDist2);
+    float matchingScore(LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2));
 
-    TwoViewXOverlap twoViewXOverlap(xMin1, xMax1, xMin2, xMax2, xOverlap);
-    TwoViewTransverseOverlapResult twoViewTransverseOverlapResult(twoViewXOverlap);
+    TwoViewTransverseOverlapResult twoViewTransverseOverlapResult(matchingScore, twoViewXOverlap);
 
     if (xOverlap > std::numeric_limits<float>::epsilon())
 <<<<<<< HEAD
