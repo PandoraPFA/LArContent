@@ -46,6 +46,7 @@ float LArDiscreteCumulativeDistributionHelper::CalculateKSTestStatistic(const Di
         //dm = std::max(dm, yB-yA);
     }
     */
+    std::cout << "ks = " << ks << std::endl;
     return ks;
 }
 
@@ -92,19 +93,18 @@ float LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatisti
 
     float sum(CalculatePValueSumTerm(1, ks, distributionA, distributionB));
     float prev_sumTerm(std::numeric_limits<float>::epsilon());
-    float sumTerm(std::numeric_limits<float>::max());
+    float sumTerm(999);
 
     int i(1);
-    while ((abs(prev_sumTerm+sumTerm)/sum)>std::numeric_limits<float>::epsilon())
+    while (fabs((prev_sumTerm+sumTerm)/sum)>std::numeric_limits<float>::epsilon())
     {
         i++;
         prev_sumTerm = sumTerm;
 	sumTerm = CalculatePValueSumTerm(i, ks, distributionA, distributionB);	
 	sum += sumTerm;
     }
-
-    float PValue(1-2*sum);
-
+    
+    float PValue(2*sum);
     return PValue;
 }
 
