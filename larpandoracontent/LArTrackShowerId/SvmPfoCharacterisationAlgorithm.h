@@ -80,7 +80,7 @@ protected:
 	bool 					m_writeToTree;					///< Whether to output root file or not
 	std::string				m_treeName;						///< Name of the tree
 	std::string				m_fileName;						///< Name of the root file
-    RecoParameters m_recoParameters;
+    RecoParameters          m_recoParameters;
 };
 
 } // namespace lar_content

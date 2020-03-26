@@ -14,6 +14,7 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include <vector>
+#include <list>
 #include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
 #include "Helpers/MCParticleHelper.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
@@ -25,7 +26,8 @@
 #include <fstream>
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.h"
-
+#include "larpandoracontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
+#include <cmath>
 using namespace pandora;
 
 namespace lar_content
@@ -128,10 +130,8 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 
     const MCParticleList *pMCParticleList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
-
     const CaloHitList *pCaloHitList = nullptr;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
-
     // Mapping target MCParticles -> truth associated Hits
     LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
     FillMCToRecoHitsMap(pMCParticleList, pCaloHitList, targetMCParticleToHitsMap);
@@ -153,7 +153,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 		const pandora::MCParticle *const pAssociatedMCParticle(mcParticleCaloHitListPair.first);
 		const CaloHitList &allMCHits(targetMCParticleToHitsMap.at(pAssociatedMCParticle));
 		const CaloHitList &associatedMCHits(mcParticleCaloHitListPair.second);
-
 		if ((abs(pAssociatedMCParticle->GetParticleId()) == 11) || (pAssociatedMCParticle->GetParticleId()) == 22)
 		{
 			hitsShower = hitsShower + associatedMCHits.size();
@@ -170,12 +169,10 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 			threeDVertexPosition = pAssociatedMCParticle->GetVertex();
 		}
 	}
-
 	float trackShowerHitsRatio;
 	trackShowerHitsRatio = hitsTrack/(hitsTrack + hitsShower);
 	int trueTrackInt = (trackShowerHitsRatio >= 0.5 ? 1 : 0);
 	int pdgCode = bestMCParticlePdgCode;
-    
 	const float completeness((nHitsInBestMCParticleTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
 	const float purity((nHitsInPfoTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInPfoTotal) : 0.f);
 
@@ -186,7 +183,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 	float zVertexPos = threeDVertexPosition.GetZ();
 
 	//----------------------------mischaracterised Pfos----------------------------------------------------
-
 	CaloHitList checkHitListW;
 	CaloHitList checkHitListU;
 	CaloHitList checkHitListV;
@@ -195,6 +191,254 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 	LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, checkHitListW);
 	LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, checkHitListU);
 	LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, checkHitListV);
+
+    //std::cout << "checkHitListU size: " << checkHitListU.size() << std::endl;
+    //std::cout << "checkHitListW size: " << checkHitListV.size() << std::endl;
+    //std::cout << "checkHitListW size: " << checkHitListW.size() << std::endl;
+    
+    double dlProbTrack (0.f);
+    double dlProbShower (0.f);
+
+    std::vector<double> dlPTrackListU;
+    std::vector<double> dlPTrackListV;
+    std::vector<double> dlPTrackListW;
+
+    std::vector<double> dlPShowerListU;
+    std::vector<double> dlPShowerListV;
+    std::vector<double> dlPShowerListW;
+
+    for (const CaloHit *pCaloHitDL : checkHitListU)
+    {  
+        //dlProbTrack = dlProbTrack + pCaloHitDL->GetPropertiesMap().at("Ptrack");
+        //dlProbShower = dlProbShower + pCaloHitDL->GetPropertiesMap().at("PShower");
+        auto map = pCaloHitDL->GetPropertiesMap();
+
+        dlProbTrack = map["Ptrack"];
+        dlProbShower = map["Pshower"];
+
+        //std::cout << "Ptrack value: " << dlProbTrack << " , Pshower value : " << dlProbShower << " , Total : " << dlProbTrack + dlProbShower << std::endl;
+        
+        dlPTrackListU.push_back(dlProbTrack);
+        dlPShowerListU.push_back(dlProbShower);
+    }
+
+    for (const CaloHit *pCaloHitDL : checkHitListV)
+    {  
+        //dlProbTrack = dlProbTrack + pCaloHitDL->GetPropertiesMap().at("Ptrack");
+        //dlProbShower = dlProbShower + pCaloHitDL->GetPropertiesMap().at("PShower");
+        auto map = pCaloHitDL->GetPropertiesMap();
+
+        dlProbTrack = map["Ptrack"];
+        dlProbShower = map["Pshower"];
+
+        //std::cout << "Ptrack value: " << dlProbTrack << " , Pshower value : " << dlProbShower << " , Total : " << dlProbTrack + dlProbShower << std::endl;
+        
+        dlPTrackListV.push_back(dlProbTrack);
+        dlPShowerListV.push_back(dlProbShower);
+    }
+
+    for (const CaloHit *pCaloHitDL : checkHitListW)
+    {  
+        //dlProbTrack = dlProbTrack + pCaloHitDL->GetPropertiesMap().at("Ptrack");
+        //dlProbShower = dlProbShower + pCaloHitDL->GetPropertiesMap().at("PShower");
+        auto map = pCaloHitDL->GetPropertiesMap();
+
+        dlProbTrack = map["Ptrack"];
+        dlProbShower = map["Pshower"];
+
+        //std::cout << "Ptrack value: " << dlProbTrack << " , Pshower value : " << dlProbShower << " , Total : " << dlProbTrack + dlProbShower << std::endl;
+        
+        dlPTrackListW.push_back(dlProbTrack);
+        dlPShowerListW.push_back(dlProbShower);
+    }
+//----------------------------------------------U-VIEW-----------------------------------------------------------------------------
+
+    double meanDLPTrackU;
+    double meanDLPShowerU;
+    double stdDevDLPTrackU;
+    double stdDevDLPShowerU;
+    
+    double sumTrackU (0.0);
+    double varTrackU (0.0);
+    double sumShowerU (0.0);
+    double varShowerU (0.0);
+
+    for (int i = 0; i < dlPTrackListU.size() ; ++i)
+    {
+        sumTrackU += dlPTrackListU[i];
+    }
+    
+    meanDLPTrackU = sumTrackU/dlPTrackListU.size();
+
+     for (int i = 0; i < dlPTrackListU.size() ; ++i)
+    {
+        varTrackU += pow(dlPTrackListU[i] - meanDLPTrackU, 2);
+    }
+    
+    varTrackU = varTrackU/dlPTrackListU.size();
+    
+    stdDevDLPTrackU = sqrt(varTrackU);
+
+    for (int i = 0; i < dlPShowerListU.size() ; ++i)
+    {
+        sumShowerU += dlPShowerListU[i];
+    }
+    
+    meanDLPShowerU = sumShowerU/dlPShowerListU.size();
+
+     for (int i = 0; i < dlPShowerListU.size() ; ++i)
+    {
+        varShowerU += pow(dlPShowerListU[i] - meanDLPShowerU, 2);
+    }
+    
+    varShowerU = varShowerU/dlPShowerListU.size();
+    
+    stdDevDLPShowerU = sqrt(varShowerU);
+
+    //std::cout << "meanDLPTrackU value : " << meanDLPTrackU << " , stdDevDLPTrackU value : " << stdDevDLPTrackU << std::endl;
+    //std::cout << "meanDLPShowerU value : " << meanDLPShowerU << " , stdDevDLPShowerU value : " << stdDevDLPShowerU << std::endl;
+//----------------------------------------------V-VIEW-----------------------------------------------------------------------------
+
+    double meanDLPTrackV;
+    double meanDLPShowerV;
+    double stdDevDLPTrackV;
+    double stdDevDLPShowerV;
+    
+    double sumTrackV (0.0);
+    double varTrackV (0.0);
+    double sumShowerV (0.0);
+    double varShowerV (0.0);
+
+    for (int i = 0; i < dlPTrackListV.size() ; ++i)
+    {
+        sumTrackV += dlPTrackListV[i];
+    }
+    
+    meanDLPTrackV = sumTrackV/dlPTrackListV.size();
+
+     for (int i = 0; i < dlPTrackListV.size() ; ++i)
+    {
+        varTrackV += pow(dlPTrackListV[i] - meanDLPTrackV, 2);
+    }
+    
+    varTrackV = varTrackV/dlPTrackListV.size();
+    
+    stdDevDLPTrackV = sqrt(varTrackV);
+
+    for (int i = 0; i < dlPShowerListV.size() ; ++i)
+    {
+        sumShowerV += dlPShowerListV[i];
+    }
+    
+    meanDLPShowerV = sumShowerV/dlPShowerListV.size();
+
+     for (int i = 0; i < dlPShowerListV.size() ; ++i)
+    {
+        varShowerV += pow(dlPShowerListV[i] - meanDLPShowerV, 2);
+    }
+    
+    varShowerV = varShowerV/dlPShowerListV.size();
+    
+    stdDevDLPShowerV = sqrt(varShowerV);
+
+    //std::cout << "meanDLPTrackV value : " << meanDLPTrackV << " , stdDevDLPTrackV value : " << stdDevDLPTrackV << std::endl;
+    //std::cout << "meanDLPShowerV value : " << meanDLPShowerV << " , stdDevDLPShowerV value : " << stdDevDLPShowerV << std::endl;
+//----------------------------------------------W-VIEW-----------------------------------------------------------------------------
+
+    double meanDLPTrackW;
+    double meanDLPShowerW;
+    double stdDevDLPTrackW;
+    double stdDevDLPShowerW;
+    
+    double sumTrackW (0.0);
+    double varTrackW (0.0);
+    double sumShowerW (0.0);
+    double varShowerW (0.0);
+
+    for (int i = 0; i < dlPTrackListW.size() ; ++i)
+    {
+        sumTrackW += dlPTrackListW[i];
+    }
+    
+    meanDLPTrackW = sumTrackW/dlPTrackListW.size();
+
+     for (int i = 0; i < dlPTrackListW.size() ; ++i)
+    {
+        varTrackW += pow(dlPTrackListW[i] - meanDLPTrackW, 2);
+    }
+    
+    varTrackW = varTrackW/dlPTrackListW.size();
+    
+    stdDevDLPTrackW = sqrt(varTrackW);
+
+    for (int i = 0; i < dlPShowerListW.size() ; ++i)
+    {
+        sumShowerW += dlPShowerListW[i];
+    }
+    
+    meanDLPShowerW = sumShowerW/dlPShowerListW.size();
+
+     for (int i = 0; i < dlPShowerListW.size() ; ++i)
+    {
+        varShowerW += pow(dlPShowerListW[i] - meanDLPShowerW, 2);
+    }
+    
+    varShowerW = varShowerW/dlPShowerListW.size();
+    
+    stdDevDLPShowerW = sqrt(varShowerW);
+
+    //std::cout << "meanDLPTrackW value : " << meanDLPTrackW << " , stdDevDLPTrackW value : " << stdDevDLPTrackW << std::endl;
+    //std::cout << "meanDLPShowerW value : " << meanDLPShowerW << " , stdDevDLPShowerW value : " << stdDevDLPShowerW << std::endl;
+
+    double ratioMeanTrackUW = meanDLPTrackU/meanDLPTrackW;
+    double ratioStdDevTrackUW = stdDevDLPTrackU/stdDevDLPTrackW;
+    double ratioMeanTrackVW = meanDLPTrackV/meanDLPTrackW;
+    double ratioStdDevTrackVW = stdDevDLPTrackV/stdDevDLPTrackW;
+    double ratioMeanTrackUV = meanDLPTrackU/meanDLPTrackV;
+    double ratioStdDevTrackUV = stdDevDLPTrackU/stdDevDLPTrackV;
+
+    double ratioMeanShowerUW = meanDLPShowerU/meanDLPShowerW;
+    double ratioStdDevShowerUW = stdDevDLPShowerU/stdDevDLPShowerW;
+    double ratioMeanShowerVW = meanDLPShowerV/meanDLPShowerW;
+    double ratioStdDevShowerVW = stdDevDLPShowerV/stdDevDLPShowerW;
+    double ratioMeanShowerUV = meanDLPShowerU/meanDLPShowerV;
+    double ratioStdDevShowerUV = stdDevDLPShowerU/stdDevDLPShowerV;
+
+    double productSumMeanTrack = (meanDLPTrackU*meanDLPTrackV*meanDLPTrackW)/(meanDLPTrackU+meanDLPTrackV+meanDLPTrackW);
+    double productSumStdDevTrack = (stdDevDLPTrackU*stdDevDLPTrackV*stdDevDLPTrackW)/(stdDevDLPTrackU+stdDevDLPTrackV+stdDevDLPTrackW);
+    double productSumMeanShower = (meanDLPShowerU*meanDLPShowerV*meanDLPShowerW)/(meanDLPShowerU+meanDLPShowerV+meanDLPShowerW);
+    double productSumStdDevShower = (stdDevDLPShowerU*stdDevDLPShowerV*stdDevDLPShowerW)/(stdDevDLPShowerU+stdDevDLPShowerV+stdDevDLPShowerW);
+
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "meanDLPTrackU", meanDLPTrackU);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "stdDevDLPTrackU", stdDevDLPTrackU);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "meanDLPShowerU", meanDLPShowerU);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "stdDevDLPShowerU", stdDevDLPShowerU);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "meanDLPTrackV", meanDLPTrackV);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "stdDevDLPTrackV", stdDevDLPTrackV);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "meanDLPShowerV", meanDLPShowerV);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "stdDevDLPShowerV", stdDevDLPShowerV);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "meanDLPTrackW", meanDLPTrackW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "stdDevDLPTrackW", stdDevDLPTrackW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "meanDLPShowerW", meanDLPShowerW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "stdDevDLPShowerW", stdDevDLPShowerW);
+
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioMeanTrackUW", ratioMeanTrackUW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioStdDevTrackUW", ratioStdDevTrackUW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioMeanTrackVW", ratioMeanTrackVW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioStdDevTrackVW", ratioStdDevTrackVW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioMeanTrackUV", ratioMeanTrackUV);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioStdDevTrackUV", ratioStdDevTrackUV);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioMeanShowerUW", ratioMeanShowerUW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioStdDevShowerUW", ratioStdDevShowerUW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioMeanShowerVW", ratioMeanShowerVW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioStdDevShowerVW", ratioStdDevShowerVW);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioMeanShowerUV", ratioMeanShowerUV);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "ratioStdDevShowerUV", ratioStdDevShowerUV);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "productSumMeanTrack", productSumMeanTrack);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "productSumStdDevTrack", productSumStdDevTrack);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "productSumMeanShower", productSumMeanShower);
+	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "productSumStdDevShower", productSumStdDevShower);
+//----------------------------------------------------------------------------------------------------------------------------------------
 
 	checkHitListAll.splice(checkHitListAll.end(), checkHitListW);
 	checkHitListAll.splice(checkHitListAll.end(), checkHitListU);
@@ -212,7 +456,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 
 	for (const CaloHit *pHit : checkHitListAll)
 	{
-
 		const MCParticle *pHitMCParticle(nullptr);
 
 		try
@@ -244,7 +487,7 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
 	const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
 
 	const LArMvaHelper::MvaFeatureVector threeDLinearFitFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDLinearFitFeatureTool>(chosenFeatureToolVector, this, pPfo));
-    
+
 	float length(threeDLinearFitFeatureVectorOfType.at(0).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(0).Get() : -std::numeric_limits<float>::max());
 	PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "length", length);
 
@@ -332,7 +575,6 @@ bool SvmPfoCharacterisationAlgorithm::IsClearTrack(const pandora::ParticleFlowOb
             return (pPfo->GetParticleId() == MU_MINUS);
         }
     }
-
     //if no failures, proceed with svm classification
     if (!m_enableProbability)
     {

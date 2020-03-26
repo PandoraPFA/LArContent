@@ -383,6 +383,10 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
                     const StatusCode &statusCode(PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
                     if (statusCode != STATUS_CODE_SUCCESS)
                         std::cout << "Cannot set calo hit meta data" << std::endl;
+                    //auto map = pCaloHit->GetPropertiesMap();
+                    //float dlProbTrack = map["Ptrack"];
+                    //float dlProbShower = map["Pshower"];
+                    //std::cout << "metadata probTrack: " << dlProbTrack << " , meatadata probShower: " << dlProbShower << std::endl;
                 }
             }
         }
