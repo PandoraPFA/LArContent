@@ -70,11 +70,11 @@ void TwoViewMatchingControl<T>::UpdateForNewCluster(const Cluster *const pNewClu
     {
         if (1 == iter->second)
         {
-            m_pAlgorithm->CalculateOverlapResult(pNewCluster, pCluster2,  nullptr); // TODO
+            m_pAlgorithm->CalculateOverlapResult(pNewCluster, pCluster2);
         }
         else
         {
-            m_pAlgorithm->CalculateOverlapResult(pCluster2, pNewCluster, nullptr); // TODO
+            m_pAlgorithm->CalculateOverlapResult(pCluster2, pNewCluster);
         }
     }
 }
@@ -201,7 +201,6 @@ void TwoViewMatchingControl<T>::TidyUp()
 template <typename T>
 void TwoViewMatchingControl<T>::PerformMainLoop()
 {
-    // TODO Support looping over all pairs of lists from an input vector of list names
     ClusterVector clusterVector1(m_clusterList1.begin(), m_clusterList1.end());
     ClusterVector clusterVector2(m_clusterList2.begin(), m_clusterList2.end());
     std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
@@ -210,7 +209,7 @@ void TwoViewMatchingControl<T>::PerformMainLoop()
     for (const Cluster *const pCluster1 : clusterVector1)
     {
         for (const Cluster *const pCluster2 : clusterVector2)
-            m_pAlgorithm->CalculateOverlapResult(pCluster1, pCluster2, nullptr); // TODO
+            m_pAlgorithm->CalculateOverlapResult(pCluster1, pCluster2);
     }
 }
 
