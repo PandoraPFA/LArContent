@@ -54,10 +54,13 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     pandora::CaloHitList overlapHits1, overlapHits2;
     LArClusterHelper::GetCaloHitListInBoundingBox(pCluster1, boundingBoxMin1, boundingBoxMax1, overlapHits1);
     LArClusterHelper::GetCaloHitListInBoundingBox(pCluster2, boundingBoxMin2, boundingBoxMax2, overlapHits2);
-
     DiscreteCumulativeDistribution disCumulDist1, disCumulDist2;
     LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(overlapHits1, disCumulDist1);
     LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(overlapHits2, disCumulDist2);
+
+    if (0 == disCumulDist1.GetSize() || 0 == disCumulDist2.GetSize())
+        return;
+
     float matchingScore(LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2));
 
     TwoViewTransverseOverlapResult twoViewTransverseOverlapResult(matchingScore, twoViewXOverlap);
