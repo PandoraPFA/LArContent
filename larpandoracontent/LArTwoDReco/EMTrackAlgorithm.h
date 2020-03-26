@@ -54,8 +54,14 @@ public:
     pandora::StatusCode Run();
     
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector);
-    
-    void FillClusterToClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterToClusterAssociationMap &clusterToClusterAssociationMap);
+
+    void InitialiseSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap);
+
+    void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap);
+
+    void MergeClusters(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap);
+
+    bool FindBestClusterAssociation(const pandora::Cluster *const pCurrentCluster, const pandora::ClusterVector &clusterVector, const TwoDSlidingFitResultMap &slidingFitResultMap, ClusterAssociation &clusterAssociation);
     
     bool AreClustersAssociated(const pandora::CartesianVector &currentPoint, const pandora::CartesianVector &currentDirection, const pandora::CartesianVector &testPoint, const pandora::CartesianVector &testDirection);
     
@@ -67,7 +73,7 @@ public:
     
     void ConnectByLine(const pandora::CartesianVector &innerCoordinate, const pandora::CartesianVector &outerCoordinate, float &gradient, float &zIntercept);
 
-    void AddHitsToCluster(const pandora::Cluster *const clusterToEnlarge, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const pandora::CaloHitVector &extrapolatedCaloHitVector);
+    void AddHitsToCluster(const pandora::Cluster *const clusterToEnlarge, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const pandora::CaloHitVector &extrapolatedCaloHitVector);
     
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

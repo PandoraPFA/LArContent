@@ -46,44 +46,62 @@ StatusCode EMTrackAlgorithm::Run()
 
     const CaloHitList *pCaloHitList = NULL;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
-    //std::sort(pCaloHitList->begin(), pCaloHitList->end(), LArClusterHelper::SortHitsByPosition); //cannot do this - can sort a vector
-
     
-    // Get target clusters
     ClusterVector clusterVector;
     SelectCleanClusters(pClusterList, clusterVector);
 
+    TwoDSlidingFitResultMap slidingFitResultMap;
+    InitialiseSlidingFitResultMap(clusterVector, slidingFitResultMap);
+    
     PandoraMonitoringApi::Create(this->GetPandora());
     PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
 
-    ClusterToClusterAssociationMap clusterToClusterAssociationMap;
-    FillClusterToClusterAssociationMap(clusterVector, clusterToClusterAssociationMap);
-    
-    
     for (const Cluster *const innerCluster : clusterVector)
     {
-        const ClusterToClusterAssociationMap::const_iterator associationIter(clusterToClusterAssociationMap.find(innerCluster));
-        
-        if (associationIter == clusterToClusterAssociationMap.end())
+        // ISOBEL - NEED TO IMPLEMENT AN EMPTY CONSTRUCTOR
+        ClusterAssociation clusterAssociation(nullptr, CartesianVector(0,0,0), CartesianVector(0,0,0), CartesianVector(0,0,0), CartesianVector(0,0,0));
+
+        // if no association is found, skip to the next cluster
+        if(!FindBestClusterAssociation(innerCluster, clusterVector, slidingFitResultMap, clusterAssociation))
             continue;
 
+        ClusterList currentCluster;
+        currentCluster.push_back(innerCluster);
+
+        ClusterList associatedCluster;
+        associatedCluster.push_back(clusterAssociation.GetAssociatedCluster());
+
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "CURRENT", GREEN);
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &associatedCluster, "ASSOCIATED", BLUE);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        
         // Get a list of associated calo hits.
         CaloHitToParentClusterMap caloHitToParentClusterMap;
         CaloHitVector extrapolatedCaloHitVector;
-        GetExtrapolatedCaloHits(innerCluster, associationIter->second, pCaloHitList, pClusterList, extrapolatedCaloHitVector, caloHitToParentClusterMap);
-
-        if (!IsTrackContinuous(associationIter->second, extrapolatedCaloHitVector))
+        GetExtrapolatedCaloHits(innerCluster, clusterAssociation, pCaloHitList, pClusterList, extrapolatedCaloHitVector, caloHitToParentClusterMap);
+        
+        if (!IsTrackContinuous(clusterAssociation, extrapolatedCaloHitVector))
             continue;
+    
+        AddHitsToCluster(innerCluster, clusterVector, slidingFitResultMap, caloHitToParentClusterMap, extrapolatedCaloHitVector);
 
 
+        // Need to add the last clusters together, delete the inner cluster fit result from map and delete the associated cluster from the cluster vector
+        // then need to redo fits and then loop again.
+        // maybe combine functions below in a snazzy way?
+       
 
-        AddHitsToCluster(innerCluster, caloHitToParentClusterMap, extrapolatedCaloHitVector);
+        /////////////////////////////
+        //MONITORING PURPOSES
+        //ClusterList theCluster;
+        //theCluster.push_back(innerCluster);
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "AFTER", GREEN);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        /////////////////////////////
 
-        ClusterList theCluster;
-        theCluster.push_back(innerCluster);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "AFTER", GREEN);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
+        
+        
+        // NEED TO UPDATE THE SLIDING FITS
     }
 
     
@@ -91,10 +109,48 @@ StatusCode EMTrackAlgorithm::Run()
     return STATUS_CODE_SUCCESS;
 }
 
+
+    void EMTrackAlgorithm()
+
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void EMTrackAlgorithm::UpdateSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap)
+{
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float slidingFitWindow(20);
+    
+    for (const Cluster *const pCluster : clusterVector)
+    {
+        const TwoDSlidingFitResultMap::const_iterator fitResultIter(slidingFitResultMap.find(pCluster));
 
-void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const CaloHitVector &extrapolatedCaloHitVector)
+        if(fitResultIter == slidingFitResultMap.end())
+        {
+            try {(void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, TwoDSlidingFitResult(pCluster, slidingFitWindow, slidingFitPitch)));}
+            catch (StatusCodeException &) {}
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EMTrackAlgorithm::CleanupClusterVector(const Cluster *const pCluster, ClusterVector &clusterVector)
+{
+    ClusterVector::const_iterator clusterToDelete(pCluster));
+    if (clusterToDelete != clusterVector.end())
+        clusterVector.erase(clusterToDelete);
+}
+
+void EMTrackAlgorithm::CleanupSlidingFitResultMap(const Cluster *const pCluster, TwoDSlidingFitResultMap &slidingFitResultMap)
+{
+    const TwoDSlidingFitResultMap::const_iterator fitToDelete(pCluster);
+    if (fitToDelete != slidingFitResultMap.end())
+        slidingFitResultMap.erase(fitToDelete);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const CaloHitVector &extrapolatedCaloHitVector)
 {
     for (const CaloHit *const pCaloHit : extrapolatedCaloHitVector)
     {
@@ -106,21 +162,24 @@ void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, 
         }
         else
         {
-            try
+            const StatusCode status(PandoraContentApi::RemoveFromCluster(*this, caloHitParentIter->second, pCaloHit));
+            
+            if (status == STATUS_CODE_SUCCESS)
             {
-                PandoraContentApi::RemoveFromCluster(*this, caloHitParentIter->first, pCaloHit);
+                CleanupSlidingFitResultMap(caloHitParentIter->second, slidingFitResultMap);
+                PandoraContentApi::AddToCluster(*this, pClusterToEnlarge, pCaloHit);
             }
-            catch (const StatusCodeException &statusCodeException)
+            else if (status == STATUS_CODE_NOT_ALLOWED)
             {
-                if (statusCodeException == STATUS_CODE_NOT_ALLOWED)
-                    PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, caloHitParentIter->first);
-                //ATTN REMOVE FROM THE CALO
-        this->MoveToNextEventFile();
+                CleanupClusterVector(caloHitParentIter->second, clusterVector);
+                PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, caloHitParentIter->second);
+            }
+            else
+            {
+                throw status;
+            }
         }
-
-        
     }
-
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------
@@ -293,11 +352,10 @@ void EMTrackAlgorithm::SelectCleanClusters(const ClusterList *pClusterList, Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-
-void EMTrackAlgorithm::FillClusterToClusterAssociationMap(const ClusterVector &clusterVector, ClusterToClusterAssociationMap &clusterToClusterAssociationMap)
+void EMTrackAlgorithm::InitialiseSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap)
 {
-
-    TwoDSlidingFitResultMap slidingFitResultMap;
+    slidingFitResultMap.clear();
+    
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const float slidingFitWindow(20);
     
@@ -306,43 +364,48 @@ void EMTrackAlgorithm::FillClusterToClusterAssociationMap(const ClusterVector &c
         try {(void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, TwoDSlidingFitResult(pCluster, slidingFitWindow, slidingFitPitch)));}
         catch (StatusCodeException &) {}
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EMTrackAlgorithm::FindBestClusterAssociation(const Cluster *const pCurrentCluster, const ClusterVector &clusterVector, const TwoDSlidingFitResultMap &slidingFitResultMap, ClusterAssociation &clusterAssociation)
+{
+    const ClusterVector::const_iterator currentIter(std::find(clusterVector.begin(), clusterVector.end(), pCurrentCluster));
+
+    const TwoDSlidingFitResultMap::const_iterator currentFitIter(slidingFitResultMap.find(pCurrentCluster));
+    if (currentFitIter == slidingFitResultMap.end())
+        return false;
+
+    unsigned int maxHits(0);
+    bool foundAssociation(false);
     
-    
-    for (ClusterVector::const_iterator iterI = clusterVector.begin(); iterI != clusterVector.end(); ++iterI)
+    for (ClusterVector::const_iterator testIter = currentIter; testIter != clusterVector.end(); ++testIter)
     {
-        const Cluster *const pCurrentCluster = *iterI;
+        const Cluster *const pTestCluster = *testIter;
         
-        TwoDSlidingFitResultMap::const_iterator currentFitIter = slidingFitResultMap.find(pCurrentCluster);
-        if (currentFitIter == slidingFitResultMap.end())
+        if (pTestCluster == pCurrentCluster)
             continue;
 
-        for (ClusterVector::const_iterator iterJ = iterI; iterJ != clusterVector.end(); ++iterJ)
-        {
-            const Cluster *const pTestCluster = *iterJ;
+        if (pTestCluster->GetNCaloHits() < maxHits)
+            continue;
 
-            if (pCurrentCluster == pTestCluster)
-                continue;
+        const TwoDSlidingFitResultMap::const_iterator testFitIter(slidingFitResultMap.find(pTestCluster));
+        if (testFitIter == slidingFitResultMap.end())
+            continue;
 
-            TwoDSlidingFitResultMap::const_iterator testFitIter = slidingFitResultMap.find(pTestCluster);
-            if (testFitIter == slidingFitResultMap.end())
-                continue;
+        CartesianVector currentPoint(0,0,0), testPoint(0,0,0);
+        CartesianVector currentDirection(0,0,0), testDirection(0,0,0);
+        GetClusterMergingCoordinates(currentFitIter->second, currentPoint, currentDirection, testFitIter->second, testPoint, testDirection);
 
-            CartesianVector currentPoint(0,0,0), testPoint(0,0,0);
-            CartesianVector currentDirection(0,0,0), testDirection(0,0,0);
-            GetClusterMergingCoordinates(currentFitIter->second, currentPoint, currentDirection, testFitIter->second, testPoint, testDirection);
+        if (!AreClustersAssociated(currentPoint, currentDirection, testPoint, testDirection))
+            continue;
 
-            if (AreClustersAssociated(currentPoint, currentDirection, testPoint, testDirection))
-            {
-                // ensure that each cluster has maximum one association, which is the closest association
-                clusterToClusterAssociationMap.insert(ClusterToClusterAssociationMap::value_type(pCurrentCluster, ClusterAssociation(pTestCluster, currentPoint, currentDirection, testPoint, testDirection)));
-                break;
-            }
-            else
-            {
-                continue;
-            }
-        }
-    }     
+        foundAssociation = true;
+        maxHits = pTestCluster->GetNCaloHits();
+        clusterAssociation = ClusterAssociation(pTestCluster, currentPoint, currentDirection, testPoint, testDirection);
+    }
+
+    return foundAssociation;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -350,7 +413,13 @@ void EMTrackAlgorithm::FillClusterToClusterAssociationMap(const ClusterVector &c
 bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint, const CartesianVector &currentDirection, const CartesianVector &testPoint, const CartesianVector &testDirection)
 {
 
-
+    // check that clusters are reasonably far away
+    if (std::sqrt(currentPoint.GetDistanceSquared(testPoint) < 50))
+    {
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "DISTANCE: " + std::to_string(std::sqrt(currentPoint.GetDistanceSquared(testPoint))), RED);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        return false;
+    }
     
     // check that opening angle is not too large
     if (currentDirection.GetCosOpeningAngle(testDirection*(-1.0)) < 0.97)
@@ -359,15 +428,6 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
         //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
-    
-    // check that clusters are reasonably far away
-    if (std::sqrt(currentPoint.GetDistanceSquared(testPoint) < 50))
-    {
-        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "DISTANCE: " + std::to_string(std::sqrt(currentPoint.GetDistanceSquared(testPoint))), RED);
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        return false;
-    }
-
     
     // check that fit allows you to get from one merge point to other merge point
     float separationDistance(std::sqrt(currentPoint.GetDistanceSquared(testPoint)));
