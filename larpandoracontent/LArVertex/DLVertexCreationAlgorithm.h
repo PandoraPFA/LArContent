@@ -66,7 +66,7 @@ private:
      */
     pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *const pClusterList, const pandora::HitType &view, 
         const pandora::CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount,
-        std::stringstream ssBuf[6], const pandora::CartesianVector &MCVertexPosition, const unsigned int allHitsCount) const;
+        std::stringstream ssBuf[6], const pandora::CartesianVector &MCVertexPosition, const unsigned int allHitsCount);
 
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
@@ -78,7 +78,7 @@ private:
      *  @return The pixel position of the DL vertex for chosen view
      */
     pandora::CartesianVector DeepLearning(const TwoDImage &out2dVec, const pandora::HitType &view,
-        const int imgLenVecIndex) const;
+        const int imgLenVecIndex);
 
     /**
      *  @brief  Create the training files

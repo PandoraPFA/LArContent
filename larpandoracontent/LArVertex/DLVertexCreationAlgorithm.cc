@@ -162,7 +162,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
 //---------------------------------------------------------------------------------------------------------------------------------
 CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList *const pClusterList, const HitType &view,
     const CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount, 
-    std::stringstream ssBuf[6], const CartesianVector &MCVertexPosition, const unsigned int allHitsCount) const
+    std::stringstream ssBuf[6], const CartesianVector &MCVertexPosition, const unsigned int allHitsCount)
 {
     const double length(m_imgLenVec[imgLenVecIndex]);
     const bool useScaledImg(length <= 0);
@@ -264,7 +264,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
 
 //---------------------------------------------------------------------------------------------------------------------------------
 CartesianVector DLVertexCreationAlgorithm::DeepLearning(const TwoDImage &out2dVec, const HitType &view,
-    const int imgLenVecIndex) const
+    const int imgLenVecIndex)
 {
     /* Get the index for model */
     int index(0);
