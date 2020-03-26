@@ -25,8 +25,7 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2
-    , const Cluster *const) // TODO
+void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);

@@ -35,8 +35,7 @@ public:
     TwoViewTransverseTracksAlgorithm();
 
 private:
-    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2
-        , const pandora::Cluster *const pCluster3 = nullptr); // TODO
+    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const);
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

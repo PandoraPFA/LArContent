@@ -88,7 +88,7 @@ public:
      *  @return the selected cluster list
      */
     virtual const pandora::ClusterList &GetSelectedClusterList(const pandora::HitType hitType) const = 0;
-// TODO sort out nclusters for overlap result
+
     /**
      *  @brief  Calculate cluster overlap result and store in container
      *
@@ -96,7 +96,7 @@ public:
      *  @param  pCluster2 address of cluster2
      *  @param  pCluster3 address of cluster3
      */
-    virtual void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3) = 0;
+    virtual void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3 = nullptr) = 0;
 
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
