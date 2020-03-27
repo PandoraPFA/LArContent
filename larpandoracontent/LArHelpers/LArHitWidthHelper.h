@@ -5,16 +5,13 @@
  *
  *  $Log: $
  */
-
 #ifndef LAR_HIT_WIDTH_HELPER_H
 #define LAR_HIT_WIDTH_HELPER_H 1
-
 
 #include "Objects/Cluster.h"
 
 namespace lar_content
 {
-  
 
 /**
  *  @brief  LArHitWidthHelper class
@@ -22,7 +19,6 @@ namespace lar_content
 class LArHitWidthHelper
 {
 public:
-
     class ConstituentHit
     {
     public:
@@ -32,15 +28,16 @@ public:
         float GetHitWidth() const;
         const pandora::Cluster* GetParentClusterAddress() const;
 
-        struct  SortByDistanceToPoint
+        class SortByDistanceToPoint
         {
+        public:
 	        SortByDistanceToPoint(const pandora::CartesianVector referencePoint) : m_referencePoint(referencePoint) {}
             bool operator() (const ConstituentHit &lhs, const ConstituentHit &rhs);
-        
+
+        private:
             const pandora::CartesianVector m_referencePoint;
         };
 
-        
     private:
         pandora::CartesianVector m_positionVector;
         float m_hitWidth;
@@ -49,8 +46,7 @@ public:
 
     typedef std::vector<ConstituentHit> ConstituentHitVector;
 
-
-   class ClusterParameters
+    class ClusterParameters
     {
     public:
         ClusterParameters(const pandora::Cluster *const pCluster, const float maxConsituentHitWidth, const bool isUniformHits, const float hitWidthScalingFactor);
@@ -59,45 +55,47 @@ public:
         const pandora::Cluster* GetClusterAddress() const;
         unsigned int GetNumCaloHits() const;
         float GetTotalWeight() const;
-        ConstituentHitVector GetConstituentHitVector() const;
-        pandora::CartesianVector GetLowerXExtrema() const;
-        pandora::CartesianVector GetHigherXExtrema() const;
+        const ConstituentHitVector& GetConstituentHitVector() const;
+        const pandora::CartesianVector& GetLowerXExtrema() const;
+        const pandora::CartesianVector& GetHigherXExtrema() const;
 
     private:
-        const pandora::Cluster *m_pCluster; 
-        unsigned int m_numCaloHits;
-        ConstituentHitVector m_constituentHitVector;
-        float m_totalWeight;
-        pandora::CartesianVector m_lowerXExtrema;
-        pandora::CartesianVector m_higherXExtrema;
+        const pandora::Cluster *m_pCluster;
+        const unsigned int m_numCaloHits;
+        const ConstituentHitVector m_constituentHitVector;
+        const float m_totalWeight;
+        const pandora::CartesianVector m_lowerXExtrema;
+        const pandora::CartesianVector m_higherXExtrema;
     };
 
     typedef std::map<const pandora::Cluster*, const ClusterParameters> ClusterToParametersMap;
 
-
     class ClusterToParametersMapStore
     {
-
     public:
+        ClusterToParametersMapStore(ClusterToParametersMapStore const& obj) = delete;   // Delete copy constructor
+        ClusterToParametersMapStore(ClusterToParametersMapStore&& obj) = delete;        // Delete move constructor
         static ClusterToParametersMapStore* Instance();
-        ClusterToParametersMap* GetMap();
+        ClusterToParametersMap& GetMap();
 
     private:
+        ClusterToParametersMapStore() = default;
         static ClusterToParametersMapStore* m_instance;
         ClusterToParametersMap m_clusterToParametersMap;
     };
-    
 
-    static ConstituentHitVector GetConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor);
-    static ConstituentHitVector GetUniformConstituentHits(const pandora::Cluster *const pCluster, const float constituentHitWidth, const float hitWidthScalingFactor);
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+    static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster);
+    static ConstituentHitVector GetConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor, const bool isUniform);
+    static void SplitHitIntoConstituents(const pandora::CaloHit *const pCaloHit, const pandora::Cluster *const pCluster, const unsigned int numberOfConstituentHits, const float constituentHitWidth, ConstituentHitVector &constituentHitVector);
     static pandora::CartesianPointVector GetConstituentHitPositionVector(const ConstituentHitVector &constituentHitVector);
-    static pandora::CartesianVector GetExtremalCoordinatesLowerX(const ConstituentHitVector &constituentHitVector);
-    static pandora::CartesianVector GetExtremalCoordinatesHigherX(const ConstituentHitVector &constituentHitVector);
     static float GetTotalClusterWeight(const ConstituentHitVector &constituentHitVector);
     static float GetOriginalTotalClusterWeight(const pandora::Cluster *const pCluster);
     static bool SortByHigherXExtrema(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+    static pandora::CartesianVector GetExtremalCoordinatesLowerX(const ConstituentHitVector &constituentHitVector);
+    static pandora::CartesianVector GetExtremalCoordinatesHigherX(const ConstituentHitVector &constituentHitVector);
     static void GetExtremalCoordinatesX(const ConstituentHitVector &constituentHitVector, pandora::CartesianVector &lowerXCoordinate, pandora::CartesianVector &higherXCoordinate);
-    static void GetExtremalCoordinatesX(const pandora::CartesianPointVector &constituentHitPositionVector, pandora::CartesianVector &lowerXCoordinate, pandora::CartesianVector &higherXCoordinate);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -130,21 +128,21 @@ inline float LArHitWidthHelper::ClusterParameters::GetTotalWeight() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArHitWidthHelper::ConstituentHitVector LArHitWidthHelper::ClusterParameters::GetConstituentHitVector() const 
+inline const LArHitWidthHelper::ConstituentHitVector& LArHitWidthHelper::ClusterParameters::GetConstituentHitVector() const 
 {
     return m_constituentHitVector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector LArHitWidthHelper::ClusterParameters::GetLowerXExtrema() const 
+inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::GetLowerXExtrema() const 
 {
     return m_lowerXExtrema;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector LArHitWidthHelper::ClusterParameters::GetHigherXExtrema() const 
+inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::GetHigherXExtrema() const 
 {
     return m_higherXExtrema;
 }
