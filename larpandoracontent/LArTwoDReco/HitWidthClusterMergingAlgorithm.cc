@@ -17,7 +17,6 @@ namespace lar_content
 {
 
 HitWidthClusterMergingAlgorithm::HitWidthClusterMergingAlgorithm() :
-  m_clusterListName(),
   m_maxConstituentHitWidth(0.5),
   m_hitWidthScalingFactor(1.0),
   m_fittingWeight(10),
@@ -83,70 +82,32 @@ void HitWidthClusterMergingAlgorithm::PopulateClusterAssociationMap(const Cluste
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-void HitWidthClusterMergingAlgorithm::RemoveShortcutAssociations(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
-{
-    // Create temporary map so can delete elements whilst still iterating over them
-    ClusterAssociationMap tempMap(clusterAssociationMap);
-
-    for (const Cluster *const pCluster : clusterVector)
-    {
-        const ClusterAssociationMap::const_iterator primaryMapIter = clusterAssociationMap.find(pCluster);
-
-        if (primaryMapIter == clusterAssociationMap.end())
-            continue;
-
-        // put ClusterSet into ClusterVector
-        ClusterVector primaryForwardAssociations(primaryMapIter->second.m_forwardAssociations.begin(), primaryMapIter->second.m_forwardAssociations.end());
-        std::sort(primaryForwardAssociations.begin(), primaryForwardAssociations.end(), LArClusterHelper::SortByNHits);
-        
-        // remove primary clusters that are present in secondary associations of other primary clusters
-        for (const Cluster *const pConsideredCluster : primaryForwardAssociations)
-        {
-            for (const Cluster *const pPrimaryCluster : primaryForwardAssociations)
-            {
-                if (pConsideredCluster == pPrimaryCluster)
-                    continue;
-
-                const ClusterAssociationMap::const_iterator secondaryMapIter = clusterAssociationMap.find(pPrimaryCluster);
-
-                // if primary cluster has no associations (this shouldn't ever be the case)
-                if (secondaryMapIter == clusterAssociationMap.end())
-                    continue;
-
-                const ClusterSet &secondaryForwardAssociations(secondaryMapIter->second.m_forwardAssociations);
-
-                if (secondaryForwardAssociations.find(pConsideredCluster) != secondaryForwardAssociations.end())
-                {
-                    ClusterSet &tempPrimaryForwardAssociations(tempMap.find(pCluster)->second.m_forwardAssociations);
-                    const ClusterSet::const_iterator forwardAssociationToRemove(tempPrimaryForwardAssociations.find(pConsideredCluster));
-
-                    // if association has already been removed
-                    if(forwardAssociationToRemove == tempPrimaryForwardAssociations.end())
-                        continue;
-
-                    ClusterSet &tempPrimaryBackwardAssociations(tempMap.find(pConsideredCluster)->second.m_backwardAssociations);
-                    const ClusterSet::const_iterator backwardAssociationToRemove(tempPrimaryBackwardAssociations.find(pCluster));
-
-                    // if association has already been removed
-                    if (backwardAssociationToRemove == tempPrimaryBackwardAssociations.end())
-                        continue;
-
-                    tempPrimaryForwardAssociations.erase(forwardAssociationToRemove);
-                    tempPrimaryBackwardAssociations.erase(backwardAssociationToRemove);
-                }
-            }
-        }
-    }
     
-    clusterAssociationMap = tempMap;
+bool HitWidthClusterMergingAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster,  const Cluster *const pTestCluster) const
+{
+    const LArHitWidthHelper::ClusterParameters &currentClusterParameters(LArHitWidthHelper::GetClusterParameters(pCurrentCluster));
+    const LArHitWidthHelper::ClusterParameters &testClusterParameters(LArHitWidthHelper::GetClusterParameters(pTestCluster));
+    const CartesianVector &currentHigherXExtrema(currentClusterParameters.GetHigherXExtrema()), &testHigherXExtrema(testClusterParameters.GetHigherXExtrema());
+    float currentMaxX(currentHigherXExtrema.GetX()), testMaxX(testHigherXExtrema.GetX());
+
+    if (isForward)
+    {
+        if (std::fabs(testMaxX - currentMaxX) > std::numeric_limits<float>::epsilon())
+            return (testMaxX > currentMaxX);
+    }
+    else
+    {
+        if (std::fabs(testMaxX - currentMaxX) > std::numeric_limits<float>::epsilon())
+            return (testMaxX < currentMaxX);
+    }
+  
+    return LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHelper::ClusterParameters &currentFitParameters, const LArHitWidthHelper::ClusterParameters &testFitParameters) const
 {
-
     // check merging points not too far away in x
     if (testFitParameters.GetLowerXExtrema().GetX() > (currentFitParameters.GetHigherXExtrema().GetX() + m_maxXMergeDistance))
         return false;
@@ -183,40 +144,17 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool HitWidthClusterMergingAlgorithm::IsExtremalCluster(const bool isForward, const Cluster *const pCurrentCluster,  const Cluster *const pTestCluster) const
-{
-    const LArHitWidthHelper::ClusterParameters &currentClusterParameters(LArHitWidthHelper::GetClusterParameters(pCurrentCluster));
-    const LArHitWidthHelper::ClusterParameters &testClusterParameters(LArHitWidthHelper::GetClusterParameters(pTestCluster));
-    const CartesianVector &currentHigherXExtrema(currentClusterParameters.GetHigherXExtrema()), &testHigherXExtrema(testClusterParameters.GetHigherXExtrema());
-    float currentMaxX(currentHigherXExtrema.GetX()), testMaxX(testHigherXExtrema.GetX());
-
-    if (isForward)
-    {
-        if (std::fabs(testMaxX - currentMaxX) > std::numeric_limits<float>::epsilon())
-            return (testMaxX > currentMaxX);
-    }
-    else
-    {
-        if (std::fabs(testMaxX - currentMaxX) > std::numeric_limits<float>::epsilon())
-            return (testMaxX < currentMaxX);
-    }
-  
-    return LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, const CartesianVector &fitReferencePoint) const 
 {
     // if cluster composed of one hit, return a transverse line as fit
     if (clusterFitParameters.GetNumCaloHits() == 1)
         return CartesianVector(1.f, 0.f, 0.f);
 
-    // minimise the longitudinal distance in fit (works best for transverse fits)
+    // minimise the longitudinal distance in fit (works best for transverse trajectories)
     CartesianVector lsTransverseClusterFitDirection(0.f, 0.f, 0.f), lsTransverseIntercept(0.f, 0.f, 0.f);
     float lsTransverseChiSquared(0.f);
 
-    // minimise the transverse coordinate in fit (works best for longitudinal fits)
+    // minimise the transverse coordinate in fit (works best for longitudinal trajectories)
     CartesianVector lsLongitudinalClusterFitDirection(0.f, 0.f, 0.f), lsLongitudinalIntercept(0.f, 0.f, 0.f);
     float lsLongitudinalChiSquared(0.f);
 
@@ -232,7 +170,8 @@ CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHi
   
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, bool isTransverse, CartesianVector &direction, CartesianVector &zIntercept, float &chiSquared, const CartesianVector &fitReferencePoint) const
+void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, const bool isTransverse,
+        CartesianVector &direction, CartesianVector &zIntercept, float &chiSquared, const CartesianVector &fitReferencePoint) const
 {
     // cannot make a longitudinal fit to a single hit cluster
     if (!isTransverse && clusterFitParameters.GetNumCaloHits() == 1) 
@@ -330,10 +269,68 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void HitWidthClusterMergingAlgorithm::RemoveShortcutAssociations(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
+{
+    // Create temporary map so can delete elements whilst still iterating over them
+    ClusterAssociationMap tempMap(clusterAssociationMap);
+
+    for (const Cluster *const pCluster : clusterVector)
+    {
+        const ClusterAssociationMap::const_iterator primaryMapIter = clusterAssociationMap.find(pCluster);
+
+        if (primaryMapIter == clusterAssociationMap.end())
+            continue;
+
+        // put ClusterSet into ClusterVector
+        ClusterVector primaryForwardAssociations(primaryMapIter->second.m_forwardAssociations.begin(), primaryMapIter->second.m_forwardAssociations.end());
+        std::sort(primaryForwardAssociations.begin(), primaryForwardAssociations.end(), LArClusterHelper::SortByNHits);
+        
+        // remove primary clusters that are present in secondary associations of other primary clusters
+        for (const Cluster *const pConsideredCluster : primaryForwardAssociations)
+        {
+            for (const Cluster *const pPrimaryCluster : primaryForwardAssociations)
+            {
+                if (pConsideredCluster == pPrimaryCluster)
+                    continue;
+
+                const ClusterAssociationMap::const_iterator secondaryMapIter = clusterAssociationMap.find(pPrimaryCluster);
+
+                // if primary cluster has no associations (this shouldn't ever be the case)
+                if (secondaryMapIter == clusterAssociationMap.end())
+                    continue;
+
+                const ClusterSet &secondaryForwardAssociations(secondaryMapIter->second.m_forwardAssociations);
+
+                if (secondaryForwardAssociations.find(pConsideredCluster) != secondaryForwardAssociations.end())
+                {
+                    ClusterSet &tempPrimaryForwardAssociations(tempMap.find(pCluster)->second.m_forwardAssociations);
+                    const ClusterSet::const_iterator forwardAssociationToRemove(tempPrimaryForwardAssociations.find(pConsideredCluster));
+
+                    // if association has already been removed
+                    if(forwardAssociationToRemove == tempPrimaryForwardAssociations.end())
+                        continue;
+
+                    ClusterSet &tempPrimaryBackwardAssociations(tempMap.find(pConsideredCluster)->second.m_backwardAssociations);
+                    const ClusterSet::const_iterator backwardAssociationToRemove(tempPrimaryBackwardAssociations.find(pCluster));
+
+                    // if association has already been removed
+                    if (backwardAssociationToRemove == tempPrimaryBackwardAssociations.end())
+                        continue;
+
+                    tempPrimaryForwardAssociations.erase(forwardAssociationToRemove);
+                    tempPrimaryBackwardAssociations.erase(backwardAssociationToRemove);
+                }
+            }
+        }
+    }
+    
+    clusterAssociationMap = tempMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode HitWidthClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListName", m_clusterListName));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FittingWeight", m_fittingWeight));
 

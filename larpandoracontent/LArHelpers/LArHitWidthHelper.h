@@ -19,82 +19,259 @@ namespace lar_content
 class LArHitWidthHelper
 {
 public:
+    /**
+     *  @brief  ConstituentHit class
+     */
     class ConstituentHit
     {
     public:
+        /**
+         *  @brief  Constructor
+         */
         ConstituentHit(const pandora::CartesianVector &positionVector, const float hitWidth, const pandora::Cluster *const parentClusterAddress);
-
+        
+        /**
+         *  @brief  Returns the constituent hit central position
+         */
         pandora::CartesianVector GetPositionVector() const;
+
+        /**
+         *  @brief  Returns the constituent hit width
+         */
         float GetHitWidth() const;
+
+        /**
+         *  @brief  Returns the address of the parent cluster
+         */
         const pandora::Cluster* GetParentClusterAddress() const;
 
+         /**
+          *  @brief  SortByDistanceToPoint class
+          */
         class SortByDistanceToPoint
         {
         public:
+            /**
+             *  @brief  Constructor
+             */
 	        SortByDistanceToPoint(const pandora::CartesianVector referencePoint) : m_referencePoint(referencePoint) {}
+            
+            /**
+             *  @brief  Sort constituent hits by their position relative to a referencePoint
+             *
+             *  @param  lhs first constituent hit
+             *  @param  rhs second constituent hit
+             *
+             *  @return  bool
+             */
             bool operator() (const ConstituentHit &lhs, const ConstituentHit &rhs);
 
         private:
-            const pandora::CartesianVector m_referencePoint;
+            const pandora::CartesianVector m_referencePoint;   ///< The point relative to which constituent hits are ordered
         };
 
     private:
-        pandora::CartesianVector m_positionVector;
-        float m_hitWidth;
-        const pandora::Cluster *m_parentClusterAddress; 
+        pandora::CartesianVector m_positionVector;        ///< The central position of the consituent hit
+        float m_hitWidth;                                 ///< The width of the constituent hit
+        const pandora::Cluster *m_parentClusterAddress;   ///< The address of the cluster the constituent hit belongs to
     };
 
     typedef std::vector<ConstituentHit> ConstituentHitVector;
 
+    /**
+     *  @brief  ClusterParameters class
+     */
     class ClusterParameters
     {
     public:
+        /**
+         *  @brief  Constructor
+         */
         ClusterParameters(const pandora::Cluster *const pCluster, const float maxConsituentHitWidth, const bool isUniformHits, const float hitWidthScalingFactor);
+        
+        /**
+         *  @brief  Constructor
+         */
         ClusterParameters(const pandora::Cluster *const pCluster, const unsigned int numCaloHits, const float totalWeight, const ConstituentHitVector &constituentHitVector, const pandora::CartesianVector &lowerXExtrema, const pandora::CartesianVector &higherXExtrema);
 
+        /**
+         *  @brief  Returns the address of the cluster
+         */
         const pandora::Cluster* GetClusterAddress() const;
+
+        /**
+         *  @brief  Returns the number of calo hits within the cluster
+         */
         unsigned int GetNumCaloHits() const;
+        
+        /**
+         *  @brief  Returns the total weight of the constituent hits
+         */
         float GetTotalWeight() const;
+
+        /**
+         *  @brief  Returns the vector of constituent hits
+         */
         const ConstituentHitVector& GetConstituentHitVector() const;
+
+        /**
+         *  @brief  Returns the lower x extremal point of the constituent hits
+         */
         const pandora::CartesianVector& GetLowerXExtrema() const;
-        const pandora::CartesianVector& GetHigherXExtrema() const;
+
+        /**
+         *  @brief  Returns the higher x extremal point of the constituent hits
+         */
+        const pandora::CartesianVector& GetHigherXExtrema() const;     
 
     private:
-        const pandora::Cluster *m_pCluster;
-        const unsigned int m_numCaloHits;
-        const ConstituentHitVector m_constituentHitVector;
-        const float m_totalWeight;
-        const pandora::CartesianVector m_lowerXExtrema;
-        const pandora::CartesianVector m_higherXExtrema;
+        const pandora::Cluster *m_pCluster;                  ///< The address of the cluster 
+        const unsigned int m_numCaloHits;                    ///< The number of calo hits within the cluster
+        const ConstituentHitVector m_constituentHitVector;   ///< The vector of constituent hits
+        const float m_totalWeight;                           ///< The total hit weight of the contituent hits
+        const pandora::CartesianVector m_lowerXExtrema;      ///< The lower x extremal point of the constituent hits
+        const pandora::CartesianVector m_higherXExtrema;     ///< The higher x extremal point of the constituent hits
     };
 
     typedef std::map<const pandora::Cluster*, const ClusterParameters> ClusterToParametersMap;
 
+    /**
+     *  @brief  ClusterToParametersMapStore class
+     */
     class ClusterToParametersMapStore
     {
     public:
-        ClusterToParametersMapStore(ClusterToParametersMapStore const& obj) = delete;   // Delete copy constructor
-        ClusterToParametersMapStore(ClusterToParametersMapStore&& obj) = delete;        // Delete move constructor
+        /**
+         *  @brief  Delete the default copy constructor
+         */
+        ClusterToParametersMapStore(ClusterToParametersMapStore const& obj) = delete;
+
+        /**
+         *  @brief  Delete the default move constructor
+         */
+        ClusterToParametersMapStore(ClusterToParametersMapStore&& obj) = delete;
+        
+        /**
+         *  @brief  Returns a pointer to the ClusterToParametersMapStore instance 
+         */
         static ClusterToParametersMapStore* Instance();
+
+        /**
+         *  @brief  Returns the map [cluster -> cluster parameters]
+         */
         ClusterToParametersMap& GetMap();
 
     private:
+        /**
+         *  @brief  Default constructor
+         */
         ClusterToParametersMapStore() = default;
-        static ClusterToParametersMapStore* m_instance;
-        ClusterToParametersMap m_clusterToParametersMap;
+        
+        static ClusterToParametersMapStore* m_instance;    ///< The address of the ClusterToParametersMapStore instance 
+        ClusterToParametersMap m_clusterToParametersMap;   ///< The map [cluster -> cluster parameters]
     };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+    /**
+     *  @brief  Return the cluster parameters of a given cluster, exception thrown if not found in map [cluster -> cluster parameters] or if map is empty
+     *
+     *  @param  pCluster the input cluster
+     *
+     *  @return  ClusterParameters the cluster parameters of the input cluster  
+     */
     static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster);
-    static ConstituentHitVector GetConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor, const bool isUniform);
-    static void SplitHitIntoConstituents(const pandora::CaloHit *const pCaloHit, const pandora::Cluster *const pCluster, const unsigned int numberOfConstituentHits, const float constituentHitWidth, ConstituentHitVector &constituentHitVector);
+
+    /**
+     *  @brief  Break up the cluster hits into constituent hits 
+     *
+     *  @param  pCluster the input cluster
+     *  @param  maxConstituentHitWidth the maximum width of a constituent hit
+     *  @param  hitWidthScalingFactor the constituent hit width scaling factor
+     *  @param  isUniform whether to break up the hit into uniform constituent hits (and pad the hit) or not
+     *          in the non-uniform case constituent hits from different hits may have different weights
+     *
+     *  @return  ConstituentHitVector the vector of constituent hits
+     */
+    static ConstituentHitVector GetConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor,
+        const bool isUniform);
+
+    /**
+     *  @brief  Break up the calo hit into constituent hits 
+     *
+     *  @param  pCaloHit the input calo hit
+     *  @param  pCluster the parent cluster
+     *  @param  numberOfConstituentHits the number of constituent hits the hit will be broken into
+     *  @param  constituentHitWidth the hit width of the constituent hits
+     *  @param  constituentHitVector the input vector to which to add the contituent hits
+     *
+     */
+    static void SplitHitIntoConstituents(const pandora::CaloHit *const pCaloHit, const pandora::Cluster *const pCluster, const unsigned int numberOfConstituentHits,
+        const float constituentHitWidth, ConstituentHitVector &constituentHitVector);
+
+    /**
+     *  @brief  Obtain a vector of the contituent hit central positions
+     *
+     *  @param  constituentHitVector the input vector of contituent hits
+     *
+     *  @return  CartesianPointVector a vector of constituent hit central positions
+     */
     static pandora::CartesianPointVector GetConstituentHitPositionVector(const ConstituentHitVector &constituentHitVector);
+
+    /**
+     *  @brief  Sum the widths of constituent hits
+     *
+     *  @param  constituentHitVector the input vector of contituent hits
+     *
+     *  @return  float the total weight sum
+     */
     static float GetTotalClusterWeight(const ConstituentHitVector &constituentHitVector);
+
+    /**
+     *  @brief  Sum the widths of the original, unscaled hits contained within a cluster
+     *
+     *  @param  pCluster the input cluster
+     *
+     *  @return  float the total weight sum
+     */
     static float GetOriginalTotalClusterWeight(const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Sort clusters by the higher x extremal point of their constituent hits
+     *
+     *  @param  pLhs first cluster
+     *  @param  pRhs second cluster
+     *
+     *  @return  bool
+     */
     static bool SortByHigherXExtrema(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    /**
+     *  @brief  Return the lower x extremal point of the constituent hits
+     *
+     *  @param  constituentHitVector the input vector of contituent hits
+     *
+     *  @return  CartesianVector the lower x extremal point of the constituent hits
+     */
     static pandora::CartesianVector GetExtremalCoordinatesLowerX(const ConstituentHitVector &constituentHitVector);
+
+    /**
+     *  @brief  Return the higher x extremal point of the constituent hits
+     *
+     *  @param  constituentHitVector the input vector of contituent hits
+     *
+     *  @return  CartesianVector the higher x extremal point of the constituent hits
+     */
     static pandora::CartesianVector GetExtremalCoordinatesHigherX(const ConstituentHitVector &constituentHitVector);
+
+    /**
+     *  @brief  Calculate the higher and lower x extremal points of the constituent hits
+     *
+     *  @param  constituentHitVector the input vector of contituent hits
+     *  @param  lowerXCoordinate the lower x extremal point
+     *  @param  higherXCoordinate the higher x extremal point
+     *
+     */
     static void GetExtremalCoordinatesX(const ConstituentHitVector &constituentHitVector, pandora::CartesianVector &lowerXCoordinate, pandora::CartesianVector &higherXCoordinate);
 };
 
