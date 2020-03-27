@@ -27,32 +27,62 @@ public:
      */
     HitWidthClusterMergingAlgorithm();
 
-private:  
+private:
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
-
     void PopulateClusterAssociationMap(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
-
-    void RemoveShortcutAssociations(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
-
-    bool AreClustersAssociated(const LArHitWidthHelper::ClusterParameters &currentFitParameters, const LArHitWidthHelper::ClusterParameters &testFitParameters) const;
-
     bool IsExtremalCluster(const bool isForward, const pandora::Cluster *const pCurrentCluster,  const pandora::Cluster *const pTestCluster) const;
 
-    pandora::CartesianVector GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, const pandora::CartesianVector &fitReferencePoint) const;
+    /**
+     *  @brief  Determine whether two clusters are associated
+     *
+     *  @param  currentClusterParameters parameters defining the current cluster
+     *  @param  testClusterParameters parameters defining the test cluster
+     *
+     *  @return boolean whether the clusters are associated
+     */
+    bool AreClustersAssociated(const LArHitWidthHelper::ClusterParameters &currentClusterParameters, const LArHitWidthHelper::ClusterParameters &testClusterParameters) const;
 
-    void GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, bool isTransverse, pandora::CartesianVector &direction, pandora::CartesianVector &zIntercept, float &chiSquared, const pandora::CartesianVector &fitReferencePoint) const;
+    /**
+     *  @brief  Return the cluster direction at a reference point
+     *
+     *  @param  clusterParameters parameters defining the cluster
+     *  @param  fitReferencePoint the hits closest to this point are included in the fit
+     *
+     *  @return CartesianVector the cluster direction at the reference point
+     */
+    pandora::CartesianVector GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterParameters, const pandora::CartesianVector &fitReferencePoint) const;
+
+    /**
+     *  @brief  Perform a weighted least squared fit 
+     *
+     *  @param  clusterParameters parameters defining the cluster
+     *  @param  isTransverse whether to minimise the transverse distance (false) or longitudinal distance (true) in the fit
+     *  @param  direction the cluster direction
+     *  @param  zIntercept the z intercept of the least squared fit
+     *  @param  chiSquared the chi squared of the fit
+     *  @param  fitReferencePoint the hits closest to this point are included in the fit
+     */
+    void GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterParameters, const bool isTransverse, pandora::CartesianVector &direction, pandora::CartesianVector &zIntercept, float &chiSquared, const pandora::CartesianVector &fitReferencePoint) const;
+
+    /**
+     *  @brief  Remove 'shortcut' associations from the cluster association map
+     *
+     *  @param  clusterVector the vector of clusters considered in the merging process
+     *  @param  clusterAssociationMap the mapping of clusters to forward/backward associations
+     *
+     */
+    void RemoveShortcutAssociations(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     
-    std::string m_clusterListName;
-    float m_maxConstituentHitWidth;
-    float m_hitWidthScalingFactor;
-    float m_fittingWeight;
-    float m_minClusterWeight;
-    float m_maxXMergeDistance;         //Distance either side of point
-    float m_maxZMergeDistance;         //Distance either side of point
-    float m_minMergeCosOpeningAngle;
-    float m_minDirectionDeviationCosAngle;
+    float m_maxConstituentHitWidth;           ///< The maximum hit width of a constituent hit of broken up hit, units cm
+    float m_hitWidthScalingFactor;            ///< The scaling factor of the hit widths
+    float m_fittingWeight;                    ///< The maximum hit weight of considered in the least squared fit
+    float m_minClusterWeight;                 ///< The threshold hit weight of the original, unscaled cluster to be considered in the merging process
+    float m_maxXMergeDistance;                ///< The maximum x distance between merging points of associated clusters, units cm
+    float m_maxZMergeDistance;                ///< The maximum z distance between merging points of associated clusters, units cm
+    float m_minMergeCosOpeningAngle;          ///< The minimum cosine opening angle of the directions of associated clusters
+    float m_minDirectionDeviationCosAngle;    ///< The minimum cosine opening angle of the direction of and associated cluster before and after merge
 };
 
 } //namespace lar_content

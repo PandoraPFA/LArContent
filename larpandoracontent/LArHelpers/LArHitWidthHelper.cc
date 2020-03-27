@@ -105,12 +105,15 @@ LArHitWidthHelper::ClusterToParametersMap& LArHitWidthHelper::ClusterToParameter
 const LArHitWidthHelper::ClusterParameters& LArHitWidthHelper::GetClusterParameters(const Cluster *const pCluster)
 {
     LArHitWidthHelper::ClusterToParametersMapStore* pClusterToParametersMapStore(LArHitWidthHelper::ClusterToParametersMapStore::Instance());
-    const LArHitWidthHelper::ClusterToParametersMap clusterToParametersMap(pClusterToParametersMapStore->GetMap());
+    const LArHitWidthHelper::ClusterToParametersMap &clusterToParametersMap(pClusterToParametersMapStore->GetMap());
 
     if (clusterToParametersMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     const auto clusterParametersIter(clusterToParametersMap.find(pCluster));
+
+    if (clusterParametersIter == clusterToParametersMap.end())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return clusterParametersIter->second;
 }
