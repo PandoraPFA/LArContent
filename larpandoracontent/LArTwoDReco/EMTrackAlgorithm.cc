@@ -5,7 +5,6 @@
  *
  *  $Log: $
  */
-
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArTwoDReco/EMTrackAlgorithm.h"
@@ -62,7 +61,7 @@ StatusCode EMTrackAlgorithm::Run()
         ClusterAssociation clusterAssociation(nullptr, CartesianVector(0,0,0), CartesianVector(0,0,0), CartesianVector(0,0,0), CartesianVector(0,0,0));
 
         // if no association is found, skip to the next cluster
-        if(!FindBestClusterAssociation(innerCluster, clusterVector, slidingFitResultMap, clusterAssociation))
+        if(!this->FindBestClusterAssociation(innerCluster, clusterVector, slidingFitResultMap, clusterAssociation))
             continue;
 
         ClusterList currentCluster;
@@ -78,12 +77,12 @@ StatusCode EMTrackAlgorithm::Run()
         // Get a list of associated calo hits.
         CaloHitToParentClusterMap caloHitToParentClusterMap;
         CaloHitVector extrapolatedCaloHitVector;
-        GetExtrapolatedCaloHits(innerCluster, clusterAssociation, pCaloHitList, pClusterList, extrapolatedCaloHitVector, caloHitToParentClusterMap);
+        this->GetExtrapolatedCaloHits(innerCluster, clusterAssociation, pCaloHitList, pClusterList, extrapolatedCaloHitVector, caloHitToParentClusterMap);
         
-        if (!IsTrackContinuous(clusterAssociation, extrapolatedCaloHitVector))
+        if (!this->IsTrackContinuous(clusterAssociation, extrapolatedCaloHitVector))
             continue;
     
-        AddHitsToCluster(innerCluster, clusterVector, slidingFitResultMap, caloHitToParentClusterMap, extrapolatedCaloHitVector);
+        this->AddHitsToCluster(innerCluster, clusterAssociation.GetAssociatedCluster(), clusterVector, slidingFitResultMap, caloHitToParentClusterMap, extrapolatedCaloHitVector);
 
 
         // Need to add the last clusters together, delete the inner cluster fit result from map and delete the associated cluster from the cluster vector
@@ -93,13 +92,14 @@ StatusCode EMTrackAlgorithm::Run()
 
         /////////////////////////////
         //MONITORING PURPOSES
-        //ClusterList theCluster;
-        //theCluster.push_back(innerCluster);
-        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "AFTER", GREEN);
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        ClusterList theCluster;
+        theCluster.push_back(innerCluster);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "AFTER", GREEN);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
         /////////////////////////////
 
-        
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), pClusterList, "ALL", BLUE);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
         
         // NEED TO UPDATE THE SLIDING FITS
     }
@@ -109,12 +109,9 @@ StatusCode EMTrackAlgorithm::Run()
     return STATUS_CODE_SUCCESS;
 }
 
-
-    void EMTrackAlgorithm()
-
     
 //------------------------------------------------------------------------------------------------------------------------------------------
-
+    /*
 void EMTrackAlgorithm::UpdateSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap)
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -131,27 +128,37 @@ void EMTrackAlgorithm::UpdateSlidingFitResultMap(const ClusterVector &clusterVec
         }
     }
 }
+    */
 
+
+
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EMTrackAlgorithm::CleanupClusterVector(const Cluster *const pCluster, ClusterVector &clusterVector)
+void EMTrackAlgorithm::RemoveClusterFromClusterVector(const Cluster *const pCluster, ClusterVector &clusterVector)
 {
-    ClusterVector::const_iterator clusterToDelete(pCluster));
+    ClusterVector::const_iterator clusterToDelete(std::find(clusterVector.begin(), clusterVector.end(), pCluster));
     if (clusterToDelete != clusterVector.end())
         clusterVector.erase(clusterToDelete);
 }
 
-void EMTrackAlgorithm::CleanupSlidingFitResultMap(const Cluster *const pCluster, TwoDSlidingFitResultMap &slidingFitResultMap)
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void EMTrackAlgorithm::RemoveClusterFromSlidingFitResultMap(const Cluster *const pCluster, TwoDSlidingFitResultMap &slidingFitResultMap)
 {
-    const TwoDSlidingFitResultMap::const_iterator fitToDelete(pCluster);
+    const TwoDSlidingFitResultMap::const_iterator fitToDelete(slidingFitResultMap.find(pCluster));
     if (fitToDelete != slidingFitResultMap.end())
         slidingFitResultMap.erase(fitToDelete);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const CaloHitVector &extrapolatedCaloHitVector)
+void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete, ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const CaloHitVector &extrapolatedCaloHitVector)
 {
+
+    this->RemoveClusterFromSlidingFitResultMap(pClusterToEnlarge, slidingFitResultMap);
+    this->RemoveClusterFromSlidingFitResultMap(pClusterToDelete, slidingFitResultMap);
+    
     for (const CaloHit *const pCaloHit : extrapolatedCaloHitVector)
     {
         CaloHitToParentClusterMap::const_iterator caloHitParentIter(caloHitToParentClusterMap.find(pCaloHit));
@@ -162,48 +169,77 @@ void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, 
         }
         else
         {
-            const StatusCode status(PandoraContentApi::RemoveFromCluster(*this, caloHitParentIter->second, pCaloHit));
+            const StatusCode statusCode(PandoraContentApi::RemoveFromCluster(*this, caloHitParentIter->second, pCaloHit));
             
-            if (status == STATUS_CODE_SUCCESS)
+            if (statusCode == STATUS_CODE_SUCCESS)
             {
-                CleanupSlidingFitResultMap(caloHitParentIter->second, slidingFitResultMap);
+                RemoveClusterFromSlidingFitResultMap(caloHitParentIter->second, slidingFitResultMap);
                 PandoraContentApi::AddToCluster(*this, pClusterToEnlarge, pCaloHit);
             }
-            else if (status == STATUS_CODE_NOT_ALLOWED)
+            else if (statusCode == STATUS_CODE_NOT_ALLOWED)
             {
-                CleanupClusterVector(caloHitParentIter->second, clusterVector);
+                RemoveClusterFromClusterVector(caloHitParentIter->second, clusterVector);
                 PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, caloHitParentIter->second);
             }
             else
             {
-                throw status;
+                throw statusCode;
             }
         }
     }
+
+    this->RemoveClusterFromClusterVector(pClusterToDelete, clusterVector);
+    PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pClusterToDelete);
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------------------
 
 bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssociation, CaloHitVector &extrapolatedCaloHitVector)
 {
-
+    // this is very important
     std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), LArClusterHelper::SortHitsByPosition);
 
-    float m_separationDistance(10);
+    const float m_maxTrackGaps(2);
+    const float m_lineSegmentLength(7);
     
-    CartesianVector pointAlongTrack(clusterAssociation.GetInnerMergePoint());
-    for(const CaloHit *const pCaloHit : extrapolatedCaloHitVector)
+    const CartesianVector &innerMergePoint(clusterAssociation.GetInnerMergePoint()), &outerMergePoint(clusterAssociation.GetOuterMergePoint());
+    const CartesianVector trackDirection(CartesianVector(outerMergePoint.GetX() - innerMergePoint.GetX(), 0.f, outerMergePoint.GetZ() - innerMergePoint.GetZ()).GetUnitVector());
+
+    std::cout << trackDirection << std::endl;
+    const float zStep(std::fabs(m_lineSegmentLength ));
+    unsigned int hitsInSegment(0), segmentsWithoutHits(0);
+
+    
+
+    CaloHitVector::const_iterator caloHitIter(extrapolatedCaloHitVector.begin());
+    for (unsigned int i = 0; i < floor(std::sqrt(innerMergePoint.GetDistanceSquared(outerMergePoint)) / m_lineSegmentLength); ++i)
     {
-        CartesianVector hitPosition(pCaloHit->GetPositionVector());
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointAlongTrack, "POINT ALONG TRACK", BLACK, 2);
-        if (pointAlongTrack.GetDistanceSquared(hitPosition) > m_separationDistance)
+        float zLimit(innerMergePoint.GetZ() + zStep * (static_cast<float>(i)));
+        float xStep = std::sqrt(std::pow(m_lineSegmentLength, 2) - std::pow(zStep, 2));
+        CartesianVector pointOnLine(innerMergePoint.GetX() - (xStep * (static_cast<float>(i))), 0, zLimit);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointOnLine, "BOUNDARY", BLACK, 2);
+        
+        while ((*caloHitIter)->GetPositionVector().GetZ() < zLimit)
+        {
+            ++hitsInSegment;
+            ++caloHitIter;
+        }
+
+        if (!hitsInSegment)
+            ++segmentsWithoutHits;
+
+        std::cout << "HITS IN SEGMENT: " << hitsInSegment << std::endl;
+        std::cout << "SEGMENTS WITHOUT HITS: " << segmentsWithoutHits << std::endl;
+
+        PandoraMonitoringApi::Pause(this->GetPandora());
+
+        if (segmentsWithoutHits > m_maxTrackGaps)
             return false;
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "HIT POSITION", RED, 2);
-        pointAlongTrack = hitPosition;
-        //PandoraMonitoringApi::Pause(this->GetPandora());
+
+        hitsInSegment = 0;
     }
-    
-    //std::cout << "END DISTANCE: " << pointAlongTrack.GetDistanceSquared(clusterAssociation.GetOuterMergePoint()) << std::endl;;
+
+    //THEN DO THE LAST ONE BUT BACKWARDS
     
     return true;
 }
