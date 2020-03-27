@@ -34,7 +34,7 @@ HitWidthClusterMergingAlgorithm::HitWidthClusterMergingAlgorithm() :
 void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
     LArHitWidthHelper::ClusterToParametersMapStore* pClusterToParametersMapStore = LArHitWidthHelper::ClusterToParametersMapStore::Instance();
-    LArHitWidthHelper::ClusterToParametersMap clusterToParametersMap = pClusterToParametersMapStore->GetMap();
+    LArHitWidthHelper::ClusterToParametersMap &clusterToParametersMap(pClusterToParametersMapStore->GetMap());
 
     // clear map if already full i.e. from other view clustering
     if(!clusterToParametersMap.empty())
@@ -61,7 +61,7 @@ void HitWidthClusterMergingAlgorithm::PopulateClusterAssociationMap(const Cluste
     for (ClusterVector::const_iterator iterCurrentCluster = clusterVector.begin(); iterCurrentCluster != clusterVector.end(); ++iterCurrentCluster)
     {
         const Cluster *const pCurrentCluster = *iterCurrentCluster;
-        const LArHitWidthHelper::ClusterParameters currentClusterParameters(LArHitWidthHelper::GetClusterParameters(pCurrentCluster));
+        const LArHitWidthHelper::ClusterParameters &currentClusterParameters(LArHitWidthHelper::GetClusterParameters(pCurrentCluster));
 
         for (ClusterVector::const_iterator iterTestCluster = iterCurrentCluster; iterTestCluster != clusterVector.end(); ++iterTestCluster)
         {
@@ -69,7 +69,7 @@ void HitWidthClusterMergingAlgorithm::PopulateClusterAssociationMap(const Cluste
                 continue;
 
             const Cluster *const pTestCluster = *iterTestCluster;
-            const LArHitWidthHelper::ClusterParameters testClusterParameters(LArHitWidthHelper::GetClusterParameters(pTestCluster));
+            const LArHitWidthHelper::ClusterParameters &testClusterParameters(LArHitWidthHelper::GetClusterParameters(pTestCluster));
 
             if (!this->AreClustersAssociated(currentClusterParameters, testClusterParameters))
                 continue;
@@ -159,7 +159,7 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
 
     currentClusterDirection = GetClusterDirection(currentFitParameters, currentFitParameters.GetHigherXExtrema());
     testClusterDirection = GetClusterDirection(testFitParameters, testFitParameters.GetLowerXExtrema());
-
+    
     // check clusters have a similar direction
     if (currentClusterDirection.GetCosOpeningAngle(testClusterDirection) < m_minMergeCosOpeningAngle)
         return false;
@@ -248,7 +248,7 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
 
     // sort hits with respect to their distance to the fitReferencePoint (closest -> furthest)
     std::sort(constituentHitVector.begin(), constituentHitVector.end(), LArHitWidthHelper::ConstituentHit::SortByDistanceToPoint(fitReferencePoint));
-
+    
     // calculate weightedXMean and weightedZMean for fit
     for (const LArHitWidthHelper::ConstituentHit &constituentHit : constituentHitVector) 
     {
@@ -306,7 +306,7 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
     float gradient(numerator/denominator), chi(0.f);
     float intercept(isTransverse ? weightedZMean - gradient * weightedXMean : weightedXMean - gradient * weightedZMean);
 
-    weightCount = 0;
+    weightCount = 0.f;
     for (const LArHitWidthHelper::ConstituentHit &constituentHit : constituentHitVector) 
     {
         const CartesianVector hitPosition(constituentHit.GetPositionVector());

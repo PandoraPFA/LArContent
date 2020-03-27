@@ -149,6 +149,8 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/ClusteringParentAlgorithm.h"
 
+#include "larpandoracontent/LArTwoDReco/HitWidthClusterMergingAlgorithm.h"
+
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/BoundedClusterMopUpAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/ConeClusterMopUpAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/IsolatedClusterMopUpAlgorithm.h"
@@ -184,6 +186,7 @@
 #include "larpandoracontent/LArContent.h"
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
+    d("LArHitWidthClusterMerging",              HitWidthClusterMergingAlgorithm)                                                \
     d("LArNeutrinoEventValidation",             NeutrinoEventValidationAlgorithm)                                               \
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
