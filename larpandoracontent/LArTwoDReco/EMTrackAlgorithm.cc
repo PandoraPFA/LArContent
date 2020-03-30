@@ -26,12 +26,27 @@ EMTrackAlgorithm::EMTrackAlgorithm() :
 {
 }
 
-EMTrackAlgorithm::ClusterAssociation::ClusterAssociation(const Cluster *const pAssociatedCluster, const CartesianVector &innerMergePoint, const CartesianVector &innerMergeDirection, const CartesianVector &outerMergePoint, const CartesianVector &outerMergeDirection) :
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+EMTrackAlgorithm::ClusterAssociation::ClusterAssociation(const Cluster *const pAssociatedCluster, const CartesianVector &innerMergePoint, const CartesianVector &innerMergeDirection, const CartesianVector &outerMergePoint, const CartesianVector &outerMergeDirection, const CartesianVector &connectingLineDirection) :
     m_pAssociatedCluster(pAssociatedCluster),
     m_innerMergePoint(innerMergePoint),
     m_innerMergeDirection(innerMergeDirection),
     m_outerMergePoint(outerMergePoint),
-    m_outerMergeDirection(outerMergeDirection)
+    m_outerMergeDirection(outerMergeDirection),
+    m_connectingLineDirection(connectingLineDirection)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+EMTrackAlgorithm::ClusterAssociation::ClusterAssociation() :
+    m_pAssociatedCluster(nullptr),
+    m_innerMergePoint(CartesianVector(0.f, 0.f, 0.f)),
+    m_innerMergeDirection(CartesianVector(0.f, 0.f, 0.f)),
+    m_outerMergePoint(CartesianVector(0.f, 0.f, 0.f)),
+    m_outerMergeDirection(CartesianVector(0.f, 0.f, 0.f)),
+    m_connectingLineDirection(CartesianVector(0.f, 0.f, 0.f))
 {
 }
     
@@ -47,71 +62,76 @@ StatusCode EMTrackAlgorithm::Run()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
     
     ClusterVector clusterVector;
-    SelectCleanClusters(pClusterList, clusterVector);
+    this->SelectCleanClusters(pClusterList, clusterVector);
 
     TwoDSlidingFitResultMap slidingFitResultMap;
-    InitialiseSlidingFitResultMap(clusterVector, slidingFitResultMap);
+    this->InitialiseSlidingFitResultMap(clusterVector, slidingFitResultMap);
     
     PandoraMonitoringApi::Create(this->GetPandora());
     PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
 
-    for (const Cluster *const innerCluster : clusterVector)
+    bool mergeMade(true);
+
+    while (mergeMade)
     {
-        // ISOBEL - NEED TO IMPLEMENT AN EMPTY CONSTRUCTOR
-        ClusterAssociation clusterAssociation(nullptr, CartesianVector(0,0,0), CartesianVector(0,0,0), CartesianVector(0,0,0), CartesianVector(0,0,0));
+        mergeMade = false;
+        for (const Cluster *const innerCluster : clusterVector)
+        {
 
-        // if no association is found, skip to the next cluster
-        if(!this->FindBestClusterAssociation(innerCluster, clusterVector, slidingFitResultMap, clusterAssociation))
-            continue;
+            ClusterAssociation clusterAssociation;
 
-        ClusterList currentCluster;
-        currentCluster.push_back(innerCluster);
+            // if no association is found, skip to the next cluster
+            if(!this->FindBestClusterAssociation(innerCluster, clusterVector, slidingFitResultMap, clusterAssociation))
+                continue;
 
-        ClusterList associatedCluster;
-        associatedCluster.push_back(clusterAssociation.GetAssociatedCluster());
+            //ClusterList currentCluster;
+            //currentCluster.push_back(innerCluster);
 
-        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "CURRENT", GREEN);
-        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &associatedCluster, "ASSOCIATED", BLUE);
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //ClusterList associatedCluster;
+            //associatedCluster.push_back(clusterAssociation.GetAssociatedCluster());
+
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentCluster, "CURRENT", GREEN);
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &associatedCluster, "ASSOCIATED", BLUE);
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         
-        // Get a list of associated calo hits.
-        CaloHitToParentClusterMap caloHitToParentClusterMap;
-        CaloHitVector extrapolatedCaloHitVector;
-        this->GetExtrapolatedCaloHits(innerCluster, clusterAssociation, pCaloHitList, pClusterList, extrapolatedCaloHitVector, caloHitToParentClusterMap);
+            // Get a list of associated calo hits.
+            CaloHitToParentClusterMap caloHitToParentClusterMap;
+            CaloHitVector extrapolatedCaloHitVector;
+            this->GetExtrapolatedCaloHits(innerCluster, clusterAssociation, pCaloHitList, pClusterList, extrapolatedCaloHitVector, caloHitToParentClusterMap);
+
+            if (extrapolatedCaloHitVector.empty())
+                continue;
         
-        if (!this->IsTrackContinuous(clusterAssociation, extrapolatedCaloHitVector))
-            continue;
+            if (!this->IsTrackContinuous(clusterAssociation, extrapolatedCaloHitVector))
+                continue;
     
-        this->AddHitsToCluster(innerCluster, clusterAssociation.GetAssociatedCluster(), clusterVector, slidingFitResultMap, caloHitToParentClusterMap, extrapolatedCaloHitVector);
+            this->AddHitsToCluster(innerCluster, clusterAssociation.GetAssociatedCluster(), clusterVector, slidingFitResultMap, caloHitToParentClusterMap, extrapolatedCaloHitVector);
+
+            /////////////////////////////
+            //MONITORING PURPOSES
+            ClusterList theCluster;
+            theCluster.push_back(innerCluster);
+            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "AFTER", GREEN);
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            /////////////////////////////
+
+            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), pClusterList, "ALL", BLUE);
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
 
-        // Need to add the last clusters together, delete the inner cluster fit result from map and delete the associated cluster from the cluster vector
-        // then need to redo fits and then loop again.
-        // maybe combine functions below in a snazzy way?
-       
+            this->UpdateSlidingFitResultMap(clusterVector, slidingFitResultMap);
 
-        /////////////////////////////
-        //MONITORING PURPOSES
-        ClusterList theCluster;
-        theCluster.push_back(innerCluster);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "AFTER", GREEN);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        /////////////////////////////
-
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), pClusterList, "ALL", BLUE);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        
-        // NEED TO UPDATE THE SLIDING FITS
+            mergeMade = true;
+            break;
+        }
     }
 
-    
-    
     return STATUS_CODE_SUCCESS;
 }
 
     
 //------------------------------------------------------------------------------------------------------------------------------------------
-    /*
+    
 void EMTrackAlgorithm::UpdateSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap)
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -128,11 +148,7 @@ void EMTrackAlgorithm::UpdateSlidingFitResultMap(const ClusterVector &clusterVec
         }
     }
 }
-    */
-
-
-
-    
+  
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EMTrackAlgorithm::RemoveClusterFromClusterVector(const Cluster *const pCluster, ClusterVector &clusterVector)
@@ -156,6 +172,7 @@ void EMTrackAlgorithm::RemoveClusterFromSlidingFitResultMap(const Cluster *const
 void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete, ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const CaloHitVector &extrapolatedCaloHitVector)
 {
 
+    // remove from sliding fit map clusters that will be deleted or whose constituents will change
     this->RemoveClusterFromSlidingFitResultMap(pClusterToEnlarge, slidingFitResultMap);
     this->RemoveClusterFromSlidingFitResultMap(pClusterToDelete, slidingFitResultMap);
     
@@ -196,30 +213,27 @@ void EMTrackAlgorithm::AddHitsToCluster(const Cluster *const pClusterToEnlarge, 
 
 bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssociation, CaloHitVector &extrapolatedCaloHitVector)
 {
-    // this is very important
-    std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), LArClusterHelper::SortHitsByPosition);
-
     const float m_maxTrackGaps(2);
     const float m_lineSegmentLength(7);
     
     const CartesianVector &innerMergePoint(clusterAssociation.GetInnerMergePoint()), &outerMergePoint(clusterAssociation.GetOuterMergePoint());
-    const CartesianVector trackDirection(CartesianVector(outerMergePoint.GetX() - innerMergePoint.GetX(), 0.f, outerMergePoint.GetZ() - innerMergePoint.GetZ()).GetUnitVector());
+    const CartesianVector &trackDirection(clusterAssociation.GetConnectingLineDirection());
+    const CartesianVector trackStep(trackDirection * m_lineSegmentLength);
 
-    std::cout << trackDirection << std::endl;
-    const float zStep(std::fabs(m_lineSegmentLength ));
+    // sort hits by project distance from the innerMergePoint
+    std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), SortByDistanceToLine(innerMergePoint, trackDirection));
+
     unsigned int hitsInSegment(0), segmentsWithoutHits(0);
 
-    
-
     CaloHitVector::const_iterator caloHitIter(extrapolatedCaloHitVector.begin());
+
+    // miss out the last segment
     for (unsigned int i = 0; i < floor(std::sqrt(innerMergePoint.GetDistanceSquared(outerMergePoint)) / m_lineSegmentLength); ++i)
     {
-        float zLimit(innerMergePoint.GetZ() + zStep * (static_cast<float>(i)));
-        float xStep = std::sqrt(std::pow(m_lineSegmentLength, 2) - std::pow(zStep, 2));
-        CartesianVector pointOnLine(innerMergePoint.GetX() - (xStep * (static_cast<float>(i))), 0, zLimit);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &pointOnLine, "BOUNDARY", BLACK, 2);
+        CartesianVector lowerBoundary(innerMergePoint + trackStep * static_cast<float>(i));
+        CartesianVector upperBoundary(innerMergePoint + trackStep * static_cast<float>(i + 1.0));
         
-        while ((*caloHitIter)->GetPositionVector().GetZ() < zLimit)
+        while (this->IsInLineSegment(lowerBoundary, upperBoundary, (*caloHitIter)->GetPositionVector()))
         {
             ++hitsInSegment;
             ++caloHitIter;
@@ -228,10 +242,8 @@ bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssoci
         if (!hitsInSegment)
             ++segmentsWithoutHits;
 
-        std::cout << "HITS IN SEGMENT: " << hitsInSegment << std::endl;
-        std::cout << "SEGMENTS WITHOUT HITS: " << segmentsWithoutHits << std::endl;
-
-        PandoraMonitoringApi::Pause(this->GetPandora());
+        //std::cout << "HITS IN SEGMENT: " << hitsInSegment << std::endl;
+        //std::cout << "SEGMENTS WITHOUT HITS: " << segmentsWithoutHits << std::endl;
 
         if (segmentsWithoutHits > m_maxTrackGaps)
             return false;
@@ -239,39 +251,91 @@ bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssoci
         hitsInSegment = 0;
     }
 
-    //THEN DO THE LAST ONE BUT BACKWARDS
+    //ISOBEL - THEN DO THE LAST ONE BUT BACKWARDS
     
     return true;
 }
     
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool EMTrackAlgorithm::SortByDistanceToLine::operator() (const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs)
+{
+    const CartesianVector lhsDistanceVector(pLhs->GetPositionVector() - m_referencePoint);
+    const CartesianVector rhsDistanceVector(pRhs->GetPositionVector() - m_referencePoint);
+
+    const float lhsProjectedDistance(lhsDistanceVector.GetDotProduct(m_referenceDirection));
+    const float rhsProjectedDistance(rhsDistanceVector.GetDotProduct(m_referenceDirection));
+
+    return (lhsProjectedDistance < rhsProjectedDistance);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool EMTrackAlgorithm::IsInLineSegment(const CartesianVector &lowerBoundary, const CartesianVector &upperBoundary, const CartesianVector &point)
+{
+
+    const float gradient = (-1.0)*(upperBoundary.GetX() - lowerBoundary.GetX()) / (upperBoundary.GetZ() - lowerBoundary.GetZ());
+    const float xPointOnUpperLine((point.GetZ() - upperBoundary.GetZ() + gradient*upperBoundary.GetX())/gradient);
+    const float xPointOnLowerLine((point.GetZ() - lowerBoundary.GetZ() + gradient*lowerBoundary.GetX())/gradient);
+
+    //const CartesianVector upper(xPointOnUpperLine, 0.f, point.GetZ());
+    //const CartesianVector lower(xPointOnLowerLine, 0.f, point.GetZ());
+
+    
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &point, "POINT", GREEN, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &lowerBoundary, "LOWER BOUNDARY", BLACK, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &upperBoundary, "UPPER BOUNDARY", BLACK, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &upper, "UPPER", VIOLET, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &lower, "LOWER", VIOLET, 2);
+            
+    if (point.GetX() > xPointOnUpperLine && point.GetX() > xPointOnLowerLine)
+    {
+        //std::cout << "failed higher than x" << std::endl;
+        return false;
+    }
+
+    if (point.GetX() < xPointOnUpperLine && point.GetX() < xPointOnLowerLine)
+    {
+        //std::cout << "failer lower than x" << std::endl;
+        return false;
+    }
+
+    //std::cout << "passed" << std::endl;
+
+    //PandoraMonitoringApi::Pause(this->GetPandora());
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void EMTrackAlgorithm::GetExtrapolatedCaloHits(const Cluster *const innerCluster, const ClusterAssociation &clusterAssociation, const CaloHitList *const pCaloHitList, const ClusterList *const pClusterList, CaloHitVector &extrapolatedCaloHitVector, CaloHitToParentClusterMap &caloHitToParentClusterMap)
 {
 
-    CartesianVector innerPoint(clusterAssociation.GetInnerMergePoint());
-    CartesianVector outerPoint(clusterAssociation.GetOuterMergePoint());
+    const CartesianVector &innerPoint(clusterAssociation.GetInnerMergePoint());
+    const CartesianVector &outerPoint(clusterAssociation.GetOuterMergePoint());
+    const CartesianVector &connectingLineDirection(clusterAssociation.GetConnectingLineDirection());
     
-    float gradient(0), zIntercept(0);
-    ConnectByLine(innerPoint, outerPoint, gradient, zIntercept);
 
     /////////////////////////////
     //MONITORING PURPOSES
+
+    //float gradient(0), zIntercept(0);
+    //ConnectByLine(innerPoint, outerPoint, gradient, zIntercept);
     
-    CartesianVector point1(innerPoint.GetX(), 0, gradient*(innerPoint.GetX()) + zIntercept);
-    CartesianVector point2(outerPoint.GetX(), 0, gradient*(outerPoint.GetX()) + zIntercept);
+    //CartesianVector point1(innerPoint.GetX(), 0, gradient*(innerPoint.GetX()) + zIntercept);
+    //CartesianVector point2(outerPoint.GetX(), 0, gradient*(outerPoint.GetX()) + zIntercept);
 
-    PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &point1, &point2, "CONNECTING LINE", BLUE, 2, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &innerPoint, "INNER", BLUE, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &outerPoint, "OUTER", BLUE, 2);
+    //PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &point1, &point2, "CONNECTING LINE", BLUE, 2, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &innerPoint, "INNER", BLUE, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &outerPoint, "OUTER", BLUE, 2);
 
-    ClusterList innerClusterList;
-    innerClusterList.push_back(innerCluster);
-    ClusterList outerClusterList;
-    outerClusterList.push_back(clusterAssociation.GetAssociatedCluster());
+    //ClusterList innerClusterList;
+    //innerClusterList.push_back(innerCluster);
+    //ClusterList outerClusterList;
+    //outerClusterList.push_back(clusterAssociation.GetAssociatedCluster());
 
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &innerClusterList, "INNER CLUSTER", BLACK);
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &outerClusterList, "OUTER CLUSTER", BLACK);
+    //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &innerClusterList, "INNER CLUSTER", BLACK);
+    //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &outerClusterList, "OUTER CLUSTER", BLACK);
 
     //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
@@ -286,19 +350,17 @@ void EMTrackAlgorithm::GetExtrapolatedCaloHits(const Cluster *const innerCluster
     
     for (const Cluster *const pCluster : *pClusterList) 
     {
-
         // do not consider hits from 'merging clusters'
         if (pCluster == innerCluster || pCluster == clusterAssociation.GetAssociatedCluster())
             continue;
         
         
         OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        for (OrderedCaloHitList::const_iterator iterJ = orderedCaloHitList.begin(); iterJ != orderedCaloHitList.end(); ++iterJ){
-            for(CaloHitList::const_iterator hitIter = iterJ->second->begin(); hitIter != iterJ->second->end(); ++hitIter)
+        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+        {
+            for (const CaloHit *const pCaloHit : *mapEntry.second) 
             {
-                const CaloHit *const pCaloHit = *hitIter;
                 const CartesianVector hitPosition(pCaloHit->GetPositionVector());
-
 
                 if (hitPosition.GetX() < minX || hitPosition.GetX() > maxX)
                     continue;
@@ -306,7 +368,8 @@ void EMTrackAlgorithm::GetExtrapolatedCaloHits(const Cluster *const innerCluster
                 if (hitPosition.GetZ() < minZ || hitPosition.GetZ() > maxZ)
                     continue;
                 
-                float distanceFromLine(std::fabs((gradient*(hitPosition.GetX()) - hitPosition.GetZ() + zIntercept)/(std::sqrt(1 + std::pow(gradient, 2)))));
+                //float distanceFromLine(std::fabs((gradient*(hitPosition.GetX()) - hitPosition.GetZ() + zIntercept)/(std::sqrt(1 + std::pow(gradient, 2)))));
+                float distanceFromLine(connectingLineDirection.GetCrossProduct(hitPosition - innerPoint).GetMagnitude());
                 
                 if (distanceFromLine > m_distanceFromLine)
                 {
@@ -314,21 +377,19 @@ void EMTrackAlgorithm::GetExtrapolatedCaloHits(const Cluster *const innerCluster
                     continue;
                 }
 
-
                 /////////////////////////////
-                PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "POTENTIAL HIT", GREEN, 2);
-                //std::cout << "DISTANCE FROM LINE" << distanceFromLine << std::endl;
+                //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "POTENTIAL HIT", GREEN, 2);
+                //std::cout << "DISTANCE FROM LINE: " << distanceFromLine << std::endl;
+                //std::cout << "NEW DISTANCE FROM LINE: " << distanceFromLine << std::endl;
                 //PandoraMonitoringApi::Pause(this->GetPandora());
                 /////////////////////////////
                 
                 extrapolatedCaloHitVector.push_back(pCaloHit);
                 caloHitToParentClusterMap[pCaloHit] = pCluster;
-
             }
         }
     }
 
-    
     // now collect any unclustered hits
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
@@ -343,8 +404,9 @@ void EMTrackAlgorithm::GetExtrapolatedCaloHits(const Cluster *const innerCluster
         if (hitPosition.GetZ() < minZ || hitPosition.GetZ() > maxZ)
             continue;
                 
-        float distanceFromLine(std::fabs((gradient*(hitPosition.GetX()) - hitPosition.GetZ() + zIntercept)/(std::sqrt(1 + std::pow(gradient, 2)))));
-
+        //float distanceFromLine(std::fabs((gradient*(hitPosition.GetX()) - hitPosition.GetZ() + zIntercept)/(std::sqrt(1 + std::pow(gradient, 2)))));
+        float distanceFromLine(connectingLineDirection.GetCrossProduct(hitPosition - innerPoint).GetMagnitude());
+        
         if (distanceFromLine > m_distanceFromLine)
         {
             PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "POTENTIAL HIT", RED, 2);
@@ -356,20 +418,8 @@ void EMTrackAlgorithm::GetExtrapolatedCaloHits(const Cluster *const innerCluster
     }
 
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void EMTrackAlgorithm::ConnectByLine(const CartesianVector &innerCoordinate, const CartesianVector &outerCoordinate, float &gradient, float &zIntercept)
-{
-    gradient = (outerCoordinate.GetZ() - innerCoordinate.GetZ())/(outerCoordinate.GetX() - innerCoordinate.GetX());
-    zIntercept = outerCoordinate.GetZ() - gradient*outerCoordinate.GetX();
-}
-
-
-
-    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void EMTrackAlgorithm::SelectCleanClusters(const ClusterList *pClusterList, ClusterVector &clusterVector)
@@ -412,9 +462,9 @@ bool EMTrackAlgorithm::FindBestClusterAssociation(const Cluster *const pCurrentC
     if (currentFitIter == slidingFitResultMap.end())
         return false;
 
-    unsigned int maxHits(0);
     bool foundAssociation(false);
-    
+    unsigned int maxHits(0);
+
     for (ClusterVector::const_iterator testIter = currentIter; testIter != clusterVector.end(); ++testIter)
     {
         const Cluster *const pTestCluster = *testIter;
@@ -428,17 +478,18 @@ bool EMTrackAlgorithm::FindBestClusterAssociation(const Cluster *const pCurrentC
         const TwoDSlidingFitResultMap::const_iterator testFitIter(slidingFitResultMap.find(pTestCluster));
         if (testFitIter == slidingFitResultMap.end())
             continue;
+        
+        CartesianVector currentMergePoint(0.f, 0.f, 0.f), testMergePoint(0.f, 0.f, 0.f), currentMergeDirection(0.f, 0.f, 0.f), testMergeDirection(0.f, 0.f, 0.f);
+        this->GetClusterMergingCoordinates(currentFitIter->second, currentMergePoint, currentMergeDirection, testFitIter->second, testMergePoint, testMergeDirection);
 
-        CartesianVector currentPoint(0,0,0), testPoint(0,0,0);
-        CartesianVector currentDirection(0,0,0), testDirection(0,0,0);
-        GetClusterMergingCoordinates(currentFitIter->second, currentPoint, currentDirection, testFitIter->second, testPoint, testDirection);
-
-        if (!AreClustersAssociated(currentPoint, currentDirection, testPoint, testDirection))
+        if (!AreClustersAssociated(currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection))
             continue;
 
         foundAssociation = true;
         maxHits = pTestCluster->GetNCaloHits();
-        clusterAssociation = ClusterAssociation(pTestCluster, currentPoint, currentDirection, testPoint, testDirection);
+        
+        CartesianVector connectingLineDirection(testMergePoint.GetX() - currentMergePoint.GetX(), 0.f, testMergePoint.GetZ() - currentMergePoint.GetZ());
+        clusterAssociation = ClusterAssociation(pTestCluster, currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection, connectingLineDirection.GetUnitVector());
     }
 
     return foundAssociation;
@@ -636,3 +687,14 @@ StatusCode EMTrackAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
 
 } // namespace lar_content
+
+/*
+void EMTrackAlgorithm::ConnectByLine(const CartesianVector &innerCoordinate, const CartesianVector &outerCoordinate, float &gradient, float &zIntercept)
+{
+    gradient = (outerCoordinate.GetZ() - innerCoordinate.GetZ())/(outerCoordinate.GetX() - innerCoordinate.GetX());
+    zIntercept = outerCoordinate.GetZ() - gradient*outerCoordinate.GetX();
+}
+*/
+
+
+    
