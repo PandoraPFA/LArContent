@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.cc
  *
- *  @brief  Implementation of the matching base algorithm class.
+ *  @brief  Implementation of the three view matching control class.
  *
  *  $Log: $
  */
@@ -13,7 +13,8 @@
 #include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/MatchingBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 using namespace pandora;
 
@@ -21,7 +22,8 @@ namespace lar_content
 {
 
 template <typename T>
-ThreeViewMatchingAlgorithm<T>::ThreeViewMatchingAlgorithm() :
+ThreeViewMatchingControl<T>::ThreeViewMatchingControl(MatchingBaseAlgorithm *const pAlgorithm) :
+    NViewMatchingControl(pAlgorithm),
     m_pInputClusterListU(nullptr),
     m_pInputClusterListV(nullptr),
     m_pInputClusterListW(nullptr)
@@ -31,14 +33,22 @@ ThreeViewMatchingAlgorithm<T>::ThreeViewMatchingAlgorithm() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-ThreeViewMatchingAlgorithm<T>::~ThreeViewMatchingAlgorithm()
+ThreeViewMatchingControl<T>::~ThreeViewMatchingControl()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeViewMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
+typename ThreeViewMatchingControl<T>::TensorType &ThreeViewMatchingControl<T>::GetOverlapTensor()
+{
+    return m_overlapTensor;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeViewMatchingControl<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
 
@@ -66,15 +76,15 @@ void ThreeViewMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNe
         {
             if (TPC_VIEW_U == hitType)
             {
-                this->CalculateOverlapResult(pNewCluster, pCluster2, pCluster3);
+                m_pAlgorithm->CalculateOverlapResult(pNewCluster, pCluster2, pCluster3);
             }
             else if (TPC_VIEW_V == hitType)
             {
-                this->CalculateOverlapResult(pCluster2, pNewCluster, pCluster3);
+                m_pAlgorithm->CalculateOverlapResult(pCluster2, pNewCluster, pCluster3);
             }
             else
             {
-                this->CalculateOverlapResult(pCluster2, pCluster3, pNewCluster);
+                m_pAlgorithm->CalculateOverlapResult(pCluster2, pCluster3, pNewCluster);
             }
         }
     }
@@ -83,7 +93,7 @@ void ThreeViewMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeViewMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
+void ThreeViewMatchingControl<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     ClusterList::iterator iterU = std::find(m_clusterListU.begin(), m_clusterListU.end(), pDeletedCluster);
     ClusterList::iterator iterV = std::find(m_clusterListV.begin(), m_clusterListV.end(), pDeletedCluster);
@@ -104,7 +114,7 @@ void ThreeViewMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDel
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const std::string &ThreeViewMatchingAlgorithm<T>::GetClusterListName(const HitType hitType) const
+const std::string &ThreeViewMatchingControl<T>::GetClusterListName(const HitType hitType) const
 {
     if (TPC_VIEW_U == hitType)
         return m_inputClusterListNameU;
@@ -121,7 +131,7 @@ const std::string &ThreeViewMatchingAlgorithm<T>::GetClusterListName(const HitTy
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const pandora::ClusterList &ThreeViewMatchingAlgorithm<T>::GetInputClusterList(const HitType hitType) const
+const pandora::ClusterList &ThreeViewMatchingControl<T>::GetInputClusterList(const HitType hitType) const
 {
     if ((TPC_VIEW_U == hitType) && m_pInputClusterListU)
         return (*m_pInputClusterListU);
@@ -138,7 +148,7 @@ const pandora::ClusterList &ThreeViewMatchingAlgorithm<T>::GetInputClusterList(c
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const pandora::ClusterList &ThreeViewMatchingAlgorithm<T>::GetSelectedClusterList(const HitType hitType) const
+const pandora::ClusterList &ThreeViewMatchingControl<T>::GetSelectedClusterList(const HitType hitType) const
 {
     if (TPC_VIEW_U == hitType)
         return m_clusterListU;
@@ -155,32 +165,42 @@ const pandora::ClusterList &ThreeViewMatchingAlgorithm<T>::GetSelectedClusterLis
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeViewMatchingAlgorithm<T>::SelectAllInputClusters()
+void ThreeViewMatchingControl<T>::SelectAllInputClusters()
 {
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
         m_inputClusterListNameU, m_pInputClusterListU));
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
         m_inputClusterListNameV, m_pInputClusterListV));
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
         m_inputClusterListNameW, m_pInputClusterListW));
 
     if (!m_pInputClusterListU || !m_pInputClusterListV || !m_pInputClusterListW)
     {
-        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-            std::cout << "ThreeViewMatchingAlgorithm: one or more input cluster lists unavailable." << std::endl;
+        if (PandoraContentApi::GetSettings(*m_pAlgorithm)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ThreeViewMatchingControl: one or more input cluster lists unavailable." << std::endl;
 
         throw StatusCodeException(STATUS_CODE_SUCCESS);
     }
 
-    this->SelectInputClusters(m_pInputClusterListU, m_clusterListU);
-    this->SelectInputClusters(m_pInputClusterListV, m_clusterListV);
-    this->SelectInputClusters(m_pInputClusterListW, m_clusterListW);
+    m_pAlgorithm->SelectInputClusters(m_pInputClusterListU, m_clusterListU);
+    m_pAlgorithm->SelectInputClusters(m_pInputClusterListV, m_clusterListV);
+    m_pAlgorithm->SelectInputClusters(m_pInputClusterListW, m_clusterListW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeViewMatchingAlgorithm<T>::TidyUp()
+void ThreeViewMatchingControl<T>::PrepareAllInputClusters()
+{
+    m_pAlgorithm->PrepareInputClusters(m_clusterListU);
+    m_pAlgorithm->PrepareInputClusters(m_clusterListV);
+    m_pAlgorithm->PrepareInputClusters(m_clusterListW);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void ThreeViewMatchingControl<T>::TidyUp()
 {
     m_overlapTensor.Clear();
 
@@ -196,7 +216,7 @@ void ThreeViewMatchingAlgorithm<T>::TidyUp()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeViewMatchingAlgorithm<T>::PerformMainLoop()
+void ThreeViewMatchingControl<T>::PerformMainLoop()
 {
     ClusterVector clusterVectorU(m_clusterListU.begin(), m_clusterListU.end());
     ClusterVector clusterVectorV(m_clusterListV.begin(), m_clusterListV.end());
@@ -210,7 +230,7 @@ void ThreeViewMatchingAlgorithm<T>::PerformMainLoop()
         for (const Cluster *const pClusterV : clusterVectorV)
         {
             for (const Cluster *const pClusterW : clusterVectorW)
-                this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW);
+                m_pAlgorithm->CalculateOverlapResult(pClusterU, pClusterV, pClusterW);
         }
     }
 }
@@ -218,19 +238,19 @@ void ThreeViewMatchingAlgorithm<T>::PerformMainLoop()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-StatusCode ThreeViewMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeViewMatchingControl<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameU", m_inputClusterListNameU));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
 
-    return MatchingBaseAlgorithm::ReadSettings(xmlHandle);
+    return STATUS_CODE_SUCCESS;
 }
 
-template class ThreeViewMatchingAlgorithm<float>;
-template class ThreeViewMatchingAlgorithm<TransverseOverlapResult>;
-template class ThreeViewMatchingAlgorithm<LongitudinalOverlapResult>;
-template class ThreeViewMatchingAlgorithm<FragmentOverlapResult>;
-template class ThreeViewMatchingAlgorithm<ShowerOverlapResult>;
+template class ThreeViewMatchingControl<float>;
+template class ThreeViewMatchingControl<TransverseOverlapResult>;
+template class ThreeViewMatchingControl<LongitudinalOverlapResult>;
+template class ThreeViewMatchingControl<FragmentOverlapResult>;
+template class ThreeViewMatchingControl<ShowerOverlapResult>;
 
 } // namespace lar_content

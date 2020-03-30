@@ -32,14 +32,9 @@ typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> Cluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointVector> SplitPositionMap;
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 /**
  *  @brief  MatchingBaseAlgorithm class
  */
-
 class MatchingBaseAlgorithm : public pandora::Algorithm
 {
 public:
@@ -95,6 +90,39 @@ public:
     virtual const pandora::ClusterList &GetSelectedClusterList(const pandora::HitType hitType) const = 0;
 
     /**
+     *  @brief  Calculate cluster overlap result and store in container
+     *
+     *  @param  pCluster1 address of cluster1
+     *  @param  pCluster2 address of cluster2
+     *  @param  pCluster3 address of cluster3
+     */
+    virtual void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3 = nullptr) = 0;
+
+    /**
+     *  @brief  Select a subset of input clusters for processing in this algorithm
+     *
+     *  @param  pInputClusterList address of an input cluster list
+     *  @param  selectedClusterList to receive the selected cluster list
+     */
+    virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+
+    /**
+     *  @brief  Perform any preparatory steps required on the input clusters, e.g. caching expensive fit results
+     *
+     *  @param  preparedClusterList to receive the prepared cluster list, non const so as to be able to modify input selected list
+     */
+    virtual void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
+
+    /**
+     *  @brief  Merge clusters together
+     *
+     *  @param  clusterMergeMap the cluster merge map
+     *
+     *  @return whether changes to the overlap container have been made
+     */
+    virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
+
+    /**
      *  @brief  Create particles using findings from recent algorithm processing
      *
      *  @param  protoParticleVector the proto particle vector
@@ -118,45 +146,6 @@ public:
      */
     virtual void SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
-    /**
-     *  @brief  Merge clusters together
-     *
-     *  @param  clusterMergeMap the cluster merge map
-     *
-     *  @return whether changes to the overlap container have been made
-     */
-    virtual bool MakeClusterMerges(const ClusterMergeMap &clusterMergeMap);
-
-    /**
-     *  @brief  Make cluster splits
-     *
-     *  @param  splitPositionMap the split position map
-     *
-     *  @return whether changes to the overlap container have been made
-     */
-    virtual bool MakeClusterSplits(const SplitPositionMap &splitPositionMap);
-
-    /**
-     *  @brief  Make a cluster split
-     *
-     *  @param  splitPosition the split position
-     *  @param  pCurrentCluster the cluster to split
-     *  @param  pLowXCluster to receive the low x cluster
-     *  @param  pHighXCluster to receive the high x cluster
-     *
-     *  @return whether a cluster split occurred
-     */
-    virtual bool MakeClusterSplit(const pandora::CartesianVector &splitPosition, const pandora::Cluster *&pCurrentCluster,
-        const pandora::Cluster *&pLowXCluster, const pandora::Cluster *&pHighXCluster) const;
-
-    /**
-     *  @brief  Sort split position cartesian vectors by increasing x coordinate
-     *
-     *  @param  lhs the first cartesian vector
-     *  @param  rhs the second cartesian vector
-     */
-    static bool SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
-
 protected:
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
@@ -166,7 +155,7 @@ protected:
     /**
      *  @brief  Perform any preparatory steps required, e.g. caching expensive fit results for clusters
      */
-    virtual void PreparationStep();
+    virtual void PrepareAllInputClusters() = 0;
 
     /**
      *  @brief  Main loop over cluster combinations in order to populate the overlap container. Responsible for calling CalculateOverlapResult.
@@ -181,7 +170,7 @@ protected:
     /**
      *  @brief  Tidy member variables in derived class
      */
-    virtual void TidyUp();
+    virtual void TidyUp() = 0;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

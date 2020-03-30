@@ -34,7 +34,7 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster 
     this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 
     if (overlapResult.IsInitialized())
-        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+        this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -203,7 +203,7 @@ void ThreeViewLongitudinalTracksAlgorithm::ExamineOverlapContainer()
 
     for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, m_overlapTensor))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 
@@ -250,7 +250,7 @@ StatusCode ThreeViewLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle 
     if (m_samplingPitch < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_INVALID_PARAMETER;
 
-    return ThreeViewTrackMatchingAlgorithm<LongitudinalOverlapResult>::ReadSettings(xmlHandle);
+    return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

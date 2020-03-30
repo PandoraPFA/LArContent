@@ -25,7 +25,7 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2)
+void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
@@ -40,7 +40,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
 
     if (xOverlap > std::numeric_limits<float>::epsilon())
-        m_overlapMatrix.SetOverlapResult(pCluster1, pCluster2, xOverlap);
+        this->GetMatchingControl().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, xOverlap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -51,7 +51,7 @@ void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 
     for (MatrixToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, m_overlapMatrix))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapMatrix()))
         {
             iter = m_algorithmToolVector.begin();
 
@@ -87,7 +87,7 @@ StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "NMaxMatrixToolRepeats", m_nMaxMatrixToolRepeats));
 
-    return TwoViewTrackMatchingAlgorithm<float>::ReadSettings(xmlHandle);
+    return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

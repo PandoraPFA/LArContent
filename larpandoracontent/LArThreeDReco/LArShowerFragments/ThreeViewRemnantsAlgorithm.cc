@@ -82,7 +82,7 @@ void ThreeViewRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pCl
 
     // ATTN Essentially a boolean result; actual value matters only so as to ensure that overlap results can be sorted
     const float hackValue(pseudoChi2 + pClusterU->GetElectromagneticEnergy() + pClusterV->GetElectromagneticEnergy() + pClusterW->GetElectromagneticEnergy());
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, hackValue);
+    this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, hackValue);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +93,7 @@ void ThreeViewRemnantsAlgorithm::ExamineOverlapContainer()
 
     for (RemnantTensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, m_overlapTensor))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 
@@ -137,7 +137,7 @@ StatusCode ThreeViewRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    return ThreeViewMatchingAlgorithm<float>::ReadSettings(xmlHandle);
+    return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

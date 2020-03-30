@@ -13,7 +13,8 @@
 #include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 namespace lar_content
 {
@@ -25,9 +26,11 @@ class ShowerTensorTool;
 /**
  *  @brief  ThreeViewShowersAlgorithm class
  */
-class ThreeViewShowersAlgorithm : public ThreeViewMatchingAlgorithm<ShowerOverlapResult>
+class ThreeViewShowersAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> >
 {
 public:
+    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> > BaseAlgorithm;
+
     /**
      *  @brief  Default constructor
      */
@@ -43,6 +46,7 @@ public:
     void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+    void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
 private:
     /**
@@ -81,15 +85,6 @@ private:
         float       m_xOverlapSpan;  ///< The x-overlap span
         float       m_nPoints;       ///< The number of sampling points to be used
     };
-
-    void PreparationStep();
-
-    /**
-     *  @brief  Preparation step for a specific cluster list
-     *
-     *  @param  clusterList the cluster list
-     */
-    void PreparationStep(pandora::ClusterList &clusterList);
 
     void TidyUp();
 
@@ -174,7 +169,7 @@ private:
 class ShowerTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeViewShowersAlgorithm::TensorType TensorType;
+    typedef ThreeViewShowersAlgorithm::MatchingType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
