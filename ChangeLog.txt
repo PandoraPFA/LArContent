@@ -1,4 +1,20 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_15_16
+--------------------------------------------------------------------------------------------------------------------------------------------
+Restructured 2D->3D matching algorithms in order to support two-view matching approaches.
+Further restructuring of 2D->3D matching for optimal sharing of code between two-view and three-view cases.
+Added option to fold/unfold mc particle hierarchies in event validation processes.
+Allowed validation algorithms to read all primary selection parameters from xml.
+Templated PfoCharacterisation algorithm on mva type.
+Tidied up contents of pfo info map when adjusting vertex.
+Handled variable that was unused only in case when building with monitoring off.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_15_15
+--------------------------------------------------------------------------------------------------------------------------------------------
+Changes to the in-LArSoft build mechanics, from the LArSoft team.
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_15_14
 --------------------------------------------------------------------------------------------------------------------------------------------
 Added dual-phase option to change vertex from highest-Y to highest-X in CosmicRayVertexBuilding algorithm.
