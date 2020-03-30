@@ -26,19 +26,22 @@ public:
     class ClusterAssociation
     {
     public:
-        ClusterAssociation(const pandora::Cluster *const pAssociatedCluster, const pandora::CartesianVector &innerMergePoint, const pandora::CartesianVector &innerMergeDirection, const pandora::CartesianVector &outerMergePoint, const pandora::CartesianVector &outerMergeDirection);
+        ClusterAssociation();
+        ClusterAssociation(const pandora::Cluster *const pAssociatedCluster, const pandora::CartesianVector &innerMergePoint, const pandora::CartesianVector &innerMergeDirection, const pandora::CartesianVector &outerMergePoint, const pandora::CartesianVector &outerMergeDirection, const pandora::CartesianVector &connectingLineDirection);
 
         const pandora::Cluster* GetAssociatedCluster() const;
         pandora::CartesianVector GetInnerMergePoint() const;
         pandora::CartesianVector GetInnerMergeDirection() const;
         pandora::CartesianVector GetOuterMergePoint() const;
         pandora::CartesianVector GetOuterMergeDirection() const;
+        pandora::CartesianVector GetConnectingLineDirection() const;
     private:
         const pandora::Cluster*     m_pAssociatedCluster;
         pandora::CartesianVector    m_innerMergePoint;
         pandora::CartesianVector    m_innerMergeDirection;
         pandora::CartesianVector    m_outerMergePoint;
         pandora::CartesianVector    m_outerMergeDirection;
+        pandora::CartesianVector    m_connectingLineDirection;
     };
 
     /**
@@ -52,12 +55,26 @@ public:
     
  private:
     pandora::StatusCode Run();
+
+    class SortByDistanceToLine
+        {
+        public:
+	        SortByDistanceToLine(const pandora::CartesianVector referencePoint, const pandora::CartesianVector referenceDirection) : m_referencePoint(referencePoint), m_referenceDirection(referenceDirection.GetUnitVector()) {}
+           
+            bool operator() (const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+
+        private:
+            const pandora::CartesianVector m_referencePoint;   ///< The point relative to which constituent hits are ordered
+            const pandora::CartesianVector m_referenceDirection;
+        };
     
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector);
 
     void InitialiseSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap);
 
-    //void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap);
+    bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point);
+
+    void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap);
 
     void RemoveClusterFromClusterVector(const pandora::Cluster *const pCluster, pandora::ClusterVector &clusterVector);
 
@@ -73,7 +90,7 @@ public:
 
     bool IsTrackContinuous(const ClusterAssociation &clusterAssociation, pandora::CaloHitVector &extrapolatedCaloHitVector);
     
-    void ConnectByLine(const pandora::CartesianVector &innerCoordinate, const pandora::CartesianVector &outerCoordinate, float &gradient, float &zIntercept);
+    //void ConnectByLine(const pandora::CartesianVector &innerCoordinate, const pandora::CartesianVector &outerCoordinate, float &gradient, float &zIntercept);
 
     void AddHitsToCluster(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const pandora::CaloHitVector &extrapolatedCaloHitVector);
     
@@ -121,6 +138,13 @@ inline pandora::CartesianVector EMTrackAlgorithm::ClusterAssociation::GetOuterMe
 inline pandora::CartesianVector EMTrackAlgorithm::ClusterAssociation::GetOuterMergeDirection() const
 {
     return m_outerMergeDirection;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::CartesianVector EMTrackAlgorithm::ClusterAssociation::GetConnectingLineDirection() const
+{
+    return m_connectingLineDirection;
 }
 
 } //namespace lar_content
