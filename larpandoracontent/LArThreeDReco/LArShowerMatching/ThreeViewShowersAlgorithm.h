@@ -1,19 +1,20 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeViewShowersAlgorithm.h
  *
- *  @brief  Header file for the three dimensional showers algorithm class.
+ *  @brief  Header file for the three view showers algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_SHOWERS_ALGORITHM_H
-#define LAR_THREE_D_SHOWERS_ALGORITHM_H 1
+#ifndef LAR_THREE_VIEW_SHOWERS_ALGORITHM_H
+#define LAR_THREE_VIEW_SHOWERS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArObjects/LArShowerOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 namespace lar_content
 {
@@ -23,15 +24,17 @@ class ShowerTensorTool;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDShowersAlgorithm class
+ *  @brief  ThreeViewShowersAlgorithm class
  */
-class ThreeDShowersAlgorithm : public ThreeDBaseAlgorithm<ShowerOverlapResult>
+class ThreeViewShowersAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> >
 {
 public:
+    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> > BaseAlgorithm;
+
     /**
      *  @brief  Default constructor
      */
-    ThreeDShowersAlgorithm();
+    ThreeViewShowersAlgorithm();
 
     /**
      *  @brief  Get a sliding shower fit result from the algorithm cache
@@ -43,7 +46,7 @@ public:
     void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
-    void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
+    void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
 private:
     /**
@@ -82,15 +85,6 @@ private:
         float       m_xOverlapSpan;  ///< The x-overlap span
         float       m_nPoints;       ///< The number of sampling points to be used
     };
-
-    void PreparationStep();
-
-    /**
-     *  @brief  Preparation step for a specific cluster list
-     *
-     *  @param  clusterList the cluster list
-     */
-    void PreparationStep(pandora::ClusterList &clusterList);
 
     void TidyUp();
 
@@ -149,7 +143,7 @@ private:
     void GetBestHitOverlapFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMapPair &positionMaps,
         unsigned int &nSampledHits, unsigned int &nMatchedHits) const;
 
-    void ExamineTensor();
+    void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<ShowerTensorTool*> TensorToolVector;
@@ -175,7 +169,7 @@ private:
 class ShowerTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeDShowersAlgorithm::TensorType TensorType;
+    typedef ThreeViewShowersAlgorithm::MatchingType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
@@ -186,9 +180,9 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_D_SHOWERS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_VIEW_SHOWERS_ALGORITHM_H

@@ -52,6 +52,7 @@
 #include "larpandoracontent/LArMonitoring/ShowerTensorVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/TestBeamEventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/TestBeamHierarchyEventValidationAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/TransverseMatrixVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
@@ -86,7 +87,7 @@
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/TwoViewShowerHitsTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeViewLongitudinalTracksAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ClearLongitudinalTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/MatchedEndPointsTool.h"
 
@@ -97,20 +98,20 @@
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/ParticleRecoveryAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/VertexBasedPfoRecoveryAlgorithm.h"
 
-#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeViewRemnantsAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerFragments/ClearRemnantsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerFragments/ConnectedRemnantsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerFragments/MopUpRemnantsTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeViewShowersAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerMatching/ClearShowersTool.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerMatching/SimpleShowersTool.h"
 #include "larpandoracontent/LArThreeDReco/LArShowerMatching/SplitShowersTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeDTrackFragmentsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTrackFragments/ThreeViewTrackFragmentsAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArTrackFragments/ClearTrackFragmentsTool.h"
 
-#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ClearTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
@@ -119,6 +120,9 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TracksCrossingGapsTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TrackSplittingTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/UndershootTracksTool.h"
+
+#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewClearTracksTool.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
 #include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
@@ -129,7 +133,7 @@
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
-#include "larpandoracontent/LArTrackShowerId/SvmPfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/MvaPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h"
@@ -218,19 +222,21 @@
     d("LArDeltaRayMatching",                    DeltaRayMatchingAlgorithm)                                                      \
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
-    d("LArThreeDLongitudinalTracks",            ThreeDLongitudinalTracksAlgorithm)                                              \
+    d("LArThreeDLongitudinalTracks",            ThreeViewLongitudinalTracksAlgorithm)                                           \
     d("LArSlidingConePfoMopUp",                 SlidingConePfoMopUpAlgorithm)                                                   \
     d("LArShowerPfoMopUp",                      ShowerPfoMopUpAlgorithm)                                                        \
     d("LArVertexBasedPfoMopUp",                 VertexBasedPfoMopUpAlgorithm)                                                   \
     d("LArParticleRecovery",                    ParticleRecoveryAlgorithm)                                                      \
     d("LArVertexBasedPfoRecovery",              VertexBasedPfoRecoveryAlgorithm)                                                \
-    d("LArThreeDRemnants",                      ThreeDRemnantsAlgorithm)                                                        \
-    d("LArThreeDShowers",                       ThreeDShowersAlgorithm)                                                         \
-    d("LArThreeDTrackFragments",                ThreeDTrackFragmentsAlgorithm)                                                  \
-    d("LArThreeDTransverseTracks",              ThreeDTransverseTracksAlgorithm)                                                \
+    d("LArThreeDRemnants",                      ThreeViewRemnantsAlgorithm)                                                     \
+    d("LArThreeDShowers",                       ThreeViewShowersAlgorithm)                                                      \
+    d("LArThreeDTrackFragments",                ThreeViewTrackFragmentsAlgorithm)                                               \
+    d("LArThreeDTransverseTracks",              ThreeViewTransverseTracksAlgorithm)                                             \
+    d("LArTwoViewTransverseTracks",             TwoViewTransverseTracksAlgorithm)                                               \
     d("LArCutClusterCharacterisation",          CutClusterCharacterisationAlgorithm)                                            \
     d("LArCutPfoCharacterisation",              CutPfoCharacterisationAlgorithm)                                                \
     d("LArShowerGrowing",                       ShowerGrowingAlgorithm)                                                         \
+    d("LArBdtPfoCharacterisation",              BdtPfoCharacterisationAlgorithm)                                                \
     d("LArSvmPfoCharacterisation",              SvmPfoCharacterisationAlgorithm)                                                \
     d("LArCrossGapsAssociation",                CrossGapsAssociationAlgorithm)                                                  \
     d("LArCrossGapsExtension",                  CrossGapsExtensionAlgorithm)                                                    \
@@ -281,6 +287,7 @@
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArCosmicRayTaggingMonitoring",          CosmicRayTaggingMonitoringTool)                                                 \
     d("LArShowerTensorVisualization",           ShowerTensorVisualizationTool)                                                  \
+    d("LArTransverseMatrixVisualization",       TransverseMatrixVisualizationTool)                                              \
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArCheatingBeamParticleId",              CheatingBeamParticleIdTool)                                                     \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
@@ -314,6 +321,7 @@
     d("LArTracksCrossingGaps",                  TracksCrossingGapsTool)                                                         \
     d("LArTrackSplitting",                      TrackSplittingTool)                                                             \
     d("LArUndershootTracks",                    UndershootTracksTool)                                                           \
+    d("LArTwoViewClearTracks",                  TwoViewClearTracksTool)                                                         \
     d("LArEnergyKickFeature",                   EnergyKickFeatureTool)                                                          \
     d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \
     d("LArLocalAsymmetryFeature",               LocalAsymmetryFeatureTool)                                                      \

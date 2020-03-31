@@ -8,7 +8,7 @@
 #ifndef MATCHED_END_POINTS_TOOL_H
 #define MATCHED_END_POINTS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeViewLongitudinalTracksAlgorithm.h"
 
 namespace lar_content
 {
@@ -24,7 +24,7 @@ public:
      */
     MatchedEndPointsTool();
 
-    bool Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

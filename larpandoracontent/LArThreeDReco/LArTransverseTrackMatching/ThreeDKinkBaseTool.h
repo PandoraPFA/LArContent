@@ -10,7 +10,7 @@
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
-#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {
@@ -33,7 +33,7 @@ public:
      */
     virtual ~ThreeDKinkBaseTool();
 
-    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 protected:
     /**
@@ -64,7 +64,7 @@ protected:
      *  @param  iteratorList list of iterators to relevant tensor elements
      *  @param  modificationList to be populated with modifications
      */
-    virtual void GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
+    virtual void GetIteratorListModifications(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
         ModificationList &modificationList) const = 0;
 
     /**
@@ -107,7 +107,7 @@ private:
      *  @param  overlapTensor the overlap tensor
      *  @param  modificationList to be populated with modifications
      */
-    void GetModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ModificationList &modificationList) const;
+    void GetModifications(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ModificationList &modificationList) const;
 
     /**
      *  @brief  Select elements representing possible components of interest due to overshoots or undershoots in clustering
@@ -128,7 +128,7 @@ private:
      *
      *  @return whether changes to the tensor have been made
      */
-    bool ApplyChanges(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const ModificationList &modificationList) const;
+    bool ApplyChanges(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const ModificationList &modificationList) const;
 };
 
 } // namespace lar_content

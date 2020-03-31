@@ -8,7 +8,7 @@
 #ifndef CLEAR_LONGITUDINAL_TRACKS_TOOL_H
 #define CLEAR_LONGITUDINAL_TRACKS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeDLongitudinalTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArLongitudinalTrackMatching/ThreeViewLongitudinalTracksAlgorithm.h"
 
 namespace lar_content
 {
@@ -24,7 +24,7 @@ public:
      */
     ClearLongitudinalTracksTool();
 
-    bool Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -36,7 +36,7 @@ private:
      *  @param  elementList the tensor element list
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
-    void CreateThreeDParticles(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
+    void CreateThreeDParticles(ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
 };

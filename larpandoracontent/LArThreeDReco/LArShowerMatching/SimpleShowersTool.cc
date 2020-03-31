@@ -24,7 +24,7 @@ SimpleShowersTool::SimpleShowersTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SimpleShowersTool::Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool SimpleShowersTool::Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -64,9 +64,9 @@ void SimpleShowersTool::FindBestShower(const TensorType &overlapTensor, ProtoPar
             continue;
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.push_back(bestElement.GetClusterU());
-        protoParticle.m_clusterListV.push_back(bestElement.GetClusterV());
-        protoParticle.m_clusterListW.push_back(bestElement.GetClusterW());
+        protoParticle.m_clusterList.push_back(bestElement.GetClusterU());
+        protoParticle.m_clusterList.push_back(bestElement.GetClusterV());
+        protoParticle.m_clusterList.push_back(bestElement.GetClusterW());
         protoParticleVector.push_back(protoParticle);
 
         return;

@@ -22,9 +22,6 @@ namespace lar_content
 {
 
 EventValidationBaseAlgorithm::EventValidationBaseAlgorithm() :
-    m_selectInputHits(true),
-    m_minHitSharingFraction(0.9f),
-    m_maxPhotonPropagation(2.5f),
     m_fileIdentifier(0),
     m_eventNumber(0),
     m_printAllToScreen(false),
@@ -213,13 +210,25 @@ StatusCode EventValidationBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectInputHits", m_selectInputHits));
+        "MinPrimaryGoodHits", m_primaryParameters.m_minPrimaryGoodHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitSharingFraction", m_minHitSharingFraction));
+        "MinHitsForGoodView", m_primaryParameters.m_minHitsForGoodView));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPhotonPropagation", m_maxPhotonPropagation));
+        "MinPrimaryGoodViews", m_primaryParameters.m_minPrimaryGoodViews));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SelectInputHits", m_primaryParameters.m_selectInputHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinHitSharingFraction", m_primaryParameters.m_minHitSharingFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxPhotonPropagation", m_primaryParameters.m_maxPhotonPropagation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FoldToPrimaries", m_primaryParameters.m_foldBackHierarchy));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PrintAllToScreen", m_printAllToScreen));

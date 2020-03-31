@@ -8,7 +8,7 @@
 #ifndef SIMPLE_SHOWERS_TOOL_H
 #define SIMPLE_SHOWERS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeViewShowersAlgorithm.h"
 
 namespace lar_content
 {
@@ -24,7 +24,7 @@ public:
      */
     SimpleShowersTool();
 
-    bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
