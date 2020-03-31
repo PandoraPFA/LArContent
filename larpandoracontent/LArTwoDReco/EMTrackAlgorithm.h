@@ -102,6 +102,8 @@ public:
     float m_minCaloHits; // minimum number of calo hits for cluster to be considered
     float m_maxXSeparation;
     float m_maxZSeparation;
+    bool m_useUnclusteredHits;
+    bool m_useAxisDirection;
 
 };
 
