@@ -83,6 +83,8 @@ private:
     float m_maxZMergeDistance;                ///< The maximum z distance between merging points of associated clusters, units cm
     float m_minMergeCosOpeningAngle;          ///< The minimum cosine opening angle of the directions of associated clusters
     float m_minDirectionDeviationCosAngle;    ///< The minimum cosine opening angle of the direction of and associated cluster before and after merge
+
+    mutable LArHitWidthHelper::ClusterToParametersMap m_clusterToParametersMap;
 };
 
 } //namespace lar_content

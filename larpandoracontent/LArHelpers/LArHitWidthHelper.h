@@ -135,6 +135,17 @@ public:
 
     typedef std::map<const pandora::Cluster*, const ClusterParameters> ClusterToParametersMap;
 
+    class SortByHigherXExtrema2
+    {
+    public:
+        SortByHigherXExtrema2(const ClusterToParametersMap &clusterToParametersMap);
+
+        bool operator() (const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
+
+    private:
+        const ClusterToParametersMap& m_clusterToParametersMap;  
+    };
+    
     /**
      *  @brief  ClusterToParametersMapStore class
      */
@@ -181,6 +192,9 @@ public:
      *  @return  ClusterParameters the cluster parameters of the input cluster  
      */
     static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster);
+
+
+    static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster, const ClusterToParametersMap &clusterToParametersMap);
 
     /**
      *  @brief  Break up the cluster hits into constituent hits 
