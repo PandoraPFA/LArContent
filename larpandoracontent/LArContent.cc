@@ -50,8 +50,6 @@
 #include "larpandoracontent/LArMonitoring/NeutrinoEventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/VisualMonitoringAlgorithm.h"
-#include "larpandoracontent/LArMonitoring/PerformanceAssessmentAlgorithm.h"
-#include "larpandoracontent/LArMonitoring/ParticleEfficiencyAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/PullDataAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/PfoValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/ShowerTensorVisualizationTool.h"
@@ -198,8 +196,6 @@
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
     d("LArPfoValidation",                       PfoValidationAlgorithm)                                                         \
     d("LArPullData",                       		PullDataAlgorithm)                                                         		\
-    d("LArPerformanceAssessment",               PerformanceAssessmentAlgorithm)                                                 \
-    d("LArParticleEfficiency",                  ParticleEfficiencyAlgorithm)                                                    \
     d("LArMCParticleMonitoring",                MCParticleMonitoringAlgorithm)                                                  \
     d("LArVisualMonitoring",                    VisualMonitoringAlgorithm)                                                      \
     d("LArEventReading",                        EventReadingAlgorithm)                                                          \
@@ -352,8 +348,7 @@
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
-    d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)                                                        \
-    d("LArThreeDPCAVariablesFeatureTool",       ThreeDPCAVariablesFeatureTool)                                                    
+    d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)                                                        
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)
