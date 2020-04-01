@@ -18,8 +18,6 @@
 #include "Helpers/MCParticleHelper.h"
 #include "larpandoracontent/LArTrackShowerId/MvaPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "TMVA/Tools.h"
-#include "TMVA/Reader.h"
 #include <iostream>
 #include <fstream>
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
@@ -29,19 +27,6 @@ using namespace pandora;
 
 namespace lar_content
 {
-
-template<typename T>
-MvaPfoCharacterisationAlgorithm<T>::RecoParameters::RecoParameters() :
-    m_minPrimaryGoodHits(15),
-    m_minHitsForGoodView(5),
-    m_minPrimaryGoodViews(2),
-    m_foldToPrimaries(false),
-    m_minHitSharingFraction(0.9f)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
 MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
@@ -125,20 +110,25 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
     // Mapping target MCParticles -> truth associated Hits
     LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-    FillMCToRecoHitsMap(pMCParticleList, pCaloHitList, targetMCParticleToHitsMap);
-    LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-    LArMCParticleHelper::GetUnfoldedPfoToReconstructable2DHitsMap(myPfoList, targetMCParticleToHitsMap, pfoToHitsMap);
-    LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCHitSharingMap;
-    LArMCParticleHelper::MCParticleToPfoHitSharingMap mcToPfoHitSharingMap;
-    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(pfoToHitsMap, {targetMCParticleToHitsMap}, pfoToMCHitSharingMap, mcToPfoHitSharingMap);
-	const CaloHitList &allHitsInPfo(pfoToHitsMap.at(pPfo));
+    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+
+    LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps({targetMCParticleToHitsMap});
+
+    LArMCParticleHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(myPfoList, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_primaryParameters.m_foldBackHierarchy);
+
+    LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
+    LArMCParticleHelper::MCParticleToPfoHitSharingMap mcParticleToPfoHitSharingMap;
+    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(pfoToReconstructable2DHitsMap, mcParticlesToGoodHitsMaps, pfoToMCParticleHitSharingMap, mcParticleToPfoHitSharingMap);
+
+	const CaloHitList &allHitsInPfo(pfoToReconstructable2DHitsMap.at(pPfo));
 	const int nHitsInPfoTotal(allHitsInPfo.size());
 	int nHitsInBestMCParticleTotal(-1), bestMCParticlePdgCode(0);
 	int nHitsSharedWithBestMCParticleTotal(-1);
     CartesianVector threeDVertexPosition(0.f, 0.f, 0.f);
     float hitsShower = 0;
 	float hitsTrack = 0;
-	const LArMCParticleHelper::MCParticleToSharedHitsVector &mcParticleToSharedHitsVector(pfoToMCHitSharingMap.at(pPfo));
+	const LArMCParticleHelper::MCParticleToSharedHitsVector &mcParticleToSharedHitsVector(pfoToMCParticleHitSharingMap.at(pPfo));
 	for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitListPair : mcParticleToSharedHitsVector)
 	{
 	    const pandora::MCParticle *const pAssociatedMCParticle(mcParticleCaloHitListPair.first);
@@ -223,69 +213,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
 	mischaracterisedPfo = ((((showerProbability < 0.5) && (trueTrackInt == 0)) || ((showerProbability > 0.5) && (trueTrackInt == 1))) ? 1 : 0);
 
-    // Start variable writing
     const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
-
-    const LArMvaHelper::MvaFeatureVector threeDLinearFitFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDLinearFitFeatureTool>(chosenFeatureToolVector, this, pPfo));
-    
-    float length(threeDLinearFitFeatureVectorOfType.at(0).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(0).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "length", length);
-
-    float diff(threeDLinearFitFeatureVectorOfType.at(1).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(1).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "diff", diff);
-
-    float gap(threeDLinearFitFeatureVectorOfType.at(2).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(2).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "gap", gap);
- 	
-
-    float rms(threeDLinearFitFeatureVectorOfType.at(3).IsInitialized() ? threeDLinearFitFeatureVectorOfType.at(3).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "rms", rms);
-
-    const LArMvaHelper::MvaFeatureVector threeDVertexDistanceFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDVertexDistanceFeatureTool>(chosenFeatureToolVector, this, pPfo));
-    
-    float vertexDistance(threeDVertexDistanceFeatureVectorOfType.at(0).IsInitialized() ? threeDVertexDistanceFeatureVectorOfType.at(0).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "vertexDistance", vertexDistance);
-
-    const LArMvaHelper::MvaFeatureVector threeDOpeningAngleFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDOpeningAngleFeatureTool>(chosenFeatureToolVector, this, pPfo));
-    
-    float diffAngle(threeDOpeningAngleFeatureVectorOfType.at(0).IsInitialized() ? threeDOpeningAngleFeatureVectorOfType.at(0).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "diffAngle", diffAngle);
-
-    const LArMvaHelper::MvaFeatureVector threeDPCAFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDPCAFeatureTool>(chosenFeatureToolVector, this, pPfo));
-    
-    float pca1(threeDPCAFeatureVectorOfType.at(0).IsInitialized() ? threeDPCAFeatureVectorOfType.at(0).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pca1", pca1);
-
-    float pca2(threeDPCAFeatureVectorOfType.at(1).IsInitialized() ? threeDPCAFeatureVectorOfType.at(1).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "pca2", pca2);
-
-    int isChargeInfoAvailable(!wClusterList.empty());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "isChargeInfoAvailable", isChargeInfoAvailable);
-
-    float charge1(-std::numeric_limits<float>::max()), charge2(-std::numeric_limits<float>::max());
-
-    if (!wClusterList.empty())
-    {
-        const LArMvaHelper::MvaFeatureVector threeDChargeFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<ThreeDChargeFeatureTool>(chosenFeatureToolVector, this, pPfo));
-        charge1 = (threeDChargeFeatureVectorOfType.at(0).IsInitialized() ? threeDChargeFeatureVectorOfType.at(0).Get() : -std::numeric_limits<float>::max());
-        charge2 = (threeDChargeFeatureVectorOfType.at(1).IsInitialized() ? threeDChargeFeatureVectorOfType.at(1).Get() : -std::numeric_limits<float>::max());
-    }
-    
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "charge1", charge1);
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "charge2", charge2);
-    
-    const LArMvaHelper::MvaFeatureVector pfoHierarchyFeatureVectorOfType(LArMvaHelper::CalculateFeaturesOfType<PfoHierarchyFeatureTool>(chosenFeatureToolVector, this, pPfo));
-	
-	float nAllDaughter(pfoHierarchyFeatureVectorOfType.at(0).IsInitialized() ? pfoHierarchyFeatureVectorOfType.at(0).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nAllDaughter", nAllDaughter);
-
-	float nHits3DDaughterTotal(pfoHierarchyFeatureVectorOfType.at(1).IsInitialized() ? pfoHierarchyFeatureVectorOfType.at(1).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nHits3DDaughterTotal", nHits3DDaughterTotal);
-
-	float daughterParentNhitsRatio(pfoHierarchyFeatureVectorOfType.at(2).IsInitialized() ? pfoHierarchyFeatureVectorOfType.at(2).Get() : -std::numeric_limits<float>::max());
-    PandoraMonitoringApi::SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "daughterParentNhitsRatio", daughterParentNhitsRatio);
-
-    PandoraMonitoringApi::FillTree(this->GetPandora(), m_treeName.c_str());
 
     if (m_trainingSetMode)
 	{
@@ -337,149 +265,31 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     }
 }
 
-  void SvmPfoCharacterisationAlgorithm::SelectParticlesByHitCount(const MCParticleVector &candidateTargets, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap, LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap) const
-{
-    // Apply restrictions on the number of good hits associated with the MCParticles
-    for (const MCParticle * const pMCTarget : candidateTargets)
-    {
-        LArMCParticleHelper::MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCTarget);
-        if (mcToTrueHitListMap.end() == trueHitsIter)
-            continue;
-
-        const CaloHitList &caloHitList(trueHitsIter->second);
-
-        // Remove shared hits where target particle deposits below threshold energy fraction
-        CaloHitList goodCaloHitList;
-        this->SelectGoodCaloHits(&caloHitList, mcToTargetMCMap, goodCaloHitList);
-
-        if (goodCaloHitList.size() < m_recoParameters.m_minPrimaryGoodHits)
-            continue;
-
-        unsigned int nGoodViews(0);
-        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, goodCaloHitList) >= m_recoParameters.m_minHitsForGoodView)
-            ++nGoodViews;
-
-        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, goodCaloHitList) >= m_recoParameters.m_minHitsForGoodView)
-            ++nGoodViews;
-
-        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, goodCaloHitList) >= m_recoParameters.m_minHitsForGoodView)
-            ++nGoodViews;
-
-        if (nGoodViews < m_recoParameters.m_minPrimaryGoodViews)
-            continue;
-
-        if (!selectedMCParticlesToHitsMap.insert(LArMCParticleHelper::MCContributionMap::value_type(pMCTarget, caloHitList)).second)
-            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-    }
-}
-
-void SvmPfoCharacterisationAlgorithm::SelectGoodCaloHits(const CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap, CaloHitList &selectedGoodCaloHitList) const
-{
-
-    for (const CaloHit *const pCaloHit : *pSelectedCaloHitList)
-    {
-        MCParticleVector mcParticleVector;
-        for (const auto &mapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(mapEntry.first);
-        std::sort(mcParticleVector.begin(), mcParticleVector.end(), PointerLessThan<MCParticle>());
-
-	// fold back weights to target MC particle (primary or not)
-	// keep for foldToPrimaries == false since will neglect hits belonging to MC particles
-	// that have been removed at an earlier stage 
-        MCParticleWeightMap weightMap;
-
-        for (const MCParticle *const pMCParticle : mcParticleVector)
-        {
-            const float weight(pCaloHit->GetMCParticleWeightMap().at(pMCParticle));
-            LArMCParticleHelper::MCRelationMap::const_iterator mcIter = mcToTargetMCMap.find(pMCParticle);
-
-            if (mcToTargetMCMap.end() != mcIter)
-                weightMap[mcIter->second] += weight;
-        }
-
-        MCParticleVector mcTargetVector;
-        for (const auto &mapEntry : weightMap) mcTargetVector.push_back(mapEntry.first);
-        std::sort(mcTargetVector.begin(), mcTargetVector.end(), PointerLessThan<MCParticle>());
-
-        const MCParticle *pBestTargetParticle(nullptr);
-        float bestTargetWeight(0.f), targetWeightSum(0.f);
-
-        for (const MCParticle *const pTargetMCParticle : mcTargetVector)
-        {
-            const float targetWeight(weightMap.at(pTargetMCParticle));
-            targetWeightSum += targetWeight;
-
-            if (targetWeight > bestTargetWeight)
-            {
-                bestTargetWeight = targetWeight;
-                pBestTargetParticle = pTargetMCParticle;
-            }
-        }
-
-        if (!pBestTargetParticle || (targetWeightSum < std::numeric_limits<float>::epsilon()) || ((bestTargetWeight / targetWeightSum) < m_recoParameters.m_minHitSharingFraction))
-            continue;
-
-        selectedGoodCaloHitList.push_back(pCaloHit);
-    }
-}
-
-  void SvmPfoCharacterisationAlgorithm::GetMCToSelfMap(const MCParticleList *const pMCParticleList, LArMCParticleHelper::MCRelationMap &mcToSelfMap) const
-{
-  for(const MCParticle *const pMCParticle : *pMCParticleList)
-  {
-    mcToSelfMap[pMCParticle] = pMCParticle;
-  }    
-
-}
-  void SvmPfoCharacterisationAlgorithm::FillMCToRecoHitsMap(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, LArMCParticleHelper::MCContributionMap &mcToRecoHitsMap) const
-{
-
-    // Obtain map: [MC particle -> self] (to prevent folding to primary MC particle)
-    // or [MC particle -> primary mc particle] (to fold to primary MC particle)
-    LArMCParticleHelper::MCRelationMap mcToTargetMCMap;
-    m_recoParameters.m_foldToPrimaries ? LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcToTargetMCMap) : GetMCToSelfMap(pMCParticleList, mcToTargetMCMap);
-
-    //REMOVED NEUTRON AND PHOTON CONSIDERATION
-
-    // Obtain maps: [hits -> MC particle (either primary or a downstream MC particle)], [MC particle -> list of hits]
-    LArMCParticleHelper::CaloHitToMCMap trueHitToTargetMCMap;
-    LArMCParticleHelper::MCContributionMap targetMCToTrueHitListMap;
-    LArMCParticleHelper::GetMCParticleToCaloHitMatches(pCaloHitList, mcToTargetMCMap, trueHitToTargetMCMap, targetMCToTrueHitListMap);
-
-    // Obtain vector: all or primary mc particles
-    MCParticleVector targetMCVector;
-    if(m_recoParameters.m_foldToPrimaries){ 
-      LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, targetMCVector);
-    } else {
-      std::copy(pMCParticleList->begin(), pMCParticleList->end(), std::back_inserter(targetMCVector));
-    }
-
-    //REMOVED WHETHER PARTICLE MATCHES SOME CRITERIA (e.g whether downstream of neutrino) - not needed for created neutrino events
-
-    // Remove hits that do not meet minimum hit count and share criteria
-    this->SelectParticlesByHitCount(targetMCVector, targetMCToTrueHitListMap, mcToTargetMCMap, mcToRecoHitsMap);
-    //SelectParticlesByHitCount(targetMCVector, targetMCToTrueHitListMap, mcToTargetMCMap, mcToRecoHitsMap);
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
 StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinPrimaryGoodHits", m_primaryParameters.m_minPrimaryGoodHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodHits", m_recoParameters.m_minPrimaryGoodHits));
+        "MinHitsForGoodView", m_primaryParameters.m_minHitsForGoodView));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsForGoodView", m_recoParameters.m_minHitsForGoodView));
+        "MinPrimaryGoodViews", m_primaryParameters.m_minPrimaryGoodViews));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodViews", m_recoParameters.m_minPrimaryGoodViews));
+        "SelectInputHits", m_primaryParameters.m_selectInputHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitSharingFraction", m_recoParameters.m_minHitSharingFraction));
+        "MinHitSharingFraction", m_primaryParameters.m_minHitSharingFraction));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FoldToPrimaries", m_recoParameters.m_foldToPrimaries));
+        "MaxPhotonPropagation", m_primaryParameters.m_maxPhotonPropagation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FoldToPrimaries", m_primaryParameters.m_foldBackHierarchy));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TrainingSetMode", m_trainingSetMode));
