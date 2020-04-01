@@ -44,7 +44,7 @@ bool LArHitWidthHelper::ConstituentHit::SortByDistanceToPoint::operator() (const
 //------------------------------------------------------------------------------------------------------------------------------------------
     
 LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCluster, const float maxConstituentHitWidth, const bool isUniformHits,
-        const float hitWidthScalingFactor):
+        const float hitWidthScalingFactor) :
     m_pCluster(pCluster),
     m_numCaloHits(pCluster->GetNCaloHits()), 
     m_constituentHitVector(LArHitWidthHelper::GetConstituentHits(pCluster, maxConstituentHitWidth, hitWidthScalingFactor, isUniformHits)),
@@ -57,7 +57,7 @@ LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCluster, const unsigned int numCaloHits, const float totalWeight,
-        const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, const CartesianVector &lowerXExtrema, const CartesianVector &higherXExtrema):
+        const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, const CartesianVector &lowerXExtrema, const CartesianVector &higherXExtrema) :
     m_pCluster(pCluster),
     m_numCaloHits(numCaloHits), 
     m_constituentHitVector(constituentHitVector),
@@ -77,6 +77,26 @@ const pandora::Cluster* LArHitWidthHelper::ClusterParameters::GetClusterAddress(
     return m_pCluster;
 }
   
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArHitWidthHelper::SortByHigherXExtrema2::SortByHigherXExtrema2(const ClusterToParametersMap &clusterToParametersMap) :
+    m_clusterToParametersMap(clusterToParametersMap)
+{
+    if (m_clusterToParametersMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArHitWidthHelper::SortByHigherXExtrema2::operator() (const Cluster *const pLhs, const Cluster *const pRhs)
+{
+    const LArHitWidthHelper::ClusterParameters& lhsClusterParameters(LArHitWidthHelper::GetClusterParameters(pLhs, m_clusterToParametersMap));
+    const LArHitWidthHelper::ClusterParameters& rhsClusterParameters(LArHitWidthHelper::GetClusterParameters(pRhs, m_clusterToParametersMap));
+
+    return (lhsClusterParameters.GetHigherXExtrema().GetX() < rhsClusterParameters.GetHigherXExtrema().GetX());
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
   
@@ -107,6 +127,21 @@ const LArHitWidthHelper::ClusterParameters& LArHitWidthHelper::GetClusterParamet
     LArHitWidthHelper::ClusterToParametersMapStore* pClusterToParametersMapStore(LArHitWidthHelper::ClusterToParametersMapStore::Instance());
     const LArHitWidthHelper::ClusterToParametersMap &clusterToParametersMap(pClusterToParametersMapStore->GetMap());
 
+    if (clusterToParametersMap.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    const auto clusterParametersIter(clusterToParametersMap.find(pCluster));
+
+    if (clusterParametersIter == clusterToParametersMap.end())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return clusterParametersIter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const LArHitWidthHelper::ClusterParameters& LArHitWidthHelper::GetClusterParameters(const Cluster *const pCluster, const ClusterToParametersMap &clusterToParametersMap)
+{
     if (clusterToParametersMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
