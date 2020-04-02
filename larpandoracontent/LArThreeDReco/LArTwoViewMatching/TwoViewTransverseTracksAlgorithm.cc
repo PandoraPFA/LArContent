@@ -16,7 +16,7 @@
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
- #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
+#include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 
 using namespace pandora;
 
@@ -92,21 +92,23 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     ChargeProfile profile1(CreateProfileFromCumulativeDistribution(resampledDisCumulDist1));
     ChargeProfile profile2(CreateProfileFromCumulativeDistribution(resampledDisCumulDist2));
 
+    size_t sizeWindowInBins(50);
+    ScoreProfile xMatchingScore;
+    float fracGoodScore(0.);
 
-    float matchingScore(1-CalculateTTestPValue(profile1,profile2));
-    /*
+    if (profile1.size()>sizeWindowInBins)
+      {
+        xMatchingScore = SlidingWindowMatchingScore(sizeWindowInBins, profile1, profile2, fracGoodScore);
+	fracGoodScore /= (nSamplingPoints-sizeWindowInBins);
+      }
+    float matchingScore(CalculateCorrelationCoefficient(profile1, profile2));
+    
     std::cout<<"Cluster 1 NHits: " << pCluster1->GetOrderedCaloHitList().size() << "  Cluster 2 NHits: " << pCluster2->GetOrderedCaloHitList().size() << std::endl;
-    float matchingScore(LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2));
-    std::cout<<"Correlation: " << LArDiscreteCumulativeDistributionHelper::CalculateCorrelationCoefficient(disCumulDist1, disCumulDist2) << std::endl;
-    std::cout<<"Matching score: " << matchingScore << std::endl;
-    std::cout<<"KS value: " << LArDiscreteCumulativeDistributionHelper::CalculateKSTestStatistic(disCumulDist1, disCumulDist2) << std::endl;
+    std::cout<<"KS PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2) << std::endl;
+    std::cout<<"Kuiper PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(disCumulDist1, disCumulDist2) << std::endl;
     std::cout<<"XOverlap: " << xOverlap << std::endl;
-    float correlation_resample = CalculateCorrelationCoefficient(profile1,profile2);
-    std::cout<<"Correlation (resample): " << correlation_resample << std::endl;
-    std::cout<<"------------------------------------------------"<<std::endl;
-    std::cout<<"------------------------------------------------"<<std::endl;
-    std::cout<<"------------------------------------------------"<<std::endl;
-    */
+    std::cout<<"Correlation: " << matchingScore << std::endl;    
+    std::cout<<"fracGoodScore = " << fracGoodScore << std::endl;
 
     TwoViewTransverseOverlapResult twoViewTransverseOverlapResult(matchingScore, twoViewXOverlap);
 
@@ -120,6 +122,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     std::vector<float> y_V;
     std::vector<float> y_prof_U;
     std::vector<float> y_prof_V;
+    std::vector<float> score_prof;
 
 //    for (size_t i = 0; i < disCumulDist1.GetSize(); i++){
 //        float x,y;
@@ -146,6 +149,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
         x_V.push_back(x);
         y_V.push_back(y);
         y_prof_V.push_back(profile2[i].second);
+	score_prof.push_back(xMatchingScore[i].second);
     }
 
     int clusterUSize = pCluster1->GetOrderedCaloHitList().size();
@@ -165,6 +169,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "yprofv", &y_prof_V));
     PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "matchscore", matchingScore));
     PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "xoverlap", xOverlap));
+    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "xmatchingscore", &score_prof));
 
 
 
@@ -294,6 +299,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateCorrelationCoefficient(const Ch
     return correlation;
 }
 
+<<<<<<< HEAD
 float TwoViewTransverseTracksAlgorithm::CalculateTTestValue(const float x, const float coefficient, const float dof)
 {
     return coefficient*std::pow( 1.0 + x*x/dof, -0.5 *(dof + 1.0));
@@ -319,4 +325,38 @@ float TwoViewTransverseTracksAlgorithm::CalculateTTestPValue(const ChargeProfile
 
     return integral;
 }
+=======
+  TwoViewTransverseTracksAlgorithm::ScoreProfile TwoViewTransverseTracksAlgorithm::SlidingWindowMatchingScore(const size_t &sizeWindowInBins, const ChargeProfile &profile1, const ChargeProfile &profile2, float &fracGoodScore)
+{
+  ScoreProfile xMatchingScore;
+  for (size_t k = 0; k<profile1.size(); k++)
+    {
+      if ( (k<(profile1.size()-sizeWindowInBins/2)) && (k>(sizeWindowInBins/2-1)) )
+	{
+      ChargeProfile windowProfile1(GetWindow(k, sizeWindowInBins, profile1));
+      ChargeProfile windowProfile2(GetWindow(k, sizeWindowInBins, profile2));
+      xMatchingScore.emplace_back(profile1[k].first, CalculateCorrelationCoefficient(windowProfile1, windowProfile2));
+      if (CalculateCorrelationCoefficient(windowProfile1, windowProfile2)>0.6) fracGoodScore++; //ATTN - Arbitrary 0.6 value of matching score
+	}
+      else
+	{
+	  xMatchingScore.emplace_back(profile1[k].first, 0.5);
+	}
+    }
+  return xMatchingScore;
+}
+
+TwoViewTransverseTracksAlgorithm::ChargeProfile   TwoViewTransverseTracksAlgorithm::GetWindow(size_t &i, const size_t &sizeWindowInBins, const ChargeProfile &profile)
+{
+  ChargeProfile windowedProfile;
+  for (size_t iElement = (i-sizeWindowInBins/2); iElement < (i+sizeWindowInBins/2 + 1); iElement++)
+    {
+      windowedProfile.emplace_back(profile[iElement].first, profile[iElement].second);
+    }
+  return windowedProfile;
+
+}
+
+
+>>>>>>> db81e74e... Added sliding window feature
 } // namespace lar_content

@@ -55,8 +55,6 @@ float LArDiscreteCumulativeDistributionHelper::CalculateKSTestStatistic(const Di
         float yA = FindY(distributionA, xB);
         ks = std::max(ks, std::abs(yB-yA));
     }
-
-    std::cout << "ks = " << ks << std::endl;
     return ks;
 }
 float LArDiscreteCumulativeDistributionHelper::CalculateKuiperTestStatistic(const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
@@ -143,7 +141,6 @@ float LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatisti
     }
     
     float PValue(2*sum);
-    std::cout << "PValue = " << PValue << std::endl;
     return PValue;
 }
 
@@ -171,7 +168,6 @@ float LArDiscreteCumulativeDistributionHelper::CalculatePValueSumKSTerm(const in
       }
 
     float PValue(2*sum);
-    std::cout << "PValue = " << PValue << std::endl;
     return PValue;
   }
 
