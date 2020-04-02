@@ -37,6 +37,7 @@ TwoViewTransverseTracksAlgorithm::~TwoViewTransverseTracksAlgorithm(){
 
 void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
+    std::cout << "=======================NEXTCOMPARISON======================" << std::endl;
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
@@ -60,6 +61,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     pandora::CaloHitList overlapHits1, overlapHits2;
     LArClusterHelper::GetCaloHitListInBoundingBox(pCluster1, boundingBoxMin1, boundingBoxMax1, overlapHits1);
     LArClusterHelper::GetCaloHitListInBoundingBox(pCluster2, boundingBoxMin2, boundingBoxMax2, overlapHits2);
+
     DiscreteCumulativeDistribution disCumulDist1, disCumulDist2;
     pandora::CaloHitList hitList1, hitList2;
     LArClusterHelper::GetCaloHitList(pCluster1, hitList1);
