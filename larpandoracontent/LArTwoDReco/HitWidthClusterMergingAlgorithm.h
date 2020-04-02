@@ -62,7 +62,8 @@ private:
      *  @param  chiSquared the chi squared of the fit
      *  @param  fitReferencePoint the hits closest to this point are included in the fit
      */
-    void GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterParameters, const bool isTransverse, pandora::CartesianVector &direction, pandora::CartesianVector &zIntercept, float &chiSquared, const pandora::CartesianVector &fitReferencePoint) const;
+    void GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterParameters, const bool isTransverse, pandora::CartesianVector &direction,
+        pandora::CartesianVector &zIntercept, float &chiSquared, const pandora::CartesianVector &fitReferencePoint) const;
 
     /**
      *  @brief  Remove 'shortcut' associations from the cluster association map
@@ -84,7 +85,8 @@ private:
     float m_minMergeCosOpeningAngle;          ///< The minimum cosine opening angle of the directions of associated clusters
     float m_minDirectionDeviationCosAngle;    ///< The minimum cosine opening angle of the direction of and associated cluster before and after merge
 
-    mutable LArHitWidthHelper::ClusterToParametersMap m_clusterToParametersMap;
+    // ATTN Dangling pointers emerge during cluster merging, here explicitly not dereferenced
+    mutable LArHitWidthHelper::ClusterToParametersMap m_clusterToParametersMap;   ///< The map [cluster -> cluster parameters]
 };
 
 } //namespace lar_content

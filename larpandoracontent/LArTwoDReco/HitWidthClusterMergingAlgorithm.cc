@@ -32,13 +32,7 @@ HitWidthClusterMergingAlgorithm::HitWidthClusterMergingAlgorithm() :
 
 void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-    //LArHitWidthHelper::ClusterToParametersMapStore* pClusterToParametersMapStore = LArHitWidthHelper::ClusterToParametersMapStore::Instance();
-    //LArHitWidthHelper::ClusterToParametersMap &clusterToParametersMap(pClusterToParametersMapStore->GetMap());
-
     // clear map if already full i.e. from other view clustering
-    //if (!clusterToParametersMap.empty())
-    //clusterToParametersMap.clear();
-
     if (!m_clusterToParametersMap.empty())
         m_clusterToParametersMap.clear();
     
@@ -48,32 +42,18 @@ void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *
         if (LArHitWidthHelper::GetOriginalTotalClusterWeight(pCluster) < m_minClusterWeight)
             continue;
 
-        //clusterToParametersMap.insert(std::pair<const Cluster*, LArHitWidthHelper::ClusterParameters>(pCluster, LArHitWidthHelper::ClusterParameters(pCluster, m_maxConstituentHitWidth, false, m_hitWidthScalingFactor)));
-
         m_clusterToParametersMap.insert(std::pair<const Cluster*, LArHitWidthHelper::ClusterParameters>(pCluster, LArHitWidthHelper::ClusterParameters(pCluster, m_maxConstituentHitWidth, false, m_hitWidthScalingFactor)));
         
         clusterVector.push_back(pCluster);
     }
 
-    std::sort(clusterVector.begin(), clusterVector.end(), LArHitWidthHelper::SortByHigherXExtrema2(m_clusterToParametersMap));
+    std::sort(clusterVector.begin(), clusterVector.end(), LArHitWidthHelper::SortByHigherXExtrema(m_clusterToParametersMap));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void HitWidthClusterMergingAlgorithm::PopulateClusterAssociationMap(const ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const
 {
-    /*
-    PandoraMonitoringApi::Create(this->GetPandora());
-    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
-
-    for (const Cluster *const pCluster : clusterVector)
-    {
-        ClusterList theCluster;
-        theCluster.push_back(pCluster);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CLUSTER", GREEN);
-        PandoraMonitoringApi::Pause(this->GetPandora());
-    }
-    */
     // ATTN this method assumes that clusters have been sorted by extremal x position (low higherXExtrema -> high higherXExtrema)
     for (ClusterVector::const_iterator iterCurrentCluster = clusterVector.begin(); iterCurrentCluster != clusterVector.end(); ++iterCurrentCluster)
     {
@@ -126,7 +106,8 @@ bool HitWidthClusterMergingAlgorithm::IsExtremalCluster(const bool isForward, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHelper::ClusterParameters &currentFitParameters, const LArHitWidthHelper::ClusterParameters &testFitParameters) const
+bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHelper::ClusterParameters &currentFitParameters,
+    const LArHitWidthHelper::ClusterParameters &testFitParameters) const
 {
     // check merging points not too far away in x
     if (testFitParameters.GetLowerXExtrema().GetX() > (currentFitParameters.GetHigherXExtrema().GetX() + m_maxXMergeDistance))
@@ -140,7 +121,7 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
 
     currentClusterDirection = GetClusterDirection(currentFitParameters, currentFitParameters.GetHigherXExtrema());
     testClusterDirection = GetClusterDirection(testFitParameters, testFitParameters.GetLowerXExtrema());
-    
+
     // check clusters have a similar direction
     if (currentClusterDirection.GetCosOpeningAngle(testClusterDirection) < m_minMergeCosOpeningAngle)
         return false;
@@ -164,7 +145,8 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, const CartesianVector &fitReferencePoint) const 
+CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterFitParameters,
+    const CartesianVector &fitReferencePoint) const 
 {
     // if cluster composed of one hit, return a transverse line as fit
     if (clusterFitParameters.GetNumCaloHits() == 1)
