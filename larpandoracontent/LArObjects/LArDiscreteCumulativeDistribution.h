@@ -35,6 +35,10 @@ public:
     template <typename T1, typename T2>
     void CollectInputData(T1 x, T2 y);
 
+    template <typename T1, typename T2>
+    void CollectCumulativeData(T1 x, T2 y);
+
+
     /**
      *  @brief  Get size of input data vector
      *
@@ -92,6 +96,15 @@ inline void DiscreteCumulativeDistribution::CollectInputData(T1 x, T2 y)
     m_InputDataHolder.emplace_back(X,Y);
 }
 
+template <typename T1, typename T2>
+inline void DiscreteCumulativeDistribution::CollectCumulativeData(T1 x, T2 y)
+{
+    float X = static_cast<float>(x);
+    float Y = static_cast<float>(y);
+
+    m_CumulativeDataVector.emplace_back(X,Y);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline size_t DiscreteCumulativeDistribution::GetInputVectorSize() const
@@ -127,23 +140,36 @@ inline void DiscreteCumulativeDistribution::GetXandY(int index, float &x, float 
 
 inline void DiscreteCumulativeDistribution::CreateCumulativeDistribution()
 {
+    //float yLast(0.);
+    if (1 < m_InputDataHolder.size())
+    {
+        float xStart(m_InputDataHolder[0].first);
+        float xSecond(m_InputDataHolder[1].first);
+        m_InputDataHolder.insert(m_InputDataHolder.begin(),std::pair<float,float>(xStart-(xSecond-xStart), 0.f));
+
+        float xLast(m_InputDataHolder[m_InputDataHolder.size()-1].first);
+        float xSecondLast(m_InputDataHolder[m_InputDataHolder.size()-2].first);
+        CollectInputData(xLast + (xLast-xSecondLast), 0.f);
+
+    }
     for (size_t iData = 0; iData < m_InputDataHolder.size(); iData++)
     {
         float x = m_InputDataHolder[iData].first;
         float y = m_InputDataHolder[iData].second;
         if (0 != m_CumulativeDataVector.size()) y += m_CumulativeDataVector.back().second;
         m_CumulativeDataVector.emplace_back(x,y);
+        //yLast+=y;
     }
-    float yLast(0.);
     if (0 != m_CumulativeDataVector.size())
     {
-        yLast = m_CumulativeDataVector.back().second;
+        float yLast = m_CumulativeDataVector.back().second;
         for (size_t iData = 0; iData < m_CumulativeDataVector.size(); ++iData)
         {
             m_CumulativeDataVector[iData].second /= yLast;
         }
     }
-    std::cout<<"In size: " << m_InputDataHolder.size() << "  out size: " << m_CumulativeDataVector.size() << std::endl;
+    //std::cout<<"yLast: " << yLast << std::endl;
+    //std::cout<<"In size: " << m_InputDataHolder.size() << "  out size: " << m_CumulativeDataVector.size() << std::endl;
 }
 
 /**
