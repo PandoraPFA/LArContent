@@ -27,6 +27,10 @@ public:
     public:
         /**
          *  @brief  Constructor
+         *
+         *  @param  positionVector the central position of the constituent hit
+         *  @param  hitWidth the hit width of the constituent hit
+         *  @param  parentClusterAddress the address of the original, unbroken hit to which it belongs 
          */
         ConstituentHit(const pandora::CartesianVector &positionVector, const float hitWidth, const pandora::Cluster *const parentClusterAddress);
         
@@ -53,6 +57,8 @@ public:
         public:
             /**
              *  @brief  Constructor
+             *
+             *  @param  referencePoint the point relative to which constituent hits are ordered
              */
 	        SortByDistanceToPoint(const pandora::CartesianVector referencePoint) : m_referencePoint(referencePoint) {}
             
@@ -86,13 +92,27 @@ public:
     public:
         /**
          *  @brief  Constructor
+         *
+         *  @param  pCluster from which the parameters will be obtained
+         *  @param  maxConstituentHitWidth the maximum width of a constituent hit
+         *  @param  isUniform whether to break up the hit into uniform constituent hits (and pad the hit) or not
+         *          in the non-uniform case constituent hits from different hits may have different weights
+         *  @param  hitWidthScalingFactor the constituent hit width scaling factor
          */
         ClusterParameters(const pandora::Cluster *const pCluster, const float maxConsituentHitWidth, const bool isUniformHits, const float hitWidthScalingFactor);
         
         /**
          *  @brief  Constructor
+         * 
+         *  @param  pCluster from which the parameters will be obtained
+         *  @param  numCaloHits the number of calo hits within the cluster
+         *  @param  totalWeight the total weight of the constituent hits
+         *  @param  constituentHitVector the vector of constituent hits
+         *  @param  lowerXExtrema the lower x extremal point of the constituent hits
+         *  @param  higherXExtrema the higher x extremal point of the constituent hits
          */
-        ClusterParameters(const pandora::Cluster *const pCluster, const unsigned int numCaloHits, const float totalWeight, const ConstituentHitVector &constituentHitVector, const pandora::CartesianVector &lowerXExtrema, const pandora::CartesianVector &higherXExtrema);
+        ClusterParameters(const pandora::Cluster *const pCluster, const unsigned int numCaloHits, const float totalWeight,
+            const ConstituentHitVector &constituentHitVector, const pandora::CartesianVector &lowerXExtrema, const pandora::CartesianVector &higherXExtrema);
 
         /**
          *  @brief  Returns the address of the cluster
@@ -133,67 +153,43 @@ public:
         const pandora::CartesianVector m_higherXExtrema;     ///< The higher x extremal point of the constituent hits
     };
 
-    typedef std::map<const pandora::Cluster*, const ClusterParameters> ClusterToParametersMap;
+    typedef std::unordered_map<const pandora::Cluster*, const ClusterParameters> ClusterToParametersMap;
 
-    class SortByHigherXExtrema2
+    /**
+     *  @brief  SortByHigherExtrema class
+     */
+    class SortByHigherXExtrema
     {
     public:
-        SortByHigherXExtrema2(const ClusterToParametersMap &clusterToParametersMap);
-
+        /**
+         *  @brief  Constructor
+         *  
+         *  @param clusterToParametersMap the map [cluster -> cluster parameters]
+         */
+        SortByHigherXExtrema(const ClusterToParametersMap &clusterToParametersMap);
+        
+        /**
+         *  @brief  Sort clusters by the higher x extremal point of their constituent hits
+         *
+         *  @param  pLhs first cluster
+         *  @param  pRhs second cluster
+         *
+         *  @return  bool
+         */
         bool operator() (const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
     private:
-        const ClusterToParametersMap& m_clusterToParametersMap;  
-    };
-    
-    /**
-     *  @brief  ClusterToParametersMapStore class
-     */
-    class ClusterToParametersMapStore
-    {
-    public:
-        /**
-         *  @brief  Delete the default copy constructor
-         */
-        ClusterToParametersMapStore(ClusterToParametersMapStore const& obj) = delete;
-
-        /**
-         *  @brief  Delete the default move constructor
-         */
-        ClusterToParametersMapStore(ClusterToParametersMapStore&& obj) = delete;
-        
-        /**
-         *  @brief  Returns a pointer to the ClusterToParametersMapStore instance 
-         */
-        static ClusterToParametersMapStore* Instance();
-
-        /**
-         *  @brief  Returns the map [cluster -> cluster parameters]
-         */
-        ClusterToParametersMap& GetMap();
-
-    private:
-        /**
-         *  @brief  Default constructor
-         */
-        ClusterToParametersMapStore() = default;
-        
-        static ClusterToParametersMapStore* m_instance;    ///< The address of the ClusterToParametersMapStore instance 
-        ClusterToParametersMap m_clusterToParametersMap;   ///< The map [cluster -> cluster parameters]
+        const ClusterToParametersMap& m_clusterToParametersMap;   ///< The map [cluster -> cluster parameters]
     };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
     /**
-     *  @brief  Return the cluster parameters of a given cluster, exception thrown if not found in map [cluster -> cluster parameters] or if map is empty
+     *  @brief  Return the cluster parameters of a given cluster, exception thrown if not found in map [cluster -> cluster parameter] or if map is empty
      *
      *  @param  pCluster the input cluster
+     *  @param  clusterToParametersMap the map [cluster -> cluster parameter]
      *
      *  @return  ClusterParameters the cluster parameters of the input cluster  
      */
-    static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster);
-
-
     static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster, const ClusterToParametersMap &clusterToParametersMap);
 
     /**
@@ -251,16 +247,6 @@ public:
     static float GetOriginalTotalClusterWeight(const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Sort clusters by the higher x extremal point of their constituent hits
-     *
-     *  @param  pLhs first cluster
-     *  @param  pRhs second cluster
-     *
-     *  @return  bool
-     */
-    static bool SortByHigherXExtrema(const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
-
-    /**
      *  @brief  Return the lower x extremal point of the constituent hits
      *
      *  @param  constituentHitVector the input vector of contituent hits
@@ -286,7 +272,8 @@ public:
      *  @param  higherXCoordinate the higher x extremal point
      *
      */
-    static void GetExtremalCoordinatesX(const ConstituentHitVector &constituentHitVector, pandora::CartesianVector &lowerXCoordinate, pandora::CartesianVector &higherXCoordinate);
+    static void GetExtremalCoordinatesX(const ConstituentHitVector &constituentHitVector, pandora::CartesianVector &lowerXCoordinate,
+        pandora::CartesianVector &higherXCoordinate);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -339,6 +326,5 @@ inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::Get
 }
 
 } // namespace lar_content
-
 
 #endif // #ifndef LAR_HIT_WIDTH_HELPER_H
