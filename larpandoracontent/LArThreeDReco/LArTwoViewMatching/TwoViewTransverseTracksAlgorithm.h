@@ -29,10 +29,10 @@ class TransverseMatrixTool;
 /**
  *  @brief  TwoViewTransverseTracksAlgorithm class
  */
-class TwoViewTransverseTracksAlgorithm : public TwoViewTrackMatchingAlgorithm<TwoViewTransverseOverlapResult>
+class TwoViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> >
 {
 public:
-    typedef NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> > BaseAlgorithm;
+    typedef NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> > BaseAlgorithm;
 
     /**
      *  @brief  Default constructor

@@ -13,6 +13,7 @@
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
@@ -299,6 +300,7 @@ StatusCode NViewTrackMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> >;
+template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> >;
 template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<float> >;
 template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> >;
 template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult> >;
