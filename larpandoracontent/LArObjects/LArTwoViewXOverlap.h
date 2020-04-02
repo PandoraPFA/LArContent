@@ -77,6 +77,20 @@ public:
      */
     float GetTwoViewXOverlapSpan() const;
 
+    /**
+     *  @brief  Get the fraction of the U cluster that overlaps in x
+     *
+     *  @return the U cluster's fractional overlap
+     */
+    float GetXOverlapFractionU() const;
+
+    /**
+     *  @brief  Get the fraction of the V cluster that overlaps in x
+     *
+     *  @return the V cluster's fractional overlap
+     */
+    float GetXOverlapFractionV() const;
+
 private:
     float       m_uMinX;                        ///< The min x value in the u view
     float       m_uMaxX;                        ///< The max x value in the u view
@@ -156,6 +170,20 @@ inline float TwoViewXOverlap::GetTwoViewXOverlapSpan() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline float TwoViewXOverlap::GetXOverlapFractionU() const
+{
+    return (std::numeric_limits<float>::epsilon() < GetXSpanU()) ? m_xOverlapSpan / GetXSpanU() : 0.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TwoViewXOverlap::GetXOverlapFractionV() const
+{
+    return (std::numeric_limits<float>::epsilon() < GetXSpanU()) ? m_xOverlapSpan / GetXSpanV() : 0.f;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline TwoViewXOverlap operator+(const TwoViewXOverlap &lhs, const TwoViewXOverlap &rhs)
 {
     const float uMinX(std::min(lhs.GetUMinX(), rhs.GetUMinX()));
@@ -168,6 +196,7 @@ inline TwoViewXOverlap operator+(const TwoViewXOverlap &lhs, const TwoViewXOverl
 
     return TwoViewXOverlap(uMinX, uMaxX, vMinX, vMaxX, xOverlapSpan);
 }
+
 
 } // namespace lar_content
 
