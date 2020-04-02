@@ -110,6 +110,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     if (xOverlap > std::numeric_limits<float>::epsilon())
         this->GetMatchingControl().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, twoViewTransverseOverlapResult);
 
+/*
     std::vector<float> x_U;
     std::vector<float> y_U;
     std::vector<float> x_V;
@@ -166,6 +167,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 
 
     PANDORA_MONITORING_API(FillTree(*primary_pandora, "matchtree"));
+    */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
