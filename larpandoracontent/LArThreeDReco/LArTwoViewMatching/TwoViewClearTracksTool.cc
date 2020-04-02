@@ -44,8 +44,11 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
 
     for (MatrixType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetTwoViewXOverlapSpan() < m_minXOverlap)
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionU() < m_minXOverlap)
             continue;
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionV() < m_minXOverlap)
+            continue;
+
 
         // TODO Add real logic here
 

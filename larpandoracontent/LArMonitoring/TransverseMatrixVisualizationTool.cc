@@ -61,7 +61,11 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
             if (allClusterList2.end() == std::find(allClusterList2.begin(), allClusterList2.end(), eIter->GetCluster2())) allClusterList2.push_back(eIter->GetCluster2());
             usedKeyClusters.insert(eIter->GetCluster1());
 
-            std::cout << " Element " << counter++ << ": XOverlap " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetTwoViewXOverlapSpan() << "  MatchingScore: " << eIter->GetOverlapResult().GetMatchingScore() << std::endl;
+            std::cout << " Element " << counter++ << std::endl;
+            std::cout <<" ---XOverlap: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetTwoViewXOverlapSpan() <<std::endl;
+            std::cout <<" ---XOverlap fraction U: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionU() << std::endl;
+            std::cout <<" ---XOverlap fraction V: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionV() << std::endl;
+            std::cout <<" ---MatchingScore: " << eIter->GetOverlapResult().GetMatchingScore() << std::endl;
 
             if (m_showEachIndividualElement)
             {
