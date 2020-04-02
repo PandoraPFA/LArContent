@@ -231,7 +231,7 @@ StatusCode TwoViewMatchingControl<T>::ReadSettings(const TiXmlHandle xmlHandle)
     return STATUS_CODE_SUCCESS;
 }
 
-template class TwoViewMatchingAlgorithm<float>;
-template class TwoViewMatchingAlgorithm<TwoViewTransverseOverlapResult>;
+template class TwoViewMatchingControl<float>;
+template class TwoViewMatchingControl<TwoViewTransverseOverlapResult>;
 
 } // namespace lar_content
