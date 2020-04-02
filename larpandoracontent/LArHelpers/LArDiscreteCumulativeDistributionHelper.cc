@@ -11,8 +11,32 @@
 
 #include "larpandoracontent/LArHelpers/LArDiscreteCumulativeDistributionHelper.h"
 
+
 namespace lar_content
 {
+
+  void LArDiscreteCumulativeDistributionHelper::SplitCaloHitList(const int &nSegments, const float &xOverlap, const pandora::CaloHitList &overlapHits, std::vector<pandora::CaloHitList> &segmentedOverlapHits)
+  {
+    float splitXOverlap(xOverlap/nSegments);
+
+    for (int k = 0; k<nSegments; k++)
+      {
+	pandora::CaloHitList caloHitList;
+	for (const pandora::CaloHit *const pCaloHit : overlapHits)
+	  {
+	    if (pCaloHit->GetPositionVector().GetX()>k*splitXOverlap && pCaloHit->GetPositionVector().GetX()<(k+1)*splitXOverlap)
+	      {
+	      caloHitList.push_back(pCaloHit);
+	      }
+
+	    //if (segmentedOverlapHits[k].size()<25 && k>0)                                                                                                
+	    //segmentedOverlapHits[k-1].insert(segmentedOverlapHits[k-1].end(), segmentedOverlapHits[k].begin(), segmentedOverlapHits[k].end());           
+	  }
+	segmentedOverlapHits.push_back(caloHitList);
+	std::cout << segmentedOverlapHits.size() << std::endl;
+      }
+    return;
+  }
 
 float LArDiscreteCumulativeDistributionHelper::CalculateKSTestStatistic(const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
 {
@@ -31,23 +55,37 @@ float LArDiscreteCumulativeDistributionHelper::CalculateKSTestStatistic(const Di
         float yA = FindY(distributionA, xB);
         ks = std::max(ks, std::abs(yB-yA));
     }
-    /*
-    //float dp = std::numeric_limits<float>::min();
-    //float dm = std::numeric_limits<float>::min();
-    for (size_t iDist = 0; iDist < distributionA.GetSize(); iDist++)
-    {
-        float xA(0), xB(0);
-        float yA(0), yB(0);
-        distributionA.GetXandY(iDist,xA,yA);
-        distributionB.GetXandY(iDist,xB,yB);
-        //std::cout<<"xA: " << xA << "  xB: " << xB << "  yAIn: " << distributionA.GetYFromInputVector(iDist) << "  yA: " << yA << "  yB: " << yB << "  ks: " << std::abs(yA-yB) << std::endl;
-        ks = std::max(ks, std::abs(yA-yB));
-        //dp = std::max(dp, yA-yB);
-        //dm = std::max(dm, yB-yA);
-    }
-    */
+
     std::cout << "ks = " << ks << std::endl;
     return ks;
+}
+float LArDiscreteCumulativeDistributionHelper::CalculateKuiperTestStatistic(const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
+{
+
+    float Dp = std::numeric_limits<float>::min();
+    float Dm = std::numeric_limits<float>::min();
+    
+    for (size_t iElement = 0; iElement < distributionA.GetSize(); ++iElement)
+      {
+        float xA(0), yA(0);
+        distributionA.GetXandY(iElement,xA,yA);
+        float yB = FindY(distributionB, xA);
+        Dp = std::max(Dp, yA-yB);
+        Dm = std::max(Dm, yB-yA);
+      }
+    for (size_t iElement = 0; iElement < distributionB.GetSize(); ++iElement)
+      {
+        float xB(0), yB(0);
+        distributionB.GetXandY(iElement,xB,yB);
+        float yA = FindY(distributionA, xB);
+        Dp = std::max(Dp, yA-yB);
+        Dm = std::max(Dm, yB-yA);
+      }
+
+
+    float kuip (Dp+Dm);
+
+    return kuip;
 }
 
 float LArDiscreteCumulativeDistributionHelper::FindY(const DiscreteCumulativeDistribution &distribution, const float &x)
@@ -91,7 +129,7 @@ float LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatisti
 {   
     float ks(CalculateKSTestStatistic(distributionA, distributionB));
 
-    float sum(CalculatePValueSumTerm(1, ks, distributionA, distributionB));
+    float sum(CalculatePValueSumKSTerm(1, ks, distributionA, distributionB));
     float prev_sumTerm(std::numeric_limits<float>::epsilon());
     float sumTerm(999);
 
@@ -100,18 +138,48 @@ float LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatisti
     {
         i++;
         prev_sumTerm = sumTerm;
-	sumTerm = CalculatePValueSumTerm(i, ks, distributionA, distributionB);	
+	sumTerm = CalculatePValueSumKSTerm(i, ks, distributionA, distributionB);	
 	sum += sumTerm;
     }
     
     float PValue(2*sum);
+    std::cout << "PValue = " << PValue << std::endl;
     return PValue;
 }
 
-float LArDiscreteCumulativeDistributionHelper::CalculatePValueSumTerm(const int i, const float &ks, const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
+float LArDiscreteCumulativeDistributionHelper::CalculatePValueSumKSTerm(const int i, const float &ks, const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
 {
     float sumTerm(pow(-1,i-1)*exp(-2*pow(i*ks*sqrt(distributionA.GetSize()*distributionB.GetSize()/(distributionA.GetSize()+distributionB.GetSize())),2)));
 
     return sumTerm;
 }
+  float LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
+  {
+    float kuip(CalculateKuiperTestStatistic(distributionA, distributionB));
+
+    float sum(CalculatePValueSumKuiperTerm(1, kuip, distributionA, distributionB));
+    float prev_sumTerm(std::numeric_limits<float>::epsilon());
+    float sumTerm(999);
+
+    int i(1);
+    while (fabs((prev_sumTerm+sumTerm)/sum)>std::numeric_limits<float>::epsilon())
+      {
+        i++;
+        prev_sumTerm = sumTerm;
+        sumTerm = CalculatePValueSumKuiperTerm(i, kuip, distributionA, distributionB);
+        sum += sumTerm;
+      }
+
+    float PValue(2*sum);
+    std::cout << "PValue = " << PValue << std::endl;
+    return PValue;
+  }
+
+  float LArDiscreteCumulativeDistributionHelper::CalculatePValueSumKuiperTerm(const int i, const float &kuip, const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB)
+  {
+    float sumTerm((4*pow(i*kuip*sqrt(distributionA.GetSize()*distributionB.GetSize()/(distributionA.GetSize()+distributionB.GetSize())),2)-1)*exp(-2*pow(i*kuip*sqrt(distributionA.GetSize()*distributionB.GetSize()/(distributionA.GetSize()+distributionB.GetSize())),2)));
+
+    return sumTerm;
+  }
+
 } // namespace lar_content

@@ -22,6 +22,19 @@ namespace lar_content
 class LArDiscreteCumulativeDistributionHelper
 {
 public:
+   /**
+    *  @brief  SplitCaloHitList
+    *
+    *  @param  distributionA the first discrete cumulatie distribution
+    *  @param  distributionB the second discrete cumulatie distribution
+    *  @param  distributionA the first discrete cumulatie distribution
+    *  @param  distributionA the first discrete cumulatie distribution
+    *
+    *  @return 
+    */
+   static void SplitCaloHitList(const int &nSegments, const float &xOverlap, 
+	   const pandora::CaloHitList &overlapHits, std::vector<pandora::CaloHitList> &segmentedOverlapHits);
+  
     /**
      *  @brief  Get the KS test statistic between two cumulative distributions
      *
@@ -33,6 +46,16 @@ public:
     static float CalculateKSTestStatistic(const DiscreteCumulativeDistribution &distributionA, 
             const DiscreteCumulativeDistribution &distributionB);
 
+    /**
+     *  @brief  Get the Kuiper test statistic between two cumulative distributions
+     *
+     *  @param  distributionA the first discrete cumulatie distribution
+     *  @param  distributionB the second discrete cumulatie distribution
+     *
+     *  @return the Kuiper test statistic
+     */
+    static float CalculateKuiperTestStatistic(const DiscreteCumulativeDistribution &distributionA,
+	    const DiscreteCumulativeDistribution &distributionB);
     /**
      *  @brief  Find the Y value for a particular X value
      *
@@ -67,15 +90,40 @@ public:
 
     /**
      *  @brief  Computation of one term of the sum in PValue(trueKs>measuredKs|distA==distB)
-     *                                                                                                                                                                                                   
+     *
      *  @param  indice of the sum term
      *  @param  measuredKs
-     *  @param  distributionA the first discrete cumulatie distribution                                                                                                                                       *  @param  distributionB the second discrete cumulatie distribution
+     *  @param  distributionA the first discrete cumulatie distribution
+     *  @param  distributionB the second discrete cumulatie distribution
      *
      *  @return sum term of PValue(trueKs>measuredKs|distA==distB)
      */
-    static float CalculatePValueSumTerm(const int i, const float &ks, 
+    static float CalculatePValueSumKSTerm(const int i, const float &ks, 
 	    const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB);
+
+    /**
+     *  @brief  Full computation of PValue(trueKuip>measuredKuip|distA==distB)
+     *
+     *  @param  distributionA the first discrete cumulatie distribution
+     *  @param  distributionB the second discrete cumulatie distribution
+     *
+     *  @return PValue(trueKuip>measuredKuip|distA==distB)
+     */
+    static float CalculatePValueWithKuiperTestStatistic(const DiscreteCumulativeDistribution &distributionA,
+            const DiscreteCumulativeDistribution &distributionB);
+
+    /**
+     *  @brief  Computation of one term of the sum in PValue(trueKuip>measuredKuip|distA==distB)
+     *
+     *  @param  indice of the sum term
+     *  @param  measuredKuip
+     *  @param  distributionA the first discrete cumulatie distribution
+     *  @param  distributionB the second discrete cumulatie distribution
+     *
+     *  @return sum term of PValue(trueKuip>measuredKuip|distA==distB)
+     */
+    static float CalculatePValueSumKuiperTerm(const int i, const float &kuip,
+            const DiscreteCumulativeDistribution &distributionA, const DiscreteCumulativeDistribution &distributionB);
 
 };
 
