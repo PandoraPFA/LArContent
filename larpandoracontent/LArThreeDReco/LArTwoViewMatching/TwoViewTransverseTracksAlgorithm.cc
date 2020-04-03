@@ -97,19 +97,53 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     float fracGoodScore(0.);
 
     if (profile1.size()>sizeWindowInBins)
-      {
+    {
         xMatchingScore = SlidingWindowMatchingScore(sizeWindowInBins, profile1, profile2, fracGoodScore);
-	fracGoodScore /= (nSamplingPoints-sizeWindowInBins);
-      }
-    float matchingScore(CalculateCorrelationCoefficient(profile1, profile2));
+	       fracGoodScore /= (nSamplingPoints-sizeWindowInBins);
+    }
+    //float matchingScore(CalculateCorrelationCoefficient(profile1, profile2));
+    float matchingScore(fracGoodScore);
     
     std::cout<<"Cluster 1 NHits: " << pCluster1->GetOrderedCaloHitList().size() << "  Cluster 2 NHits: " << pCluster2->GetOrderedCaloHitList().size() << std::endl;
-    std::cout<<"KS PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2) << std::endl;
-    std::cout<<"Kuiper PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(disCumulDist1, disCumulDist2) << std::endl;
+    std::cout<<"KS PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
+    std::cout<<"Kuiper PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
     std::cout<<"XOverlap: " << xOverlap << std::endl;
     std::cout<<"Correlation: " << matchingScore << std::endl;    
     std::cout<<"fracGoodScore = " << fracGoodScore << std::endl;
 
+    /*
+    int NHits1(overlapHits1.size()), NHits2(overlapHits2.size());
+    int k(2);
+    int nSegments(1),nMaxSegments(7);
+    while ( (std::min(NHits1,NHits2)/k)>25 && k<nMaxSegments+1 )
+      {
+        nSegments = k;
+        k++;
+      }
+
+    std::vector<pandora::CaloHitList> segmentedOverlapHits1, segmentedOverlapHits2;
+
+    LArDiscreteCumulativeDistributionHelper::SplitCaloHitList(nSegments, xOverlap, overlapHits1, segmentedOverlapHits1);
+    LArDiscreteCumulativeDistributionHelper::SplitCaloHitList(nSegments, xOverlap, overlapHits2, segmentedOverlapHits2);
+
+    for (int i = 0; i<nSegments; i++)
+      {
+        DiscreteCumulativeDistribution disCumulDist1, disCumulDist2;
+        //LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(overlapHits1, disCumulDist1);                                                                                             
+        //LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(overlapHits2, disCumulDist2);                                                                                             
+
+	LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(segmentedOverlapHits1[i], disCumulDist1);
+	LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(segmentedOverlapHits2[i], disCumulDist2);
+
+        if (0 == disCumulDist1.GetSize() || 0 == disCumulDist2.GetSize())
+          return;
+
+        float matchingScoreKuip(LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(disCumulDist1, disCumulDist2));
+        float matchingScoreKS(LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2));
+	std::cout << "MatchingScoreKUIPER: " << matchingScoreKuip << std::endl;
+	std::cout << "MatchingScoreKS: " << matchingScoreKS << std::endl;
+      }
+    */
     TwoViewTransverseOverlapResult twoViewTransverseOverlapResult(matchingScore, twoViewXOverlap);
 
     if (xOverlap > std::numeric_limits<float>::epsilon())
@@ -299,7 +333,6 @@ float TwoViewTransverseTracksAlgorithm::CalculateCorrelationCoefficient(const Ch
     return correlation;
 }
 
-<<<<<<< HEAD
 float TwoViewTransverseTracksAlgorithm::CalculateTTestValue(const float x, const float coefficient, const float dof)
 {
     return coefficient*std::pow( 1.0 + x*x/dof, -0.5 *(dof + 1.0));
@@ -325,7 +358,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateTTestPValue(const ChargeProfile
 
     return integral;
 }
-=======
+
   TwoViewTransverseTracksAlgorithm::ScoreProfile TwoViewTransverseTracksAlgorithm::SlidingWindowMatchingScore(const size_t &sizeWindowInBins, const ChargeProfile &profile1, const ChargeProfile &profile2, float &fracGoodScore)
 {
   ScoreProfile xMatchingScore;
@@ -356,7 +389,40 @@ TwoViewTransverseTracksAlgorithm::ChargeProfile   TwoViewTransverseTracksAlgorit
   return windowedProfile;
 
 }
+  TwoViewTransverseTracksAlgorithm::ScoreProfile TwoViewTransverseTracksAlgorithm::SlidingWindowMatchingScore(const size_t &sizeWindowInBins, const DiscreteCumulativeDistribution &disCumulDist1, const DiscreteCumulativeDistribution &disCumulDist2, float &fracGoodScore)
+{
+  float x(0), y(0);
+  ScoreProfile xMatchingScore;
+  for (size_t iElement = 0; iElement<disCumulDist1.GetSize(); iElement++)
+    {
+      disCumulDist1.GetXandY(iElement, x, y);
+      if ( (iElement<(disCumulDist1.GetSize()-sizeWindowInBins/2)) && (iElement>(sizeWindowInBins/2-1)) )
+	{
+      ChargeProfile windowProfile1(GetWindow(iElement, sizeWindowInBins, disCumulDist1));
+      ChargeProfile windowProfile2(GetWindow(iElement, sizeWindowInBins, disCumulDist2));
+      xMatchingScore.emplace_back(x, LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2));
+      //std::cout<<LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2)<<std::endl;
+      if (LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2)>0.9) fracGoodScore++; //ATTN - Arbitrary 0.6 value of matching score
+	}
+      else
+	{
+	  xMatchingScore.emplace_back(x, 0.5);
+	}
+    }
+  return xMatchingScore;
+}
 
+  TwoViewTransverseTracksAlgorithm::ChargeProfile  TwoViewTransverseTracksAlgorithm::GetWindow(size_t &i, const size_t &sizeWindowInBins, const DiscreteCumulativeDistribution &disCumulDist)
+{
+  float x(0), y(0);
+  ChargeProfile windowedProfile; //ATTN - Should use another type?
+  for (size_t iElement = (i-sizeWindowInBins/2); iElement < (i+sizeWindowInBins/2 + 1); iElement++)
+    {
+      disCumulDist.GetXandY(iElement, x, y);
+      windowedProfile.emplace_back(x, y);
+    }
+  return windowedProfile;
 
->>>>>>> db81e74e... Added sliding window feature
+}
+
 } // namespace lar_content
