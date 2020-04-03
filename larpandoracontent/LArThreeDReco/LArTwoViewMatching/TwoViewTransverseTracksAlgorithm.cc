@@ -97,11 +97,12 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     float fracGoodScore(0.);
 
     if (profile1.size()>sizeWindowInBins)
-      {
+    {
         xMatchingScore = SlidingWindowMatchingScore(sizeWindowInBins, profile1, profile2, fracGoodScore);
-	fracGoodScore /= (nSamplingPoints-sizeWindowInBins);
-      }
-    float matchingScore(CalculateCorrelationCoefficient(profile1, profile2));
+	       fracGoodScore /= (nSamplingPoints-sizeWindowInBins);
+    }
+    //float matchingScore(CalculateCorrelationCoefficient(profile1, profile2));
+    float matchingScore(fracGoodScore);
     
     std::cout<<"Cluster 1 NHits: " << pCluster1->GetOrderedCaloHitList().size() << "  Cluster 2 NHits: " << pCluster2->GetOrderedCaloHitList().size() << std::endl;
     std::cout<<"KS PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
