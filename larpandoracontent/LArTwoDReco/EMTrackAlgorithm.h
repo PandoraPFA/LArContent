@@ -67,32 +67,30 @@ public:
             const pandora::CartesianVector m_referencePoint;   ///< The point relative to which constituent hits are ordered
             const pandora::CartesianVector m_referenceDirection;
         };
-    
+
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector);
 
-    void InitialiseSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap);
+    void InitialiseSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
 
     bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point);
 
-    void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap);
+    void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
 
     void RemoveClusterFromClusterVector(const pandora::Cluster *const pCluster, pandora::ClusterVector &clusterVector);
 
     void RemoveClusterFromSlidingFitResultMap(const pandora::Cluster *const pCluster, TwoDSlidingFitResultMap &slidingFitResultMap);
-    
-    bool FindBestClusterAssociation(const pandora::Cluster *const pCurrentCluster, const pandora::ClusterVector &clusterVector, const TwoDSlidingFitResultMap &slidingFitResultMap, ClusterAssociation &clusterAssociation);
-    
+
+    bool FindBestClusterAssociation(const pandora::Cluster *const pCurrentCluster, const pandora::ClusterVector &clusterVector, const TwoDSlidingFitResultMap &microSlidingFitResultMap, const TwoDSlidingFitResultMap &macroSlidingFitResultMap, ClusterAssociation &clusterAssociation);
+
     bool AreClustersAssociated(const pandora::CartesianVector &currentPoint, const pandora::CartesianVector &currentDirection, const pandora::CartesianVector &testPoint, const pandora::CartesianVector &testDirection);
     
-    void GetClusterMergingCoordinates(const TwoDSlidingFitResult &cluster1FitResult, pandora::CartesianVector &cluster1MergePoint, pandora::CartesianVector &cluster1Direction, const TwoDSlidingFitResult &cluster2FitResult, pandora::CartesianVector &cluster2MergePoint, pandora::CartesianVector &cluster2Direction);
+    void GetClusterMergingCoordinates(const TwoDSlidingFitResult &cluster1FitResult, const TwoDSlidingFitResult &cluster1MacroFitResult, pandora::CartesianVector &cluster1MergePoint, pandora::CartesianVector &cluster1Direction, const TwoDSlidingFitResult &cluster2FitResult, const TwoDSlidingFitResult &cluster2MacroFitResult, pandora::CartesianVector &cluster2MergePoint, pandora::CartesianVector &cluster2Direction);
     
-    void GetExtrapolatedCaloHits(const pandora::Cluster *const innerCluster, const ClusterAssociation &clusterAssociation, const pandora::CaloHitList *const pCaloHitList, const pandora::ClusterList *const pClusterList, pandora::CaloHitVector &extrapolatedCaloHitVector, CaloHitToParentClusterMap &caloHitToParentClusterMap);
+    void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, pandora::CaloHitVector &extrapolatedCaloHitVector, CaloHitToParentClusterMap &caloHitToParentClusterMap);
 
     bool IsTrackContinuous(const ClusterAssociation &clusterAssociation, pandora::CaloHitVector &extrapolatedCaloHitVector);
     
-    //void ConnectByLine(const pandora::CartesianVector &innerCoordinate, const pandora::CartesianVector &outerCoordinate, float &gradient, float &zIntercept);
-
-    void AddHitsToCluster(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const pandora::CaloHitVector &extrapolatedCaloHitVector);
+    void AddHitsToCluster(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const pandora::CaloHitVector &extrapolatedCaloHitVector, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
     
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -102,8 +100,7 @@ public:
     float m_minCaloHits; // minimum number of calo hits for cluster to be considered
     float m_maxXSeparation;
     float m_maxZSeparation;
-    bool m_useUnclusteredHits;
-    bool m_useAxisDirection;
+    unsigned int m_slidingFitWindow;
 
 };
 
