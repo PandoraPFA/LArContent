@@ -79,7 +79,8 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     DiscreteCumulativeDistribution resampledDisCumulDist1;
     DiscreteCumulativeDistribution resampledDisCumulDist2;
 
-    int nSamplingPoints(100);
+    int nSamplingPoints(std::min(disCumulDist1.GetSize(), disCumulDist2.GetSize())/5);
+    nSamplingPoints = std::max(nSamplingPoints,10);
     for (float xPos = xOverlapMin; xPos < xOverlapMax; xPos += (xOverlapMax-xOverlapMin)/nSamplingPoints)
     {
         float q1 = spline1(xPos).coeff(0);
@@ -92,7 +93,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     ChargeProfile profile2(CreateProfileFromCumulativeDistribution(resampledDisCumulDist2));
 
 
-    float matchingScore(CalculateCorrelationCoefficient(profile1,profile2));
+    float matchingScore(1-CalculateTTestPValue(profile1,profile2));
     /*
     std::cout<<"Cluster 1 NHits: " << pCluster1->GetOrderedCaloHitList().size() << "  Cluster 2 NHits: " << pCluster2->GetOrderedCaloHitList().size() << std::endl;
     float matchingScore(LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2));
@@ -112,7 +113,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     if (xOverlap > std::numeric_limits<float>::epsilon())
         this->GetMatchingControl().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, twoViewTransverseOverlapResult);
 
-/*
+    /*
     std::vector<float> x_U;
     std::vector<float> y_U;
     std::vector<float> x_V;
@@ -291,5 +292,31 @@ float TwoViewTransverseTracksAlgorithm::CalculateCorrelationCoefficient(const Ch
         correlation = covariance/=(sqrt(variance1*variance2));
 
     return correlation;
+}
+
+float TwoViewTransverseTracksAlgorithm::CalculateTTestValue(const float x, const float coefficient, const float dof)
+{
+    return coefficient*std::pow( 1.0 + x*x/dof, -0.5 *(dof + 1.0));
+}
+
+float TwoViewTransverseTracksAlgorithm::CalculateTTestPValue(const ChargeProfile &profile1, const ChargeProfile &profile2)
+{
+    if (profile1.size() != profile2.size())
+        return -999.;
+    float correlation(CalculateCorrelationCoefficient(profile1,profile2));
+    float dof(profile1.size() - 2);
+    float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.-correlation*correlation)));
+    float tDistCoeff(std::tgamma(0.5 * (dof+1.)) / std::tgamma(0.5*dof) / (std::sqrt(dof*3.14159265359)));
+
+    int nSteps(10000);
+    float upperLimit(15.f);
+    float dx((upperLimit-tTestStatistic)/nSteps);
+    float integral(CalculateTTestValue(tTestStatistic, tDistCoeff, dof) + CalculateTTestValue(upperLimit, tDistCoeff, dof));
+    for (int iStep = 1; iStep < nSteps; iStep++)
+        integral+=2. * CalculateTTestValue(tTestStatistic + iStep*dx, tDistCoeff, dof);
+    integral *= dx/2.0;
+
+
+    return integral;
 }
 } // namespace lar_content
