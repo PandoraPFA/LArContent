@@ -332,7 +332,6 @@ float TwoViewTransverseTracksAlgorithm::CalculateCorrelationCoefficient(const Ch
     return correlation;
 }
 
-<<<<<<< HEAD
 float TwoViewTransverseTracksAlgorithm::CalculateTTestValue(const float x, const float coefficient, const float dof)
 {
     return coefficient*std::pow( 1.0 + x*x/dof, -0.5 *(dof + 1.0));
@@ -358,7 +357,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateTTestPValue(const ChargeProfile
 
     return integral;
 }
-=======
+
   TwoViewTransverseTracksAlgorithm::ScoreProfile TwoViewTransverseTracksAlgorithm::SlidingWindowMatchingScore(const size_t &sizeWindowInBins, const ChargeProfile &profile1, const ChargeProfile &profile2, float &fracGoodScore)
 {
   ScoreProfile xMatchingScore;
@@ -425,6 +424,4 @@ TwoViewTransverseTracksAlgorithm::ChargeProfile   TwoViewTransverseTracksAlgorit
 
 }
 
-
->>>>>>> db81e74e... Added sliding window feature
 } // namespace lar_content
