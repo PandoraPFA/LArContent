@@ -101,6 +101,7 @@ public:
     float m_maxXSeparation;
     float m_maxZSeparation;
     unsigned int m_slidingFitWindow;
+    bool m_limitZ;
 
 };
 
