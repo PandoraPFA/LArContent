@@ -55,6 +55,8 @@ private:
     Spline1f CreateSplineFromCumulativeDistribution(const DiscreteCumulativeDistribution &cumulativeDistribution);
     ChargeProfile CreateProfileFromCumulativeDistribution(const DiscreteCumulativeDistribution &cumulativeDistribution);
     float CalculateCorrelationCoefficient(const ChargeProfile &profile1, const ChargeProfile &profile2);
+    float CalculateTTestValue(const float x, const float coefficient, const float dof);
+    float CalculateTTestPValue(const ChargeProfile &profile1, const ChargeProfile &profile2);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
