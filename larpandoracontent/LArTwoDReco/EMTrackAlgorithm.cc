@@ -23,7 +23,8 @@ EMTrackAlgorithm::EMTrackAlgorithm() :
     m_minCaloHits(25),
     m_maxXSeparation(10),
     m_maxZSeparation(10),
-    m_slidingFitWindow(20)
+    m_slidingFitWindow(20),
+    m_limitZ(false)
 {
 }
 
@@ -278,9 +279,6 @@ bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssoci
     
     for (unsigned int i = 0; i < (fullSegments + 1); ++i)
     {
-
-        //std::cout << "ITERATION" << i << std::endl;
-        
         // if have run out of hits
         if (caloHitIter == extrapolatedCaloHitVector.end())
         {
@@ -293,7 +291,7 @@ bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssoci
         CartesianVector lowerBoundary(innerMergePoint + trackStep * static_cast<float>(i));
         CartesianVector upperBoundary(innerMergePoint + trackStep * static_cast<float>(i + 1.0));
 
-        // merge remainder segment into preceding segment, split into two if remainder segment lenght is over half of the m_lineSegmentLength
+        // merge remainder segment into preceding segment, split into two if remainder segment length is over half of the m_lineSegmentLength
         if (i == fullSegments - 1)
         {
             if (lengthOfTrackRemainder > m_lineSegmentLength * 0.5)
@@ -311,9 +309,6 @@ bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssoci
             lowerBoundary = outerMergePoint - (trackStep * 0.5) - (trackDirection * lengthOfTrackRemainder * 0.5);
             upperBoundary = outerMergePoint;
         }
-
-        //std::cout << "LOWER BOUNDARY: " << lowerBoundary << std::endl;
-        //std::cout << "UPPER BOUNDARY: " << upperBoundary << std::endl;
         
         while (this->IsInLineSegment(lowerBoundary, upperBoundary, (*caloHitIter)->GetPositionVector()))
         {
@@ -324,8 +319,15 @@ bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssoci
                 break;
         }
 
+        // if number of hits in segment exceeds threshold then reset segmentsWithoutHits
         if (!hitsInSegment)
+        {
             ++segmentsWithoutHits;
+        }
+        else
+        {
+            segmentsWithoutHits = 0;
+        }
 
         //std::cout << "HITS IN SEGMENT: " << hitsInSegment << std::endl;
         //std::cout << "SEGMENTS WITHOUT HITS: " << segmentsWithoutHits << std::endl;
@@ -333,6 +335,7 @@ bool EMTrackAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssoci
         if (segmentsWithoutHits > m_maxTrackGaps)
             return false;
 
+        // case in which final two segments are merged, therefore need to leave the loop early
         if (i == (fullSegments - 1) && !(lengthOfTrackRemainder > m_lineSegmentLength * 0.5))
             return true;
 
@@ -597,7 +600,12 @@ bool EMTrackAlgorithm::FindBestClusterAssociation(const Cluster *const pCurrentC
 
 bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint, const CartesianVector &currentDirection, const CartesianVector &testPoint, const CartesianVector &testDirection)
 {
-
+    if (m_limitZ)
+    {
+        if (testPoint.GetZ() < currentPoint.GetZ())
+            return false;
+    }
+    
     // check that clusters are reasonably far away
     if (std::sqrt(currentPoint.GetDistanceSquared(testPoint)) < 30)
     {
@@ -611,10 +619,10 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     // check that opening angle is not too large
     if (currentDirection.GetCosOpeningAngle(testDirection * (-1.0)) < 0.99)
     {
-        //std::string reason("ANGLE" + std::to_string(currentDirection.GetCosOpeningAngle(testDirection * (-1.0))));
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, reason, RED, 2);
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, reason, RED, 2);
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        std::string reason("ANGLE" + std::to_string(currentDirection.GetCosOpeningAngle(testDirection * (-1.0))));
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, reason, RED, 2);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, reason, RED, 2);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
     
@@ -628,7 +636,8 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     CartesianVector testTL(testPoint.GetX() - m_maxXSeparation, 0, testPoint.GetZ() + m_maxZSeparation);
     CartesianVector testBR(testPoint.GetX() + m_maxXSeparation, 0, testPoint.GetZ() - m_maxZSeparation);
     CartesianVector testBL(testPoint.GetX() - m_maxXSeparation, 0, testPoint.GetZ() - m_maxZSeparation);
-    
+    */
+    /*
     PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTR, &testTL, "TEST BOX", RED, 2, 2);
     PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTR, &testBR, "TEST BOX", RED, 2, 2);
     PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTL, &testBL, "TEST BOX", RED, 2, 2);
@@ -666,9 +675,9 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
         CartesianVector currentTL(currentPoint.GetX() - m_maxXSeparation, 0, currentPoint.GetZ() + m_maxZSeparation);
         CartesianVector currentBR(currentPoint.GetX() + m_maxXSeparation, 0, currentPoint.GetZ() - m_maxZSeparation);
         CartesianVector currentBL(currentPoint.GetX() - m_maxXSeparation, 0, currentPoint.GetZ() - m_maxZSeparation);
-    
+    */
         
-        
+        /*
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTR, &currentTL, "CURRENT BOX", RED, 2, 2);
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTR, &currentBR, "CURRENT BOX", RED, 2, 2);
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTL, &currentBL, "CURRENT BOX", RED, 2, 2);
@@ -867,6 +876,9 @@ StatusCode EMTrackAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxZSeparation", m_maxZSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "LimitZ", m_limitZ));
 
     return STATUS_CODE_SUCCESS;
 }
