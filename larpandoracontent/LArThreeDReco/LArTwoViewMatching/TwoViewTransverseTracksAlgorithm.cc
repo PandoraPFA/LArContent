@@ -92,24 +92,26 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     ChargeProfile profile1(CreateProfileFromCumulativeDistribution(resampledDisCumulDist1));
     ChargeProfile profile2(CreateProfileFromCumulativeDistribution(resampledDisCumulDist2));
 
-    size_t sizeWindowInBins(50);
+    size_t sizeWindowInBins(std::max(nSamplingPoints/3,10)); //ATTN - No real reason to have nSamplingPoints/3
     ScoreProfile xMatchingScore;
     float fracGoodScore(0.);
 
     if (profile1.size()>sizeWindowInBins)
     {
         xMatchingScore = SlidingWindowMatchingScore(sizeWindowInBins, profile1, profile2, fracGoodScore);
-	       fracGoodScore /= (nSamplingPoints-sizeWindowInBins);
+	       fracGoodScore /= (nSamplingPoints-sizeWindowInBins+1);
     }
-    //float matchingScore(CalculateCorrelationCoefficient(profile1, profile2));
+    //float matchingScore(1-CalculateCorrelationCoefficient(profile1, profile2));
     float matchingScore(fracGoodScore);
     
     std::cout<<"Cluster 1 NHits: " << pCluster1->GetOrderedCaloHitList().size() << "  Cluster 2 NHits: " << pCluster2->GetOrderedCaloHitList().size() << std::endl;
     std::cout<<"KS PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
     std::cout<<"Kuiper PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
     std::cout<<"XOverlap: " << xOverlap << std::endl;
-    std::cout<<"Correlation: " << matchingScore << std::endl;    
-    std::cout<<"fracGoodScore = " << fracGoodScore << std::endl;
+    std::cout<<"Correlation: " << CalculateCorrelationCoefficient(profile1,profile2) << std::endl;    
+    std::cout<<"p-value: " << CalculateTTestPValue(profile1,profile2) << std::endl;
+    std::cout<<"fracGoodScore = " << matchingScore << std::endl;
+    std::cout<<"thanks"<<std::endl;
 
     /*
     int NHits1(overlapHits1.size()), NHits2(overlapHits2.size());
@@ -149,7 +151,6 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     if (xOverlap > std::numeric_limits<float>::epsilon())
         this->GetMatchingControl().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, twoViewTransverseOverlapResult);
 
-    /*
     std::vector<float> x_U;
     std::vector<float> y_U;
     std::vector<float> x_V;
@@ -209,13 +210,19 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 
 
     PANDORA_MONITORING_API(FillTree(*primary_pandora, "matchtree"));
-    */
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 {
+    const pandora::Pandora * primary_pandora = MultiPandoraApi::GetPrimaryPandoraInstance(&(this->GetPandora()));
+    PANDORA_MONITORING_API(Create(*primary_pandora));
+    PANDORA_MONITORING_API(SaveTree(*primary_pandora, "matchtree", "output.root", "RECREATE"));
+    //PANDORA_MONITORING_API(Delete(*primary_pandora));
+
+
     unsigned int repeatCounter(0);
 
     for (MatrixToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
@@ -368,8 +375,8 @@ float TwoViewTransverseTracksAlgorithm::CalculateTTestPValue(const ChargeProfile
 	{
       ChargeProfile windowProfile1(GetWindow(k, sizeWindowInBins, profile1));
       ChargeProfile windowProfile2(GetWindow(k, sizeWindowInBins, profile2));
-      xMatchingScore.emplace_back(profile1[k].first, CalculateCorrelationCoefficient(windowProfile1, windowProfile2));
-      if (CalculateCorrelationCoefficient(windowProfile1, windowProfile2)>0.6) fracGoodScore++; //ATTN - Arbitrary 0.6 value of matching score
+      xMatchingScore.emplace_back(profile1[k].first, 1-CalculateTTestPValue(windowProfile1, windowProfile2));
+      if (1-CalculateTTestPValue(windowProfile1, windowProfile2)>0.99999) fracGoodScore++; //ATTN - Arbitrary 0.99999 value of matching score
 	}
       else
 	{
