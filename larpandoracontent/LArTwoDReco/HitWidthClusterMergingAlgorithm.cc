@@ -75,7 +75,7 @@ void HitWidthClusterMergingAlgorithm::PopulateClusterAssociationMap(const Cluste
             clusterAssociationMap[pTestCluster].m_backwardAssociations.insert(pCurrentCluster);
         }
     }
-
+    
     this->RemoveShortcutAssociations(clusterVector, clusterAssociationMap);
 }
 
@@ -100,7 +100,7 @@ bool HitWidthClusterMergingAlgorithm::IsExtremalCluster(const bool isForward, co
         if (std::fabs(testMaxX - currentMaxX) > std::numeric_limits<float>::epsilon())
             return (testMaxX < currentMaxX);
     }
-  
+
     return LArClusterHelper::SortByNHits(pTestCluster, pCurrentCluster);
 }
 
