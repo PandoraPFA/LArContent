@@ -68,6 +68,8 @@ public:
             const pandora::CartesianVector m_referenceDirection;
         };
 
+    void RemoveClusteringErrors(const pandora::Cluster *const innerCluster, const ClusterAssociation &clusterAssociation, const pandora::CaloHitVector &extrapolatedCaloHitVector);
+    
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector);
 
     void InitialiseSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
@@ -102,6 +104,7 @@ public:
     float m_maxZSeparation;
     unsigned int m_slidingFitWindow;
     bool m_limitZ;
+    bool m_useOtherCluster;
 
 };
 
