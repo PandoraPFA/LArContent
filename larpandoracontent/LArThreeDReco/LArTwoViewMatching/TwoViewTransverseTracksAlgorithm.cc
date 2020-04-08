@@ -94,21 +94,20 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 
     size_t sizeWindowInBins(std::max(nSamplingPoints/3,10)); //ATTN - No real reason to have nSamplingPoints/3
     ScoreProfile xMatchingScore;
-    float fracGoodScore(0.);
+    float fracGoodScore(-1);
 
     if (profile1.size()>sizeWindowInBins)
     {
+        fracGoodScore = 0.;
         xMatchingScore = SlidingWindowMatchingScore(sizeWindowInBins, profile1, profile2, fracGoodScore);
-	       fracGoodScore /= (nSamplingPoints-sizeWindowInBins+1);
     }
-    //float matchingScore(1-CalculateCorrelationCoefficient(profile1, profile2));
-    float matchingScore(fracGoodScore);
+    float matchingScore((profile1.size()>10) ? fracGoodScore : 1-CalculateTTestPValue(profile1, profile2));
     
     std::cout<<"Cluster 1 NHits: " << pCluster1->GetOrderedCaloHitList().size() << "  Cluster 2 NHits: " << pCluster2->GetOrderedCaloHitList().size() << std::endl;
     std::cout<<"KS PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
     std::cout<<"Kuiper PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
     std::cout<<"XOverlap: " << xOverlap << std::endl;
-    std::cout<<"Correlation: " << matchingScore << std::endl;    
+    std::cout<<"Correlation PValue: " << matchingScore << std::endl;    
     std::cout<<"fracGoodScore = " << fracGoodScore << std::endl;
 
     /*
@@ -183,7 +182,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
         x_V.push_back(x);
         y_V.push_back(y);
         y_prof_V.push_back(profile2[i].second);
-	score_prof.push_back(xMatchingScore[i].second);
+	if (resampledDisCumulDist2.GetSize()>10) score_prof.push_back(xMatchingScore[i].second);
     }
 
     int clusterUSize = pCluster1->GetOrderedCaloHitList().size();
@@ -362,10 +361,12 @@ float TwoViewTransverseTracksAlgorithm::CalculateTTestPValue(const ChargeProfile
   TwoViewTransverseTracksAlgorithm::ScoreProfile TwoViewTransverseTracksAlgorithm::SlidingWindowMatchingScore(const size_t &sizeWindowInBins, const ChargeProfile &profile1, const ChargeProfile &profile2, float &fracGoodScore)
 {
   ScoreProfile xMatchingScore;
+  int NWindow(0);
   for (size_t k = 0; k<profile1.size(); k++)
     {
       if ( (k<(profile1.size()-sizeWindowInBins/2)) && (k>(sizeWindowInBins/2-1)) )
 	{
+      NWindow++;
       ChargeProfile windowProfile1(GetWindow(k, sizeWindowInBins, profile1));
       ChargeProfile windowProfile2(GetWindow(k, sizeWindowInBins, profile2));
       xMatchingScore.emplace_back(profile1[k].first, 1-CalculateTTestPValue(windowProfile1, windowProfile2));
@@ -376,6 +377,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateTTestPValue(const ChargeProfile
 	  xMatchingScore.emplace_back(profile1[k].first, 0.5);
 	}
     }
+  fracGoodScore /= NWindow;
   return xMatchingScore;
 }
 
