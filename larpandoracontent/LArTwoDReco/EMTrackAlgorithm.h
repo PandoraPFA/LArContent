@@ -68,7 +68,7 @@ public:
             const pandora::CartesianVector m_referenceDirection;
         };
 
-    void RemoveClusteringErrors(const pandora::Cluster *const innerCluster, const ClusterAssociation &clusterAssociation, const pandora::CaloHitVector &extrapolatedCaloHitVector);
+    void RemoveClusteringErrors(const pandora::Cluster *const innerCluster, const ClusterAssociation &clusterAssociation, const pandora::CaloHitVector &extrapolatedCaloHitVector, const TwoDSlidingFitResultMap &currentMicroFitResult);
     
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector);
 
