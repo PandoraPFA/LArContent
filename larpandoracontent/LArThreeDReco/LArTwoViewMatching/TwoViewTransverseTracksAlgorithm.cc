@@ -87,6 +87,8 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
         resampledDisCumulDist1.CollectCumulativeData(xPos, q1);
         float q2 = spline2(xPos).coeff(0);
         resampledDisCumulDist2.CollectCumulativeData(xPos, q2);
+	//std::cout<<"Cluster 1 spliney: " << q1 << "  Cluster 2 spliney =  " << q2 << std::endl;
+
     }
 
     ChargeProfile profile1(CreateProfileFromCumulativeDistribution(resampledDisCumulDist1));
@@ -110,39 +112,6 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     std::cout<<"Correlation PValue: " << matchingScore << std::endl;    
     std::cout<<"fracGoodScore = " << fracGoodScore << std::endl;
 
-    /*
-    int NHits1(overlapHits1.size()), NHits2(overlapHits2.size());
-    int k(2);
-    int nSegments(1),nMaxSegments(7);
-    while ( (std::min(NHits1,NHits2)/k)>25 && k<nMaxSegments+1 )
-      {
-        nSegments = k;
-        k++;
-      }
-
-    std::vector<pandora::CaloHitList> segmentedOverlapHits1, segmentedOverlapHits2;
-
-    LArDiscreteCumulativeDistributionHelper::SplitCaloHitList(nSegments, xOverlap, overlapHits1, segmentedOverlapHits1);
-    LArDiscreteCumulativeDistributionHelper::SplitCaloHitList(nSegments, xOverlap, overlapHits2, segmentedOverlapHits2);
-
-    for (int i = 0; i<nSegments; i++)
-      {
-        DiscreteCumulativeDistribution disCumulDist1, disCumulDist2;
-        //LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(overlapHits1, disCumulDist1);                                                                                             
-        //LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(overlapHits2, disCumulDist2);                                                                                             
-
-	LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(segmentedOverlapHits1[i], disCumulDist1);
-	LArDiscreteCumulativeDistributionHelper::CreateDistributionFromCaloHits(segmentedOverlapHits2[i], disCumulDist2);
-
-        if (0 == disCumulDist1.GetSize() || 0 == disCumulDist2.GetSize())
-          return;
-
-        float matchingScoreKuip(LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(disCumulDist1, disCumulDist2));
-        float matchingScoreKS(LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(disCumulDist1, disCumulDist2));
-	std::cout << "MatchingScoreKUIPER: " << matchingScoreKuip << std::endl;
-	std::cout << "MatchingScoreKS: " << matchingScoreKS << std::endl;
-      }
-    */
     TwoViewTransverseOverlapResult twoViewTransverseOverlapResult(matchingScore, twoViewXOverlap);
 
     if (xOverlap > std::numeric_limits<float>::epsilon())
@@ -157,18 +126,18 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     std::vector<float> y_prof_V;
     std::vector<float> score_prof;
 
-//    for (size_t i = 0; i < disCumulDist1.GetSize(); i++){
-//        float x,y;
-//        disCumulDist1.GetXandY(i,x,y);
-//        x_U.push_back(x);
-//        y_U.push_back(y);
-//    }
-//    for (size_t i = 0; i < disCumulDist2.GetSize(); i++){
-//        float x,y;
-//        disCumulDist2.GetXandY(i,x,y);
-//        x_V.push_back(x);
-//        y_V.push_back(y);
-//    }
+    for (size_t i = 0; i < disCumulDist1.GetSize(); i++){
+        float x,y;
+        disCumulDist1.GetXandY(i,x,y);
+        x_U.push_back(x);
+        y_U.push_back(y);
+    }
+    for (size_t i = 0; i < disCumulDist2.GetSize(); i++){
+        float x,y;
+        disCumulDist2.GetXandY(i,x,y);
+        x_V.push_back(x);
+        y_V.push_back(y);
+    }
     for (size_t i = 0; i < resampledDisCumulDist1.GetSize(); i++){
         float x,y;
         resampledDisCumulDist1.GetXandY(i,x,y);
@@ -208,7 +177,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 
 
     PANDORA_MONITORING_API(FillTree(*primary_pandora, "matchtree"));
-    */
+    */    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -216,6 +185,10 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
+
+    //const pandora::Pandora * primary_pandora = MultiPandoraApi::GetPrimaryPandoraInstance(&(this->GetPandora()));
+    //PANDORA_MONITORING_API(Create(*primary_pandora));
+    //PANDORA_MONITORING_API(SaveTree(*primary_pandora, "matchtree", "output.root", "RECREATE"));
 
     for (MatrixToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
@@ -270,6 +243,7 @@ TwoViewTransverseTracksAlgorithm::Spline1f TwoViewTransverseTracksAlgorithm::Cre
         cumulativeDistribution.GetXandY(iValue, x, y);
         xVals(iValue) = x;
         yVals(iValue) = y;
+	//std::cout << "what gives nan " << xVals(iValue) << " and " << yVals(iValue) << std::endl;
     }
     Spline1f spline(Eigen::SplineFitting<Spline1f>::Interpolate(yVals, 1, xVals));
     return spline;
