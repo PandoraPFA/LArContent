@@ -73,8 +73,8 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     if (0 == disCumulDist1.GetSize() || 0 == disCumulDist2.GetSize())
         return;
 
-    Spline1f spline1(CreateSplineFromCumulativeDistribution(disCumulDist1));
-    Spline1f spline2(CreateSplineFromCumulativeDistribution(disCumulDist2));
+    //Spline1f spline1(CreateSplineFromCumulativeDistribution(disCumulDist1));
+    //Spline1f spline2(CreateSplineFromCumulativeDistribution(disCumulDist2));
 
     DiscreteCumulativeDistribution resampledDisCumulDist1;
     DiscreteCumulativeDistribution resampledDisCumulDist2;
@@ -83,11 +83,11 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     nSamplingPoints = std::max(nSamplingPoints,10);
     for (float xPos = xOverlapMin; xPos < xOverlapMax; xPos += (xOverlapMax-xOverlapMin)/nSamplingPoints)
     {
-        float q1 = spline1(xPos).coeff(0);
-        resampledDisCumulDist1.CollectCumulativeData(xPos, q1);
-        float q2 = spline2(xPos).coeff(0);
-        resampledDisCumulDist2.CollectCumulativeData(xPos, q2);
-	//std::cout<<"Cluster 1 spliney: " << q1 << "  Cluster 2 spliney =  " << q2 << std::endl;
+      float q1 = LArDiscreteCumulativeDistributionHelper::CumulDistLinearInterpolation(xPos, disCumulDist1);  //spline1(xPos).coeff(0);
+      resampledDisCumulDist1.CollectCumulativeData(xPos, q1);
+      float q2 = LArDiscreteCumulativeDistributionHelper::CumulDistLinearInterpolation(xPos, disCumulDist2);  //spline2(xPos).coeff(0);
+      resampledDisCumulDist2.CollectCumulativeData(xPos, q2);
+      //std::cout<<"Cluster 1 spliney: " << q1 << "  Cluster 2 spliney =  " << q2 << std::endl;
 
     }
 
