@@ -141,17 +141,17 @@ inline void DiscreteCumulativeDistribution::GetXandY(int index, float &x, float 
 inline void DiscreteCumulativeDistribution::CreateCumulativeDistribution()
 {
     //float yLast(0.);
-    if (1 < m_InputDataHolder.size())
-    {
-        float xStart(m_InputDataHolder[0].first);
-        float xSecond(m_InputDataHolder[1].first);
-        m_InputDataHolder.insert(m_InputDataHolder.begin(),std::pair<float,float>(xStart-(xSecond-xStart), 0.f));
+    //if (1 < m_InputDataHolder.size())
+    //{
+    //    float xStart(m_InputDataHolder[0].first);
+    //    float xSecond(m_InputDataHolder[1].first);
+    //    m_InputDataHolder.insert(m_InputDataHolder.begin(),std::pair<float,float>(xStart-(xSecond-xStart), 0.f));
 
-        float xLast(m_InputDataHolder[m_InputDataHolder.size()-1].first);
-        float xSecondLast(m_InputDataHolder[m_InputDataHolder.size()-2].first);
-        CollectInputData(xLast + (xLast-xSecondLast), 0.f);
+    //    float xLast(m_InputDataHolder[m_InputDataHolder.size()-1].first);
+    //    float xSecondLast(m_InputDataHolder[m_InputDataHolder.size()-2].first);
+    //    CollectInputData(xLast + (xLast-xSecondLast), 0.f);
 
-    }
+    //}
     for (size_t iData = 0; iData < m_InputDataHolder.size(); iData++)
     {
         float x = m_InputDataHolder[iData].first;

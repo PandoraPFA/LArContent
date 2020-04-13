@@ -23,6 +23,16 @@ class LArDiscreteCumulativeDistributionHelper
 {
 public:
    /**
+    *  @brief  CumulDistLinearInterpolation
+    *
+    *  @param  x position for which we want the interpolated y
+    *  @param  the discrete cumulatie distribution one wishes to interpolate
+    *
+    *  @return 
+    */
+   static float CumulDistLinearInterpolation(const float &xPos, const DiscreteCumulativeDistribution &distribution);
+
+   /**
     *  @brief  SplitCaloHitList
     *
     *  @param  distributionA the first discrete cumulatie distribution
