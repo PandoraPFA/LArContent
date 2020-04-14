@@ -61,7 +61,7 @@ public:
          *
          *  @return the parent
          */
-        VertexType GetParent() const;
+       VertexType GetParent() const;
 
         /**
          *  @brief  Get daughter
@@ -85,7 +85,10 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    void OrderMerges(const pandora::ParticleFlowObject *const vertexPfo, pandora::PfoVector &pfoVector) const;
 
+    bool IsBoundaryAPA(const pandora::LArTPC *const TPC1, const pandora::LArTPC *const TPC2) const;
+    
     /**
      *  @brief  Select primary Pfos from the input list of Pfos
      *
@@ -185,7 +188,8 @@ private:
         const PfoMergeMap &inputPfoMerges, PfoMergeMap &outputPfoMerges) const;
 
     typedef std::pair<const pandora::LArTPC*, const pandora::LArTPC*> LArTPCPair;
-    typedef std::map<const pandora::ParticleFlowObject*, LArPointingCluster::Vertex> PfoToPointingVertexMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, LArPointingCluster::Vertex> PfoToPointingVertexMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, PfoToPointingVertexMap> PfoToPointingVertexMatrix;
 
     /**
      *  @brief  Apply X0 corrections, and then stitch together Pfos
@@ -250,7 +254,7 @@ private:
      *  @param  pfoToPointingVertexMap map of pfo to pointing vertex used in stitching
      */
     void CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
-        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMap &pfoToPointingVertexMap) const;
+        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
 
     bool            m_useXcoordinate;
     bool            m_alwaysApplyT0Calculation;
