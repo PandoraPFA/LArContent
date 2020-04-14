@@ -85,10 +85,7 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    void OrderMerges(const pandora::ParticleFlowObject *const vertexPfo, pandora::PfoVector &pfoVector) const;
 
-    bool IsBoundaryAPA(const pandora::LArTPC *const TPC1, const pandora::LArTPC *const TPC2) const;
-    
     /**
      *  @brief  Select primary Pfos from the input list of Pfos
      *
