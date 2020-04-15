@@ -30,14 +30,14 @@ public:
          *
          *  @param  positionVector the central position of the constituent hit
          *  @param  hitWidth the hit width of the constituent hit
-         *  @param  parentClusterAddress the address of the original, unbroken hit to which it belongs 
+         *  @param  pParentClusterAddress the address of the original, unbroken hit to which it belongs 
          */
-        ConstituentHit(const pandora::CartesianVector &positionVector, const float hitWidth, const pandora::Cluster *const parentClusterAddress);
+        ConstituentHit(const pandora::CartesianVector &positionVector, const float hitWidth, const pandora::Cluster *const pParentClusterAddress);
         
         /**
          *  @brief  Returns the constituent hit central position
          */
-        pandora::CartesianVector GetPositionVector() const;
+        const pandora::CartesianVector& GetPositionVector() const;
 
         /**
          *  @brief  Returns the constituent hit width
@@ -60,7 +60,7 @@ public:
              *
              *  @param  referencePoint the point relative to which constituent hits are ordered
              */
-	        SortByDistanceToPoint(const pandora::CartesianVector referencePoint) : m_referencePoint(referencePoint) {}
+            SortByDistanceToPoint(const pandora::CartesianVector referencePoint) : m_referencePoint(referencePoint) {}
             
             /**
              *  @brief  Sort constituent hits by their position relative to a referencePoint
@@ -77,9 +77,9 @@ public:
         };
 
     private:
-        pandora::CartesianVector m_positionVector;        ///< The central position of the consituent hit
-        float m_hitWidth;                                 ///< The width of the constituent hit
-        const pandora::Cluster *m_parentClusterAddress;   ///< The address of the cluster the constituent hit belongs to
+        pandora::CartesianVector    m_positionVector;          ///< The central position of the consituent hit
+        float                       m_hitWidth;                ///< The width of the constituent hit
+        const pandora::Cluster     *m_pParentClusterAddress;   ///< The address of the cluster the constituent hit belongs to
     };
 
     typedef std::vector<ConstituentHit> ConstituentHitVector;
@@ -145,12 +145,12 @@ public:
         const pandora::CartesianVector& GetHigherXExtrema() const;     
 
     private:
-        const pandora::Cluster *m_pCluster;                  ///< The address of the cluster 
-        const unsigned int m_numCaloHits;                    ///< The number of calo hits within the cluster
-        const ConstituentHitVector m_constituentHitVector;   ///< The vector of constituent hits
-        const float m_totalWeight;                           ///< The total hit weight of the contituent hits
-        const pandora::CartesianVector m_lowerXExtrema;      ///< The lower x extremal point of the constituent hits
-        const pandora::CartesianVector m_higherXExtrema;     ///< The higher x extremal point of the constituent hits
+        const pandora::Cluster           *m_pCluster;               ///< The address of the cluster 
+        const unsigned int                m_numCaloHits;            ///< The number of calo hits within the cluster
+        const ConstituentHitVector        m_constituentHitVector;   ///< The vector of constituent hits
+        const float                       m_totalWeight;            ///< The total hit weight of the contituent hits
+        const pandora::CartesianVector    m_lowerXExtrema;          ///< The lower x extremal point of the constituent hits
+        const pandora::CartesianVector    m_higherXExtrema;         ///< The higher x extremal point of the constituent hits
     };
 
     typedef std::unordered_map<const pandora::Cluster*, const ClusterParameters> ClusterToParametersMap;
@@ -278,7 +278,7 @@ public:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector LArHitWidthHelper::ConstituentHit::GetPositionVector() const
+inline const pandora::CartesianVector& LArHitWidthHelper::ConstituentHit::GetPositionVector() const
 {
     return m_positionVector;
 }
@@ -288,6 +288,20 @@ inline pandora::CartesianVector LArHitWidthHelper::ConstituentHit::GetPositionVe
 inline float LArHitWidthHelper::ConstituentHit::GetHitWidth() const
 {
     return m_hitWidth;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::Cluster* LArHitWidthHelper::ConstituentHit::GetParentClusterAddress() const
+{
+    return m_pParentClusterAddress;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::Cluster* LArHitWidthHelper::ClusterParameters::GetClusterAddress() const
+{
+    return m_pCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
