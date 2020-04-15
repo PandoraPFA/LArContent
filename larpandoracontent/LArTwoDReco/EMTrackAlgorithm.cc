@@ -609,10 +609,10 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     // check that clusters are reasonably far away
     if (std::sqrt(currentPoint.GetDistanceSquared(testPoint)) < 30)
     {
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "TOO CLOSE", RED, 2);
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TOO CLOSE", RED, 2);
-        //std::cout << "DISTANCE: " << std::sqrt(currentPoint.GetDistanceSquared(testPoint)) << std::endl;
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "TOO CLOSE", RED, 2);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TOO CLOSE", RED, 2);
+        std::cout << "DISTANCE: " << std::sqrt(currentPoint.GetDistanceSquared(testPoint)) << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
     
@@ -620,9 +620,9 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     if (currentDirection.GetCosOpeningAngle(testDirection * (-1.0)) < 0.99)
     {
         std::string reason("ANGLE" + std::to_string(currentDirection.GetCosOpeningAngle(testDirection * (-1.0))));
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, reason, RED, 2);
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, reason, RED, 2);
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, reason, RED, 2);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, reason, RED, 2);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
     
@@ -631,84 +631,84 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     CartesianVector extrapolatedCurrentPoint(currentPoint + currentDirection*separationDistance);
     CartesianVector extrapolatedTestPoint(testPoint + testDirection*separationDistance);
     
-    /*
+    
     CartesianVector testTR(testPoint.GetX() + m_maxXSeparation, 0, testPoint.GetZ() + m_maxZSeparation);
     CartesianVector testTL(testPoint.GetX() - m_maxXSeparation, 0, testPoint.GetZ() + m_maxZSeparation);
     CartesianVector testBR(testPoint.GetX() + m_maxXSeparation, 0, testPoint.GetZ() - m_maxZSeparation);
     CartesianVector testBL(testPoint.GetX() - m_maxXSeparation, 0, testPoint.GetZ() - m_maxZSeparation);
-    */
-    /*
+    
+    
     PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTR, &testTL, "TEST BOX", RED, 2, 2);
     PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTR, &testBR, "TEST BOX", RED, 2, 2);
     PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testTL, &testBL, "TEST BOX", RED, 2, 2);
     PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &testBR, &testBL, "TEST BOX", RED, 2, 2);
-    */
+    
     
     if (extrapolatedCurrentPoint.GetX() > testPoint.GetX() + m_maxXSeparation || extrapolatedCurrentPoint.GetX() < testPoint.GetX() - m_maxXSeparation)
     {
-        /*
+        
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", RED, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
 
         PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        */
+        
         return false;
     }
 
     if (extrapolatedCurrentPoint.GetZ() > testPoint.GetZ() + m_maxZSeparation || extrapolatedCurrentPoint.GetZ() < testPoint.GetZ() - m_maxZSeparation)
     {
-        /*
+        
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", RED, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
 
         PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        */
+        
         return false;
     }
 
-    /*
+    
         CartesianVector currentTR(currentPoint.GetX() + m_maxXSeparation, 0, currentPoint.GetZ() + m_maxZSeparation);
         CartesianVector currentTL(currentPoint.GetX() - m_maxXSeparation, 0, currentPoint.GetZ() + m_maxZSeparation);
         CartesianVector currentBR(currentPoint.GetX() + m_maxXSeparation, 0, currentPoint.GetZ() - m_maxZSeparation);
         CartesianVector currentBL(currentPoint.GetX() - m_maxXSeparation, 0, currentPoint.GetZ() - m_maxZSeparation);
-    */
+    
         
-        /*
+        
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTR, &currentTL, "CURRENT BOX", RED, 2, 2);
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTR, &currentBR, "CURRENT BOX", RED, 2, 2);
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTL, &currentBL, "CURRENT BOX", RED, 2, 2);
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentBR, &currentBL, "CURRENT BOX", RED, 2, 2);
-        */
+        
 
     
     if (extrapolatedTestPoint.GetX() > currentPoint.GetX() + m_maxXSeparation || extrapolatedTestPoint.GetX() < currentPoint.GetX() - m_maxXSeparation)
     {
-        /*
+        
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", RED, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
 
         PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        */
+        
         return false;
     }
 
 
     if (extrapolatedTestPoint.GetZ() > currentPoint.GetZ() + m_maxZSeparation || extrapolatedTestPoint.GetZ() < currentPoint.GetZ() - m_maxZSeparation)
     {
-        /*
+        
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "CURRENT MERGE POINT", RED, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", BLACK, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", RED, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", DARKGREEN, 2);
 
         PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        */
+        
         return false;
     }
 
@@ -727,12 +727,12 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedCurrentPoint, "EXTRAPOLATED CURRENT POINT", VIOLET, 2);
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "TEST MERGE POINT", GREEN, 2);
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedTestPoint, "EXTRAPOLATED TEST POINT", VIOLET, 2);
-    
+    */
     
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "PASS", GREEN, 2);
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, "PASS", GREEN, 2);
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
+    
     return true;
 }
 
