@@ -11,6 +11,7 @@
 #include "Pandora/Algorithm.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterAssociationAlgorithm.h"
+
 #include "larpandoracontent/LArHelpers/LArHitWidthHelper.h"
 
 namespace lar_content
