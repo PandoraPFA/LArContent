@@ -620,9 +620,9 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     if (currentDirection.GetCosOpeningAngle(testDirection * (-1.0)) < 0.99)
     {
         std::string reason("ANGLE" + std::to_string(currentDirection.GetCosOpeningAngle(testDirection * (-1.0))));
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, reason, RED, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, reason, RED, 2);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, reason, RED, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testPoint, reason, RED, 2);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
     
