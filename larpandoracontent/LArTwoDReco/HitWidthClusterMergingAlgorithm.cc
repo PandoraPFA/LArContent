@@ -8,6 +8,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArTwoDReco/HitWidthClusterMergingAlgorithm.h"
+
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
@@ -42,7 +43,8 @@ void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *
         if (LArHitWidthHelper::GetOriginalTotalClusterWeight(pCluster) < m_minClusterWeight)
             continue;
 
-        m_clusterToParametersMap.insert(std::pair<const Cluster*, LArHitWidthHelper::ClusterParameters>(pCluster, LArHitWidthHelper::ClusterParameters(pCluster, m_maxConstituentHitWidth, false, m_hitWidthScalingFactor)));
+        m_clusterToParametersMap.insert(std::pair<const Cluster*, LArHitWidthHelper::ClusterParameters>(pCluster,
+            LArHitWidthHelper::ClusterParameters(pCluster, m_maxConstituentHitWidth, false, m_hitWidthScalingFactor)));
         
         clusterVector.push_back(pCluster);
     }
@@ -155,16 +157,16 @@ CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHi
     if (clusterFitParameters.GetNumCaloHits() == 1)
         return CartesianVector(1.f, 0.f, 0.f);
 
-    // minimise the longitudinal distance in fit (works best for transverse trajectories)
+    // minimise the transverse distance in fit
     CartesianVector lsTransverseClusterFitDirection(0.f, 0.f, 0.f), lsTransverseIntercept(0.f, 0.f, 0.f);
     float lsTransverseChiSquared(0.f);
 
-    // minimise the transverse coordinate in fit (works best for longitudinal trajectories)
+    // minimise the longitudinal distance in fit
     CartesianVector lsLongitudinalClusterFitDirection(0.f, 0.f, 0.f), lsLongitudinalIntercept(0.f, 0.f, 0.f);
     float lsLongitudinalChiSquared(0.f);
 
-    this->GetWeightedGradient(clusterFitParameters, true, lsTransverseClusterFitDirection, lsTransverseIntercept, lsTransverseChiSquared, fitReferencePoint);
-    this->GetWeightedGradient(clusterFitParameters, false, lsLongitudinalClusterFitDirection, lsLongitudinalIntercept, lsLongitudinalChiSquared, fitReferencePoint);
+    this->GetWeightedGradient(clusterFitParameters.GetConstituentHitVector(), false, lsTransverseClusterFitDirection, lsTransverseIntercept, lsTransverseChiSquared, fitReferencePoint);
+    this->GetWeightedGradient(clusterFitParameters.GetConstituentHitVector(), true, lsLongitudinalClusterFitDirection, lsLongitudinalIntercept, lsLongitudinalChiSquared, fitReferencePoint);
     
     // return fit with the lowest chi-squared
     if (lsTransverseChiSquared < lsLongitudinalChiSquared)
@@ -175,21 +177,13 @@ CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHi
   
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterFitParameters, const bool isTransverse,
+void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelper::ConstituentHitVector &unsortedConstituentHitVector, const bool isLongitudinal,
         CartesianVector &direction, CartesianVector &zIntercept, float &chiSquared, const CartesianVector &fitReferencePoint) const
 {
-    // cannot make a longitudinal fit to a single hit cluster
-    if (!isTransverse && clusterFitParameters.GetNumCaloHits() == 1) 
-    {
-        std::cout << "HitWidthClusterMergingAlgorithm::GetWeightedGradient - cannot make a longitudinal fit to a single hit cluster" << std::endl;
-        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-    }
-
     float weightSum(0.f), weightedXSum(0.f), weightedZSum(0.f);
     bool isXConstant(true), isZConstant(true);
-
-    LArHitWidthHelper::ConstituentHitVector constituentHitVector(clusterFitParameters.GetConstituentHitVector());
-
+    LArHitWidthHelper::ConstituentHitVector constituentHitVector(unsortedConstituentHitVector);
+    
     // sort hits with respect to their distance to the fitReferencePoint (closest -> furthest)
     std::sort(constituentHitVector.begin(), constituentHitVector.end(), LArHitWidthHelper::ConstituentHit::SortByDistanceToPoint(fitReferencePoint));
     
@@ -199,10 +193,10 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
         const CartesianVector &hitPosition(constituentHit.GetPositionVector());
         const float hitWeight(constituentHit.GetHitWidth());
 
-        if (std::fabs(clusterFitParameters.GetConstituentHitVector().begin()->GetPositionVector().GetX() - hitPosition.GetX()) > std::numeric_limits<float>::epsilon())
+        if (std::fabs(constituentHitVector.begin()->GetPositionVector().GetX() - hitPosition.GetX()) > std::numeric_limits<float>::epsilon())
             isXConstant = false;
 
-        if (std::fabs(clusterFitParameters.GetConstituentHitVector().begin()->GetPositionVector().GetZ() - hitPosition.GetZ()) > std::numeric_limits<float>::epsilon())
+        if (std::fabs(constituentHitVector.begin()->GetPositionVector().GetZ() - hitPosition.GetZ()) > std::numeric_limits<float>::epsilon())
             isZConstant = false;
 
         weightedXSum += hitPosition.GetX() * hitWeight;
@@ -216,7 +210,7 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
 
     if (weightSum < std::numeric_limits<float>::epsilon())
     {
-        std::cout << "HitWidthClusterMergingAlgorithm::GetWeightedGradient - hit weight in fit is equivalent to zero" << std::endl;
+        std::cout << "HitWidthClusterMergingAlgorithm::GetWeightedGradient - hit weight in fit is negative or equivalent to zero" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
     }
 
@@ -233,7 +227,7 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
     if (isZConstant) 
     {
         direction = CartesianVector(1.f, 0.f, 0.f);
-        zIntercept = CartesianVector(0.f, 0.f, clusterFitParameters.GetConstituentHitVector().begin()->GetPositionVector().GetZ());
+        zIntercept = CartesianVector(0.f, 0.f, constituentHitVector.begin()->GetPositionVector().GetZ());
         chiSquared = 0.f;
         return;
     }
@@ -246,7 +240,7 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
         weightCount += hitWeight;
         
         numerator += hitWeight * (hitPosition.GetX() - weightedXMean) * (hitPosition.GetZ() - weightedZMean);
-        denominator += isTransverse ? hitWeight * pow(hitPosition.GetX() - weightedXMean, 2) : hitWeight * pow(hitPosition.GetZ() - weightedZMean, 2);
+        denominator += isLongitudinal ? hitWeight * pow(hitPosition.GetX() - weightedXMean, 2) : hitWeight * pow(hitPosition.GetZ() - weightedZMean, 2);
 
         // do not exceed the specified hit weight in the fit
         if (weightCount > m_fittingWeight)
@@ -254,7 +248,7 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
     }
 
     float gradient(numerator/denominator), chi(0.f);
-    float intercept(isTransverse ? weightedZMean - gradient * weightedXMean : weightedXMean - gradient * weightedZMean);
+    float intercept(isLongitudinal ? weightedZMean - gradient * weightedXMean : weightedXMean - gradient * weightedZMean);
 
     weightCount = 0.f;
     for (const LArHitWidthHelper::ConstituentHit &constituentHit : constituentHitVector) 
@@ -263,7 +257,7 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
         const float hitWeight(constituentHit.GetHitWidth());
         weightCount += hitWeight;
         
-        chi += isTransverse ? hitWeight * pow(hitPosition.GetZ() - intercept - gradient * hitPosition.GetX(), 2) : hitWeight * pow(hitPosition.GetX() - intercept - gradient * hitPosition.GetZ(), 2);
+        chi += isLongitudinal ? hitWeight * pow(hitPosition.GetZ() - intercept - gradient * hitPosition.GetX(), 2) : hitWeight * pow(hitPosition.GetX() - intercept - gradient * hitPosition.GetZ(), 2);
 
         // do not exceed the specified hit weight in the fit
         if (weightCount > m_fittingWeight)
@@ -271,8 +265,8 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
     }
 
     // change coordinates to z=mx+c fit and normalise
-    direction = isTransverse ? CartesianVector(1.f, 0.f, gradient).GetUnitVector() : CartesianVector(gradient, 0.f, 1.f).GetUnitVector();
-    zIntercept = isTransverse ? CartesianVector(0.f, 0.f, intercept) : CartesianVector(0.f, 0.f, -intercept/gradient);
+    direction = isLongitudinal ? CartesianVector(1.f, 0.f, gradient).GetUnitVector() : CartesianVector(gradient, 0.f, 1.f).GetUnitVector();
+    zIntercept = isLongitudinal ? CartesianVector(0.f, 0.f, intercept) : CartesianVector(0.f, 0.f, -intercept/gradient);
     chiSquared = chi;
 }
 
