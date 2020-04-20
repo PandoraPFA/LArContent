@@ -22,11 +22,13 @@ EMTrackAlgorithm::EMTrackAlgorithm() :
     m_caloHitListName(),
     m_caloHitToParentClusterMap(),
     m_minCaloHits(25),
+    m_minSeparationDistance(27),
     m_maxXSeparation(10),
     m_maxZSeparation(10),
     m_slidingFitWindow(20),
     m_limitZ(false),
-    m_useOtherCluster(false)
+    m_useOtherCluster(false),
+    m_abortIfNoPosition(false)
 {
 }
 
@@ -203,6 +205,9 @@ void EMTrackAlgorithm::RemoveClusteringErrors(const Cluster *const innerCluster,
 
 void EMTrackAlgorithm::SelectCleanClusters(const ClusterList *pClusterList, ClusterVector &clusterVector)
 {
+
+    //std::cout << "MIN HITS: " << m_minCaloHits << std::endl;
+    
     for (const Cluster *const pCluster : *pClusterList)
     {
         if (pCluster->GetNCaloHits() < m_minCaloHits)
@@ -633,7 +638,8 @@ bool EMTrackAlgorithm::FindBestClusterAssociation(const Cluster *const pCurrentC
         }
         
         CartesianVector currentMergePoint(0.f, 0.f, 0.f), testMergePoint(0.f, 0.f, 0.f), currentMergeDirection(0.f, 0.f, 0.f), testMergeDirection(0.f, 0.f, 0.f);
-        this->GetClusterMergingCoordinates(currentMicroFitIter->second, currentMacroFitIter->second, currentMergePoint, currentMergeDirection, testMicroFitIter->second, testMacroFitIter->second, testMergePoint, testMergeDirection);
+        if (!this->GetClusterMergingCoordinates(currentMicroFitIter->second, currentMacroFitIter->second, currentMergePoint, currentMergeDirection, testMicroFitIter->second, testMacroFitIter->second, testMergePoint, testMergeDirection))
+            continue;
 
         if (!AreClustersAssociated(currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection))
             continue;
@@ -666,7 +672,7 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     }
     
     // check that clusters are reasonably far away
-    if (std::sqrt(currentPoint.GetDistanceSquared(testPoint)) < 27)
+    if (std::sqrt(currentPoint.GetDistanceSquared(testPoint)) < m_minSeparationDistance)
     {
         /*
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentPoint, "TOO CLOSE", RED, 2);
@@ -680,6 +686,7 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
     
     // check that opening angle is not too large
     // ATTN - HAVE TURNED THE DIRECTION AROUND IN PREVIOUS FUNCTION
+    // this may be useless (if going to have it drop out at an earlier stage)
     if (currentDirection.GetCosOpeningAngle(testDirection * (-1.0)) < 0.99)
     {
         /*
@@ -739,7 +746,7 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
         CartesianVector currentTL(currentPoint.GetX() - m_maxXSeparation, 0, currentPoint.GetZ() + m_maxZSeparation);
         CartesianVector currentBR(currentPoint.GetX() + m_maxXSeparation, 0, currentPoint.GetZ() - m_maxZSeparation);
         CartesianVector currentBL(currentPoint.GetX() - m_maxXSeparation, 0, currentPoint.GetZ() - m_maxZSeparation);
-    
+        
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTR, &currentTL, "CURRENT BOX", RED, 2, 2);
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTR, &currentBR, "CURRENT BOX", RED, 2, 2);
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &currentTL, &currentBL, "CURRENT BOX", RED, 2, 2);
@@ -800,7 +807,7 @@ bool EMTrackAlgorithm::AreClustersAssociated(const CartesianVector &currentPoint
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EMTrackAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFitResult &currentMicroFitResult, const TwoDSlidingFitResult &currentMacroFitResult, CartesianVector &currentMergePosition, CartesianVector &currentMergeDirection, const TwoDSlidingFitResult &testMicroFitResult, const TwoDSlidingFitResult &testMacroFitResult, CartesianVector &testMergePosition, CartesianVector &testMergeDirection)
+bool EMTrackAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFitResult &currentMicroFitResult, const TwoDSlidingFitResult &currentMacroFitResult, CartesianVector &currentMergePosition, CartesianVector &currentMergeDirection, const TwoDSlidingFitResult &testMicroFitResult, const TwoDSlidingFitResult &testMacroFitResult, CartesianVector &testMergePosition, CartesianVector &testMergeDirection)
 {
     //////////
     //CartesianVector origin(0.f,0.f,0.f);
@@ -818,23 +825,12 @@ void EMTrackAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFitResult &
     currentMacroFitResult.GetGlobalDirection(currentMacroLayerFitResultMap.begin()->second.GetGradient(), currentAverageDirection);
     testMacroFitResult.GetGlobalDirection(testMacroLayerFitResultMap.begin()->second.GetGradient(), testAverageDirection);    
 
-    // potentially, could be different - have never seen this happen?
-    if (currentMicroFitResult.GetMinLayer() != currentMacroFitResult.GetMinLayer())
-    {
-        std::cout << "ISOBEL: CURRENT MIN LAYERS ARE DIFFERENT" << std::endl;
-    }
-
-    if (currentMicroFitResult.GetMaxLayer() != currentMacroFitResult.GetMaxLayer())
-    {
-        std::cout << "ISOBEL: CURRENT MAX LAYERS ARE DIFFERENT" << std::endl;
-    }
-    
+    // potentially, could be different 
     int maxLayer(std::min(currentMicroFitResult.GetMaxLayer(), currentMacroFitResult.GetMaxLayer()));
     int minLayer(std::max(currentMicroFitResult.GetMinLayer(), currentMacroFitResult.GetMinLayer()));
 
     unsigned int goodPositionCount(0);
     unsigned int currentStabilityHitWindow(std::ceil(currentMicroFitResult.GetCluster()->GetNCaloHits() * 0.1));
-    //unsigned int currentStabilityHitWindow(10);
     for (int i = maxLayer; i >= minLayer; --i)
     {
         const auto microIter(currentMicroLayerFitResultMap.find(i));
@@ -847,13 +843,13 @@ void EMTrackAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFitResult &
         currentMicroFitResult.GetGlobalDirection(microIter->second.GetGradient(), microDirection);
 
         const float cosDirectionOpeningAngle(microDirection.GetCosOpeningAngle(m_useOtherCluster ? testAverageDirection : currentAverageDirection));
-        
+       
         //////////
-        std::cout << "COS OPENING ANGLE: " << cosDirectionOpeningAngle << std::endl;
+        //std::cout << "COS OPENING ANGLE: " << cosDirectionOpeningAngle << std::endl;
         //currentMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), currentMergePosition);
         //////////
         
-        if (cosDirectionOpeningAngle > 0.9999)
+        if (cosDirectionOpeningAngle > 0.9995)
         {
             if (goodPositionCount == 0)
             {
@@ -869,7 +865,6 @@ void EMTrackAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFitResult &
 
         if (goodPositionCount > currentStabilityHitWindow)
         {
-            std::cout << "FOUND CURRENT BEST MARKER" << std::endl;
             break;
         }
             
@@ -877,34 +872,27 @@ void EMTrackAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFitResult &
         //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &origin, "ORIGIN", BLUE, 2);
         //PandoraMonitoringApi::Pause(this->GetPandora());
         
-        // if cannot find a point that is near the average (seems unlikely since thats how averages work...)
+        // if cannot find a point that is near the average 
         if (i == minLayer)
         {
-            std::cout << "ISOBEL: COULDN'T FIND CURRENT AVERAGE POINT" << std::endl;
+            if (m_abortIfNoPosition)
+            {
+                return false;
+            }
+            
             currentMergePosition = currentMicroFitResult.GetGlobalMaxLayerPosition();
             currentMergeDirection = currentMicroFitResult.GetGlobalMaxLayerDirection();
+            
         }
     }
 
     //TEST CLUSTER
-
-    // should be the same, but may not?
-    if (testMicroFitResult.GetMinLayer() != testMacroFitResult.GetMinLayer())
-    {
-        std::cout << "ISOBEL: CURRENT MIN LAYERS ARE DIFFERENT" << std::endl;
-    }
-
-    if (testMicroFitResult.GetMaxLayer() != testMacroFitResult.GetMaxLayer())
-    {
-        std::cout << "ISOBEL: CURRENT MAX LAYERS ARE DIFFERENT" << std::endl;
-    }
-    
     maxLayer = std::min(testMicroFitResult.GetMaxLayer(), testMacroFitResult.GetMaxLayer());
     minLayer = std::max(testMicroFitResult.GetMinLayer(), testMacroFitResult.GetMinLayer());
 
     goodPositionCount = 0;
     unsigned int testStabilityHitWindow(std::ceil(testMicroFitResult.GetCluster()->GetNCaloHits() * 0.1));
-    //unsigned int testStabilityHitWindow(10);
+    //std::cout << "TEST STABILITY WINDOW: " << testStabilityHitWindow << std::endl;
     for (int i = minLayer; i <= maxLayer; ++i)
     {
         const auto microIter(testMicroLayerFitResultMap.find(i));
@@ -918,11 +906,12 @@ void EMTrackAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFitResult &
         const float cosDirectionOpeningAngle(microDirection.GetCosOpeningAngle(m_useOtherCluster ? currentAverageDirection : testAverageDirection));
         
         ///////////////
-        std::cout << "COS OPENING ANGLE: " << microDirection.GetCosOpeningAngle(m_useOtherCluster ? currentAverageDirection : testAverageDirection) << std::endl;
+        //std::cout << "COS OPENING ANGLE: " << microDirection.GetCosOpeningAngle(m_useOtherCluster ? currentAverageDirection : testAverageDirection) << std::endl;
         //testMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), testMergePosition);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testMergePosition, "POSITION", VIOLET, 2);
         ///////////////
         
-        if (cosDirectionOpeningAngle > 0.9999)
+        if (cosDirectionOpeningAngle > 0.9995)
         {
             if (goodPositionCount == 0)
             {
@@ -937,29 +926,36 @@ void EMTrackAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFitResult &
             goodPositionCount = 0;
         }
 
+        //std::cout << "POSITION COUNT: " << goodPositionCount  << std::endl;
+        
         if (goodPositionCount > testStabilityHitWindow)
         {
-            std::cout << "TEST POINT FOUND" << std::endl;
             break;
         }
 
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testMergePosition, "POSITION", VIOLET, 2);
+        
         //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &origin, "ORIGIN", BLUE, 2);
         //PandoraMonitoringApi::Pause(this->GetPandora());
 
-        // if cannot find a point that is near the average (seems unlikely since thats how averages work...)
+        // if cannot find a point that is near the average 
         if (i == maxLayer)
         {
-            std::cout << "ISOBEL: COULDN'T FIND TEST AVERAGE POINT" << std::endl;
+            if (m_abortIfNoPosition)
+            {
+                return false;
+            }
+            
+	        //std::cout << "ISOBEL: COULDN'T FIND TEST AVERAGE POINT" << std::endl;
             testMergePosition = testMicroFitResult.GetGlobalMinLayerPosition();
             testMergeDirection = testMicroFitResult.GetGlobalMinLayerDirection() * (-1.0);
         }
-    }    
-    
+    }
+    /*
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &currentMergePosition, "CURRENT MERGE POSITION", BLUE, 2);
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testMergePosition, "TEST MERGE POSITION", BLUE, 2);
     PandoraMonitoringApi::Pause(this->GetPandora());
-    
+    */
+    return true;
 
 }
 
@@ -983,10 +979,16 @@ StatusCode EMTrackAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "MaxZSeparation", m_maxZSeparation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinSeparationDistance", m_minSeparationDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "LimitZ", m_limitZ));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseOtherCluster", m_useOtherCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "AbortIfNoPosition", m_abortIfNoPosition));
 
     return STATUS_CODE_SUCCESS;
 }

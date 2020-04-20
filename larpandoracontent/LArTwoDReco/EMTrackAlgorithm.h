@@ -86,7 +86,7 @@ public:
 
     bool AreClustersAssociated(const pandora::CartesianVector &currentPoint, const pandora::CartesianVector &currentDirection, const pandora::CartesianVector &testPoint, const pandora::CartesianVector &testDirection);
     
-    void GetClusterMergingCoordinates(const TwoDSlidingFitResult &cluster1FitResult, const TwoDSlidingFitResult &cluster1MacroFitResult, pandora::CartesianVector &cluster1MergePoint, pandora::CartesianVector &cluster1Direction, const TwoDSlidingFitResult &cluster2FitResult, const TwoDSlidingFitResult &cluster2MacroFitResult, pandora::CartesianVector &cluster2MergePoint, pandora::CartesianVector &cluster2Direction);
+    bool GetClusterMergingCoordinates(const TwoDSlidingFitResult &cluster1FitResult, const TwoDSlidingFitResult &cluster1MacroFitResult, pandora::CartesianVector &cluster1MergePoint, pandora::CartesianVector &cluster1Direction, const TwoDSlidingFitResult &cluster2FitResult, const TwoDSlidingFitResult &cluster2MacroFitResult, pandora::CartesianVector &cluster2MergePoint, pandora::CartesianVector &cluster2Direction);
     
     void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, pandora::CaloHitVector &extrapolatedCaloHitVector, CaloHitToParentClusterMap &caloHitToParentClusterMap);
 
@@ -100,11 +100,13 @@ public:
     CaloHitToParentClusterMap m_caloHitToParentClusterMap;
     
     float m_minCaloHits; // minimum number of calo hits for cluster to be considered
+    bool m_minSeparationDistance;
     float m_maxXSeparation;
     float m_maxZSeparation;
     unsigned int m_slidingFitWindow;
     bool m_limitZ;
     bool m_useOtherCluster;
+    bool m_abortIfNoPosition;
 
 };
 
