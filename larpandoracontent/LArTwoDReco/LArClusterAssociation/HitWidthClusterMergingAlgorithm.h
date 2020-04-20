@@ -1,5 +1,5 @@
 /**
- *  @file   HitWidthClusterMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h
  *
  *  @brief  Header file for the hit width cluster merging algorithm class.
  *

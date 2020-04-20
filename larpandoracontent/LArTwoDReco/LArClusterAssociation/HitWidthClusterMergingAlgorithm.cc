@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/HitWidthClusterMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.cc
  *
  *  @brief  Implementation of the hit width cluster merging algorithm class.
  *
@@ -7,10 +7,10 @@
  */
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArTwoDReco/HitWidthClusterMergingAlgorithm.h"
-
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h"
 
 using namespace pandora;
 
