@@ -28,7 +28,6 @@ public:
      *  @brief  Default constructor
      */
     StitchingCosmicRayMergingTool();
-    ~StitchingCosmicRayMergingTool();
 
     void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map);
 
