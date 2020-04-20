@@ -46,12 +46,12 @@ private:
     /**
      *  @brief  Return the cluster direction at a reference point
      *
-     *  @param  clusterParameters parameters defining the cluster
+     *  @param  constituentHitVector the input vector of constituent hits
      *  @param  fitReferencePoint the hits closest to this point are included in the fit
      *
      *  @return CartesianVector the cluster direction at the reference point
      */
-    pandora::CartesianVector GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterParameters, const pandora::CartesianVector &fitReferencePoint) const;
+    pandora::CartesianVector GetClusterDirection(const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, const pandora::CartesianVector &fitReferencePoint) const;
 
     /**
      *  @brief  Perform a weighted least squared fit to the input consitutent hit positions by minimising the longitudinal (as traditional) or transverse distance in the fit

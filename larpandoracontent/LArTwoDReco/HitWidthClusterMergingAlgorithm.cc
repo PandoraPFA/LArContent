@@ -124,8 +124,8 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
     
     CartesianVector currentClusterDirection(0.f, 0.f, 0.f), testClusterDirection(0.f, 0.f, 0.f);
 
-    currentClusterDirection = this->GetClusterDirection(currentFitParameters, currentFitParameters.GetHigherXExtrema());
-    testClusterDirection = this->GetClusterDirection(testFitParameters, testFitParameters.GetLowerXExtrema());
+    currentClusterDirection = this->GetClusterDirection(currentFitParameters.GetConstituentHitVector(), currentFitParameters.GetHigherXExtrema());
+    testClusterDirection = this->GetClusterDirection(testFitParameters.GetConstituentHitVector(), testFitParameters.GetLowerXExtrema());
 
     // check clusters have a similar direction
     if (currentClusterDirection.GetCosOpeningAngle(testClusterDirection) < m_minMergeCosOpeningAngle)
@@ -134,10 +134,9 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
     // check that the new direction is consistent with the old clusters
     LArHitWidthHelper::ConstituentHitVector newConstituentHitVector(currentFitParameters.GetConstituentHitVector());
     newConstituentHitVector.insert(newConstituentHitVector.end(), testFitParameters.GetConstituentHitVector().begin(), testFitParameters.GetConstituentHitVector().end());
-    LArHitWidthHelper::ClusterParameters newParameters(nullptr, currentFitParameters.GetNumCaloHits() + testFitParameters.GetNumCaloHits(), 0.f,
-        newConstituentHitVector, CartesianVector(0.f, 0.f, 0.f), CartesianVector(0.f, 0.f, 0.f));
+    
     const CartesianVector midpoint((currentFitParameters.GetHigherXExtrema() + testFitParameters.GetLowerXExtrema()) * 0.5);
-    const CartesianVector newClusterDirection(this->GetClusterDirection(newParameters, midpoint));
+    const CartesianVector newClusterDirection(this->GetClusterDirection(newConstituentHitVector, midpoint));
 
     if (newClusterDirection.GetCosOpeningAngle(currentClusterDirection) < m_minDirectionDeviationCosAngle ||
         newClusterDirection.GetCosOpeningAngle(testClusterDirection) < m_minDirectionDeviationCosAngle)
@@ -150,13 +149,9 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterFitParameters,
+CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHitWidthHelper::ConstituentHitVector &constituentHitVector,
     const CartesianVector &fitReferencePoint) const 
 {
-    // if cluster composed of one hit, return a transverse line as fit
-    if (clusterFitParameters.GetNumCaloHits() == 1)
-        return CartesianVector(1.f, 0.f, 0.f);
-
     // minimise the transverse distance in fit
     CartesianVector lsTransverseClusterFitDirection(0.f, 0.f, 0.f), lsTransverseIntercept(0.f, 0.f, 0.f);
     float lsTransverseChiSquared(0.f);
@@ -165,8 +160,8 @@ CartesianVector HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHi
     CartesianVector lsLongitudinalClusterFitDirection(0.f, 0.f, 0.f), lsLongitudinalIntercept(0.f, 0.f, 0.f);
     float lsLongitudinalChiSquared(0.f);
 
-    this->GetWeightedGradient(clusterFitParameters.GetConstituentHitVector(), false, lsTransverseClusterFitDirection, lsTransverseIntercept, lsTransverseChiSquared, fitReferencePoint);
-    this->GetWeightedGradient(clusterFitParameters.GetConstituentHitVector(), true, lsLongitudinalClusterFitDirection, lsLongitudinalIntercept, lsLongitudinalChiSquared, fitReferencePoint);
+    this->GetWeightedGradient(constituentHitVector, false, lsTransverseClusterFitDirection, lsTransverseIntercept, lsTransverseChiSquared, fitReferencePoint);
+    this->GetWeightedGradient(constituentHitVector, true, lsLongitudinalClusterFitDirection, lsLongitudinalIntercept, lsLongitudinalChiSquared, fitReferencePoint);
     
     // return fit with the lowest chi-squared
     if (lsTransverseChiSquared < lsLongitudinalChiSquared)
