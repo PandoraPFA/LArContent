@@ -30,10 +30,10 @@ public:
          *
          *  @param  positionVector the central position of the constituent hit
          *  @param  hitWidth the hit width of the constituent hit
-         *  @param  pParentClusterAddress the address of the original, unbroken hit to which it belongs 
+         *  @param  pParentClusterAddress the address of the original, unbroken hit to which it belongs
          */
         ConstituentHit(const pandora::CartesianVector &positionVector, const float hitWidth, const pandora::Cluster *const pParentClusterAddress);
-        
+
         /**
          *  @brief  Returns the constituent hit central position
          */
@@ -61,7 +61,7 @@ public:
              *  @param  referencePoint the point relative to which constituent hits are ordered
              */
             SortByDistanceToPoint(const pandora::CartesianVector referencePoint) : m_referencePoint(referencePoint) {}
-            
+
             /**
              *  @brief  Sort constituent hits by their position relative to a referencePoint
              *
@@ -100,10 +100,10 @@ public:
          *  @param  hitWidthScalingFactor the constituent hit width scaling factor
          */
         ClusterParameters(const pandora::Cluster *const pCluster, const float maxConsituentHitWidth, const bool isUniformHits, const float hitWidthScalingFactor);
-        
+
         /**
          *  @brief  Constructor
-         * 
+         *
          *  @param  pCluster from which the parameters will be obtained
          *  @param  numCaloHits the number of calo hits within the cluster
          *  @param  totalWeight the total weight of the constituent hits
@@ -123,7 +123,7 @@ public:
          *  @brief  Returns the number of calo hits within the cluster
          */
         unsigned int GetNumCaloHits() const;
-        
+
         /**
          *  @brief  Returns the total weight of the constituent hits
          */
@@ -142,10 +142,10 @@ public:
         /**
          *  @brief  Returns the higher x extremal point of the constituent hits
          */
-        const pandora::CartesianVector& GetHigherXExtrema() const;     
+        const pandora::CartesianVector& GetHigherXExtrema() const;
 
     private:
-        const pandora::Cluster           *m_pCluster;               ///< The address of the cluster 
+        const pandora::Cluster           *m_pCluster;               ///< The address of the cluster
         const unsigned int                m_numCaloHits;            ///< The number of calo hits within the cluster
         const ConstituentHitVector        m_constituentHitVector;   ///< The vector of constituent hits
         const float                       m_totalWeight;            ///< The total hit weight of the contituent hits
@@ -163,11 +163,11 @@ public:
     public:
         /**
          *  @brief  Constructor
-         *  
+         *
          *  @param clusterToParametersMap the map [cluster -> cluster parameters]
          */
         SortByHigherXExtrema(const ClusterToParametersMap &clusterToParametersMap);
-        
+
         /**
          *  @brief  Sort clusters by the higher x extremal point of their constituent hits
          *
@@ -188,12 +188,12 @@ public:
      *  @param  pCluster the input cluster
      *  @param  clusterToParametersMap the map [cluster -> cluster parameter]
      *
-     *  @return  ClusterParameters the cluster parameters of the input cluster  
+     *  @return  ClusterParameters the cluster parameters of the input cluster
      */
     static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster, const ClusterToParametersMap &clusterToParametersMap);
 
     /**
-     *  @brief  Break up the cluster hits into constituent hits 
+     *  @brief  Break up the cluster hits into constituent hits
      *
      *  @param  pCluster the input cluster
      *  @param  maxConstituentHitWidth the maximum width of a constituent hit
@@ -207,7 +207,7 @@ public:
         const bool isUniform);
 
     /**
-     *  @brief  Break up the calo hit into constituent hits 
+     *  @brief  Break up the calo hit into constituent hits
      *
      *  @param  pCaloHit the input calo hit
      *  @param  pCluster the parent cluster
@@ -320,21 +320,21 @@ inline float LArHitWidthHelper::ClusterParameters::GetTotalWeight() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const LArHitWidthHelper::ConstituentHitVector& LArHitWidthHelper::ClusterParameters::GetConstituentHitVector() const 
+inline const LArHitWidthHelper::ConstituentHitVector& LArHitWidthHelper::ClusterParameters::GetConstituentHitVector() const
 {
     return m_constituentHitVector;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::GetLowerXExtrema() const 
+inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::GetLowerXExtrema() const
 {
     return m_lowerXExtrema;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::GetHigherXExtrema() const 
+inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::GetHigherXExtrema() const
 {
     return m_higherXExtrema;
 }
