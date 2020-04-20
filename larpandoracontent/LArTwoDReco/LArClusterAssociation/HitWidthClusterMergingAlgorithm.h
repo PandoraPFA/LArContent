@@ -1,5 +1,5 @@
 /**
- *  @file   HitWidthClusterMergingAlgorithm.h
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h
  *
  *  @brief  Header file for the hit width cluster merging algorithm class.
  *
@@ -55,7 +55,7 @@ private:
 
     /**
      *  @brief  Perform a weighted least squared fit to the input consitutent hit positions by minimising the longitudinal (as traditional) or transverse distance in the fit
-     *          Function composed of three main loops to calculate the: 
+     *          Function composed of three main loops to calculate the:
      *          1. x & z weighted means
      *          2. gradient and x/z intercept of the fit
      *          3. chi-squared of the fit
@@ -82,7 +82,7 @@ private:
     void RemoveShortcutAssociations(const pandora::ClusterVector &clusterVector, ClusterAssociationMap &clusterAssociationMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    
+
     float m_maxConstituentHitWidth;           ///< The maximum hit width of a constituent hit of broken up hit, units cm
     float m_hitWidthScalingFactor;            ///< The scaling factor of the hit widths
     float m_fittingWeight;                    ///< The maximum hit weight of considered in the least squared fit
