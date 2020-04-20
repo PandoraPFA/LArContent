@@ -54,16 +54,22 @@ private:
     pandora::CartesianVector GetClusterDirection(const LArHitWidthHelper::ClusterParameters &clusterParameters, const pandora::CartesianVector &fitReferencePoint) const;
 
     /**
-     *  @brief  Perform a weighted least squared fit 
+     *  @brief  Perform a weighted least squared fit to the input consitutent hit positions by minimising the longitudinal (as traditional) or transverse distance in the fit
+     *          Function composed of three main loops to calculate the: 
+     *          1. x & z weighted means
+     *          2. gradient and x/z intercept of the fit
+     *          3. chi-squared of the fit
+     *          The gradient & intercept are transformed such that the output is that of a z = mx + c fit
+     *          The fit is performed using a subset of points that are closest to the fitReferencePoint
      *
-     *  @param  clusterParameters parameters defining the cluster
-     *  @param  isTransverse whether to minimise the transverse distance (false) or longitudinal distance (true) in the fit
-     *  @param  direction the cluster direction
+     *  @param  unsortedConstituentHitVector the input vector of constituent hits to which the fit is applied
+     *  @param  isLongitudinal whether to minimise the longitudinal distance (true) or transverse distance (false) in the fit
+     *  @param  direction the fitted cluster direction
      *  @param  zIntercept the z intercept of the least squared fit
      *  @param  chiSquared the chi squared of the fit
      *  @param  fitReferencePoint the hits closest to this point are included in the fit
      */
-    void GetWeightedGradient(const LArHitWidthHelper::ClusterParameters &clusterParameters, const bool isTransverse, pandora::CartesianVector &direction,
+    void GetWeightedGradient(const LArHitWidthHelper::ConstituentHitVector &unsortedConstituentHitVector, const bool isLongitudinal, pandora::CartesianVector &direction,
         pandora::CartesianVector &zIntercept, float &chiSquared, const pandora::CartesianVector &fitReferencePoint) const;
 
     /**
