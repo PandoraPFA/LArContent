@@ -28,6 +28,7 @@ public:
      *  @brief  Default constructor
      */
     StitchingCosmicRayMergingTool();
+    ~StitchingCosmicRayMergingTool();
 
     void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map);
 
@@ -61,7 +62,7 @@ public:
          *
          *  @return the parent
          */
-        VertexType GetParent() const;
+       VertexType GetParent() const;
 
         /**
          *  @brief  Get daughter
@@ -185,7 +186,8 @@ private:
         const PfoMergeMap &inputPfoMerges, PfoMergeMap &outputPfoMerges) const;
 
     typedef std::pair<const pandora::LArTPC*, const pandora::LArTPC*> LArTPCPair;
-    typedef std::map<const pandora::ParticleFlowObject*, LArPointingCluster::Vertex> PfoToPointingVertexMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, LArPointingCluster::Vertex> PfoToPointingVertexMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, PfoToPointingVertexMap> PfoToPointingVertexMatrix;
 
     /**
      *  @brief  Apply X0 corrections, and then stitch together Pfos
@@ -250,7 +252,7 @@ private:
      *  @param  pfoToPointingVertexMap map of pfo to pointing vertex used in stitching
      */
     void CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
-        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMap &pfoToPointingVertexMap) const;
+        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
 
     bool            m_useXcoordinate;
     bool            m_alwaysApplyT0Calculation;
@@ -262,6 +264,10 @@ private:
     float           m_relaxCosRelativeAngle;
     float           m_relaxTransverseDisplacement;
     unsigned int    m_minNCaloHits3D;
+    bool m_writeToTree;
+    std::string m_fileName;
+    std::string m_treeName;
+    bool m_ignoreImpactParameterCut;
 };
 
 } // namespace lar_content
