@@ -267,7 +267,7 @@ private:
     bool m_writeToTree;
     std::string m_fileName;
     std::string m_treeName;
-    bool m_ignoreImpactParameterCut;
+    int m_eventNumber;
 };
 
 } // namespace lar_content
