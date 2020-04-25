@@ -266,7 +266,7 @@ CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList 
 CartesianVector DLVertexCreationAlgorithm::DeepLearning(const TwoDImage &out2dVec, const HitType &view,
     const int imgLenVecIndex)
 {
-    torch::NoGradGuard no_grad;
+    //torch::NoGradGuard no_grad;
 
     /* Get the index for model */
     int index(0);
