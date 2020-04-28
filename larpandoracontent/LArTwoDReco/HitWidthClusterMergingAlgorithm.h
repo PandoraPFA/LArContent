@@ -74,7 +74,7 @@ private:
 
 
     void GetConstituentHitSubsetVector(const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, const pandora::CartesianVector &fitReferencePoint,
-        LArHitWidthHelper::ConstituentHitVector &constituentHitSubsetVector) const;
+        const float fittingWeight, LArHitWidthHelper::ConstituentHitVector &constituentHitSubsetVector) const;
 
     void GetFittingAxes(const LArHitWidthHelper::ConstituentHitVector &constituentHitSubsetVector, pandora::CartesianVector &axisDirection,
         pandora::CartesianVector &orthoDirection) const;
@@ -84,8 +84,10 @@ private:
     void GetGlobalDirection(const pandora::CartesianVector &axisDirection, const float gradient, pandora::CartesianVector &globalDirection) const;
 
     void GetWeightedGradient(const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, pandora::CartesianVector &direction,
-        const pandora::CartesianVector &fitReferencePoint) const;
+        const pandora::CartesianVector &fitReferencePoint, const float fittingWeight) const;
 
+    void FindClosestPointToPosition(const pandora::CartesianVector &position, const LArHitWidthHelper::ConstituentHitVector &constituentHitVector,
+        pandora::CartesianVector &closestPoint) const;
     
     /**
      *  @brief  Remove 'shortcut' associations from the cluster association map
@@ -108,6 +110,8 @@ private:
     float m_minDirectionDeviationCosAngle;    ///< The minimum cosine opening angle of the direction of and associated cluster before and after merge
     float m_minClusterSparseness;
     bool  m_useOldDirectionMethod;
+    bool  m_useClosestMergePoint;
+    bool  m_doubleFittingWeight;
 
 
     // ATTN Dangling pointers emerge during cluster merging, here explicitly not dereferenced
