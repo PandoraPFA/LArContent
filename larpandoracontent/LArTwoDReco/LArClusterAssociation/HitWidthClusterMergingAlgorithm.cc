@@ -28,7 +28,9 @@ HitWidthClusterMergingAlgorithm::HitWidthClusterMergingAlgorithm() :
   m_minMergeCosOpeningAngle(0.97f),
   m_minDirectionDeviationCosAngle(0.9f),
   m_minClusterSparseness(0.3f),
-  m_useOldDirectionMethod(true)
+  m_useOldDirectionMethod(true),
+  m_useClosestMergePoint(false),
+  m_doubleFittingWeight(false)
 {
 }
 
@@ -73,6 +75,7 @@ void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *
     PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &consideredClusters, "CLUSTER", VIOLET);
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
     */
+    
     
 }
 
@@ -132,9 +135,28 @@ bool HitWidthClusterMergingAlgorithm::IsExtremalCluster(const bool isForward, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void HitWidthClusterMergingAlgorithm::FindClosestPointToPosition(const CartesianVector &position, const LArHitWidthHelper::ConstituentHitVector &constituentHitVector,
+    CartesianVector &closestPoint) const
+{
+    float minDistanceSquared(std::numeric_limits<float>::max());
+    for (const LArHitWidthHelper::ConstituentHit &constituentHit : constituentHitVector)
+    {
+        const CartesianVector &hitPosition(constituentHit.GetPositionVector());
+
+        const float separationDistanceSquared(hitPosition.GetDistanceSquared(position));
+        if (separationDistanceSquared < minDistanceSquared)
+        {
+            minDistanceSquared = separationDistanceSquared;
+            closestPoint = hitPosition;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHelper::ClusterParameters &currentFitParameters,
     const LArHitWidthHelper::ClusterParameters &testFitParameters) const
-{
+{    
     // check merging points not too far away in x
     if (testFitParameters.GetLowerXExtrema().GetX() > (currentFitParameters.GetHigherXExtrema().GetX() + m_maxXMergeDistance))
         return false;
@@ -146,29 +168,44 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
         return false;
     }
 
+    // find appropriate test merging point and check closeness in z
+    CartesianVector testMergePoint(0.f, 0.f, 0.f);
+    if (testFitParameters.GetLowerXExtrema().GetX() < currentFitParameters.GetHigherXExtrema().GetX())
+    {
+        if (m_useClosestMergePoint)
+        {
+            this->FindClosestPointToPosition(currentFitParameters.GetHigherXExtrema(), testFitParameters.GetConstituentHitVector(), testMergePoint);
+        }
+        else
+        {
+            testMergePoint = testFitParameters.GetLowerXExtrema();
+        }
+    }
+    else
+    {
+        testMergePoint = testFitParameters.GetLowerXExtrema();
+    }
+
+    // check merging points not too far away in z
+    if (testMergePoint.GetZ() > (currentFitParameters.GetHigherXExtrema().GetZ() + m_maxZMergeDistance) ||
+        testMergePoint.GetZ() < (currentFitParameters.GetHigherXExtrema().GetZ() - m_maxZMergeDistance))
+    {
+        return false;
+    }
+
+
+    
     CartesianVector currentClusterDirection(0.f, 0.f, 0.f), testClusterDirection(0.f, 0.f, 0.f);
     if (m_useOldDirectionMethod)
     {
         currentClusterDirection = this->GetClusterDirection(currentFitParameters.GetConstituentHitVector(), currentFitParameters.GetHigherXExtrema());
-        testClusterDirection = this->GetClusterDirection(testFitParameters.GetConstituentHitVector(), testFitParameters.GetLowerXExtrema());
+        testClusterDirection = this->GetClusterDirection(testFitParameters.GetConstituentHitVector(), testMergePoint);
     }
     else
     {
-        this->GetWeightedGradient(currentFitParameters.GetConstituentHitVector(), currentClusterDirection, currentFitParameters.GetHigherXExtrema());
-        this->GetWeightedGradient(testFitParameters.GetConstituentHitVector(), testClusterDirection, testFitParameters.GetLowerXExtrema());
+        this->GetWeightedGradient(currentFitParameters.GetConstituentHitVector(), currentClusterDirection, currentFitParameters.GetHigherXExtrema(), m_fittingWeight);
+        this->GetWeightedGradient(testFitParameters.GetConstituentHitVector(), testClusterDirection, testMergePoint, m_fittingWeight);
     }
-    
-    /*
-    ClusterList currentClusterList;
-    currentClusterList.push_back(currentFitParameters.GetClusterAddress());
-    ClusterList testClusterList;
-    testClusterList.push_back(testFitParameters.GetClusterAddress());
-    
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &currentClusterList, "CURRENT", BLUE,2);
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &testClusterList, "TEST", RED,2);
-
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
     
     // check clusters have a similar direction
     if (currentClusterDirection.GetCosOpeningAngle(testClusterDirection) < m_minMergeCosOpeningAngle)
@@ -177,9 +214,24 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
     // check that the new direction is consistent with the old clusters
     LArHitWidthHelper::ConstituentHitVector newConstituentHitVector(currentFitParameters.GetConstituentHitVector());
     newConstituentHitVector.insert(newConstituentHitVector.end(), testFitParameters.GetConstituentHitVector().begin(), testFitParameters.GetConstituentHitVector().end());
-
-    const CartesianVector midpoint((currentFitParameters.GetHigherXExtrema() + testFitParameters.GetLowerXExtrema()) * 0.5);
-    const CartesianVector newClusterDirection(this->GetClusterDirection(newConstituentHitVector, midpoint));
+    
+    const CartesianVector midpoint((currentFitParameters.GetHigherXExtrema() + testMergePoint) * 0.5);
+    CartesianVector newClusterDirection(0.f, 0.f, 0.f);
+    if (m_useOldDirectionMethod)
+    {
+        newClusterDirection = this->GetClusterDirection(newConstituentHitVector, midpoint);
+    }
+    else
+    {
+        if (m_doubleFittingWeight)
+        {
+            this->GetWeightedGradient(newConstituentHitVector, newClusterDirection, midpoint, m_fittingWeight * 2.0);
+        }
+        else
+        {
+            this->GetWeightedGradient(newConstituentHitVector, newClusterDirection, midpoint, m_fittingWeight);
+        }
+    }
 
     if (newClusterDirection.GetCosOpeningAngle(currentClusterDirection) < m_minDirectionDeviationCosAngle ||
         newClusterDirection.GetCosOpeningAngle(testClusterDirection) < m_minDirectionDeviationCosAngle)
@@ -187,6 +239,19 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
         return false;
     }
 
+    ///////////////////////
+    /*
+    ClusterList theTestCluster;
+    theTestCluster.push_back(testFitParameters.GetClusterAddress());
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theTestCluster, "TEST CLUSTER", RED);
+    ClusterList theCurrentCluster;
+    theCurrentCluster.push_back(currentFitParameters.GetClusterAddress());
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCurrentCluster, "CURRENT CLUSTER", BLUE);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &testMergePoint, "CLOSEST MERGE POINT", RED, 2);
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    */
+    //////////////////////
+    
     return true;
 }
 
@@ -315,7 +380,7 @@ void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelpe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void HitWidthClusterMergingAlgorithm::GetConstituentHitSubsetVector(const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, const CartesianVector &fitReferencePoint,
-    LArHitWidthHelper::ConstituentHitVector &constituentHitSubsetVector) const
+    const float fittingWeight, LArHitWidthHelper::ConstituentHitVector &constituentHitSubsetVector) const
 {
     LArHitWidthHelper::ConstituentHitVector sortedConstituentHitVector(constituentHitVector);
 
@@ -329,7 +394,7 @@ void HitWidthClusterMergingAlgorithm::GetConstituentHitSubsetVector(const LArHit
 
         weightCount += constituentHit.GetHitWidth();
         
-        if (weightCount > m_fittingWeight)
+        if (weightCount > fittingWeight)
             break;
     }    
 }
@@ -384,14 +449,14 @@ void HitWidthClusterMergingAlgorithm::GetGlobalDirection(const CartesianVector &
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void HitWidthClusterMergingAlgorithm::GetWeightedGradient(const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, CartesianVector &direction,
-    const CartesianVector &fitReferencePoint) const
+    const CartesianVector &fitReferencePoint, const float fittingWeight) const
 {
     float weightSum(0.f), weightedLSum(0.f), weightedTSum(0.f);
     bool isLConstant(true), isTConstant(true);
 
     // get fitting subset vector
     LArHitWidthHelper::ConstituentHitVector constituentHitSubsetVector;
-    this->GetConstituentHitSubsetVector(constituentHitVector, fitReferencePoint, constituentHitSubsetVector);
+    this->GetConstituentHitSubsetVector(constituentHitVector, fitReferencePoint, fittingWeight, constituentHitSubsetVector);
 
     // determine the fitting axes
     CartesianVector axisDirection(0.f, 0.f, 0.f), orthoDirection(0.f, 0.f, 0.f);
@@ -554,6 +619,12 @@ StatusCode HitWidthClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "MinClusterSparseness", m_minClusterSparseness));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "UseClosestMergePoint", m_useClosestMergePoint));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "DoubleFittingWeight", m_doubleFittingWeight));
 
     return ClusterAssociationAlgorithm::ReadSettings(xmlHandle);
 }
