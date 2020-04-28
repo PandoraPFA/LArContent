@@ -27,6 +27,7 @@ HitWidthClusterMergingAlgorithm::HitWidthClusterMergingAlgorithm() :
   m_maxZMergeDistance(2.f),
   m_minMergeCosOpeningAngle(0.97f),
   m_minDirectionDeviationCosAngle(0.9f),
+  m_minClusterSparseness(0.3f),
   m_useOldDirectionMethod(true)
 {
 }
@@ -44,14 +45,35 @@ void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *
         // the original cluster weight, with no hit scaling or hit padding
         if (LArHitWidthHelper::GetOriginalTotalClusterWeight(pCluster) < m_minClusterWeight)
             continue;
-
+        
         m_clusterToParametersMap.insert(std::pair<const Cluster*, LArHitWidthHelper::ClusterParameters>(pCluster,
             LArHitWidthHelper::ClusterParameters(pCluster, m_maxConstituentHitWidth, false, m_hitWidthScalingFactor)));
 
+        LArHitWidthHelper::ClusterParameters clusterParameters(pCluster, m_maxConstituentHitWidth, false, m_hitWidthScalingFactor);
+
+        float clusterSparseness(1.f - (static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(clusterParameters.GetConstituentHitVector().size())));
+
+        if (clusterSparseness < m_minClusterSparseness && pCluster->GetNCaloHits() != 1)
+            continue;
+        
+        /*
+        ClusterList theCluster;
+        theCluster.push_back(pCluster);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CLUSTER", VIOLET);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        */                                                
+        
         clusterVector.push_back(pCluster);
     }
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArHitWidthHelper::SortByHigherXExtrema(m_clusterToParametersMap));
+
+    /*
+    ClusterList consideredClusters(clusterVector.begin(), clusterVector.end());
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &consideredClusters, "CLUSTER", VIOLET);
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    */
+    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -529,6 +551,9 @@ StatusCode HitWidthClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
         "UseOldDirectionMethod", m_useOldDirectionMethod));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, 
+        "MinClusterSparseness", m_minClusterSparseness));
 
     return ClusterAssociationAlgorithm::ReadSettings(xmlHandle);
 }
