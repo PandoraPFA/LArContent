@@ -8,7 +8,7 @@
 #ifndef MISSING_TRACK_SEGMENT_TOOL_H
 #define MISSING_TRACK_SEGMENT_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h"
 
 #include <unordered_map>
 
@@ -26,7 +26,7 @@ public:
      */
     MissingTrackSegmentTool();
 
-    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -85,7 +85,7 @@ private:
      *  @param  protoParticleVector to receive the list of proto particles
      *  @param  clusterMergeMap to receive the cluster merge map
      */
-    void FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
+    void FindTracks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
         ClusterMergeMap &clusterMergeMap) const;
 
     /**
@@ -105,7 +105,7 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  clusterMergeMap to receive the cluster merge map
      */
-    bool PassesParticleChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, pandora::ClusterSet &usedClusters,
+    bool PassesParticleChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, pandora::ClusterSet &usedClusters,
         ClusterMergeMap &clusterMergeMap) const;
 
     /**
@@ -115,7 +115,7 @@ private:
      *  @param  particle the particle
      *  @param  candidateClusters to receive the list of candidate clusters
      */
-    void GetCandidateClusters(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, pandora::ClusterList &candidateClusters) const;
+    void GetCandidateClusters(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, pandora::ClusterList &candidateClusters) const;
 
     /**
      *  @brief  Get a sliding fit result map for the list of candidate clusters
@@ -124,7 +124,7 @@ private:
      *  @param  candidateClusters the list of candidate clusters
      *  @param  slidingFitResultMap to receive the sliding fit result map
      */
-    void GetSlidingFitResultMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const pandora::ClusterList &candidateClusterList,
+    void GetSlidingFitResultMap(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const pandora::ClusterList &candidateClusterList,
         TwoDSlidingFitResultMap &slidingFitResultMap) const;
 
     /**
@@ -135,7 +135,7 @@ private:
      *  @param  slidingFitResultMap the sliding fit result map
      *  @param  segmentOverlapMap to receive the segment overlap map
      */
-    void GetSegmentOverlapMap(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
+    void GetSegmentOverlapMap(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
         const TwoDSlidingFitResultMap &slidingFitResultMap, SegmentOverlapMap &segmentOverlapMap) const;
 
     /**

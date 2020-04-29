@@ -25,7 +25,7 @@ TransverseTensorVisualizationTool::TransverseTensorVisualizationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool TransverseTensorVisualizationTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -89,9 +89,9 @@ bool TransverseTensorVisualizationTool::Run(ThreeDTransverseTracksAlgorithm *con
 
         if (m_showContext)
         {
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListU()), "InputClusterListU", GRAY));
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListV()), "InputClusterListV", GRAY));
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterListW()), "InputClusterListW", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_U)), "InputClusterListU", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_V)), "InputClusterListV", GRAY));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_W)), "InputClusterListW", GRAY));
         }
 
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));

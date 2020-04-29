@@ -67,7 +67,7 @@ void TestBeamEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
         }
 
         LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
+        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, m_primaryParameters.m_foldBackHierarchy);
 
         validationInfo.SetPfoToHitsMap(pfoToHitsMap);
     }
@@ -137,7 +137,6 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             continue;
 
         associatedMCPrimaries.push_back(pMCPrimary);
-        const int nTargetPrimaries(associatedMCPrimaries.size());
         ++mcPrimaryIndex;
         const CaloHitList &mcPrimaryHitList(validationInfo.GetAllMCParticleToHitsMap().at(pMCPrimary));
 
@@ -145,6 +144,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
         const int isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary));
         const int isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary));
 #ifdef MONITORING
+        const int nTargetPrimaries(associatedMCPrimaries.size());
         const CartesianVector &targetVertex(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)->GetVertex());
         const float targetVertexX(targetVertex.GetX()), targetVertexY(targetVertex.GetY()), targetVertexZ(targetVertex.GetZ());
 #endif

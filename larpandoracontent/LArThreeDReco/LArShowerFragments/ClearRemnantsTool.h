@@ -8,7 +8,7 @@
 #ifndef CLEAR_REMNANTS_TOOL_H
 #define CLEAR_REMNANTS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeViewRemnantsAlgorithm.h"
 
 namespace lar_content
 {
@@ -19,7 +19,7 @@ namespace lar_content
 class ClearRemnantsTool : public RemnantTensorTool
 {
 public:
-    bool Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -31,7 +31,7 @@ private:
      *  @param  elementList the tensor element list
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
-    void CreateThreeDParticles(ThreeDRemnantsAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
+    void CreateThreeDParticles(ThreeViewRemnantsAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 };
 
 } // namespace lar_content
