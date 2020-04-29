@@ -105,6 +105,14 @@ public:
          *  @brief  Constructor
          *
          *  @param  pCluster from which the parameters will be obtained
+         *  @param  constituentHitVector the vector of constituent hits
+         */
+        ClusterParameters(const pandora::Cluster *const pCluster, const LArHitWidthHelper::ConstituentHitVector &constituentHitVector);
+        
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  pCluster from which the parameters will be obtained
          *  @param  numCaloHits the number of calo hits within the cluster
          *  @param  totalWeight the total weight of the constituent hits
          *  @param  constituentHitVector the vector of constituent hits
