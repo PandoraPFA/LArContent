@@ -45,6 +45,18 @@ LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCl
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+    
+LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCluster, const LArHitWidthHelper::ConstituentHitVector &constituentHitVector) :
+    m_pCluster(pCluster),
+    m_numCaloHits(pCluster->GetNCaloHits()), 
+    m_constituentHitVector(constituentHitVector),
+    m_totalWeight(LArHitWidthHelper::GetTotalClusterWeight(m_constituentHitVector)),
+    m_lowerXExtrema(LArHitWidthHelper::GetExtremalCoordinatesLowerX(m_constituentHitVector)), 
+    m_higherXExtrema(LArHitWidthHelper::GetExtremalCoordinatesHigherX(m_constituentHitVector))
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCluster, const unsigned int numCaloHits, const float totalWeight,
         const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, const CartesianVector &lowerXExtrema, const CartesianVector &higherXExtrema) :
