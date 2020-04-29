@@ -45,18 +45,6 @@ LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCl
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
-LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCluster, const LArHitWidthHelper::ConstituentHitVector &constituentHitVector) :
-    m_pCluster(pCluster),
-    m_numCaloHits(pCluster->GetNCaloHits()), 
-    m_constituentHitVector(constituentHitVector),
-    m_totalWeight(LArHitWidthHelper::GetTotalClusterWeight(m_constituentHitVector)),
-    m_lowerXExtrema(LArHitWidthHelper::GetExtremalCoordinatesLowerX(m_constituentHitVector)), 
-    m_higherXExtrema(LArHitWidthHelper::GetExtremalCoordinatesHigherX(m_constituentHitVector))
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 LArHitWidthHelper::ClusterParameters::ClusterParameters(const Cluster *const pCluster, const unsigned int numCaloHits, const float totalWeight,
         const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, const CartesianVector &lowerXExtrema, const CartesianVector &higherXExtrema) :
@@ -103,6 +91,37 @@ const LArHitWidthHelper::ClusterParameters& LArHitWidthHelper::GetClusterParamet
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     return clusterParametersIter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int LArHitWidthHelper::GetNProposedConstituentHits(const Cluster *const pCluster, const float maxConstituentHitWidth,
+    const float hitWidthScalingFactor)
+{
+    if (maxConstituentHitWidth < std::numeric_limits<float>::epsilon())
+    {
+        std::cout << "LArHitWidthHelper::GetConstituentHits - Negative or equivalent to zero constitent hit width not allowed" << std::endl;
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+    }
+    
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    if (orderedCaloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    unsigned int totalConstituentHits(0);
+    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+    {
+        for (const CaloHit *const pCaloHit : *mapEntry.second) 
+        {
+            const float hitWidth = pCaloHit->GetCellSize1() * hitWidthScalingFactor;
+            const unsigned int numberOfConstituentHits = std::ceil(hitWidth / maxConstituentHitWidth);
+            
+            totalConstituentHits += numberOfConstituentHits;
+        }
+    }
+    
+    return totalConstituentHits;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
