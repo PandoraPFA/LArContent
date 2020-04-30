@@ -657,6 +657,8 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
     {
         const PfoList &pfoList(pfoMerges.at(pPfoToEnlarge));
         const PfoVector pfoVector(pfoList.begin(), pfoList.end());
+
+        std::cout << "PFO LIST SIZE: " << pfoVector.size() << std::endl;
         
         float x0(0.f);
         PfoToPointingVertexMatrix pfoToPointingVertexMatrix;
@@ -669,9 +671,12 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             }
             catch (const pandora::StatusCodeException &)
             {
+                std::cout << "JAM" << std::endl;
                 continue;
             }
         }
+
+        std::cout << "x0: " << x0 << std::endl;
 
         ///////////////
         /*
