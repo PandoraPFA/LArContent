@@ -30,6 +30,10 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 }
 
 TwoViewTransverseTracksAlgorithm::~TwoViewTransverseTracksAlgorithm(){
+    //const pandora::Pandora * primary_pandora = MultiPandoraApi::GetPrimaryPandoraInstance(&(this->GetPandora()));
+    //PANDORA_MONITORING_API(Create(this->GetPandora()));
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "matchtree", "output.root", "RECREATE"));
+    std::cout<<"Pandora name: " << this->GetPandora().GetName() << std::endl;
 
 }
 
@@ -37,7 +41,6 @@ TwoViewTransverseTracksAlgorithm::~TwoViewTransverseTracksAlgorithm(){
 
 void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
-    std::cout << "=======================NEXTCOMPARISON======================" << std::endl;
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
@@ -87,6 +90,13 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
         resampledDisCumulDist1.CollectCumulativeData(xPos, q1);
         float q2 = spline2(xPos).coeff(0);
         resampledDisCumulDist2.CollectCumulativeData(xPos, q2);
+    }
+    for (size_t i = 0; i < disCumulDist1.GetSize(); i++){
+        float x,y;
+        disCumulDist1.GetXandY(i,x,y);
+        float q1 = spline1(x).coeff(0);
+        float q2 = spline2(x).coeff(0);
+        std::cout<<"x: " << x << " y: " << y << " spliney: " << q1 << "   spline2y: " << q2 << std::endl;
     }
 
     ChargeProfile profile1(CreateProfileFromCumulativeDistribution(resampledDisCumulDist1));
@@ -177,15 +187,23 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
         y_prof_V.push_back(profile2[i].second);
 	if (resampledDisCumulDist2.GetSize()>10) score_prof.push_back(xMatchingScore[i].second);
     }
+    int sameParticle(-999);
+    int pdgU(-999);
+    int pdgV(-999);
+    int isPrimaryU(-999);
+    int isPrimaryV(-999);
 
-    const MCParticle* particle1(MCParticleHelper::GetMainMCParticle(pCluster1)); 
-    const MCParticle* particle2(MCParticleHelper::GetMainMCParticle(pCluster2)); 
-    int sameParticle(particle1->GetUid() == particle2->GetUid());
-    int pdgU(particle1->GetParticleId());
-    int pdgV(particle2->GetParticleId());
-    int isPrimaryU(particle1->IsRootParticle());
-    int isPrimaryV(particle2->IsRootParticle());
 
+    try{
+        const MCParticle* particle1(MCParticleHelper::GetMainMCParticle(pCluster1)); 
+        const MCParticle* particle2(MCParticleHelper::GetMainMCParticle(pCluster2)); 
+        pdgU=(particle1->GetParticleId());
+        isPrimaryU=(particle1->IsRootParticle());
+        pdgV=(particle2->GetParticleId());
+        isPrimaryV=(particle2->IsRootParticle());
+        sameParticle=(particle1->GetUid() == particle2->GetUid());
+    }
+    catch(...){};
     int clusterSizeU = pCluster1->GetOrderedCaloHitList().size();
     int clusterSizeV = pCluster2->GetOrderedCaloHitList().size();
     int overlapNHitsU = disCumulDist1.GetSize();
@@ -199,44 +217,49 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     float xOverlapFractionV(twoViewXOverlap.GetXOverlapFractionV());
 
 
+    if (correlation > -0.001 && correlation < 0.001 && pdgU==13 && pdgV==13 && clusterSizeU==940)
+        std::cout<<"Found the event!"<<std::endl;
+    if (clusterSizeU==960 && clusterSizeV==720)
+        std::cout<<"Found the event!"<<std::endl;
 
-    const pandora::Pandora * primary_pandora = MultiPandoraApi::GetPrimaryPandoraInstance(&(this->GetPandora()));
+    //const pandora::Pandora * primary_pandora = MultiPandoraApi::GetPrimaryPandoraInstance(&(this->GetPandora()));
 
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "sameparticle", sameParticle));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "pdgu", pdgU));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "pdgv", pdgV));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "isprimaryu", isPrimaryU));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "isprimaryv", isPrimaryV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "sameparticle", sameParticle));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "pdgu", pdgU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "pdgv", pdgV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "isprimaryu", isPrimaryU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "isprimaryv", isPrimaryV));
 
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "clustersizeu", clusterSizeU));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "clustersizev", clusterSizeV));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "overlapnhitsu", overlapNHitsU));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "overlapnhitsv", overlapNHitsV));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "resampleoverlapnbinsu", resampleOverlapNBinsU));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "resampleoverlapnbinsv", resampleOverlapNBinsV));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "correlation", correlation));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "pvalue", pvalue));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "clustersizeu", clusterSizeU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "clustersizev", clusterSizeV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "overlapnhitsu", overlapNHitsU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "overlapnhitsv", overlapNHitsV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "resampleoverlapnbinsu", resampleOverlapNBinsU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "resampleoverlapnbinsv", resampleOverlapNBinsV));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "correlation", correlation));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "pvalue", pvalue));
 
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "matchscore", matchingScore));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "xoverlap", xOverlap));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "xoverlapfracu", xOverlapFractionU));
-    PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "xoverlapfracv", xOverlapFractionV));
-
-
-    //PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "xu", &x_U));
-    //PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "yu", &y_U));
-    //PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "xv", &x_V));
-    //PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "yv", &y_V));
-    //PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "yprofu", &y_prof_U));
-    //PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "yprofv", &y_prof_V));
-    //PANDORA_MONITORING_API(SetTreeVariable(*primary_pandora, "matchtree", "xmatchingscore", &score_prof));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "matchscore", matchingScore));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "xoverlap", xOverlap));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "xoverlapfracu", xOverlapFractionU));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "xoverlapfracv", xOverlapFractionV));
 
 
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "xu", &x_U));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "yu", &y_U));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "xv", &x_V));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "yv", &y_V));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "yprofu", &y_prof_U));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "yprofv", &y_prof_V));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "xmatchingscore", &score_prof));
 
 
-    PANDORA_MONITORING_API(FillTree(*primary_pandora, "matchtree"));
 
 
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), "matchtree"));
+
+
+    std::cout << "=======================NEXTCOMPARISON======================" << std::endl;
     std::cout<<"Cluster 1 NHits: " << pCluster1->GetOrderedCaloHitList().size() << "  Cluster 2 NHits: " << pCluster2->GetOrderedCaloHitList().size() << std::endl;
     std::cout<<"KS PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKSTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
     std::cout<<"Kuiper PValue: " << LArDiscreteCumulativeDistributionHelper::CalculatePValueWithKuiperTestStatistic(resampledDisCumulDist1, resampledDisCumulDist2) << std::endl;
@@ -245,6 +268,10 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     std::cout<<"p-value: " << CalculateTTestPValue(profile1,profile2) << std::endl;
     std::cout<<"fracGoodScore = " << matchingScore << std::endl;
     std::cout<<"thanks"<<std::endl;
+    //std::cout<<"Dumping the bins for this event: " << std::endl;
+    //for (size_t iElement = 0; iElement < profile1.size(); iElement++){
+    //    std::cout<<"i: " << iElement << "  x: " << profile1[iElement].first << "  prof1: " << profile1[iElement].second << "  " << profile2[iElement].second << std::endl;
+    //}
 
 
 
@@ -254,10 +281,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 
 void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 {
-    const pandora::Pandora * primary_pandora = MultiPandoraApi::GetPrimaryPandoraInstance(&(this->GetPandora()));
-    PANDORA_MONITORING_API(Create(*primary_pandora));
-    PANDORA_MONITORING_API(SaveTree(*primary_pandora, "matchtree", "output.root", "RECREATE"));
-    //PANDORA_MONITORING_API(Delete(*primary_pandora));
+    //PANDORA_MONITORING_API(Delete(this->GetPandora()));
 
 
     unsigned int repeatCounter(0);
