@@ -76,8 +76,8 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     if (0 == disCumulDist1.GetSize() || 0 == disCumulDist2.GetSize())
         return;
 
-    Spline1f spline1(CreateSplineFromCumulativeDistribution(disCumulDist1));
-    Spline1f spline2(CreateSplineFromCumulativeDistribution(disCumulDist2));
+    //Spline1f spline1(CreateSplineFromCumulativeDistribution(disCumulDist1));
+    //Spline1f spline2(CreateSplineFromCumulativeDistribution(disCumulDist2));
 
     DiscreteCumulativeDistribution resampledDisCumulDist1;
     DiscreteCumulativeDistribution resampledDisCumulDist2;
@@ -86,17 +86,12 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     nSamplingPoints = std::max(nSamplingPoints,10);
     for (float xPos = xOverlapMin; xPos < xOverlapMax; xPos += (xOverlapMax-xOverlapMin)/nSamplingPoints)
     {
-        float q1 = spline1(xPos).coeff(0);
-        resampledDisCumulDist1.CollectCumulativeData(xPos, q1);
-        float q2 = spline2(xPos).coeff(0);
-        resampledDisCumulDist2.CollectCumulativeData(xPos, q2);
-    }
-    for (size_t i = 0; i < disCumulDist1.GetSize(); i++){
-        float x,y;
-        disCumulDist1.GetXandY(i,x,y);
-        float q1 = spline1(x).coeff(0);
-        float q2 = spline2(x).coeff(0);
-        std::cout<<"x: " << x << " y: " << y << " spliney: " << q1 << "   spline2y: " << q2 << std::endl;
+      float q1 = LArDiscreteCumulativeDistributionHelper::CumulDistLinearInterpolation(xPos, disCumulDist1);  //spline1(xPos).coeff(0);
+      resampledDisCumulDist1.CollectCumulativeData(xPos, q1);
+      float q2 = LArDiscreteCumulativeDistributionHelper::CumulDistLinearInterpolation(xPos, disCumulDist2);  //spline2(xPos).coeff(0);
+      resampledDisCumulDist2.CollectCumulativeData(xPos, q2);
+      //std::cout<<"Cluster 1 spliney: " << q1 << "  Cluster 2 spliney =  " << q2 << std::endl;
+
     }
 
     ChargeProfile profile1(CreateProfileFromCumulativeDistribution(resampledDisCumulDist1));
@@ -160,18 +155,18 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     std::vector<float> y_prof_V;
     std::vector<float> score_prof;
 
-//    for (size_t i = 0; i < disCumulDist1.GetSize(); i++){
-//        float x,y;
-//        disCumulDist1.GetXandY(i,x,y);
-//        x_U.push_back(x);
-//        y_U.push_back(y);
-//    }
-//    for (size_t i = 0; i < disCumulDist2.GetSize(); i++){
-//        float x,y;
-//        disCumulDist2.GetXandY(i,x,y);
-//        x_V.push_back(x);
-//        y_V.push_back(y);
-//    }
+    for (size_t i = 0; i < disCumulDist1.GetSize(); i++){
+        float x,y;
+        disCumulDist1.GetXandY(i,x,y);
+        x_U.push_back(x);
+        y_U.push_back(y);
+    }
+    for (size_t i = 0; i < disCumulDist2.GetSize(); i++){
+        float x,y;
+        disCumulDist2.GetXandY(i,x,y);
+        x_V.push_back(x);
+        y_V.push_back(y);
+    }
     for (size_t i = 0; i < resampledDisCumulDist1.GetSize(); i++){
         float x,y;
         resampledDisCumulDist1.GetXandY(i,x,y);
@@ -273,8 +268,6 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     //    std::cout<<"i: " << iElement << "  x: " << profile1[iElement].first << "  prof1: " << profile1[iElement].second << "  " << profile2[iElement].second << std::endl;
     //}
 
-
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,6 +278,10 @@ void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 
 
     unsigned int repeatCounter(0);
+
+    //const pandora::Pandora * primary_pandora = MultiPandoraApi::GetPrimaryPandoraInstance(&(this->GetPandora()));
+    //PANDORA_MONITORING_API(Create(*primary_pandora));
+    //PANDORA_MONITORING_API(SaveTree(*primary_pandora, "matchtree", "output.root", "RECREATE"));
 
     for (MatrixToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
@@ -339,6 +336,7 @@ TwoViewTransverseTracksAlgorithm::Spline1f TwoViewTransverseTracksAlgorithm::Cre
         cumulativeDistribution.GetXandY(iValue, x, y);
         xVals(iValue) = x;
         yVals(iValue) = y;
+	//std::cout << "what gives nan " << xVals(iValue) << " and " << yVals(iValue) << std::endl;
     }
     Spline1f spline(Eigen::SplineFitting<Spline1f>::Interpolate(yVals, 1, xVals));
     return spline;

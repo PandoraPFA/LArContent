@@ -14,6 +14,26 @@
 
 namespace lar_content
 {
+  float LArDiscreteCumulativeDistributionHelper::CumulDistLinearInterpolation(const float &xPos, const DiscreteCumulativeDistribution &distribution)
+  {
+    //The following assumes hits are ordered by X
+
+    float x(0), y(0), xbelow(0), ybelow(0), result(-999);
+    for (size_t iElement = 0; iElement < distribution.GetSize(); ++iElement)
+      {
+      distribution.GetXandY(iElement,x,y);
+      
+      if (xPos>xbelow && xPos<x)
+	result = ((y-ybelow)/(x-xbelow))*xPos + (x*ybelow-xbelow*y)/(x-xbelow);
+      
+      xbelow = x;
+      ybelow = y;
+
+      if (xPos==x) result = y;
+      }
+    
+    return result;
+  }
 
   void LArDiscreteCumulativeDistributionHelper::SplitCaloHitList(const int &nSegments, const float &xOverlap, const pandora::CaloHitList &overlapHits, std::vector<pandora::CaloHitList> &segmentedOverlapHits)
   {
