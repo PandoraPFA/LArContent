@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h
+ *  @file   HitWidthClusterMergingAlgorithm.h
  *
  *  @brief  Header file for the hit width cluster merging algorithm class.
  *
@@ -58,7 +58,7 @@ private:
      *  @brief  Determine the cluster direction at a reference point by performing a weighted least squared fit to the input consitutent hit positions
      *          The fit is performed in a rotated cartesian coordinate system defined by a fitting axis determined by eigen
      *          The function is composed of two main loops that calculate the:
-     *          1. rL & rT weighted means 
+     *          1. rL & rT weighted means
      *          2. gradient of the fit
      *          The fit is performed using a subset of points that are closest to the fitReferencePoint
      *
@@ -114,7 +114,7 @@ private:
      *
      */
     void GetGlobalDirection(const pandora::CartesianVector &axisDirection, const float gradient, pandora::CartesianVector &globalDirection) const;
-    
+
     /**
      *  @brief  Remove 'shortcut' associations from the cluster association map
      *

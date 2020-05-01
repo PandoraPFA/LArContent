@@ -100,7 +100,7 @@ public:
          *  @param  hitWidthScalingFactor the constituent hit width scaling factor
          */
         ClusterParameters(const pandora::Cluster *const pCluster, const float maxConsituentHitWidth, const bool isUniformHits, const float hitWidthScalingFactor);
-        
+
         /**
          *  @brief  Constructor
          *
@@ -202,9 +202,9 @@ public:
      *  @return  unsigned int the number of consitutient hits the cluster would be broken into
      */
     static unsigned int GetNProposedConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor);
-    
+
     /**
-     *  @brief  Break up the cluster hits into constituent hits 
+     *  @brief  Break up the cluster hits into constituent hits
      *
      *  @param  pCluster the input cluster
      *  @param  maxConstituentHitWidth the maximum width of a constituent hit
