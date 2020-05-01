@@ -70,8 +70,6 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     this->OrderPfoMerges(pfoToLArTPCMap, pointingClusterMap, pfoSelectedMerges, pfoOrderedMerges);
 
     this->StitchPfos(pAlgorithm, pointingClusterMap, pfoOrderedMerges, pfoToLArTPCMap, stitchedPfosToX0Map);
-
-    std::cout << "HERE" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -142,19 +140,6 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPCToPfoMap &larTP
     for (const auto &mapEntry : larTPCToPfoMap) larTPCVector.push_back(mapEntry.first);
     std::sort(larTPCVector.begin(), larTPCVector.end(), LArStitchingHelper::SortTPCs);
 
-    /*
-    for (const auto &lartpc : larTPCVector)
-    {
-        const CartesianVector centre(lartpc->GetCenterX(), lartpc->GetCenterY(), lartpc->GetCenterZ());
-        const CartesianVector origin(0,0,0);
-
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &centre, "CENTRE", BLACK, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &origin, "CENTRE", RED, 2);
-        PandoraMonitoringApi::Pause(this->GetPandora());
-    }
-    
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
     for (LArTPCVector::const_iterator tpcIter1 = larTPCVector.begin(), tpcIterEnd = larTPCVector.end(); tpcIter1 != tpcIterEnd; ++tpcIter1)
     {
         const LArTPC *const pLArTPC1(*tpcIter1);
@@ -559,7 +544,6 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             try
             {
                 this->CalculateX0(pfoToLArTPCMap, pointingClusterMap, pfoVector, x0, pfoToPointingVertexMatrix);
-                //std::cout << "XO: " << x0 << std::endl;
             }
             catch (const pandora::StatusCodeException &)
             {
@@ -689,11 +673,8 @@ void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
 
             // Calculate X0 for the closest pair of vertices
             LArPointingCluster::Vertex pointingVertex1, pointingVertex2;
-            unsigned int count(0);
             try
             {
-                ++count;
-                
                 LArStitchingHelper::GetClosestVertices(*pLArTPC1, *pLArTPC2, pointingCluster1, pointingCluster2,
                     pointingVertex1, pointingVertex2);
                 
