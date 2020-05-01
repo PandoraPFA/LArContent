@@ -155,6 +155,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
     std::vector<float> y_prof_V;
     std::vector<float> score_prof;
 
+    /*
     for (size_t i = 0; i < disCumulDist1.GetSize(); i++){
         float x,y;
         disCumulDist1.GetXandY(i,x,y);
@@ -167,6 +168,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
         x_V.push_back(x);
         y_V.push_back(y);
     }
+    */
     for (size_t i = 0; i < resampledDisCumulDist1.GetSize(); i++){
         float x,y;
         resampledDisCumulDist1.GetXandY(i,x,y);
