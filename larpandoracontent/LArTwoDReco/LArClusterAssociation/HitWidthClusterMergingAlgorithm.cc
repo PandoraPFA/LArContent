@@ -7,7 +7,7 @@
  */
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArTwoDReco/HitWidthClusterMergingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
