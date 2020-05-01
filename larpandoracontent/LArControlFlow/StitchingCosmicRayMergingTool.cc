@@ -31,39 +31,17 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_maxTransverseDisplacement(5.f),
     m_relaxCosRelativeAngle(0.906),
     m_relaxTransverseDisplacement(2.5f),
-    m_minNCaloHits3D(0),
-    m_writeToTree(false),
-    m_fileName("ImpactParameters.root"),
-    m_treeName("ImpactParameterTree"),
-    m_eventNumber(0)
+    m_minNCaloHits3D(0)
 {
-}
-    
-//------------------------------------------------------------------------------------------------------------------------------------------
-    
-StitchingCosmicRayMergingTool::~StitchingCosmicRayMergingTool() 
-{
-    if(m_writeToTree) {
-        try {
-            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
-            std::cout << "TREE SAVED" << std::endl;
-        }
-        catch (const StatusCodeException &) {
-            std::cout << "UNABLE TO WRITE TREE" << std::endl;
-        }
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm, const PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map)
 {
-    
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    m_eventNumber++;
-    
     if (this->GetPandora().GetGeometry()->GetLArTPCMap().size() < 2)
         return;
 
@@ -110,15 +88,6 @@ void StitchingCosmicRayMergingTool::SelectPrimaryPfos(const PfoList *pInputPfoLi
     }
 
     outputPfoList.sort(LArPfoHelper::SortByNHits);
-
-    /*
-    PandoraMonitoringApi::Create(this->GetPandora());
-    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
-    
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &outputPfoList, "TO MATCH PFOS", RED);
-
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -147,19 +116,6 @@ void StitchingCosmicRayMergingTool::BuildPointingClusterMaps(const PfoList &inpu
         }
         catch (const StatusCodeException &) {}
     }
-    /*
-    for (const ParticleFlowObject *const pPfo : inputPfoList)
-    {
-        const auto iter(pfoToLArTPCMap.find(pPfo));
-        if (iter == pfoToLArTPCMap.end())
-            continue;
-        PfoList aList;
-        aList.push_back(pPfo);
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &aList, "CLUSTERED", RED);
-    }
-
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -202,21 +158,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPCToPfoMap &larTP
             for (const ParticleFlowObject *const pPfo1 : pfoList1)
             {
                 for (const ParticleFlowObject *const pPfo2 : pfoList2)
-                {
-                    //////////
-                    /*
-                    PfoList pfo1List, pfo2List;
-                    pfo1List.push_back(pPfo1);
-                    pfo2List.push_back(pPfo2);
-                    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfo1List, "PFO1", RED);
-                    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfo2List, "PFO2", VIOLET);
-                    */
-                    //////////
-                    
                     this->CreatePfoMatches(*pLArTPC1, *pLArTPC2, pPfo1, pPfo2, pointingClusterMap, pfoAssociationMatrix);
-
-                    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                }
             }
         }
     }    
@@ -240,18 +182,12 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
     if (pointingClusterMap.end() == iter1 || pointingClusterMap.end() == iter2)
         return;
 
-    //std::cout << "A" << std::endl;
-    
     const LArPointingCluster &pointingCluster1(iter1->second);
     const LArPointingCluster &pointingCluster2(iter2->second);
 
     // Check length of pointing clusters
     if (pointingCluster1.GetLengthSquared() < m_minLengthSquared || pointingCluster2.GetLengthSquared() < m_minLengthSquared)
         return;
-
-    //std::cout << "B" << std::endl;
-
-
 
     // Get number of 3D hits in each of the pfos
     CaloHitList caloHitList3D1;
@@ -264,8 +200,6 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
     if (caloHitList3D1.size() < m_minNCaloHits3D || caloHitList3D2.size() < m_minNCaloHits3D)
         return;
 
-    //std::cout << "C" << std::endl;
-
     // Get closest pair of vertices
     LArPointingCluster::Vertex pointingVertex1, pointingVertex2;
 
@@ -277,28 +211,12 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
     {
         return;
     }
-
-    //////////
-    /*
-    CartesianVector position1(pointingVertex1.GetPosition());
-    CartesianVector position2(pointingVertex2.GetPosition());
-    
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position1, "VERTEX 1", RED, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position2, "VERTEX 2", VIOLET, 2);
-    */
-    //////////
-    
-    //std::cout << "D" << std::endl;
     
     // Pointing clusters must have a parallel direction
     const float cosRelativeAngle(-pointingVertex1.GetDirection().GetDotProduct(pointingVertex2.GetDirection()));
-
-    //std::cout << "COS RELATIVE ANGLE: " << cosRelativeAngle << std::endl;
     
     if (cosRelativeAngle < m_relaxCosRelativeAngle)
         return;
-
-    //std::cout << "E" << std::endl;
 
     // Pointing clusters must have a non-zero X direction (so that they point across drift volume boundary)
     const float pX1(std::fabs(pointingVertex1.GetDirection().GetX()));
@@ -306,16 +224,12 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
 
     if (pX1 < std::numeric_limits<float>::epsilon() || pX2 < std::numeric_limits<float>::epsilon())
         return;
-
-    //std::cout << "F" << std::endl;
     
     // Pointing clusters must intersect at a drift volume boundary
     const float intersectX(0.5 * (pointingVertex1.GetPosition().GetX() + pointingVertex2.GetPosition().GetX()));
 
     if (std::fabs(intersectX - boundaryCenterX) > maxLongitudinalDisplacementX)
         return;
-
-    //std::cout << "G" << std::endl;
 
     // Impact parameters
     float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
@@ -338,8 +252,6 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
         return;
     }
 
-    //std::cout << "H" << std::endl;
-
     // Selection cuts on longitudinal impact parameters
     const float minL(-1.f);
     const float dXdL1(m_useXcoordinate ? pX1 :
@@ -349,22 +261,8 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
     const float maxL1(maxLongitudinalDisplacementX / dXdL1);
     const float maxL2(maxLongitudinalDisplacementX / dXdL2);
 
-    /*
-    std::cout << "minL: " << minL << std::endl;
-    std::cout << "maxL1: " << maxL1 << std::endl;
-    std::cout << "maxL2: " << maxL2 << std::endl;
-    std::cout << "rL1: " << rL1 << std::endl;
-    std::cout << "rL2: " << rL2 << std::endl;
-
-    std::cout << "rT1" << rT1 << std::endl;
-    std::cout << "rT2" << rT2 << std::endl;
-    */
-
-
     if (rL1 < minL || rL1 > maxL1 || rL2 < minL || rL2 > maxL2)
         return;
-    
-    //std::cout << "I" << std::endl;
     
     // Selection cuts on transverse impact parameters
     const bool minPass(std::min(rT1, rT2) < m_relaxTransverseDisplacement && cosRelativeAngle > m_relaxCosRelativeAngle);
@@ -372,8 +270,6 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
 
     if (!minPass && !maxPass)
         return;
-
-    //std::cout << "J" << std::endl;
 
     // Store this association
     const PfoAssociation::VertexType vertexType1(pointingVertex1.IsInnerVertex() ? PfoAssociation::INNER : PfoAssociation::OUTER);
@@ -639,8 +535,6 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
     {
         const PfoList &pfoList(pfoMerges.at(pPfoToEnlarge));
         const PfoVector pfoVector(pfoList.begin(), pfoList.end());
-
-        std::cout << "PFO LIST SIZE: " << pfoVector.size() << std::endl;
         
         float x0(0.f);
         PfoToPointingVertexMatrix pfoToPointingVertexMatrix;
@@ -652,35 +546,11 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             }
             catch (const pandora::StatusCodeException &)
             {
-                std::cout << "JAM" << std::endl;
                 continue;
             }
         }
 
-        std::cout << "x0: " << x0 << std::endl;
-
-        ///////////////
-        /*
-        PfoList thePfoToEnlarge;
-        thePfoToEnlarge.push_back(pPfoToEnlarge);
-        std::cout << "SIZE OF MATCHES VECTOR: " << pfoVector.size() << std::endl;
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &thePfoToEnlarge, "PFO TO ENLARGE", RED);
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "MERGE PFOS BEFORE SHIFTED", BLUE);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        */
-        ///////////////
-
-        if (m_writeToTree)
-        {
-            int matchesSize(pfoVector.size());
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "APA_X0", x0));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "Matches", matchesSize));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "EventNumber", m_eventNumber));
-            PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName));
-        }
-        
-
-        // first shift the pfos
+        // first shift the pfos one at a time
         PfoList shiftedPfos;
         for (PfoVector::const_iterator iterI = pfoVector.begin(); iterI != pfoVector.end(); ++iterI)
         {
@@ -700,14 +570,6 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
                 PfoList pfosToShift({pPfoI, pPfoJ});
 
-                ///////////////
-                /*
-                PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfosToShift, "MERGE PAIR", BLACK);
-                std::cout << "XO FOR APA: " << x0 << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                */
-                ///////////////
-                
                 for (const ParticleFlowObject *const pPfoToShift : pfosToShift)
                 {
                     // if pfo has already been shifted
@@ -715,33 +577,35 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
                         continue;
 
                     if (!m_useXcoordinate || m_alwaysApplyT0Calculation)
-                    {                    
-                        const LArTPC *const pLArTPCShift(pfoToLArTPCMap.at(pPfoToShift));
+                    { 
+                        // get pfo stitching vertex
+                        const PfoToPointingVertexMatrix::iterator pfoToPointingVertexMatrixIter(pfoToPointingVertexMatrix.find(pPfoToShift));
+                        LArPointingCluster::Vertex stitchingVertex;
+                        for (const ParticleFlowObject *const pPfo : pfosToShift)
+                        {
+                            if (pPfo == pPfoToShift)
+                                continue;
+
+                            stitchingVertex = pfoToPointingVertexMatrixIter->second.at(pPfo);
+                        }
+
+                        // Determine shift sign from the relative position of stitching vertex and closest TPC boundary position                        
+                        const LArTPC *const pShiftLArTPC(pfoToLArTPCMap.at(pPfoToShift));
                         const float tpcBoundaryCenterX(LArStitchingHelper::GetTPCBoundaryCenterX(*pLArTPCI, *pLArTPCJ));
                         float tpcBoundaryX(0.f);
-
-                        if (pLArTPCShift->GetCenterX() < tpcBoundaryCenterX)
+                        
+                        if (pShiftLArTPC->GetCenterX() < tpcBoundaryCenterX)
                         {
-                            tpcBoundaryX = pLArTPCShift->GetCenterX() + (pLArTPCShift->GetWidthX()/2);
+                            tpcBoundaryX = pShiftLArTPC->GetCenterX() + (pShiftLArTPC->GetWidthX()/2);
                         }
                         else
                         {
-                            tpcBoundaryX = pLArTPCShift->GetCenterX() - (pLArTPCShift->GetWidthX()/2);
+                            tpcBoundaryX = pShiftLArTPC->GetCenterX() - (pShiftLArTPC->GetWidthX()/2);
                         }
 
-                        const PfoToPointingVertexMatrix::iterator pfoToPointingVertexMatrixIter(pfoToPointingVertexMatrix.find(pPfoToShift));
-                        LArPointingCluster::Vertex stitchingVertex;
-                        for (const ParticleFlowObject *const pJam : pfosToShift)
-                        {
-                            if (pJam == pPfoToShift)
-                                continue;
-
-                            stitchingVertex = pfoToPointingVertexMatrixIter->second.at(pJam);
-                        }
-                    
-                        float positionShiftSign(0.f);
-                        positionShiftSign = stitchingVertex.GetPosition().GetX() < tpcBoundaryX ? 1.f : -1.f;
-
+                        const float positionShiftSign = stitchingVertex.GetPosition().GetX() < tpcBoundaryX ? 1.f : -1.f;
+                        
+                        // ATTN: No CPA/APA sign needed since x0 calculation is corresponds to an APA 
                         object_creation::ParticleFlowObject::Metadata metadata;
                         metadata.m_propertiesToAdd["X0"] = x0;
             
@@ -751,34 +615,18 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
                         for (const ParticleFlowObject *const pHierarchyPfo : downstreamPfoList)
                             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pHierarchyPfo, metadata));
-                     
                     
                         const float signedX0(std::fabs(x0) * positionShiftSign);
-
-                        ///////////////
-                        /*
-                        PfoList theParticles;
-                        theParticles.push_back(pPfoToShift);
-                        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &theParticles, "WILL SHIFT PFO", DARKGREEN);
-                        std::cout << "SIGNED XO: " << signedX0 << std::endl;
-                        PandoraMonitoringApi::Pause(this->GetPandora());
-                        */
-                        ///////////////
                         
                         pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, signedX0);
                     }
-                    
+
                     shiftedPfos.push_back(pPfoToShift);
                 }
             }
         }
 
-        ///////////////
-        //PfoList shiftList(shiftedPfos.begin(), shiftedPfos.end());
-        //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &shiftList, "MERGE PFOS AFTER SHIFTED", RED);
-        ///////////////
-
-        // now merge
+        // now merge all pfos
         for (const ParticleFlowObject *const pPfoToDelete : shiftedPfos)
         {
             if (pPfoToDelete == pPfoToEnlarge)
@@ -786,139 +634,8 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
             pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
         }
-
+        
         stitchedPfosToX0Map.insert(PfoToFloatMap::value_type(pPfoToEnlarge, x0));
-
-        ///////////////
-        /*
-        PfoList mergedList;
-        mergedList.push_back(pPfoToEnlarge);
-        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &mergedList, "MERGED PFOS", VIOLET);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        */
-        ///////////////
-    }
-
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const ParticleFlowObject *StitchingCosmicRayMergingTool::ReduceToLongestStitch(const PfoVector &pfoVector, const ParticleFlowObject *const pPfoToEnlarge,
-    const PfoToLArTPCMap &pfoToLArTPCMap, PfoVector &reducedPfoVector) const
-{
-    if (pfoVector.size() > 2)
-    {
-        this->SelectLongestStitch(pfoVector, pfoToLArTPCMap, reducedPfoVector);
-        std::sort(reducedPfoVector.begin(), reducedPfoVector.end(), LArPfoHelper::SortByNHits);
-
-        return this->GetClosestPfo(pPfoToEnlarge, reducedPfoVector);
-    }
-    else
-    {
-        reducedPfoVector = pfoVector;
-
-        return pPfoToEnlarge;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void StitchingCosmicRayMergingTool::SelectLongestStitch(const PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap, PfoVector &reducedPfoVector) const
-{
-    //ATTN this is the initialization, in case the rest of logic fails
-    reducedPfoVector = pfoVector;
-    reducedPfoVector.resize(2);
-
-    unsigned int totalHitsStitched(0);
-
-    for (PfoVector::const_iterator iterPfo1 = pfoVector.begin(), iterPfoEnd = pfoVector.end(); iterPfo1 != iterPfoEnd; ++iterPfo1)
-    {
-        for (PfoVector::const_iterator iterPfo2 =  iterPfo1; iterPfo2 != iterPfoEnd; ++iterPfo2)
-        {
-            const ParticleFlowObject *const pPfoToShift1(*iterPfo1);
-            const ParticleFlowObject *const pPfoToShift2(*iterPfo2);
-
-            if (pPfoToShift2 == pPfoToShift1)
-                continue;
-
-            const unsigned int twoDHitsPfo1(LArPfoHelper::GetNumberOfTwoDHits(pPfoToShift1)), twoDHitsPfo2(LArPfoHelper::GetNumberOfTwoDHits(pPfoToShift2));
-
-            PfoToLArTPCMap::const_iterator iter1(pfoToLArTPCMap.find(pPfoToShift1));
-            PfoToLArTPCMap::const_iterator iter2(pfoToLArTPCMap.find(pPfoToShift2));
-
-            if ((iter1 != pfoToLArTPCMap.end()) && (iter2 != pfoToLArTPCMap.end()))
-            {
-                const LArTPC *const pLArTPC1(iter1->second);
-                const LArTPC *const pLArTPC2(iter2->second);
-
-                if (((twoDHitsPfo1 + twoDHitsPfo2) > totalHitsStitched) && LArStitchingHelper::CanTPCsBeStitched(*pLArTPC1, *pLArTPC2))
-                {
-                    totalHitsStitched = twoDHitsPfo1 + twoDHitsPfo2;
-                    reducedPfoVector.clear();
-                    reducedPfoVector.push_back(pPfoToShift1);
-                    reducedPfoVector.push_back(pPfoToShift2);
-                }
-            }
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-const ParticleFlowObject *StitchingCosmicRayMergingTool::GetClosestPfo(const ParticleFlowObject *const pPfoToEnlarge, const PfoVector &pfoVector) const
-{
-    const ParticleFlowObject *pClosestPfo(*pfoVector.begin());
-
-    float minDistance(std::numeric_limits<float>::max());
-    for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-    {
-        if (pPfoToShift == pPfoToEnlarge)
-            return pPfoToEnlarge;
-
-        const float thisDistance(LArPfoHelper::GetTwoDSeparation(pPfoToShift, pPfoToEnlarge));
-        if (thisDistance < minDistance)
-        {
-            minDistance = thisDistance;
-            pClosestPfo = pPfoToShift;
-        }
-    }
-
-    return pClosestPfo;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void StitchingCosmicRayMergingTool::FindStitchedLArTPCs(const PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap,
-    LArTPCPair &stitchedLArTPCs) const
-{
-    for (const ParticleFlowObject *const pPfoToShift : pfoVector)
-    {
-        PfoToLArTPCMap::const_iterator iter(pfoToLArTPCMap.find(pPfoToShift));
-
-        if (iter != pfoToLArTPCMap.end())
-        {
-            const LArTPC *const pLArTPC(iter->second);
-
-            if (pLArTPC && (stitchedLArTPCs.first == pLArTPC || stitchedLArTPCs.second == pLArTPC))
-                continue;
-
-            if (!stitchedLArTPCs.first)
-            {
-                stitchedLArTPCs.first = pLArTPC;
-            }
-            else if (!stitchedLArTPCs.second)
-            {
-                stitchedLArTPCs.second = pLArTPC;
-            }
-            else
-            {
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-            }
-        }
-        else
-        {
-            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-        }
     }
 }
 
@@ -1007,8 +724,8 @@ void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
 
                 const float tpcBoundaryCenterX(LArStitchingHelper::GetTPCBoundaryCenterX(*pLArTPC1, *pLArTPC2));
                 bool isCPAStitch(pLArTPC1->GetCenterX() < tpcBoundaryCenterX ? !pLArTPC1->IsDriftInPositiveX() : !pLArTPC2->IsDriftInPositiveX());
-                
                 float thisX0(LArStitchingHelper::CalculateX0(*pLArTPC1, *pLArTPC2, pointingVertex1, pointingVertex2));
+                
                 thisX0 *= isCPAStitch ? -1.f : 1.f; 
                 sumX += thisX0; sumN += 1.f;
             }
@@ -1093,16 +810,6 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNCaloHits3D", m_minNCaloHits3D));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "WriteToTree", m_writeToTree));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TreeName", m_treeName));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FileName", m_fileName));
-
 
     return STATUS_CODE_SUCCESS;
 }
