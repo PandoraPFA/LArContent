@@ -534,9 +534,9 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
     {
         const PfoList &pfoList(pfoMerges.at(pPfoToEnlarge));
         const PfoVector pfoVector(pfoList.begin(), pfoList.end());
-
-        float x0(0.f);
         PfoToPointingVertexMatrix pfoToPointingVertexMatrix;
+        float x0(0.f);
+        
         if (!m_useXcoordinate || m_alwaysApplyT0Calculation)
         {
             try
@@ -580,6 +580,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
                         // get pfo stitching vertex
                         const PfoToPointingVertexMatrix::iterator pfoToPointingVertexMatrixIter(pfoToPointingVertexMatrix.find(pPfoToShift));
                         LArPointingCluster::Vertex stitchingVertex;
+                        
                         for (const ParticleFlowObject *const pPfo : pfosToShift)
                         {
                             if (pPfo == pPfoToShift)
@@ -619,10 +620,8 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
                         pAlgorithm->ShiftPfoHierarchy(pPfoToShift, pfoToLArTPCMap, signedX0);
                     }
-
                     shiftedPfos.push_back(pPfoToShift);
                 }
-                
             }
         }
 
