@@ -66,7 +66,7 @@ bool LongTracksTool::IsLongerThanDirectConnections(IteratorList::const_iterator 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LongTracksTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool LongTracksTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -108,9 +108,9 @@ void LongTracksTool::FindLongTracks(const TensorType &overlapTensor, ProtoPartic
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterListU.push_back((*iIter)->GetClusterU());
-            protoParticle.m_clusterListV.push_back((*iIter)->GetClusterV());
-            protoParticle.m_clusterListW.push_back((*iIter)->GetClusterW());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterW());
             protoParticleVector.push_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());

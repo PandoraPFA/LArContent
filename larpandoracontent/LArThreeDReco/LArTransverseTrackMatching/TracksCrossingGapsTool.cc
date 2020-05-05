@@ -33,7 +33,7 @@ TracksCrossingGapsTool::TracksCrossingGapsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TracksCrossingGapsTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool TracksCrossingGapsTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -50,7 +50,7 @@ bool TracksCrossingGapsTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TracksCrossingGapsTool::FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
+void TracksCrossingGapsTool::FindTracks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
     ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
@@ -78,9 +78,9 @@ void TracksCrossingGapsTool::FindTracks(ThreeDTransverseTracksAlgorithm *const p
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterListU.push_back((*iIter)->GetClusterU());
-            protoParticle.m_clusterListV.push_back((*iIter)->GetClusterV());
-            protoParticle.m_clusterListW.push_back((*iIter)->GetClusterW());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterU());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterV());
+            protoParticle.m_clusterList.push_back((*iIter)->GetClusterW());
             protoParticleVector.push_back(protoParticle);
 
             usedClusters.insert((*iIter)->GetClusterU());
@@ -92,7 +92,7 @@ void TracksCrossingGapsTool::FindTracks(ThreeDTransverseTracksAlgorithm *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TracksCrossingGapsTool::SelectElements(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
+void TracksCrossingGapsTool::SelectElements(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
     const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
@@ -126,7 +126,7 @@ void TracksCrossingGapsTool::SelectElements(ThreeDTransverseTracksAlgorithm *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TracksCrossingGapsTool::CalculateEffectiveOverlapFractions(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
+void TracksCrossingGapsTool::CalculateEffectiveOverlapFractions(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
     float &xOverlapFractionU, float &xOverlapFractionV, float &xOverlapFractionW) const
 {
     float xMinEffU(element.GetOverlapResult().GetXOverlap().GetUMinX()), xMaxEffU(element.GetOverlapResult().GetXOverlap().GetUMaxX());
@@ -147,7 +147,7 @@ void TracksCrossingGapsTool::CalculateEffectiveOverlapFractions(ThreeDTransverse
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TracksCrossingGapsTool::CalculateEffectiveOverlapSpan(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
+void TracksCrossingGapsTool::CalculateEffectiveOverlapSpan(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
     float &xMinEffU, float &xMaxEffU, float &xMinEffV, float &xMaxEffV, float &xMinEffW, float &xMaxEffW) const
 {
     const float xMinAll(std::min(xMinEffU, std::min(xMinEffV, xMinEffW)));
@@ -198,7 +198,7 @@ void TracksCrossingGapsTool::CalculateEffectiveOverlapSpan(ThreeDTransverseTrack
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TracksCrossingGapsTool::PassesGapChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const float xSample,
+bool TracksCrossingGapsTool::PassesGapChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const float xSample,
     bool &gapInU, bool &gapInV, bool &gapInW) const
 {
     const TwoDSlidingFitResult &slidingFitResultU(pAlgorithm->GetCachedSlidingFitResult(element.GetClusterU()));

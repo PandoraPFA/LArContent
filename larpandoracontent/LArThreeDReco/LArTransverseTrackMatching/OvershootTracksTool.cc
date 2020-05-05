@@ -29,7 +29,7 @@ OvershootTracksTool::OvershootTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OvershootTracksTool::GetIteratorListModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
+void OvershootTracksTool::GetIteratorListModifications(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
     ModificationList &modificationList) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
@@ -155,7 +155,7 @@ void OvershootTracksTool::SetSplitPosition(const LArPointingCluster::Vertex &ver
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool OvershootTracksTool::IsThreeDKink(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const bool isA1LowestInX,
+bool OvershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const bool isA1LowestInX,
     const bool isA2LowestInX) const
 {
     try

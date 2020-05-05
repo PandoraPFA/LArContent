@@ -1,14 +1,14 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeViewRemnantsAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional remnants algorithm class.
+ *  @brief  Implementation of the three view remnants algorithm class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeViewRemnantsAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -18,7 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ThreeDRemnantsAlgorithm::ThreeDRemnantsAlgorithm() :
+ThreeViewRemnantsAlgorithm::ThreeViewRemnantsAlgorithm() :
     m_nMaxTensorToolRepeats(1000),
     m_minClusterCaloHits(5),
     m_xOverlapWindow(2.f),
@@ -28,7 +28,7 @@ ThreeDRemnantsAlgorithm::ThreeDRemnantsAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+void ThreeViewRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
     for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
     {
@@ -46,22 +46,7 @@ void ThreeDRemnantsAlgorithm::SelectInputClusters(const ClusterList *const pInpu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantsAlgorithm::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
-{
-    // TODO Correct these placeholder parameters
-    pfoParameters.m_particleId = E_MINUS; // Shower
-    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-    pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
+void ThreeViewRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     // Requirements on X matching
     float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
@@ -97,18 +82,18 @@ void ThreeDRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pClust
 
     // ATTN Essentially a boolean result; actual value matters only so as to ensure that overlap results can be sorted
     const float hackValue(pseudoChi2 + pClusterU->GetElectromagneticEnergy() + pClusterV->GetElectromagneticEnergy() + pClusterW->GetElectromagneticEnergy());
-    m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, hackValue);
+    this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, hackValue);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDRemnantsAlgorithm::ExamineTensor()
+void ThreeViewRemnantsAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 
     for (RemnantTensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, m_overlapTensor))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 
@@ -124,7 +109,7 @@ void ThreeDRemnantsAlgorithm::ExamineTensor()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeViewRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
@@ -134,7 +119,7 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         RemnantTensorTool *const pRemnantTensorTool(dynamic_cast<RemnantTensorTool*>(*iter));
 
-        if (NULL == pRemnantTensorTool)
+        if (!pRemnantTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pRemnantTensorTool);
@@ -152,7 +137,7 @@ StatusCode ThreeDRemnantsAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    return ThreeDBaseAlgorithm<float>::ReadSettings(xmlHandle);
+    return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

@@ -264,7 +264,11 @@ void NeutrinoHierarchyAlgorithm::AdjustVertexAndPfoInfo(const ParticleFlowObject
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pNeutrinoPfo, pNewNeutrinoVertex));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Vertex>(*this, pOldNeutrinoVertex, neutrinoVertexListName));
 
+    for (auto &mapIter : pfoInfoMap)
+        delete mapIter.second;
+
     pfoInfoMap.clear();
+
     for (PfoRelationTool *const pPfoRelationTool : m_algorithmToolVector)
         pPfoRelationTool->Run(this, pNewNeutrinoVertex, pfoInfoMap);
 }
