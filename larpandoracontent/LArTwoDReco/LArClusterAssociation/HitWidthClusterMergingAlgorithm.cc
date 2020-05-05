@@ -49,7 +49,7 @@ void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *
 
         if (numberOfProposedConstituentHits == 0)
             continue;
-        
+
         // clusterSparseness [0 -> 1] where a higher value indicates sparseness
         const float clusterSparseness(1.f - (static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(numberOfProposedConstituentHits)));
 

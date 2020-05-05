@@ -75,7 +75,7 @@ const LArHitWidthHelper::ClusterParameters& LArHitWidthHelper::GetClusterParamet
 {
     if (clusterToParametersMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-    
+
     const auto clusterParametersIter(clusterToParametersMap.find(pCluster));
 
     if (clusterParametersIter == clusterToParametersMap.end())
