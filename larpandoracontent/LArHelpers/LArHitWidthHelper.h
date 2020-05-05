@@ -166,7 +166,7 @@ public:
          *
          *  @param clusterToParametersMap the map [cluster -> cluster parameters]
          */
-        SortByHigherXExtrema(const ClusterToParametersMap &clusterToParametersMap);
+        SortByHigherXExtrema(const ClusterToParametersMap &clusterToParametersMap) : m_clusterToParametersMap(clusterToParametersMap) {}
 
         /**
          *  @brief  Sort clusters by the higher x extremal point of their constituent hits
@@ -199,7 +199,7 @@ public:
      *  @param  maxConstituentHitWidth the maximum width of a constituent hit
      *  @param  hitWidthScalingFactor the constituent hit width scaling factor
      *
-     *  @return  unsigned int the number of consitutient hits the cluster would be broken into
+     *  @return  unsigned int the number of constituent hits the cluster would be broken into
      */
     static unsigned int GetNProposedConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor);
 

@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArTwoDReco/HitWidthClusterMergingAlgorithm.cc
+ *  @file   larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.cc
  *
  *  @brief  Implementation of the hit width cluster merging algorithm class.
  *
@@ -45,12 +45,15 @@ void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *
         if (LArHitWidthHelper::GetOriginalTotalClusterWeight(pCluster) < m_minClusterWeight)
             continue;
 
-        unsigned int numberOfProposedConstituentHits(LArHitWidthHelper::GetNProposedConstituentHits(pCluster, m_maxConstituentHitWidth, m_hitWidthScalingFactor));
+        const unsigned int numberOfProposedConstituentHits(LArHitWidthHelper::GetNProposedConstituentHits(pCluster, m_maxConstituentHitWidth, m_hitWidthScalingFactor));
 
+        if (numberOfProposedConstituentHits == 0)
+            continue;
+        
         // clusterSparseness [0 -> 1] where a higher value indicates sparseness
-        float clusterSparseness(1.f - (static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(numberOfProposedConstituentHits)));
+        const float clusterSparseness(1.f - (static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(numberOfProposedConstituentHits)));
 
-        if (clusterSparseness < m_minClusterSparseness && pCluster->GetNCaloHits() != 1)
+        if ((clusterSparseness < m_minClusterSparseness) && (pCluster->GetNCaloHits() != 1))
             continue;
 
         m_clusterToParametersMap.insert(std::pair<const Cluster*, LArHitWidthHelper::ClusterParameters>(pCluster,
@@ -58,9 +61,6 @@ void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *
 
         clusterVector.push_back(pCluster);
     }
-
-    if (clusterVector.empty())
-        return;
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArHitWidthHelper::SortByHigherXExtrema(m_clusterToParametersMap));
 }
@@ -280,7 +280,6 @@ void HitWidthClusterMergingAlgorithm::GetClusterDirection(const LArHitWidthHelpe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 
 void HitWidthClusterMergingAlgorithm::GetConstituentHitSubsetVector(const LArHitWidthHelper::ConstituentHitVector &constituentHitVector, const CartesianVector &fitReferencePoint,
     const float fittingWeight, LArHitWidthHelper::ConstituentHitVector &constituentHitSubsetVector) const
