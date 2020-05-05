@@ -166,7 +166,7 @@ public:
          *
          *  @param clusterToParametersMap the map [cluster -> cluster parameters]
          */
-        SortByHigherXExtrema(const ClusterToParametersMap &clusterToParametersMap) : m_clusterToParametersMap(clusterToParametersMap) {}
+        SortByHigherXExtrema(const ClusterToParametersMap &clusterToParametersMap);
 
         /**
          *  @brief  Sort clusters by the higher x extremal point of their constituent hits
@@ -309,6 +309,7 @@ inline const pandora::Cluster* LArHitWidthHelper::ConstituentHit::GetParentClust
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::Cluster* LArHitWidthHelper::ClusterParameters::GetClusterAddress() const
 {
@@ -348,6 +349,14 @@ inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::Get
 inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::GetHigherXExtrema() const
 {
     return m_higherXExtrema;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArHitWidthHelper::SortByHigherXExtrema::SortByHigherXExtrema(const ClusterToParametersMap &clusterToParametersMap) :
+    m_clusterToParametersMap(clusterToParametersMap)
+{
 }
 
 } // namespace lar_content
