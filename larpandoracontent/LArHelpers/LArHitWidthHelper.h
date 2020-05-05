@@ -193,6 +193,17 @@ public:
     static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster, const ClusterToParametersMap &clusterToParametersMap);
 
     /**
+     *  @brief  Return the number of constituent hits that a given cluster would be broken into
+     *
+     *  @param  pCluster the input cluster
+     *  @param  maxConstituentHitWidth the maximum width of a constituent hit
+     *  @param  hitWidthScalingFactor the constituent hit width scaling factor
+     *
+     *  @return  unsigned int the number of constituent hits the cluster would be broken into
+     */
+    static unsigned int GetNProposedConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor);
+
+    /**
      *  @brief  Break up the cluster hits into constituent hits
      *
      *  @param  pCluster the input cluster
@@ -298,6 +309,7 @@ inline const pandora::Cluster* LArHitWidthHelper::ConstituentHit::GetParentClust
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::Cluster* LArHitWidthHelper::ClusterParameters::GetClusterAddress() const
 {
@@ -337,6 +349,14 @@ inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::Get
 inline const pandora::CartesianVector& LArHitWidthHelper::ClusterParameters::GetHigherXExtrema() const
 {
     return m_higherXExtrema;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArHitWidthHelper::SortByHigherXExtrema::SortByHigherXExtrema(const ClusterToParametersMap &clusterToParametersMap) :
+    m_clusterToParametersMap(clusterToParametersMap)
+{
 }
 
 } // namespace lar_content
