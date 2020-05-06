@@ -177,7 +177,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
     IntVector bestMatchPfoRecoTBId, bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW;
     IntVector bestMatchPfoNSharedHitsTotal, bestMatchPfoNSharedHitsU, bestMatchPfoNSharedHitsV, bestMatchPfoNSharedHitsW;
     FloatVector bestMatchPfoX0;
-
+    
     std::stringstream targetSS;
     const std::string name("TB");
 

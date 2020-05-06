@@ -61,7 +61,7 @@ public:
          *
          *  @return the parent
          */
-       VertexType GetParent() const;
+        VertexType GetParent() const;
 
         /**
          *  @brief  Get daughter
@@ -187,9 +187,6 @@ private:
     typedef std::pair<const pandora::LArTPC*, const pandora::LArTPC*> LArTPCPair;
     typedef std::unordered_map<const pandora::ParticleFlowObject*, LArPointingCluster::Vertex> PfoToPointingVertexMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject*, PfoToPointingVertexMap> PfoToPointingVertexMatrix;
-
-    typedef std::tuple<const pandora::ParticleFlowObject*, const pandora::LArTPC*, const pandora::LArTPC*> PfoStitch;
-    typedef std::unordered_map<PfoStitch, LArPointingCluster::Vertex> PfoStitchToVertexMap;
     
     /**
      *  @brief  Apply X0 corrections, and then stitch together Pfos
@@ -213,7 +210,7 @@ private:
      *  @param  pfoToPointingVertexMatrix the map [pfo -> map [matched pfo -> pfo stitching vertex]]
      */
     void ShiftPfo(const MasterAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfoToShift, const pandora::ParticleFlowObject *const pMatchedPfo,
-        const float x0, const PfoToLArTPCMap &pfoToLArTPCMap, const PfoStitchToVertexMap &pfoStitchToVertexMap) const;
+        const float x0, const PfoToLArTPCMap &pfoToLArTPCMap, const PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
 
     /**
      *  @brief  Calculate x0 shift for a group of associated Pfos
