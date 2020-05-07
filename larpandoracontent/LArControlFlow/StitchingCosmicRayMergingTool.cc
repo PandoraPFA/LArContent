@@ -31,8 +31,27 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_maxTransverseDisplacement(5.f),
     m_relaxCosRelativeAngle(0.906),
     m_relaxTransverseDisplacement(2.5f),
-    m_minNCaloHits3D(0)
+    m_minNCaloHits3D(0),
+    m_writeToTree(false),
+    m_fileName("ThreeMatches.root"),
+    m_treeName("ThreeMatchesTree"),
+    m_eventNumber(0)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StitchingCosmicRayMergingTool::~StitchingCosmicRayMergingTool() 
+{
+    if(m_writeToTree) {
+        try {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
+            std::cout << "TREE SAVED" << std::endl;
+        }
+        catch (const StatusCodeException &) {
+            std::cout << "UNABLE TO WRITE TREE" << std::endl;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -42,6 +61,8 @@ void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm,
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
+    m_eventNumber++;
+    
     if (this->GetPandora().GetGeometry()->GetLArTPCMap().size() < 2)
         return;
 
@@ -529,7 +550,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
     PfoVector pfoVectorToEnlarge;
     for (const auto &mapEntry : pfoMerges) pfoVectorToEnlarge.push_back(mapEntry.first);
     std::sort(pfoVectorToEnlarge.begin(), pfoVectorToEnlarge.end(), LArPfoHelper::SortByNHits);
-
+    
     for (const ParticleFlowObject *const pPfoToEnlarge : pfoVectorToEnlarge)
     {
         const PfoList &pfoList(pfoMerges.at(pPfoToEnlarge));
@@ -537,11 +558,16 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
         PfoToPointingVertexMatrix pfoToPointingVertexMatrix;
         float x0(0.f);
         
+        if (pfoVector.size() < 3)
+            continue;
+
+        std::vector<double> contributionDiffVec;
+
         if (!m_useXcoordinate || m_alwaysApplyT0Calculation)
         {
             try
             {
-                this->CalculateX0(pfoToLArTPCMap, pointingClusterMap, pfoVector, x0, pfoToPointingVertexMatrix);
+                this->CalculateX0(pfoToLArTPCMap, pointingClusterMap, pfoVector, x0, pfoToPointingVertexMatrix, contributionDiffVec);
             }
             catch (const pandora::StatusCodeException &)
             {
@@ -581,6 +607,16 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
                 }
             }
         }
+
+        if (m_writeToTree)
+        {
+            int matchesSize(pfoVector.size());
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "APA_X0", x0));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "EventNumber", m_eventNumber));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "Matches", matchesSize));
+            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "FractionalDiffVector", &contributionDiffVec));
+            PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName));
+        }        
 
         // now merge all pfos
         for (const ParticleFlowObject *const pPfoToDelete : shiftedPfos)
@@ -639,9 +675,11 @@ void StitchingCosmicRayMergingTool::ShiftPfo(const MasterAlgorithm *const pAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
-    const PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const
+    const PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix, std::vector<double> &contributionDiffVec) const
 {
     float sumX(0.f), sumN(0.f);
+
+
 
     for (PfoVector::const_iterator iter1 = pfoVector.begin(), iterEnd = pfoVector.end(); iter1 != iterEnd; ++iter1)
     {
@@ -730,7 +768,21 @@ void StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
                 float thisX0(LArStitchingHelper::CalculateX0(*pLArTPC1, *pLArTPC2, pointingVertex1, pointingVertex2));
 
                 thisX0 *= isCPAStitch ? -1.f : 1.f;
+                
+                if (sumN > std::numeric_limits<float>::epsilon())
+                {
+                    float fractionalDiff(std::fabs((sumX - (thisX0 * sumN)) / sumX));
+                    double fractionalDiff_d(static_cast<double>(fractionalDiff));
+                    //std::cout << "fractionalDiff_d" << fractionalDiff_d << std::endl;
+                    contributionDiffVec.push_back(fractionalDiff_d);
+
+                    //std::cout << "THISX0: " << thisX0 << std::endl;
+                    //std::cout << "SUMX: " << sumX << std::endl;
+                    //std::cout << "SUMN: " << sumN << std::endl;               
+                }
+
                 sumX += thisX0; sumN += 1.f;
+
             }
             catch (const pandora::StatusCodeException &statusCodeException)
             {
@@ -813,6 +865,16 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNCaloHits3D", m_minNCaloHits3D));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "WriteToTree", m_writeToTree));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "TreeName", m_treeName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FileName", m_fileName));
+    
 
     return STATUS_CODE_SUCCESS;
 }

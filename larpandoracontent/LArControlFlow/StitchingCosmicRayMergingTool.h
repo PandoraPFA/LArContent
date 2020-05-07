@@ -28,6 +28,7 @@ public:
      *  @brief  Default constructor
      */
     StitchingCosmicRayMergingTool();
+    ~StitchingCosmicRayMergingTool();
 
     void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map);
 
@@ -222,7 +223,7 @@ private:
      *  @param  pfoToPointingVertexMatrix map of pfo to a map of matched pfo and the corresponding pointing vertex used in stitching
      */
     void CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
-        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
+                     const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix, std::vector<double> &contributionDiffVec) const;
 
     bool            m_useXcoordinate;
     bool            m_alwaysApplyT0Calculation;
@@ -234,6 +235,10 @@ private:
     float           m_relaxCosRelativeAngle;
     float           m_relaxTransverseDisplacement;
     unsigned int    m_minNCaloHits3D;
+    bool m_writeToTree;
+    std::string m_fileName;
+    std::string m_treeName;
+    int m_eventNumber;
 };
 
 } // namespace lar_content
