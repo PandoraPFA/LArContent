@@ -221,9 +221,11 @@ private:
      *  @param  pfoVector the vector of parent Pfos to stitch together
      *  @param  x0 the output x0 value
      *  @param  pfoToPointingVertexMatrix map of pfo to a map of matched pfo and the corresponding pointing vertex used in stitching
+     *
+     *  @return bool true if all x0 contributions were consistent, false otherwise
      */
-    void CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
-                     const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix, std::vector<double> &contributionDiffVec) const;
+    bool CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
+        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
 
     bool            m_useXcoordinate;
     bool            m_alwaysApplyT0Calculation;
