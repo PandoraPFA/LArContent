@@ -11,6 +11,9 @@
 #include <vector>
 #include <iostream>
 
+#include "Pandora/PandoraInternal.h"
+#include "Pandora/StatusCodes.h"
+
 namespace lar_content
 {
 
@@ -21,16 +24,19 @@ class DiscreteProbabilityVector
 {
 public:
 
-    template<typename T1, typename T2>
-    using InputData = std::vector<std::pair<T1, T2> >;
+    template <typename TX, typename TY>
+    using InputDatum = std::pair<TX, TY>;
+
+    template <typename TX, typename TY>
+    using InputData = std::vector<InputDatum<TX, TY> >;
 
     /**
      *  @brief  Constructor
      *
      *  @param  param description
      */
-    template <typename T1, typename T2>
-    DiscreteProbabilityVector(InputData<T1, T2> inputData);
+    template <typename TX, typename TY>
+    DiscreteProbabilityVector(InputData<TX, TY> inputData);
 
     /**
      *  @brief  Store data to later convert to a cumulative distribution
@@ -38,186 +44,118 @@ public:
      *  @param  x independent variable
      *  @param  y dependent variable
      */
-    template <typename T1, typename T2>
-    void CollectInputData(T1 x, T2 y);
-
-    template <typename T1, typename T2>
-    void CollectCumulativeData(T1 x, T2 y);
-
-
-    /**
-     *  @brief  Get size of input data vector
-     *
-     *  @return input data vector size
-     */
-    size_t GetInputVectorSize() const;
-
-    /**
-     *  @brief  Get X value for specific element from input vector
-     *
-     *  @param index the index in the DCD
-     *
-     *  @return X value for element in DCD
-     */
-    float GetXFromInputVector(int index) const;
-
-    /**
-     *  @brief  Get size of the DCD
-     *
-     *  @return size of DCD
-     */
-    size_t GetSize() const;
-
-    /**
-     *  @brief  Get X value for specific element from input vector
-     *
-     *  @param index the index in the input vector
-     *  @param x the x-value for the element in DCD
-     *  @param y the y-value for the element in DCD
-     */
-    void GetXandY(int index, float &x, float &y) const;
-
-    /**
-     *  @brief  Create the cumulative distribution from the collected data
-     */
-    void CreateCumulativeDistribution();
+    //template <typename T1, typename T2>
+    //void CollectInputData(T1 x, T2 y);
 
 
 private:
 
-    typedef std::vector<std::pair<float, float> > InputDataVector;
-    typedef InputDataVector CumulativeDataVector;
+    class DiscreteProbabilityDatum
+    {
+        public:
+            DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum);
 
-    InputDataVector m_InputDataHolder;                 ///< Input data storage which gets convered into a cumulative distribution
-    CumulativeDataVector m_CumulativeDataVector;       ///< Hold the cumulative distribution
-    //float       m_uMinX;                        ///< The min x value in the u view
+            float GetX();
+            float GetDensityDatum();
+            float GetCumulativeDatum();
+
+        private:
+            float m_x;                     ///< The x coordinate
+            float m_densityDatum;          ///< The probability density value
+            float m_cumulativeDatum;       ///< The cumulative probability value
+    };
+    typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
+
+    template<typename TX, typename TY>
+    DiscreteProbabilityData InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> &inputData);
+
+    template <typename TX, typename TY>
+    static bool SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs);
+
+    template <typename TX, typename TY>
+    float CalculateNormalisation(InputData<TX, TY> const &inputData);
+
+    const DiscreteProbabilityData m_discreteProbabilityData;
 };
 
-template <typename T1, typename T2>
-inline DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<T1, T2> inputData)
+template <typename TX, typename TY>
+inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> inputData) :
+    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
 {
-    std::cout<<"Input: 0 " << inputData[0].first << "  " << inputData[1].second << std::endl;
 }
 
-template <typename T1, typename T2>
-inline void DiscreteProbabilityVector::CollectInputData(T1 x, T2 y)
+inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum) :
+    m_x(x),
+    m_densityDatum(densityDatum),
+    m_cumulativeDatum(cumulativeDatum)
 {
-    float X = static_cast<float>(x);
-    float Y = static_cast<float>(y);
-
-    m_InputDataHolder.emplace_back(X,Y);
 }
 
-template <typename T1, typename T2>
-inline void DiscreteProbabilityVector::CollectCumulativeData(T1 x, T2 y)
+inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetX()
 {
-    float X = static_cast<float>(x);
-    float Y = static_cast<float>(y);
-
-    m_CumulativeDataVector.emplace_back(X,Y);
+    return m_x;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline size_t DiscreteProbabilityVector::GetInputVectorSize() const
+inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetDensityDatum()
 {
-    return m_InputDataHolder.size();
+    return m_densityDatum;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float DiscreteProbabilityVector::GetXFromInputVector(int index) const
+inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeDatum()
 {
-    return m_InputDataHolder.at(index).first;
+    return m_cumulativeDatum;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline size_t DiscreteProbabilityVector::GetSize() const
+template <typename TX, typename TY>
+inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> &inputData)
 {
-    return m_CumulativeDataVector.size();
-}
+    std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    float normalisation(CalculateNormalisation(inputData));
+    float accumulation(0.f);
 
-inline void DiscreteProbabilityVector::GetXandY(int index, float &x, float &y) const
-{
-    x = m_CumulativeDataVector.at(index).first;
-    y = m_CumulativeDataVector.at(index).second;
-
-    return;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline void DiscreteProbabilityVector::CreateCumulativeDistribution()
-{
-    //float yLast(0.);
-    //if (1 < m_InputDataHolder.size())
-    //{
-    //    float xStart(m_InputDataHolder[0].first);
-    //    float xSecond(m_InputDataHolder[1].first);
-    //    m_InputDataHolder.insert(m_InputDataHolder.begin(),std::pair<float,float>(xStart-(xSecond-xStart), 0.f));
-
-    //    float xLast(m_InputDataHolder[m_InputDataHolder.size()-1].first);
-    //    float xSecondLast(m_InputDataHolder[m_InputDataHolder.size()-2].first);
-    //    CollectInputData(xLast + (xLast-xSecondLast), 0.f);
-
-    //}
-    for (size_t iData = 0; iData < m_InputDataHolder.size(); iData++)
+    DiscreteProbabilityData data;
+    for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
-        float x = m_InputDataHolder[iData].first;
-        float y = m_InputDataHolder[iData].second;
-        if (0 != m_CumulativeDataVector.size()) y += m_CumulativeDataVector.back().second;
-        m_CumulativeDataVector.emplace_back(x,y);
-        //yLast+=y;
+        float x(inputData.at(iDatum).first);
+        float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
+        accumulation+=densityDatum;
+        data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulation));
+        std::cout<<iDatum << "  " << x << "  " << densityDatum << "  " << accumulation << std::endl;
     }
-    if (0 != m_CumulativeDataVector.size())
+    return data;
+}
+
+template <typename TX, typename TY>
+inline bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs)
+{
+    float deltaX(static_cast<float>(rhs.first) - static_cast<float>(lhs.first));
+    if (std::fabs(deltaX) < std::numeric_limits<float>::epsilon())
+        return (lhs.second < rhs.second);
+
+    return (lhs.first < rhs.first);
+}
+
+template <typename TX, typename TY>
+inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const &inputData)
+{
+    if (2 > inputData.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    float normalisation(0.f);
+
+    for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
-        float yLast = m_CumulativeDataVector.back().second;
-        for (size_t iData = 0; iData < m_CumulativeDataVector.size(); ++iData)
-        {
-            m_CumulativeDataVector[iData].second /= yLast;
-        }
+        float deltaX(static_cast<float>(inputData.at(iDatum+1).first) - static_cast<float>(inputData.at(iDatum).first));
+        float y(static_cast<float>(inputData.at(iDatum).second));
+        normalisation += y*deltaX;
     }
-    //std::cout<<"yLast: " << yLast << std::endl;
-    //std::cout<<"In size: " << m_InputDataHolder.size() << "  out size: " << m_CumulativeDataVector.size() << std::endl;
+
+    return normalisation;
 }
-
-/**
- *  @brief  x overlap result + operator
- *
- *  @param  lhs the first x overlap result to add
- *  @param  rhs the second x overlap result to add
- */
-//DiscreteProbabilityVector operator+(const DiscreteProbabilityVector &lhs, const DiscreteProbabilityVector &rhs);
-
-/*
-
-
-inline DiscreteProbabilityVector::DiscreteProbabilityVector(const float uMinX, const float uMaxX, const float vMinX, const float vMaxX,
-        const float wMinX, const float wMaxX, const float xOverlapSpan) :
-    m_uMinX(uMinX),
-    m_uMaxX(uMaxX),
-    m_vMinX(vMinX),
-    m_vMaxX(vMaxX),
-    m_wMinX(wMinX),
-    m_wMaxX(wMaxX),
-    m_xOverlapSpan(xOverlapSpan)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float DiscreteProbabilityVector::GetUMinX() const
-{
-    return m_uMinX;
-}
-*/
-
 
 
 } // namespace lar_content
 
-#endif // £ifndef  LAR_DISCRETE_CUMULATIVE_DISTRIBUTION_H
+#endif // £ifndef  LAR_DISCRETE_PROBABILITY_VECTOR_H
 
