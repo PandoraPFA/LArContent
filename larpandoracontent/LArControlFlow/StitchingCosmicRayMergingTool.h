@@ -28,7 +28,6 @@ public:
      *  @brief  Default constructor
      */
     StitchingCosmicRayMergingTool();
-    ~StitchingCosmicRayMergingTool();
 
     void Run(const MasterAlgorithm *const pAlgorithm, const pandora::PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map);
 
@@ -237,10 +236,8 @@ private:
     float           m_relaxCosRelativeAngle;
     float           m_relaxTransverseDisplacement;
     unsigned int    m_minNCaloHits3D;
-    bool m_writeToTree;
-    std::string m_fileName;
-    std::string m_treeName;
-    int m_eventNumber;
+    float           m_maxX0FractionalDeviation;     ///< The maximum allowed fractional difference of an X0 contribution for matches to be stitched
+    float           m_boundaryToleranceWidth;       ///< The distance from the APA/CPA boundary inside which the deviation consideration is ignored
 };
 
 } // namespace lar_content
