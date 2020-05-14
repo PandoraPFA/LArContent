@@ -54,6 +54,7 @@ public:
      */
     float EvaluateCumulativeProbability(float x) const;
 
+    void Print();
 
 
     /**
@@ -153,6 +154,14 @@ inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const floa
     throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     return 0.f;
+}
+
+void DiscreteProbabilityVector::Print()
+{
+    for (size_t iDatum = 0; iDatum < m_discreteProbabilityData.size(); ++iDatum)
+    {
+        std::cout<<"Datum: " << iDatum << "  x: " << m_discreteProbabilityData.at(iDatum).GetX() << "  density: " << m_discreteProbabilityData.at(iDatum).GetDensityDatum() << "  cumulative: " << m_discreteProbabilityData.at(iDatum).GetCumulativeDatum() << std::endl;
+    }
 }
 
 inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum) :
