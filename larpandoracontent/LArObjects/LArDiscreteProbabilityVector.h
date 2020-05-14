@@ -86,18 +86,15 @@ private:
     template <typename TX, typename TY>
     float CalculateNormalisation(InputData<TX, TY> const &inputData);
 
-    const DiscreteProbabilityData m_discreteProbabilityData;
     const float m_xUpperBound;
+    const DiscreteProbabilityData m_discreteProbabilityData;
 };
 
 template <typename TX, typename TY>
 inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData, const TX xUpperBound) :
-    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData)),
-    m_xUpperBound(static_cast<float>(xUpperBound))
+    m_xUpperBound(static_cast<float>(xUpperBound)),
+    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
 {
-    if (m_xUpperBound > m_discreteProbabilityData.back().GetX())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
 }
 
 inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x)
@@ -163,6 +160,9 @@ inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVec
     if (2 > inputData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
+    if (m_xUpperBound > m_discreteProbabilityData.back().GetX())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
     float normalisation(CalculateNormalisation(inputData));
@@ -204,6 +204,9 @@ inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY>
         float y(static_cast<float>(inputData.at(iDatum).second));
         normalisation += y*deltaX;
     }
+    float deltaX(m_xUpperBound - static_cast<float>(inputData.back().first));
+    float y(static_cast<float>(inputData.back().first));
+    normalisation += y*deltaX;
 
     return normalisation;
 }
