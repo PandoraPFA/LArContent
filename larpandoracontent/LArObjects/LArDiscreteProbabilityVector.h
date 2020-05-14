@@ -113,15 +113,15 @@ inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const floa
     if (x < m_discreteProbabilityData.front().GetX())
         return 0.f;
 
-    for (size_t iDatum = 0; iDatum < m_discreteProbabilityData.size()-1; ++iDatum)
+    for (size_t iDatum = 1; iDatum < m_discreteProbabilityData.size(); ++iDatum)
     {
         if (x > m_discreteProbabilityData.at(iDatum).GetX())
             continue;
 
-        float xLow(m_discreteProbabilityData.at(iDatum).GetX());
-        float yLow(m_discreteProbabilityData.at(iDatum).GetCumulativeDatum());
-        float xHigh(m_discreteProbabilityData.at(iDatum+1).GetX());
-        float yHigh(m_discreteProbabilityData.at(iDatum+1).GetCumulativeDatum());
+        float xLow(m_discreteProbabilityData.at(iDatum-1).GetX());
+        float yLow(m_discreteProbabilityData.at(iDatum-1).GetCumulativeDatum());
+        float xHigh(m_discreteProbabilityData.at(iDatum).GetX());
+        float yHigh(m_discreteProbabilityData.at(iDatum).GetCumulativeDatum());
 
         if (std::fabs(xHigh-xLow) < std::numeric_limits<float>::epsilon())
             throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
