@@ -12,6 +12,8 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArDiscreteCumulativeDistributionHelper.h"
+#include "larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h"
+
 
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
@@ -41,6 +43,18 @@ TwoViewTransverseTracksAlgorithm::~TwoViewTransverseTracksAlgorithm(){
 
 void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
+    DiscreteProbabilityVector::InputData<float,float> inputData;
+    inputData.emplace_back(1,1);
+    inputData.emplace_back(2,2);
+    inputData.emplace_back(3,1);
+    inputData.emplace_back(4,2);
+    inputData.emplace_back(5,1);
+    DiscreteProbabilityVector probVect(inputData);
+
+
+
+
+
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
