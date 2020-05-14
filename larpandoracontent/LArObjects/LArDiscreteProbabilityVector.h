@@ -41,11 +41,18 @@ public:
     DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound);
 
     /**
+     *  @brief  Constructor
+     *
+     *  @param  param description
+     */
+    DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
+
+    /**
      *  @brief  Evaluate cumulative probability at arbritrary x
      *
      *  @param  x the x value
      */
-    float EvaluateCumulativeProbability(float x);
+    float EvaluateCumulativeProbability(float x) const;
 
 
 
@@ -77,14 +84,20 @@ private:
     };
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
 
+    typedef std::vector<std::pair<float, float > > DiscreteCumulativeProbabilityData;
+
     template<typename TX, typename TY>
     DiscreteProbabilityData InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData);
+
+    DiscreteProbabilityData ResampleDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
 
     template <typename TX, typename TY>
     static bool SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs);
 
     template <typename TX, typename TY>
     float CalculateNormalisation(InputData<TX, TY> const &inputData);
+
+    void VerifyCompleteData();
 
     const float m_xUpperBound;
     const DiscreteProbabilityData m_discreteProbabilityData;
@@ -95,14 +108,19 @@ inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityV
     m_xUpperBound(static_cast<float>(xUpperBound)),
     m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
 {
-    if (2 > m_discreteProbabilityData.size())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-    if (m_discreteProbabilityData.back().GetX() > m_xUpperBound)
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
-inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x)
+inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints) :
+    m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
+    m_discreteProbabilityData(ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
+{
+    VerifyCompleteData();
+}
+
+
+
+
+inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) const
 {
     if (2 > m_discreteProbabilityData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -186,6 +204,25 @@ inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVec
     return data;
 }
 
+inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::ResampleDiscreteProbabilityData(DiscreteProbabilityVector const & discreteProbabilityVector, ResamplingPoints const & resamplingPoints)
+{
+    DiscreteProbabilityData resampledProbabilityData;
+
+    float prevCumulativeData(0.f);
+    for (size_t iSample = 0; iSample < resamplingPoints.size(); iSample++)
+    {
+        float xResampled(resamplingPoints.at(iSample));
+        float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
+        float densityDatumResampled(cumulativeDatumResampled-prevCumulativeData);
+        resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, cumulativeDatumResampled));
+        prevCumulativeData = cumulativeDatumResampled;
+    }
+
+    return resampledProbabilityData;
+}
+
+
+
 template <typename TX, typename TY>
 inline bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs)
 {
@@ -216,6 +253,17 @@ inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY>
     normalisation += y*deltaX;
 
     return normalisation;
+}
+
+void DiscreteProbabilityVector::VerifyCompleteData()
+{
+    if (2 > m_discreteProbabilityData.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    if (m_discreteProbabilityData.back().GetX() > m_xUpperBound)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    return;
 }
 
 
