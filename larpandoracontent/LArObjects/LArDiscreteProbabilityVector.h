@@ -38,7 +38,7 @@ public:
      *  @param  param description
      */
     template <typename TX, typename TY>
-    DiscreteProbabilityVector(InputData<TX, TY> const &inputData);
+    DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound);
 
     /**
      *  @brief  Evaluate cumulative probability at arbritrary x
@@ -87,12 +87,17 @@ private:
     float CalculateNormalisation(InputData<TX, TY> const &inputData);
 
     const DiscreteProbabilityData m_discreteProbabilityData;
+    const float m_xUpperBound;
 };
 
 template <typename TX, typename TY>
-inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData) :
-    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
+inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData, const TX xUpperBound) :
+    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData)),
+    m_xUpperBound(static_cast<float>(xUpperBound))
 {
+    if (m_xUpperBound > m_discreteProbabilityData.back().GetX())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
 }
 
 inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x)
@@ -155,6 +160,9 @@ inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeD
 template <typename TX, typename TY>
 inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData)
 {
+    if (2 > inputData.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
     float normalisation(CalculateNormalisation(inputData));
