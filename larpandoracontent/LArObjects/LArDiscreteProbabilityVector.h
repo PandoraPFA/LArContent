@@ -112,16 +112,16 @@ inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVec
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
     float normalisation(CalculateNormalisation(inputData));
-    float accumulation(0.f);
+    float accumulationDatum(0.f);
 
     DiscreteProbabilityData data;
     for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
         float x(inputData.at(iDatum).first);
         float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
-        accumulation+=densityDatum;
-        data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulation));
-        std::cout<<iDatum << "  " << x << "  " << densityDatum << "  " << accumulation << std::endl;
+        accumulationDatum+=densityDatum;
+        data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum));
+        std::cout<<iDatum << "  " << x << "  " << densityDatum << "  " << accumulationDatum << std::endl;
     }
     return data;
 }
