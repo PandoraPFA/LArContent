@@ -104,58 +104,6 @@ private:
     const float m_xUpperBound;
     const DiscreteProbabilityData m_discreteProbabilityData;
 };
-//
-//template <typename TX, typename TY>
-//inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData, const TX xUpperBound) :
-//    m_xUpperBound(static_cast<float>(xUpperBound)),
-//    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
-//{
-//}
-
-inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints) :
-    m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
-    m_discreteProbabilityData(ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
-{
-    VerifyCompleteData();
-}
-
-
-
-
-inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) const
-{
-    if (2 > m_discreteProbabilityData.size())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-    if (x > m_discreteProbabilityData.back().GetX())
-        return 1.f;
-
-    if (x < m_discreteProbabilityData.front().GetX())
-        return 0.f;
-
-    for (size_t iDatum = 1; iDatum < m_discreteProbabilityData.size(); ++iDatum)
-    {
-        if (x > m_discreteProbabilityData.at(iDatum).GetX())
-            continue;
-
-        float xLow(m_discreteProbabilityData.at(iDatum-1).GetX());
-        float yLow(m_discreteProbabilityData.at(iDatum-1).GetCumulativeDatum());
-        float xHigh(m_discreteProbabilityData.at(iDatum).GetX());
-        float yHigh(m_discreteProbabilityData.at(iDatum).GetCumulativeDatum());
-
-        if (std::fabs(xHigh-xLow) < std::numeric_limits<float>::epsilon())
-            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-        float m((yHigh-yLow)/(xHigh-xLow));
-        float c(yLow-m*xLow);
-
-        return m*x+c;
-    }
-
-    throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-    return 0.f;
-}
 
 inline void DiscreteProbabilityVector::Print()
 {
@@ -187,61 +135,6 @@ inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeD
     return m_cumulativeDatum;
 }
 
-template <typename TX, typename TY>
-inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData)
-{
-    if (2 > inputData.size())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-
-    std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
-
-    if (inputData.back().first > m_xUpperBound)
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-    float normalisation(CalculateNormalisation(inputData));
-    float accumulationDatum(0.f);
-
-    DiscreteProbabilityData data;
-    for (size_t iDatum = 0; iDatum < inputData.size(); ++iDatum)
-    {
-        float x(inputData.at(iDatum).first);
-        float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
-        accumulationDatum+=densityDatum;
-        data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum));
-        std::cout<<iDatum << "  " << x << "  " << densityDatum << "  " << accumulationDatum << std::endl;
-    }
-    return data;
-}
-
-inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::ResampleDiscreteProbabilityData(DiscreteProbabilityVector const & discreteProbabilityVector, ResamplingPoints const & resamplingPoints)
-{
-    DiscreteProbabilityData resampledProbabilityData;
-
-    float prevCumulativeData(0.f);
-    for (size_t iSample = 0; iSample < resamplingPoints.size(); iSample++)
-    {
-        float xResampled(resamplingPoints.at(iSample));
-        float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
-        float densityDatumResampled(cumulativeDatumResampled-prevCumulativeData);
-        resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, cumulativeDatumResampled));
-        prevCumulativeData = cumulativeDatumResampled;
-    }
-
-    return resampledProbabilityData;
-}
-
-
-
-template <typename TX, typename TY>
-inline bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs)
-{
-    float deltaX(static_cast<float>(rhs.first) - static_cast<float>(lhs.first));
-    if (std::fabs(deltaX) < std::numeric_limits<float>::epsilon())
-        return (lhs.second < rhs.second);
-
-    return (lhs.first < rhs.first);
-}
 
 template <typename TX, typename TY>
 inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const &inputData)
