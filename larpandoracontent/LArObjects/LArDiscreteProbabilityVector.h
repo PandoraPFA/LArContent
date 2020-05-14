@@ -38,7 +38,7 @@ public:
      *  @param  param description
      */
     template <typename TX, typename TY>
-    DiscreteProbabilityVector(InputData<TX, TY> inputData);
+    DiscreteProbabilityVector(InputData<TX, TY> const &inputData);
 
     /**
      *  @brief  Evaluate cumulative probability at arbritrary x
@@ -78,7 +78,7 @@ private:
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
 
     template<typename TX, typename TY>
-    DiscreteProbabilityData InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> &inputData);
+    DiscreteProbabilityData InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData);
 
     template <typename TX, typename TY>
     static bool SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs);
@@ -90,7 +90,7 @@ private:
 };
 
 template <typename TX, typename TY>
-inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> inputData) :
+inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData) :
     m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
 {
 }
@@ -153,7 +153,7 @@ inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeD
 }
 
 template <typename TX, typename TY>
-inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> &inputData)
+inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData)
 {
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
