@@ -38,7 +38,7 @@ public:
      *  @param  param description
      */
     template <typename TX, typename TY>
-    DiscreteProbabilityVector(InputData<TX, TY> const &inputData);
+    DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound);
 
     /**
      *  @brief  Evaluate cumulative probability at arbritrary x
@@ -86,11 +86,13 @@ private:
     template <typename TX, typename TY>
     float CalculateNormalisation(InputData<TX, TY> const &inputData);
 
+    const float m_xUpperBound;
     const DiscreteProbabilityData m_discreteProbabilityData;
 };
 
 template <typename TX, typename TY>
-inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData) :
+inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData, const TX xUpperBound) :
+    m_xUpperBound(static_cast<float>(xUpperBound)),
     m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
 {
 }
@@ -155,6 +157,12 @@ inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeD
 template <typename TX, typename TY>
 inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData)
 {
+    if (2 > inputData.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    if (m_xUpperBound > m_discreteProbabilityData.back().GetX())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
     float normalisation(CalculateNormalisation(inputData));
@@ -196,6 +204,9 @@ inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY>
         float y(static_cast<float>(inputData.at(iDatum).second));
         normalisation += y*deltaX;
     }
+    float deltaX(m_xUpperBound - static_cast<float>(inputData.back().first));
+    float y(static_cast<float>(inputData.back().first));
+    normalisation += y*deltaX;
 
     return normalisation;
 }
