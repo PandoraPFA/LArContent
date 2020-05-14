@@ -104,7 +104,7 @@ inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityV
 
 inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x)
 {
-    if (0 == m_discreteProbabilityData.size())
+    if (2 > m_discreteProbabilityData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     if (x > m_discreteProbabilityData.back().GetX())
