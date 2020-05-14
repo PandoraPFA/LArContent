@@ -258,7 +258,7 @@ inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY>
         normalisation += y*deltaX;
     }
     float deltaX(m_xUpperBound - static_cast<float>(inputData.back().first));
-    float y(static_cast<float>(inputData.back().first));
+    float y(static_cast<float>(inputData.back().second));
     normalisation += y*deltaX;
 
     return normalisation;
