@@ -30,6 +30,8 @@ public:
     template <typename TX, typename TY>
     using InputData = std::vector<InputDatum<TX, TY> >;
 
+    typedef std::vector<float> ResamplingPoints;
+
     /**
      *  @brief  Constructor
      *
