@@ -528,7 +528,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
     PfoVector pfoVectorToEnlarge;
     for (const auto &mapEntry : pfoMerges) pfoVectorToEnlarge.push_back(mapEntry.first);
     std::sort(pfoVectorToEnlarge.begin(), pfoVectorToEnlarge.end(), LArPfoHelper::SortByNHits);
-    
+
     for (const ParticleFlowObject *const pPfoToEnlarge : pfoVectorToEnlarge)
     {
         const PfoList &pfoList(pfoMerges.at(pPfoToEnlarge));
@@ -592,7 +592,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             pAlgorithm->StitchPfos(pPfoToEnlarge, pPfoToDelete, pfoToLArTPCMap);
         }
 
-        stitchedPfosToX0Map.insert(PfoToFloatMap::value_type(pPfoToEnlarge, x0));  
+        stitchedPfosToX0Map.insert(PfoToFloatMap::value_type(pPfoToEnlarge, x0));
     }
 }
 
@@ -756,7 +756,7 @@ bool StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     x0 = (sumX / sumN);
-    
+
     return true;
 }
 
@@ -833,7 +833,7 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BoundaryToleranceWidth", m_boundaryToleranceWidth));
-    
+
     return STATUS_CODE_SUCCESS;
 }
 

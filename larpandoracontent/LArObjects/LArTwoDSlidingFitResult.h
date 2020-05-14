@@ -29,7 +29,7 @@ public:
      *  @param  pT describing the positions to be fitted
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  layerPitch the layer pitch, units cm
-     *  @param  axisDeviationLimitForHitDivision the value of the cosine of the opening angle between the 
+     *  @param  axisDeviationLimitForHitDivision the value of the cosine of the opening angle between the
      *          principal axis and xAxis above which cluster hits are broken into their constituent hits
      */
     template <typename T>
@@ -44,7 +44,7 @@ public:
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
      *  @param  orthoDirection the orthogonal direction vector
-     *  @param  axisDeviationLimitForHitDivision the value of the cosine of the opening angle between the 
+     *  @param  axisDeviationLimitForHitDivision the value of the cosine of the opening angle between the
      *          principal axis and xAxis above which cluster hits are broken into their constituent hits
      */
     template <typename T>

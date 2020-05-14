@@ -50,7 +50,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
         const CartesianPointVector constituentHitPointVector(LArHitWidthHelper::GetConstituentHitPositionVector(constituentHitVector));
         this->FillLayerFitContributionMap(constituentHitPointVector);
     }
- 
+
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
