@@ -98,7 +98,7 @@ inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityV
     if (2 > m_discreteProbabilityData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    if (m_xUpperBound > m_discreteProbabilityData.back().GetX())
+    if (m_discreteProbabilityData.back().GetX() > m_xUpperBound)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
@@ -168,7 +168,7 @@ inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVec
 
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
-    if (m_xUpperBound > inputData.back().first)
+    if (inputData.back().first > m_xUpperBound)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     float normalisation(CalculateNormalisation(inputData));
