@@ -95,6 +95,11 @@ inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityV
     m_xUpperBound(static_cast<float>(xUpperBound)),
     m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
 {
+    if (2 > m_discreteProbabilityData.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    if (m_xUpperBound > m_discreteProbabilityData.back().GetX())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
 inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x)
@@ -160,16 +165,17 @@ inline DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVec
     if (2 > inputData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    if (m_xUpperBound > m_discreteProbabilityData.back().GetX())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
+
+    if (m_xUpperBound > inputData.back().first)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     float normalisation(CalculateNormalisation(inputData));
     float accumulationDatum(0.f);
 
     DiscreteProbabilityData data;
-    for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
+    for (size_t iDatum = 0; iDatum < inputData.size(); ++iDatum)
     {
         float x(inputData.at(iDatum).first);
         float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
@@ -200,6 +206,7 @@ inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY>
 
     for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
+        std::cout<<"datum " << iDatum << std::endl;
         float deltaX(static_cast<float>(inputData.at(iDatum+1).first) - static_cast<float>(inputData.at(iDatum).first));
         float y(static_cast<float>(inputData.at(iDatum).second));
         normalisation += y*deltaX;
