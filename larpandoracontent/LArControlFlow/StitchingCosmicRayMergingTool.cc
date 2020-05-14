@@ -734,7 +734,7 @@ bool StitchingCosmicRayMergingTool::CalculateX0(const PfoToLArTPCMap &pfoToLArTP
                 thisX0 *= isCPAStitch ? -1.f : 1.f;
 
                 // Check if stitching contribution is consistent
-                if (sumN > std::numeric_limits<float>::epsilon())
+                if ((sumN > std::numeric_limits<float>::epsilon()) && (sumX > std::numeric_limits<float>::epsilon()))
                 {
                     float fractionalDiff(std::fabs((sumX - (thisX0 * sumN)) / sumX));
 
