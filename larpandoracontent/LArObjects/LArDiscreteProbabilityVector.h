@@ -55,14 +55,14 @@ private:
         public:
             DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum);
 
-            float GetX();
-            float GetDensityDatum();
-            float GetCumulativeDatum();
+            float GetX() const;
+            float GetDensityDatum() const;
+            float GetCumulativeDatum() const;
 
         private:
-            float m_x;                     ///< The x coordinate
-            float m_densityDatum;          ///< The probability density value
-            float m_cumulativeDatum;       ///< The cumulative probability value
+            const float m_x;                     ///< The x coordinate
+            const float m_densityDatum;          ///< The probability density value
+            const float m_cumulativeDatum;       ///< The cumulative probability value
     };
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
 
@@ -91,17 +91,17 @@ inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityD
 {
 }
 
-inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetX()
+inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetX() const
 {
     return m_x;
 }
 
-inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetDensityDatum()
+inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetDensityDatum() const
 {
     return m_densityDatum;
 }
 
-inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeDatum()
+inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeDatum() const
 {
     return m_cumulativeDatum;
 }
