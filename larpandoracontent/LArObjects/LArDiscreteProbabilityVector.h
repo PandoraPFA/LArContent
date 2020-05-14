@@ -41,6 +41,15 @@ public:
     DiscreteProbabilityVector(InputData<TX, TY> inputData);
 
     /**
+     *  @brief  Evaluate cumulative probability at arbritrary x
+     *
+     *  @param  x the x value
+     */
+    float EvaluateCumulativeProbability(float x);
+
+
+
+    /**
      *  @brief  Store data to later convert to a cumulative distribution
      *
      *  @param  x independent variable
@@ -84,6 +93,41 @@ template <typename TX, typename TY>
 inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> inputData) :
     m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
 {
+}
+
+inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x)
+{
+    if (0 == m_discreteProbabilityData.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    if (x > m_discreteProbabilityData.back().GetX())
+        return 1.f;
+
+    if (x < m_discreteProbabilityData.front().GetX())
+        return 0.f;
+
+    for (size_t iDatum = 0; iDatum < m_discreteProbabilityData.size(); ++iDatum)
+    {
+        if (x > m_discreteProbabilityData.at(iDatum).GetX())
+            continue;
+
+        float xLow(m_discreteProbabilityData.at(iDatum-1).GetX());
+        float yLow(m_discreteProbabilityData.at(iDatum-1).GetCumulativeDatum());
+        float xHigh(m_discreteProbabilityData.at(iDatum).GetX());
+        float yHigh(m_discreteProbabilityData.at(iDatum).GetCumulativeDatum());
+
+        if (std::fabs(xHigh-xLow) < std::numeric_limits<float>::epsilon())
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+        float m((yHigh-yLow)/(xHigh-xLow));
+        float c(yLow-m*xLow);
+
+        return m*x+c;
+    }
+
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    return 0.f;
 }
 
 inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum) :
