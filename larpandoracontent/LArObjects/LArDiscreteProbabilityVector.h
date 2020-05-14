@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <iostream>
+#include <cmath>
 
 #include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
@@ -103,13 +104,13 @@ private:
     const float m_xUpperBound;
     const DiscreteProbabilityData m_discreteProbabilityData;
 };
-
-template <typename TX, typename TY>
-inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData, const TX xUpperBound) :
-    m_xUpperBound(static_cast<float>(xUpperBound)),
-    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
-{
-}
+//
+//template <typename TX, typename TY>
+//inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<TX, TY> const &inputData, const TX xUpperBound) :
+//    m_xUpperBound(static_cast<float>(xUpperBound)),
+//    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
+//{
+//}
 
 inline DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
@@ -156,7 +157,7 @@ inline float DiscreteProbabilityVector::EvaluateCumulativeProbability(const floa
     return 0.f;
 }
 
-void DiscreteProbabilityVector::Print()
+inline void DiscreteProbabilityVector::Print()
 {
     for (size_t iDatum = 0; iDatum < m_discreteProbabilityData.size(); ++iDatum)
     {
@@ -264,7 +265,7 @@ inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY>
     return normalisation;
 }
 
-void DiscreteProbabilityVector::VerifyCompleteData()
+inline void DiscreteProbabilityVector::VerifyCompleteData()
 {
     if (2 > m_discreteProbabilityData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
