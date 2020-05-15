@@ -9,8 +9,8 @@
 #define LAR_DISCRETE_PROBABILITY_VECTOR_H 1
 
 #include <vector>
-#include <iostream>
 #include <cmath>
+#include <utility>
 
 #include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
