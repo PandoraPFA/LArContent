@@ -3,6 +3,8 @@ TAG v03_16_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Added HitWidthClusterMerging algorithm.
 Added LArHitWidthHelper.
+Enable stitching across multiple TPC boundaries, with veto if associated x0 values are inconsistent.
+Use hit widths to aid sliding linear fits, if principal axis is closely aligned with drift direction.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_15_16
