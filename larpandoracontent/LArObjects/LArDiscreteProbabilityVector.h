@@ -133,10 +133,15 @@ private:
     const DiscreteProbabilityData m_discreteProbabilityData;
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline size_t DiscreteProbabilityVector::GetSize()
 {
     return m_discreteProbabilityData.size();
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float DiscreteProbabilityVector::GetX(const size_t index)
 {
@@ -145,6 +150,8 @@ inline float DiscreteProbabilityVector::GetX(const size_t index)
     return m_discreteProbabilityData.at(index).GetX();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline float DiscreteProbabilityVector::GetProbabilityDensity(const size_t index)
 {
     VerifyElementRequest(index);
@@ -152,12 +159,16 @@ inline float DiscreteProbabilityVector::GetProbabilityDensity(const size_t index
     return m_discreteProbabilityData.at(index).GetDensityDatum();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline float DiscreteProbabilityVector::GetCumulativeProbability(const size_t index)
 {
     VerifyElementRequest(index);
 
     return m_discreteProbabilityData.at(index).GetCumulativeDatum();
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &x, float &probabilityDensity, float &cumulativeProbability)
 {
@@ -171,6 +182,8 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum) :
     m_x(x),
     m_densityDatum(densityDatum),
@@ -178,20 +191,28 @@ inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityD
 {
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetX() const
 {
     return m_x;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetDensityDatum() const
 {
     return m_densityDatum;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeDatum() const
 {
     return m_cumulativeDatum;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline void DiscreteProbabilityVector::VerifyCompleteData()
 {
@@ -204,6 +225,8 @@ inline void DiscreteProbabilityVector::VerifyCompleteData()
     return;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline void DiscreteProbabilityVector::VerifyElementRequest(const size_t index)
 {
     if (GetSize() < index || 0 > index)
@@ -211,7 +234,6 @@ inline void DiscreteProbabilityVector::VerifyElementRequest(const size_t index)
 
     return;
 }
-
 
 } // namespace lar_content
 
