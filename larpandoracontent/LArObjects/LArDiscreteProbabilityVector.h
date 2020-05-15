@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h
  *
- *  @brief  Header file for the lar discrete cumulative distribution class.
+ *  @brief  Header file for the lar discrete probability vector class
  *
  *  $Log: $
  */
@@ -151,23 +151,61 @@ private:
 
     typedef std::vector<std::pair<float, float > > DiscreteCumulativeProbabilityData;
 
+    /**
+     *  @brief  Get a initialised probability data vector from the input data
+     *
+     *  @param  inputData the input data
+     *
+     *  @return a fully-initialised discrete probability data vector
+     */
     template<typename TX, typename TY>
     DiscreteProbabilityData InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData);
 
+    /**
+     *  @brief  Get a resampled probability data vector by resampling another probability data vector
+     *
+     *  @param  discreteProbabilityVector another discrete probability vector
+     *  @param  resamplingPoints the points to resample the discrete probability vector with
+     *
+     *  @return a resampled probability data vector
+     */
     DiscreteProbabilityData ResampleDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
 
+    /**
+     *  @brief  Sort the input data according to their x value
+     *
+     *  @param  lhs the first InputDatum
+     *  @param  lhs the second InputDatum
+     *
+     *  @return a bool dictacting swapping the two InputDatums
+     */
     template <typename TX, typename TY>
     static bool SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs);
 
+    /**
+     *  @brief  Calculate the probability normalisation
+     *
+     *  @param  inputData the input data
+     *
+     *  @return the probability normalisation
+     */
     template <typename TX, typename TY>
     float CalculateNormalisation(InputData<TX, TY> const &inputData);
 
+    /**
+     *  @brief  Verify the integrity of the complete probability vector
+     */
     void VerifyCompleteData();
 
+    /**
+     *  @brief  Verify the integrity of the element request
+     *
+     *  @param  index the index in the probability vector
+     */
     void VerifyElementRequest(const size_t index);
 
-    const float m_xUpperBound;
-    const DiscreteProbabilityData m_discreteProbabilityData;
+    const float m_xUpperBound;                                              ///< the upper bound of the probability vector
+    const DiscreteProbabilityData m_discreteProbabilityData;                ///< the probability data
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
