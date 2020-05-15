@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArTwoViewXOverlap.h
  *
- *  @brief  Header file for the lar x overlap class.
+ *  @brief  Header file for the lar x two view overlap class.
  *
  *  $Log: $
  */
@@ -196,7 +196,6 @@ inline TwoViewXOverlap operator+(const TwoViewXOverlap &lhs, const TwoViewXOverl
 
     return TwoViewXOverlap(uMinX, uMaxX, vMinX, vMaxX, xOverlapSpan);
 }
-
 
 } // namespace lar_content
 
