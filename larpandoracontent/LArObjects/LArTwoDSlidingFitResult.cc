@@ -46,6 +46,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     }
     else
     {
+        // TODO Refactor hit splitting and ensure all parameters configurable
         LArHitWidthHelper::ConstituentHitVector constituentHitVector(LArHitWidthHelper::GetConstituentHits(pCluster, 0.5f, 1.f, true));
         const CartesianPointVector constituentHitPointVector(LArHitWidthHelper::GetConstituentHitPositionVector(constituentHitVector));
         this->FillLayerFitContributionMap(constituentHitPointVector);
@@ -94,6 +95,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     }
     else
     {
+        // TODO Refactor hit splitting and ensure all parameters configurable
         LArHitWidthHelper::ConstituentHitVector constituentHitVector(LArHitWidthHelper::GetConstituentHits(pCluster, 0.5f, 1.f, true));
         const CartesianPointVector constituentHitPointVector(LArHitWidthHelper::GetConstituentHitPositionVector(constituentHitVector));
         this->FillLayerFitContributionMap(constituentHitPointVector);
