@@ -159,7 +159,7 @@ private:
      *  @return a fully-initialised discrete probability data vector
      */
     template<typename TX, typename TY>
-    DiscreteProbabilityData InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData) const;
+    DiscreteProbabilityData InitialiseDiscreteProbabilityData(InputData<TX, TY> inputData) const;
 
     /**
      *  @brief  Get a resampled probability data vector by resampling another probability data vector
@@ -169,7 +169,8 @@ private:
      *
      *  @return a resampled probability data vector
      */
-    DiscreteProbabilityData ResampleDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints) const;
+    DiscreteProbabilityData ResampleDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, 
+        ResamplingPoints const &resamplingPoints) const;
 
     /**
      *  @brief  Sort the input data according to their x value
@@ -245,7 +246,8 @@ inline float DiscreteProbabilityVector::GetCumulativeProbability(const size_t in
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &x, float &probabilityDensity, float &cumulativeProbability) const
+inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &x, float &probabilityDensity,
+    float &cumulativeProbability) const
 {
     VerifyElementRequest(index);
 
@@ -259,7 +261,8 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum) :
+inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x,
+    const float &densityDatum, const float &cumulativeDatum) :
     m_x(x),
     m_densityDatum(densityDatum),
     m_cumulativeDatum(cumulativeDatum)

@@ -23,7 +23,8 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<TX, TY> const &in
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints) :
+DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector,
+    ResamplingPoints const &resamplingPoints) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_discreteProbabilityData(ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
 {
@@ -67,7 +68,7 @@ float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TX, typename TY>
-DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData) const
+DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<TX, TY> inputData) const
 {
     if (2 > inputData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -95,7 +96,8 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 
-DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::ResampleDiscreteProbabilityData(DiscreteProbabilityVector const & discreteProbabilityVector, ResamplingPoints const & resamplingPoints) const
+DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::ResampleDiscreteProbabilityData(
+    DiscreteProbabilityVector const & discreteProbabilityVector, ResamplingPoints const & resamplingPoints) const
 {
     DiscreteProbabilityData resampledProbabilityData;
 
