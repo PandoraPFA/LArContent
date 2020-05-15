@@ -8,13 +8,12 @@
 #ifndef LAR_TRACK_TWO_VIEW_OVERLAP_RESULT_H
 #define LAR_TRACK_TWO_VIEW_OVERLAP_RESULT_H 1
 
-#include "Pandora/PandoraInputTypes.h"
 #include "Pandora/StatusCodes.h"
 
 #include "larpandoracontent/LArObjects/LArTwoViewXOverlap.h"
 
-#include <cmath>
 #include <vector>
+
 
 namespace lar_content
 {
@@ -138,7 +137,7 @@ public:
     TwoViewTransverseOverlapResult &operator=(const TwoViewTransverseOverlapResult &rhs);
 
 private:
-    TwoViewXOverlap        m_twoViewXOverlap;                     ///< The two view  x overlap object
+    TwoViewXOverlap        m_twoViewXOverlap;                     ///< The two view x overlap object
 };
 
 typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResultVector;

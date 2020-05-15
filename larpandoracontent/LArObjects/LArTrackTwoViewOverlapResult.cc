@@ -1,14 +1,10 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.cc
  *
- *  @brief  Implementation of the lar track overlap result class.
+ *  @brief  Implementation of the lar track two view overlap result class.
  *
  *  $Log: $
  */
-
-#include "Objects/CaloHit.h"
-
-#include "Pandora/PandoraInternal.h"
 
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
