@@ -6,10 +6,6 @@
  *  $Log: $
  */
 
-#include "Objects/CaloHit.h"
-
-#include "Pandora/PandoraInternal.h"
-
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
 using namespace pandora;
