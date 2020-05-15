@@ -141,9 +141,9 @@ private:
             float GetCumulativeDatum() const;
 
         private:
-            const float m_x;                     ///< The x coordinate
-            const float m_densityDatum;          ///< The probability density value
-            const float m_cumulativeDatum;       ///< The cumulative probability value
+            float m_x;                     ///< The x coordinate
+            float m_densityDatum;          ///< The probability density value
+            float m_cumulativeDatum;       ///< The cumulative probability value
     };
 
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
@@ -204,8 +204,8 @@ private:
      */
     void VerifyElementRequest(const size_t index) const;
 
-    const float m_xUpperBound;                                              ///< the upper bound of the probability vector
-    const DiscreteProbabilityData m_discreteProbabilityData;                ///< the probability data
+    float m_xUpperBound;                                              ///< the upper bound of the probability vector
+    DiscreteProbabilityData m_discreteProbabilityData;                ///< the probability data
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
