@@ -115,13 +115,36 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TX, typename TY>
-inline bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs)
+bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs)
 {
     float deltaX(static_cast<float>(rhs.first) - static_cast<float>(lhs.first));
     if (std::fabs(deltaX) < std::numeric_limits<float>::epsilon())
         return (lhs.second < rhs.second);
 
     return (lhs.first < rhs.first);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename TX, typename TY>
+float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const &inputData)
+{
+    if (2 > inputData.size())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    float normalisation(0.f);
+
+    for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
+    {
+        float deltaX(static_cast<float>(inputData.at(iDatum+1).first) - static_cast<float>(inputData.at(iDatum).first));
+        float y(static_cast<float>(inputData.at(iDatum).second));
+        normalisation += y*deltaX;
+    }
+    float deltaX(m_xUpperBound - static_cast<float>(inputData.back().first));
+    float y(static_cast<float>(inputData.back().second));
+    normalisation += y*deltaX;
+
+    return normalisation;
 }
 
 template DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<int, float> const&, int const);
@@ -138,6 +161,13 @@ template bool DiscreteProbabilityVector::SortInputDataByX(DiscreteProbabilityVec
 template bool DiscreteProbabilityVector::SortInputDataByX(DiscreteProbabilityVector::InputDatum<float, int>, DiscreteProbabilityVector::InputDatum<float, int>);
 template bool DiscreteProbabilityVector::SortInputDataByX(DiscreteProbabilityVector::InputDatum<float, float>, DiscreteProbabilityVector::InputDatum<float, float>);
 template bool DiscreteProbabilityVector::SortInputDataByX(DiscreteProbabilityVector::InputDatum<int, int>, DiscreteProbabilityVector::InputDatum<int, int>);
+
+template float DiscreteProbabilityVector::CalculateNormalisation(InputData<int, float> const&);
+template float DiscreteProbabilityVector::CalculateNormalisation(InputData<float, int> const&);
+template float DiscreteProbabilityVector::CalculateNormalisation(InputData<float, float> const&);
+template float DiscreteProbabilityVector::CalculateNormalisation(InputData<int, int> const&);
+
+
 
 
 

@@ -136,27 +136,7 @@ inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeD
 }
 
 
-template <typename TX, typename TY>
-inline float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const &inputData)
-{
-    if (2 > inputData.size())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float normalisation(0.f);
-
-    for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
-    {
-        std::cout<<"datum " << iDatum << std::endl;
-        float deltaX(static_cast<float>(inputData.at(iDatum+1).first) - static_cast<float>(inputData.at(iDatum).first));
-        float y(static_cast<float>(inputData.at(iDatum).second));
-        normalisation += y*deltaX;
-    }
-    float deltaX(m_xUpperBound - static_cast<float>(inputData.back().first));
-    float y(static_cast<float>(inputData.back().second));
-    normalisation += y*deltaX;
-
-    return normalisation;
-}
 
 inline void DiscreteProbabilityVector::VerifyCompleteData()
 {
