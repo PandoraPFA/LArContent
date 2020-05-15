@@ -147,20 +147,20 @@ float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const 
     return normalisation;
 }
 
-template DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<int, float> const&, int const);
-template DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<float, int> const&, float const);
-template DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<float, float> const&, float const);
-template DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector::InputData<int, int> const&, int const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<int, float> const&, int const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<float, int> const&, float const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<float, float> const&, float const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<int, int> const&, int const);
 
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<int, float>);
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<float, int>);
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<float, float>);
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<int, int>);
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<int, float>);
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<float, int>);
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<float, float>);
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<int, int>);
 
-template bool DiscreteProbabilityVector::SortInputDataByX(DiscreteProbabilityVector::InputDatum<int, float>, DiscreteProbabilityVector::InputDatum<int, float>);
-template bool DiscreteProbabilityVector::SortInputDataByX(DiscreteProbabilityVector::InputDatum<float, int>, DiscreteProbabilityVector::InputDatum<float, int>);
-template bool DiscreteProbabilityVector::SortInputDataByX(DiscreteProbabilityVector::InputDatum<float, float>, DiscreteProbabilityVector::InputDatum<float, float>);
-template bool DiscreteProbabilityVector::SortInputDataByX(DiscreteProbabilityVector::InputDatum<int, int>, DiscreteProbabilityVector::InputDatum<int, int>);
+template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, float>, InputDatum<int, float>);
+template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, int>, InputDatum<float, int>);
+template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, float>, InputDatum<float, float>);
+template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, int>, InputDatum<int, int>);
 
 template float DiscreteProbabilityVector::CalculateNormalisation(InputData<int, float> const&);
 template float DiscreteProbabilityVector::CalculateNormalisation(InputData<float, int> const&);
