@@ -36,7 +36,8 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  param description
+     *  @param  inputData the data used to construt the probability vector
+     *  @param  the upper bound of the probability vector
      */
     template <typename TX, typename TY>
     DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound);
@@ -44,53 +45,61 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  param description
+     *  @param  discreteProbabilityVector a discrete probability vector to resample from
+     *  @param  The points to resample the discrete probability vector with 
      */
     DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
 
     /**
-     *  @brief  Evaluate cumulative probability at arbritrary x
+     *  @brief  Evaluate cumulative probability at arbitrary x
      *
      *  @param  x the x value
+     *
+     *  @return the cumulative probability
      */
     float EvaluateCumulativeProbability(float x) const;
 
     /**
      *  @brief  Size of the probability vector
+     *
+     *  @return the probability vector size
      */
     size_t GetSize();
 
     /**
      *  @brief  The x value of the element in the vector
      *
-     * @param index the index in the vector
+     *  @param  index the index in the vector
+     *
+     *  @return the x value
      */
-
     float GetX(const size_t index);
 
     /**
      *  @brief  The probability density value of the element in the vector
      *
-     * @param index the index in the vector
+     *  @param  index the index in the vector
+     *
+     *  @return the probablity density
      */
-
     float GetProbabilityDensity(const size_t index);
 
     /**
      *  @brief  The cumulative probability value of the element in the vector
      *
-     * @param index the index in the vector
+     *  @param  index the index in the vector
+     *
+     *  @return the cumulative probability
      */
-
     float GetCumulativeProbability(const size_t index);
 
     /**
      *  @brief  All information stored at a particular index
      *
-     * @param index the index in the vector
-     * @param x the x value
-     * @param probabilityDensity the probability density value
-     * @param cumulativeProbability the cumulative probability value
+     *  @param  index the index in the vector
+     *  @param  x the x value
+     *  @param  probabilityDensity the probability density value
+     *  @param  cumulativeProbability the cumulative probability value
      */
     void GetAllAtIndex(const size_t index, float &x, float &probabilityDensity, float &cumulativeProbability);
 
