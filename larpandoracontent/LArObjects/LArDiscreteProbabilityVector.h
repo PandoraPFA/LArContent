@@ -159,7 +159,7 @@ private:
      *  @return a fully-initialised discrete probability data vector
      */
     template<typename TX, typename TY>
-    DiscreteProbabilityData InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData);
+    DiscreteProbabilityData InitialiseDiscreteProbabilityData(DiscreteProbabilityVector::InputData<TX, TY> inputData) const;
 
     /**
      *  @brief  Get a resampled probability data vector by resampling another probability data vector
@@ -190,7 +190,7 @@ private:
      *  @return the probability normalisation
      */
     template <typename TX, typename TY>
-    float CalculateNormalisation(InputData<TX, TY> const &inputData);
+    float CalculateNormalisation(InputData<TX, TY> const &inputData) const;
 
     /**
      *  @brief  Verify the integrity of the complete probability vector
