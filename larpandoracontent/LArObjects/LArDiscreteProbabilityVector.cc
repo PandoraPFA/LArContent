@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArDiscreteProbabilityVector.cc
  *
- *  @brief  Implementation of the lar discrete probability vetor class
+ *  @brief  Implementation of the lar discrete probability vector class
  *
  *  $Log: $
  */
