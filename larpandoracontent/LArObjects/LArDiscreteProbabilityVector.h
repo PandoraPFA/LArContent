@@ -55,9 +55,6 @@ public:
      */
     float EvaluateCumulativeProbability(float x) const;
 
-    void Print();
-
-
     /**
      *  @brief  Store data to later convert to a cumulative distribution
      *
@@ -104,14 +101,6 @@ private:
     const float m_xUpperBound;
     const DiscreteProbabilityData m_discreteProbabilityData;
 };
-
-inline void DiscreteProbabilityVector::Print()
-{
-    for (size_t iDatum = 0; iDatum < m_discreteProbabilityData.size(); ++iDatum)
-    {
-        std::cout<<"Datum: " << iDatum << "  x: " << m_discreteProbabilityData.at(iDatum).GetX() << "  density: " << m_discreteProbabilityData.at(iDatum).GetDensityDatum() << "  cumulative: " << m_discreteProbabilityData.at(iDatum).GetCumulativeDatum() << std::endl;
-    }
-}
 
 inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum) :
     m_x(x),
