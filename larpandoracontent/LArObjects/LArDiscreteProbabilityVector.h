@@ -51,7 +51,7 @@ public:
     DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
 
     /**
-     *  @brief  Evaluate cumulative probability at arbitrary x
+     *  @brief  Evaluate the cumulative probability at arbitrary x
      *
      *  @param  x the x value
      *
@@ -60,14 +60,14 @@ public:
     float EvaluateCumulativeProbability(float x) const;
 
     /**
-     *  @brief  Size of the probability vector
+     *  @brief  Get the size of the probability vector
      *
      *  @return the probability vector size
      */
     size_t GetSize();
 
     /**
-     *  @brief  The x value of the element in the vector
+     *  @brief  Get the x value of the element in the vector
      *
      *  @param  index the index in the vector
      *
@@ -76,7 +76,7 @@ public:
     float GetX(const size_t index);
 
     /**
-     *  @brief  The probability density value of the element in the vector
+     *  @brief  Get the probability density value of the element in the vector
      *
      *  @param  index the index in the vector
      *
@@ -85,7 +85,7 @@ public:
     float GetProbabilityDensity(const size_t index);
 
     /**
-     *  @brief  The cumulative probability value of the element in the vector
+     *  @brief  Get the cumulative probability value of the element in the vector
      *
      *  @param  index the index in the vector
      *
@@ -94,7 +94,7 @@ public:
     float GetCumulativeProbability(const size_t index);
 
     /**
-     *  @brief  All information stored at a particular index
+     *  @brief  Get all information stored at a particular index
      *
      *  @param  index the index in the vector
      *  @param  x the x value
@@ -105,13 +105,40 @@ public:
 
 private:
 
+    /**
+     *  @brief  DiscreteProbabilityData class
+     */
     class DiscreteProbabilityDatum
     {
         public:
+            /**
+             *  @brief  Constructor
+             *
+             *  @param  x the x value
+             *  @param  densityDatum the probability density for the corresponding x
+             *  @param  cumulativeDatum the cumulative probability for the corresponding x
+             */
             DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum);
 
+            /**
+             *  @brief  Get the x value for the datum
+             *
+             *  @return the x value
+             */
             float GetX() const;
+
+            /**
+             *  @brief  Get the probability density for the datum
+             *
+             *  @return the probability density
+             */
             float GetDensityDatum() const;
+
+            /**
+             *  @brief  Get the cumulative probability for the datum
+             *
+             *  @return the cumulative probability
+             */
             float GetCumulativeDatum() const;
 
         private:
@@ -119,6 +146,7 @@ private:
             const float m_densityDatum;          ///< The probability density value
             const float m_cumulativeDatum;       ///< The cumulative probability value
     };
+
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
 
     typedef std::vector<std::pair<float, float > > DiscreteCumulativeProbabilityData;
