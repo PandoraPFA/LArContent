@@ -12,6 +12,8 @@
 
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
+#include <cmath>
+
 using namespace pandora;
 
 namespace lar_content
