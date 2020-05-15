@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.cc
  *
- *  @brief  Implementation of the lar track overlap result class.
+ *  @brief  Implementation of the lar track two view overlap result class.
  *
  *  $Log: $
  */
