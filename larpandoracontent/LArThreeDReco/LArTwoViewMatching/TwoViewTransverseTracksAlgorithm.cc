@@ -43,17 +43,30 @@ TwoViewTransverseTracksAlgorithm::~TwoViewTransverseTracksAlgorithm(){
 
 void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
+    std::cout<<"hello"<<std::endl;
     DiscreteProbabilityVector::InputData<float,float> inputData;
     inputData.emplace_back(1,1);
     inputData.emplace_back(2,2);
     inputData.emplace_back(3,1);
     inputData.emplace_back(4,2);
     inputData.emplace_back(5,1);
-    DiscreteProbabilityVector probVect(inputData);
+    DiscreteProbabilityVector probVect(inputData, 6.f);
 
+    DiscreteProbabilityVector::ResamplingPoints pointsA;
+    pointsA.emplace_back(1);
+    pointsA.emplace_back(2);
+    pointsA.emplace_back(3);
+    pointsA.emplace_back(4);
+    pointsA.emplace_back(5);
+    DiscreteProbabilityVector probVectResampleA(probVect, pointsA);
 
-
-
+    DiscreteProbabilityVector::ResamplingPoints pointsB;
+    pointsB.emplace_back(1.5);
+    pointsB.emplace_back(2.5);
+    pointsB.emplace_back(3.5);
+    pointsB.emplace_back(4.5);
+    pointsB.emplace_back(5.5);
+    DiscreteProbabilityVector probVectResampleB(probVect, pointsB);
 
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
