@@ -95,7 +95,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 
-DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::ResampleDiscreteProbabilityData(DiscreteProbabilityVector const & discreteProbabilityVector, ResamplingPoints const & resamplingPoints)
+DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::ResampleDiscreteProbabilityData(DiscreteProbabilityVector const & discreteProbabilityVector, ResamplingPoints const & resamplingPoints) const
 {
     DiscreteProbabilityData resampledProbabilityData;
 

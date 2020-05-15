@@ -169,7 +169,7 @@ private:
      *
      *  @return a resampled probability data vector
      */
-    DiscreteProbabilityData ResampleDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
+    DiscreteProbabilityData ResampleDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints) const;
 
     /**
      *  @brief  Sort the input data according to their x value
