@@ -56,14 +56,43 @@ public:
     float EvaluateCumulativeProbability(float x) const;
 
     /**
-     *  @brief  Store data to later convert to a cumulative distribution
-     *
-     *  @param  x independent variable
-     *  @param  y dependent variable
+     *  @brief  Size of the probability vector
      */
-    //template <typename T1, typename T2>
-    //void CollectInputData(T1 x, T2 y);
+    size_t GetSize();
 
+    /**
+     *  @brief  The x value of the element in the vector
+     *
+     * @param index the index in the vector
+     */
+
+    float GetX(const size_t index);
+
+    /**
+     *  @brief  The probability density value of the element in the vector
+     *
+     * @param index the index in the vector
+     */
+
+    float GetProbabilityDensity(const size_t index);
+
+    /**
+     *  @brief  The cumulative probability value of the element in the vector
+     *
+     * @param index the index in the vector
+     */
+
+    float GetCumulativeProbability(const size_t index);
+
+    /**
+     *  @brief  All information stored at a particular index
+     *
+     * @param index the index in the vector
+     * @param x the x value
+     * @param probabilityDensity the probability density value
+     * @param cumulativeProbability the cumulative probability value
+     */
+    void GetAllAtIndex(const size_t index, float &x, float &probabilityDensity, float &cumulativeProbability);
 
 private:
 
@@ -98,9 +127,49 @@ private:
 
     void VerifyCompleteData();
 
+    void VerifyElementRequest(const size_t index);
+
     const float m_xUpperBound;
     const DiscreteProbabilityData m_discreteProbabilityData;
 };
+
+inline size_t DiscreteProbabilityVector::GetSize()
+{
+    return m_discreteProbabilityData.size();
+}
+
+inline float DiscreteProbabilityVector::GetX(const size_t index)
+{
+    VerifyElementRequest(index);
+
+    return m_discreteProbabilityData.at(index).GetX();
+}
+
+inline float DiscreteProbabilityVector::GetProbabilityDensity(const size_t index)
+{
+    VerifyElementRequest(index);
+
+    return m_discreteProbabilityData.at(index).GetDensityDatum();
+}
+
+inline float DiscreteProbabilityVector::GetCumulativeProbability(const size_t index)
+{
+    VerifyElementRequest(index);
+
+    return m_discreteProbabilityData.at(index).GetCumulativeDatum();
+}
+
+inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &x, float &probabilityDensity, float &cumulativeProbability)
+{
+    VerifyElementRequest(index);
+
+    const DiscreteProbabilityDatum &theDatum(m_discreteProbabilityData.at(index));
+    x = theDatum.GetX();
+    probabilityDensity = theDatum.GetDensityDatum();
+    cumulativeProbability = theDatum.GetCumulativeDatum();
+
+    return;
+}
 
 inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum) :
     m_x(x),
@@ -124,9 +193,6 @@ inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeD
     return m_cumulativeDatum;
 }
 
-
-
-
 inline void DiscreteProbabilityVector::VerifyCompleteData()
 {
     if (2 > m_discreteProbabilityData.size())
@@ -134,6 +200,14 @@ inline void DiscreteProbabilityVector::VerifyCompleteData()
 
     if (m_discreteProbabilityData.back().GetX() > m_xUpperBound)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    return;
+}
+
+inline void DiscreteProbabilityVector::VerifyElementRequest(const size_t index)
+{
+    if (GetSize() < index || 0 > index)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_OUT_OF_RANGE);
 
     return;
 }
