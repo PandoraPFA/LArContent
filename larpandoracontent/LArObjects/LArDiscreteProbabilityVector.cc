@@ -8,8 +8,8 @@
 
 #include "larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h"
 
+#include <algorithm>
 #include <cmath>
-
 
 namespace lar_content
 {
