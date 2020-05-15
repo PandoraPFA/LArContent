@@ -6,9 +6,10 @@
  *  $Log: $
  */
 
-//#include "Pandora/PandoraInputTypes.h"
-
 #include "larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h"
+
+#include <cmath>
+
 
 namespace lar_content
 {
