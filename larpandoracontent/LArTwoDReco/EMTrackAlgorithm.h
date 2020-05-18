@@ -27,16 +27,18 @@ public:
     {
     public:
         ClusterAssociation();
-        ClusterAssociation(const pandora::Cluster *const pAssociatedCluster, const pandora::CartesianVector &innerMergePoint, const pandora::CartesianVector &innerMergeDirection, const pandora::CartesianVector &outerMergePoint, const pandora::CartesianVector &outerMergeDirection, const pandora::CartesianVector &connectingLineDirection);
+        ClusterAssociation(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster, const pandora::CartesianVector &innerMergePoint, const pandora::CartesianVector &innerMergeDirection, const pandora::CartesianVector &outerMergePoint, const pandora::CartesianVector &outerMergeDirection, const pandora::CartesianVector &connectingLineDirection);
 
-        const pandora::Cluster* GetAssociatedCluster() const;
+        const pandora::Cluster* GetInnerCluster() const;
+        const pandora::Cluster* GetOuterCluster() const;
         pandora::CartesianVector GetInnerMergePoint() const;
         pandora::CartesianVector GetInnerMergeDirection() const;
         pandora::CartesianVector GetOuterMergePoint() const;
         pandora::CartesianVector GetOuterMergeDirection() const;
         pandora::CartesianVector GetConnectingLineDirection() const;
     private:
-        const pandora::Cluster*     m_pAssociatedCluster;
+        const pandora::Cluster*     m_pInnerCluster;
+        const pandora::Cluster*     m_pOuterCluster;
         pandora::CartesianVector    m_innerMergePoint;
         pandora::CartesianVector    m_innerMergeDirection;
         pandora::CartesianVector    m_outerMergePoint;
@@ -67,32 +69,42 @@ public:
             const pandora::CartesianVector m_referencePoint;   ///< The point relative to which constituent hits are ordered
             const pandora::CartesianVector m_referenceDirection;
         };
-
-    void RemoveClusteringErrors(const pandora::Cluster *const innerCluster, const ClusterAssociation &clusterAssociation, const pandora::CaloHitVector &extrapolatedCaloHitVector, const TwoDSlidingFitResultMap &currentMicroFitResult);
     
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector);
 
-    void InitialiseSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
+    void InitialiseSlidingFitResultMaps(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
 
-    bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point);
+    bool FindBestClusterAssociation(const pandora::Cluster *const pCurrentCluster, const pandora::ClusterVector &clusterVector, const TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        const TwoDSlidingFitResultMap &macroSlidingFitResultMap, ClusterAssociation &clusterAssociation);
 
-    void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
-
-    void RemoveClusterFromClusterVector(const pandora::Cluster *const pCluster, pandora::ClusterVector &clusterVector);
-
-    void RemoveClusterFromSlidingFitResultMap(const pandora::Cluster *const pCluster, TwoDSlidingFitResultMap &slidingFitResultMap);
-
-    bool FindBestClusterAssociation(const pandora::Cluster *const pCurrentCluster, const pandora::ClusterVector &clusterVector, const TwoDSlidingFitResultMap &microSlidingFitResultMap, const TwoDSlidingFitResultMap &macroSlidingFitResultMap, ClusterAssociation &clusterAssociation);
+    bool GetClusterMergingCoordinates(const TwoDSlidingFitResult &currentMicroFitResult, const TwoDSlidingFitResult &currentMacroFitResult, const TwoDSlidingFitResult &associatedMacroFitResult,
+        pandora::CartesianVector &currentMergePosition, pandora::CartesianVector &currentMergeDirection, const bool isInner);
 
     bool AreClustersAssociated(const pandora::CartesianVector &currentPoint, const pandora::CartesianVector &currentDirection, const pandora::CartesianVector &testPoint, const pandora::CartesianVector &testDirection);
-    
-    bool GetClusterMergingCoordinates(const TwoDSlidingFitResult &cluster1FitResult, const TwoDSlidingFitResult &cluster1MacroFitResult, pandora::CartesianVector &cluster1MergePoint, pandora::CartesianVector &cluster1Direction, const TwoDSlidingFitResult &cluster2FitResult, const TwoDSlidingFitResult &cluster2MacroFitResult, pandora::CartesianVector &cluster2MergePoint, pandora::CartesianVector &cluster2Direction);
-    
+
     void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, pandora::CaloHitVector &extrapolatedCaloHitVector, CaloHitToParentClusterMap &caloHitToParentClusterMap);
 
     bool IsTrackContinuous(const ClusterAssociation &clusterAssociation, pandora::CaloHitVector &extrapolatedCaloHitVector);
+
+    bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point);
+
+    void RefineTracks(const ClusterAssociation &clusterAssociation, const pandora::CaloHitVector &extrapolatedCaloHitVector,
+        const TwoDSlidingFitResultMap &microFitResultMap);
+
+    void RefineTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, const pandora::CaloHitVector &extrapolatedCaloHitVector,
+        const TwoDSlidingFitResultMap &microFitResultMap, const bool isInner);
     
-    void AddHitsToCluster(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, const CaloHitToParentClusterMap &caloHitToParentClusterMap, const pandora::CaloHitVector &extrapolatedCaloHitVector, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
+    void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
+
+    void RemoveClusterFromSlidingFitResultMaps(const pandora::Cluster *const pCluster, std::vector<TwoDSlidingFitResultMap*> &slidingFitResultMapVector);
+    
+    void RemoveClusterFromClusterVector(const pandora::Cluster *const pCluster, pandora::ClusterVector &clusterVector);
+    
+    void AddHitsToCluster(const ClusterAssociation &clusterAssociation, const CaloHitToParentClusterMap &caloHitToParentClusterMap,
+        const pandora::CaloHitVector &extrapolatedCaloHitVector, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap);
+
+
     
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -104,17 +116,21 @@ public:
     float m_maxXSeparation;
     float m_maxZSeparation;
     unsigned int m_slidingFitWindow;
-    bool m_limitZ;
-    bool m_useOtherCluster;
-    bool m_abortIfNoPosition;
 
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster* EMTrackAlgorithm::ClusterAssociation::GetAssociatedCluster() const
+inline const pandora::Cluster* EMTrackAlgorithm::ClusterAssociation::GetInnerCluster() const
 {
-    return m_pAssociatedCluster;
+    return m_pInnerCluster;
+}
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::Cluster* EMTrackAlgorithm::ClusterAssociation::GetOuterCluster() const
+{
+    return m_pOuterCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
