@@ -74,13 +74,13 @@ public:
 
     void InitialiseSlidingFitResultMaps(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap);
 
-    bool FindBestClusterAssociation(const pandora::Cluster *const pCurrentCluster, const pandora::ClusterVector &clusterVector, const TwoDSlidingFitResultMap &microSlidingFitResultMap,
+    bool FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const TwoDSlidingFitResultMap &microSlidingFitResultMap,
         const TwoDSlidingFitResultMap &macroSlidingFitResultMap, ClusterAssociation &clusterAssociation);
 
     bool GetClusterMergingCoordinates(const TwoDSlidingFitResult &currentMicroFitResult, const TwoDSlidingFitResult &currentMacroFitResult, const TwoDSlidingFitResult &associatedMacroFitResult,
         pandora::CartesianVector &currentMergePosition, pandora::CartesianVector &currentMergeDirection, const bool isInner);
 
-    bool AreClustersAssociated(const pandora::CartesianVector &currentPoint, const pandora::CartesianVector &currentDirection, const pandora::CartesianVector &testPoint, const pandora::CartesianVector &testDirection);
+    bool AreClustersAssociated(const pandora::Cluster *const pCurrentCluster, const pandora::CartesianVector &currentPoint, const pandora::CartesianVector &currentDirection, const pandora::Cluster *const pTestCluster, const pandora::CartesianVector &testPoint, const pandora::CartesianVector &testDirection);
 
     void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, pandora::CaloHitVector &extrapolatedCaloHitVector, CaloHitToParentClusterMap &caloHitToParentClusterMap);
 
@@ -112,10 +112,15 @@ public:
     CaloHitToParentClusterMap m_caloHitToParentClusterMap;
     
     float m_minCaloHits; // minimum number of calo hits for cluster to be considered
-    bool m_minSeparationDistance;
+    float m_minSeparationDistance;
     float m_maxXSeparation;
     float m_maxZSeparation;
     unsigned int m_slidingFitWindow;
+    float m_mergePointMinCosAngleDeviation;
+    float m_minClusterLengthSum;
+    float m_minDirectionDeviationCosAngle;
+    unsigned int m_maxTrackGaps;
+    float m_lineSegmentLength;
 
 };
 
