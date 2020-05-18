@@ -218,6 +218,24 @@ public:
     static const pandora::MCParticle *GetParentMCParticle(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Get all descendent mc particles
+     *
+     *  @param  pMCParticle the input mc particle
+     *  @param  descendentMCParticleList the output descendent mc particle list
+     */
+    static void GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle,
+            pandora::MCParticleList& descendentMCParticleList);
+
+    /**
+     *  @brief  Get all ancestor mc particles
+     *
+     *  @param  pMCParticle the input mc particle
+     *  @param  ancestorMCParticleList the output ancestor mc particle list
+     */
+    static void GetAllAncestorMCParticles(const pandora::MCParticle *const pMCParticle,
+            pandora::MCParticleList& ancestorMCParticleList);
+
+    /**
      *  @brief  Get mapping from individual mc particles (in a provided list) and their primary parent mc particles
      *
      *  @param  pMCParticleList the input mc particle list

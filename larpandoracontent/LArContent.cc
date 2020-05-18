@@ -33,6 +33,7 @@
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h"
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/NeutrinoIdTool.h"
+#include "larpandoracontent/LArControlFlow/NeutrinoSliceSelectionTool.h"
 #include "larpandoracontent/LArControlFlow/SimpleNeutrinoIdTool.h"
 #include "larpandoracontent/LArControlFlow/PostProcessingAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/PreProcessingAlgorithm.h"
@@ -286,6 +287,7 @@
     d("LArBdtNeutrinoId",                       BdtNeutrinoIdTool)                                                              \
     d("LArSvmNeutrinoId",                       SvmNeutrinoIdTool)                                                              \
     d("LArSimpleNeutrinoId",                    SimpleNeutrinoIdTool)                                                           \
+    d("LArNeutrinoSliceSelection",              NeutrinoSliceSelectionTool)                                                     \
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArCosmicRayTaggingMonitoring",          CosmicRayTaggingMonitoringTool)                                                 \
     d("LArShowerTensorVisualization",           ShowerTensorVisualizationTool)                                                  \
