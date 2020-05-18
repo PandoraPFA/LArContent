@@ -53,7 +53,7 @@ void HitWidthClusterMergingAlgorithm::GetListOfCleanClusters(const ClusterList *
         // clusterSparseness [0 -> 1] where a higher value indicates sparseness
         const float clusterSparseness(1.f - (static_cast<float>(pCluster->GetNCaloHits()) / static_cast<float>(numberOfProposedConstituentHits)));
 
-        if ((clusterSparseness < m_minClusterSparseness) && (pCluster->GetNCaloHits() != 1))
+        if (clusterSparseness < m_minClusterSparseness)
             continue;
 
         m_clusterToParametersMap.insert(std::pair<const Cluster*, LArHitWidthHelper::ClusterParameters>(pCluster,
@@ -154,8 +154,16 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
     }
 
     CartesianVector currentClusterDirection(0.f, 0.f, 0.f), testClusterDirection(0.f, 0.f, 0.f);
-    this->GetClusterDirection(currentFitParameters.GetConstituentHitVector(), currentClusterDirection, currentFitParameters.GetHigherXExtrema(), m_fittingWeight);
-    this->GetClusterDirection(testFitParameters.GetConstituentHitVector(), testClusterDirection, testMergePoint, m_fittingWeight);
+
+    try
+    {
+        this->GetClusterDirection(currentFitParameters.GetConstituentHitVector(), currentClusterDirection, currentFitParameters.GetHigherXExtrema(), m_fittingWeight);
+        this->GetClusterDirection(testFitParameters.GetConstituentHitVector(), testClusterDirection, testMergePoint, m_fittingWeight);
+    }
+    catch (const StatusCodeException &)
+    {
+        return false;
+    }
 
     // check clusters have a similar direction
     if (currentClusterDirection.GetCosOpeningAngle(testClusterDirection) < m_minMergeCosOpeningAngle)
@@ -167,7 +175,15 @@ bool HitWidthClusterMergingAlgorithm::AreClustersAssociated(const LArHitWidthHel
 
     const CartesianVector midpoint((currentFitParameters.GetHigherXExtrema() + testMergePoint) * 0.5);
     CartesianVector newClusterDirection(0.f, 0.f, 0.f);
-    this->GetClusterDirection(newConstituentHitVector, newClusterDirection, midpoint, m_fittingWeight);
+
+    try
+    {
+        this->GetClusterDirection(newConstituentHitVector, newClusterDirection, midpoint, m_fittingWeight);
+    }
+    catch (const StatusCodeException &)
+    {
+        return false;
+    }
 
     if (newClusterDirection.GetCosOpeningAngle(currentClusterDirection) < m_minDirectionDeviationCosAngle ||
         newClusterDirection.GetCosOpeningAngle(testClusterDirection) < m_minDirectionDeviationCosAngle)
