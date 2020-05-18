@@ -54,7 +54,7 @@ StatusCode DLVertexCreationAlgorithm::Initialize()
     // Load the model file. 
     const StringVector view{"W", "V", "U"};
 
-    const unsigned int numModels(m_trainingSetMode ? m_trainingImgLenVecIndex : m_imgLenVec.size());
+    const int numModels(m_trainingSetMode ? m_trainingImgLenVecIndex : m_imgLenVec.size());
     for (int iModel=0; iModel<numModels; iModel++)
     {
         for (int iView=0; iView<m_numViews; iView++)
@@ -91,7 +91,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pClusterList1->front()));
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pClusterList2->front()));
 
-    std::vector<unsigned int> allHitsCountVec{0, 0, 0};
+    std::vector<int> allHitsCountVec{0, 0, 0};
     if (!(this->EventViewCheck(pClusterList0, allHitsCountVec[0]))) return STATUS_CODE_SUCCESS;
     if (!(this->EventViewCheck(pClusterList1, allHitsCountVec[1]))) return STATUS_CODE_SUCCESS;
     if (!(this->EventViewCheck(pClusterList2, allHitsCountVec[2]))) return STATUS_CODE_SUCCESS;
@@ -117,7 +117,7 @@ StatusCode DLVertexCreationAlgorithm::Run()
     }
 
     CartesianVector position3D(0.f, 0.f, 0.f); float chiSquared(0.f);
-    for (int imgLenVecIndex=1; imgLenVecIndex<m_imgLenVec.size(); imgLenVecIndex++)
+    for (unsigned int imgLenVecIndex=1; imgLenVecIndex<m_imgLenVec.size(); imgLenVecIndex++)
     {
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType0, hitType1, hitType2,
             position0, position1, position2, position3D, chiSquared);
@@ -161,8 +161,8 @@ StatusCode DLVertexCreationAlgorithm::Run()
 
 //---------------------------------------------------------------------------------------------------------------------------------
 CartesianVector DLVertexCreationAlgorithm::GetDLVertexForView(const ClusterList *const pClusterList, const HitType &view,
-    const CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount, 
-    std::stringstream ssBuf[6], const CartesianVector &MCVertexPosition, const unsigned int allHitsCount)
+    const CartesianVector &positionInput, const unsigned int imgLenVecIndex, unsigned int &vertReconCount, 
+    std::stringstream ssBuf[6], const CartesianVector &MCVertexPosition, const int allHitsCount)
 {
     const double length(m_imgLenVec[imgLenVecIndex]);
     const bool useScaledImg(length <= 0);
@@ -381,9 +381,9 @@ bool DLVertexCreationAlgorithm::DetectorCheck(const pandora::CartesianVector &po
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-bool DLVertexCreationAlgorithm::EventViewCheck(const pandora::ClusterList *const pClusterList, unsigned int &allHitsCount) const
+bool DLVertexCreationAlgorithm::EventViewCheck(const pandora::ClusterList *const pClusterList, int &allHitsCount) const
 {
-    unsigned int filtHitsCount(0);
+    int filtHitsCount(0);
 
     for (const Cluster *const pCluster : *pClusterList) 
     {

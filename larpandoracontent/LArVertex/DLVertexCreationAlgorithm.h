@@ -65,8 +65,8 @@ private:
      *  @return The position of the DL vertex for chosen view
      */
     pandora::CartesianVector GetDLVertexForView(const pandora::ClusterList *const pClusterList, const pandora::HitType &view, 
-        const pandora::CartesianVector &positionInput, const int imgLenVecIndex, unsigned int &vertReconCount,
-        std::stringstream ssBuf[6], const pandora::CartesianVector &MCVertexPosition, const unsigned int allHitsCount);
+        const pandora::CartesianVector &positionInput, const unsigned int imgLenVecIndex, unsigned int &vertReconCount,
+        std::stringstream ssBuf[6], const pandora::CartesianVector &MCVertexPosition, const int allHitsCount);
 
     /**
      *  @brief  Use Deep Learning on input image to get vertex pixel position for chosen view
@@ -122,7 +122,7 @@ private:
      *
      *  @return A flag recording if the event view passed the conditions
      */
-    bool EventViewCheck(const pandora::ClusterList *const pClusterList, unsigned int &allHitsCount) const;
+    bool EventViewCheck(const pandora::ClusterList *const pClusterList, int &allHitsCount) const;
 
     /**
      *  @brief  Get the MC vertex position
@@ -144,12 +144,12 @@ private:
     std::string             m_filePathEnvironmentVariable;    ///< The environment variable providing paths to model files
     std::string             m_modelFileNamePrefix;            ///< The model file name prefix
     unsigned int            m_numClusterCaloHitsPar;          ///< The number of cluster calo hits parameter 
-    unsigned int            m_npixels;                        ///< The number of pixels, N, in the N*N square image 
+    int                     m_npixels;                        ///< The number of pixels, N, in the N*N square image 
     pandora::FloatVector    m_imgLenVec;                      ///< Vector of lengths of the images
     bool                    m_trainingSetMode;                ///< Whether to train
-    int                     m_trainingImgLenVecIndex;         ///< Index for m_imgLenVec to use for output training images
+    unsigned int            m_trainingImgLenVecIndex;         ///< Index for m_imgLenVec to use for output training images
     float                   m_lenBuffer;                      ///< Length of the buffer for scaled images
-    unsigned int            m_numViews;                       ///< Number of available 2D views
+    int                     m_numViews;                       ///< Number of available 2D views
     std::string             m_trainingDataFileName;           ///< The name of the training data output file
     std::string             m_trainingLabelsFileName;         ///< The name of the training labels output file
     float                   m_vertexXCorrection;              ///< The correction to the x-coordinate of the MC vertex position
