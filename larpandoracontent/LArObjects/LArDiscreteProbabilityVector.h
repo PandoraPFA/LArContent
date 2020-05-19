@@ -12,6 +12,7 @@
 
 #include <utility>
 #include <vector>
+#include <random>
 
 
 namespace lar_content
@@ -48,6 +49,15 @@ public:
      *  @param  The points to resample the discrete probability vector with 
      */
     DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  discreteProbabilityVector a discrete probability vector to randomly rearrange
+     *  @param  randomNumberGenerator the random number generator for the random reshuffling
+     */
+    DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, std::mt19937 &randomNumberGenerator);
+
 
     /**
      *  @brief  Evaluate the cumulative probability at arbitrary x
@@ -170,6 +180,18 @@ private:
      */
     DiscreteProbabilityData ResampleDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, 
         ResamplingPoints const &resamplingPoints) const;
+
+    /**
+     *  @brief  Get a randomised probability data vector in which the x values are unchanged, the probability density is 
+     *          randomised and the cumulative probability is recalculated
+     *
+     *  @param  discreteProbabilityVector another discrete probability vector
+     *  @param  randomNumberGenerator the random number generator for the random reshuffling 
+     *
+     *  @return a resampled probability data vector
+     */
+    DiscreteProbabilityData RandomiseDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, 
+        std::mt19937 &randomNumberGenerator) const;
 
     /**
      *  @brief  Sort the input data according to their x value
