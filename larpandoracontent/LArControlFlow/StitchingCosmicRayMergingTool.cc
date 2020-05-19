@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
@@ -250,24 +251,35 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
         return;
     }
 
-    // Selection cuts on longitudinal impact parameters
-    const float minL(-1.f);
-    const float dXdL1(m_useXcoordinate ? pX1 :
-        (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1) : minL);
-    const float dXdL2(m_useXcoordinate ? pX2 :
-        (1.f - pX2 * pX2 > std::numeric_limits<float>::epsilon()) ? pX2 / std::sqrt(1.f - pX2 * pX2) : minL);
-    const float maxL1(maxLongitudinalDisplacementX / dXdL1);
-    const float maxL2(maxLongitudinalDisplacementX / dXdL2);
+    // To skip impact parameters
+    CartesianVector position1(pointingVertex1.GetPosition());
+    CartesianVector position2(pointingVertex2.GetPosition());
 
-    if (rL1 < minL || rL1 > maxL1 || rL2 < minL || rL2 > maxL2)
-        return;
+    bool isInGap3D_1(LArGeometryHelper::IsInGap(this->GetPandora(), position1,  TPC_VIEW_U, 0.f) && LArGeometryHelper::IsInGap(this->GetPandora(), position1,  TPC_VIEW_V, 0.f) && LArGeometryHelper::IsInGap(this->GetPandora(), position1,  TPC_VIEW_W, 0.f));
+    
+    bool isInGap3D_2(LArGeometryHelper::IsInGap(this->GetPandora(), position2,  TPC_VIEW_U, 0.f) && LArGeometryHelper::IsInGap(this->GetPandora(), position2,  TPC_VIEW_V, 0.f) && LArGeometryHelper::IsInGap(this->GetPandora(), position2,  TPC_VIEW_W, 0.f));
 
-    // Selection cuts on transverse impact parameters
-    const bool minPass(std::min(rT1, rT2) < m_relaxTransverseDisplacement && cosRelativeAngle > m_relaxCosRelativeAngle);
-    const bool maxPass(std::max(rT1, rT2) < m_maxTransverseDisplacement && cosRelativeAngle > m_minCosRelativeAngle);
+    if (!isInGap3D_1 && !isInGap3D_2)
+    {
+        // Selection cuts on longitudinal impact parameters
+        const float minL(-1.f);
+        const float dXdL1(m_useXcoordinate ? pX1 :
+            (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1) : minL);
+        const float dXdL2(m_useXcoordinate ? pX2 :
+            (1.f - pX2 * pX2 > std::numeric_limits<float>::epsilon()) ? pX2 / std::sqrt(1.f - pX2 * pX2) : minL);
+        const float maxL1(maxLongitudinalDisplacementX / dXdL1);
+        const float maxL2(maxLongitudinalDisplacementX / dXdL2);
 
-    if (!minPass && !maxPass)
-        return;
+        if (rL1 < minL || rL1 > maxL1 || rL2 < minL || rL2 > maxL2)
+            return;
+
+        // Selection cuts on transverse impact parameters
+        const bool minPass(std::min(rT1, rT2) < m_relaxTransverseDisplacement && cosRelativeAngle > m_relaxCosRelativeAngle);
+        const bool maxPass(std::max(rT1, rT2) < m_maxTransverseDisplacement && cosRelativeAngle > m_minCosRelativeAngle);
+
+        if (!minPass && !maxPass)
+	  return;
+    }
 
     // Store this association
     const PfoAssociation::VertexType vertexType1(pointingVertex1.IsInnerVertex() ? PfoAssociation::INNER : PfoAssociation::OUTER);
