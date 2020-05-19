@@ -1,14 +1,14 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/NeutrinoSliceSelectionTool.cc
+ *  @file   larpandoracontent/LArControlFlow/BeamParticleSliceSelectionTool.cc
  *
- *  @brief  Implementation of the neutrino id tool class.
+ *  @brief  Implementation of the beam slice selection tool class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArControlFlow/NeutrinoSliceSelectionTool.h"
+#include "larpandoracontent/LArControlFlow/BeamParticleSliceSelectionTool.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
@@ -17,20 +17,20 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoSliceSelectionTool::NeutrinoSliceSelectionTool()
+BeamParticleSliceSelectionTool::BeamParticleSliceSelectionTool()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool NeutrinoSliceSelectionTool::IsTarget(const MCParticle *const mcParticle) const
+bool BeamParticleSliceSelectionTool::IsTarget(const MCParticle *const mcParticle) const
 {
-    return LArMCParticleHelper::IsNeutrino(mcParticle);
+    return LArMCParticleHelper::IsBeamParticle(mcParticle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode NeutrinoSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode BeamParticleSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     return GenericSliceSelectionTool::ReadSettings(xmlHandle);
 }

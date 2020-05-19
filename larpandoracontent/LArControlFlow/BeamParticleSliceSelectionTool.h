@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/NeutrinoSliceSelectionTool.h
+ *  @file   larpandoracontent/LArControlFlow/BeamParticleSliceSelectionTool.h
  *
- *  @brief  Header file for the neutrino slice selection tool class.
+ *  @brief  Header file for the test beam slice selection tool class.
  *
  *  $Log: $
  */
-#ifndef LAR_NEUTRINO_SLICE_SELECTION_TOOL_H
-#define LAR_NEUTRINO_SLICE_SELECTION_TOOL_H 1
+#ifndef LAR_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H
+#define LAR_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/GenericSliceSelectionTool.h"
 
@@ -14,15 +14,15 @@ namespace lar_content
 {
 
 /**
- *  @brief  NeutrinoSliceSelectionTool class
+ *  @brief  BeamParticleSliceSelectionTool class
  */
-class NeutrinoSliceSelectionTool : public GenericSliceSelectionTool
+class BeamParticleSliceSelectionTool : public GenericSliceSelectionTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    NeutrinoSliceSelectionTool();
+    BeamParticleSliceSelectionTool();
 
 protected:
     /**
@@ -38,5 +38,5 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_NEUTRINO_SLICE_SELECTION_TOOL_H
+#endif // #ifndef LAR_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H
 

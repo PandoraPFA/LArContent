@@ -30,6 +30,7 @@
 
 #include "larpandoracontent/LArControlFlow/BdtBeamParticleIdTool.h"
 #include "larpandoracontent/LArControlFlow/BeamParticleIdTool.h"
+#include "larpandoracontent/LArControlFlow/BeamParticleSliceSelectionTool.h"
 #include "larpandoracontent/LArControlFlow/CosmicRayTaggingTool.h"
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/NeutrinoIdTool.h"
@@ -287,6 +288,7 @@
     d("LArBdtNeutrinoId",                       BdtNeutrinoIdTool)                                                              \
     d("LArSvmNeutrinoId",                       SvmNeutrinoIdTool)                                                              \
     d("LArSimpleNeutrinoId",                    SimpleNeutrinoIdTool)                                                           \
+    d("LArBeamParticleSliceSelection",          BeamParticleSliceSelectionTool)                                                 \
     d("LArNeutrinoSliceSelection",              NeutrinoSliceSelectionTool)                                                     \
     d("LArStitchingCosmicRayMerging",           StitchingCosmicRayMergingTool)                                                  \
     d("LArCosmicRayTaggingMonitoring",          CosmicRayTaggingMonitoringTool)                                                 \
