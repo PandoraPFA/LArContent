@@ -24,8 +24,16 @@ public:
      */
     NeutrinoSliceSelectionTool();
 
+    /**
+     *  @brief  Select which slice(s) to use; neutrino or beam slices
+     *
+     *  @param  pAlgorithm the address of the master instance, used to access MCParticles when in training mode
+     *  @param  inputSliceVector the initial slice vector
+     *  @param  outputSliceVector the output slice vector
+     *  @param  outputMCParticleList the MC particle list corresponding to the output slice(s)
+     */
     void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector,
-        SliceVector &outputSliceVector);
+        SliceVector &outputSliceVector, pandora::MCParticleList& outputMCParticleList);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -33,7 +41,6 @@ private:
     int             m_maxSlices;                ///< The maximum number of slices to retain (0 to retain all) - default 0
     float           m_threshold;                ///< The minimum cut threshold to retain a slice (< 0 for no threshold) - default -1
     std::string     m_cutVariable;              ///< The variable to cut on ("purity" or "completeness") - default "completeness"
-    std::string     m_mcParticleListName;       ///< The name for the MCParticleList associated with the slice selection
 };
 
 } // namespace lar_content

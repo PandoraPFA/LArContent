@@ -157,9 +157,6 @@ StatusCode MasterAlgorithm::Run()
     if (!m_workerInstancesInitialized)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitializeWorkerInstances());
 
-    if (m_passMCParticlesToWorkerInstances)
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
-
     PfoToFloatMap stitchedPfosToX0Map;
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
@@ -512,15 +509,34 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
     SliceVector selectedSliceVector;
     if (m_shouldRunSlicing && m_sliceSelectionToolVector.size() > 0)
     {
+        MCParticleList reducedMCParticleList;
         SliceVector inputSliceVector(sliceVector);
         for (SliceSelectionBaseTool *const pSliceSelectionTool : m_sliceSelectionToolVector)
         {
-            pSliceSelectionTool->SelectSlices(this, inputSliceVector, selectedSliceVector);
+            reducedMCParticleList.clear();
+            pSliceSelectionTool->SelectSlices(this, inputSliceVector, selectedSliceVector, reducedMCParticleList);
             inputSliceVector = selectedSliceVector;
+        }
+        if (m_passMCParticlesToWorkerInstances)
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<MCParticleList>(*this, reducedMCParticleList,
+                m_inputMCParticleListName));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
         }
     }
     else
+    {
         selectedSliceVector = sliceVector;
+        if (m_passMCParticlesToWorkerInstances)
+        {
+            const MCParticleList* pCurrentMCParticleList{nullptr};
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList<MCParticleList>(*this,
+                pCurrentMCParticleList));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<MCParticleList>(*this, *pCurrentMCParticleList,
+                m_inputMCParticleListName));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
+        }
+    }
 
     unsigned int sliceCounter(0);
 

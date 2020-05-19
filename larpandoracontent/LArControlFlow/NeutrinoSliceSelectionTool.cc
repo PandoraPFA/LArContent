@@ -27,7 +27,7 @@ NeutrinoSliceSelectionTool::NeutrinoSliceSelectionTool() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void NeutrinoSliceSelectionTool::SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector,
-    SliceVector &outputSliceVector)
+    SliceVector &outputSliceVector, MCParticleList& outputMCParticleList)
 {
     // ATTN Ensure this only runs if slicing enabled
     unsigned int sliceCounter{0};
@@ -119,7 +119,6 @@ void NeutrinoSliceSelectionTool::SelectSlices(const pandora::Algorithm *const pA
     }
 
     // Get the MC particles associated with the best slice(s)
-    MCParticleList reducedMCParticleList{};
     for (const CaloHitList &sliceHits : outputSliceVector)
     {
         MCParticleList currentMCParticleList{};
@@ -152,25 +151,18 @@ void NeutrinoSliceSelectionTool::SelectSlices(const pandora::Algorithm *const pA
                 ancestorMCParticleList.begin(), ancestorMCParticleList.end());
         for (const auto current : currentMCParticleList)
         {
-            if (std::find(reducedMCParticleList.begin(), reducedMCParticleList.end(),
-                        current) == reducedMCParticleList.end())
+            if (std::find(outputMCParticleList.begin(), outputMCParticleList.end(),
+                        current) == outputMCParticleList.end())
             {
-                reducedMCParticleList.push_back(current);
+                outputMCParticleList.push_back(current);
             }
         }
     }
     
-    reducedMCParticleList.sort(LArMCParticleHelper::SortByMomentum);
+    outputMCParticleList.sort(LArMCParticleHelper::SortByMomentum);
     const MCParticleList *pCurrentMCParticleList{nullptr};
     if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*pAlgorithm, pCurrentMCParticleList))
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-    std::cout << "MC original length " << pCurrentMCParticleList->size() << std::endl;    
-    if (STATUS_CODE_SUCCESS != PandoraContentApi::SaveList<MCParticleList>(*pAlgorithm, reducedMCParticleList, m_mcParticleListName))
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-    if (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<MCParticle>(*pAlgorithm, m_mcParticleListName))
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
-    PandoraContentApi::GetCurrentList(*pAlgorithm, pCurrentMCParticleList);
-    std::cout << "MC selected length " << pCurrentMCParticleList->size() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -190,9 +182,6 @@ StatusCode NeutrinoSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
         std::cout << "NeutrinoSliceSelectionTool::ReadSettings: Unknown cut variable \'" << m_cutVariable << "\'" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputMCParticleListName", m_mcParticleListName));
 
     return STATUS_CODE_SUCCESS;
 }

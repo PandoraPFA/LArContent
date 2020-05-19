@@ -424,9 +424,10 @@ public:
      *  @param  pAlgorithm the address of the master instance, used to access MCParticles when in training mode
      *  @param  inputSliceVector the initial slice vector
      *  @param  outputSliceVector the output slice vector
+     *  @param  mcParticleList the MC particle list corresponding to the output slice(s)
      */
     virtual void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector,
-        SliceVector &outputSliceVector) = 0;
+        SliceVector &outputSliceVector, pandora::MCParticleList& mcParticleList) = 0;
 };
 
 } // namespace lar_content
