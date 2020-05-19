@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h"
 
+#include <random>
+
 /**
  *  @brief  DiscreteCumulativeDistributionHelper class
  */
@@ -22,6 +24,9 @@ class LArDiscreteProbabilityHelper
 public:
 
     template <typename T>
+    static float CalculateCorrelationCoefficientPValue(const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const size_t nPermutations);
+
+    template <typename T>
     static float CalculateCorrelationCoefficient(const T &t1, const T &t2);
 
     template <typename T>
@@ -29,7 +34,14 @@ public:
 
 private:
 
+    template <typename T>
+    static T MakeRandomisedSample(const T &t, std::mt19937 &randomNumberGenerator);
 
+    template <typename T>
+    static T MakeRandomisedSampleImpl(const T &t, std::mt19937 &randomNumberGenerator);
+
+    template <typename T>
+    static std::vector<T> MakeRandomisedSampleImpl(const std::vector<T> &t, std::mt19937 &randomNumberGenerator);
 
     template <typename T>
     static size_t GetSize(const T &t);
@@ -58,6 +70,26 @@ private:
     */
    //static float CumulDistLinearInterpolation(const float &xPos, const DiscreteCumulativeDistribution &distribution);
 };
+
+
+template <typename T>
+float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValue(const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const size_t nPermutations)
+{
+    if (1 > nPermutations)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    float rNominal(CalculateCorrelationCoefficient(t1,t2));
+
+    int nExtreme(0);
+    for (size_t iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
+    {
+        float rRandomised(CalculateCorrelationCoefficient(MakeRandomisedSample(t1,randomNumberGenerator),MakeRandomisedSample(t2,randomNumberGenerator)));
+        if ((rRandomised-rNominal) > std::numeric_limits<float>::epsilon())
+            nExtreme++;
+    }
+
+    return static_cast<float>(nExtreme)/static_cast<float>(nPermutations);
+}
 
 
 template <typename T>
@@ -106,6 +138,28 @@ float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
     mean /= static_cast<float>(GetSize(t));
 
     return mean;
+}
+
+
+template <typename T>
+inline T LArDiscreteProbabilityHelper::MakeRandomisedSample(const T &t, std::mt19937 &randomNumberGenerator)
+{
+    return MakeRandomisedSampleImpl(t, randomNumberGenerator);
+}
+
+template <>
+inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(const DiscreteProbabilityVector &t, std::mt19937 &randomNumberGenerator)
+{
+    return DiscreteProbabilityVector(t,randomNumberGenerator);
+}
+
+template <typename T>
+inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(const std::vector<T> &t, std::mt19937 &randomNumberGenerator)
+{
+    std::vector<T> randomisedVector(t);
+    std::shuffle(randomisedVector.begin(), randomisedVector.end(), randomNumberGenerator);
+
+    return randomisedVector;
 }
 
 template <typename T>

@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <numeric>
 
 namespace lar_content
 {
@@ -25,12 +26,23 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<TX, TY> const &in
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector,
+     std::mt19937 &randomNumberGenerator) :
+    m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
+    m_discreteProbabilityData(RandomiseDiscreteProbabilityData(discreteProbabilityVector, randomNumberGenerator))
+{
+    VerifyCompleteData();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector,
     ResamplingPoints const &resamplingPoints) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_discreteProbabilityData(ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
 {
     VerifyCompleteData();
 }
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -96,7 +108,6 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-
 DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::ResampleDiscreteProbabilityData(
     DiscreteProbabilityVector const & discreteProbabilityVector, ResamplingPoints const & resamplingPoints) const
 {
@@ -113,6 +124,29 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
     }
 
     return resampledProbabilityData;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::RandomiseDiscreteProbabilityData(
+   DiscreteProbabilityVector const &discreteProbabilityVector, std::mt19937 &randomNumberGenerator) const
+{
+    DiscreteProbabilityData randomisedProbabilityData;
+
+    std::vector<size_t> randomisedElements(discreteProbabilityVector.GetSize());
+    std::iota (std::begin(randomisedElements), std::end(randomisedElements), 0);
+    std::shuffle(std::begin(randomisedElements), std::end(randomisedElements), randomNumberGenerator);
+
+    float cumulativeProbability(0.f);
+    for (size_t iElement = 0; iElement < discreteProbabilityVector.GetSize(); ++iElement)
+    {
+        float x(discreteProbabilityVector.GetX(iElement));
+        float probabilityDensity(discreteProbabilityVector.GetProbabilityDensity(randomisedElements.at(iElement)));
+        cumulativeProbability+=probabilityDensity;
+        randomisedProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, probabilityDensity, cumulativeProbability));
+    }
+
+    return randomisedProbabilityData;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
