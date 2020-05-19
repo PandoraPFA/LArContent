@@ -135,13 +135,13 @@ inline float LArDiscreteProbabilityHelper::GetElement(const T &t, const size_t e
 template <>
 inline float LArDiscreteProbabilityHelper::GetElementImpl(const DiscreteProbabilityVector& t, const size_t element)
 {
-    return t.GetProbabilityDensity(element);
+    return static_cast<float>(t.GetProbabilityDensity(element));
 }
 
 template<typename T>
 inline float LArDiscreteProbabilityHelper::GetElementImpl(const std::vector<T> &t, const size_t element)
 {
-    return t.at(element);
+    return static_cast<float>(t.at(element));
 }
 
 } // namespace lar_content
