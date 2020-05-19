@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h"
 
+#include <random>
+
 /**
  *  @brief  DiscreteCumulativeDistributionHelper class
  */
@@ -20,6 +22,9 @@ namespace lar_content
 class LArDiscreteProbabilityHelper
 {
 public:
+
+    template <typename T>
+    static float CalculateCorrelationCoefficientPValue(const T &t1, const T &t2, const size_t nPermutations);
 
     template <typename T>
     static float CalculateCorrelationCoefficient(const T &t1, const T &t2);
@@ -58,6 +63,17 @@ private:
     */
    //static float CumulDistLinearInterpolation(const float &xPos, const DiscreteCumulativeDistribution &distribution);
 };
+
+
+template <typename T>
+float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValue(const T &t1, const T &t2, const size_t nPermutations)
+{
+    float rNominal(CalculateCorrelationCoefficient(t1,t2));
+    //std::random_device rd;
+    //std::mt19937 g(rd());
+    //int nExtreme(0);
+    return rNominal;
+}
 
 
 template <typename T>
