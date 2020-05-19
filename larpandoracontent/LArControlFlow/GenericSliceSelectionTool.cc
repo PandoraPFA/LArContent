@@ -24,8 +24,8 @@ GenericSliceSelectionTool::GenericSliceSelectionTool() :
 {
 }
 
-void GenericSliceSelectionTool::SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector,
-    SliceVector &outputSliceVector, MCParticleList& outputMCParticleList)
+void GenericSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*pAlgorithm*/, const SliceVector &inputSliceVector,
+    SliceVector &outputSliceVector)
 {
     // ATTN Ensure this only runs if slicing enabled
     unsigned int sliceCounter{0};
@@ -114,52 +114,6 @@ void GenericSliceSelectionTool::SelectSlices(const pandora::Algorithm *const pAl
         if (++i == m_maxSlices)
             break;
     }
-
-    // Get the MC particles associated with the best slice(s)
-    for (const CaloHitList &sliceHits : outputSliceVector)
-    {
-        MCParticleList currentMCParticleList{};
-        MCParticleList ancestorMCParticleList{};
-        MCParticleList descendentMCParticleList{};
-
-        CaloHitList localHitList{};
-
-        for (const CaloHit *const pSliceCaloHit : sliceHits)
-            localHitList.push_back(static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()));
-
-        for (const CaloHit *const pCaloHit : localHitList)
-        {
-            const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
-
-            if (hitMCParticleWeightMap.empty())
-                continue;
-
-            for (const auto &mapEntry : hitMCParticleWeightMap)
-            {
-                const auto currentMCParticle = mapEntry.first;
-                currentMCParticleList.push_back(currentMCParticle);
-                LArMCParticleHelper::GetAllDescendentMCParticles(currentMCParticle, descendentMCParticleList);
-                LArMCParticleHelper::GetAllAncestorMCParticles(currentMCParticle, ancestorMCParticleList);
-            }
-        }
-        currentMCParticleList.insert(currentMCParticleList.end(),
-                descendentMCParticleList.begin(), descendentMCParticleList.end());
-        currentMCParticleList.insert(currentMCParticleList.end(),
-                ancestorMCParticleList.begin(), ancestorMCParticleList.end());
-        for (const auto current : currentMCParticleList)
-        {
-            if (std::find(outputMCParticleList.begin(), outputMCParticleList.end(),
-                        current) == outputMCParticleList.end())
-            {
-                outputMCParticleList.push_back(current);
-            }
-        }
-    }
-    
-    outputMCParticleList.sort(LArMCParticleHelper::SortByMomentum);
-    const MCParticleList *pCurrentMCParticleList{nullptr};
-    if (STATUS_CODE_SUCCESS != PandoraContentApi::GetCurrentList(*pAlgorithm, pCurrentMCParticleList))
-        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

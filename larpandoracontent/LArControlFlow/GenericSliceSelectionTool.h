@@ -30,10 +30,9 @@ public:
      *  @param  pAlgorithm the address of the master instance, used to access MCParticles when in training mode
      *  @param  inputSliceVector the initial slice vector
      *  @param  outputSliceVector the output slice vector
-     *  @param  outputMCParticleList the MC particle list corresponding to the output slice(s)
      */
     void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector,
-        SliceVector &outputSliceVector, pandora::MCParticleList& outputMCParticleList);
+        SliceVector &outputSliceVector);
         
 protected:
     /**
