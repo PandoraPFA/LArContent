@@ -75,14 +75,20 @@ private:
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValue(const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const size_t nPermutations)
 {
+    if (1 > nPermutations)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
     float rNominal(CalculateCorrelationCoefficient(t1,t2));
 
     int nExtreme(0);
     for (size_t iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
     {
-
+        float rRandomised(CalculateCorrelationCoefficient(MakeRandomisedSample(t1,randomNumberGenerator),MakeRandomisedSample(t2,randomNumberGenerator)));
+        if ((rRandomised-rNominal) > std::numeric_limits<float>::epsilon())
+            nExtreme++;
     }
-    return rNominal;
+
+    return static_cast<float>(nExtreme)/static_cast<float>(nPermutations);
 }
 
 
