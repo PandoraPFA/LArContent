@@ -620,16 +620,21 @@ void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const
     {
         for (const CaloHit *const pCaloHit : *layerEntry.second)
         {
-            //std::cout<<"x: " << pCaloHit->GetPositionVector().GetX() << "  y: " << pCaloHit->GetPositionVector().GetY() << "  z: " << pCaloHit->GetPositionVector().GetZ() << std::endl;
-
             const CartesianVector hitPosition = pCaloHit->GetPositionVector();
-            if (hitPosition.GetX() > std::min(lowerBound.GetX(),upperBound.GetX()) &&
-                hitPosition.GetX() < std::max(lowerBound.GetX(),upperBound.GetX()) &&
-                //hitPosition.GetY() - std::min(lowerBound.GetY(),upperBound.GetY()) >= std::numeric_limits<float>::epsilon() &&
-                //std::max(lowerBound.GetY(),upperBound.GetY()) - hitPosition.GetY() >= std::numeric_limits<float>::epsilon() &&
-                hitPosition.GetZ() > std::min(lowerBound.GetZ(),upperBound.GetZ()) &&
-                hitPosition.GetZ() < std::max(lowerBound.GetZ(),upperBound.GetZ()))
-                caloHitList.push_back(pCaloHit);
+            if (std::fabs(upperBound.GetX()-lowerBound.GetX()) > std::numeric_limits<float>::epsilon() && 
+                (hitPosition.GetX() < std::min(lowerBound.GetX(),upperBound.GetX())-std::numeric_limits<float>::epsilon() ||
+                 hitPosition.GetX() > std::max(lowerBound.GetX(),upperBound.GetX())+std::numeric_limits<float>::epsilon()))
+                    continue;
+            else if (std::fabs(upperBound.GetY()-lowerBound.GetY()) > std::numeric_limits<float>::epsilon() && 
+                (hitPosition.GetY() < std::min(lowerBound.GetY(),upperBound.GetY())-std::numeric_limits<float>::epsilon() ||
+                 hitPosition.GetY() > std::max(lowerBound.GetY(),upperBound.GetY())+std::numeric_limits<float>::epsilon()))
+                    continue;
+            else if (std::fabs(upperBound.GetZ()-lowerBound.GetZ()) > std::numeric_limits<float>::epsilon() && 
+                (hitPosition.GetZ() < std::min(lowerBound.GetZ(),upperBound.GetZ())-std::numeric_limits<float>::epsilon() ||
+                 hitPosition.GetZ() > std::max(lowerBound.GetZ(),upperBound.GetZ())+std::numeric_limits<float>::epsilon()))
+                    continue;
+
+            caloHitList.push_back(pCaloHit);
         }
     }
     caloHitList.sort(LArClusterHelper::SortHitsByPosition);
