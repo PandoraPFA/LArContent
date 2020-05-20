@@ -267,7 +267,7 @@ public:
      *  @brief  Get list of Calo hits from an input cluster.  The hits are sorted by position
      *
      *  @param  pCluster address of the cluster
-     *  @param  caloHitVector
+     *  @param  caloHitList the CaloHitList to be filled
      */
     static void GetCaloHitList(const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
 
@@ -277,7 +277,7 @@ public:
      *  @param  pCluster address of the cluster
      *  @param  lowerBound one opposing corner of the bounding box
      *  @param  upperBound the other opposing corner of the bounding box
-     *  @param  caloHitVector
+     *  @param  caloHitList the CaloHitList to be filled
      */
     static void GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound, 
             const pandora::CartesianVector &upperBound, pandora::CaloHitList &caloHitList);
