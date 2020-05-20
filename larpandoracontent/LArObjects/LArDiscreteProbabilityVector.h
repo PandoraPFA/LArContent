@@ -37,7 +37,7 @@ public:
      *  @brief  Constructor
      *
      *  @param  inputData the data used to construt the probability vector
-     *  @param  the upper bound of the probability vector
+     *  @param  xUpperBound the upper bound of the probability vector
      */
     template <typename TX, typename TY>
     DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound);
@@ -46,7 +46,7 @@ public:
      *  @brief  Constructor
      *
      *  @param  discreteProbabilityVector a discrete probability vector to resample from
-     *  @param  The points to resample the discrete probability vector with 
+     *  @param  resamplingPoints the points to resample the discrete probability vector with 
      */
     DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
 
@@ -57,7 +57,6 @@ public:
      *  @param  randomNumberGenerator the random number generator for the random reshuffling
      */
     DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, std::mt19937 &randomNumberGenerator);
-
 
     /**
      *  @brief  Evaluate the cumulative probability at arbitrary x
@@ -336,5 +335,5 @@ inline void DiscreteProbabilityVector::VerifyElementRequest(const size_t index) 
 
 } // namespace lar_content
 
-#endif // £ifndef  LAR_DISCRETE_PROBABILITY_VECTOR_H
+#endif // #ifndef  LAR_DISCRETE_PROBABILITY_VECTOR_H
 
