@@ -335,5 +335,5 @@ inline void DiscreteProbabilityVector::VerifyElementRequest(const size_t index) 
 
 } // namespace lar_content
 
-#endif // £ifndef  LAR_DISCRETE_PROBABILITY_VECTOR_H
+#endif // #ifndef  LAR_DISCRETE_PROBABILITY_VECTOR_H
 
