@@ -767,7 +767,6 @@ bool LArClusterHelper::SortHitsByPositionInX(const pandora::CaloHit *const pLhs,
     return SortHitsByPulseHeight(pLhs, pRhs);
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArClusterHelper::SortHitsByPulseHeight(const CaloHit *const pLhs, const CaloHit *const pRhs)
