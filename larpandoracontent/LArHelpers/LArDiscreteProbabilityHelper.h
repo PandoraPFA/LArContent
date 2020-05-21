@@ -202,10 +202,11 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
         covariance += (element1-mean1)*(element2-mean2);
     }
 
-    if(variance1*variance2 < std::numeric_limits<float>::epsilon())
+    float sqrtVars(std::sqrt(variance1*variance2));
+    if(sqrtVars < std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
-    return covariance /= std::sqrt(variance1*variance2);
+    return covariance /= sqrtVars;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
