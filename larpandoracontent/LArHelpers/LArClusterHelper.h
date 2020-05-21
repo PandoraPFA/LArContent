@@ -358,7 +358,6 @@ public:
      */
     static bool SortHitsByPositionInX(const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
 
-
    /**
      *  @brief  Sort calo hits by their pulse height
      *
