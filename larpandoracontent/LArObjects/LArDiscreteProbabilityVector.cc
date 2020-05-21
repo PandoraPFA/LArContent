@@ -96,13 +96,20 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
     float accumulationDatum(0.f);
 
     DiscreteProbabilityData data;
-    for (size_t iDatum = 0; iDatum < inputData.size(); ++iDatum)
+    for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
         float x(inputData.at(iDatum).first);
+        float deltaX(inputData.at(iDatum+1).first-x);
         float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
-        accumulationDatum+=densityDatum;
+        accumulationDatum+=densityDatum*deltaX;
         data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum));
     }
+    float x(inputData.back().first);
+    float deltaX(m_xUpperBound-x);
+    float densityDatum(static_cast<float>(inputData.back().second) / normalisation);
+    accumulationDatum+=densityDatum*deltaX;
+    data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum));
+
     return data;
 }
 
