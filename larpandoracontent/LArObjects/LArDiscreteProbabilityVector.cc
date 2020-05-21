@@ -48,15 +48,15 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector c
 
 float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) const
 {
-    if (x > m_discreteProbabilityData.back().GetX())
+    if (x - m_discreteProbabilityData.back().GetX() > std::numeric_limits<float>::epsilon())
         return 1.f;
 
-    if (x < m_discreteProbabilityData.front().GetX())
+    if (x - m_discreteProbabilityData.front().GetX() < std::numeric_limits<float>::epsilon())
         return 0.f;
 
     for (size_t iDatum = 1; iDatum < m_discreteProbabilityData.size(); ++iDatum)
     {
-        if (x > m_discreteProbabilityData.at(iDatum).GetX())
+        if (x - m_discreteProbabilityData.at(iDatum).GetX() > std::numeric_limits<float>::epsilon())
             continue;
 
         float xLow(m_discreteProbabilityData.at(iDatum-1).GetX());
@@ -89,7 +89,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
 
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
-    if (inputData.back().first > m_xUpperBound)
+    if (inputData.back().first - m_xUpperBound > std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     float normalisation(CalculateNormalisation(inputData));

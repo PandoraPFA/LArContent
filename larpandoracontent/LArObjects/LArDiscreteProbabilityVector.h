@@ -13,7 +13,7 @@
 #include <utility>
 #include <vector>
 #include <random>
-
+#include <limits>
 
 namespace lar_content
 {
@@ -317,9 +317,8 @@ inline void DiscreteProbabilityVector::VerifyCompleteData() const
     if (2 > m_discreteProbabilityData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
-    if (m_discreteProbabilityData.back().GetX() > m_xUpperBound)
+    if (m_discreteProbabilityData.back().GetX() - m_xUpperBound > std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
     return;
 }
 
