@@ -102,14 +102,24 @@ public:
     float GetCumulativeProbability(const size_t index) const;
 
     /**
+     *  @brief  Get the cumulative probability value of the element in the vector
+     *
+     *  @param  index the index in the vector
+     *
+     *  @return the width of the probability bin
+     */
+    float GetWidth(const size_t index) const;
+
+    /**
      *  @brief  Get all information stored at a particular index
      *
      *  @param  index the index in the vector
      *  @param  x the x value
      *  @param  probabilityDensity the probability density value
      *  @param  cumulativeProbability the cumulative probability value
+     *  @param width the width of the probability bin
      */
-    void GetAllAtIndex(const size_t index, float &x, float &probabilityDensity, float &cumulativeProbability) const;
+    void GetAllAtIndex(const size_t index, float &x, float &probabilityDensity, float &cumulativeProbability, float &width) const;
 
 private:
 
@@ -125,8 +135,9 @@ private:
              *  @param  x the x value
              *  @param  densityDatum the probability density for the corresponding x
              *  @param  cumulativeDatum the cumulative probability for the corresponding x
+             *  @param width the width of the bin
              */
-            DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum);
+            DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum, const float &width);
 
             /**
              *  @brief  Get the x value for the datum
@@ -149,10 +160,19 @@ private:
              */
             float GetCumulativeDatum() const;
 
+            /**
+             *  @brief  Get the width of the datum
+             *
+             *  @return the width
+             */
+            float GetWidth() const;
+
+
         private:
             float m_x;                     ///< The x coordinate
             float m_densityDatum;          ///< The probability density value
             float m_cumulativeDatum;       ///< The cumulative probability value
+            float m_width;                 ///< The width of the probability bin
     };
 
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
@@ -266,8 +286,17 @@ inline float DiscreteProbabilityVector::GetCumulativeProbability(const size_t in
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline float DiscreteProbabilityVector::GetWidth(const size_t index) const
+{
+    VerifyElementRequest(index);
+
+    return m_discreteProbabilityData.at(index).GetWidth();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &x, float &probabilityDensity,
-    float &cumulativeProbability) const
+    float &cumulativeProbability, float &width) const
 {
     VerifyElementRequest(index);
 
@@ -275,6 +304,7 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &
     x = theDatum.GetX();
     probabilityDensity = theDatum.GetDensityDatum();
     cumulativeProbability = theDatum.GetCumulativeDatum();
+    width = theDatum.GetWidth();
 
     return;
 }
@@ -282,10 +312,11 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x,
-    const float &densityDatum, const float &cumulativeDatum) :
+    const float &densityDatum, const float &cumulativeDatum, const float &width) :
     m_x(x),
     m_densityDatum(densityDatum),
-    m_cumulativeDatum(cumulativeDatum)
+    m_cumulativeDatum(cumulativeDatum),
+    m_width(width)
 {
 }
 
@@ -308,6 +339,13 @@ inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetDensityDatu
 inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetCumulativeDatum() const
 {
     return m_cumulativeDatum;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float DiscreteProbabilityVector::DiscreteProbabilityDatum::GetWidth() const
+{
+    return m_width;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
