@@ -327,7 +327,7 @@ inline float LArDiscreteProbabilityHelper::GetElement(const T &t, const size_t i
 template <>
 inline float LArDiscreteProbabilityHelper::GetElementImpl(const DiscreteProbabilityVector& t, const size_t index)
 {
-    return static_cast<float>(t.GetProbabilityDensity(index))*static_cast<float>(t.GetWidth(index));
+    return static_cast<float>(t.GetProbability(index));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
