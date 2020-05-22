@@ -38,9 +38,10 @@ public:
      *
      *  @param  inputData the data used to construt the probability vector
      *  @param  xUpperBound the upper bound of the probability vector
+     *  @param  useWidths bool controlling whether the bin widths are used in calculations
      */
     template <typename TX, typename TY>
-    DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound);
+    DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound, const bool useWidths);
 
     /**
      *  @brief  Constructor
@@ -246,6 +247,7 @@ private:
     void VerifyElementRequest(const size_t index) const;
 
     float m_xUpperBound;                                              ///< the upper bound of the probability vector
+    bool m_useWidths;                                                 ///< controls whether bin widths are used in calculations
     DiscreteProbabilityData m_discreteProbabilityData;                ///< the probability data
 };
 
