@@ -32,7 +32,19 @@ public:
      *  @return the p-value
      */
     template <typename T>
-    static float CalculateCorrelationCoefficientPValue(const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const size_t nPermutations);
+    static float CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const size_t nPermutations);
+
+    /**
+     *  @brief  Calculate P value for measured correlation coefficient between two datasets via a integrating the student T distribution
+     *
+     *  @param  t1 the first input dataset
+     *  @param  t2 the second input dataset
+     *  @param  nIntegrationSteps how many steps to use in the trapezium integration
+     *
+     *  @return the p-value
+     */
+    template <typename T>
+    static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, const T &t2, const size_t nIntegrationSteps);
 
     /**
      *  @brief  Calculate the correlation coefficient between two datasets 
@@ -156,7 +168,8 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValue(const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const size_t nPermutations)
+float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, 
+    std::mt19937 &randomNumberGenerator, const size_t nPermutations)
 {
     if (1 > nPermutations)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -172,6 +185,29 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValue(const 
     }
 
     return static_cast<float>(nExtreme)/static_cast<float>(nPermutations);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, 
+    const T &t2, const size_t nIntegrationSteps)
+{
+    float correlation(CalculateCorrelationCoefficient(t1,t2));
+    float dof(GetSize(t1) - 2);
+    float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.-correlation*correlation)));
+    float tDistCoeff(std::tgamma(0.5 * (dof+1.)) / std::tgamma(0.5*dof) / (std::sqrt(dof*3.14159265359)));
+
+    int nSteps(10000);
+    float upperLimit(15.f);
+    float dx((upperLimit-tTestStatistic)/nSteps);
+    float integral(tDistCoeff*std::pow( 1.0 + tTestStatistic*tTestStatistic/dof, -0.5 *(dof + 1.0)) + 
+            tDistCoeff*std::pow( 1.0 + upperLimit*upperLimit/dof, -0.5 *(dof + 1.0)));
+    for (int iStep = 1; iStep < nSteps; iStep++)
+        integral+=2. * tDistCoeff*std::pow( 1.0 + (tTestStatistic + iStep*dx)*(tTestStatistic + iStep*dx)/dof, -0.5 *(dof + 1.0));
+    integral *= dx/2.0;
+
+    return integral;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -291,7 +327,7 @@ inline float LArDiscreteProbabilityHelper::GetElement(const T &t, const size_t i
 template <>
 inline float LArDiscreteProbabilityHelper::GetElementImpl(const DiscreteProbabilityVector& t, const size_t index)
 {
-    return static_cast<float>(t.GetProbabilityDensity(index));
+    return static_cast<float>(t.GetProbabilityDensity(index))*static_cast<float>(t.GetWidth(index));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
