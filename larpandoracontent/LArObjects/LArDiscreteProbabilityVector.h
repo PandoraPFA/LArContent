@@ -85,6 +85,15 @@ public:
     float GetX(const size_t index) const;
 
     /**
+     *  @brief  Get the probability value of the element in the vector
+     *
+     *  @param  index the index in the vector
+     *
+     *  @return the probablity
+     */
+    float GetProbability(const size_t index) const;
+
+    /**
      *  @brief  Get the probability density value of the element in the vector
      *
      *  @param  index the index in the vector
@@ -103,7 +112,7 @@ public:
     float GetCumulativeProbability(const size_t index) const;
 
     /**
-     *  @brief  Get the cumulative probability value of the element in the vector
+     *  @brief  Get the width of the element in the vectorr
      *
      *  @param  index the index in the vector
      *
@@ -266,6 +275,15 @@ inline float DiscreteProbabilityVector::GetX(const size_t index) const
     VerifyElementRequest(index);
 
     return m_discreteProbabilityData.at(index).GetX();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float DiscreteProbabilityVector::GetProbability(const size_t index) const
+{
+    VerifyElementRequest(index);
+
+    return m_discreteProbabilityData.at(index).GetDensityDatum()*(m_useWidths ? m_discreteProbabilityData.at(index).GetWidth() : 1.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
