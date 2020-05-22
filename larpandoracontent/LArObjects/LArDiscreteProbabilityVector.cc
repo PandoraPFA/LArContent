@@ -129,14 +129,14 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
         float xResampled(resamplingPoints.at(iSample));
         float deltaX(resamplingPoints.at(iSample+1)-xResampled);
         float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
-        float densityDatumResampled(cumulativeDatumResampled-prevCumulativeData);
+        float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/deltaX);
         resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, cumulativeDatumResampled, deltaX));
         prevCumulativeData = cumulativeDatumResampled;
     }
     float xResampled(resamplingPoints.back());
     float deltaX(m_xUpperBound-xResampled);
     float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
-    float densityDatumResampled(cumulativeDatumResampled-prevCumulativeData);
+    float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/deltaX);
     resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, cumulativeDatumResampled, deltaX));
 
     return resampledProbabilityData;
@@ -160,7 +160,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
         float randomElementIndex(randomisedElements.at(iElement));
         float deltaX(discreteProbabilityVector.GetWidth(randomElementIndex));
         float probabilityDensity(discreteProbabilityVector.GetProbabilityDensity(randomElementIndex));
-        cumulativeProbability+=probabilityDensity;
+        cumulativeProbability+=probabilityDensity*deltaX;
         randomisedProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xPos, probabilityDensity, cumulativeProbability, deltaX));
         xPos+=deltaX;
     }
