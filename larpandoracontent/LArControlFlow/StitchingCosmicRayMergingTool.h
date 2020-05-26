@@ -1,7 +1,7 @@
 /**
  *  @file   LArContent/include/LArControlFlow/StitchingCosmicRayMergingTool.h
  *
- *  @brief  Header file for the stitching pfo merging tool class.
+ *  @brief  Header file for the stitching cosmic ray merging tool class.
  *
  *  $Log: $
  */
@@ -11,7 +11,6 @@
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
-#include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
 #include <unordered_map>
 
@@ -50,9 +49,9 @@ public:
         /**
          *  @brief  Constructor
          *
-         *  @param  parent
-         *  @param  daughter
-         *  @param  fom
+         *  @param  parent the parent vertex type
+         *  @param  daughter the daughter vertex type
+         *  @param  fom the figure of merit
          */
         PfoAssociation(const VertexType parent, const VertexType daughter, const float fom);
 
@@ -78,9 +77,9 @@ public:
         float GetFigureOfMerit() const;
 
     private:
-        VertexType      m_parent;           ///<
-        VertexType      m_daughter;         ///<
-        float           m_fom;              ///<
+        VertexType      m_parent;           ///< The parent vertex type
+        VertexType      m_daughter;         ///< The daughter vertex type
+        float           m_fom;              ///< The figure of merit
     };
 
 private:
@@ -124,7 +123,7 @@ private:
      *  @brief  Create associations between Pfos using 3D pointing clusters
      *
      *  @param  larTPCToPfoMap the input mapping between tpc and Pfos
-     *  @param  pointingClusterMap the mapping between Pfos and their corresponding 3D pointing clusters
+     *  @param  pointingClusterMap the input mapping between Pfos and their corresponding 3D pointing clusters
      *  @param  pfoAssociationMatrix the output matrix of associations between Pfos
      */
     void CreatePfoMatches(const LArTPCToPfoMap &larTPCToPfoMap, const ThreeDPointingClusterMap &pointingClusterMap,
@@ -137,7 +136,7 @@ private:
      *  @param  larTPC2 the tpc description for the second Pfo
      *  @param  pPfo1 the first Pfo
      *  @param  pPfo2 the second Pfo
-     *  @param  pointingClusterMap the mapping between Pfos and their corresponding 3D pointing clusters
+     *  @param  pointingClusterMap the input mapping between Pfos and their corresponding 3D pointing clusters
      *  @param  pfoAssociationMatrix the output matrix of associations between Pfos
      */
     void CreatePfoMatches(const pandora::LArTPC &larTPC1, const pandora::LArTPC &larTPC2, const pandora::ParticleFlowObject *const pPfo1,
@@ -184,9 +183,6 @@ private:
     void OrderPfoMerges(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
         const PfoMergeMap &inputPfoMerges, PfoMergeMap &outputPfoMerges) const;
 
-    typedef std::pair<const pandora::LArTPC*, const pandora::LArTPC*> LArTPCPair;
-    typedef std::map<const pandora::ParticleFlowObject*, LArPointingCluster::Vertex> PfoToPointingVertexMap;
-
     /**
      *  @brief  Apply X0 corrections, and then stitch together Pfos
      *
@@ -199,46 +195,20 @@ private:
     void StitchPfos(const MasterAlgorithm *const pAlgorithm, const ThreeDPointingClusterMap &pointingClusterMap,
         const PfoMergeMap &pfoMerges, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map) const;
 
-    /**
-     * @brief Reduce the original pfoVector to one of size 2 if its greater than that
-     *
-     * @param pfoVector vector of pfos being stitched
-     * @param reducedPfoVector the reduced vector of pfos
-     * @param pPfoToEnlarge the pfo we are enlarging
-     * @param pfoToLArTPCMap the pfo to lar tpc map
-     *
-     * @return particleflow object to enlarge
-     */
-    const pandora::ParticleFlowObject *ReduceToLongestStitch(const pandora::PfoVector &pfoVector, const pandora::ParticleFlowObject *const pPfoToEnlarge,
-        const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoVector &reducedPfoVector) const;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, LArPointingCluster::Vertex> PfoToPointingVertexMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject*, PfoToPointingVertexMap> PfoToPointingVertexMatrix;
 
     /**
-     * @brief Select the longest stitch if the pfoVector of pfos to stitch provided is larger than 2
-	 *
-     * @param pfoVector vector of pfos being stitched
-     * @param pfoToLArTPCMap the pfo to lar tpc map
-     * @param reducedPfoVector the pfo vector we returned with size just 2 if pfo vector was larger
-     */
-    void SelectLongestStitch(const pandora::PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap, pandora::PfoVector &reducedPfoVector) const;
-
-    /**
-     * @brief Get the closest pfo to pfoToEnlarge from pfoVector
+     *  @brief  Shift a pfo given its pfo stitching pair
      *
-     * @param pPfoToEnlarge pfo we search for the closest one to
-     * @param pfoVector vector of pfos in which to find the closest to pPfoToEnlarge
-     *
-     * @return the pfo closest to pPfoToEnlarge from those contained in pfoVector
-     */
-    const pandora::ParticleFlowObject *GetClosestPfo(const pandora::ParticleFlowObject *const pPfoToEnlarge, const pandora::PfoVector &pfoVector) const;
-
-    /**
-     *  @brief  Find the pair of LArTPCs that contain the pfos being stitched
-     *
-     *  @param  pfoVector vector of pfos being stitched
+     *  @param  pPfoToShift the pfo of the stitching pair to shift
+     *  @param  pMatchedPfo the pfo of the stitching pair to remain stationary
+     *  @param  x0 the distance by which pPfoToShift is to be shifted (direction of shift is determined in method)
      *  @param  pfoToLArTPCMap the pfo to lar tpc map
-     *  @param  stitchedLArTPCs the pair of LArTPCs containing the pfos being stitched
+     *  @param  pfoToPointingVertexMatrix the map [pfo -> map [matched pfo -> pfo stitching vertex]]
      */
-    void FindStitchedLArTPCs(const pandora::PfoVector &pfoVector, const PfoToLArTPCMap &pfoToLArTPCMap, LArTPCPair &stitchedLArTPCs) const;
+    void ShiftPfo(const MasterAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfoToShift, const pandora::ParticleFlowObject *const pMatchedPfo,
+        const float x0, const PfoToLArTPCMap &pfoToLArTPCMap, const PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
 
     /**
      *  @brief  Calculate x0 shift for a group of associated Pfos
@@ -247,10 +217,12 @@ private:
      *  @param  pointingClusterMap the mapping between Pfos and their corresponding 3D pointing clusters
      *  @param  pfoVector the vector of parent Pfos to stitch together
      *  @param  x0 the output x0 value
-     *  @param  pfoToPointingVertexMap map of pfo to pointing vertex used in stitching
+     *  @param  pfoToPointingVertexMatrix map of pfo to a map of matched pfo and the corresponding pointing vertex used in stitching
+     *
+     *  @return bool true if all x0 contributions were consistent, false otherwise
      */
-    void CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
-        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMap &pfoToPointingVertexMap) const;
+    bool CalculateX0(const PfoToLArTPCMap &pfoToLArTPCMap, const ThreeDPointingClusterMap &pointingClusterMap,
+        const pandora::PfoVector &pfoVector, float &x0, PfoToPointingVertexMatrix &pfoToPointingVertexMatrix) const;
 
     bool            m_useXcoordinate;
     bool            m_alwaysApplyT0Calculation;
@@ -262,6 +234,8 @@ private:
     float           m_relaxCosRelativeAngle;
     float           m_relaxTransverseDisplacement;
     unsigned int    m_minNCaloHits3D;
+    float           m_maxX0FractionalDeviation;     ///< The maximum allowed fractional difference of an X0 contribution for matches to be stitched
+    float           m_boundaryToleranceWidth;       ///< The distance from the APA/CPA boundary inside which the deviation consideration is ignored
 };
 
 } // namespace lar_content

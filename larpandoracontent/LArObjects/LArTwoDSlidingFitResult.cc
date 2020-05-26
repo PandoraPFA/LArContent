@@ -8,6 +8,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArHitWidthHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
@@ -22,7 +23,8 @@ namespace lar_content
 {
 
 template <>
-TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch) :
+TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const float axisDeviationLimitForHitDivision) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -32,14 +34,31 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 {
     CartesianPointVector pointVector;
     LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+
     this->CalculateAxes(pointVector, layerPitch);
-    this->FillLayerFitContributionMap(pointVector);
+
+    const CartesianVector xAxis(1.f, 0.f, 0.f);
+    const float cosOpeningAngle(xAxis.GetCosOpeningAngle(m_axisDirection));
+
+    if (std::fabs(cosOpeningAngle) < axisDeviationLimitForHitDivision)
+    {
+        this->FillLayerFitContributionMap(pointVector);
+    }
+    else
+    {
+        // TODO Refactor hit splitting and ensure all parameters configurable
+        LArHitWidthHelper::ConstituentHitVector constituentHitVector(LArHitWidthHelper::GetConstituentHits(pCluster, 0.5f, 1.f, true));
+        const CartesianPointVector constituentHitPointVector(LArHitWidthHelper::GetConstituentHitPositionVector(constituentHitVector));
+        this->FillLayerFitContributionMap(constituentHitPointVector);
+    }
+
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
 
 template <>
-TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch) :
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const float /*axisDeviationLimitForHitDivision*/) :
     m_pCluster(nullptr),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -57,7 +76,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPo
 
 template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
+        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, const float axisDeviationLimitForHitDivision) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -65,16 +84,30 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
     m_axisDirection(axisDirection),
     m_orthoDirection(orthoDirection)
 {
-    CartesianPointVector pointVector;
-    LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
-    this->FillLayerFitContributionMap(pointVector);
+    const CartesianVector xAxis(1.f, 0.f, 0.f);
+    const float cosOpeningAngle(xAxis.GetCosOpeningAngle(m_axisDirection));
+
+    if (std::fabs(cosOpeningAngle) < axisDeviationLimitForHitDivision)
+    {
+        CartesianPointVector pointVector;
+        LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+        this->FillLayerFitContributionMap(pointVector);
+    }
+    else
+    {
+        // TODO Refactor hit splitting and ensure all parameters configurable
+        LArHitWidthHelper::ConstituentHitVector constituentHitVector(LArHitWidthHelper::GetConstituentHits(pCluster, 0.5f, 1.f, true));
+        const CartesianPointVector constituentHitPointVector(LArHitWidthHelper::GetConstituentHitPositionVector(constituentHitVector));
+        this->FillLayerFitContributionMap(constituentHitPointVector);
+    }
+
     this->PerformSlidingLinearFit();
     this->FindSlidingFitSegments();
 }
 
 template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection) :
+        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, const float /*axisDeviationLimitForHitDivision*/) :
     m_pCluster(nullptr),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
