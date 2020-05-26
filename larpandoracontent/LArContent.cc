@@ -146,7 +146,7 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/TransverseExtensionAlgorithm.h"
 
-#include "larpandoracontent/LArTwoDReco/EMTrackAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/TrackInEMShowerAlgorithm.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/SimpleClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterCreation/TrackClusterCreationAlgorithm.h"
@@ -188,7 +188,7 @@
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArNeutrinoEventValidation",             NeutrinoEventValidationAlgorithm)                                               \
-    d("LArEMTrack",                             EMTrackAlgorithm)                                                               \
+    d("LArTrackInEMShower",                     TrackInEMShowerAlgorithm)                                                       \
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
     d("LArPfoValidation",                       PfoValidationAlgorithm)                                                         \
