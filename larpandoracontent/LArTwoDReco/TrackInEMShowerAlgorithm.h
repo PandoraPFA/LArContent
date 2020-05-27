@@ -42,7 +42,8 @@ public:
          *  @param  outerMergePoint the outer cluster point to be used in the merging process
          *  @param  outerMergeDirection the outer cluster direction at the outer merge point
          */
-        ClusterAssociation(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster, const pandora::CartesianVector &innerMergePoint, const pandora::CartesianVector &innerMergeDirection, const pandora::CartesianVector &outerMergePoint, const pandora::CartesianVector &outerMergeDirection);
+        ClusterAssociation(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster, const pandora::CartesianVector &innerMergePoint,
+            const pandora::CartesianVector &innerMergeDirection, const pandora::CartesianVector &outerMergePoint, const pandora::CartesianVector &outerMergeDirection);
 
         /**
          *  @brief  Returns the inner cluster address
@@ -150,12 +151,12 @@ public:
     void InitialiseSlidingFitResultMaps(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
 
     /**
-     *  @brief  Cache the sliding fits of input clusters
+     *  @brief  Find the cluster association with the longest cluster length sum
      *
      *  @param  clusterVector the input cluster vector
      *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
      *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global cluster gradients
-     *  @param  clusterAssociation the ClusterAssociation of the two associated clusters with the longest length sum within the input cluster vector
+     *  @param  clusterAssociation the output ClusterAssociation
      *
      *  @return bool whether a cluster association was found
      */
