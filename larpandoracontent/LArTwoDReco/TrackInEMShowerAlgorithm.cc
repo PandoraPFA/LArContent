@@ -1,7 +1,7 @@
 /**
  *  @file   TrackInEMShowerAlgorithm.cc
  *
- *  @brief  Implementation of the em track algorithm class
+ *  @brief  Implementation of the track in em shower algorithm class
  *
  *  $Log: $
  */
@@ -92,7 +92,7 @@ StatusCode TrackInEMShowerAlgorithm::Run()
     TwoDSlidingFitResultMap macroSlidingFitResultMap;
     this->InitialiseSlidingFitResultMaps(clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
 
-    // Find highest hit association and conitnue merging until no further merges can be made
+    // Find longest length association and conitnue merging until no further merges can be made
     bool mergeMade(false);
     do
     {
