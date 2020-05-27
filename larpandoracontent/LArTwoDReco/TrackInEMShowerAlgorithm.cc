@@ -234,8 +234,6 @@ bool TrackInEMShowerAlgorithm::FindBestClusterAssociation(ClusterVector &cluster
                 continue;
             }
 
-            const float separationDistance(std::sqrt(currentMergePoint.GetDistanceSquared(testMergePoint)));
-
             if ((isCurrentInner && !AreClustersAssociated(currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection)) ||
                 (!isCurrentInner && !AreClustersAssociated(testMergePoint, testMergeDirection, currentMergePoint, currentMergeDirection)))
             {
