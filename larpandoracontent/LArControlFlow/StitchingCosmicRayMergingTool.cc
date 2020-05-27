@@ -252,13 +252,9 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
     }
 
     // To skip impact parameters
-    CartesianVector position1(pointingVertex1.GetPosition());
-    CartesianVector position2(pointingVertex2.GetPosition());
-
-    bool isInGap3D_1(LArGeometryHelper::IsInGap(this->GetPandora(), position1,  TPC_VIEW_U, 0.f) && LArGeometryHelper::IsInGap(this->GetPandora(), position1,  TPC_VIEW_V, 0.f) && LArGeometryHelper::IsInGap(this->GetPandora(), position1,  TPC_VIEW_W, 0.f));
+    const bool isInGap3D_1(LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex1.GetPosition(),  TPC_VIEW_W, 0.f));
+    const bool isInGap3D_2(LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex2.GetPosition(),  TPC_VIEW_W, 0.f));
     
-    bool isInGap3D_2(LArGeometryHelper::IsInGap(this->GetPandora(), position2,  TPC_VIEW_U, 0.f) && LArGeometryHelper::IsInGap(this->GetPandora(), position2,  TPC_VIEW_V, 0.f) && LArGeometryHelper::IsInGap(this->GetPandora(), position2,  TPC_VIEW_W, 0.f));
-
     if (!isInGap3D_1 && !isInGap3D_2)
     {
         // Selection cuts on longitudinal impact parameters
@@ -278,7 +274,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
         const bool maxPass(std::max(rT1, rT2) < m_maxTransverseDisplacement && cosRelativeAngle > m_minCosRelativeAngle);
 
         if (!minPass && !maxPass)
-	  return;
+            return;
     }
 
     // Store this association
