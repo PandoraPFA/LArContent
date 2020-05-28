@@ -24,7 +24,7 @@ namespace lar_content
 
 template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const float axisDeviationLimitForHitDivision) :
+                                           const float axisDeviationLimitForHitDivision) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -58,7 +58,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 
 template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const float /*axisDeviationLimitForHitDivision*/) :
+                                           const float /*axisDeviationLimitForHitDivision*/) :
     m_pCluster(nullptr),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -76,7 +76,7 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPo
 
 template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, const float axisDeviationLimitForHitDivision) :
+                                           const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, const float axisDeviationLimitForHitDivision) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
