@@ -254,6 +254,15 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
     // To skip impact parameters
     const bool isInGap3D_1(LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex1.GetPosition(),  TPC_VIEW_W, 0.f));
     const bool isInGap3D_2(LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex2.GetPosition(),  TPC_VIEW_W, 0.f));
+
+    ////////////////////////////
+    const CartesianVector position1(pointingVertex1.GetPosition()), position2(pointingVertex2.GetPosition());
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position1, "POSITION 1", VIOLET, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position2, "POSITION 2", VIOLET, 2);
+    std::cout << "isInGap3D_1" << isInGap3D_1 << std::endl;
+    std::cout << "isInGap3D_2" << isInGap3D_2 << std::endl;
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    ////////////////////////////
     
     if (!isInGap3D_1 && !isInGap3D_2)
     {
