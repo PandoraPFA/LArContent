@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/GenericSliceSelectionTool.h
+ *  @file   larpandoracontent/LArCheating/CheatingSliceSelectionTool.h
  *
- *  @brief  Header file for the generic slice selection tool class.
+ *  @brief  Header file for the cheating slice selection tool class.
  *
  *  $Log: $
  */
-#ifndef LAR_GENERIC_SLICE_SELECTION_TOOL_H
-#define LAR_GENERIC_SLICE_SELECTION_TOOL_H 1
+#ifndef LAR_CHEATING_SLICE_SELECTION_TOOL_H
+#define LAR_CHEATING_SLICE_SELECTION_TOOL_H 1
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
@@ -14,15 +14,15 @@ namespace lar_content
 {
 
 /**
- *  @brief  GenericSliceSelectionTool class
+ *  @brief  CheatingSliceSelectionTool class
  */
-class GenericSliceSelectionTool : public SliceSelectionBaseTool
+class CheatingSliceSelectionTool : public SliceSelectionBaseTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    GenericSliceSelectionTool();
+    CheatingSliceSelectionTool();
 
     /**
      *  @brief  Select which slice(s) to use
@@ -52,5 +52,5 @@ protected:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_GENERIC_SLICE_SELECTION_TOOL_H
+#endif // #ifndef LAR_CHEATING_SLICE_SELECTION_TOOL_H
 

@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/NeutrinoSliceSelectionTool.cc
+ *  @file   larpandoracontent/LArCheating/CheatingNeutrinoSliceSelectionTool.cc
  *
  *  @brief  Implementation of the neutrino id tool class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArControlFlow/NeutrinoSliceSelectionTool.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoSliceSelectionTool.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
@@ -17,22 +17,22 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoSliceSelectionTool::NeutrinoSliceSelectionTool()
+CheatingNeutrinoSliceSelectionTool::CheatingNeutrinoSliceSelectionTool()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool NeutrinoSliceSelectionTool::IsTarget(const MCParticle *const mcParticle) const
+bool CheatingNeutrinoSliceSelectionTool::IsTarget(const MCParticle *const mcParticle) const
 {
     return LArMCParticleHelper::IsNeutrino(mcParticle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode NeutrinoSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CheatingNeutrinoSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    return GenericSliceSelectionTool::ReadSettings(xmlHandle);
+    return CheatingSliceSelectionTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

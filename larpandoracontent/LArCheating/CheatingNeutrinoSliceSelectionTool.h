@@ -1,28 +1,28 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/NeutrinoSliceSelectionTool.h
+ *  @file   larpandoracontent/LArCheating/CheatingNeutrinoSliceSelectionTool.h
  *
  *  @brief  Header file for the neutrino slice selection tool class.
  *
  *  $Log: $
  */
-#ifndef LAR_NEUTRINO_SLICE_SELECTION_TOOL_H
-#define LAR_NEUTRINO_SLICE_SELECTION_TOOL_H 1
+#ifndef LAR_CHEATING_NEUTRINO_SLICE_SELECTION_TOOL_H
+#define LAR_CHEATING_NEUTRINO_SLICE_SELECTION_TOOL_H 1
 
-#include "larpandoracontent/LArControlFlow/GenericSliceSelectionTool.h"
+#include "larpandoracontent/LArCheating/CheatingSliceSelectionTool.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  NeutrinoSliceSelectionTool class
+ *  @brief  CheatingNeutrinoSliceSelectionTool class
  */
-class NeutrinoSliceSelectionTool : public GenericSliceSelectionTool
+class CheatingNeutrinoSliceSelectionTool : public CheatingSliceSelectionTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    NeutrinoSliceSelectionTool();
+    CheatingNeutrinoSliceSelectionTool();
 
 protected:
     /**
@@ -38,5 +38,5 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_NEUTRINO_SLICE_SELECTION_TOOL_H
+#endif // #ifndef LAR_CHEATING_NEUTRINO_SLICE_SELECTION_TOOL_H
 

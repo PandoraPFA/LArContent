@@ -1,14 +1,14 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/GenericSliceSelectionTool.cc
+ *  @file   larpandoracontent/LArCheating/CheatingSliceSelectionTool.cc
  *
- *  @brief  Implementation of the generic slice selection tool class.
+ *  @brief  Implementation of the cheating slice selection tool class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArControlFlow/GenericSliceSelectionTool.h"
+#include "larpandoracontent/LArCheating/CheatingSliceSelectionTool.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
@@ -17,14 +17,14 @@ using namespace pandora;
 namespace lar_content
 {
 
-GenericSliceSelectionTool::GenericSliceSelectionTool() :
+CheatingSliceSelectionTool::CheatingSliceSelectionTool() :
     m_maxSlices{0},
     m_threshold{-1.f},
     m_cutVariable{"completeness"}
 {
 }
 
-void GenericSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*pAlgorithm*/, const SliceVector &inputSliceVector,
+void CheatingSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*pAlgorithm*/, const SliceVector &inputSliceVector,
     SliceVector &outputSliceVector)
 {
     // ATTN Ensure this only runs if slicing enabled
@@ -118,7 +118,7 @@ void GenericSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode GenericSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CheatingSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxSlices", m_maxSlices));
@@ -130,7 +130,7 @@ StatusCode GenericSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
     std::transform(m_cutVariable.begin(), m_cutVariable.end(), m_cutVariable.begin(), [](unsigned char c){ return std::tolower(c); });
     if (m_cutVariable != "completeness" && m_cutVariable != "purity")
     {
-        std::cout << "GenericSliceSelectionTool::ReadSettings: Unknown cut variable \'" << m_cutVariable << "\'" << std::endl;
+        std::cout << "CheatingSliceSelectionTool::ReadSettings: Unknown cut variable \'" << m_cutVariable << "\'" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 

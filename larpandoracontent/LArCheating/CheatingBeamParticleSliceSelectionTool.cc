@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/BeamParticleSliceSelectionTool.cc
+ *  @file   larpandoracontent/LArCheating/CheatingBeamParticleSliceSelectionTool.cc
  *
  *  @brief  Implementation of the beam slice selection tool class.
  *
@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArControlFlow/BeamParticleSliceSelectionTool.h"
+#include "larpandoracontent/LArCheating/CheatingBeamParticleSliceSelectionTool.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
@@ -17,22 +17,22 @@ using namespace pandora;
 namespace lar_content
 {
 
-BeamParticleSliceSelectionTool::BeamParticleSliceSelectionTool()
+CheatingBeamParticleSliceSelectionTool::CheatingBeamParticleSliceSelectionTool()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool BeamParticleSliceSelectionTool::IsTarget(const MCParticle *const mcParticle) const
+bool CheatingBeamParticleSliceSelectionTool::IsTarget(const MCParticle *const mcParticle) const
 {
     return LArMCParticleHelper::IsBeamParticle(mcParticle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode BeamParticleSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode CheatingBeamParticleSliceSelectionTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    return GenericSliceSelectionTool::ReadSettings(xmlHandle);
+    return CheatingSliceSelectionTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

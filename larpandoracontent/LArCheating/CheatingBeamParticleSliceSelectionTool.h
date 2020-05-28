@@ -1,28 +1,28 @@
 /**
- *  @file   larpandoracontent/LArControlFlow/BeamParticleSliceSelectionTool.h
+ *  @file   larpandoracontent/LArCheating/CheatingBeamParticleSliceSelectionTool.h
  *
  *  @brief  Header file for the test beam slice selection tool class.
  *
  *  $Log: $
  */
-#ifndef LAR_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H
-#define LAR_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H 1
+#ifndef LAR_CHEATING_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H
+#define LAR_CHEATING_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H 1
 
-#include "larpandoracontent/LArControlFlow/GenericSliceSelectionTool.h"
+#include "larpandoracontent/LArCheating/CheatingSliceSelectionTool.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  BeamParticleSliceSelectionTool class
+ *  @brief  CheatingBeamParticleSliceSelectionTool class
  */
-class BeamParticleSliceSelectionTool : public GenericSliceSelectionTool
+class CheatingBeamParticleSliceSelectionTool : public CheatingSliceSelectionTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    BeamParticleSliceSelectionTool();
+    CheatingBeamParticleSliceSelectionTool();
 
 protected:
     /**
@@ -38,5 +38,5 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H
+#endif // #ifndef LAR_CHEATING_BEAM_PARTICLE_SLICE_SELECTION_TOOL_H
 
