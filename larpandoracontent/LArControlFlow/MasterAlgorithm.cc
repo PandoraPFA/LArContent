@@ -510,7 +510,7 @@ StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHit
 StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, SliceHypotheses &nuSliceHypotheses, SliceHypotheses &crSliceHypotheses) const
 {
     SliceVector selectedSliceVector;
-    if (m_shouldRunSlicing && m_sliceSelectionToolVector.size() > 0)
+    if (m_shouldRunSlicing && !m_sliceSelectionToolVector.empty())
     {
         SliceVector inputSliceVector(sliceVector);
         for (SliceSelectionBaseTool *const pSliceSelectionTool : m_sliceSelectionToolVector)
@@ -531,7 +531,8 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
         for (const CaloHit *const pSliceCaloHit : sliceHits)
         {
             // ATTN Must ensure we copy the hit actually owned by master instance; access differs with/without slicing enabled
-            const CaloHit *const pCaloHitInMaster(m_shouldRunSlicing ? static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()) : pSliceCaloHit);
+            const CaloHit *const pCaloHitInMaster(m_shouldRunSlicing ? static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()) :
+                pSliceCaloHit);
 
             if (m_shouldRunNeutrinoRecoOption)
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHitInMaster));
@@ -554,14 +555,16 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
                 metadata.m_propertiesToAdd["SliceIndex"] = sliceCounter;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo,
+                    metadata));
             }
         }
 
         if (m_shouldRunCosmicRecoOption)
         {
             if (m_printOverallRecoStatus)
-                std::cout << "Running cr worker instance for slice " << (sliceCounter + 1) << " of " << selectedSliceVector.size() << std::endl;
+                std::cout << "Running cr worker instance for slice " << (sliceCounter + 1) << " of " << selectedSliceVector.size() <<
+                    std::endl;
 
             const PfoList *pSliceCRPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
@@ -661,10 +664,7 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     parameters.m_pParentAddress = static_cast<const void*>(pCaloHit);
     parameters.m_larTPCVolumeId = pLArCaloHit->GetLArTPCVolumeId();
 
-    LArCaloHitFactory larFactory{};
-
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(
-                *pPandora, parameters, larFactory));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
     if (m_passMCParticlesToWorkerInstances)
     {
@@ -676,7 +676,7 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
         for (const MCParticle *const pMCParticle : mcParticleVector)
         {
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(
-                        *pPandora, pLArCaloHit, pMCParticle, pLArCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
+                *pPandora, pLArCaloHit, pMCParticle, pLArCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
         }
     }
 

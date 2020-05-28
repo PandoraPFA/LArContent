@@ -240,13 +240,13 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle,
-        pandora::MCParticleList& descendentMCParticleList)
+    pandora::MCParticleList &descendentMCParticleList)
 {
-    MCParticleList daughterMCParticleList = pMCParticle->GetDaughterList();
-    for (const MCParticle* pDaughterMCParticle : daughterMCParticleList)
+    const MCParticleList &daughterMCParticleList = pMCParticle->GetDaughterList();
+    for (const MCParticle *pDaughterMCParticle : daughterMCParticleList)
     {
         if (std::find(descendentMCParticleList.begin(), descendentMCParticleList.end(), pDaughterMCParticle) ==
-                descendentMCParticleList.end())
+            descendentMCParticleList.end())
         {
             descendentMCParticleList.push_back(pDaughterMCParticle);
             LArMCParticleHelper::GetAllDescendentMCParticles(pDaughterMCParticle, descendentMCParticleList);
@@ -257,16 +257,16 @@ void LArMCParticleHelper::GetAllDescendentMCParticles(const pandora::MCParticle 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::GetAllAncestorMCParticles(const pandora::MCParticle *const pMCParticle,
-        pandora::MCParticleList& ancestorMCParticleList)
+    pandora::MCParticleList &ancestorMCParticleList)
 {
-    MCParticleList parentMCParticleList = pMCParticle->GetParentList();
+    const MCParticleList &parentMCParticleList = pMCParticle->GetParentList();
     if (parentMCParticleList.empty()) return;
     if (parentMCParticleList.size() != 1)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const MCParticle* pParentMCParticle = *parentMCParticleList.begin();
+    const MCParticle *pParentMCParticle = *parentMCParticleList.begin();
     if (std::find(ancestorMCParticleList.begin(), ancestorMCParticleList.end(), pParentMCParticle) ==
-            ancestorMCParticleList.end())
+        ancestorMCParticleList.end())
     {
         ancestorMCParticleList.push_back(pParentMCParticle);
         LArMCParticleHelper::GetAllAncestorMCParticles(pParentMCParticle, ancestorMCParticleList);

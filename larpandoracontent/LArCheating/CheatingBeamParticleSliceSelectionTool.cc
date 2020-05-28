@@ -17,12 +17,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingBeamParticleSliceSelectionTool::CheatingBeamParticleSliceSelectionTool()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool CheatingBeamParticleSliceSelectionTool::IsTarget(const MCParticle *const mcParticle) const
 {
     return LArMCParticleHelper::IsBeamParticle(mcParticle);

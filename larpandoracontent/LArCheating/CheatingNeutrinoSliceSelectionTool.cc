@@ -17,12 +17,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingNeutrinoSliceSelectionTool::CheatingNeutrinoSliceSelectionTool()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool CheatingNeutrinoSliceSelectionTool::IsTarget(const MCParticle *const mcParticle) const
 {
     return LArMCParticleHelper::IsNeutrino(mcParticle);

@@ -11,6 +11,7 @@
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/ExternallyConfiguredAlgorithm.h"
 
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 
 #include <unordered_map>
@@ -347,6 +348,7 @@ protected:
     std::string                 m_recreatedVertexListName;          ///< The output recreated vertex list name
 
     float                       m_inTimeMaxX0;                      ///< Cut on X0 to determine whether particle is clear cosmic ray
+    LArCaloHitFactory           m_larCaloHitFactory;                ///< Factory for creating LArCaloHits during hit copying
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

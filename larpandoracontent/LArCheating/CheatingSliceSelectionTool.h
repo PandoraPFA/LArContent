@@ -33,7 +33,9 @@ public:
      */
     void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector,
         SliceVector &outputSliceVector);
-        
+ 
+    typedef std::map<float, int, std::greater<float>> MetricSliceIndexMap;
+
 protected:
     /**
      *  @brief  Template method to determine if an MC particle matches the target criteria for slice selection. Return true if match.

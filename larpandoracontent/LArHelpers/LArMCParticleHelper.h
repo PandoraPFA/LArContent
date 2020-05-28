@@ -224,7 +224,7 @@ public:
      *  @param  descendentMCParticleList the output descendent mc particle list
      */
     static void GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle,
-            pandora::MCParticleList& descendentMCParticleList);
+        pandora::MCParticleList &descendentMCParticleList);
 
     /**
      *  @brief  Get all ancestor mc particles
@@ -233,7 +233,7 @@ public:
      *  @param  ancestorMCParticleList the output ancestor mc particle list
      */
     static void GetAllAncestorMCParticles(const pandora::MCParticle *const pMCParticle,
-            pandora::MCParticleList& ancestorMCParticleList);
+        pandora::MCParticleList &ancestorMCParticleList);
 
     /**
      *  @brief  Get mapping from individual mc particles (in a provided list) and their primary parent mc particles

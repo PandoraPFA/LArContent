@@ -18,12 +18,6 @@ namespace lar_content
  */
 class CheatingBeamParticleSliceSelectionTool : public CheatingSliceSelectionTool
 {
-public:
-    /**
-     *  @brief  Default constructor
-     */
-    CheatingBeamParticleSliceSelectionTool();
-
 protected:
     /**
      *  @brief  Template method to determine if an MC particle matches the target criteria for slice selection. Return true if match.

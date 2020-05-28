@@ -18,26 +18,29 @@ namespace lar_content
 {
 
 CheatingSliceSelectionTool::CheatingSliceSelectionTool() :
-    m_maxSlices{0},
+    m_maxSlices{1},
     m_threshold{-1.f},
     m_cutVariable{"completeness"}
 {
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 
 void CheatingSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*pAlgorithm*/, const SliceVector &inputSliceVector,
     SliceVector &outputSliceVector)
 {
     // ATTN Ensure this only runs if slicing enabled
     unsigned int sliceCounter{0};
-    std::map<float, int, std::greater<float>> reducedSliceVarIndexMap;
+    MetricSliceIndexMap reducedSliceVarIndexMap;
 
-    std::vector<float> targetWeights(inputSliceVector.size());
-    std::vector<float> otherWeights(inputSliceVector.size());
+    FloatVector targetWeights(inputSliceVector.size());
+    FloatVector otherWeights(inputSliceVector.size());
 
     // Calculate target and total weight for each slice
     for (const CaloHitList &sliceHits : inputSliceVector)
     {
         CaloHitList localHitList{};
+        // ATTN Must ensure we copy the hit actually owned by master instance; access differs with/without slicing enabled
         for (const CaloHit *const pSliceCaloHit : sliceHits)
             localHitList.push_back(static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()));
 
@@ -84,14 +87,15 @@ void CheatingSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*
     }
 
     float totalTargetWeight{0.f};
-    for(const float weight : targetWeights)
+    for (const float weight : targetWeights)
         totalTargetWeight += weight;
 
     // Add slices passing cut threshold to map
-    for(int i = 0; i < targetWeights.size(); ++i)
+    for (int i = 0; i < targetWeights.size(); ++i)
     {
-        float completeness{targetWeights[i] / totalTargetWeight};
-        float purity{targetWeights[i] / (targetWeights[i] + otherWeights[i])};
+        const float sliceWeight = targetWeights[i] + otherWeights[i];
+        const float completeness{totalTargetWeight > std::numeric_limits<float>::epsilon() ? targetWeights[i] / totalTargetWeight : 0.f};
+        const float purity{sliceWeight > std::numeric_limits<float>::epsilon() ? targetWeights[i] / sliceWeight : 0.f};
         // Already checked correctness of variable in ReadSettings
         if (m_cutVariable == "completeness")
         {
@@ -107,7 +111,7 @@ void CheatingSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*
     // Select the best m_maxSlices slices - prefix increment ensures all slices retained if m_maxSlices == 0
     std::vector<int> reducedSliceIndices{};
     int i = 0;
-    for(const auto [ cutVariable, index ] : reducedSliceVarIndexMap)
+    for (const auto [ cutVariable, index ] : reducedSliceVarIndexMap)
     {   // ATTN: Map is sorted on cut variable from max to min
         reducedSliceIndices.push_back(index);
         outputSliceVector.push_back(inputSliceVector[index]);
