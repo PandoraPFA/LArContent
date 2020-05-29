@@ -9,6 +9,7 @@
 #define LAR_TWO_VIEW_X_OVERLAP_H 1
 
 #include <cmath>
+#include <limits>
 
 namespace lar_content
 {
