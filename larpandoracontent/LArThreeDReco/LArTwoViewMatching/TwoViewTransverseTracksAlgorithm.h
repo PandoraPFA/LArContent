@@ -11,10 +11,13 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h"
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
+
+#include <random>
 
 namespace lar_content
 {
@@ -39,17 +42,24 @@ public:
 
 private:
     void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const);
+
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, TwoViewTransverseOverlapResult &overlapResult);
+
+    float CalculateLocalMatchingFraction(const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2);
 
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<TransverseMatrixTool*> MatrixToolVector;
-    MatrixToolVector            m_algorithmToolVector;      ///< The algorithm tool vector
+    MatrixToolVector            m_algorithmToolVector;                 ///< The algorithm tool vector
 
-    unsigned int                m_nMaxMatrixToolRepeats;    ///< The maximum number of repeat loops over matrix tools
-    unsigned int                m_downsampleFactor;         ///< The downsampling (hit merging) applied to hits in the overlap region
-    unsigned int                m_minSamples;               ///< The minimum number of samples needed for comparing charges
+    unsigned int                m_nMaxMatrixToolRepeats;               ///< The maximum number of repeat loops over matrix tools
+    unsigned int                m_downsampleFactor;                    ///< The downsampling (hit merging) applied to hits in the overlap region
+    unsigned int                m_minSamples;                          ///< The minimum number of samples needed for comparing charges
+    unsigned int                m_nPermutations;                       ///< The number of permutations for calculating p-values
+    float                       m_localMatchingScoreThreshold;         ///< The minimum score to classify a local region as matching
+    std::random_device          m_randomDevice;                        ///< The random device used for seeding the number generator
+    std::mt19937                m_randomNumberGenerator;               ///< The random number generator for reshuffling data
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
