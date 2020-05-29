@@ -106,7 +106,7 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float match
 
 TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const TwoViewTransverseOverlapResult &rhs) :
     TrackTwoViewOverlapResult(rhs),
-    m_locallyMatchedFraction(rhs.IsInitialized() ? rhs.m_locallyMatchedFraction : 0.f),
+    m_locallyMatchedFraction(rhs.m_locallyMatchedFraction),
     m_twoViewXOverlap(rhs.IsInitialized() ? rhs.m_twoViewXOverlap : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
