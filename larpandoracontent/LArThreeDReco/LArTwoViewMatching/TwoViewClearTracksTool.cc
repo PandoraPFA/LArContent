@@ -15,7 +15,8 @@ namespace lar_content
 {
 
 TwoViewClearTracksTool::TwoViewClearTracksTool() :
-    m_minXOverlap(0.1f)
+    m_minXOverlapFraction(0.1f),
+    m_minLocallyMatchedFraction(0.5f)
 {
 }
 
@@ -44,11 +45,13 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
 
     for (MatrixType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionU() < m_minXOverlap)
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionU() - m_minXOverlapFraction < std::numeric_limits<float>::epsilon())
             continue;
-        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionV() < m_minXOverlap)
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionV() - m_minXOverlapFraction < std::numeric_limits<float>::epsilon())
             continue;
 
+        if (iter->GetOverlapResult().GetLocallyMatchedFraction() - m_minLocallyMatchedFraction < std::numeric_limits<float>::epsilon())
+            continue;
 
         // TODO Add real logic here
 
@@ -66,7 +69,7 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
 StatusCode TwoViewClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlap", m_minXOverlap));
+        "MinXOverlap", m_minXOverlapFraction));
 
     return STATUS_CODE_SUCCESS;
 }
