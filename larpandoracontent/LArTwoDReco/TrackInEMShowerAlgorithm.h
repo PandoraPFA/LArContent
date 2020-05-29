@@ -79,6 +79,16 @@ public:
          *  @brief  Returns the unit vector of the line connecting the inner and outer merge points (inner -> outer)
          */           
         pandora::CartesianVector GetConnectingLineDirection() const;
+
+        /**
+         *  @brief  Sets the inner cluster address
+         */
+        void SetInnerCluster(const pandora::Cluster *const pCluster);
+
+        /**
+         *  @brief  Sets the outer cluster address
+         */
+        void SetOuterCluster(const pandora::Cluster *const pCluster);
         
     private:
         const pandora::Cluster*     m_pInnerCluster;               ///< The inner cluster of the two associated clusters         
@@ -228,8 +238,10 @@ public:
      *
      *  @param clusterAssociation the clusterAssociation
      *  @param  extrapolatedCaloHitVector the input vector of calo hits
+     *  @param  microFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
      */
-    void RefineTracks(const ClusterAssociation &clusterAssociation, const pandora::CaloHitVector &extrapolatedCaloHitVector, const TwoDSlidingFitResultMap &microFitResultMap) const;
+    void RefineTracks(ClusterAssociation &clusterAssociation, TwoDSlidingFitResultMap &microFitResultMap,
+        TwoDSlidingFitResultMap &macroFitResultMap, pandora::ClusterVector &clusterVector, pandora::CaloHitVector &extrapolatedCaloHitVector) const;
 
     /**
      *  @brief  Remove cluster hits that fall after the split position
@@ -238,10 +250,11 @@ public:
      *  @param  splitPosition the position the cluster after which hits are removed
      *  @param  extrapolatedCaloHitVector the input vector of calo hits
      *  @param  microFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  macroFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
      *  @param  isInner whether the cluster is the inner cluster wrt the associated vector
      */
-    void RefineTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, const pandora::CaloHitVector &extrapolatedCaloHitVector,
-        const TwoDSlidingFitResultMap &microFitResultMap, const bool isInner) const;
+    const pandora::Cluster* RefineTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, TwoDSlidingFitResultMap &microFitResultMap,
+        TwoDSlidingFitResultMap &macroFitResultMap, const bool isInner, pandora::ClusterVector &clusterVector, pandora::CaloHitVector &extrapolatedCaloHitVector) const;
 
     /**
      *  @brief  Remove clusters not found in an input cluster vector from sliding fit maps
@@ -252,6 +265,8 @@ public:
      */
     void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
 
+    void UpdateForClusterCreation(const pandora::Cluster *&pCluster, PandoraContentApi::Cluster::Parameters &clusterParameters, pandora::ClusterVector &clusterVector) const;
+    
     /**
      *  @brief  Remove a cluster from the sliding fit result maps in an input vector
      *
@@ -347,7 +362,22 @@ inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::Ge
     return m_connectingLineDirection;
 }
 
-} //namespace lar_content
+//------------------------------------------------------------------------------------------------------------------------------------------
 
+inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetInnerCluster(const pandora::Cluster *const pCluster)
+{
+    // ISOBEL DO I ADD 'IF CLUSTER IS NOT NULL'
+    m_pInnerCluster = pCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetOuterCluster(const pandora::Cluster *const pCluster)
+{
+    // ISOBEL DO I ADD 'IF CLUSTER IS NOT NULL'    
+    m_pOuterCluster = pCluster;
+}
+    
+} //namespace lar_content
 
 #endif // #ifndef LAR_EM_TRACK_ALGORITHM_H
