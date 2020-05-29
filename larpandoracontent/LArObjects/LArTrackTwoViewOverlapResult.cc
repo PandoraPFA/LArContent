@@ -87,14 +87,17 @@ TrackTwoViewOverlapResult &TrackTwoViewOverlapResult::operator=(const TrackTwoVi
 
 TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult() :
     TrackTwoViewOverlapResult(),
+    m_locallyMatchedFraction(0.f),
     m_twoViewXOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const TwoViewXOverlap &twoViewXOverlap) :
+TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const float locallyMatchedFraction, 
+    const TwoViewXOverlap &twoViewXOverlap) :
     TrackTwoViewOverlapResult(matchingScore),
+    m_locallyMatchedFraction(locallyMatchedFraction),
     m_twoViewXOverlap(twoViewXOverlap)
 {
 }
@@ -103,7 +106,8 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float match
 
 TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const TwoViewTransverseOverlapResult &rhs) :
     TrackTwoViewOverlapResult(rhs),
-    m_twoViewXOverlap(rhs.IsInitialized() ? rhs.GetTwoViewXOverlap() : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
+    m_locallyMatchedFraction(rhs.IsInitialized() ? rhs.m_locallyMatchedFraction : 0.f),
+    m_twoViewXOverlap(rhs.IsInitialized() ? rhs.m_twoViewXOverlap : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
@@ -119,15 +123,18 @@ TwoViewTransverseOverlapResult &TwoViewTransverseOverlapResult::operator=(const 
 {
     this->TrackTwoViewOverlapResult::operator=(rhs);
 
-    if (rhs.IsInitialized())
+    if (rhs.m_isInitialized)
     {
         m_isInitialized = rhs.m_isInitialized;
         m_matchingScore = rhs.m_matchingScore;
-        m_twoViewXOverlap = rhs.GetTwoViewXOverlap();
+        m_locallyMatchedFraction = rhs.m_locallyMatchedFraction;
+        m_twoViewXOverlap = rhs.m_twoViewXOverlap;
     }
     else
     {
+        m_isInitialized = false;
         m_matchingScore = 0.f;
+        m_locallyMatchedFraction = 0.f;
         m_twoViewXOverlap = TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f);
     }
 
