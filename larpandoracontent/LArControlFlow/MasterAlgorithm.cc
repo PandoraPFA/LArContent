@@ -521,7 +521,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
     }
     else
     {
-        selectedSliceVector = sliceVector;
+        selectedSliceVector = std::move(sliceVector);
     }
 
     unsigned int sliceCounter(0);
@@ -531,8 +531,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
         for (const CaloHit *const pSliceCaloHit : sliceHits)
         {
             // ATTN Must ensure we copy the hit actually owned by master instance; access differs with/without slicing enabled
-            const CaloHit *const pCaloHitInMaster(m_shouldRunSlicing ? static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()) :
-                pSliceCaloHit);
+            const CaloHit *const pCaloHitInMaster(m_shouldRunSlicing ? static_cast<const CaloHit*>(pSliceCaloHit->GetParentAddress()) : pSliceCaloHit);
 
             if (m_shouldRunNeutrinoRecoOption)
                 PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(m_pSliceNuWorkerInstance, pCaloHitInMaster));
@@ -555,16 +554,14 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             {
                 PandoraContentApi::ParticleFlowObject::Metadata metadata;
                 metadata.m_propertiesToAdd["SliceIndex"] = sliceCounter;
-                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo,
-                    metadata));
+                PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
             }
         }
 
         if (m_shouldRunCosmicRecoOption)
         {
             if (m_printOverallRecoStatus)
-                std::cout << "Running cr worker instance for slice " << (sliceCounter + 1) << " of " << selectedSliceVector.size() <<
-                    std::endl;
+                std::cout << "Running cr worker instance for slice " << (sliceCounter + 1) << " of " << selectedSliceVector.size() << std::endl;
 
             const PfoList *pSliceCRPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
@@ -581,6 +578,11 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
 
         ++sliceCounter;
     }
+
+    // ATTN: If we swapped these objects at the start, be sure to swap them back in case we ever want to use sliceVector
+    // after this function
+    if (!(m_shouldRunSlicing && !m_sliceSelectionToolVector.empty()))
+        sliceVector = std::move(selectedSliceVector);
 
     if (m_shouldRunNeutrinoRecoOption && m_shouldRunCosmicRecoOption && (nuSliceHypotheses.size() != crSliceHypotheses.size()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
