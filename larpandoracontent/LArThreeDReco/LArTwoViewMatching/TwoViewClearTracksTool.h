@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
+#include <limits>
+
 namespace lar_content
 {
 
@@ -38,7 +40,8 @@ private:
      */
     void CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList, bool &particlesMade) const;
 
-    float           m_minXOverlap;              ///< The min x overlap value for particle creation
+    float           m_minXOverlapFraction;           ///< The min x overlap fraction value for particle creation
+    float           m_minLocallyMatchedFraction;     ///< The min locally matched fraction for particle creation
 };
 
 } // namespace lar_content
