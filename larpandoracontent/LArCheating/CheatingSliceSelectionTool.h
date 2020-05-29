@@ -33,7 +33,7 @@ public:
      */
     void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector,
         SliceVector &outputSliceVector);
- 
+
     typedef std::map<float, int, std::greater<float>> MetricSliceIndexMap;
 
 protected:
@@ -46,7 +46,7 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-protected:    
+protected:
     int             m_maxSlices;                ///< The maximum number of slices to retain (0 to retain all) - default 0
     float           m_threshold;                ///< The minimum cut threshold to retain a slice (< 0 for no threshold) - default -1
     std::string     m_cutVariable;              ///< The variable to cut on ("purity" or "completeness") - default "completeness"

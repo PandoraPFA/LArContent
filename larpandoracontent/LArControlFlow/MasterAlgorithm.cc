@@ -586,7 +586,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
 
     if (m_shouldRunNeutrinoRecoOption && m_shouldRunCosmicRecoOption && (nuSliceHypotheses.size() != crSliceHypotheses.size()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -1084,7 +1084,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         pExternalParameters = dynamic_cast<ExternalSteeringParameters*>(this->GetExternalParameters());
         if (!pExternalParameters) return STATUS_CODE_FAILURE;
     }
-    
+
     {
         AlgorithmToolVector algorithmToolVector;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "SliceSelectionTools",
