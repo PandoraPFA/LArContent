@@ -384,7 +384,7 @@ inline void DiscreteProbabilityVector::VerifyCompleteData() const
 
 inline void DiscreteProbabilityVector::VerifyElementRequest(const size_t index) const
 {
-    if (GetSize() < index || 0 > index)
+    if (GetSize() < index)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_OUT_OF_RANGE);
 
     return;
