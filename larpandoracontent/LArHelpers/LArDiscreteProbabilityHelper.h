@@ -36,7 +36,7 @@ public:
         std::mt19937 &randomNumberGenerator, const size_t nPermutations);
 
     /**
-     *  @brief  Calculate P value for measured correlation coefficient between two datasets via a integrating the student T distribution
+     *  @brief  Calculate P value for measured correlation coefficient between two datasets via a integrating the student T dist.
      *
      *  @param  t1 the first input dataset
      *  @param  t2 the second input dataset
@@ -182,7 +182,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPer
     for (size_t iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
     {
         float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(LArDiscreteProbabilityHelper::MakeRandomisedSample(
-            t1,randomNumberGenerator),MakeRandomisedSample(t2,randomNumberGenerator)));
+            t1,randomNumberGenerator),LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
 
         if ((rRandomised-rNominal) > std::numeric_limits<float>::epsilon())
             nExtreme++;
