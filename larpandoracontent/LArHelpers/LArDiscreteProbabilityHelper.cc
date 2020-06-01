@@ -21,7 +21,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPer
     float rNominal(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
 
     int nExtreme(0);
-    for (size_t iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
+    for (unsigned int iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
     {
         float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(LArDiscreteProbabilityHelper::MakeRandomisedSample(
             t1,randomNumberGenerator),LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
