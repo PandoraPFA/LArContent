@@ -32,7 +32,8 @@ public:
      *  @return the p-value
      */
     template <typename T>
-    static float CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const size_t nPermutations);
+    static float CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, 
+        std::mt19937 &randomNumberGenerator, const size_t nPermutations);
 
     /**
      *  @brief  Calculate P value for measured correlation coefficient between two datasets via a integrating the student T distribution
@@ -44,7 +45,8 @@ public:
      *  @return the p-value
      */
     template <typename T>
-    static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, const T &t2, const size_t nIntegrationSteps);
+    static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, const T &t2, 
+        const size_t nIntegrationSteps);
 
     /**
      *  @brief  Calculate the correlation coefficient between two datasets 
