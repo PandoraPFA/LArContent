@@ -168,14 +168,12 @@ private:
 typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResultVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool TrackTwoViewOverlapResult::IsInitialized() const
 {
     return m_isInitialized;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float TrackTwoViewOverlapResult::GetMatchingScore() const
@@ -198,7 +196,6 @@ inline unsigned int TwoViewTransverseOverlapResult::GetNSamplingPoints() const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float TwoViewTransverseOverlapResult::GetCorrelationCoefficient() const
 {
@@ -209,7 +206,6 @@ inline float TwoViewTransverseOverlapResult::GetCorrelationCoefficient() const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float TwoViewTransverseOverlapResult::GetLocallyMatchedFraction() const
 {
@@ -219,7 +215,6 @@ inline float TwoViewTransverseOverlapResult::GetLocallyMatchedFraction() const
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const TwoViewXOverlap &TwoViewTransverseOverlapResult::GetTwoViewXOverlap() const
