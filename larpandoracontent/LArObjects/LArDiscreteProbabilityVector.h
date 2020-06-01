@@ -147,7 +147,7 @@ private:
              *  @param  cumulativeDatum the cumulative probability for the corresponding x
              *  @param width the width of the bin
              */
-            DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum, const float &width);
+            DiscreteProbabilityDatum(const float x, const float densityDatum, const float cumulativeDatum, const float width);
 
             /**
              *  @brief  Get the x value for the datum
@@ -331,8 +331,8 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x,
-    const float &densityDatum, const float &cumulativeDatum, const float &width) :
+inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float x,
+    const float densityDatum, const float cumulativeDatum, const float width) :
     m_x(x),
     m_densityDatum(densityDatum),
     m_cumulativeDatum(cumulativeDatum),
