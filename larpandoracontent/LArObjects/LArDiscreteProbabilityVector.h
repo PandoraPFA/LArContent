@@ -66,7 +66,7 @@ public:
      *
      *  @return the cumulative probability
      */
-    float EvaluateCumulativeProbability(float x) const;
+    float EvaluateCumulativeProbability(const float x) const;
 
     /**
      *  @brief  Get the size of the probability vector
