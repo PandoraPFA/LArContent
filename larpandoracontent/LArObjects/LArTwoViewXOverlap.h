@@ -32,44 +32,44 @@ public:
     TwoViewXOverlap(const float xMin0, const float xMax0, const float xMin1, const float xMax1, const float xOverlapSpan);
 
     /**
-     *  @brief  Get the min x value in the u view
+     *  @brief  Get the min x value in the view 0
      *
-     *  @return the min x value in the u view
+     *  @return the min x value in the view 0
      */
     float GetXMin0() const;
 
     /**
-     *  @brief  Get the max x value in the u view
+     *  @brief  Get the max x value in the view 0
      *
-     *  @return the max x value in the u view
+     *  @return the max x value in the view 0
      */
     float GetXMax0() const;
 
     /**
-     *  @brief  Get the min x value in the v view
+     *  @brief  Get the min x value in the view 1
      *
-     *  @return the min x value in the v view
+     *  @return the min x value in the view 1
      */
     float GetXMin1() const;
 
     /**
-     *  @brief  Get the max x value in the v view
+     *  @brief  Get the max x value in the view 1
      *
-     *  @return the max x value in the v view
+     *  @return the max x value in the view 1
      */
     float GetXMax1() const;
 
     /**
-     *  @brief  Get the x span in the u view
+     *  @brief  Get the x span in the view 0
      *
-     *  @return the x span in the u view
+     *  @return the x span in the view 0
      */
     float GetXSpan0() const;
 
     /**
-     *  @brief  Get the x span in the v view
+     *  @brief  Get the x span in the view 1
      *
-     *  @return the x span in the v view
+     *  @return the x span in the view 1
      */
     float GetXSpan1() const;
 
@@ -81,24 +81,24 @@ public:
     float GetTwoViewXOverlapSpan() const;
 
     /**
-     *  @brief  Get the fraction of the U cluster that overlaps in x
+     *  @brief  Get the fraction of the view 0 cluster that overlaps in x
      *
-     *  @return the U cluster's fractional overlap
+     *  @return the view 0 cluster's fractional overlap
      */
     float GetXOverlapFraction0() const;
 
     /**
-     *  @brief  Get the fraction of the V cluster that overlaps in x
+     *  @brief  Get the fraction of the view 1 cluster that overlaps in x
      *
-     *  @return the V cluster's fractional overlap
+     *  @return the view 1 cluster's fractional overlap
      */
     float GetXOverlapFraction1() const;
 
 private:
-    float       m_xMin0;                        ///< The min x value in the u view
-    float       m_xMax0;                        ///< The max x value in the u view
-    float       m_xMin1;                        ///< The min x value in the v view
-    float       m_xMax1;                        ///< The max x value in the v view
+    float       m_xMin0;                        ///< The min x value in the view 0
+    float       m_xMax0;                        ///< The max x value in the view 0
+    float       m_xMin1;                        ///< The min x value in the view 1
+    float       m_xMax1;                        ///< The max x value in the view 1
     float       m_xOverlapSpan;                 ///< The x overlap span
 };
 
