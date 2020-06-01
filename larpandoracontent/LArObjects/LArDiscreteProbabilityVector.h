@@ -187,8 +187,6 @@ private:
 
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
 
-    typedef std::vector<std::pair<float, float > > DiscreteCumulativeProbabilityData;
-
     /**
      *  @brief  Get a initialised probability data vector from the input data
      *
