@@ -47,7 +47,7 @@ bool TrackTwoViewOverlapResult::operator<(const TrackTwoViewOverlapResult &rhs) 
     if (this == &rhs)
         return false;
 
-    if (!m_isInitialized && !rhs.IsInitialized())
+    if (!m_isInitialized && !rhs.m_isInitialized)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
     if (!m_isInitialized)
@@ -113,7 +113,7 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const TwoViewTran
     m_nSamplingPoints(rhs.m_nSamplingPoints),
     m_correlationCoefficient(rhs.m_correlationCoefficient),
     m_locallyMatchedFraction(rhs.m_locallyMatchedFraction),
-    m_twoViewXOverlap(rhs.IsInitialized() ? rhs.m_twoViewXOverlap : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
+    m_twoViewXOverlap(rhs.m_isInitialized ? rhs.m_twoViewXOverlap : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
