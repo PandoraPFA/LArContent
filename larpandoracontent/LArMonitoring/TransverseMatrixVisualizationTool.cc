@@ -63,8 +63,8 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
 
             std::cout << " Element " << counter++ << std::endl;
             std::cout <<" ---XOverlap: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetTwoViewXOverlapSpan() <<std::endl;
-            std::cout <<" ---XOverlap fraction 0: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionU() << std::endl;
-            std::cout <<" ---XOverlap fraction 1: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFractionV() << std::endl;
+            std::cout <<" ---XOverlap fraction view0: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() << std::endl;
+            std::cout <<" ---XOverlap fraction view1: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() << std::endl;
             std::cout <<" ---Matching score: " << eIter->GetOverlapResult().GetMatchingScore() << std::endl;
             std::cout <<" ---N. sampling points: " << eIter->GetOverlapResult().GetNSamplingPoints() << std::endl;
             std::cout <<" ---Correlation coeff.: " << eIter->GetOverlapResult().GetCorrelationCoefficient() << std::endl;
