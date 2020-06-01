@@ -198,19 +198,18 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
     const T &t2, const size_t nIntegrationSteps)
 {
     float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
-    float dof(static_cast<float>(GetSize(t1)) - 2.f);
-    float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.-correlation*correlation)));
-    float tDistCoeff(std::tgamma(0.5 * (dof+1.)) / std::tgamma(0.5*dof) / (std::sqrt(dof*M_PI)));
+    float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
+    float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.f-correlation*correlation)));
+    float tDistCoeff(std::tgamma(0.5f * (dof+1.f)) / std::tgamma(0.5f*dof) / (std::sqrt(dof*M_PI)));
 
-    int nSteps(nIntegrationSteps);
     float upperLimit(15.f);
-    float dx((upperLimit-tTestStatistic)/static_cast<float>(nSteps));
-    float integral(tDistCoeff*std::pow( 1.0 + tTestStatistic*tTestStatistic/dof, -0.5 *(dof + 1.0)) + 
-            tDistCoeff*std::pow( 1.0 + upperLimit*upperLimit/dof, -0.5 *(dof + 1.0)));
-    for (int iStep = 1; iStep < nSteps; iStep++)
-        integral+=2. * tDistCoeff*std::pow( 
-            1.0 + (tTestStatistic + static_cast<float>(iStep)*dx)*(tTestStatistic + static_cast<float>(iStep)*dx)/dof, -0.5 *(dof + 1.0));
-    integral *= dx/2.0;
+    float dx((upperLimit-tTestStatistic)/static_cast<float>(nIntegrationSteps));
+    float integral(tDistCoeff*std::pow( 1.f + tTestStatistic*tTestStatistic/dof, -0.5f *(dof + 1.f)) + 
+            tDistCoeff*std::pow( 1.f + upperLimit*upperLimit/dof, -0.5f *(dof + 1.f)));
+    for (int iStep = 1; iStep < nIntegrationSteps; iStep++)
+        integral+=2.f * tDistCoeff*std::pow( 
+            1.f + (tTestStatistic + static_cast<float>(iStep)*dx)*(tTestStatistic + static_cast<float>(iStep)*dx)/dof, -0.5f *(dof + 1.f));
+    integral *= dx/2.f;
 
     return integral;
 }
