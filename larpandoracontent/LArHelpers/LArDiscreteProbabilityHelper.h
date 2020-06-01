@@ -225,14 +225,12 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
     if (2 > LArDiscreteProbabilityHelper::GetSize(t1))
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float mean1(LArDiscreteProbabilityHelper::CalculateMean(t1)); 
+    float mean1(LArDiscreteProbabilityHelper::CalculateMean(t1));
     float mean2(LArDiscreteProbabilityHelper::CalculateMean(t2));
 
-    float variance1(0.f);
-    float variance2(0.f);
-    float covariance(0.f);
+    float variance1(0.f), variance2(0.f), covariance(0.f);
 
-    for (size_t iElement = 0; iElement < GetSize(t1); iElement++)
+    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); iElement++)
     {
         float element1(LArDiscreteProbabilityHelper::GetElement(t1,iElement));
         float element2(LArDiscreteProbabilityHelper::GetElement(t2,iElement));
@@ -258,7 +256,7 @@ float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     float mean(0.f);
-    for (size_t iElement = 0; iElement < GetSize(t); ++iElement)
+    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t); ++iElement)
     {
         mean+=LArDiscreteProbabilityHelper::GetElement(t,iElement);
     }
