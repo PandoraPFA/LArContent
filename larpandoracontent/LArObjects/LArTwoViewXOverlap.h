@@ -23,55 +23,55 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  uMinX min x value in the u view
-     *  @param  uMaxX max x value in the u view
-     *  @param  vMinX min x value in the v view
-     *  @param  vMaxX max x value in the v view
+     *  @param  xMin0 min x value in the view 0
+     *  @param  xMax0 max x value in the view 0
+     *  @param  xMin1 min x value in the view 1
+     *  @param  xMax1 max x value in the view 1
      *  @param  xOverlapSpan the x overlap span
      */
-    TwoViewXOverlap(const float uMinX, const float uMaxX, const float vMinX, const float vMaxX, const float xOverlapSpan);
+    TwoViewXOverlap(const float xMin0, const float xMax0, const float xMin1, const float xMax1, const float xOverlapSpan);
 
     /**
      *  @brief  Get the min x value in the u view
      *
      *  @return the min x value in the u view
      */
-    float GetUMinX() const;
+    float GetXMin0() const;
 
     /**
      *  @brief  Get the max x value in the u view
      *
      *  @return the max x value in the u view
      */
-    float GetUMaxX() const;
+    float GetXMax0() const;
 
     /**
      *  @brief  Get the min x value in the v view
      *
      *  @return the min x value in the v view
      */
-    float GetVMinX() const;
+    float GetXMin1() const;
 
     /**
      *  @brief  Get the max x value in the v view
      *
      *  @return the max x value in the v view
      */
-    float GetVMaxX() const;
+    float GetXMax1() const;
 
     /**
      *  @brief  Get the x span in the u view
      *
      *  @return the x span in the u view
      */
-    float GetXSpanU() const;
+    float GetXSpan0() const;
 
     /**
      *  @brief  Get the x span in the v view
      *
      *  @return the x span in the v view
      */
-    float GetXSpanV() const;
+    float GetXSpan1() const;
 
     /**
      *  @brief  Get the x overlap span
@@ -85,20 +85,20 @@ public:
      *
      *  @return the U cluster's fractional overlap
      */
-    float GetXOverlapFractionU() const;
+    float GetXOverlapFraction0() const;
 
     /**
      *  @brief  Get the fraction of the V cluster that overlaps in x
      *
      *  @return the V cluster's fractional overlap
      */
-    float GetXOverlapFractionV() const;
+    float GetXOverlapFraction1() const;
 
 private:
-    float       m_uMinX;                        ///< The min x value in the u view
-    float       m_uMaxX;                        ///< The max x value in the u view
-    float       m_vMinX;                        ///< The min x value in the v view
-    float       m_vMaxX;                        ///< The max x value in the v view
+    float       m_xMin0;                        ///< The min x value in the u view
+    float       m_xMax0;                        ///< The max x value in the u view
+    float       m_xMin1;                        ///< The min x value in the v view
+    float       m_xMax1;                        ///< The max x value in the v view
     float       m_xOverlapSpan;                 ///< The x overlap span
 };
 
@@ -112,56 +112,56 @@ TwoViewXOverlap operator+(const TwoViewXOverlap &lhs, const TwoViewXOverlap &rhs
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline TwoViewXOverlap::TwoViewXOverlap(const float uMinX, const float uMaxX, const float vMinX, const float vMaxX,
+inline TwoViewXOverlap::TwoViewXOverlap(const float xMin0, const float xMax0, const float xMin1, const float xMax1,
         const float xOverlapSpan) :
-    m_uMinX(uMinX),
-    m_uMaxX(uMaxX),
-    m_vMinX(vMinX),
-    m_vMaxX(vMaxX),
+    m_xMin0(xMin0),
+    m_xMax0(xMax0),
+    m_xMin1(xMin1),
+    m_xMax1(xMax1),
     m_xOverlapSpan(xOverlapSpan)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoViewXOverlap::GetUMinX() const
+inline float TwoViewXOverlap::GetXMin0() const
 {
-    return m_uMinX;
+    return m_xMin0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoViewXOverlap::GetUMaxX() const
+inline float TwoViewXOverlap::GetXMax0() const
 {
-    return m_uMaxX;
+    return m_xMax0;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoViewXOverlap::GetVMinX() const
+inline float TwoViewXOverlap::GetXMin1() const
 {
-    return m_vMinX;
+    return m_xMin1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoViewXOverlap::GetVMaxX() const
+inline float TwoViewXOverlap::GetXMax1() const
 {
-    return m_vMaxX;
+    return m_xMax1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoViewXOverlap::GetXSpanU() const
+inline float TwoViewXOverlap::GetXSpan0() const
 {
-    return std::fabs(m_uMaxX - m_uMinX);
+    return std::fabs(m_xMax0 - m_xMin0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoViewXOverlap::GetXSpanV() const
+inline float TwoViewXOverlap::GetXSpan1() const
 {
-    return std::fabs(m_vMaxX - m_vMinX);
+    return std::fabs(m_xMax1 - m_xMin1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -173,31 +173,31 @@ inline float TwoViewXOverlap::GetTwoViewXOverlapSpan() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoViewXOverlap::GetXOverlapFractionU() const
+inline float TwoViewXOverlap::GetXOverlapFraction0() const
 {
-    return (std::numeric_limits<float>::epsilon() < GetXSpanU()) ? m_xOverlapSpan / GetXSpanU() : 0.f;
+    return (std::numeric_limits<float>::epsilon() < GetXSpan0()) ? m_xOverlapSpan / GetXSpan0() : 0.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float TwoViewXOverlap::GetXOverlapFractionV() const
+inline float TwoViewXOverlap::GetXOverlapFraction1() const
 {
-    return (std::numeric_limits<float>::epsilon() < GetXSpanU()) ? m_xOverlapSpan / GetXSpanV() : 0.f;
+    return (std::numeric_limits<float>::epsilon() < GetXSpan0()) ? m_xOverlapSpan / GetXSpan1() : 0.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TwoViewXOverlap operator+(const TwoViewXOverlap &lhs, const TwoViewXOverlap &rhs)
 {
-    const float uMinX(std::min(lhs.GetUMinX(), rhs.GetUMinX()));
-    const float uMaxX(std::max(lhs.GetUMaxX(), rhs.GetUMaxX()));
-    const float vMinX(std::min(lhs.GetVMinX(), rhs.GetVMinX()));
-    const float vMaxX(std::max(lhs.GetVMaxX(), rhs.GetVMaxX()));
-    const float minX(std::max(uMinX, vMinX));
-    const float maxX(std::min(uMaxX, vMaxX));
+    const float xMin0(std::min(lhs.GetXMin0(), rhs.GetXMin0()));
+    const float xMax0(std::max(lhs.GetXMax0(), rhs.GetXMax0()));
+    const float xMin1(std::min(lhs.GetXMin1(), rhs.GetXMin1()));
+    const float xMax1(std::max(lhs.GetXMax1(), rhs.GetXMax1()));
+    const float minX(std::max(xMin0, xMin1));
+    const float maxX(std::min(xMax0, xMax1));
     const float xOverlapSpan(maxX - minX);
 
-    return TwoViewXOverlap(uMinX, uMaxX, vMinX, vMaxX, xOverlapSpan);
+    return TwoViewXOverlap(xMin0, xMax0, xMin1, xMax1, xOverlapSpan);
 }
 
 } // namespace lar_content
