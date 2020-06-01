@@ -38,28 +38,60 @@ public:
      *  @brief  Default constructor
      */
     TwoViewTransverseTracksAlgorithm();
-    virtual ~TwoViewTransverseTracksAlgorithm();
 
 private:
-    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const);
+    /**
+     *  @brief  The overridden function called by the base class which instigates calculation of the two view overlap result
+     *
+     *  @param  pCluster1 the view 0 cluster
+     *  @param  pCluster2 the view 1 cluster
+     */
+    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, 
+        const pandora::Cluster *const);
 
-    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, TwoViewTransverseOverlapResult &overlapResult);
+    /**
+     *  @brief  Calculates the two view overlap result
+     *
+     *  @param  pCluster1 the view 0 cluster
+     *  @param  pCluster2 the view 1 cluster
+     *  @param  overlapResult the two view overlap result
+     */
+    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, 
+        TwoViewTransverseOverlapResult &overlapResult);
 
-    float CalculateLocalMatchingFraction(const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2);
+    /**
+     *  @brief  Calculates the fraction of the sliding windows that contains charge bins that locally match
+     *
+     *  @param  discreteProbabilityVector1 the view 0 discrete probability vector containing the charge information
+     *  @param  pCluster2 the view 1 discrete probability vector containing the charge information
+     *
+     *  @result the matched window fraction
+     */
+    float CalculateLocalMatchingFraction(const DiscreteProbabilityVector &discreteProbabilityVector1, 
+        const DiscreteProbabilityVector &discreteProbabilityVector2);
 
+    /**
+     *  @brief  Runs the list of matching tools on each element in the overlap matrix 
+     */
     void ExamineOverlapContainer();
+
+    /**
+     *  @brief  Reads the settings from the XML 
+     *
+     *  @param  xmlHandle the xml handle
+     */
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<TransverseMatrixTool*> MatrixToolVector;
-    MatrixToolVector            m_algorithmToolVector;                 ///< The algorithm tool vector
+    MatrixToolVector            m_algorithmToolVector;           ///< The algorithm tool vector
 
-    unsigned int                m_nMaxMatrixToolRepeats;               ///< The maximum number of repeat loops over matrix tools
-    unsigned int                m_downsampleFactor;                    ///< The downsampling (hit merging) applied to hits in the overlap region
-    unsigned int                m_minSamples;                          ///< The minimum number of samples needed for comparing charges
-    unsigned int                m_nPermutations;                       ///< The number of permutations for calculating p-values
-    float                       m_localMatchingScoreThreshold;         ///< The minimum score to classify a local region as matching
-    std::random_device          m_randomDevice;                        ///< The random device used for seeding the number generator
-    std::mt19937                m_randomNumberGenerator;               ///< The random number generator for reshuffling data
+    unsigned int                m_nMaxMatrixToolRepeats;         ///< The maximum number of repeat loops over matrix tools
+    unsigned int                m_downsampleFactor;              ///< The downsampling (hit merging) applied to hits in the overlap region
+    unsigned int                m_minSamples;                    ///< The minimum number of samples needed for comparing charges
+    unsigned int                m_nPermutations;                 ///< The number of permutations for calculating p-values
+    float                       m_localMatchingScoreThreshold;   ///< The minimum score to classify a local region as matching
+    std::random_device          m_randomDevice;                  ///< The random device used for seeding the number generator
+    std::mt19937                m_randomNumberGenerator;         ///< The random number generator for reshuffling data
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
