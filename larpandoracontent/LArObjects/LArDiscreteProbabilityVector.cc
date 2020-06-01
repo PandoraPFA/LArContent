@@ -85,7 +85,8 @@ float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TX, typename TY>
-DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<TX, TY> inputData) const
+DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
+    InputData<TX, TY> inputData) const
 {
     if (2 > inputData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -137,6 +138,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
             densityDatumResampled, cumulativeDatumResampled, deltaX));
         prevCumulativeData = cumulativeDatumResampled;
     }
+
     float xResampled(resamplingPoints.back());
     float deltaX(m_xUpperBound-xResampled);
     float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
