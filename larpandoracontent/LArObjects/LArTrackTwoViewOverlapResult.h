@@ -63,7 +63,6 @@ public:
      */
     float GetMatchingScore() const;
 
-
     /**
      *  @brief  Track two view overlap result less than operator
      *
@@ -167,6 +166,7 @@ private:
 
 typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResultVector;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool TrackTwoViewOverlapResult::IsInitialized() const
