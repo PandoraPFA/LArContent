@@ -133,14 +133,16 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
         float deltaX(resamplingPoints.at(iSample+1)-xResampled);
         float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
         float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/(m_useWidths ? deltaX : 1.f));
-        resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, cumulativeDatumResampled, deltaX));
+        resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, 
+            densityDatumResampled, cumulativeDatumResampled, deltaX));
         prevCumulativeData = cumulativeDatumResampled;
     }
     float xResampled(resamplingPoints.back());
     float deltaX(m_xUpperBound-xResampled);
     float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
     float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/(m_useWidths ? deltaX : 1.f));
-    resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, cumulativeDatumResampled, deltaX));
+    resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, 
+        cumulativeDatumResampled, deltaX));
 
     return resampledProbabilityData;
 }
@@ -164,7 +166,8 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
         float deltaX(discreteProbabilityVector.GetWidth(randomElementIndex));
         float probabilityDensity(discreteProbabilityVector.GetProbabilityDensity(randomElementIndex));
         cumulativeProbability+=probabilityDensity*(m_useWidths ? deltaX : 1.f);
-        randomisedProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xPos, probabilityDensity, cumulativeProbability, deltaX));
+        randomisedProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xPos, probabilityDensity, 
+            cumulativeProbability, deltaX));
         xPos+=deltaX;
     }
 
