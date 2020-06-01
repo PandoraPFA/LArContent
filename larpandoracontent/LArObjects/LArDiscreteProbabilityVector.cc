@@ -162,7 +162,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
     float cumulativeProbability(0.f);
     for (size_t iElement = 0; iElement < discreteProbabilityVector.GetSize(); ++iElement)
     {
-        float randomElementIndex(randomisedElements.at(iElement));
+        size_t randomElementIndex(randomisedElements.at(iElement));
         float deltaX(discreteProbabilityVector.GetWidth(randomElementIndex));
         float probabilityDensity(discreteProbabilityVector.GetProbabilityDensity(randomElementIndex));
         cumulativeProbability+=probabilityDensity*(m_useWidths ? deltaX : 1.f);
