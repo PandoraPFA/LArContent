@@ -20,9 +20,9 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<TX, TY> const &in
     const bool useWidths) :
     m_xUpperBound(static_cast<float>(xUpperBound)),
     m_useWidths(useWidths),
-    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
+    m_discreteProbabilityData(this->InitialiseDiscreteProbabilityData(inputData))
 {
-    VerifyCompleteData();
+    this->VerifyCompleteData();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -31,9 +31,9 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector c
     std::mt19937 &randomNumberGenerator) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_useWidths(discreteProbabilityVector.m_useWidths),
-    m_discreteProbabilityData(RandomiseDiscreteProbabilityData(discreteProbabilityVector, randomNumberGenerator))
+    m_discreteProbabilityData(this->RandomiseDiscreteProbabilityData(discreteProbabilityVector, randomNumberGenerator))
 {
-    VerifyCompleteData();
+    this->VerifyCompleteData();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -42,9 +42,9 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector c
     ResamplingPoints const &resamplingPoints) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_useWidths(discreteProbabilityVector.m_useWidths),
-    m_discreteProbabilityData(ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
+    m_discreteProbabilityData(this->ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
 {
-    VerifyCompleteData();
+    this->VerifyCompleteData();
 }
 
 
@@ -90,13 +90,12 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
     if (2 > inputData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
     if (inputData.back().first - m_xUpperBound > std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float normalisation(CalculateNormalisation(inputData));
+    float normalisation(this->CalculateNormalisation(inputData));
     float accumulationDatum(0.f);
 
     DiscreteProbabilityData data;
