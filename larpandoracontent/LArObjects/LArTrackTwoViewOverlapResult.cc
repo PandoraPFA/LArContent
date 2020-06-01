@@ -53,7 +53,7 @@ bool TrackTwoViewOverlapResult::operator<(const TrackTwoViewOverlapResult &rhs) 
     if (!m_isInitialized)
         return true;
 
-    if (!rhs.IsInitialized())
+    if (!rhs.m_isInitialized)
         return false;
 
     return (m_matchingScore < rhs.m_matchingScore);
