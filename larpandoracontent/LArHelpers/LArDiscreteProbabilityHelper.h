@@ -32,10 +32,11 @@ public:
      *  @return the p-value
      */
     template <typename T>
-    static float CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const size_t nPermutations);
+    static float CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, 
+        std::mt19937 &randomNumberGenerator, const size_t nPermutations);
 
     /**
-     *  @brief  Calculate P value for measured correlation coefficient between two datasets via a integrating the student T distribution
+     *  @brief  Calculate P value for measured correlation coefficient between two datasets via a integrating the student T dist.
      *
      *  @param  t1 the first input dataset
      *  @param  t2 the second input dataset
@@ -44,7 +45,8 @@ public:
      *  @return the p-value
      */
     template <typename T>
-    static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, const T &t2, const size_t nIntegrationSteps);
+    static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, const T &t2, 
+        const size_t nIntegrationSteps);
 
     /**
      *  @brief  Calculate the correlation coefficient between two datasets 
@@ -174,12 +176,14 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPer
     if (1 > nPermutations)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float rNominal(CalculateCorrelationCoefficient(t1,t2));
+    float rNominal(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
 
     int nExtreme(0);
     for (size_t iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
     {
-        float rRandomised(CalculateCorrelationCoefficient(MakeRandomisedSample(t1,randomNumberGenerator),MakeRandomisedSample(t2,randomNumberGenerator)));
+        float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(LArDiscreteProbabilityHelper::MakeRandomisedSample(
+            t1,randomNumberGenerator),LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
+
         if ((rRandomised-rNominal) > std::numeric_limits<float>::epsilon())
             nExtreme++;
     }
@@ -193,19 +197,19 @@ template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, 
     const T &t2, const size_t nIntegrationSteps)
 {
-    float correlation(CalculateCorrelationCoefficient(t1,t2));
-    float dof(GetSize(t1) - 2);
-    float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.-correlation*correlation)));
-    float tDistCoeff(std::tgamma(0.5 * (dof+1.)) / std::tgamma(0.5*dof) / (std::sqrt(dof*3.14159265359)));
+    float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
+    float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
+    float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.f - correlation*correlation)));
+    float tDistCoeff(std::tgamma(0.5f*(dof + 1.f)) / std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
 
-    int nSteps(10000);
     float upperLimit(15.f);
-    float dx((upperLimit-tTestStatistic)/nSteps);
-    float integral(tDistCoeff*std::pow( 1.0 + tTestStatistic*tTestStatistic/dof, -0.5 *(dof + 1.0)) + 
-            tDistCoeff*std::pow( 1.0 + upperLimit*upperLimit/dof, -0.5 *(dof + 1.0)));
-    for (int iStep = 1; iStep < nSteps; iStep++)
-        integral+=2. * tDistCoeff*std::pow( 1.0 + (tTestStatistic + iStep*dx)*(tTestStatistic + iStep*dx)/dof, -0.5 *(dof + 1.0));
-    integral *= dx/2.0;
+    float dx((upperLimit-tTestStatistic)/static_cast<float>(nIntegrationSteps));
+    float integral(tDistCoeff*std::pow( 1.f + tTestStatistic*tTestStatistic/dof, -0.5f*(dof + 1.f)) + 
+            tDistCoeff*std::pow( 1.f + upperLimit*upperLimit/dof, -0.5f*(dof + 1.f)));
+    for (int iStep = 1; iStep < nIntegrationSteps; iStep++)
+        integral+=2.f*tDistCoeff*std::pow( 
+            1.f + (tTestStatistic + static_cast<float>(iStep)*dx)*(tTestStatistic + static_cast<float>(iStep)*dx)/dof, -0.5f*(dof + 1.f));
+    integral *= dx/2.f;
 
     return integral;
 }
@@ -215,23 +219,21 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1, const T &t2)
 {
-    if (GetSize(t1) != (GetSize(t2)))
+    if (LArDiscreteProbabilityHelper::GetSize(t1) != (LArDiscreteProbabilityHelper::GetSize(t2)))
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    if (2 > GetSize(t1))
+    if (2 > LArDiscreteProbabilityHelper::GetSize(t1))
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float mean1(CalculateMean(t1)); 
-    float mean2(CalculateMean(t2));
+    float mean1(LArDiscreteProbabilityHelper::CalculateMean(t1));
+    float mean2(LArDiscreteProbabilityHelper::CalculateMean(t2));
 
-    float variance1(0.f);
-    float variance2(0.f);
-    float covariance(0.f);
+    float variance1(0.f), variance2(0.f), covariance(0.f);
 
-    for (size_t iElement = 0; iElement < GetSize(t1); iElement++)
+    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); iElement++)
     {
-        float element1(GetElement(t1,iElement));
-        float element2(GetElement(t2,iElement));
+        float element1(LArDiscreteProbabilityHelper::GetElement(t1,iElement));
+        float element2(LArDiscreteProbabilityHelper::GetElement(t2,iElement));
 
         variance1 += (element1-mean1)*(element1-mean1);
         variance2 += (element2-mean2)*(element2-mean2);
@@ -250,15 +252,15 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
 {
-    if (0 == GetSize(t))
+    if (0 == LArDiscreteProbabilityHelper::GetSize(t))
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     float mean(0.f);
-    for (size_t iElement = 0; iElement < GetSize(t); ++iElement)
+    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t); ++iElement)
     {
-        mean+=GetElement(t,iElement);
+        mean+=LArDiscreteProbabilityHelper::GetElement(t,iElement);
     }
-    mean /= static_cast<float>(GetSize(t));
+    mean /= static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t));
 
     return mean;
 }
@@ -268,13 +270,14 @@ float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
 template <typename T>
 inline T LArDiscreteProbabilityHelper::MakeRandomisedSample(const T &t, std::mt19937 &randomNumberGenerator)
 {
-    return MakeRandomisedSampleImpl(t, randomNumberGenerator);
+    return LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(t, randomNumberGenerator);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <>
-inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(const DiscreteProbabilityVector &t, std::mt19937 &randomNumberGenerator)
+inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(const DiscreteProbabilityVector &t, 
+    std::mt19937 &randomNumberGenerator)
 {
     return DiscreteProbabilityVector(t,randomNumberGenerator);
 }
@@ -295,7 +298,7 @@ inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(con
 template <typename T>
 inline size_t LArDiscreteProbabilityHelper::GetSize(const T &t)
 {
-    return GetSizeImpl(t);
+    return LArDiscreteProbabilityHelper::GetSizeImpl(t);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -319,7 +322,7 @@ inline size_t LArDiscreteProbabilityHelper::GetSizeImpl(const std::vector<T> &t)
 template <typename T>
 inline float LArDiscreteProbabilityHelper::GetElement(const T &t, const size_t index)
 {
-    return GetElementImpl(t, index);
+    return LArDiscreteProbabilityHelper::GetElementImpl(t, index);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

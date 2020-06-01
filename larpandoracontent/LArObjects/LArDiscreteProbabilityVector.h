@@ -10,10 +10,10 @@
 
 #include "Pandora/StatusCodes.h"
 
+#include <limits>
+#include <random>
 #include <utility>
 #include <vector>
-#include <random>
-#include <limits>
 
 namespace lar_content
 {
@@ -66,7 +66,7 @@ public:
      *
      *  @return the cumulative probability
      */
-    float EvaluateCumulativeProbability(float x) const;
+    float EvaluateCumulativeProbability(const float x) const;
 
     /**
      *  @brief  Get the size of the probability vector
@@ -147,7 +147,7 @@ private:
              *  @param  cumulativeDatum the cumulative probability for the corresponding x
              *  @param width the width of the bin
              */
-            DiscreteProbabilityDatum(const float &x, const float &densityDatum, const float &cumulativeDatum, const float &width);
+            DiscreteProbabilityDatum(const float x, const float densityDatum, const float cumulativeDatum, const float width);
 
             /**
              *  @brief  Get the x value for the datum
@@ -186,8 +186,6 @@ private:
     };
 
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
-
-    typedef std::vector<std::pair<float, float > > DiscreteCumulativeProbabilityData;
 
     /**
      *  @brief  Get a initialised probability data vector from the input data
@@ -261,7 +259,6 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline size_t DiscreteProbabilityVector::GetSize() const
 {
@@ -272,7 +269,7 @@ inline size_t DiscreteProbabilityVector::GetSize() const
 
 inline float DiscreteProbabilityVector::GetX(const size_t index) const
 {
-    VerifyElementRequest(index);
+    this->VerifyElementRequest(index);
 
     return m_discreteProbabilityData.at(index).GetX();
 }
@@ -281,7 +278,7 @@ inline float DiscreteProbabilityVector::GetX(const size_t index) const
 
 inline float DiscreteProbabilityVector::GetProbability(const size_t index) const
 {
-    VerifyElementRequest(index);
+    this->VerifyElementRequest(index);
 
     return m_discreteProbabilityData.at(index).GetDensityDatum()*(m_useWidths ? m_discreteProbabilityData.at(index).GetWidth() : 1.f);
 }
@@ -290,7 +287,7 @@ inline float DiscreteProbabilityVector::GetProbability(const size_t index) const
 
 inline float DiscreteProbabilityVector::GetProbabilityDensity(const size_t index) const
 {
-    VerifyElementRequest(index);
+    this->VerifyElementRequest(index);
 
     return m_discreteProbabilityData.at(index).GetDensityDatum();
 }
@@ -299,7 +296,7 @@ inline float DiscreteProbabilityVector::GetProbabilityDensity(const size_t index
 
 inline float DiscreteProbabilityVector::GetCumulativeProbability(const size_t index) const
 {
-    VerifyElementRequest(index);
+    this->VerifyElementRequest(index);
 
     return m_discreteProbabilityData.at(index).GetCumulativeDatum();
 }
@@ -308,7 +305,7 @@ inline float DiscreteProbabilityVector::GetCumulativeProbability(const size_t in
 
 inline float DiscreteProbabilityVector::GetWidth(const size_t index) const
 {
-    VerifyElementRequest(index);
+    this->VerifyElementRequest(index);
 
     return m_discreteProbabilityData.at(index).GetWidth();
 }
@@ -318,7 +315,7 @@ inline float DiscreteProbabilityVector::GetWidth(const size_t index) const
 inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &x, float &probabilityDensity,
     float &cumulativeProbability, float &width) const
 {
-    VerifyElementRequest(index);
+    this->VerifyElementRequest(index);
 
     const DiscreteProbabilityDatum &theDatum(m_discreteProbabilityData.at(index));
     x = theDatum.GetX();
@@ -331,8 +328,8 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float &x,
-    const float &densityDatum, const float &cumulativeDatum, const float &width) :
+inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float x,
+    const float densityDatum, const float cumulativeDatum, const float width) :
     m_x(x),
     m_densityDatum(densityDatum),
     m_cumulativeDatum(cumulativeDatum),
@@ -384,7 +381,7 @@ inline void DiscreteProbabilityVector::VerifyCompleteData() const
 
 inline void DiscreteProbabilityVector::VerifyElementRequest(const size_t index) const
 {
-    if (GetSize() < index)
+    if (this->GetSize() < index)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_OUT_OF_RANGE);
 
     return;

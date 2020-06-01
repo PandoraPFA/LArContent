@@ -20,9 +20,9 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<TX, TY> const &in
     const bool useWidths) :
     m_xUpperBound(static_cast<float>(xUpperBound)),
     m_useWidths(useWidths),
-    m_discreteProbabilityData(InitialiseDiscreteProbabilityData(inputData))
+    m_discreteProbabilityData(this->InitialiseDiscreteProbabilityData(inputData))
 {
-    VerifyCompleteData();
+    this->VerifyCompleteData();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -31,9 +31,9 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector c
     std::mt19937 &randomNumberGenerator) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_useWidths(discreteProbabilityVector.m_useWidths),
-    m_discreteProbabilityData(RandomiseDiscreteProbabilityData(discreteProbabilityVector, randomNumberGenerator))
+    m_discreteProbabilityData(this->RandomiseDiscreteProbabilityData(discreteProbabilityVector, randomNumberGenerator))
 {
-    VerifyCompleteData();
+    this->VerifyCompleteData();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -42,9 +42,9 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector c
     ResamplingPoints const &resamplingPoints) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_useWidths(discreteProbabilityVector.m_useWidths),
-    m_discreteProbabilityData(ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
+    m_discreteProbabilityData(this->ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
 {
-    VerifyCompleteData();
+    this->VerifyCompleteData();
 }
 
 
@@ -85,30 +85,30 @@ float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TX, typename TY>
-DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<TX, TY> inputData) const
+DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
+    InputData<TX, TY> inputData) const
 {
     if (2 > inputData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
 
     std::sort(inputData.begin(), inputData.end(), DiscreteProbabilityVector::SortInputDataByX<TX,TY>);
 
     if (inputData.back().first - m_xUpperBound > std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float normalisation(CalculateNormalisation(inputData));
+    float normalisation(this->CalculateNormalisation(inputData));
     float accumulationDatum(0.f);
 
     DiscreteProbabilityData data;
     for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
-        float x(inputData.at(iDatum).first);
-        float deltaX(inputData.at(iDatum+1).first-x);
+        float x(static_cast<float>(inputData.at(iDatum).first));
+        float deltaX(static_cast<float>(inputData.at(iDatum+1).first)-x);
         float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
         accumulationDatum+=densityDatum*(m_useWidths ? deltaX : 1.f);
         data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum, deltaX));
     }
-    float x(inputData.back().first);
+    float x(static_cast<float>(inputData.back().first));
     float deltaX(m_xUpperBound-x);
     float densityDatum(static_cast<float>(inputData.back().second) / normalisation);
     accumulationDatum+=densityDatum*(m_useWidths ? deltaX : 1.f);
@@ -134,14 +134,17 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
         float deltaX(resamplingPoints.at(iSample+1)-xResampled);
         float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
         float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/(m_useWidths ? deltaX : 1.f));
-        resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, cumulativeDatumResampled, deltaX));
+        resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, 
+            densityDatumResampled, cumulativeDatumResampled, deltaX));
         prevCumulativeData = cumulativeDatumResampled;
     }
+
     float xResampled(resamplingPoints.back());
     float deltaX(m_xUpperBound-xResampled);
     float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
     float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/(m_useWidths ? deltaX : 1.f));
-    resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, cumulativeDatumResampled, deltaX));
+    resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, 
+        cumulativeDatumResampled, deltaX));
 
     return resampledProbabilityData;
 }
@@ -161,11 +164,12 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
     float cumulativeProbability(0.f);
     for (size_t iElement = 0; iElement < discreteProbabilityVector.GetSize(); ++iElement)
     {
-        float randomElementIndex(randomisedElements.at(iElement));
+        size_t randomElementIndex(randomisedElements.at(iElement));
         float deltaX(discreteProbabilityVector.GetWidth(randomElementIndex));
         float probabilityDensity(discreteProbabilityVector.GetProbabilityDensity(randomElementIndex));
         cumulativeProbability+=probabilityDensity*(m_useWidths ? deltaX : 1.f);
-        randomisedProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xPos, probabilityDensity, cumulativeProbability, deltaX));
+        randomisedProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xPos, probabilityDensity, 
+            cumulativeProbability, deltaX));
         xPos+=deltaX;
     }
 
