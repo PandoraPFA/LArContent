@@ -91,7 +91,7 @@ void CheatingSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*
         totalTargetWeight += weight;
 
     // Add slices passing cut threshold to map
-    for (int i = 0; i < targetWeights.size(); ++i)
+    for (unsigned int i = 0; i < targetWeights.size(); ++i)
     {
         const float sliceWeight = targetWeights[i] + otherWeights[i];
         const float completeness{totalTargetWeight > std::numeric_limits<float>::epsilon() ? targetWeights[i] / totalTargetWeight : 0.f};
