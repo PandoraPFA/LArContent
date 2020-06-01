@@ -25,12 +25,8 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_downsampleFactor(20),
     m_minSamples(11),
     m_nPermutations(10000),
-    m_localMatchingScoreThreshold(0.99),
+    m_localMatchingScoreThreshold(0.99f),
     m_randomNumberGenerator(m_randomDevice())
-{
-}
-
-TwoViewTransverseTracksAlgorithm::~TwoViewTransverseTracksAlgorithm()
 {
 }
 
