@@ -211,15 +211,21 @@ float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const 
     return normalisation;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<int, float> const&, int const, bool const);
 template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<float, int> const&, float const, bool const);
 template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<float, float> const&, float const, bool const);
 template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<int, int> const&, int const, bool const);
 
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<int, float>) const;
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<float, int>) const;
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<float, float>) const;
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<int, int>) const;
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
+    InputData<int, float>) const;
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
+    InputData<float, int>) const;
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
+    InputData<float, float>) const;
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
+    InputData<int, int>) const;
 
 template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, float>, InputDatum<int, float>);
 template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, int>, InputDatum<float, int>);
