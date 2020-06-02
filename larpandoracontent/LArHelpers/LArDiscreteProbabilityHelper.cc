@@ -23,8 +23,9 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPer
     int nExtreme(0);
     for (unsigned int iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
     {
-        const float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(LArDiscreteProbabilityHelper::MakeRandomisedSample(
-            t1,randomNumberGenerator),LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
+        const float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
+            LArDiscreteProbabilityHelper::MakeRandomisedSample(t1,randomNumberGenerator),
+            LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
 
         if ((rRandomised-rNominal) > std::numeric_limits<float>::epsilon())
             nExtreme++;
