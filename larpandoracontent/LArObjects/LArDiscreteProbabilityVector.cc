@@ -128,7 +128,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
     DiscreteProbabilityData resampledProbabilityData;
 
     float prevCumulativeData(0.f);
-    for (size_t iSample = 0; iSample < resamplingPoints.size()-1; iSample++)
+    for (size_t iSample = 0; iSample < resamplingPoints.size()-1; ++iSample)
     {
         const float xResampled(resamplingPoints.at(iSample));
         const float deltaX(resamplingPoints.at(iSample+1)-xResampled);
