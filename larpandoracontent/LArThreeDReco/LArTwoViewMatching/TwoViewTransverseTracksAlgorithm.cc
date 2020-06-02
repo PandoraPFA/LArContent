@@ -21,7 +21,7 @@ namespace lar_content
 
 TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_nMaxMatrixToolRepeats(1000),
-    m_downsampleFactor(20),
+    m_downsampleFactor(5),
     m_minSamples(11),
     m_nPermutations(10000),
     m_localMatchingScoreThreshold(0.99f),
