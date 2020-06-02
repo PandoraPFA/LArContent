@@ -32,10 +32,12 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
+void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, 
+    const Cluster *const)
 {
     TwoViewTransverseOverlapResult overlapResult;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pCluster1, pCluster2, overlapResult));
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pCluster1, pCluster2, overlapResult));
 
     if (overlapResult.IsInitialized())
         this->GetMatchingControl().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, overlapResult);
@@ -75,7 +77,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     if (m_minSamples > std::min(overlapHits1.size(),overlapHits2.size()))
         return STATUS_CODE_NOT_FOUND;
 
-    unsigned int nSamples(std::max(m_minSamples,static_cast<unsigned int>(std::min(overlapHits1.size(),overlapHits2.size()))/m_downsampleFactor));
+    unsigned int nSamples(std::max(
+        m_minSamples,static_cast<unsigned int>(std::min(overlapHits1.size(),overlapHits2.size()))/m_downsampleFactor));
 
     DiscreteProbabilityVector::InputData<float,float> inputData1;
     for (const pandora::CaloHit *const pCaloHit: overlapHits1)
@@ -90,16 +93,25 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 
     DiscreteProbabilityVector::ResamplingPoints resamplingPointsX;
     for (unsigned int iSample = 0; iSample < nSamples; ++iSample)
-        resamplingPointsX.emplace_back((xOverlapMin + (xOverlapMax - xOverlapMin) * static_cast<float>(iSample+1) / static_cast<float>(nSamples+1)));
+        resamplingPointsX.emplace_back((xOverlapMin + (xOverlapMax - xOverlapMin) * 
+            static_cast<float>(iSample+1) / static_cast<float>(nSamples+1)));
 
     DiscreteProbabilityVector resampledDiscreteProbabilityVector1(discreteProbabilityVector1, resamplingPointsX);
     DiscreteProbabilityVector resampledDiscreteProbabilityVector2(discreteProbabilityVector2, resamplingPointsX);
 
-    float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2));
-    float pvalue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
+    float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
+        resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2));
+
+    float pvalue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
+        resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
+
     float matchingScore(1.f-pvalue);
-    float locallyMatchedFraction(CalculateLocalMatchingFraction(resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2));
-    overlapResult = TwoViewTransverseOverlapResult(matchingScore, resampledDiscreteProbabilityVector1.GetSize(), correlation, locallyMatchedFraction, twoViewXOverlap);
+
+    float locallyMatchedFraction(CalculateLocalMatchingFraction(resampledDiscreteProbabilityVector1, 
+        resampledDiscreteProbabilityVector2));
+
+    overlapResult = TwoViewTransverseOverlapResult(matchingScore, resampledDiscreteProbabilityVector1.GetSize(), 
+        correlation, locallyMatchedFraction, twoViewXOverlap);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -125,7 +137,8 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
         localValues2.emplace_back(discreteProbabilityVector2.GetProbability(iValue));
         if (localValues1.size() == m_minSamples)
         {
-            const float localPValue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(localValues1, localValues2, m_randomNumberGenerator, m_nPermutations));
+            const float localPValue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
+                localValues1, localValues2, m_randomNumberGenerator, m_nPermutations));
 
             if ((1.f-localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
                 nMatchedComparisons++;
