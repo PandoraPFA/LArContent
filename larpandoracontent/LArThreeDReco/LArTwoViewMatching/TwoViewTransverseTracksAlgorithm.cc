@@ -146,7 +146,10 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
         }
     }
 
-    const unsigned int nComparisons(static_cast<unsigned int>(discreteProbabilityVector1.GetSize())-(m_minSamples-1));
+    const int nComparisons(static_cast<int>(discreteProbabilityVector1.GetSize())-(static_cast<int>(m_minSamples)-1));
+    if (1 > nComparisons)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
     return static_cast<float>(nMatchedComparisons)/static_cast<float>(nComparisons);
 }
 
@@ -172,7 +175,6 @@ void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
@@ -180,7 +182,8 @@ StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
         "TrackTools", algorithmToolVector));
 
-    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); 
+        iter != iterEnd; ++iter)
     {
         TransverseMatrixTool *const pTransverseMatrixTool(dynamic_cast<TransverseMatrixTool*>(*iter));
 

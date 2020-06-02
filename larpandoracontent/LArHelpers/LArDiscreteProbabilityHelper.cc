@@ -18,13 +18,14 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPer
     if (1 > nPermutations)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float rNominal(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
+    const float rNominal(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
 
     int nExtreme(0);
     for (unsigned int iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
     {
-        float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(LArDiscreteProbabilityHelper::MakeRandomisedSample(
-            t1,randomNumberGenerator),LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
+        const float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
+            LArDiscreteProbabilityHelper::MakeRandomisedSample(t1,randomNumberGenerator),
+            LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
 
         if ((rRandomised-rNominal) > std::numeric_limits<float>::epsilon())
             nExtreme++;
@@ -39,13 +40,13 @@ template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, 
     const T &t2, const size_t nIntegrationSteps)
 {
-    float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
-    float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
-    float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.f - correlation*correlation)));
-    float tDistCoeff(std::tgamma(0.5f*(dof + 1.f)) / std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
+    const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
+    const float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
+    const float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.f - correlation*correlation)));
+    const float tDistCoeff(std::tgamma(0.5f*(dof + 1.f)) / std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
 
-    float upperLimit(15.f);
-    float dx((upperLimit-tTestStatistic)/static_cast<float>(nIntegrationSteps));
+    const float upperLimit(15.f);
+    const float dx((upperLimit-tTestStatistic)/static_cast<float>(nIntegrationSteps));
     float integral(tDistCoeff*std::pow( 1.f + tTestStatistic*tTestStatistic/dof, -0.5f*(dof + 1.f)) + 
             tDistCoeff*std::pow( 1.f + upperLimit*upperLimit/dof, -0.5f*(dof + 1.f)));
     for (unsigned int iStep = 1; iStep < nIntegrationSteps; iStep++)
@@ -67,8 +68,8 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
     if (2 > LArDiscreteProbabilityHelper::GetSize(t1))
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float mean1(LArDiscreteProbabilityHelper::CalculateMean(t1));
-    float mean2(LArDiscreteProbabilityHelper::CalculateMean(t2));
+    const float mean1(LArDiscreteProbabilityHelper::CalculateMean(t1));
+    const float mean2(LArDiscreteProbabilityHelper::CalculateMean(t2));
 
     float variance1(0.f), variance2(0.f), covariance(0.f);
 
@@ -82,7 +83,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
         covariance += (element1-mean1)*(element2-mean2);
     }
 
-    float sqrtVars(std::sqrt(variance1*variance2));
+    const float sqrtVars(std::sqrt(variance1*variance2));
     if(sqrtVars < std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 

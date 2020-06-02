@@ -229,7 +229,7 @@ private:
      *  @return a bool dictacting swapping the two InputDatums
      */
     template <typename TX, typename TY>
-    static bool SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs);
+    static bool SortInputDataByX(InputDatum<TX, TY> const &lhs, InputDatum<TX, TY> const &rhs);
 
     /**
      *  @brief  Calculate the probability normalisation

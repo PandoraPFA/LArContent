@@ -7,6 +7,7 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
+
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewClearTracksTool.h"
 
 using namespace pandora;
@@ -38,22 +39,22 @@ bool TwoViewClearTracksTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList,
-    bool &particlesMade) const
+void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, 
+    const MatrixType::ElementList &elementList, bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
 
     for (MatrixType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < std::numeric_limits<float>::epsilon())
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < 
+            -1.f*std::numeric_limits<float>::epsilon())
             continue;
-        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < std::numeric_limits<float>::epsilon())
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < 
+            -1.f*std::numeric_limits<float>::epsilon())
             continue;
 
         if (iter->GetOverlapResult().GetLocallyMatchedFraction() - m_minLocallyMatchedFraction < std::numeric_limits<float>::epsilon())
             continue;
-
-        // TODO Add real logic here
 
         ProtoParticle protoParticle;
         protoParticle.m_clusterList.push_back(iter->GetCluster1());
