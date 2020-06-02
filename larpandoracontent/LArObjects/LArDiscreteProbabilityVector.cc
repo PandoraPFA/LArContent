@@ -63,16 +63,16 @@ float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) co
         if (x - m_discreteProbabilityData.at(iDatum).GetX() > std::numeric_limits<float>::epsilon())
             continue;
 
-        float xLow(m_discreteProbabilityData.at(iDatum-1).GetX());
-        float yLow(m_discreteProbabilityData.at(iDatum-1).GetCumulativeDatum());
-        float xHigh(m_discreteProbabilityData.at(iDatum).GetX());
-        float yHigh(m_discreteProbabilityData.at(iDatum).GetCumulativeDatum());
+        const float xLow(m_discreteProbabilityData.at(iDatum-1).GetX());
+        const float yLow(m_discreteProbabilityData.at(iDatum-1).GetCumulativeDatum());
+        const float xHigh(m_discreteProbabilityData.at(iDatum).GetX());
+        const float yHigh(m_discreteProbabilityData.at(iDatum).GetCumulativeDatum());
 
         if (std::fabs(xHigh-xLow) < std::numeric_limits<float>::epsilon())
             throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-        float m((yHigh-yLow)/(xHigh-xLow));
-        float c(yLow-m*xLow);
+        const float m((yHigh-yLow)/(xHigh-xLow));
+        const float c(yLow-m*xLow);
 
         return m*x+c;
     }
@@ -96,21 +96,21 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
     if (inputData.back().first - m_xUpperBound > std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    float normalisation(this->CalculateNormalisation(inputData));
+    const float normalisation(this->CalculateNormalisation(inputData));
     float accumulationDatum(0.f);
 
     DiscreteProbabilityData data;
     for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
-        float x(static_cast<float>(inputData.at(iDatum).first));
-        float deltaX(static_cast<float>(inputData.at(iDatum+1).first)-x);
-        float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
+        const float x(static_cast<float>(inputData.at(iDatum).first));
+        const float deltaX(static_cast<float>(inputData.at(iDatum+1).first)-x);
+        const float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
         accumulationDatum+=densityDatum*(m_useWidths ? deltaX : 1.f);
         data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum, deltaX));
     }
-    float x(static_cast<float>(inputData.back().first));
-    float deltaX(m_xUpperBound-x);
-    float densityDatum(static_cast<float>(inputData.back().second) / normalisation);
+    const float x(static_cast<float>(inputData.back().first));
+    const float deltaX(m_xUpperBound-x);
+    const float densityDatum(static_cast<float>(inputData.back().second) / normalisation);
     accumulationDatum+=densityDatum*(m_useWidths ? deltaX : 1.f);
     data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum, deltaX));
 
@@ -130,19 +130,19 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
     float prevCumulativeData(0.f);
     for (size_t iSample = 0; iSample < resamplingPoints.size()-1; iSample++)
     {
-        float xResampled(resamplingPoints.at(iSample));
-        float deltaX(resamplingPoints.at(iSample+1)-xResampled);
-        float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
-        float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/(m_useWidths ? deltaX : 1.f));
+        const float xResampled(resamplingPoints.at(iSample));
+        const float deltaX(resamplingPoints.at(iSample+1)-xResampled);
+        const float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
+        const float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/(m_useWidths ? deltaX : 1.f));
         resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, 
             densityDatumResampled, cumulativeDatumResampled, deltaX));
         prevCumulativeData = cumulativeDatumResampled;
     }
 
-    float xResampled(resamplingPoints.back());
-    float deltaX(m_xUpperBound-xResampled);
-    float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
-    float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/(m_useWidths ? deltaX : 1.f));
+    const float xResampled(resamplingPoints.back());
+    const float deltaX(m_xUpperBound-xResampled);
+    const float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
+    const float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData)/(m_useWidths ? deltaX : 1.f));
     resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, 
         cumulativeDatumResampled, deltaX));
 
@@ -164,9 +164,9 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
     float cumulativeProbability(0.f);
     for (size_t iElement = 0; iElement < discreteProbabilityVector.GetSize(); ++iElement)
     {
-        size_t randomElementIndex(randomisedElements.at(iElement));
-        float deltaX(discreteProbabilityVector.GetWidth(randomElementIndex));
-        float probabilityDensity(discreteProbabilityVector.GetProbabilityDensity(randomElementIndex));
+        const size_t randomElementIndex(randomisedElements.at(iElement));
+        const float deltaX(discreteProbabilityVector.GetWidth(randomElementIndex));
+        const float probabilityDensity(discreteProbabilityVector.GetProbabilityDensity(randomElementIndex));
         cumulativeProbability+=probabilityDensity*(m_useWidths ? deltaX : 1.f);
         randomisedProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xPos, probabilityDensity, 
             cumulativeProbability, deltaX));
@@ -200,12 +200,12 @@ float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const 
 
     for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
-        float deltaX(static_cast<float>(inputData.at(iDatum+1).first) - static_cast<float>(inputData.at(iDatum).first));
-        float y(static_cast<float>(inputData.at(iDatum).second));
+        const float deltaX(static_cast<float>(inputData.at(iDatum+1).first) - static_cast<float>(inputData.at(iDatum).first));
+        const float y(static_cast<float>(inputData.at(iDatum).second));
         normalisation += y*(m_useWidths ? deltaX : 1.f);
     }
-    float deltaX(m_xUpperBound - static_cast<float>(inputData.back().first));
-    float y(static_cast<float>(inputData.back().second));
+    const float deltaX(m_xUpperBound - static_cast<float>(inputData.back().first));
+    const float y(static_cast<float>(inputData.back().second));
     normalisation += y*(m_useWidths ? deltaX : 1.f);
 
     return normalisation;
