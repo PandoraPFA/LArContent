@@ -172,7 +172,6 @@ void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
