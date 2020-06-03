@@ -24,8 +24,7 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_downsampleFactor(5),
     m_minSamples(11),
     m_nPermutations(10000),
-    m_localMatchingScoreThreshold(0.99f),
-    m_randomNumberGenerator(m_randomDevice())
+    m_localMatchingScoreThreshold(0.99f)
 {
 }
 
@@ -101,13 +100,16 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2));
 
+    std::mt19937 randomNumberGenerator(static_cast<std::mt19937::result_type>(
+                pCluster2->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
+
     const float pvalue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
-        resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
+        resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, randomNumberGenerator, m_nPermutations));
 
     const float matchingScore(1.f-pvalue);
 
     const float locallyMatchedFraction(CalculateLocalMatchingFraction(resampledDiscreteProbabilityVector1, 
-        resampledDiscreteProbabilityVector2));
+        resampledDiscreteProbabilityVector2, randomNumberGenerator));
 
     overlapResult = TwoViewTransverseOverlapResult(matchingScore, resampledDiscreteProbabilityVector1.GetSize(), 
         correlation, locallyMatchedFraction, twoViewXOverlap);
@@ -118,7 +120,7 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const DiscreteProbabilityVector &discreteProbabilityVector1,
-    const DiscreteProbabilityVector &discreteProbabilityVector2)
+    const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator)
 {
     if (discreteProbabilityVector1.GetSize() != discreteProbabilityVector2.GetSize() || 
             0 == discreteProbabilityVector1.GetSize()*discreteProbabilityVector2.GetSize())
@@ -137,7 +139,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
         if (localValues1.size() == m_minSamples)
         {
             const float localPValue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
-                localValues1, localValues2, m_randomNumberGenerator, m_nPermutations));
+                localValues1, localValues2, randomNumberGenerator, m_nPermutations));
 
             if ((1.f-localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
                 nMatchedComparisons++;
