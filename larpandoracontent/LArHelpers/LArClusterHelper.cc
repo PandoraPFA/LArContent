@@ -603,10 +603,8 @@ void LArClusterHelper::GetCoordinateVector(const Cluster *const pCluster, Cartes
 void LArClusterHelper::GetCaloHitList(const Cluster *const pCluster, CaloHitList &caloHitList)
 {
     for (const OrderedCaloHitList::value_type &layerEntry : pCluster->GetOrderedCaloHitList())
-    {
         for (const CaloHit *const pCaloHit : *layerEntry.second)
             caloHitList.push_back(pCaloHit);
-    }
 
     caloHitList.sort(LArClusterHelper::SortHitsByPosition);
 }
