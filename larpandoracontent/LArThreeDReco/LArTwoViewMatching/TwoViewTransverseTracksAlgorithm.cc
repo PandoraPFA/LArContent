@@ -146,7 +146,10 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
         }
     }
 
-    const unsigned int nComparisons(static_cast<unsigned int>(discreteProbabilityVector1.GetSize())-(m_minSamples-1));
+    const int nComparisons(static_cast<int>(discreteProbabilityVector1.GetSize())-(static_cast<int>(m_minSamples)-1));
+    if (1 > nComparisons)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
     return static_cast<float>(nMatchedComparisons)/static_cast<float>(nComparisons);
 }
 
