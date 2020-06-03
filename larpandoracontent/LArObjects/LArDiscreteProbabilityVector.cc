@@ -181,7 +181,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
 template <typename TX, typename TY>
 bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> const &lhs, InputDatum<TX, TY> const &rhs)
 {
-    float deltaX(static_cast<float>(rhs.first) - static_cast<float>(lhs.first));
+    const float deltaX(static_cast<float>(rhs.first) - static_cast<float>(lhs.first));
     if (std::fabs(deltaX) < std::numeric_limits<float>::epsilon())
         return (lhs.second < rhs.second);
 
