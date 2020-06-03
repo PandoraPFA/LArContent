@@ -179,7 +179,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TX, typename TY>
-bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> lhs, InputDatum<TX, TY> rhs)
+bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> const &lhs, InputDatum<TX, TY> const &rhs)
 {
     float deltaX(static_cast<float>(rhs.first) - static_cast<float>(lhs.first));
     if (std::fabs(deltaX) < std::numeric_limits<float>::epsilon())
@@ -227,10 +227,10 @@ template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityV
 template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
     InputData<int, int>) const;
 
-template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, float>, InputDatum<int, float>);
-template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, int>, InputDatum<float, int>);
-template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, float>, InputDatum<float, float>);
-template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, int>, InputDatum<int, int>);
+template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, float> const&, InputDatum<int, float> const&);
+template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, int> const&, InputDatum<float, int> const&);
+template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, float> const&, InputDatum<float, float> const&);
+template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, int> const&, InputDatum<int, int> const&);
 
 template float DiscreteProbabilityVector::CalculateNormalisation(InputData<int, float> const&) const;
 template float DiscreteProbabilityVector::CalculateNormalisation(InputData<float, int> const&) const;
