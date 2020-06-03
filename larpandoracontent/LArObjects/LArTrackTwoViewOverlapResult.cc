@@ -97,7 +97,7 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const unsigned int nSamplingPoints,
-    const float correlationCoefficient, const float locallyMatchedFraction, const TwoViewXOverlap &twoViewXOverlap) :
+        const float correlationCoefficient, const float locallyMatchedFraction, const TwoViewXOverlap &twoViewXOverlap) :
     TrackTwoViewOverlapResult(matchingScore),
     m_nSamplingPoints(nSamplingPoints),
     m_correlationCoefficient(correlationCoefficient),

@@ -14,7 +14,6 @@
 
 #include <vector>
 
-
 namespace lar_content
 {
 
@@ -35,7 +34,6 @@ public:
      *  @param matchingScore
      */
     TrackTwoViewOverlapResult(const float matchingScore);
-
 
     /**
      *  @brief  Copy constructor
@@ -105,7 +103,11 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  twoViewXOverlap
+     *  @param  matchingScore the matching candidate matching score
+     *  @param  nSamplingPoints the number of sampling points used in the matching
+     *  @param  correlationCoefficient the corerlation coefficient for the matching candidate
+     *  @param locallyMatchedFraction the fraction of locally matching regions in the matching candidate
+     *  @param  twoViewXOverlap the description of the geometrical overlap for the matching candidate
      */
     TwoViewTransverseOverlapResult(const float matchingScore, const unsigned int nSamplingPoints, 
         const float correlationCoefficient, const float locallyMatchedFraction, const TwoViewXOverlap &twoViewXOverlap);
@@ -113,7 +115,7 @@ public:
     /**
      *  @brief  Copy constructor
      *
-     *  @param  rhs
+     *  @param  rhs the rhs
      */
     TwoViewTransverseOverlapResult(const TwoViewTransverseOverlapResult &rhs);
 
