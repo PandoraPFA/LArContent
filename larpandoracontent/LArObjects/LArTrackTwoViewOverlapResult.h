@@ -35,7 +35,6 @@ public:
      */
     TrackTwoViewOverlapResult(const float matchingScore);
 
-
     /**
      *  @brief  Copy constructor
      *
