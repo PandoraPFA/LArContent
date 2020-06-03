@@ -200,13 +200,12 @@ float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const 
 
     for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
-        const float deltaX(static_cast<float>(inputData.at(iDatum+1).first) - static_cast<float>(inputData.at(iDatum).first));
         const float y(static_cast<float>(inputData.at(iDatum).second));
-        normalisation += y*(m_useWidths ? deltaX : 1.f);
+        normalisation += y*(m_useWidths ? 
+            static_cast<float>(inputData.at(iDatum+1).first) - static_cast<float>(inputData.at(iDatum).first) : 1.f);
     }
-    const float deltaX(m_xUpperBound - static_cast<float>(inputData.back().first));
     const float y(static_cast<float>(inputData.back().second));
-    normalisation += y*(m_useWidths ? deltaX : 1.f);
+    normalisation += y*(m_useWidths ? m_xUpperBound - static_cast<float>(inputData.back().first) : 1.f);
 
     return normalisation;
 }
