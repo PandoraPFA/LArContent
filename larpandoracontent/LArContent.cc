@@ -13,6 +13,7 @@
 #include "Pandora/Pandora.h"
 
 #include "larpandoracontent/LArCheating/CheatingBeamParticleIdTool.h"
+#include "larpandoracontent/LArCheating/CheatingBeamParticleSliceSelectionTool.h"
 #include "larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
@@ -22,6 +23,7 @@
 #include "larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoIdTool.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoSliceSelectionTool.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayRemovalAlgorithm.h"
@@ -292,9 +294,11 @@
     d("LArTransverseMatrixVisualization",       TransverseMatrixVisualizationTool)                                              \
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArCheatingBeamParticleId",              CheatingBeamParticleIdTool)                                                     \
+    d("LArCheatingBeamParticleSliceSelection",  CheatingBeamParticleSliceSelectionTool)                                         \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
     d("LArCheatingCosmicRayTagging",            CheatingCosmicRayTaggingTool)                                                   \
     d("LArCheatingNeutrinoId",                  CheatingNeutrinoIdTool)                                                         \
+    d("LArCheatingNeutrinoSliceSelection",      CheatingNeutrinoSliceSelectionTool)                                             \
     d("LArBranchAssociatedPfos",                BranchAssociatedPfosTool)                                                       \
     d("LArEndAssociatedPfos",                   EndAssociatedPfosTool)                                                          \
     d("LArEventSlicing",                        EventSlicingTool)                                                               \
