@@ -78,8 +78,6 @@ float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) co
     }
 
     throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
-
-    return 0.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

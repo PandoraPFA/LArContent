@@ -72,7 +72,7 @@ public:
 
 private:
     /**
-     *  @brief  Creates a randomised copy of a dataset 
+     *  @brief  Make a randomised copy of a dataset
      *
      *  @param  t the dataset to be shuffled
      *  @param  randomNumberGenerator the random number generator
@@ -83,18 +83,7 @@ private:
     static T MakeRandomisedSample(const T &t, std::mt19937 &randomNumberGenerator);
 
     /**
-     *  @brief  An implementation for making a randomised copy of a dataset
-     *
-     *  @param  t the dataset to be shuffled
-     *  @param  randomNumberGenerator the random number generator
-     *
-     *  @return the reshuffled dataset
-     */
-    template <typename T>
-    static T MakeRandomisedSampleImpl(const T &t, std::mt19937 &randomNumberGenerator);
-
-    /**
-     *  @brief  An implementation for making a randomised copy of dataset (dataset is an std::vector)
+     *  @brief  Make a randomised copy of dataset (dataset is an std::vector)
      *
      *  @param  t the std::vector-based dataset to be shuffled
      *  @param  randomNumberGenerator the random number generator
@@ -102,10 +91,10 @@ private:
      *  @return the reshuffled std::vector
      */
     template <typename T>
-    static std::vector<T> MakeRandomisedSampleImpl(const std::vector<T> &t, std::mt19937 &randomNumberGenerator);
+    static std::vector<T> MakeRandomisedSample(const std::vector<T> &t, std::mt19937 &randomNumberGenerator);
 
     /**
-     *  @brief  Gets the size of a dataset
+     *  @brief  Get the size the size of a dataset
      *
      *  @param  t the dataset
      *
@@ -115,24 +104,14 @@ private:
     static size_t GetSize(const T &t);
 
     /**
-     *  @brief  An implementation of a getter for the size of a dataset
-     *
-     *  @param  t the dataset
-     *
-     *  @return the dataset size
-     */
-    template <typename T>
-    static size_t GetSizeImpl(const T &t);
-
-    /**
-     *  @brief  An implementation of a getter for the size of a dataset (dataset is an std::vector)
+     *  @brief  Get the size of a dataset (dataset is an std::vector)
      *
      *  @param  t the std::vector dataset
      *
      *  @return the std::vector-based dataset size
      */
     template <typename T>
-    static size_t GetSizeImpl(const std::vector<T> &t);
+    static size_t GetSize(const std::vector<T> &t);
 
     /**
      *  @brief  Get an element in a dataset 
@@ -146,18 +125,7 @@ private:
     static float GetElement(const T &t, const size_t index);
 
     /**
-     *  @brief  An implementation of a getter for an element in a dataset 
-     *
-     *  @param  t the dataset
-     *  @param  index the index of the element
-     *
-     *  @return the dataset element
-     */
-    template <typename T>
-    static float GetElementImpl(const T &t, const size_t index);
-
-    /**
-     *  @brief  An implementation of a getter for an element in a dataset (dataset is an std::vector)
+     *  @brief  Get an element in a dataset (dataset is an std::vector)
      *
      *  @param  t the std::vector dataset
      *  @param  index the index of the element
@@ -165,22 +133,13 @@ private:
      *  @return the std::vector-based dataset element
      */
     template <typename T>
-    static float GetElementImpl(const std::vector<T> &t, const size_t index);
+    static float GetElement(const std::vector<T> &t, const size_t index);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-
-template <typename T>
-inline T LArDiscreteProbabilityHelper::MakeRandomisedSample(const T &t, std::mt19937 &randomNumberGenerator)
-{
-    return LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(t, randomNumberGenerator);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 template <>
-inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(const DiscreteProbabilityVector &t, 
+inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSample(const DiscreteProbabilityVector &t, 
     std::mt19937 &randomNumberGenerator)
 {
     return DiscreteProbabilityVector(t,randomNumberGenerator);
@@ -189,7 +148,7 @@ inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSam
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(const std::vector<T> &t, std::mt19937 &randomNumberGenerator)
+inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSample(const std::vector<T> &t, std::mt19937 &randomNumberGenerator)
 {
     std::vector<T> randomisedVector(t);
     std::shuffle(randomisedVector.begin(), randomisedVector.end(), randomNumberGenerator);
@@ -199,16 +158,8 @@ inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSampleImpl(con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-inline size_t LArDiscreteProbabilityHelper::GetSize(const T &t)
-{
-    return LArDiscreteProbabilityHelper::GetSizeImpl(t);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 template <>
-inline size_t LArDiscreteProbabilityHelper::GetSizeImpl(const DiscreteProbabilityVector& t)
+inline size_t LArDiscreteProbabilityHelper::GetSize(const DiscreteProbabilityVector& t)
 {
     return t.GetSize();
 }
@@ -216,23 +167,15 @@ inline size_t LArDiscreteProbabilityHelper::GetSizeImpl(const DiscreteProbabilit
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline size_t LArDiscreteProbabilityHelper::GetSizeImpl(const std::vector<T> &t)
+inline size_t LArDiscreteProbabilityHelper::GetSize(const std::vector<T> &t)
 {
     return t.size();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-inline float LArDiscreteProbabilityHelper::GetElement(const T &t, const size_t index)
-{
-    return LArDiscreteProbabilityHelper::GetElementImpl(t, index);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 template <>
-inline float LArDiscreteProbabilityHelper::GetElementImpl(const DiscreteProbabilityVector& t, const size_t index)
+inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityVector& t, const size_t index)
 {
     return static_cast<float>(t.GetProbability(index));
 }
@@ -240,7 +183,7 @@ inline float LArDiscreteProbabilityHelper::GetElementImpl(const DiscreteProbabil
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-inline float LArDiscreteProbabilityHelper::GetElementImpl(const std::vector<T> &t, const size_t index)
+inline float LArDiscreteProbabilityHelper::GetElement(const std::vector<T> &t, const size_t index)
 {
     return static_cast<float>(t.at(index));
 }
