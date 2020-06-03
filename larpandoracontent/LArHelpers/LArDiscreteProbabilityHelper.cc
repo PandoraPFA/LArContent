@@ -100,9 +100,8 @@ float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
 
     float mean(0.f);
     for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t); ++iElement)
-    {
         mean+=LArDiscreteProbabilityHelper::GetElement(t,iElement);
-    }
+
     mean /= static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t));
 
     return mean;
