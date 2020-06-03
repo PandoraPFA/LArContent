@@ -16,7 +16,7 @@ namespace lar_content
 {
 
 template <typename TX, typename TY>
-DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound, 
+DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<TX, TY> &inputData, const TX xUpperBound, 
     const bool useWidths) :
     m_xUpperBound(static_cast<float>(xUpperBound)),
     m_useWidths(useWidths),
@@ -27,7 +27,7 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<TX, TY> const &in
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector,
+DiscreteProbabilityVector::DiscreteProbabilityVector(const DiscreteProbabilityVector &discreteProbabilityVector,
     std::mt19937 &randomNumberGenerator) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_useWidths(discreteProbabilityVector.m_useWidths),
@@ -38,8 +38,8 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-DiscreteProbabilityVector::DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector,
-    ResamplingPoints const &resamplingPoints) :
+DiscreteProbabilityVector::DiscreteProbabilityVector(const DiscreteProbabilityVector &discreteProbabilityVector,
+    const ResamplingPoints &resamplingPoints) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_useWidths(discreteProbabilityVector.m_useWidths),
     m_discreteProbabilityData(this->ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
@@ -120,7 +120,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::ResampleDiscreteProbabilityData(
-    DiscreteProbabilityVector const & discreteProbabilityVector, ResamplingPoints const & resamplingPoints) const
+    const DiscreteProbabilityVector &discreteProbabilityVector, const ResamplingPoints &resamplingPoints) const
 {
     if (2 > resamplingPoints.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -152,7 +152,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::RandomiseDiscreteProbabilityData(
-   DiscreteProbabilityVector const &discreteProbabilityVector, std::mt19937 &randomNumberGenerator) const
+   const DiscreteProbabilityVector &discreteProbabilityVector, std::mt19937 &randomNumberGenerator) const
 {
     DiscreteProbabilityData randomisedProbabilityData;
 
@@ -179,7 +179,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TX, typename TY>
-bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> const &lhs, InputDatum<TX, TY> const &rhs)
+bool DiscreteProbabilityVector::SortInputDataByX(const InputDatum<TX, TY> &lhs, const InputDatum<TX, TY> &rhs)
 {
     const float deltaX(static_cast<float>(rhs.first) - static_cast<float>(lhs.first));
     if (std::fabs(deltaX) < std::numeric_limits<float>::epsilon())
@@ -191,7 +191,7 @@ bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<TX, TY> const &lhs, 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename TX, typename TY>
-float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const &inputData) const
+float DiscreteProbabilityVector::CalculateNormalisation(const InputData<TX, TY> &inputData) const
 {
     if (2 > inputData.size())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
@@ -212,10 +212,10 @@ float DiscreteProbabilityVector::CalculateNormalisation(InputData<TX, TY> const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<int, float> const&, int const, bool const);
-template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<float, int> const&, float const, bool const);
-template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<float, float> const&, float const, bool const);
-template DiscreteProbabilityVector::DiscreteProbabilityVector(InputData<int, int> const&, int const, bool const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<int, float> &, int const, bool const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<float, int> &, float const, bool const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<float, float> &, float const, bool const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<int, int> &, int const, bool const);
 
 template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
     InputData<int, float>) const;
@@ -226,14 +226,14 @@ template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityV
 template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
     InputData<int, int>) const;
 
-template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, float> const&, InputDatum<int, float> const&);
-template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, int> const&, InputDatum<float, int> const&);
-template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<float, float> const&, InputDatum<float, float> const&);
-template bool DiscreteProbabilityVector::SortInputDataByX(InputDatum<int, int> const&, InputDatum<int, int> const&);
+template bool DiscreteProbabilityVector::SortInputDataByX(const InputDatum<int, float> &, const InputDatum<int, float> &);
+template bool DiscreteProbabilityVector::SortInputDataByX(const InputDatum<float, int> &, const InputDatum<float, int> &);
+template bool DiscreteProbabilityVector::SortInputDataByX(const InputDatum<float, float> &, const InputDatum<float, float> &);
+template bool DiscreteProbabilityVector::SortInputDataByX(const InputDatum<int, int> &, const InputDatum<int, int> &);
 
-template float DiscreteProbabilityVector::CalculateNormalisation(InputData<int, float> const&) const;
-template float DiscreteProbabilityVector::CalculateNormalisation(InputData<float, int> const&) const;
-template float DiscreteProbabilityVector::CalculateNormalisation(InputData<float, float> const&) const;
-template float DiscreteProbabilityVector::CalculateNormalisation(InputData<int, int> const&) const;
+template float DiscreteProbabilityVector::CalculateNormalisation(const InputData<int, float> &) const;
+template float DiscreteProbabilityVector::CalculateNormalisation(const InputData<float, int> &) const;
+template float DiscreteProbabilityVector::CalculateNormalisation(const InputData<float, float> &) const;
+template float DiscreteProbabilityVector::CalculateNormalisation(const InputData<int, int> &) const;
 
 } // namespace lar_content
