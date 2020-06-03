@@ -100,7 +100,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2));
 
-    std::mt19937 randomNumberGenerator(pCluster2->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size());
+    std::mt19937 randomNumberGenerator(static_cast<std::mt19937::result_type>(
+                pCluster2->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
 
     const float pvalue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, randomNumberGenerator, m_nPermutations));
