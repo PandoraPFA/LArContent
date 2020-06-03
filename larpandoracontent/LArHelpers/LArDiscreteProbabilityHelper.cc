@@ -75,12 +75,12 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
 
     for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); ++iElement)
     {
-        float element1(LArDiscreteProbabilityHelper::GetElement(t1,iElement));
-        float element2(LArDiscreteProbabilityHelper::GetElement(t2,iElement));
+        const float diff1(LArDiscreteProbabilityHelper::GetElement(t1,iElement) - mean1);
+        const float diff2(LArDiscreteProbabilityHelper::GetElement(t2,iElement) - mean2);
 
-        variance1 += (element1-mean1)*(element1-mean1);
-        variance2 += (element2-mean2)*(element2-mean2);
-        covariance += (element1-mean1)*(element2-mean2);
+        variance1 += diff1*diff1;
+        variance2 += diff2*diff2;
+        covariance += diff1*diff2;
     }
 
     const float sqrtVars(std::sqrt(variance1*variance2));
