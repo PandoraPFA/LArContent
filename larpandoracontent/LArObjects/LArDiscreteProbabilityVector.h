@@ -41,7 +41,7 @@ public:
      *  @param  useWidths bool controlling whether the bin widths are used in calculations
      */
     template <typename TX, typename TY>
-    DiscreteProbabilityVector(InputData<TX, TY> const &inputData, const TX xUpperBound, const bool useWidths);
+    DiscreteProbabilityVector(const InputData<TX, TY> &inputData, const TX xUpperBound, const bool useWidths);
 
     /**
      *  @brief  Constructor
@@ -49,7 +49,7 @@ public:
      *  @param  discreteProbabilityVector a discrete probability vector to resample from
      *  @param  resamplingPoints the points to resample the discrete probability vector with 
      */
-    DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, ResamplingPoints const &resamplingPoints);
+    DiscreteProbabilityVector(const DiscreteProbabilityVector &discreteProbabilityVector, const ResamplingPoints &resamplingPoints);
 
     /**
      *  @brief  Constructor
@@ -57,7 +57,7 @@ public:
      *  @param  discreteProbabilityVector a discrete probability vector to randomly rearrange
      *  @param  randomNumberGenerator the random number generator for the random reshuffling
      */
-    DiscreteProbabilityVector(DiscreteProbabilityVector const &discreteProbabilityVector, std::mt19937 &randomNumberGenerator);
+    DiscreteProbabilityVector(const DiscreteProbabilityVector &discreteProbabilityVector, std::mt19937 &randomNumberGenerator);
 
     /**
      *  @brief  Evaluate the cumulative probability at arbitrary x
@@ -205,8 +205,8 @@ private:
      *
      *  @return a resampled probability data vector
      */
-    DiscreteProbabilityData ResampleDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, 
-        ResamplingPoints const &resamplingPoints) const;
+    DiscreteProbabilityData ResampleDiscreteProbabilityData(const DiscreteProbabilityVector &discreteProbabilityVector, 
+        const ResamplingPoints &resamplingPoints) const;
 
     /**
      *  @brief  Get a randomised probability data vector in which the x values are unchanged, the probability density is 
@@ -217,7 +217,7 @@ private:
      *
      *  @return a resampled probability data vector
      */
-    DiscreteProbabilityData RandomiseDiscreteProbabilityData(DiscreteProbabilityVector const &discreteProbabilityVector, 
+    DiscreteProbabilityData RandomiseDiscreteProbabilityData(const DiscreteProbabilityVector &discreteProbabilityVector, 
         std::mt19937 &randomNumberGenerator) const;
 
     /**
@@ -229,7 +229,7 @@ private:
      *  @return a bool dictacting swapping the two InputDatums
      */
     template <typename TX, typename TY>
-    static bool SortInputDataByX(InputDatum<TX, TY> const &lhs, InputDatum<TX, TY> const &rhs);
+    static bool SortInputDataByX(const InputDatum<TX, TY> &lhs, const InputDatum<TX, TY> &rhs);
 
     /**
      *  @brief  Calculate the probability normalisation
@@ -239,7 +239,7 @@ private:
      *  @return the probability normalisation
      */
     template <typename TX, typename TY>
-    float CalculateNormalisation(InputData<TX, TY> const &inputData) const;
+    float CalculateNormalisation(const InputData<TX, TY> &inputData) const;
 
     /**
      *  @brief  Verify the integrity of the complete probability vector

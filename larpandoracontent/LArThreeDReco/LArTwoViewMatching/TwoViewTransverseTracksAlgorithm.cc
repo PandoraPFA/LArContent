@@ -182,8 +182,7 @@ StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
         "TrackTools", algorithmToolVector));
 
-    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); 
-        iter != iterEnd; ++iter)
+    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
         TransverseMatrixTool *const pTransverseMatrixTool(dynamic_cast<TransverseMatrixTool*>(*iter));
 

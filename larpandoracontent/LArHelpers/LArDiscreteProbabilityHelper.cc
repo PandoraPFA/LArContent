@@ -43,13 +43,13 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
     const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
     const float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
     const float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.f - correlation*correlation)));
-    const float tDistCoeff(std::tgamma(0.5f*(dof + 1.f)) / std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
+    const float tDistCoeff(std::tgamma(0.5f*(dof + 1.f))/std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
 
     const float upperLimit(15.f);
-    const float dx((upperLimit-tTestStatistic)/static_cast<float>(nIntegrationSteps));
-    float integral(tDistCoeff*std::pow( 1.f + tTestStatistic*tTestStatistic/dof, -0.5f*(dof + 1.f)) + 
-            tDistCoeff*std::pow( 1.f + upperLimit*upperLimit/dof, -0.5f*(dof + 1.f)));
-    for (unsigned int iStep = 1; iStep < nIntegrationSteps; iStep++)
+    const float dx((upperLimit - tTestStatistic)/static_cast<float>(nIntegrationSteps));
+    float integral(tDistCoeff*std::pow(1.f + tTestStatistic*tTestStatistic/dof, -0.5f*(dof + 1.f)) + 
+            tDistCoeff*std::pow(1.f + upperLimit*upperLimit/dof, -0.5f*(dof + 1.f)));
+    for (unsigned int iStep = 1; iStep < nIntegrationSteps; ++iStep)
         integral+=2.f*tDistCoeff*std::pow( 
             1.f + (tTestStatistic + static_cast<float>(iStep)*dx)*(tTestStatistic + static_cast<float>(iStep)*dx)/dof, -0.5f*(dof + 1.f));
     integral *= dx/2.f;
@@ -73,14 +73,14 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
 
     float variance1(0.f), variance2(0.f), covariance(0.f);
 
-    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); iElement++)
+    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); ++iElement)
     {
-        float element1(LArDiscreteProbabilityHelper::GetElement(t1,iElement));
-        float element2(LArDiscreteProbabilityHelper::GetElement(t2,iElement));
+        const float diff1(LArDiscreteProbabilityHelper::GetElement(t1,iElement) - mean1);
+        const float diff2(LArDiscreteProbabilityHelper::GetElement(t2,iElement) - mean2);
 
-        variance1 += (element1-mean1)*(element1-mean1);
-        variance2 += (element2-mean2)*(element2-mean2);
-        covariance += (element1-mean1)*(element2-mean2);
+        variance1 += diff1*diff1;
+        variance2 += diff2*diff2;
+        covariance += diff1*diff2;
     }
 
     const float sqrtVars(std::sqrt(variance1*variance2));
@@ -100,9 +100,8 @@ float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
 
     float mean(0.f);
     for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t); ++iElement)
-    {
         mean+=LArDiscreteProbabilityHelper::GetElement(t,iElement);
-    }
+
     mean /= static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t));
 
     return mean;
