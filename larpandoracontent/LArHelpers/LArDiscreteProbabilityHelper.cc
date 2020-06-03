@@ -73,7 +73,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
 
     float variance1(0.f), variance2(0.f), covariance(0.f);
 
-    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); iElement++)
+    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); ++iElement)
     {
         float element1(LArDiscreteProbabilityHelper::GetElement(t1,iElement));
         float element2(LArDiscreteProbabilityHelper::GetElement(t2,iElement));
