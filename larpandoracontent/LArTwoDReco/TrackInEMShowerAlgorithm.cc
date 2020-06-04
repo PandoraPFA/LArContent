@@ -455,14 +455,6 @@ void TrackInEMShowerAlgorithm::RefineTracks(ClusterAssociation &clusterAssociati
 const Cluster* TrackInEMShowerAlgorithm::RefineTrack(const Cluster *const pCluster, const CartesianVector &splitPosition, TwoDSlidingFitResultMap &microFitResultMap,
     TwoDSlidingFitResultMap &macroFitResultMap, const bool isUpstream,  ClusterVector &clusterVector, CaloHitVector &extrapolatedCaloHitVector) const
 {
-    // Fragmentation initialisation
-    std::string originalListName, fragmentListName;
-    const ClusterList originalClusterList(1, pCluster);
-    PandoraContentApi::Cluster::Parameters mainTrackParameters, belowTrackParameters, aboveTrackParameters;
-    const Cluster *pAboveTrackCluster(nullptr), *pMainTrackCluster(nullptr), *pBelowTrackCluster(nullptr);
-
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, originalClusterList, originalListName, fragmentListName));
-
     // Cluster fit details
     const TwoDSlidingFitResult microFitResult(microFitResultMap.at(pCluster));
     const TwoDSlidingFitResult macroFitResult(macroFitResultMap.at(pCluster));
@@ -474,6 +466,9 @@ const Cluster* TrackInEMShowerAlgorithm::RefineTrack(const Cluster *const pClust
     microFitResult.GetLocalPosition(splitPosition, rL, rT);
 
     // Categorise calo hits
+    PandoraContentApi::Cluster::Parameters mainTrackParameters;
+    CaloHitList caloHitsBelowTrack, caloHitsAboveTrack;
+
     OrderedCaloHitList orderedCaloHitList(pCluster->GetOrderedCaloHitList());
     for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
     {
@@ -490,7 +485,7 @@ const Cluster* TrackInEMShowerAlgorithm::RefineTrack(const Cluster *const pClust
                 const float gradient(averageDirection.GetZ()/averageDirection.GetX());
                 const float intercept(splitPosition.GetZ() - (gradient * splitPosition.GetX()));
                 
-                (hitPosition.GetZ() > ((gradient * hitPosition.GetX()) + intercept)) ? aboveTrackParameters.m_caloHitList.push_back(pCaloHit) : belowTrackParameters.m_caloHitList.push_back(pCaloHit);
+                (hitPosition.GetZ() > ((gradient * hitPosition.GetX()) + intercept)) ? caloHitsAboveTrack.push_back(pCaloHit) : caloHitsBelowTrack.push_back(pCaloHit);
             }
             else
             {
@@ -500,10 +495,20 @@ const Cluster* TrackInEMShowerAlgorithm::RefineTrack(const Cluster *const pClust
             }
         }
     }
+    // Fragmentation initialisation
+    std::string originalListName, fragmentListName;
+    const ClusterList originalClusterList(1, pCluster);    
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, originalClusterList, originalListName, fragmentListName));
 
-    this->UpdateForClusterCreation(pAboveTrackCluster, aboveTrackParameters, clusterVector);
-    this->UpdateForClusterCreation(pMainTrackCluster, mainTrackParameters, clusterVector);
-    this->UpdateForClusterCreation(pBelowTrackCluster, belowTrackParameters, clusterVector);
+    // CREATE MAIN TRACK CLUSTER
+    const Cluster *pMainTrackCluster(nullptr);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, mainTrackParameters, pMainTrackCluster));
+    ClusterList mainTrackClusterList({pMainTrackCluster});
+    this->SelectCleanClusters(&mainTrackClusterList, clusterVector);
+
+    // CREATE OTHER CLUSTERS
+    this->CreateClusters(caloHitsAboveTrack, clusterVector);
+    this->CreateClusters(caloHitsBelowTrack, clusterVector);
 
     //UPDATE FOR CLUSTER DELETION
     // Remove from CV as clusters will be deleted
@@ -515,8 +520,6 @@ const Cluster* TrackInEMShowerAlgorithm::RefineTrack(const Cluster *const pClust
 
     // End fragmentation process
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, fragmentListName, originalListName));
-
-    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
     
     return pMainTrackCluster;
     
@@ -575,15 +578,55 @@ void TrackInEMShowerAlgorithm::AddHitsToCluster(const ClusterAssociation &cluste
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 
-void TrackInEMShowerAlgorithm::UpdateForClusterCreation(const Cluster *&pCluster, PandoraContentApi::Cluster::Parameters &clusterParameters, ClusterVector &clusterVector) const
+void TrackInEMShowerAlgorithm::CreateClusters(const CaloHitList &caloHitList, ClusterVector &clusterVector) const
 {
-    if (clusterParameters.m_caloHitList.empty())
+    if (caloHitList.empty())
         return;
 
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParameters, pCluster));
+    const float m_maxDistanceFromCluster(3);
     
-    ClusterList newCluster({pCluster});
-    this->SelectCleanClusters(&newCluster, clusterVector);
+    ClusterList createdClusters;
+
+    const Cluster *pCluster(nullptr);
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        if (createdClusters.empty())
+        {
+            PandoraContentApi::Cluster::Parameters parameters;
+            parameters.m_caloHitList.push_back(pCaloHit);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
+            createdClusters.push_back(pCluster);
+        }
+        else
+        {
+            const Cluster *pClosestCluster(nullptr);
+            float closestDistance(std::numeric_limits<float>::max());
+
+            for (const Cluster *const pCreatedCluster : createdClusters)
+            {
+                const float separationDistance(LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), pCreatedCluster));
+                if ((separationDistance < closestDistance) && (separationDistance < m_maxDistanceFromCluster))
+                {
+                    closestDistance = separationDistance;
+                    pClosestCluster = pCreatedCluster;
+                }
+            }
+
+            if (pClosestCluster)
+            {
+                PandoraContentApi::AddToCluster(*this, pClosestCluster, pCaloHit);
+            }
+            else
+            {
+                PandoraContentApi::Cluster::Parameters parameters;
+                parameters.m_caloHitList.push_back(pCaloHit);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pCluster));
+                createdClusters.push_back(pCluster);
+            }
+        }
+    }
+
+    this->SelectCleanClusters(&createdClusters, clusterVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
