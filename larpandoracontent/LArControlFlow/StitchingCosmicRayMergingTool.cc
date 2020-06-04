@@ -34,25 +34,8 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_relaxTransverseDisplacement(2.5f),
     m_minNCaloHits3D(0),
     m_maxX0FractionalDeviation(0.3f),
-    m_boundaryToleranceWidth(10.f),
-    m_applyImpactCut(true),
-    m_writeToTree(false),
-    m_fileName("impactFailures.root"),
-    m_treeName("impactFailures")
+    m_boundaryToleranceWidth(10.f)
 {
-}
-
-StitchingCosmicRayMergingTool::~StitchingCosmicRayMergingTool() 
-{
-    if(m_writeToTree) {
-        try {
-            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName, m_fileName, "UPDATE"));
-            std::cout << "TREE SAVED" << std::endl;
-        }
-        catch (const StatusCodeException &) {
-            std::cout << "UNABLE TO WRITE TREE" << std::endl;
-        }
-    }
 }
 
 void StitchingCosmicRayMergingTool::Run(const MasterAlgorithm *const pAlgorithm, const PfoList *const pMultiPfoList, PfoToLArTPCMap &pfoToLArTPCMap, PfoToFloatMap &stitchedPfosToX0Map)
@@ -272,21 +255,7 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
     const bool isInGap3D_1(LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex1.GetPosition(),  TPC_VIEW_W, 0.f));
     const bool isInGap3D_2(LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex2.GetPosition(),  TPC_VIEW_W, 0.f));
 
-    ////////////////////////////
-    /*
-    const CartesianVector position1(pointingVertex1.GetPosition()), position2(pointingVertex2.GetPosition());
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position1, "POSITION 1", BLUE, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position2, "POSITION 2", RED, 2);
-    PfoList thePfo1(1, pPfo1);
-    PfoList thePfo2(1, pPfo2);
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &thePfo1, "PFO1", BLUE);
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &thePfo2, "PFO2", RED);
-    std::cout << "isInGap3D_1" << isInGap3D_1 << std::endl;
-    std::cout << "isInGap3D_2" << isInGap3D_2 << std::endl;
-    */
-    ////////////////////////////
-    
-    if ((!isInGap3D_1 || !isInGap3D_2) || m_applyImpactCut)
+    if (!isInGap3D_1 || !isInGap3D_2)
     {
         // Selection cuts on longitudinal impact parameters
         const float minL(-1.f);
@@ -297,18 +266,6 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
         const float maxL1(maxLongitudinalDisplacementX / dXdL1);
         const float maxL2(maxLongitudinalDisplacementX / dXdL2);
 
-        /*
-        std::cout << "minL: " << minL << std::endl;
-        std::cout << "maxL1: " << maxL1 << std::endl;
-        std::cout << "maxL2: " << maxL2 << std::endl;
-        std::cout << "rL1: " << rL1 << std::endl;
-        std::cout << "rL2: " << rL2 << std::endl;
-        std::cout << "rT1: " << rT1 << std::endl;
-        std::cout << "rT2: " << rT2 << std::endl;
-        
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        */
-        
         if (rL1 < minL || rL1 > maxL1 || rL2 < minL || rL2 > maxL2)
             return;
 
@@ -599,7 +556,7 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
             {
                 continue;
             }
-        }    
+        }
 
         // ATTN: shift the pfos one at a time
         PfoSet shiftedPfos;
@@ -615,98 +572,6 @@ void StitchingCosmicRayMergingTool::StitchPfos(const MasterAlgorithm *const pAlg
 
                 if (!LArStitchingHelper::CanTPCsBeStitched(*pLArTPCI, *pLArTPCJ))
                     continue;
-
-                //////////////////////////////
-                if (m_writeToTree)
-                {
-                // THIS IS TO TEST THE IMPACT PARAMETERS
-                
-                // get stitching vertices for the pfos
-                const PfoToPointingVertexMatrix::const_iterator pfoToPointingVertexMatrixIterI(pfoToPointingVertexMatrix.find(pPfoI));
-                const LArPointingCluster::Vertex stitchingVertexI(pfoToPointingVertexMatrixIterI->second.at(pPfoJ));
-                const PfoToPointingVertexMatrix::const_iterator pfoToPointingVertexMatrixIterJ(pfoToPointingVertexMatrix.find(pPfoJ));
-                const LArPointingCluster::Vertex stitchingVertexJ(pfoToPointingVertexMatrixIterJ->second.at(pPfoI));
-
-                // impact parameters
-                float rTI(0.f), rLI(0.f), rTJ(0.f), rLJ(0.f);
-
-                try
-                { 
-                    if (m_useXcoordinate)
-                    {
-                        LArPointingClusterHelper::GetImpactParameters(stitchingVertexI, stitchingVertexJ, rLI, rTI);
-                        LArPointingClusterHelper::GetImpactParameters(stitchingVertexJ, stitchingVertexI, rLJ, rTJ);
-                    }
-                    else
-                    {
-                        LArPointingClusterHelper::GetImpactParametersInYZ(stitchingVertexI, stitchingVertexJ, rLI, rTI);
-                        LArPointingClusterHelper::GetImpactParametersInYZ(stitchingVertexJ, stitchingVertexI, rLJ, rTJ);
-                    }
-                }
-                catch (const pandora::StatusCodeException &)
-                {
-                    return;
-                }
-
-                // To skip impact parameters
-                const bool isInGap3D_1(LArGeometryHelper::IsInGap(this->GetPandora(), stitchingVertexI.GetPosition(),  TPC_VIEW_W, 0.f));
-                const bool isInGap3D_2(LArGeometryHelper::IsInGap(this->GetPandora(), stitchingVertexJ.GetPosition(),  TPC_VIEW_W, 0.f));
-
-                if (isInGap3D_1 && isInGap3D_2)
-                {
-                    // Selection cuts on longitudinal impact parameters
-                    /*
-                    std::cout << "minL: " << minL << std::endl;
-                    std::cout << "rLI: " << rLI << std::endl;
-                    std::cout << "rLJ: " << rLJ << std::endl;
-                    std::cout << "rTI: " << rTI << std::endl;
-                    std::cout << "rTJ: " << rTJ << std::endl;
-
-                    std::cout << "x0: " << x0 << std::endl;
-                    */
-
-                    if (rLI < (-1.f))
-                    {
-                        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "rL", rLI));
-                        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "rT", std::numeric_limits<float>::max()));
-                        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "x0", x0));
-                        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName));
-                    }
-                            
-                    if (rLJ < (-1.f))
-                    {
-                        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "rL", rLJ));
-                        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "rT", std::numeric_limits<float>::max()));
-                        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "x0", x0));
-                        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName));
-                    }
-
-                    // Selection cuts on transverse impact parameters
-                    const float cosRelativeAngle(-stitchingVertexI.GetDirection().GetDotProduct(stitchingVertexJ.GetDirection()));
-                    const bool minPass((std::min(rTI, rTJ) < 5.f) && (cosRelativeAngle > 0.906));
-                    const bool maxPass((std::max(rTI, rTJ) < 2.5f) && (cosRelativeAngle > 0.966));
-
-                    if (!minPass && !maxPass)
-                    {
-                        if (!minPass)
-                        {
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "rT", std::min(rTI, rTJ)));
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "rL", std::numeric_limits<float>::max()));
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "x0", x0));
-                            PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName));
-                        }
-
-                        if (!maxPass)
-                        {
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "rT", std::max(rTI, rTJ)));
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "rL", std::numeric_limits<float>::max()));
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName, "x0", x0));
-                            PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName));
-                        }
-                    }
-                }
-                }
-                //////////////////////////////    
 
                 if (std::find(shiftedPfos.begin(), shiftedPfos.end(), pPfoI) == shiftedPfos.end())
                 {
@@ -976,18 +841,6 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BoundaryToleranceWidth", m_boundaryToleranceWidth));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ApplyImpactCut", m_applyImpactCut));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "WriteToTree", m_writeToTree));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FileName", m_fileName));
-    
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TreeName", m_treeName));    
 
     return STATUS_CODE_SUCCESS;
 }
