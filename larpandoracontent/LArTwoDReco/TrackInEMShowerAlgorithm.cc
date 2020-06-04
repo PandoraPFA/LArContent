@@ -57,7 +57,8 @@ TrackInEMShowerAlgorithm::TrackInEMShowerAlgorithm() :
     m_minDirectionDeviationCosAngle(0.99),
     m_distanceFromLine(0.35),
     m_maxTrackGaps(2),
-    m_lineSegmentLength(7.f)
+    m_lineSegmentLength(7.f),
+    m_maxHitDistanceFromCluster(3)
 {
 }
 
@@ -192,7 +193,14 @@ bool TrackInEMShowerAlgorithm::FindBestClusterAssociation(ClusterVector &cluster
                 continue;
 
             const bool isCurrentUpstream(LArClusterHelper::SortByPosition(pCurrentCluster, pTestCluster));
+
+            // Ensure that clusters are not contained within one another
+            const float currentMinLayerZ(currentMacroFitIter->second.GetGlobalMinLayerPosition().GetZ()), currentMaxLayerZ(currentMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ());
+            const float testMinLayerZ(testMacroFitIter->second.GetGlobalMinLayerPosition().GetZ()), testMaxLayerZ(testMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ());
             
+            if (((currentMinLayerZ > testMinLayerZ) && (currentMaxLayerZ < testMaxLayerZ)) || ((testMinLayerZ > currentMinLayerZ) && (testMaxLayerZ < currentMaxLayerZ)))
+                continue;
+
             CartesianVector currentMergePoint(0.f, 0.f, 0.f), testMergePoint(0.f, 0.f, 0.f), currentMergeDirection(0.f, 0.f, 0.f), testMergeDirection(0.f, 0.f, 0.f);
             if (!this->GetClusterMergingCoordinates(currentMicroFitIter->second, currentMacroFitIter->second, testMacroFitIter->second, currentMergePoint, currentMergeDirection, isCurrentUpstream) ||
                 !this->GetClusterMergingCoordinates(testMicroFitIter->second, testMacroFitIter->second, currentMacroFitIter->second, testMergePoint, testMergeDirection, !isCurrentUpstream))
@@ -200,13 +208,8 @@ bool TrackInEMShowerAlgorithm::FindBestClusterAssociation(ClusterVector &cluster
                 continue;
             }
 
-            if (((currentMacroFitIter->second.GetGlobalMinLayerPosition().GetZ() > testMacroFitIter->second.GetGlobalMinLayerPosition().GetZ()) && (currentMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ() < testMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ())) || ((testMacroFitIter->second.GetGlobalMinLayerPosition().GetZ() > currentMacroFitIter->second.GetGlobalMinLayerPosition().GetZ()) && (testMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ() < currentMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ())))
-           {
-                continue;
-           }
-
-            if ((isCurrentUpstream && !AreClustersAssociated(currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection)) ||
-                (!isCurrentUpstream && !AreClustersAssociated(testMergePoint, testMergeDirection, currentMergePoint, currentMergeDirection)))
+            if ((isCurrentUpstream && !this->AreClustersAssociated(currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection)) ||
+                (!isCurrentUpstream && !this->AreClustersAssociated(testMergePoint, testMergeDirection, currentMergePoint, currentMergeDirection)))
             {
                 continue;
             }
@@ -495,7 +498,7 @@ const Cluster* TrackInEMShowerAlgorithm::RefineTrack(const Cluster *const pClust
             }
         }
     }
-    // Fragmentation initialisation
+    // FRAGMENTATION INITIALISATION
     std::string originalListName, fragmentListName;
     const ClusterList originalClusterList(1, pCluster);    
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, originalClusterList, originalListName, fragmentListName));
@@ -511,14 +514,9 @@ const Cluster* TrackInEMShowerAlgorithm::RefineTrack(const Cluster *const pClust
     this->CreateClusters(caloHitsBelowTrack, clusterVector);
 
     //UPDATE FOR CLUSTER DELETION
-    // Remove from CV as clusters will be deleted
-    this->RemoveClusterFromClusterVector(pCluster, clusterVector);
-    
-    // Remove from SF maps as clusters will be deleted
-    std::vector<TwoDSlidingFitResultMap*> slidingFitResultVector({&microFitResultMap, &macroFitResultMap});
-    this->RemoveClusterFromSlidingFitResultMaps(pCluster, slidingFitResultVector);
+    this->UpdateForClusterDeletion(pCluster, clusterVector, microFitResultMap, macroFitResultMap);
 
-    // End fragmentation process
+    // END FRAGMENTATION PROCESS
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, fragmentListName, originalListName));
     
     return pMainTrackCluster;
@@ -533,11 +531,6 @@ void TrackInEMShowerAlgorithm::AddHitsToCluster(const ClusterAssociation &cluste
     const Cluster *const pClusterToEnlarge(clusterAssociation.GetUpstreamCluster());
     const Cluster *const pClusterToDelete(clusterAssociation.GetDownstreamCluster());
     
-    // remove from sliding fit map clusters that will be deleted or whose constituents will change
-    std::vector<TwoDSlidingFitResultMap*> slidingFitResultVector({&microSlidingFitResultMap, &macroSlidingFitResultMap});
-    this->RemoveClusterFromSlidingFitResultMaps(pClusterToEnlarge, slidingFitResultVector);
-    this->RemoveClusterFromSlidingFitResultMaps(pClusterToDelete, slidingFitResultVector);
-    
     for (const CaloHit *const pCaloHit : extrapolatedCaloHitVector)
     {
         CaloHitToParentClusterMap::const_iterator caloHitParentIter(caloHitToParentClusterMap.find(pCaloHit));
@@ -545,21 +538,16 @@ void TrackInEMShowerAlgorithm::AddHitsToCluster(const ClusterAssociation &cluste
         if (caloHitParentIter == caloHitToParentClusterMap.end())
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-        if ((caloHitParentIter->second == pClusterToEnlarge) || (caloHitParentIter->second == pClusterToDelete))
-            continue;
-
         const StatusCode statusCode(PandoraContentApi::RemoveFromCluster(*this, caloHitParentIter->second, pCaloHit));
             
         if (statusCode == STATUS_CODE_SUCCESS)
         {
-            // UPDATE FOR CLUSTER MODIFICATION
-            RemoveClusterFromSlidingFitResultMaps(caloHitParentIter->second, slidingFitResultVector);
-            PandoraContentApi::AddToCluster(*this, pClusterToEnlarge, pCaloHit);
+            this->UpdateAfterClusterModification(caloHitParentIter->second, clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
+            PandoraContentApi::AddToCluster(*this, pClusterToEnlarge, pCaloHit);   
         }
         else if (statusCode == STATUS_CODE_NOT_ALLOWED)
         {
-            // UPDATE FOR CLUSTER DELETION
-            RemoveClusterFromClusterVector(caloHitParentIter->second, clusterVector);
+            this->UpdateForClusterDeletion(caloHitParentIter->second, clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
             PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, caloHitParentIter->second);
         }
         else
@@ -568,26 +556,21 @@ void TrackInEMShowerAlgorithm::AddHitsToCluster(const ClusterAssociation &cluste
         }
     }
 
-    // UPDATE FOR CLUSTER DELETION (CLUSTER TO DELETE)
-    // UPDATE FOR CLUSTER MODIFICATION (CLUSTER TO ENLARGE)
-    
-    this->RemoveClusterFromClusterVector(pClusterToDelete, clusterVector);
+    this->UpdateForClusterDeletion(pClusterToDelete, clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);    
     PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pClusterToDelete);
+    this->UpdateAfterClusterModification(pClusterToEnlarge, clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 
 void TrackInEMShowerAlgorithm::CreateClusters(const CaloHitList &caloHitList, ClusterVector &clusterVector) const
 {
     if (caloHitList.empty())
         return;
 
-    const float m_maxDistanceFromCluster(3);
-    
     ClusterList createdClusters;
-
     const Cluster *pCluster(nullptr);
+    
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         if (createdClusters.empty())
@@ -605,7 +588,7 @@ void TrackInEMShowerAlgorithm::CreateClusters(const CaloHitList &caloHitList, Cl
             for (const Cluster *const pCreatedCluster : createdClusters)
             {
                 const float separationDistance(LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), pCreatedCluster));
-                if ((separationDistance < closestDistance) && (separationDistance < m_maxDistanceFromCluster))
+                if ((separationDistance < closestDistance) && (separationDistance < m_maxHitDistanceFromCluster))
                 {
                     closestDistance = separationDistance;
                     pClosestCluster = pCreatedCluster;
@@ -631,6 +614,36 @@ void TrackInEMShowerAlgorithm::CreateClusters(const CaloHitList &caloHitList, Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TrackInEMShowerAlgorithm::UpdateAfterClusterModification(const Cluster *const pCluster, ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+    TwoDSlidingFitResultMap &macroSlidingFitResultMap) const
+{
+    // Remove from SF maps
+    std::vector<TwoDSlidingFitResultMap*> slidingFitResultVector({&microSlidingFitResultMap, &macroSlidingFitResultMap});
+    this->RemoveClusterFromSlidingFitResultMaps(pCluster, slidingFitResultVector);
+
+    // Remove from CV
+    this->RemoveClusterFromClusterVector(pCluster, clusterVector);
+
+    // Check whether cluster should be added back into the CV
+    ClusterList alteredClusterList({pCluster});
+    this->SelectCleanClusters(&alteredClusterList, clusterVector);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrackInEMShowerAlgorithm::UpdateForClusterDeletion(const Cluster *const pCluster, ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+    TwoDSlidingFitResultMap &macroSlidingFitResultMap) const
+{
+    // Remove from SF maps
+    std::vector<TwoDSlidingFitResultMap*> slidingFitResultVector({&microSlidingFitResultMap, &macroSlidingFitResultMap});
+    this->RemoveClusterFromSlidingFitResultMaps(pCluster, slidingFitResultVector);
+
+    // Remove from CV
+    this->RemoveClusterFromClusterVector(pCluster, clusterVector);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
 void TrackInEMShowerAlgorithm::RemoveClusterFromSlidingFitResultMaps(const Cluster *const pCluster, std::vector<TwoDSlidingFitResultMap*> &slidingFitResultMapVector) const
 {
     for (TwoDSlidingFitResultMap *const pSlidingFitResultMap : slidingFitResultMapVector)
