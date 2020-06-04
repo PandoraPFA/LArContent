@@ -265,7 +265,7 @@ public:
      */
     void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
 
-    void UpdateForClusterCreation(const pandora::Cluster *&pCluster, PandoraContentApi::Cluster::Parameters &clusterParameters, pandora::ClusterVector &clusterVector) const;
+    void CreateClusters(const pandora::CaloHitList &caloHitList, pandora::ClusterVector &clusterVector) const;
     
     /**
      *  @brief  Remove a cluster from the sliding fit result maps in an input vector
