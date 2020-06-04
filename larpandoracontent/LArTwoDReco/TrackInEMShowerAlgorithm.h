@@ -35,69 +35,69 @@ public:
         /**
          *  @brief  Constructor
          *
-         *  @param  pInnerCluster the inner cluster of the two associated clusters
-         *  @param  pOuterCluster the outer cluster of the two associated clusters
-         *  @param  innerMergePoint the inner cluster point to be used in the merging process
-         *  @param  innerMergeDirection the inner cluster direction at the inner merge point
-         *  @param  outerMergePoint the outer cluster point to be used in the merging process
-         *  @param  outerMergeDirection the outer cluster direction at the outer merge point
+         *  @param  pUpstreamCluster the upstream cluster of the two associated clusters
+         *  @param  pDownstreamCluster the downstream cluster of the two associated clusters
+         *  @param  upstreamMergePoint the upstream cluster point to be used in the merging process
+         *  @param  upstreamMergeDirection the upstream cluster direction at the upstream merge point
+         *  @param  downstreamMergePoint the downstream cluster point to be used in the merging process
+         *  @param  downstreamMergeDirection the downstream cluster direction at the downstream merge point
          */
-        ClusterAssociation(const pandora::Cluster *const pInnerCluster, const pandora::Cluster *const pOuterCluster, const pandora::CartesianVector &innerMergePoint,
-            const pandora::CartesianVector &innerMergeDirection, const pandora::CartesianVector &outerMergePoint, const pandora::CartesianVector &outerMergeDirection);
+        ClusterAssociation(const pandora::Cluster *const pUpstreamCluster, const pandora::Cluster *const pDownstreamCluster, const pandora::CartesianVector &upstreamMergePoint,
+            const pandora::CartesianVector &upstreamMergeDirection, const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection);
 
         /**
-         *  @brief  Returns the inner cluster address
+         *  @brief  Returns the upstream cluster address
          */
-        const pandora::Cluster* GetInnerCluster() const;
+        const pandora::Cluster* GetUpstreamCluster() const;
 
         /**
-         *  @brief  Returns the outer cluster address
+         *  @brief  Returns the downstream cluster address
          */
-        const pandora::Cluster* GetOuterCluster() const;
+        const pandora::Cluster* GetDownstreamCluster() const;
 
         /**
-         *  @brief  Returns the inner cluster merge point
+         *  @brief  Returns the upstream cluster merge point
          */
-        pandora::CartesianVector GetInnerMergePoint() const;
+        pandora::CartesianVector GetUpstreamMergePoint() const;
 
         /**
-         *  @brief  Returns the inner cluster direction at the inner merge point
+         *  @brief  Returns the upstream cluster direction at the upstream merge point
          */        
-        pandora::CartesianVector GetInnerMergeDirection() const;
+        pandora::CartesianVector GetUpstreamMergeDirection() const;
 
         /**
-         *  @brief  Returns the outer cluster merge point
+         *  @brief  Returns the downstream cluster merge point
          */
-        pandora::CartesianVector GetOuterMergePoint() const;
+        pandora::CartesianVector GetDownstreamMergePoint() const;
 
         /**
-         *  @brief  Returns the outer cluster direction at the outer merge point
+         *  @brief  Returns the downstream cluster direction at the downstream merge point
          */        
-        pandora::CartesianVector GetOuterMergeDirection() const;
+        pandora::CartesianVector GetDownstreamMergeDirection() const;
 
         /**
-         *  @brief  Returns the unit vector of the line connecting the inner and outer merge points (inner -> outer)
+         *  @brief  Returns the unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
          */           
         pandora::CartesianVector GetConnectingLineDirection() const;
 
         /**
-         *  @brief  Sets the inner cluster address
+         *  @brief  Sets the upstream cluster address
          */
-        void SetInnerCluster(const pandora::Cluster *const pCluster);
+        void SetUpstreamCluster(const pandora::Cluster *const pCluster);
 
         /**
-         *  @brief  Sets the outer cluster address
+         *  @brief  Sets the downstream cluster address
          */
-        void SetOuterCluster(const pandora::Cluster *const pCluster);
+        void SetDownstreamCluster(const pandora::Cluster *const pCluster);
         
     private:
-        const pandora::Cluster*     m_pInnerCluster;               ///< The inner cluster of the two associated clusters         
-        const pandora::Cluster*     m_pOuterCluster;               ///< The outer cluster of the two associated clusters
-        pandora::CartesianVector    m_innerMergePoint;             ///< The inner cluster point to be used in the merging process
-        pandora::CartesianVector    m_innerMergeDirection;         ///< The inner cluster direction at the inner merge point (points in the direction of the outer cluster)
-        pandora::CartesianVector    m_outerMergePoint;             ///< The outer cluster point to be used in the merging process
-        pandora::CartesianVector    m_outerMergeDirection;         ///< The outer cluster direction at the outer merge point (points in the direction of the inner cluster)
-        pandora::CartesianVector    m_connectingLineDirection;     ///< The unit vector of the line connecting the inner and outer merge points (inner -> outer)
+        const pandora::Cluster*     m_pUpstreamCluster;               ///< The upstream cluster of the two associated clusters         
+        const pandora::Cluster*     m_pDownstreamCluster;               ///< The downstream cluster of the two associated clusters
+        pandora::CartesianVector    m_upstreamMergePoint;             ///< The upstream cluster point to be used in the merging process
+        pandora::CartesianVector    m_upstreamMergeDirection;         ///< The upstream cluster direction at the upstream merge point (points in the direction of the downstream cluster)
+        pandora::CartesianVector    m_downstreamMergePoint;             ///< The downstream cluster point to be used in the merging process
+        pandora::CartesianVector    m_downstreamMergeDirection;         ///< The downstream cluster direction at the downstream merge point (points in the direction of the upstream cluster)
+        pandora::CartesianVector    m_connectingLineDirection;     ///< The unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
     };
 
     /**
@@ -109,9 +109,9 @@ public:
     
  private:
     /**
-      *  @brief  SortByDistanceToLine class
+      *  @brief  SortByDistanceAlongLine class
       */
-    class SortByDistanceToLine
+    class SortByDistanceAlongLine
     {
     public:
         /**
@@ -120,7 +120,7 @@ public:
          *  @param  startPoint the line start point
          *  @param  lineDirection the line direction unit vector
          */
-	    SortByDistanceToLine(const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection) :
+	    SortByDistanceAlongLine(const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection) :
             m_startPoint(startPoint), m_lineDirection(lineDirection.GetUnitVector()) {}
 
         /**
@@ -181,13 +181,13 @@ public:
      *  @param  associatedMacroFitReult the global TwoDSlidingFitResult of the associated cluster
      *  @param  currentMergePosition the merge position of the cluster
      *  @param  currentMergeDirection the merge direction of the cluster
-     *  @param  isInner whether the cluster is the inner cluster
+     *  @param  isUpstream whether the cluster is the upstream cluster
      *
      *  @return bool whether it was possible to find a suitable merge position
      */
     bool GetClusterMergingCoordinates(const TwoDSlidingFitResult &currentMicroFitResult, const TwoDSlidingFitResult &currentMacroFitResult,
         const TwoDSlidingFitResult &associatedMacroFitResult, pandora::CartesianVector &currentMergePosition, pandora::CartesianVector &currentMergeDirection,
-        const bool isInner) const;
+        const bool isUpstream) const;
 
     /**
      *  @brief  Whether two clusters are assoicated to one another
@@ -234,7 +234,7 @@ public:
     bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;
 
     /**
-     *  @brief  Remove any hits in the inner/outer cluster that are between the merge points are not found in the extrapolatedCaloHitVector
+     *  @brief  Remove any hits in the upstream/downstream cluster that are between the merge points are not found in the extrapolatedCaloHitVector
      *
      *  @param clusterAssociation the clusterAssociation
      *  @param  extrapolatedCaloHitVector the input vector of calo hits
@@ -251,10 +251,10 @@ public:
      *  @param  extrapolatedCaloHitVector the input vector of calo hits
      *  @param  microFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
      *  @param  macroFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
-     *  @param  isInner whether the cluster is the inner cluster wrt the associated vector
+     *  @param  isUpstream whether the cluster is the upstream cluster wrt the associated vector
      */
     const pandora::Cluster* RefineTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, TwoDSlidingFitResultMap &microFitResultMap,
-        TwoDSlidingFitResultMap &macroFitResultMap, const bool isInner, pandora::ClusterVector &clusterVector, pandora::CaloHitVector &extrapolatedCaloHitVector) const;
+        TwoDSlidingFitResultMap &macroFitResultMap, const bool isUpstream, pandora::ClusterVector &clusterVector, pandora::CaloHitVector &extrapolatedCaloHitVector) const;
 
     /**
      *  @brief  Remove clusters not found in an input cluster vector from sliding fit maps
@@ -300,8 +300,7 @@ public:
     
     unsigned int m_minCaloHits;                                ///< The threshold number of calo hits 
     float m_minSeparationDistance;                             ///< The threshold separation distance between associated clusters 
-    float m_maxXSeparation;                                    ///< The threshold separation distance in x between extrapolated and true cluster merge points 
-    float m_maxZSeparation;                                    ///< The threshold separation distance in z between extrapolated and true cluster merge points 
+    float m_maxPredictedMergePointOffset;                      ///< The threshold separation distance between the predicted and true cluster merge points 
     unsigned int m_slidingFitWindow;                           ///< The sliding fit window used in the fits contained within the microSlidingFitResultMap
     float m_mergePointMinCosAngleDeviation;                    ///< The threshold cos opening angle between the cluster local gradient and the associated
                                                                ///  cluster global gradient used to determine merge points
@@ -315,44 +314,44 @@ public:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster* TrackInEMShowerAlgorithm::ClusterAssociation::GetInnerCluster() const
+inline const pandora::Cluster* TrackInEMShowerAlgorithm::ClusterAssociation::GetUpstreamCluster() const
 {
-    return m_pInnerCluster;
+    return m_pUpstreamCluster;
 }
     
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster* TrackInEMShowerAlgorithm::ClusterAssociation::GetOuterCluster() const
+inline const pandora::Cluster* TrackInEMShowerAlgorithm::ClusterAssociation::GetDownstreamCluster() const
 {
-    return m_pOuterCluster;
+    return m_pDownstreamCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetInnerMergePoint() const
+inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetUpstreamMergePoint() const
 {
-    return m_innerMergePoint;
+    return m_upstreamMergePoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetInnerMergeDirection() const
+inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetUpstreamMergeDirection() const
 {
-    return m_innerMergeDirection;
+    return m_upstreamMergeDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetOuterMergePoint() const
+inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetDownstreamMergePoint() const
 {
-    return m_outerMergePoint;
+    return m_downstreamMergePoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetOuterMergeDirection() const
+inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetDownstreamMergeDirection() const
 {
-    return m_outerMergeDirection;
+    return m_downstreamMergeDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -364,18 +363,18 @@ inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::Ge
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetInnerCluster(const pandora::Cluster *const pCluster)
+inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetUpstreamCluster(const pandora::Cluster *const pCluster)
 {
     // ISOBEL DO I ADD 'IF CLUSTER IS NOT NULL'
-    m_pInnerCluster = pCluster;
+    m_pUpstreamCluster = pCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetOuterCluster(const pandora::Cluster *const pCluster)
+inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetDownstreamCluster(const pandora::Cluster *const pCluster)
 {
     // ISOBEL DO I ADD 'IF CLUSTER IS NOT NULL'    
-    m_pOuterCluster = pCluster;
+    m_pDownstreamCluster = pCluster;
 }
     
 } //namespace lar_content
