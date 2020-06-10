@@ -106,6 +106,7 @@ public:
     TrackInEMShowerAlgorithm();
 
     typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> CaloHitToParentClusterMap;
+    typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToCaloHitListMap;
     
  private:
     /**
@@ -211,7 +212,7 @@ public:
      *  @param  caloHitToParentClusterMap the output map [calo hit -> parent cluster] 
      */
     void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, pandora::CaloHitVector &extrapolatedCaloHitVector,
-        CaloHitToParentClusterMap &caloHitToParentClusterMap) const;
+         ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
     /**
      *  @brief  Check whether the extrapolatedCaloHitVector contains a continuous line of hits between the cluster merge points
@@ -271,7 +272,7 @@ public:
      *  @param  caloHitList the input calo hit list
      *  @param  clusterVector the vector of 'relevant' clusters
      */
-    void CreateClusters(const pandora::CaloHitList &caloHitList, pandora::ClusterVector &clusterVector) const;
+    bool CreateClusters(const pandora::CaloHitList &caloHitList, pandora::ClusterVector &clusterVector) const;
 
     /**
      *  @brief  Update the sliding fit maps and cluster vector after a cluster modification
@@ -322,9 +323,11 @@ public:
      *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
      *  @param  macroFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
      */
-    void AddHitsToCluster(const ClusterAssociation &clusterAssociation, const CaloHitToParentClusterMap &caloHitToParentClusterMap,
-        const pandora::CaloHitVector &extrapolatedCaloHitVector, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
-        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
+    void AddHitsToCluster(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
+        pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
+
+    void FragmentCluster(const pandora::Cluster *const pCluster, const pandora::Cluster *const pClusterToEnlarge, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
+        pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
     
     unsigned int m_minCaloHits;                                ///< The threshold number of calo hits 
     float m_minSeparationDistance;                             ///< The threshold separation distance between associated clusters 
