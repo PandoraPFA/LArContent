@@ -24,7 +24,8 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_downsampleFactor(5),
     m_minSamples(11),
     m_nPermutations(10000),
-    m_localMatchingScoreThreshold(0.99f)
+    m_localMatchingScoreThreshold(0.99f),
+    m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
 {
 }
 
@@ -33,6 +34,9 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, 
     const Cluster *const)
 {
+    m_randomNumberGenerator.seed(static_cast<std::mt19937::result_type>(
+                pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
+
     TwoViewTransverseOverlapResult overlapResult;
     PANDORA_THROW_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pCluster1, pCluster2, overlapResult));
@@ -100,16 +104,12 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2));
 
-    std::mt19937 randomNumberGenerator(static_cast<std::mt19937::result_type>(
-                pCluster2->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
-
     const float pvalue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
-        resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, randomNumberGenerator, m_nPermutations));
+        resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
 
     const float matchingScore(1.f-pvalue);
-
     const float locallyMatchedFraction(CalculateLocalMatchingFraction(resampledDiscreteProbabilityVector1, 
-        resampledDiscreteProbabilityVector2, randomNumberGenerator));
+        resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
 
     overlapResult = TwoViewTransverseOverlapResult(matchingScore, resampledDiscreteProbabilityVector1.GetSize(), 
         correlation, locallyMatchedFraction, twoViewXOverlap);
