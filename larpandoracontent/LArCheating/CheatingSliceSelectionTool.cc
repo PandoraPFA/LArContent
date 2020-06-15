@@ -113,6 +113,7 @@ void CheatingSliceSelectionTool::SelectSlices(const pandora::Algorithm *const /*
     int i = 0;
     for (const auto [ cutVariable, index ] : reducedSliceVarIndexMap)
     {   // ATTN: Map is sorted on cut variable from max to min
+        (void)cutVariable;  // GCC 7 support, versions 8+ do not need this
         reducedSliceIndices.push_back(index);
         outputSliceVector.push_back(inputSliceVector[index]);
         if (++i == m_maxSlices)
