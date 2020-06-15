@@ -91,12 +91,12 @@ public:
         void SetDownstreamCluster(const pandora::Cluster *const pCluster);
         
     private:
-        const pandora::Cluster*     m_pUpstreamCluster;               ///< The upstream cluster of the two associated clusters         
-        const pandora::Cluster*     m_pDownstreamCluster;               ///< The downstream cluster of the two associated clusters
-        pandora::CartesianVector    m_upstreamMergePoint;             ///< The upstream cluster point to be used in the merging process
-        pandora::CartesianVector    m_upstreamMergeDirection;         ///< The upstream cluster direction at the upstream merge point (points in the direction of the downstream cluster)
-        pandora::CartesianVector    m_downstreamMergePoint;             ///< The downstream cluster point to be used in the merging process
-        pandora::CartesianVector    m_downstreamMergeDirection;         ///< The downstream cluster direction at the downstream merge point (points in the direction of the upstream cluster)
+        const pandora::Cluster*     m_pUpstreamCluster;            ///< The upstream cluster of the two associated clusters         
+        const pandora::Cluster*     m_pDownstreamCluster;          ///< The downstream cluster of the two associated clusters
+        pandora::CartesianVector    m_upstreamMergePoint;          ///< The upstream cluster point to be used in the merging process
+        pandora::CartesianVector    m_upstreamMergeDirection;      ///< The upstream cluster direction at the upstream merge point (points in the direction of the downstream cluster)
+        pandora::CartesianVector    m_downstreamMergePoint;        ///< The downstream cluster point to be used in the merging process
+        pandora::CartesianVector    m_downstreamMergeDirection;    ///< The downstream cluster direction at the downstream merge point (points in the direction of the upstream cluster)
         pandora::CartesianVector    m_connectingLineDirection;     ///< The unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
     };
 
@@ -105,8 +105,8 @@ public:
      */
     TrackInEMShowerAlgorithm();
 
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> CaloHitToParentClusterMap;
     typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToCaloHitListMap;
+    typedef std::vector<std::pair<const pandora::CaloHitList*, bool>> FragmentationInfo;
     
  private:
     /**
@@ -159,7 +159,8 @@ public:
      *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global cluster gradients
      *
      */
-    void InitialiseSlidingFitResultMaps(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
+    void InitialiseSlidingFitResultMaps(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
 
     /**
      *  @brief  Find the cluster association with the longest cluster length sum
@@ -193,15 +194,15 @@ public:
     /**
      *  @brief  Whether two clusters are assoicated to one another
      *
-     *  @param  currentPoint the merge point of the first cluster
-     *  @param  currentDirection the local direction of the first cluster at the merge point (in the direction of the second cluster)
-     *  @param  testPoint the merge point of the second cluster
-     *  @param  testDirection the local direction of the second cluster at the merge point (in the direction of the first cluster)
+     *  @param  upstreamPoint the merge point of the upstream cluster
+     *  @param  upstreamDirection the local direction of the upstream cluster at the merge point (in the direction of the downstream cluster)
+     *  @param  downstreamPoint the merge point of the downstream cluster
+     *  @param  downstreamDirection the local direction of the downstrean cluster at the merge point (in the direction of the upstream cluster)
      *
      *  @return bool whether the clusters are associated
      */
-    bool AreClustersAssociated(const pandora::CartesianVector &currentPoint, const pandora::CartesianVector &currentDirection, const pandora::CartesianVector &testPoint,
-        const pandora::CartesianVector &testDirection) const;
+    bool AreClustersAssociated(const pandora::CartesianVector &upstreamPoint, const pandora::CartesianVector &upstreamDirection, const pandora::CartesianVector &downstreamPoint,
+        const pandora::CartesianVector &downstreamDirection) const;
 
     /**
      *  @brief  Collect the hits that lie near the line connecting the associated clusters
@@ -209,7 +210,7 @@ public:
      *  @param  clusterAssociation the clusterAssociation 
      *  @param  pClusterList the list of all clusters
      *  @param  extrapolatedCaloHitVector the output vector of collected hits
-     *  @param  caloHitToParentClusterMap the output map [calo hit -> parent cluster] 
+     *  @param  clusterToCaloHitListMap the output map [parent cluster -> list of hits which belong to the main track]
      */
     void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, pandora::CaloHitVector &extrapolatedCaloHitVector,
          ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
@@ -227,52 +228,104 @@ public:
     /**
      *  @brief  Whether a calo hit falls within a specified segment of the cluster connecting line
      *
-     *  @param  clusterAssociation the clusterAssociation
-     *  @param  extrapolatedCaloHitVector the input vector of calo hits
+     *  @param  lowerBoundary the lower boundary of the segment
+     *  @param  upperBoundary the upper boundary of the segment
+     *  @param  point the position of the calo hit
      *
-     *  @return bool whether the calo hits are continuous
+     *  @return bool whether the calo hit falls within segment
      */
     bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;
 
     /**
-     *  @brief  Remove any hits in the upstream/downstream cluster that are between the merge points are not found in the extrapolatedCaloHitVector
+     *  @brief  Remove any hits in the upstream/downstream cluster that are between the merge points and are not found in the extrapolatedCaloHitVector
      *
-     *  @param clusterAssociation the clusterAssociation
-     *  @param  extrapolatedCaloHitVector the input vector of calo hits
-     *  @param  microFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  clusterAssociation the cluster association
+     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
+     *  @param  clusterVector the vector of relevant clusters
+     *  @param  extrapolatedCaloHitVector the vector of collected hits
      */
-    void RefineTracks(ClusterAssociation &clusterAssociation, TwoDSlidingFitResultMap &microFitResultMap,
-        TwoDSlidingFitResultMap &macroFitResultMap, pandora::ClusterVector &clusterVector, pandora::CaloHitVector &extrapolatedCaloHitVector) const;
-
+    void RefineTracks(ClusterAssociation &clusterAssociation, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap, pandora::ClusterVector &clusterVector, pandora::CaloHitVector &extrapolatedCaloHitVector) const;
+    
     /**
      *  @brief  Remove cluster hits that fall after the split position
      *
      *  @param  pCluster the input cluster
      *  @param  splitPosition the position the cluster after which hits are removed
-     *  @param  extrapolatedCaloHitVector the input vector of calo hits
-     *  @param  microFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
-     *  @param  macroFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
-     *  @param  isUpstream whether the cluster is the upstream cluster wrt the associated vector
+     *  @param  extrapolatedCaloHitVector the vector of collected calo hits
+     *  @param  isUpstream whether the input cluster is the upstream cluster
+     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
+     *  @param  clusterVector the vector of relevant clusters
+     *
+     *  @return const Cluster* the reference of the refined track cluster
      */
-    const pandora::Cluster* RefineTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, TwoDSlidingFitResultMap &microFitResultMap,
-        TwoDSlidingFitResultMap &macroFitResultMap, const bool isUpstream, pandora::ClusterVector &clusterVector, pandora::CaloHitVector &extrapolatedCaloHitVector) const;
+    const pandora::Cluster* RefineTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, const pandora::CaloHitVector &extrapolatedCaloHitVector,
+        const bool isUpstream, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap, pandora::ClusterVector &clusterVector) const;
 
+    /**
+     *  @brief  Fragment the input cluster based on the separation of hits and whether they fall above or below a track
+     *
+     *  @param  pCluster the input cluster
+     *  @param  pClusterToEnlarge the main track cluster
+     *  @param  aboveTrackList the list of calo hits that fall above a cluster
+     *  @param  belowTrackList the list of calo hits that fall below a cluster
+     *  @param  fragmentAbove whether to fragment the above hits based on their separation
+     *  @param  fragmentBelow whether to fragment the below hits based on their separation
+     */
+    void FragmentCluster(const pandora::Cluster *const pCluster, const pandora::Cluster *const pClusterToEnlarge, const pandora::CaloHitList &aboveTrackList,
+        const pandora::CaloHitList &belowTrackList, const bool fragmentAbove, const bool fragmentBelow) const;
+    
+    /**
+     *  @brief  Merge together the associated muon track pair and the collected hits  
+     *
+     *  @param  pCluster the input cluster
+     *  @param  clusterAssociation the cluster association
+     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
+     *  @param  clusterVector the vector of relevant clusters
+     */
+    void MergeHits(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap, pandora::ClusterVector &clusterVector) const;
+
+    /**
+     *  @brief  Remove collected hits from a cluster and recluster the cluster remnant
+     *
+     *  @param  pCluster the input cluster
+     *  @param  pClusterToEnlarge the main track cluster
+     *  @param  caloHitsToMerge the list of collected calo hits owned by the input cluster
+     *  @param  clusterAssociation the cluster association
+     */    
+    void MergeCluster(const pandora::Cluster *const pCluster, const pandora::Cluster *const pClusterToEnlarge, const pandora::CaloHitList &caloHitsToMerge,
+        const ClusterAssociation &clusterAssociation) const;
+
+    /**
+     *  @brief  Determine whether the input hits would form a disconnected cluster
+     *
+     *  @param  trackHits the input calo hits
+     *
+     *  @return bool whether the track is disconnected
+     */    
+    bool IsClusterRemnantDisconnected(const pandora::CaloHitList &trackHits) const;
+
+    /**
+     *  @brief  Merge a cluster with that closest to it
+     *
+     *  @param  pClusterToMerge the cluster to merge
+     *  @param  pClusterToEnlarge the main track cluster
+     */  
+    void AddToNearestCluster(const pandora::Cluster *const pClusterToMerge, const pandora::Cluster *const pClusterToEnlarge) const;
+    
     /**
      *  @brief  Remove clusters not found in an input cluster vector from sliding fit maps
      *
      *  @param  clusterVector the input vector of clusters
-     *  @param  microFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
-     *  @param  macroFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
+     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
      */
-    void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
-
-    /**
-     *  @brief  Cluster calo hits into groups motivated by their spatial separation
-     *
-     *  @param  caloHitList the input calo hit list
-     *  @param  clusterVector the vector of 'relevant' clusters
-     */
-    bool CreateClusters(const pandora::CaloHitList &caloHitList, pandora::ClusterVector &clusterVector) const;
+    void UpdateSlidingFitResultMap(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
 
     /**
      *  @brief  Update the sliding fit maps and cluster vector after a cluster modification
@@ -312,23 +365,6 @@ public:
      */
     void RemoveClusterFromClusterVector(const pandora::Cluster *const pCluster, pandora::ClusterVector &clusterVector) const;
 
-    /**
-     *  @brief  Merge the clusters in the clusterAssociation together alongside the hits within the extrapolatedCaloHitVector. In this process 'deleted' clusters are removed from the 
-     *          cached sliding fit result maps and cluster vector but left in the caloHitToParentClusterMap
-     *
-     *  @param  clusterAssociation the clusterAssociation
-     *  @param  caloHitToParentClusterMap the map [calo hit -> parent cluster] 
-     *  @param  extrapolatedCaloHitVector the vector of extrapolated calo hits to be merged in to the resulting cluster
-     *  @param  clusterVector the cluster vector
-     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
-     *  @param  macroFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
-     */
-    void AddHitsToCluster(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
-        pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
-
-    void FragmentCluster(const pandora::Cluster *const pCluster, const pandora::Cluster *const pClusterToEnlarge, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
-        pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap, TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
-    
     unsigned int m_minCaloHits;                                ///< The threshold number of calo hits 
     float m_minSeparationDistance;                             ///< The threshold separation distance between associated clusters 
     float m_maxPredictedMergePointOffset;                      ///< The threshold separation distance between the predicted and true cluster merge points 
@@ -341,8 +377,8 @@ public:
     unsigned int m_maxTrackGaps;                               ///< The maximum number of graps allowed in the extrapolated hit vector
     float m_lineSegmentLength;                                 ///< The length of a track gap
     float m_maxHitDistanceFromCluster;                         ///< The threshold separation between a hit and cluster for the hit to be merged into the cluster
-    unsigned int m_globalSlidingFitWindow;
-    
+    float m_maxHitSeparationForConnectedCluster;               ///< The maximum separation between two adjacent (in z) hits in a connected cluster
+    float m_maxDistanceFromMainTrack;                          ///< The threshold distance for a hit to be added to the main track
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -398,7 +434,6 @@ inline pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::Ge
 
 inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetUpstreamCluster(const pandora::Cluster *const pCluster)
 {
-    // ISOBEL DO I ADD 'IF CLUSTER IS NOT NULL'
     m_pUpstreamCluster = pCluster;
 }
 
@@ -406,7 +441,6 @@ inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetUpstreamCluster(con
 
 inline void TrackInEMShowerAlgorithm::ClusterAssociation::SetDownstreamCluster(const pandora::Cluster *const pCluster)
 {
-    // ISOBEL DO I ADD 'IF CLUSTER IS NOT NULL'    
     m_pDownstreamCluster = pCluster;
 }
     
