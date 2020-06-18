@@ -21,16 +21,23 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
-            - llvm-toolchain-focal-8.0
           packages:
             - g++-7
-            - clang-8.0
       env:
          - COMPILER=g++-7
+
+    - os: linux
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-focal-8.0
+          packages:
+            - clang-8.0
+      env:
          - COMPILER=clang-8.0
 
 before_install:
-  - if [[ "${TRAVIS_EVENT_TYPE}" == "cron" && "${COMPILER}" == "g++" ]]; then
+  - if [[ ${TRAVIS_EVENT_TYPE} == cron && ${COMPILER} == g++* ]]; then
         export CRON_GCC_BUILD=true;
         export COVERITY_DESC=`date`;
         export COVERITY_REPO=`echo ${TRAVIS_REPO_SLUG} | sed 's/\//\%2F/g'`;
