@@ -23,9 +23,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - g++-7
-      env:
-         - CXX=g++-7
-         - CC=gcc-7
+      env: MATRIX_EVAL="COMPILER=g++-7 && CXX=g++-7 && CC=gcc-7"
 
     - os: linux
       addons:
@@ -34,11 +32,10 @@ matrix:
             - llvm-toolchain-focal-8.0
           packages:
             - clang-8.0
-      env:
-         - CXX=clang-8.0
-         - CC=clang-8.0
+      env: MATRIX_EVAL="COMPILER=clang-8.0 && CXX=clang-8.0 && CC=clang-8.0"
 
 before_install:
+  - eval "${MATRIX_EVAL}"
   - if [[ ${TRAVIS_EVENT_TYPE} == cron && ${COMPILER} == g++* ]]; then
         export CRON_GCC_BUILD=true;
         export COVERITY_DESC=`date`;
@@ -63,6 +60,9 @@ install:
   - docker exec -it pandora /bin/bash -c "source install_pandora_monitoring.sh"
 
 script:
+  - ${CC} --version
+  - ${CXX} --version
+  - cmake --version
   - if [[ "${CRON_GCC_BUILD}" == true ]]; then
         docker exec -it pandora /bin/bash -c "cd /pandora/package && source /pandora/build_larcontent.sh coverity";
         curl --form token=${COVERITY_SCAN_TOKEN} --form email=${COVERITY_TARGET_EMAIL} --form file=@build/coverity_build.tgz --form version="master" --form description="${COVERITY_DESC}" https://scan.coverity.com/builds?project=${COVERITY_REPO};
