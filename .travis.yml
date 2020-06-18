@@ -25,7 +25,7 @@ matrix:
             - g++-7
       env:
          - CXX=g++-7
-         - CCC=gcc-7
+         - CC=gcc-7
 
     - os: linux
       addons:
