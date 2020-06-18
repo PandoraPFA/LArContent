@@ -9,7 +9,7 @@ addons:
       - g++-7
 
 sudo: required
-dist: trusty
+dist: focal
 
 services:
   - docker
@@ -21,21 +21,13 @@ matrix:
         apt:
           sources:
             - ubuntu-toolchain-r-test
+            - llvm-toolchain-focal-8.0
           packages:
             - g++-7
-      env:
-         - COMPILER=g++-7
-
-  include:
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-8.0
-          packages:
             - clang-8.0
       env:
-        - COMPILER=clang-8.0
+         - COMPILER=g++-7
+         - COMPILER=clang-8.0
 
 before_install:
   - if [[ "${TRAVIS_EVENT_TYPE}" == "cron" && "${COMPILER}" == "g++" ]]; then
