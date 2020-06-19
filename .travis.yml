@@ -47,7 +47,7 @@ before_install:
       docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
       docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" -e "CODECOV_TOKEN=$CODECOV_TOKEN" pandorapfa/pandorapfa_data:latest /bin/bash;
     else
-      docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa:latest /bin/bash;
+      docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa_c17:latest /bin/bash;
     fi
 
 install:
