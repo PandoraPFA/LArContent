@@ -30,7 +30,7 @@ INCLUDES  = -I$(PROJECT_INCLUDE_DIR)
 INCLUDES += -I$(PANDORA_DIR)/PandoraSDK/include
 INCLUDES += -isystem $(EIGEN_INC)/
 ifdef MONITORING
-    INCLUDES += -I$(PANDORA_DIR)/PandoraMonitoring/include
+    INCLUDES += -isystem $(PANDORA_DIR)/PandoraMonitoring/include
 endif
 
 ifdef MONITORING
