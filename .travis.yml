@@ -8,11 +8,11 @@ services:
 
 matrix:
   include:
-    - os: linux
-      env: MATRIX_EVAL="COMPILER=g++-7"
+#    - os: linux
+#      env: MATRIX_EVAL="COMPILER=g++-7"
 
     - os: linux
-      env: MATRIX_EVAL="COMPILER=clang-8"
+      env: MATRIX_EVAL="COMPILER=clang"
 
 before_install:
   - eval "${MATRIX_EVAL}"
