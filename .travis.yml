@@ -24,10 +24,6 @@ matrix:
       env: MATRIX_EVAL="COMPILER=g++-7 && CXX=g++-7 && CC=gcc-7"
 
     - os: linux
-      addons:
-        apt:
-          packages:
-            - clang-8.0
       env: MATRIX_EVAL="COMPILER=clang-8.0 && CXX=clang-8.0 && CC=clang-8.0"
 
 before_install:
