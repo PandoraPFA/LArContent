@@ -1,18 +1,22 @@
 language: cpp
 
 sudo: required
-dist: trusty
+dist: eoan
 
 services:
   - docker
 
-env:
-  matrix:
-    - COMPILER=g++
-    - COMPILER=clang
+matrix:
+  include:
+    - os: linux
+      env: MATRIX_EVAL="COMPILER=g++-7"
+    
+    - os: linux
+      env: MATRIX_EVAL="COMPILER=clang-8"
 
 before_install:
-  - if [[ "${TRAVIS_EVENT_TYPE}" == "cron" && "${COMPILER}" == "g++" ]]; then
+  - eval "${MATRIX_EVAL}"
+  - if [[ ${TRAVIS_EVENT_TYPE} == cron && ${COMPILER} == g++* ]]; then
         export CRON_GCC_BUILD=true;
         export COVERITY_DESC=`date`;
         export COVERITY_REPO=`echo ${TRAVIS_REPO_SLUG} | sed 's/\//\%2F/g'`;
@@ -23,7 +27,7 @@ before_install:
       docker login -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD";
       docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" -e "CODECOV_TOKEN=$CODECOV_TOKEN" pandorapfa/pandorapfa_data:latest /bin/bash;
     else
-      docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa:latest /bin/bash;
+      docker run -itd --name pandora -v `pwd`:/pandora/package -e "COMPILER=$COMPILER" pandorapfa/pandorapfa_c17:latest /bin/bash;
     fi
 
 install:
