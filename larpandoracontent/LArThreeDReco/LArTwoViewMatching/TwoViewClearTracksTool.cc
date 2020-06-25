@@ -48,11 +48,9 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
 
     for (MatrixType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < 
-            -1.f*std::numeric_limits<float>::epsilon())
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
             continue;
-        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < 
-            -1.f*std::numeric_limits<float>::epsilon())
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
             continue;
 
         if (iter->GetOverlapResult().GetLocallyMatchedFraction() - m_minLocallyMatchedFraction < std::numeric_limits<float>::epsilon())
