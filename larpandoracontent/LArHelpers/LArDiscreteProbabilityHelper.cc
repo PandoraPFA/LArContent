@@ -18,20 +18,20 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPer
     if (1 > nPermutations)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    const float rNominal(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
+    const float rNominal(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1, t2));
 
     unsigned int nExtreme(0);
     for (unsigned int iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
     {
         const float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
-            LArDiscreteProbabilityHelper::MakeRandomisedSample(t1,randomNumberGenerator),
-            LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
+            LArDiscreteProbabilityHelper::MakeRandomisedSample(t1, randomNumberGenerator),
+            LArDiscreteProbabilityHelper::MakeRandomisedSample(t2, randomNumberGenerator)));
 
         if ((rRandomised-rNominal) > std::numeric_limits<float>::epsilon())
             nExtreme++;
     }
 
-    return static_cast<float>(nExtreme)/static_cast<float>(nPermutations);
+    return static_cast<float>(nExtreme) / static_cast<float>(nPermutations);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -40,7 +40,7 @@ template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, 
     const T &t2, const unsigned int nIntegrationSteps)
 {
-    const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
+    const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1, t2));
     const float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
     const float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.f - correlation*correlation)));
     const float tDistCoeff(std::tgamma(0.5f*(dof + 1.f))/std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
@@ -75,8 +75,8 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
 
     for (unsigned int iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); ++iElement)
     {
-        const float diff1(LArDiscreteProbabilityHelper::GetElement(t1,iElement) - mean1);
-        const float diff2(LArDiscreteProbabilityHelper::GetElement(t2,iElement) - mean2);
+        const float diff1(LArDiscreteProbabilityHelper::GetElement(t1, iElement) - mean1);
+        const float diff2(LArDiscreteProbabilityHelper::GetElement(t2, iElement) - mean2);
 
         variance1 += diff1*diff1;
         variance2 += diff2*diff2;
