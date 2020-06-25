@@ -42,7 +42,15 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
 {
     const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1, t2));
     const float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
-    const float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.f - correlation*correlation)));
+
+    if (0 > dof)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    const float tTestStatisticDenominator(1.f-correlation-correlation);
+    if (tTestStatisticDenominator < std::numeric_limits<float>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    const float tTestStatistic(correlation*std::sqrt(dof)/(std::sqrt(tTestStatisticDenominator)));
     const float tDistCoeff(std::tgamma(0.5f*(dof + 1.f))/std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
 
     const float upperLimit(15.f);
