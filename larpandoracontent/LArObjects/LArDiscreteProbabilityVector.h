@@ -36,7 +36,7 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  inputData the data used to construt the probability vector
+     *  @param  inputData the data used to construct the probability vector
      *  @param  xUpperBound the upper bound of the probability vector
      *  @param  useWidths bool controlling whether the bin widths are used in calculations
      */
