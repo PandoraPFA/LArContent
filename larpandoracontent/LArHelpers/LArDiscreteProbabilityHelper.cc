@@ -5,7 +5,6 @@
  *
  *  $Log: $
  */
-
 #include "Pandora/PandoraInternal.h"
 
 #include "larpandoracontent/LArHelpers/LArDiscreteProbabilityHelper.h"
