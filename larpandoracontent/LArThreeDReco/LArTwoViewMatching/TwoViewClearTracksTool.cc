@@ -41,8 +41,7 @@ bool TwoViewClearTracksTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, 
-    const MatrixType::ElementList &elementList, bool &particlesMade) const
+void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList, bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
 
