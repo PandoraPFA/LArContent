@@ -6,6 +6,8 @@
  *  $Log: $
  */
 
+#include "Pandora/PandoraInternal.h"
+
 #include "larpandoracontent/LArHelpers/LArDiscreteProbabilityHelper.h"
 
 namespace lar_content
@@ -121,19 +123,19 @@ float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
 
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(const DiscreteProbabilityVector &, 
     const DiscreteProbabilityVector &, std::mt19937 &, const unsigned int);
-template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(const std::vector<float> &, 
-    const std::vector<float> &, std::mt19937 &, const unsigned int);
+template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(const pandora::FloatVector &, 
+    const pandora::FloatVector &, std::mt19937 &, const unsigned int);
 
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(
     const DiscreteProbabilityVector &, const DiscreteProbabilityVector &, const unsigned int, const float);
-template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const std::vector<float> &, 
-    const std::vector<float> &, const unsigned int, const float);
+template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const pandora::FloatVector &, 
+    const pandora::FloatVector &, const unsigned int, const float);
 
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const DiscreteProbabilityVector &, 
     const DiscreteProbabilityVector &);
-template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const std::vector<float> &, const std::vector<float> &);
+template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const pandora::FloatVector &, const pandora::FloatVector &);
 
 template float LArDiscreteProbabilityHelper::CalculateMean(const DiscreteProbabilityVector &);
-template float LArDiscreteProbabilityHelper::CalculateMean(const std::vector<float> &);
+template float LArDiscreteProbabilityHelper::CalculateMean(const pandora::FloatVector &);
 
 } // namespace lar_content
