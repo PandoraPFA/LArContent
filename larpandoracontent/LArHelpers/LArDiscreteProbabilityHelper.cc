@@ -71,10 +71,12 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1, const T &t2)
 {
-    if (LArDiscreteProbabilityHelper::GetSize(t1) != (LArDiscreteProbabilityHelper::GetSize(t2)))
+    const float size1(LArDiscreteProbabilityHelper::GetSize(t1));
+    const float size2(LArDiscreteProbabilityHelper::GetSize(t2));
+    if (size1 != size2)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    if (2 > LArDiscreteProbabilityHelper::GetSize(t1))
+    if (2 > size1)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     const float mean1(LArDiscreteProbabilityHelper::CalculateMean(t1));
@@ -82,7 +84,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
 
     float variance1(0.f), variance2(0.f), covariance(0.f);
 
-    for (unsigned int iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); ++iElement)
+    for (unsigned int iElement = 0; iElement < size1; ++iElement)
     {
         const float diff1(LArDiscreteProbabilityHelper::GetElement(t1, iElement) - mean1);
         const float diff2(LArDiscreteProbabilityHelper::GetElement(t2, iElement) - mean2);
