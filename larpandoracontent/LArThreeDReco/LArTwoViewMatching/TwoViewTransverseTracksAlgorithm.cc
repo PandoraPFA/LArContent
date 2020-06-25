@@ -34,12 +34,10 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, 
     const Cluster *const)
 {
-    m_randomNumberGenerator.seed(static_cast<std::mt19937::result_type>(
-                pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
+    m_randomNumberGenerator.seed(static_cast<std::mt19937::result_type>(pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
 
     TwoViewTransverseOverlapResult overlapResult;
-    PANDORA_THROW_RESULT_IF_AND_IF(
-        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pCluster1, pCluster2, overlapResult));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pCluster1, pCluster2, overlapResult));
 
     if (overlapResult.IsInitialized())
         this->GetMatchingControl().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, overlapResult);
