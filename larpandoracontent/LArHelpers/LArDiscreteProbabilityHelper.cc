@@ -47,6 +47,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     const float tTestStatisticDenominator(1.f-correlation-correlation);
+
     if (tTestStatisticDenominator < std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
