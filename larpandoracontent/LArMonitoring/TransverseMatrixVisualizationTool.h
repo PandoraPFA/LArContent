@@ -24,20 +24,9 @@ public:
      */
     TransverseMatrixVisualizationTool();
 
-    /**
-     *  @brief  Overridden function that runs the visualisation tool
-     *
-     *  @param  pAlgorithm the algorithm
-     *  @param  overlapMatrix the transverse overlap matrix
-     */
     bool Run(TwoViewTransverseTracksAlgorithm *const pAlgorithm, MatrixType &overlapMatrix);
 
 private:
-    /**
-     *  @brief  Reads input settihngs from XML
-     *
-     *  @param  xmlHandle the XML handle
-     */
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int    m_minClusterConnections;        ///< The minimum number of cluster connections for display

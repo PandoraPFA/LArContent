@@ -139,15 +139,6 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <>
-inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSample(const DiscreteProbabilityVector &t, 
-    std::mt19937 &randomNumberGenerator)
-{
-    return DiscreteProbabilityVector(t,randomNumberGenerator);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 template <typename T>
 inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSample(const std::vector<T> &t, std::mt19937 &randomNumberGenerator)
 {
@@ -157,7 +148,21 @@ inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSample(const s
     return randomisedVector;
 }
 
+template <>
+inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSample(const DiscreteProbabilityVector &t, 
+    std::mt19937 &randomNumberGenerator)
+{
+    return DiscreteProbabilityVector(t,randomNumberGenerator);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+
+template <typename T>
+inline unsigned int LArDiscreteProbabilityHelper::GetSize(const std::vector<T> &t)
+{
+    return t.size();
+}
 
 template <>
 inline unsigned int LArDiscreteProbabilityHelper::GetSize(const DiscreteProbabilityVector& t)
@@ -167,13 +172,11 @@ inline unsigned int LArDiscreteProbabilityHelper::GetSize(const DiscreteProbabil
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-inline unsigned int LArDiscreteProbabilityHelper::GetSize(const std::vector<T> &t)
+template<typename T>
+inline float LArDiscreteProbabilityHelper::GetElement(const std::vector<T> &t, const unsigned int index)
 {
-    return t.size();
+    return static_cast<float>(t.at(index));
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 template <>
 inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityVector& t, const unsigned int index)
@@ -181,13 +184,6 @@ inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityV
     return static_cast<float>(t.GetProbability(index));
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-inline float LArDiscreteProbabilityHelper::GetElement(const std::vector<T> &t, const unsigned int index)
-{
-    return static_cast<float>(t.at(index));
-}
 
 } // namespace lar_content
 #endif // #ifndef LAR_DISCRETE_PROBABILITY_HELPER_H
