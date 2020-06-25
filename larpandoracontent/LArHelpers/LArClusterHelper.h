@@ -272,7 +272,7 @@ public:
      *  @param  caloHitList the CaloHitList to be filled
      */
     static void GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound, 
-            const pandora::CartesianVector &upperBound, pandora::CaloHitList &caloHitList);
+        const pandora::CartesianVector &upperBound, pandora::CaloHitList &caloHitList);
 
     /**
      *  @brief  Get average Z positions of the calo hits in a cluster in range xmin to xmax
