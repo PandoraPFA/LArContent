@@ -42,12 +42,13 @@ public:
      *  @param  t1 the first input dataset
      *  @param  t2 the second input dataset
      *  @param  nIntegrationSteps how many steps to use in the trapezium integration
+     *  @param  upperLimit the upper limit of the integration
      *
      *  @return the p-value
      */
     template <typename T>
     static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, const T &t2, 
-        const unsigned int nIntegrationSteps);
+        const unsigned int nIntegrationSteps, const float upperLimit);
 
     /**
      *  @brief  Calculate the correlation coefficient between two datasets 
