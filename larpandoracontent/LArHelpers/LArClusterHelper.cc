@@ -601,7 +601,7 @@ void LArClusterHelper::GetCoordinateVector(const Cluster *const pCluster, Cartes
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound, 
-        const pandora::CartesianVector &upperBound , pandora::CaloHitList &caloHitList)
+        const pandora::CartesianVector &upperBound, pandora::CaloHitList &caloHitList)
 {
     const bool useX(std::fabs(upperBound.GetX() - lowerBound.GetX()) > std::numeric_limits<float>::epsilon());
     const bool useY(std::fabs(upperBound.GetY() - lowerBound.GetY()) > std::numeric_limits<float>::epsilon());
