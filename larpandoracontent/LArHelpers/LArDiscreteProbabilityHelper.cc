@@ -106,16 +106,15 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
 {
-    if (0 == LArDiscreteProbabilityHelper::GetSize(t))
+    const unsigned int size(LArDiscreteProbabilityHelper::GetSize(t));
+    if (1 > size)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     float mean(0.f);
-    for (unsigned int iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t); ++iElement)
+    for (unsigned int iElement = 0; iElement < size; ++iElement)
         mean+=LArDiscreteProbabilityHelper::GetElement(t,iElement);
 
-    mean /= static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t));
-
-    return mean;
+    return mean / static_cast<float>(size);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
