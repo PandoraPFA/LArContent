@@ -132,7 +132,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
     std::vector<float> localValues1, localValues2;
     int nMatchedComparisons(0);
 
-    for (size_t iValue = 0; iValue < discreteProbabilityVector1.GetSize(); ++iValue)
+    for (unsigned int iValue = 0; iValue < discreteProbabilityVector1.GetSize(); ++iValue)
     {
         localValues1.emplace_back(discreteProbabilityVector1.GetProbability(iValue));
         localValues2.emplace_back(discreteProbabilityVector2.GetProbability(iValue));

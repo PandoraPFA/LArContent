@@ -58,7 +58,7 @@ float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) co
     if (x - m_discreteProbabilityData.front().GetX() < std::numeric_limits<float>::epsilon())
         return 0.f;
 
-    for (size_t iDatum = 1; iDatum < m_discreteProbabilityData.size(); ++iDatum)
+    for (unsigned int iDatum = 1; iDatum < m_discreteProbabilityData.size(); ++iDatum)
     {
         if (x - m_discreteProbabilityData.at(iDatum).GetX() > std::numeric_limits<float>::epsilon())
             continue;
@@ -98,7 +98,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
     float accumulationDatum(0.f);
 
     DiscreteProbabilityData data;
-    for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
+    for (unsigned int iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
         const float x(static_cast<float>(inputData.at(iDatum).first));
         const float deltaX(static_cast<float>(inputData.at(iDatum+1).first)-x);
@@ -126,7 +126,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
     DiscreteProbabilityData resampledProbabilityData;
 
     float prevCumulativeData(0.f);
-    for (size_t iSample = 0; iSample < resamplingPoints.size()-1; ++iSample)
+    for (unsigned int iSample = 0; iSample < resamplingPoints.size()-1; ++iSample)
     {
         const float xResampled(resamplingPoints.at(iSample));
         const float deltaX(resamplingPoints.at(iSample+1)-xResampled);
@@ -154,15 +154,15 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
 {
     DiscreteProbabilityData randomisedProbabilityData;
 
-    std::vector<size_t> randomisedElements(discreteProbabilityVector.GetSize());
+    std::vector<unsigned int> randomisedElements(discreteProbabilityVector.GetSize());
     std::iota (std::begin(randomisedElements), std::end(randomisedElements), 0);
     std::shuffle(std::begin(randomisedElements), std::end(randomisedElements), randomNumberGenerator);
 
     float xPos(discreteProbabilityVector.GetX(0));
     float cumulativeProbability(0.f);
-    for (size_t iElement = 0; iElement < discreteProbabilityVector.GetSize(); ++iElement)
+    for (unsigned int iElement = 0; iElement < discreteProbabilityVector.GetSize(); ++iElement)
     {
-        const size_t randomElementIndex(randomisedElements.at(iElement));
+        const unsigned int randomElementIndex(randomisedElements.at(iElement));
         const float deltaX(discreteProbabilityVector.GetWidth(randomElementIndex));
         const float probabilityDensity(discreteProbabilityVector.GetProbabilityDensity(randomElementIndex));
         cumulativeProbability+=probabilityDensity*(m_useWidths ? deltaX : 1.f);
@@ -196,7 +196,7 @@ float DiscreteProbabilityVector::CalculateNormalisation(const InputData<TX, TY> 
 
     float normalisation(0.f);
 
-    for (size_t iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
+    for (unsigned int iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
         const float y(static_cast<float>(inputData.at(iDatum).second));
         normalisation += y*(m_useWidths ? 

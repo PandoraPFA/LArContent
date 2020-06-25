@@ -73,7 +73,7 @@ public:
      *
      *  @return the probability vector size
      */
-    size_t GetSize() const;
+    unsigned int GetSize() const;
 
     /**
      *  @brief  Get the x value of the element in the vector
@@ -82,7 +82,7 @@ public:
      *
      *  @return the x value
      */
-    float GetX(const size_t index) const;
+    float GetX(const unsigned int index) const;
 
     /**
      *  @brief  Get the probability value of the element in the vector
@@ -91,7 +91,7 @@ public:
      *
      *  @return the probablity
      */
-    float GetProbability(const size_t index) const;
+    float GetProbability(const unsigned int index) const;
 
     /**
      *  @brief  Get the probability density value of the element in the vector
@@ -100,7 +100,7 @@ public:
      *
      *  @return the probablity density
      */
-    float GetProbabilityDensity(const size_t index) const;
+    float GetProbabilityDensity(const unsigned int index) const;
 
     /**
      *  @brief  Get the cumulative probability value of the element in the vector
@@ -109,7 +109,7 @@ public:
      *
      *  @return the cumulative probability
      */
-    float GetCumulativeProbability(const size_t index) const;
+    float GetCumulativeProbability(const unsigned int index) const;
 
     /**
      *  @brief  Get the width of the element in the vectorr
@@ -118,7 +118,7 @@ public:
      *
      *  @return the width of the probability bin
      */
-    float GetWidth(const size_t index) const;
+    float GetWidth(const unsigned int index) const;
 
     /**
      *  @brief  Get all information stored at a particular index
@@ -129,7 +129,7 @@ public:
      *  @param  cumulativeProbability the cumulative probability value
      *  @param width the width of the probability bin
      */
-    void GetAllAtIndex(const size_t index, float &x, float &probabilityDensity, float &cumulativeProbability, float &width) const;
+    void GetAllAtIndex(const unsigned int index, float &x, float &probabilityDensity, float &cumulativeProbability, float &width) const;
 
 private:
 
@@ -251,7 +251,7 @@ private:
      *
      *  @param  index the index in the probability vector
      */
-    void VerifyElementRequest(const size_t index) const;
+    void VerifyElementRequest(const unsigned int index) const;
 
     float m_xUpperBound;                                              ///< the upper bound of the probability vector
     bool m_useWidths;                                                 ///< controls whether bin widths are used in calculations
@@ -260,14 +260,14 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline size_t DiscreteProbabilityVector::GetSize() const
+inline unsigned int DiscreteProbabilityVector::GetSize() const
 {
     return m_discreteProbabilityData.size();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float DiscreteProbabilityVector::GetX(const size_t index) const
+inline float DiscreteProbabilityVector::GetX(const unsigned int index) const
 {
     this->VerifyElementRequest(index);
 
@@ -276,7 +276,7 @@ inline float DiscreteProbabilityVector::GetX(const size_t index) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float DiscreteProbabilityVector::GetProbability(const size_t index) const
+inline float DiscreteProbabilityVector::GetProbability(const unsigned int index) const
 {
     this->VerifyElementRequest(index);
 
@@ -285,7 +285,7 @@ inline float DiscreteProbabilityVector::GetProbability(const size_t index) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float DiscreteProbabilityVector::GetProbabilityDensity(const size_t index) const
+inline float DiscreteProbabilityVector::GetProbabilityDensity(const unsigned int index) const
 {
     this->VerifyElementRequest(index);
 
@@ -294,7 +294,7 @@ inline float DiscreteProbabilityVector::GetProbabilityDensity(const size_t index
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float DiscreteProbabilityVector::GetCumulativeProbability(const size_t index) const
+inline float DiscreteProbabilityVector::GetCumulativeProbability(const unsigned int index) const
 {
     this->VerifyElementRequest(index);
 
@@ -303,7 +303,7 @@ inline float DiscreteProbabilityVector::GetCumulativeProbability(const size_t in
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float DiscreteProbabilityVector::GetWidth(const size_t index) const
+inline float DiscreteProbabilityVector::GetWidth(const unsigned int index) const
 {
     this->VerifyElementRequest(index);
 
@@ -312,7 +312,7 @@ inline float DiscreteProbabilityVector::GetWidth(const size_t index) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void DiscreteProbabilityVector::GetAllAtIndex(const size_t index, float &x, float &probabilityDensity,
+inline void DiscreteProbabilityVector::GetAllAtIndex(const unsigned int index, float &x, float &probabilityDensity,
     float &cumulativeProbability, float &width) const
 {
     this->VerifyElementRequest(index);
@@ -379,7 +379,7 @@ inline void DiscreteProbabilityVector::VerifyCompleteData() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void DiscreteProbabilityVector::VerifyElementRequest(const size_t index) const
+inline void DiscreteProbabilityVector::VerifyElementRequest(const unsigned int index) const
 {
     if (this->GetSize() < index)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_OUT_OF_RANGE);

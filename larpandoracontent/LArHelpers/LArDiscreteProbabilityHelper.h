@@ -34,7 +34,7 @@ public:
      */
     template <typename T>
     static float CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, 
-        std::mt19937 &randomNumberGenerator, const size_t nPermutations);
+        std::mt19937 &randomNumberGenerator, const unsigned int nPermutations);
 
     /**
      *  @brief  Calculate P value for measured correlation coefficient between two datasets via a integrating the student T dist.
@@ -47,7 +47,7 @@ public:
      */
     template <typename T>
     static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, const T &t2, 
-        const size_t nIntegrationSteps);
+        const unsigned int nIntegrationSteps);
 
     /**
      *  @brief  Calculate the correlation coefficient between two datasets 
@@ -101,7 +101,7 @@ private:
      *  @return the dataset size
      */
     template <typename T>
-    static size_t GetSize(const T &t);
+    static unsigned int GetSize(const T &t);
 
     /**
      *  @brief  Get the size of a dataset (dataset is an std::vector)
@@ -111,7 +111,7 @@ private:
      *  @return the std::vector-based dataset size
      */
     template <typename T>
-    static size_t GetSize(const std::vector<T> &t);
+    static unsigned int GetSize(const std::vector<T> &t);
 
     /**
      *  @brief  Get an element in a dataset 
@@ -122,7 +122,7 @@ private:
      *  @return the dataset element
      */
     template <typename T>
-    static float GetElement(const T &t, const size_t index);
+    static float GetElement(const T &t, const unsigned int index);
 
     /**
      *  @brief  Get an element in a dataset (dataset is an std::vector)
@@ -133,7 +133,7 @@ private:
      *  @return the std::vector-based dataset element
      */
     template <typename T>
-    static float GetElement(const std::vector<T> &t, const size_t index);
+    static float GetElement(const std::vector<T> &t, const unsigned int index);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,7 +159,7 @@ inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSample(const s
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <>
-inline size_t LArDiscreteProbabilityHelper::GetSize(const DiscreteProbabilityVector& t)
+inline unsigned int LArDiscreteProbabilityHelper::GetSize(const DiscreteProbabilityVector& t)
 {
     return t.GetSize();
 }
@@ -167,7 +167,7 @@ inline size_t LArDiscreteProbabilityHelper::GetSize(const DiscreteProbabilityVec
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline size_t LArDiscreteProbabilityHelper::GetSize(const std::vector<T> &t)
+inline unsigned int LArDiscreteProbabilityHelper::GetSize(const std::vector<T> &t)
 {
     return t.size();
 }
@@ -175,7 +175,7 @@ inline size_t LArDiscreteProbabilityHelper::GetSize(const std::vector<T> &t)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <>
-inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityVector& t, const size_t index)
+inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityVector& t, const unsigned int index)
 {
     return static_cast<float>(t.GetProbability(index));
 }
@@ -183,7 +183,7 @@ inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityV
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-inline float LArDiscreteProbabilityHelper::GetElement(const std::vector<T> &t, const size_t index)
+inline float LArDiscreteProbabilityHelper::GetElement(const std::vector<T> &t, const unsigned int index)
 {
     return static_cast<float>(t.at(index));
 }
