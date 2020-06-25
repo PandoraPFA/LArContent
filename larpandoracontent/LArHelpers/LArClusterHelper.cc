@@ -600,17 +600,6 @@ void LArClusterHelper::GetCoordinateVector(const Cluster *const pCluster, Cartes
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetCaloHitList(const Cluster *const pCluster, CaloHitList &caloHitList)
-{
-    for (const OrderedCaloHitList::value_type &layerEntry : pCluster->GetOrderedCaloHitList())
-        for (const CaloHit *const pCaloHit : *layerEntry.second)
-            caloHitList.push_back(pCaloHit);
-
-    caloHitList.sort(LArClusterHelper::SortHitsByPosition);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound, 
         const pandora::CartesianVector &upperBound , pandora::CaloHitList &caloHitList)
 {

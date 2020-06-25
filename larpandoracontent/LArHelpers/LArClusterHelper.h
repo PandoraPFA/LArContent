@@ -264,14 +264,6 @@ public:
     static void GetCoordinateVector(const pandora::Cluster *const pCluster, pandora::CartesianPointVector &coordinateVector);
 
     /**
-     *  @brief  Get list of Calo hits from an input cluster.  The hits are sorted by position
-     *
-     *  @param  pCluster address of the cluster
-     *  @param  caloHitList the CaloHitList to be filled
-     */
-    static void GetCaloHitList(const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
-
-    /**
      *  @brief  Get list of Calo hits from an input cluster that are contained in a bounding box.  The hits are sorted by position
      *
      *  @param  pCluster address of the cluster
