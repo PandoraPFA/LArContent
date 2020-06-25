@@ -38,7 +38,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPer
 
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, 
-    const T &t2, const unsigned int nIntegrationSteps)
+    const T &t2, const unsigned int nIntegrationSteps, const float upperLimit)
 {
     const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1, t2));
     const float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
@@ -53,7 +53,6 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
     const float tTestStatistic(correlation*std::sqrt(dof)/(std::sqrt(tTestStatisticDenominator)));
     const float tDistCoeff(std::tgamma(0.5f*(dof + 1.f))/std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
 
-    const float upperLimit(15.f);
     const float dx((upperLimit - tTestStatistic)/static_cast<float>(nIntegrationSteps));
     float integral(tDistCoeff*std::pow(1.f + tTestStatistic*tTestStatistic/dof, -0.5f*(dof + 1.f)) + 
             tDistCoeff*std::pow(1.f + upperLimit*upperLimit/dof, -0.5f*(dof + 1.f)));
@@ -123,9 +122,9 @@ template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPVal
     const std::vector<float> &, std::mt19937 &, const unsigned int);
 
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(
-    const DiscreteProbabilityVector &, const DiscreteProbabilityVector &, const unsigned int);
+    const DiscreteProbabilityVector &, const DiscreteProbabilityVector &, const unsigned int, const float);
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const std::vector<float> &, 
-    const std::vector<float> &, const unsigned int);
+    const std::vector<float> &, const unsigned int, const float);
 
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const DiscreteProbabilityVector &, 
     const DiscreteProbabilityVector &);
