@@ -184,5 +184,6 @@ inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityV
     return static_cast<float>(t.GetProbability(index));
 }
 
+
 } // namespace lar_content
 #endif // #ifndef LAR_DISCRETE_PROBABILITY_HELPER_H
