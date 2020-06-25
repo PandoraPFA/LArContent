@@ -620,7 +620,7 @@ void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const
     {
         for (const CaloHit *const pCaloHit : *layerEntry.second)
         {
-            const CartesianVector hitPosition = pCaloHit->GetPositionVector();
+            const CartesianVector &hitPosition = pCaloHit->GetPositionVector();
             if (useX && 
                 (hitPosition.GetX() < minX - std::numeric_limits<float>::epsilon() ||
                  hitPosition.GetX() > maxX + std::numeric_limits<float>::epsilon()))
