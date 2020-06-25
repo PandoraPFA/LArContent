@@ -10,8 +10,6 @@
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
-#include <limits>
-
 namespace lar_content
 {
 

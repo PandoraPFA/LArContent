@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewClearTracksTool.h"
 
+#include <limits>
+
 using namespace pandora;
 
 namespace lar_content
