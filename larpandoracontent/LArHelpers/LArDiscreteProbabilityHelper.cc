@@ -13,36 +13,44 @@ namespace lar_content
 
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, 
-    std::mt19937 &randomNumberGenerator, const size_t nPermutations)
+    std::mt19937 &randomNumberGenerator, const unsigned int nPermutations)
 {
     if (1 > nPermutations)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-    const float rNominal(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
+    const float rNominal(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1, t2));
 
-    int nExtreme(0);
+    unsigned int nExtreme(0);
     for (unsigned int iPermutation = 0; iPermutation < nPermutations; ++iPermutation)
     {
         const float rRandomised(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
-            LArDiscreteProbabilityHelper::MakeRandomisedSample(t1,randomNumberGenerator),
-            LArDiscreteProbabilityHelper::MakeRandomisedSample(t2,randomNumberGenerator)));
+            LArDiscreteProbabilityHelper::MakeRandomisedSample(t1, randomNumberGenerator),
+            LArDiscreteProbabilityHelper::MakeRandomisedSample(t2, randomNumberGenerator)));
 
         if ((rRandomised-rNominal) > std::numeric_limits<float>::epsilon())
             nExtreme++;
     }
 
-    return static_cast<float>(nExtreme)/static_cast<float>(nPermutations);
+    return static_cast<float>(nExtreme) / static_cast<float>(nPermutations);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, 
-    const T &t2, const size_t nIntegrationSteps)
+    const T &t2, const unsigned int nIntegrationSteps)
 {
-    const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1,t2));
+    const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(t1, t2));
     const float dof(static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t1)) - 2.f);
-    const float tTestStatistic(correlation*sqrt(dof)/(sqrt(1.f - correlation*correlation)));
+
+    if (0 > dof)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    const float tTestStatisticDenominator(1.f-correlation-correlation);
+    if (tTestStatisticDenominator < std::numeric_limits<float>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
+    const float tTestStatistic(correlation*std::sqrt(dof)/(std::sqrt(tTestStatisticDenominator)));
     const float tDistCoeff(std::tgamma(0.5f*(dof + 1.f))/std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
 
     const float upperLimit(15.f);
@@ -73,10 +81,10 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
 
     float variance1(0.f), variance2(0.f), covariance(0.f);
 
-    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); ++iElement)
+    for (unsigned int iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t1); ++iElement)
     {
-        const float diff1(LArDiscreteProbabilityHelper::GetElement(t1,iElement) - mean1);
-        const float diff2(LArDiscreteProbabilityHelper::GetElement(t2,iElement) - mean2);
+        const float diff1(LArDiscreteProbabilityHelper::GetElement(t1, iElement) - mean1);
+        const float diff2(LArDiscreteProbabilityHelper::GetElement(t2, iElement) - mean2);
 
         variance1 += diff1*diff1;
         variance2 += diff2*diff2;
@@ -99,7 +107,7 @@ float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 
     float mean(0.f);
-    for (size_t iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t); ++iElement)
+    for (unsigned int iElement = 0; iElement < LArDiscreteProbabilityHelper::GetSize(t); ++iElement)
         mean+=LArDiscreteProbabilityHelper::GetElement(t,iElement);
 
     mean /= static_cast<float>(LArDiscreteProbabilityHelper::GetSize(t));
@@ -110,14 +118,14 @@ float LArDiscreteProbabilityHelper::CalculateMean(const T &t)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(const DiscreteProbabilityVector &, 
-    const DiscreteProbabilityVector &, std::mt19937 &, const size_t);
+    const DiscreteProbabilityVector &, std::mt19937 &, const unsigned int);
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(const std::vector<float> &, 
-    const std::vector<float> &, std::mt19937 &, const size_t);
+    const std::vector<float> &, std::mt19937 &, const unsigned int);
 
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(
-    const DiscreteProbabilityVector &, const DiscreteProbabilityVector &, const size_t);
+    const DiscreteProbabilityVector &, const DiscreteProbabilityVector &, const unsigned int);
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStudentTDistribution(const std::vector<float> &, 
-    const std::vector<float> &, const size_t);
+    const std::vector<float> &, const unsigned int);
 
 template float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const DiscreteProbabilityVector &, 
     const DiscreteProbabilityVector &);
