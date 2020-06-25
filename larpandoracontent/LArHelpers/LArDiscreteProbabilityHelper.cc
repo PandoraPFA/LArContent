@@ -48,7 +48,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
 
     const float tTestStatisticDenominator(1.f-correlation-correlation);
     if (tTestStatisticDenominator < std::numeric_limits<float>::epsilon())
-        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
     const float tTestStatistic(correlation*std::sqrt(dof)/(std::sqrt(tTestStatisticDenominator)));
     const float tDistCoeff(std::tgamma(0.5f*(dof + 1.f))/std::tgamma(0.5f*dof)/(std::sqrt(dof*M_PI)));
