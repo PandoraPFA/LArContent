@@ -22,6 +22,7 @@
 #include <fstream>
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 using namespace pandora;
 
@@ -35,8 +36,17 @@ MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
     m_useThreeDInformation(true),
     m_minProbabilityCut(0.5f),
     m_minCaloHitsCut(5),
-    m_filePathEnvironmentVariable("FW_SEARCH_PATH")
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
+    m_writeToTree(false)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+template<typename T>
+MvaPfoCharacterisationAlgorithm<T>::~MvaPfoCharacterisationAlgorithm()
+{
+    if (m_writeToTree)
+        PandoraMonitoringApi::SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE");
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -166,9 +176,8 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     const float completeness((nHitsInBestMCParticleTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
     const float purity((nHitsInPfoTotal > 0) ? static_cast<float>(nHitsSharedWithBestMCParticleTotal) / static_cast<float>(nHitsInPfoTotal) : 0.f);
     int pdgCode = bestMCParticlePdgCode;
-	
-    // End purity, completeness
 
+    // End purity, completeness
 	CaloHitList checkHitListW;
 	CaloHitList checkHitListU;
 	CaloHitList checkHitListV;
@@ -222,7 +231,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 
         if (isMainMCParticleSet)
         {
-			if (completeness >= 0.8 && purity >= 0.8 && mischaracterisedPfo == 0 && (abs(xVertexPos) <= 340) && (abs(yVertexPos) <= 584) && (zVertexPos >= 200 && zVertexPos <= 1194))
+			if (completeness >= 0.0 && purity >= 0.0 && mischaracterisedPfo == 0 && (abs(xVertexPos) <= 340) && (abs(yVertexPos) <= 584) && (zVertexPos >= 200 && zVertexPos <= 1194))
 			{
             std::string outputFile;
             outputFile.append(m_trainingOutputFile);
@@ -311,6 +320,14 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BdtName", m_mvaName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SvmName", m_mvaName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MvaName", m_mvaName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "WriteToTree", m_writeToTree)); // added by Mousam
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputTree", m_treeName)); // added by Mousam
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "OutputFile", m_fileName)); //added by Mousam
 
     if (m_useThreeDInformation)
     {
