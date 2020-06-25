@@ -95,7 +95,7 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1,
     if(sqrtVars < std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
 
-    return covariance /= sqrtVars;
+    return covariance / sqrtVars;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
