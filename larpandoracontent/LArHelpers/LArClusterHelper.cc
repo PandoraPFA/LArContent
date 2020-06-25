@@ -757,14 +757,7 @@ bool LArClusterHelper::SortHitsByPositionInX(const pandora::CaloHit *const pLhs,
     if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
         return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
 
-    if (std::fabs(deltaPosition.GetZ()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetZ() > std::numeric_limits<float>::epsilon());
-
-    if (std::fabs(deltaPosition.GetY()) > std::numeric_limits<float>::epsilon())
-        return (deltaPosition.GetY() > std::numeric_limits<float>::epsilon());
-
-    // Use pulse height to resolve ties
-    return SortHitsByPulseHeight(pLhs, pRhs);
+    return SortHitsByPositionInX(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
