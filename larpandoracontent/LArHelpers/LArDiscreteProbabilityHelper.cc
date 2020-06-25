@@ -71,8 +71,8 @@ float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromStu
 template <typename T>
 float LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(const T &t1, const T &t2)
 {
-    const float size1(LArDiscreteProbabilityHelper::GetSize(t1));
-    const float size2(LArDiscreteProbabilityHelper::GetSize(t2));
+    const unsigned int size1(LArDiscreteProbabilityHelper::GetSize(t1));
+    const unsigned int size2(LArDiscreteProbabilityHelper::GetSize(t2));
     if (size1 != size2)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
