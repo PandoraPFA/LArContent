@@ -372,6 +372,7 @@ inline void DiscreteProbabilityVector::VerifyCompleteData() const
 
     if (m_discreteProbabilityData.back().GetX() - m_xUpperBound > std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
     return;
 }
 
