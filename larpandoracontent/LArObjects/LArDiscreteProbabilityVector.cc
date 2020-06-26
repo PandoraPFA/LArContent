@@ -95,6 +95,10 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     const float normalisation(this->CalculateNormalisation(inputData));
+
+    if (normalisation < std::numeric_limits<float>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_FAILURE);
+
     float accumulationDatum(0.f);
 
     DiscreteProbabilityData data;
@@ -130,6 +134,10 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
     {
         const float xResampled(resamplingPoints.at(iSample));
         const float deltaX(resamplingPoints.at(iSample + 1)-xResampled);
+
+        if (deltaX < std::numeric_limits<float>::epsilon())
+            throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
         const float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
         const float densityDatumResampled((cumulativeDatumResampled - prevCumulativeData) / (m_useWidths ? deltaX : 1.f));
         resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, 
@@ -139,6 +147,10 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
 
     const float xResampled(resamplingPoints.back());
     const float deltaX(m_xUpperBound - xResampled);
+
+    if (deltaX < std::numeric_limits<float>::epsilon())
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
     const float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
     const float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData) / (m_useWidths ? deltaX : 1.f));
     resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, 
