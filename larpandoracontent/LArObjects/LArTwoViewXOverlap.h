@@ -8,6 +8,7 @@
 #ifndef LAR_TWO_VIEW_X_OVERLAP_H
 #define LAR_TWO_VIEW_X_OVERLAP_H 1
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 
@@ -27,9 +28,8 @@ public:
      *  @param  xMax0 max x value in the view 0
      *  @param  xMin1 min x value in the view 1
      *  @param  xMax1 max x value in the view 1
-     *  @param  xOverlapSpan the x overlap span
      */
-    TwoViewXOverlap(const float xMin0, const float xMax0, const float xMin1, const float xMax1, const float xOverlapSpan);
+    TwoViewXOverlap(const float xMin0, const float xMax0, const float xMin1, const float xMax1);
 
     /**
      *  @brief  Get the min x value in the view 0
@@ -81,6 +81,20 @@ public:
     float GetTwoViewXOverlapSpan() const;
 
     /**
+     *  @brief  Get the x overlap max X value
+     *
+     *  @return the x overlap min
+     */
+    float GetTwoViewXOverlapMin() const;
+
+    /**
+     *  @brief  Get the x overlap min X value
+     *
+     *  @return the x overlap max
+     */
+    float GetTwoViewXOverlapMax() const;
+
+    /**
      *  @brief  Get the fraction of the view 0 cluster that overlaps in x
      *
      *  @return the view 0 cluster's fractional overlap
@@ -112,13 +126,12 @@ TwoViewXOverlap operator+(const TwoViewXOverlap &lhs, const TwoViewXOverlap &rhs
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline TwoViewXOverlap::TwoViewXOverlap(const float xMin0, const float xMax0, const float xMin1, const float xMax1,
-        const float xOverlapSpan) :
+inline TwoViewXOverlap::TwoViewXOverlap(const float xMin0, const float xMax0, const float xMin1, const float xMax1) :
     m_xMin0(xMin0),
     m_xMax0(xMax0),
     m_xMin1(xMin1),
     m_xMax1(xMax1),
-    m_xOverlapSpan(xOverlapSpan)
+    m_xOverlapSpan(std::min(m_xMax0, m_xMax1) - std::max(m_xMin0, m_xMin1))
 {
 }
 
@@ -173,6 +186,20 @@ inline float TwoViewXOverlap::GetTwoViewXOverlapSpan() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline float TwoViewXOverlap::GetTwoViewXOverlapMin() const
+{
+    return std::max(m_xMin0, m_xMin1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TwoViewXOverlap::GetTwoViewXOverlapMax() const
+{
+    return std::min(m_xMax0, m_xMax1);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline float TwoViewXOverlap::GetXOverlapFraction0() const
 {
     return (std::numeric_limits<float>::epsilon() < this->GetXSpan0()) ? m_xOverlapSpan / this->GetXSpan0() : 0.f;
@@ -193,11 +220,8 @@ inline TwoViewXOverlap operator+(const TwoViewXOverlap &lhs, const TwoViewXOverl
     const float xMax0(std::max(lhs.GetXMax0(), rhs.GetXMax0()));
     const float xMin1(std::min(lhs.GetXMin1(), rhs.GetXMin1()));
     const float xMax1(std::max(lhs.GetXMax1(), rhs.GetXMax1()));
-    const float minX(std::max(xMin0, xMin1));
-    const float maxX(std::min(xMax0, xMax1));
-    const float xOverlapSpan(maxX - minX);
 
-    return TwoViewXOverlap(xMin0, xMax0, xMin1, xMax1, xOverlapSpan);
+    return TwoViewXOverlap(xMin0, xMax0, xMin1, xMax1);
 }
 
 } // namespace lar_content

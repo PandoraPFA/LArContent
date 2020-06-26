@@ -90,7 +90,7 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult() :
     m_nSamplingPoints(0),
     m_correlationCoefficient(0.f),
     m_locallyMatchedFraction(0.f),
-    m_twoViewXOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
+    m_twoViewXOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f))
 {
 }
 
@@ -113,7 +113,7 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const TwoViewTran
     m_nSamplingPoints(rhs.m_nSamplingPoints),
     m_correlationCoefficient(rhs.m_correlationCoefficient),
     m_locallyMatchedFraction(rhs.m_locallyMatchedFraction),
-    m_twoViewXOverlap(rhs.m_isInitialized ? rhs.m_twoViewXOverlap : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f))
+    m_twoViewXOverlap(rhs.m_isInitialized ? rhs.m_twoViewXOverlap : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f))
 {
 }
 
@@ -145,7 +145,7 @@ TwoViewTransverseOverlapResult &TwoViewTransverseOverlapResult::operator=(const 
         m_nSamplingPoints = 0;
         m_correlationCoefficient = 0.f;
         m_locallyMatchedFraction = 0.f;
-        m_twoViewXOverlap = TwoViewXOverlap(0.f, 0.f, 0.f, 0.f, 0.f);
+        m_twoViewXOverlap = TwoViewXOverlap(0.f, 0.f, 0.f, 0.f);
     }
 
     return *this;

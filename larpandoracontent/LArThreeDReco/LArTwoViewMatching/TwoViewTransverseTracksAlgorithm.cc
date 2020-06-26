@@ -52,18 +52,15 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
 
-    const float xSpan1(xMax1 - xMin1), xSpan2(xMax2 - xMin2);
-
-    if ((xSpan1 < std::numeric_limits<float>::epsilon()) || (xSpan2 < std::numeric_limits<float>::epsilon()))
+    const TwoViewXOverlap twoViewXOverlap(xMin1, xMax1, xMin2, xMax2);
+    if (twoViewXOverlap.GetXSpan0() < std::numeric_limits<float>::epsilon() || twoViewXOverlap.GetXSpan1() < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const float xOverlapMin(std::max(xMin1, xMin2));
-    const float xOverlapMax(std::min(xMax1, xMax2));
-    const float xOverlap(xOverlapMax - xOverlapMin);
-    if (xOverlap < std::numeric_limits<float>::epsilon())
+    if (twoViewXOverlap.GetTwoViewXOverlapSpan() < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_NOT_FOUND;
-    const TwoViewXOverlap twoViewXOverlap(xMin1, xMax1, xMin2, xMax2, xOverlap);
 
+    float xOverlapMin(twoViewXOverlap.GetTwoViewXOverlapMin());
+    float xOverlapMax(twoViewXOverlap.GetTwoViewXOverlapMax());
     float zMin1(0.f), zMax1(0.f);
     float zMin2(0.f), zMax2(0.f);
     LArClusterHelper::GetClusterSpanZ(pCluster1, xMin1, xMax1, zMin1, zMax1);
