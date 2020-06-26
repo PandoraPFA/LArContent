@@ -123,7 +123,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
     const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator)
 {
     if (discreteProbabilityVector1.GetSize() != discreteProbabilityVector2.GetSize() || 
-            0 == discreteProbabilityVector1.GetSize()*discreteProbabilityVector2.GetSize())
+        0 == discreteProbabilityVector1.GetSize()*discreteProbabilityVector2.GetSize())
         throw STATUS_CODE_INVALID_PARAMETER;
 
     if (m_minSamples > discreteProbabilityVector1.GetSize())
