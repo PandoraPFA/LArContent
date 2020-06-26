@@ -93,8 +93,10 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 
     DiscreteProbabilityVector::ResamplingPoints resamplingPointsX;
     for (unsigned int iSample = 0; iSample < nSamples; ++iSample)
+    {
         resamplingPointsX.emplace_back((xOverlapMin + (xOverlapMax - xOverlapMin) * 
-            static_cast<float>(iSample+1) / static_cast<float>(nSamples+1)));
+            static_cast<float>(iSample + 1) / static_cast<float>(nSamples + 1)));
+    }
 
     const DiscreteProbabilityVector resampledDiscreteProbabilityVector1(discreteProbabilityVector1, resamplingPointsX);
     const DiscreteProbabilityVector resampledDiscreteProbabilityVector2(discreteProbabilityVector2, resamplingPointsX);
