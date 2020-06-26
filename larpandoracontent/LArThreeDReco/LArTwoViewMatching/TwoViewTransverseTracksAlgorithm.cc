@@ -75,6 +75,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     if (m_minSamples > std::min(overlapHits1.size(), overlapHits2.size()))
         return STATUS_CODE_NOT_FOUND;
 
+    if (1 > m_downsampleFactor)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     const unsigned int nSamples(std::max(m_minSamples, static_cast<unsigned int>(std::min(overlapHits1.size(), overlapHits2.size())) /
         m_downsampleFactor));
 
