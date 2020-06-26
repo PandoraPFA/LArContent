@@ -17,7 +17,7 @@ namespace lar_content
 
 template <typename TX, typename TY>
 DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<TX, TY> &inputData, const TX xUpperBound, 
-    const bool useWidths) :
+        const bool useWidths) :
     m_xUpperBound(static_cast<float>(xUpperBound)),
     m_useWidths(useWidths),
     m_discreteProbabilityData(this->InitialiseDiscreteProbabilityData(inputData))
@@ -28,7 +28,7 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<TX, TY> &in
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 DiscreteProbabilityVector::DiscreteProbabilityVector(const DiscreteProbabilityVector &discreteProbabilityVector,
-    std::mt19937 &randomNumberGenerator) :
+        std::mt19937 &randomNumberGenerator) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_useWidths(discreteProbabilityVector.m_useWidths),
     m_discreteProbabilityData(this->RandomiseDiscreteProbabilityData(discreteProbabilityVector, randomNumberGenerator))
@@ -39,7 +39,7 @@ DiscreteProbabilityVector::DiscreteProbabilityVector(const DiscreteProbabilityVe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 DiscreteProbabilityVector::DiscreteProbabilityVector(const DiscreteProbabilityVector &discreteProbabilityVector,
-    const ResamplingPoints &resamplingPoints) :
+        const ResamplingPoints &resamplingPoints) :
     m_xUpperBound(discreteProbabilityVector.m_xUpperBound),
     m_useWidths(discreteProbabilityVector.m_useWidths),
     m_discreteProbabilityData(this->ResampleDiscreteProbabilityData(discreteProbabilityVector, resamplingPoints))
