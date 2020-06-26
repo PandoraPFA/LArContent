@@ -227,14 +227,10 @@ template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<fl
 template DiscreteProbabilityVector::DiscreteProbabilityVector(const AllFloatInputData &, float const, bool const);
 template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<int, int> &, int const, bool const);
 
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
-    InputData<int, float>) const;
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
-    InputData<float, int>) const;
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
-    AllFloatInputData) const;
-template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
-    InputData<int, int>) const;
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<int, float>) const;
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<float, int>) const;
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(AllFloatInputData) const;
+template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(InputData<int, int>) const;
 
 template bool DiscreteProbabilityVector::SortInputDataByX(const InputDatum<int, float> &, const InputDatum<int, float> &);
 template bool DiscreteProbabilityVector::SortInputDataByX(const InputDatum<float, int> &, const InputDatum<float, int> &);
