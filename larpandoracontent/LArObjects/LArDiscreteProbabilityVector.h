@@ -8,6 +8,7 @@
 #ifndef LAR_DISCRETE_PROBABILITY_VECTOR_H
 #define LAR_DISCRETE_PROBABILITY_VECTOR_H 1
 
+#include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
 
 #include <limits>
@@ -24,14 +25,15 @@ namespace lar_content
 class DiscreteProbabilityVector
 {
 public:
-
     template <typename TX, typename TY>
     using InputDatum = std::pair<TX, TY>;
 
     template <typename TX, typename TY>
     using InputData = std::vector<InputDatum<TX, TY> >;
 
-    typedef std::vector<float> ResamplingPoints;
+    typedef InputData<float, float> AllFloatInputData;
+
+    typedef pandora::FloatVector ResamplingPoints;
 
     /**
      *  @brief  Constructor
@@ -89,7 +91,7 @@ public:
      *
      *  @param  index the index in the vector
      *
-     *  @return the probablity
+     *  @return the probability
      */
     float GetProbability(const unsigned int index) const;
 
@@ -98,7 +100,7 @@ public:
      *
      *  @param  index the index in the vector
      *
-     *  @return the probablity density
+     *  @return the probability density
      */
     float GetProbabilityDensity(const unsigned int index) const;
 
@@ -127,62 +129,60 @@ public:
      *  @param  x the x value
      *  @param  probabilityDensity the probability density value
      *  @param  cumulativeProbability the cumulative probability value
-     *  @param width the width of the probability bin
+     *  @param  width the width of the probability bin
      */
     void GetAllAtIndex(const unsigned int index, float &x, float &probabilityDensity, float &cumulativeProbability, float &width) const;
 
 private:
-
     /**
      *  @brief  DiscreteProbabilityData class
      */
     class DiscreteProbabilityDatum
     {
-        public:
-            /**
-             *  @brief  Constructor
-             *
-             *  @param  x the x value
-             *  @param  densityDatum the probability density for the corresponding x
-             *  @param  cumulativeDatum the cumulative probability for the corresponding x
-             *  @param width the width of the bin
-             */
-            DiscreteProbabilityDatum(const float x, const float densityDatum, const float cumulativeDatum, const float width);
+    public:
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  x the x value
+         *  @param  densityDatum the probability density for the corresponding x
+         *  @param  cumulativeDatum the cumulative probability for the corresponding x
+         *  @param  width the width of the bin
+         */
+        DiscreteProbabilityDatum(const float x, const float densityDatum, const float cumulativeDatum, const float width);
 
-            /**
-             *  @brief  Get the x value for the datum
-             *
-             *  @return the x value
-             */
-            float GetX() const;
+        /**
+         *  @brief  Get the x value for the datum
+         *
+         *  @return the x value
+         */
+        float GetX() const;
 
-            /**
-             *  @brief  Get the probability density for the datum
-             *
-             *  @return the probability density
-             */
-            float GetDensityDatum() const;
+        /**
+         *  @brief  Get the probability density for the datum
+         *
+         *  @return the probability density
+         */
+        float GetDensityDatum() const;
 
-            /**
-             *  @brief  Get the cumulative probability for the datum
-             *
-             *  @return the cumulative probability
-             */
-            float GetCumulativeDatum() const;
+        /**
+         *  @brief  Get the cumulative probability for the datum
+         *
+         *  @return the cumulative probability
+         */
+        float GetCumulativeDatum() const;
 
-            /**
-             *  @brief  Get the width of the datum
-             *
-             *  @return the width
-             */
-            float GetWidth() const;
+        /**
+         *  @brief  Get the width of the datum
+         *
+         *  @return the width
+         */
+        float GetWidth() const;
 
-
-        private:
-            float m_x;                     ///< The x coordinate
-            float m_densityDatum;          ///< The probability density value
-            float m_cumulativeDatum;       ///< The cumulative probability value
-            float m_width;                 ///< The width of the probability bin
+    private:
+        float m_x;                     ///< The x coordinate
+        float m_densityDatum;          ///< The probability density value
+        float m_cumulativeDatum;       ///< The cumulative probability value
+        float m_width;                 ///< The width of the probability bin
     };
 
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
@@ -253,8 +253,8 @@ private:
      */
     void VerifyElementRequest(const unsigned int index) const;
 
-    float m_xUpperBound;                                              ///< the upper bound of the probability vector
-    bool m_useWidths;                                                 ///< controls whether bin widths are used in calculations
+    float                   m_xUpperBound;                            ///< the upper bound of the probability vector
+    bool                    m_useWidths;                              ///< controls whether bin widths are used in calculations
     DiscreteProbabilityData m_discreteProbabilityData;                ///< the probability data
 };
 
@@ -280,7 +280,7 @@ inline float DiscreteProbabilityVector::GetProbability(const unsigned int index)
 {
     this->VerifyElementRequest(index);
 
-    return m_discreteProbabilityData.at(index).GetDensityDatum()*(m_useWidths ? m_discreteProbabilityData.at(index).GetWidth() : 1.f);
+    return m_discreteProbabilityData.at(index).GetDensityDatum() * (m_useWidths ? m_discreteProbabilityData.at(index).GetWidth() : 1.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -322,14 +322,12 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const unsigned int index, f
     probabilityDensity = theDatum.GetDensityDatum();
     cumulativeProbability = theDatum.GetCumulativeDatum();
     width = theDatum.GetWidth();
-
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float x,
-    const float densityDatum, const float cumulativeDatum, const float width) :
+        const float densityDatum, const float cumulativeDatum, const float width) :
     m_x(x),
     m_densityDatum(densityDatum),
     m_cumulativeDatum(cumulativeDatum),
@@ -374,6 +372,7 @@ inline void DiscreteProbabilityVector::VerifyCompleteData() const
 
     if (m_discreteProbabilityData.back().GetX() - m_xUpperBound > std::numeric_limits<float>::epsilon())
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+
     return;
 }
 

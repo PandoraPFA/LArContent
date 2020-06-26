@@ -40,12 +40,6 @@ public:
     TwoViewTransverseTracksAlgorithm();
 
 private:
-    /**
-     *  @brief  The overridden function called by the base class which instigates calculation of the two view overlap result
-     *
-     *  @param  pCluster1 the view 0 cluster
-     *  @param  pCluster2 the view 1 cluster
-     */
     void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, 
         const pandora::Cluster *const);
 
@@ -71,16 +65,7 @@ private:
     float CalculateLocalMatchingFraction(const DiscreteProbabilityVector &discreteProbabilityVector1, 
         const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator);
 
-    /**
-     *  @brief  Runs the list of matching tools on each element in the overlap matrix 
-     */
     void ExamineOverlapContainer();
-
-    /**
-     *  @brief  Reads the settings from the XML 
-     *
-     *  @param  xmlHandle the xml handle
-     */
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<TransverseMatrixTool*> MatrixToolVector;

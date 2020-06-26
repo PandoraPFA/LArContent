@@ -75,14 +75,16 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     if (m_minSamples > std::min(overlapHits1.size(), overlapHits2.size()))
         return STATUS_CODE_NOT_FOUND;
 
+    if (1 > m_downsampleFactor)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     const unsigned int nSamples(std::max(m_minSamples, static_cast<unsigned int>(std::min(overlapHits1.size(), overlapHits2.size())) /
         m_downsampleFactor));
 
-    DiscreteProbabilityVector::InputData<float,float> inputData1;
+    DiscreteProbabilityVector::AllFloatInputData inputData1;
     for (const pandora::CaloHit *const pCaloHit: overlapHits1)
         inputData1.emplace_back(pCaloHit->GetPositionVector().GetX(), pCaloHit->GetInputEnergy());
 
-    DiscreteProbabilityVector::InputData<float,float> inputData2;
+    DiscreteProbabilityVector::AllFloatInputData inputData2;
     for (const pandora::CaloHit *const pCaloHit: overlapHits2)
         inputData2.emplace_back(pCaloHit->GetPositionVector().GetX(), pCaloHit->GetInputEnergy());
 
@@ -91,8 +93,10 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 
     DiscreteProbabilityVector::ResamplingPoints resamplingPointsX;
     for (unsigned int iSample = 0; iSample < nSamples; ++iSample)
+    {
         resamplingPointsX.emplace_back((xOverlapMin + (xOverlapMax - xOverlapMin) * 
-            static_cast<float>(iSample+1) / static_cast<float>(nSamples+1)));
+            static_cast<float>(iSample + 1) / static_cast<float>(nSamples + 1)));
+    }
 
     const DiscreteProbabilityVector resampledDiscreteProbabilityVector1(discreteProbabilityVector1, resamplingPointsX);
     const DiscreteProbabilityVector resampledDiscreteProbabilityVector2(discreteProbabilityVector2, resamplingPointsX);
@@ -103,7 +107,7 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const float pvalue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
 
-    const float matchingScore(1.f-pvalue);
+    const float matchingScore(1.f - pvalue);
     const float locallyMatchedFraction(CalculateLocalMatchingFraction(resampledDiscreteProbabilityVector1, 
         resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
 
@@ -119,13 +123,13 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
     const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator)
 {
     if (discreteProbabilityVector1.GetSize() != discreteProbabilityVector2.GetSize() || 
-            0 == discreteProbabilityVector1.GetSize()*discreteProbabilityVector2.GetSize())
+        0 == discreteProbabilityVector1.GetSize()*discreteProbabilityVector2.GetSize())
         throw STATUS_CODE_INVALID_PARAMETER;
 
     if (m_minSamples > discreteProbabilityVector1.GetSize())
         throw STATUS_CODE_INVALID_PARAMETER;
 
-    std::vector<float> localValues1, localValues2;
+    pandora::FloatVector localValues1, localValues2;
     int nMatchedComparisons(0);
 
     for (unsigned int iValue = 0; iValue < discreteProbabilityVector1.GetSize(); ++iValue)
@@ -137,18 +141,19 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
             const float localPValue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
                 localValues1, localValues2, randomNumberGenerator, m_nPermutations));
 
-            if ((1.f-localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
+            if ((1.f - localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
                 nMatchedComparisons++;
+
             localValues1.erase(localValues1.begin());
             localValues2.erase(localValues2.begin());
         }
     }
 
-    const int nComparisons(static_cast<int>(discreteProbabilityVector1.GetSize())-(static_cast<int>(m_minSamples)-1));
+    const int nComparisons(static_cast<int>(discreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
     if (1 > nComparisons)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    return static_cast<float>(nMatchedComparisons)/static_cast<float>(nComparisons);
+    return (static_cast<float>(nMatchedComparisons) / static_cast<float>(nComparisons));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
