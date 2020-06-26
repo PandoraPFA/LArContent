@@ -153,7 +153,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
     if (1 > nComparisons)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    return static_cast<float>(nMatchedComparisons) / static_cast<float>(nComparisons);
+    return (static_cast<float>(nMatchedComparisons) / static_cast<float>(nComparisons));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
