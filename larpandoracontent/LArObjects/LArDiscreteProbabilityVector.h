@@ -32,6 +32,8 @@ public:
     template <typename TX, typename TY>
     using InputData = std::vector<InputDatum<TX, TY> >;
 
+    typedef InputData<float, float> AllFloatInputData;
+
     typedef pandora::FloatVector ResamplingPoints;
 
     /**

@@ -80,11 +80,11 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const unsigned int nSamples(std::max(m_minSamples, static_cast<unsigned int>(std::min(overlapHits1.size(), overlapHits2.size())) /
         m_downsampleFactor));
 
-    DiscreteProbabilityVector::InputData<float,float> inputData1;
+    DiscreteProbabilityVector::AllFloatInputData inputData1;
     for (const pandora::CaloHit *const pCaloHit: overlapHits1)
         inputData1.emplace_back(pCaloHit->GetPositionVector().GetX(), pCaloHit->GetInputEnergy());
 
-    DiscreteProbabilityVector::InputData<float,float> inputData2;
+    DiscreteProbabilityVector::AllFloatInputData inputData2;
     for (const pandora::CaloHit *const pCaloHit: overlapHits2)
         inputData2.emplace_back(pCaloHit->GetPositionVector().GetX(), pCaloHit->GetInputEnergy());
 

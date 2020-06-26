@@ -212,7 +212,7 @@ float DiscreteProbabilityVector::CalculateNormalisation(const InputData<TX, TY> 
 
 template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<int, float> &, int const, bool const);
 template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<float, int> &, float const, bool const);
-template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<float, float> &, float const, bool const);
+template DiscreteProbabilityVector::DiscreteProbabilityVector(const AllFloatInputData &, float const, bool const);
 template DiscreteProbabilityVector::DiscreteProbabilityVector(const InputData<int, int> &, int const, bool const);
 
 template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
@@ -220,7 +220,7 @@ template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityV
 template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
     InputData<float, int>) const;
 template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
-    InputData<float, float>) const;
+    AllFloatInputData) const;
 template DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::InitialiseDiscreteProbabilityData(
     InputData<int, int>) const;
 
@@ -231,7 +231,7 @@ template bool DiscreteProbabilityVector::SortInputDataByX(const InputDatum<int, 
 
 template float DiscreteProbabilityVector::CalculateNormalisation(const InputData<int, float> &) const;
 template float DiscreteProbabilityVector::CalculateNormalisation(const InputData<float, int> &) const;
-template float DiscreteProbabilityVector::CalculateNormalisation(const InputData<float, float> &) const;
+template float DiscreteProbabilityVector::CalculateNormalisation(const AllFloatInputData &) const;
 template float DiscreteProbabilityVector::CalculateNormalisation(const InputData<int, int> &) const;
 
 } // namespace lar_content
