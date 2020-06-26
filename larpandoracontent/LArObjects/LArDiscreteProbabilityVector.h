@@ -134,7 +134,6 @@ public:
     void GetAllAtIndex(const unsigned int index, float &x, float &probabilityDensity, float &cumulativeProbability, float &width) const;
 
 private:
-
     /**
      *  @brief  DiscreteProbabilityData class
      */
