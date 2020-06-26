@@ -322,8 +322,6 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const unsigned int index, f
     probabilityDensity = theDatum.GetDensityDatum();
     cumulativeProbability = theDatum.GetCumulativeDatum();
     width = theDatum.GetWidth();
-
-    return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
