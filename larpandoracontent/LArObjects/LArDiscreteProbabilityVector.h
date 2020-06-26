@@ -25,7 +25,6 @@ namespace lar_content
 class DiscreteProbabilityVector
 {
 public:
-
     template <typename TX, typename TY>
     using InputDatum = std::pair<TX, TY>;
 
