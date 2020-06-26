@@ -129,7 +129,7 @@ public:
      *  @param  x the x value
      *  @param  probabilityDensity the probability density value
      *  @param  cumulativeProbability the cumulative probability value
-     *  @param width the width of the probability bin
+     *  @param  width the width of the probability bin
      */
     void GetAllAtIndex(const unsigned int index, float &x, float &probabilityDensity, float &cumulativeProbability, float &width) const;
 
@@ -146,7 +146,7 @@ private:
              *  @param  x the x value
              *  @param  densityDatum the probability density for the corresponding x
              *  @param  cumulativeDatum the cumulative probability for the corresponding x
-             *  @param width the width of the bin
+             *  @param  width the width of the bin
              */
             DiscreteProbabilityDatum(const float x, const float densityDatum, const float cumulativeDatum, const float width);
 
