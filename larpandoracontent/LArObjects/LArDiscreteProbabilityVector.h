@@ -327,7 +327,7 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const unsigned int index, f
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float x,
-    const float densityDatum, const float cumulativeDatum, const float width) :
+        const float densityDatum, const float cumulativeDatum, const float width) :
     m_x(x),
     m_densityDatum(densityDatum),
     m_cumulativeDatum(cumulativeDatum),
