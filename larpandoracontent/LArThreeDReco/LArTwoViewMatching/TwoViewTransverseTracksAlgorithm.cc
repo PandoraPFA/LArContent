@@ -143,6 +143,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
 
             if ((1.f - localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
                 nMatchedComparisons++;
+
             localValues1.erase(localValues1.begin());
             localValues2.erase(localValues2.begin());
         }
