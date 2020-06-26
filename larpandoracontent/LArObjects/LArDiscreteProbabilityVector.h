@@ -280,7 +280,7 @@ inline float DiscreteProbabilityVector::GetProbability(const unsigned int index)
 {
     this->VerifyElementRequest(index);
 
-    return m_discreteProbabilityData.at(index).GetDensityDatum()*(m_useWidths ? m_discreteProbabilityData.at(index).GetWidth() : 1.f);
+    return m_discreteProbabilityData.at(index).GetDensityDatum() * (m_useWidths ? m_discreteProbabilityData.at(index).GetWidth() : 1.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
