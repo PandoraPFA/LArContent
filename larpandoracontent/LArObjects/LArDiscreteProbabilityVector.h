@@ -178,7 +178,6 @@ private:
              */
             float GetWidth() const;
 
-
         private:
             float m_x;                     ///< The x coordinate
             float m_densityDatum;          ///< The probability density value
