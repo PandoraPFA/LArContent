@@ -167,7 +167,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Ra
     DiscreteProbabilityData randomisedProbabilityData;
 
     std::vector<unsigned int> randomisedElements(discreteProbabilityVector.GetSize());
-    std::iota (std::begin(randomisedElements), std::end(randomisedElements), 0);
+    std::iota(std::begin(randomisedElements), std::end(randomisedElements), 0);
     std::shuffle(std::begin(randomisedElements), std::end(randomisedElements), randomNumberGenerator);
 
     float xPos(discreteProbabilityVector.GetX(0));
