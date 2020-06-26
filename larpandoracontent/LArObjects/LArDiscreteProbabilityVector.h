@@ -253,8 +253,8 @@ private:
      */
     void VerifyElementRequest(const unsigned int index) const;
 
-    float m_xUpperBound;                                              ///< the upper bound of the probability vector
-    bool m_useWidths;                                                 ///< controls whether bin widths are used in calculations
+    float                   m_xUpperBound;                            ///< the upper bound of the probability vector
+    bool                    m_useWidths;                              ///< controls whether bin widths are used in calculations
     DiscreteProbabilityData m_discreteProbabilityData;                ///< the probability data
 };
 
