@@ -101,15 +101,15 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::In
     for (unsigned int iDatum = 0; iDatum < inputData.size()-1; ++iDatum)
     {
         const float x(static_cast<float>(inputData.at(iDatum).first));
-        const float deltaX(static_cast<float>(inputData.at(iDatum+1).first)-x);
+        const float deltaX(static_cast<float>(inputData.at(iDatum + 1).first) - x);
         const float densityDatum(static_cast<float>(inputData.at(iDatum).second) / normalisation);
-        accumulationDatum+=densityDatum*(m_useWidths ? deltaX : 1.f);
+        accumulationDatum += densityDatum * (m_useWidths ? deltaX : 1.f);
         data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum, deltaX));
     }
     const float x(static_cast<float>(inputData.back().first));
-    const float deltaX(m_xUpperBound-x);
+    const float deltaX(m_xUpperBound - x);
     const float densityDatum(static_cast<float>(inputData.back().second) / normalisation);
-    accumulationDatum+=densityDatum*(m_useWidths ? deltaX : 1.f);
+    accumulationDatum += densityDatum * (m_useWidths ? deltaX : 1.f);
     data.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(x, densityDatum, accumulationDatum, deltaX));
 
     return data;
