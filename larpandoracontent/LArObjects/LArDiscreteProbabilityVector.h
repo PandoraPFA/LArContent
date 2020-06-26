@@ -8,6 +8,7 @@
 #ifndef LAR_DISCRETE_PROBABILITY_VECTOR_H
 #define LAR_DISCRETE_PROBABILITY_VECTOR_H 1
 
+#include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
 
 #include <limits>
@@ -31,7 +32,7 @@ public:
     template <typename TX, typename TY>
     using InputData = std::vector<InputDatum<TX, TY> >;
 
-    typedef std::vector<float> ResamplingPoints;
+    typedef pandora::FloatVector ResamplingPoints;
 
     /**
      *  @brief  Constructor
