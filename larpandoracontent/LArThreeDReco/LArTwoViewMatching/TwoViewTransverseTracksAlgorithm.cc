@@ -141,18 +141,18 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
             const float localPValue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
                 localValues1, localValues2, randomNumberGenerator, m_nPermutations));
 
-            if ((1.f-localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
+            if ((1.f - localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
                 nMatchedComparisons++;
             localValues1.erase(localValues1.begin());
             localValues2.erase(localValues2.begin());
         }
     }
 
-    const int nComparisons(static_cast<int>(discreteProbabilityVector1.GetSize())-(static_cast<int>(m_minSamples)-1));
+    const int nComparisons(static_cast<int>(discreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
     if (1 > nComparisons)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    return static_cast<float>(nMatchedComparisons)/static_cast<float>(nComparisons);
+    return static_cast<float>(nMatchedComparisons) / static_cast<float>(nComparisons);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
