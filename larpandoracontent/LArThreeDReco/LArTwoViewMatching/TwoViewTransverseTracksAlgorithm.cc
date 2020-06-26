@@ -72,11 +72,11 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     LArClusterHelper::GetCaloHitListInBoundingBox(pCluster1, boundingBoxMin1, boundingBoxMax1, overlapHits1);
     LArClusterHelper::GetCaloHitListInBoundingBox(pCluster2, boundingBoxMin2, boundingBoxMax2, overlapHits2);
 
-    if (m_minSamples > std::min(overlapHits1.size(),overlapHits2.size()))
+    if (m_minSamples > std::min(overlapHits1.size(), overlapHits2.size()))
         return STATUS_CODE_NOT_FOUND;
 
-    const unsigned int nSamples(std::max(
-        m_minSamples,static_cast<unsigned int>(std::min(overlapHits1.size(),overlapHits2.size()))/m_downsampleFactor));
+    const unsigned int nSamples(std::max(m_minSamples, static_cast<unsigned int>(std::min(overlapHits1.size(), overlapHits2.size())) /
+        m_downsampleFactor));
 
     DiscreteProbabilityVector::InputData<float,float> inputData1;
     for (const pandora::CaloHit *const pCaloHit: overlapHits1)
