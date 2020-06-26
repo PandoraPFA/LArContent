@@ -63,18 +63,18 @@ float DiscreteProbabilityVector::EvaluateCumulativeProbability(const float x) co
         if (x - m_discreteProbabilityData.at(iDatum).GetX() > std::numeric_limits<float>::epsilon())
             continue;
 
-        const float xLow(m_discreteProbabilityData.at(iDatum-1).GetX());
-        const float yLow(m_discreteProbabilityData.at(iDatum-1).GetCumulativeDatum());
+        const float xLow(m_discreteProbabilityData.at(iDatum - 1).GetX());
+        const float yLow(m_discreteProbabilityData.at(iDatum - 1).GetCumulativeDatum());
         const float xHigh(m_discreteProbabilityData.at(iDatum).GetX());
         const float yHigh(m_discreteProbabilityData.at(iDatum).GetCumulativeDatum());
 
-        if (std::fabs(xHigh-xLow) < std::numeric_limits<float>::epsilon())
+        if (std::fabs(xHigh - xLow) < std::numeric_limits<float>::epsilon())
             throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
-        const float m((yHigh-yLow)/(xHigh-xLow));
-        const float c(yLow-m*xLow);
+        const float m((yHigh - yLow)/(xHigh - xLow));
+        const float c(yLow - m*xLow);
 
-        return m*x+c;
+        return m*x + c;
     }
 
     throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
