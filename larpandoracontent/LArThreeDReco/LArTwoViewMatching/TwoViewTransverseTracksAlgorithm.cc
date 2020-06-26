@@ -107,7 +107,7 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const float pvalue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
 
-    const float matchingScore(1.f-pvalue);
+    const float matchingScore(1.f - pvalue);
     const float locallyMatchedFraction(CalculateLocalMatchingFraction(resampledDiscreteProbabilityVector1, 
         resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
 
