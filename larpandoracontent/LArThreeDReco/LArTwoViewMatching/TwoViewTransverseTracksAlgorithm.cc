@@ -129,7 +129,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
     if (m_minSamples > discreteProbabilityVector1.GetSize())
         throw STATUS_CODE_INVALID_PARAMETER;
 
-    std::vector<float> localValues1, localValues2;
+    pandora::FloatVector localValues1, localValues2;
     int nMatchedComparisons(0);
 
     for (unsigned int iValue = 0; iValue < discreteProbabilityVector1.GetSize(); ++iValue)
