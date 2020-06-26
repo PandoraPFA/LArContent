@@ -91,7 +91,7 @@ public:
      *
      *  @param  index the index in the vector
      *
-     *  @return the probablity
+     *  @return the probability
      */
     float GetProbability(const unsigned int index) const;
 
@@ -100,7 +100,7 @@ public:
      *
      *  @param  index the index in the vector
      *
-     *  @return the probablity density
+     *  @return the probability density
      */
     float GetProbabilityDensity(const unsigned int index) const;
 
