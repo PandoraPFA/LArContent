@@ -152,7 +152,7 @@ DiscreteProbabilityVector::DiscreteProbabilityData DiscreteProbabilityVector::Re
         throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 
     const float cumulativeDatumResampled(discreteProbabilityVector.EvaluateCumulativeProbability(xResampled));
-    const float densityDatumResampled((cumulativeDatumResampled-prevCumulativeData) / (m_useWidths ? deltaX : 1.f));
+    const float densityDatumResampled((cumulativeDatumResampled - prevCumulativeData) / (m_useWidths ? deltaX : 1.f));
     resampledProbabilityData.emplace_back(DiscreteProbabilityVector::DiscreteProbabilityDatum(xResampled, densityDatumResampled, 
         cumulativeDatumResampled, deltaX));
 
