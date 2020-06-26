@@ -139,50 +139,50 @@ private:
      */
     class DiscreteProbabilityDatum
     {
-        public:
-            /**
-             *  @brief  Constructor
-             *
-             *  @param  x the x value
-             *  @param  densityDatum the probability density for the corresponding x
-             *  @param  cumulativeDatum the cumulative probability for the corresponding x
-             *  @param  width the width of the bin
-             */
-            DiscreteProbabilityDatum(const float x, const float densityDatum, const float cumulativeDatum, const float width);
+    public:
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  x the x value
+         *  @param  densityDatum the probability density for the corresponding x
+         *  @param  cumulativeDatum the cumulative probability for the corresponding x
+         *  @param  width the width of the bin
+         */
+        DiscreteProbabilityDatum(const float x, const float densityDatum, const float cumulativeDatum, const float width);
 
-            /**
-             *  @brief  Get the x value for the datum
-             *
-             *  @return the x value
-             */
-            float GetX() const;
+        /**
+         *  @brief  Get the x value for the datum
+         *
+         *  @return the x value
+         */
+        float GetX() const;
 
-            /**
-             *  @brief  Get the probability density for the datum
-             *
-             *  @return the probability density
-             */
-            float GetDensityDatum() const;
+        /**
+         *  @brief  Get the probability density for the datum
+         *
+         *  @return the probability density
+         */
+        float GetDensityDatum() const;
 
-            /**
-             *  @brief  Get the cumulative probability for the datum
-             *
-             *  @return the cumulative probability
-             */
-            float GetCumulativeDatum() const;
+        /**
+         *  @brief  Get the cumulative probability for the datum
+         *
+         *  @return the cumulative probability
+         */
+        float GetCumulativeDatum() const;
 
-            /**
-             *  @brief  Get the width of the datum
-             *
-             *  @return the width
-             */
-            float GetWidth() const;
+        /**
+         *  @brief  Get the width of the datum
+         *
+         *  @return the width
+         */
+        float GetWidth() const;
 
-        private:
-            float m_x;                     ///< The x coordinate
-            float m_densityDatum;          ///< The probability density value
-            float m_cumulativeDatum;       ///< The cumulative probability value
-            float m_width;                 ///< The width of the probability bin
+    private:
+        float m_x;                     ///< The x coordinate
+        float m_densityDatum;          ///< The probability density value
+        float m_cumulativeDatum;       ///< The cumulative probability value
+        float m_width;                 ///< The width of the probability bin
     };
 
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
