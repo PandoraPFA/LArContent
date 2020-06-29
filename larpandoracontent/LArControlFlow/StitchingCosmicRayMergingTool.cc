@@ -28,6 +28,7 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_halfWindowLayers(30),
     m_minLengthSquared(50.f),
     m_minCosRelativeAngle(0.966),
+    m_relaxMinLongitudinalDisplacement(-5.f),    
     m_maxLongitudinalDisplacementX(15.f),
     m_maxTransverseDisplacement(5.f),
     m_relaxCosRelativeAngle(0.906),
@@ -251,28 +252,24 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
         return;
     }
 
-    if (!LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex1.GetPosition(),  TPC_3D, 0.f) ||
-        !LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex2.GetPosition(),  TPC_3D, 0.f))
-    {
-        // Selection cuts on longitudinal impact parameters
-        const float minL(-1.f);
-        const float dXdL1(m_useXcoordinate ? pX1 :
-            (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1) : minL);
-        const float dXdL2(m_useXcoordinate ? pX2 :
-            (1.f - pX2 * pX2 > std::numeric_limits<float>::epsilon()) ? pX2 / std::sqrt(1.f - pX2 * pX2) : minL);
-        const float maxL1(maxLongitudinalDisplacementX / dXdL1);
-        const float maxL2(maxLongitudinalDisplacementX / dXdL2);
+    const float minL((!LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex1.GetPosition(),  TPC_3D, 0.f) ||
+        !LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex2.GetPosition(),  TPC_3D, 0.f)) ? -1.f : m_relaxMinLongitudinalDisplacement);
+    const float dXdL1(m_useXcoordinate ? pX1 :
+        (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1) : minL);
+    const float dXdL2(m_useXcoordinate ? pX2 :
+        (1.f - pX2 * pX2 > std::numeric_limits<float>::epsilon()) ? pX2 / std::sqrt(1.f - pX2 * pX2) : minL);
+    const float maxL1(maxLongitudinalDisplacementX / dXdL1);
+    const float maxL2(maxLongitudinalDisplacementX / dXdL2);
 
-        if (rL1 < minL || rL1 > maxL1 || rL2 < minL || rL2 > maxL2)
-            return;
+    if (rL1 < minL || rL1 > maxL1 || rL2 < minL || rL2 > maxL2)
+        return;
 
-        // Selection cuts on transverse impact parameters
-        const bool minPass(std::min(rT1, rT2) < m_relaxTransverseDisplacement && cosRelativeAngle > m_relaxCosRelativeAngle);
-        const bool maxPass(std::max(rT1, rT2) < m_maxTransverseDisplacement && cosRelativeAngle > m_minCosRelativeAngle);
+    // Selection cuts on transverse impact parameters
+    const bool minPass(std::min(rT1, rT2) < m_relaxTransverseDisplacement && cosRelativeAngle > m_relaxCosRelativeAngle);
+    const bool maxPass(std::max(rT1, rT2) < m_maxTransverseDisplacement && cosRelativeAngle > m_minCosRelativeAngle);
 
-        if (!minPass && !maxPass)
-            return;
-    }
+    if (!minPass && !maxPass)
+        return;
 
     // Store this association
     const PfoAssociation::VertexType vertexType1(pointingVertex1.IsInnerVertex() ? PfoAssociation::INNER : PfoAssociation::OUTER);
@@ -817,6 +814,9 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "RelaxMinLongitudinalDisplacement", m_relaxMinLongitudinalDisplacement));        
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalDisplacementX", m_maxLongitudinalDisplacementX));
