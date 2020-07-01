@@ -14,6 +14,8 @@
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
+#include <unordered_map>
+
 namespace lar_content
 {
 
@@ -66,35 +68,35 @@ public:
          *
          *  @return  CartesianVector the merge point of the upstream cluster
          */
-        const pandora::CartesianVector GetUpstreamMergePoint() const;
+        const pandora::CartesianVector &GetUpstreamMergePoint() const;
 
         /**
          *  @brief  Returns the upstream cluster direction at the upstream merge point
          *
          *  @return  CartesianVector the direction at the merge point of the upstream cluster
          */        
-        const pandora::CartesianVector GetUpstreamMergeDirection() const;
+        const pandora::CartesianVector &GetUpstreamMergeDirection() const;
 
         /**
          *  @brief  Returns the downstream cluster merge point
          *
          *  @return  CartesianVector the merge point of the downstream cluster
          */
-        const pandora::CartesianVector GetDownstreamMergePoint() const;
+        const pandora::CartesianVector &GetDownstreamMergePoint() const;
 
         /**
          *  @brief  Returns the downstream cluster direction at the downstream merge point
          *
          *  @return  CartesianVector the direction at the merge point of the downstream cluster
          */        
-        const pandora::CartesianVector GetDownstreamMergeDirection() const;
+        const pandora::CartesianVector &GetDownstreamMergeDirection() const;
 
         /**
          *  @brief  Returns the unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
          *
          *  @return  CartesianVector the unit displacement vector from the upstream merge point to the downstream merge point
          */           
-        const pandora::CartesianVector GetConnectingLineDirection() const;
+        const pandora::CartesianVector &GetConnectingLineDirection() const;
         
     private:
         const pandora::Cluster     *m_pUpstreamCluster;            ///< The upstream cluster of the two associated clusters         
@@ -378,35 +380,35 @@ inline const pandora::Cluster *TrackInEMShowerAlgorithm::ClusterAssociation::Get
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetUpstreamMergePoint() const
+inline const pandora::CartesianVector &TrackInEMShowerAlgorithm::ClusterAssociation::GetUpstreamMergePoint() const
 {
     return m_upstreamMergePoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetUpstreamMergeDirection() const
+inline const pandora::CartesianVector &TrackInEMShowerAlgorithm::ClusterAssociation::GetUpstreamMergeDirection() const
 {
     return m_upstreamMergeDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetDownstreamMergePoint() const
+inline const pandora::CartesianVector &TrackInEMShowerAlgorithm::ClusterAssociation::GetDownstreamMergePoint() const
 {
     return m_downstreamMergePoint;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetDownstreamMergeDirection() const
+inline const pandora::CartesianVector &TrackInEMShowerAlgorithm::ClusterAssociation::GetDownstreamMergeDirection() const
 {
     return m_downstreamMergeDirection;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociation::GetConnectingLineDirection() const
+inline const pandora::CartesianVector &TrackInEMShowerAlgorithm::ClusterAssociation::GetConnectingLineDirection() const
 {
     return m_connectingLineDirection;
 }
@@ -415,7 +417,8 @@ inline const pandora::CartesianVector TrackInEMShowerAlgorithm::ClusterAssociati
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrackInEMShowerAlgorithm::SortByDistanceAlongLine::SortByDistanceAlongLine(const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection) :
-    m_startPoint(startPoint), m_lineDirection(lineDirection.GetUnitVector())
+    m_startPoint(startPoint),
+    m_lineDirection(lineDirection.GetUnitVector())
 {
 }
     
