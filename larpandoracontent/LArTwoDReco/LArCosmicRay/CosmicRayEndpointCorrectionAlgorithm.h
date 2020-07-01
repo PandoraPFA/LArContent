@@ -35,6 +35,12 @@ private:
      */
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector) const;
 
+
+    void IsCosmicRay(const pandora::CartesianVector &clusterEndpoint, const pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection,
+        const bool isUpstream, const TwoDSlidingFitResult &microFitResult, const pandora::CartesianVector &averageDirection,  const pandora::Cluster *const pCluster) const;
+
+    void NewIsCosmicRay(const pandora::CartesianVector &clusterEndpoint, const pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection, const pandora::Cluster *const pCluster, const bool isUpstream) const;
+    
 };
 
 } // namespace lar_content
