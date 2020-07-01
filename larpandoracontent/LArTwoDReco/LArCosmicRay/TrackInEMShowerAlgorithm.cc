@@ -105,13 +105,13 @@ void TrackInEMShowerAlgorithm::InitialiseSlidingFitResultMaps(const ClusterVecto
     {
         try
         {
-            TwoDSlidingFitResult microSlidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
-            TwoDSlidingFitResult macroSlidingFitResult(pCluster, m_macroSlidingFitWindow, slidingFitPitch);
+            const TwoDSlidingFitResult microSlidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
+            const TwoDSlidingFitResult macroSlidingFitResult(pCluster, m_macroSlidingFitWindow, slidingFitPitch);
 
             (void) microSlidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, microSlidingFitResult));
             (void) macroSlidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, macroSlidingFitResult));
         }
-        catch (StatusCodeException &) {}
+        catch (const StatusCodeException &) {}
     }
 }
   
@@ -652,31 +652,24 @@ bool TrackInEMShowerAlgorithm::IsClusterRemnantDisconnected(const Cluster *const
     if (pRemnantCluster->GetNCaloHits() == 1)
         return false;
 
-    unsigned int count(0);
-    float maxSeparationDistance(-std::numeric_limits<float>::max());
-
     const OrderedCaloHitList &orderedCaloHitList(pRemnantCluster->GetOrderedCaloHitList());
-    CartesianVector previousHitPosition((*orderedCaloHitList.begin()->second->begin())->GetPositionVector());
+    const CaloHit *pPreviousCaloHit(orderedCaloHitList.begin()->second->front());
+    
     for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
     {
         for (const CaloHit *const pCaloHit : *mapEntry.second) 
         {
-            ++count;
-            
-            if (count == 1)
+            if (pCaloHit == pPreviousCaloHit)
                 continue;
             
-            const float separationDistance(std::sqrt(pCaloHit->GetPositionVector().GetDistanceSquared(previousHitPosition)));
+            const float separationDistanceSquared(pCaloHit->GetPositionVector().GetDistanceSquared(pPreviousCaloHit->GetPositionVector()));
 
-            if (separationDistance > maxSeparationDistance)
-                maxSeparationDistance = separationDistance;
+            if (separationDistanceSquared > (m_maxHitSeparationForConnectedCluster * m_maxHitSeparationForConnectedCluster))
+                return true;
 
-            previousHitPosition = pCaloHit->GetPositionVector();
+            pPreviousCaloHit = pCaloHit;
         }
     }
-
-    if (maxSeparationDistance > m_maxHitSeparationForConnectedCluster)
-        return true;
     
     return false;
 }

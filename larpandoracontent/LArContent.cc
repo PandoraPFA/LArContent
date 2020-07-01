@@ -222,7 +222,6 @@
     d("LArCosmicRayVertexBuilding",             CosmicRayVertexBuildingAlgorithm)                                               \
     d("LArDeltaRayIdentification",              DeltaRayIdentificationAlgorithm)                                                \
     d("LArDeltaRayMatching",                    DeltaRayMatchingAlgorithm)                                                      \
-    d("LArTrackInEMShower",                     TrackInEMShowerAlgorithm)                                                       \
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
     d("LArThreeDLongitudinalTracks",            ThreeViewLongitudinalTracksAlgorithm)                                           \
@@ -262,6 +261,7 @@
     d("LArCosmicRaySplitting",                  CosmicRaySplittingAlgorithm)                                                    \
     d("LArDeltaRayExtension",                   DeltaRayExtensionAlgorithm)                                                     \
     d("LArDeltaRayGrowing",                     DeltaRayGrowingAlgorithm)                                                       \
+    d("LArTrackInEMShower",                     TrackInEMShowerAlgorithm)                                                       \
     d("LArBranchSplitting",                     BranchSplittingAlgorithm)                                                       \
     d("LArCrossedTrackSplitting",               CrossedTrackSplittingAlgorithm)                                                 \
     d("LArDeltaRaySplitting",                   DeltaRaySplittingAlgorithm)                                                     \

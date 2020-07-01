@@ -226,7 +226,7 @@ bool TracksCrossingGapsTool::PassesGapChecks(ThreeViewTransverseTracksAlgorithm 
         if ((STATUS_CODE_SUCCESS != statusCodeW) && (!this->IsEndOfCluster(xSample, slidingFitResultW)))
             return this->CheckXPositionInGap(xSample, slidingFitResultW, slidingFitResultU, slidingFitResultV, gapInW, gapInU, gapInV);
     }
-    catch (StatusCodeException &statusCodeException) {}
+    catch (const StatusCodeException &statusCodeException) {}
     
     return false;
 }
