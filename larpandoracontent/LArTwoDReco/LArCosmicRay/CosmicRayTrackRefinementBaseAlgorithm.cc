@@ -62,6 +62,9 @@ bool CosmicRayTrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const T
     const int loopTerminationLayer(endLayer + (isUpstream ? -1 : 1));
     const int step(isUpstream ? -1 : 1);
 
+    std::cout << "DO NOT FORGET THAT YOU HAVE THE DIRECTIONS FACING ONE ANOTHER" << std::endl;
+    std::cout << "DO NOT FORGET THAT YOU HAVE CHANGED THIS SO THAT WE USE THE LOCAL GRADIENT AND NOT THE AVERAGE" << std::endl; 
+    
     // ATTN: Search for stable region for which the local layer gradient agrees well with associated cluster global gradient
     unsigned int gradientStabilityWindow(std::ceil(clusterMicroLayerFitResultMap.size() *  m_stableRegionClusterFraction));
     unsigned int goodLayerCount(0);
@@ -83,7 +86,9 @@ bool CosmicRayTrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const T
             if (goodLayerCount == 0)
             {
                 // ATTN: Cluster direction vectors must point to one another
-                clusterMergeDirection = clusterAverageDirection * (isUpstream ? 1.f : -1.f);
+                //clusterMergeDirection = clusterAverageDirection * (isUpstream ? 1.f : -1.f);
+                clusterMergeDirection = microDirection;
+                //clusterMergeDirection = clusterAverageDirection;
                 clusterMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), clusterMergePosition);
             }
             
