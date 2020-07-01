@@ -215,7 +215,7 @@ bool TracksCrossingGapsTool::PassesGapChecks(ThreeViewTransverseTracksAlgorithm 
         return false;
 
     try
-    {    
+    {
         // Note: argument order important - initially assume first view has a gap, but inside CheckXPositionInGap do check other two views
         if ((STATUS_CODE_SUCCESS != statusCodeU) && (!this->IsEndOfCluster(xSample, slidingFitResultU)))
             return this->CheckXPositionInGap(xSample, slidingFitResultU, slidingFitResultV, slidingFitResultW, gapInU, gapInV, gapInW);
@@ -227,7 +227,7 @@ bool TracksCrossingGapsTool::PassesGapChecks(ThreeViewTransverseTracksAlgorithm 
             return this->CheckXPositionInGap(xSample, slidingFitResultW, slidingFitResultU, slidingFitResultV, gapInW, gapInU, gapInV);
     }
     catch (const StatusCodeException &statusCodeException) {}
-    
+
     return false;
 }
 

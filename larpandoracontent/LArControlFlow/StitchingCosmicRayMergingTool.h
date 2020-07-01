@@ -234,7 +234,7 @@ private:
     float           m_maxTransverseDisplacement;
     float           m_relaxCosRelativeAngle;
     float           m_relaxTransverseDisplacement;
-    unsigned int    m_minNCaloHits3D;    
+    unsigned int    m_minNCaloHits3D;
     float           m_maxX0FractionalDeviation;           ///< The maximum allowed fractional difference of an X0 contribution for matches to be stitched
     float           m_boundaryToleranceWidth;             ///< The distance from the APA/CPA boundary inside which the deviation consideration is ignored
 };

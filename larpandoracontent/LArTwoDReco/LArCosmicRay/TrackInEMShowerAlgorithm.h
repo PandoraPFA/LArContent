@@ -74,7 +74,7 @@ public:
          *  @brief  Returns the upstream cluster direction at the upstream merge point
          *
          *  @return  CartesianVector the direction at the merge point of the upstream cluster
-         */        
+         */
         const pandora::CartesianVector &GetUpstreamMergeDirection() const;
 
         /**
@@ -88,18 +88,18 @@ public:
          *  @brief  Returns the downstream cluster direction at the downstream merge point
          *
          *  @return  CartesianVector the direction at the merge point of the downstream cluster
-         */        
+         */
         const pandora::CartesianVector &GetDownstreamMergeDirection() const;
 
         /**
          *  @brief  Returns the unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
          *
          *  @return  CartesianVector the unit displacement vector from the upstream merge point to the downstream merge point
-         */           
+         */
         const pandora::CartesianVector &GetConnectingLineDirection() const;
-        
+
     private:
-        const pandora::Cluster     *m_pUpstreamCluster;            ///< The upstream cluster of the two associated clusters         
+        const pandora::Cluster     *m_pUpstreamCluster;            ///< The upstream cluster of the two associated clusters
         const pandora::Cluster     *m_pDownstreamCluster;          ///< The downstream cluster of the two associated clusters
         pandora::CartesianVector    m_upstreamMergePoint;          ///< The upstream cluster point to be used in the merging process
         pandora::CartesianVector    m_upstreamMergeDirection;      ///< The upstream cluster direction at the upstream merge point (points in the direction of the downstream cluster)
@@ -148,7 +148,7 @@ public:
 
     typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToCaloHitListMap;
     typedef std::vector<TwoDSlidingFitResultMap*> SlidingFitResultMapVector;
-    
+
     /**
      *  @brief  Select clusters to be considered in algorithm
      *
@@ -166,7 +166,7 @@ public:
      */
     void InitialiseSlidingFitResultMaps(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
         TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
-    
+
     /**
      *  @brief  Find the cluster association with the longest cluster length sum
      *
@@ -212,13 +212,13 @@ public:
     /**
      *  @brief  Collect the hits that lie near the line connecting the associated clusters
      *
-     *  @param  clusterAssociation the clusterAssociation 
+     *  @param  clusterAssociation the clusterAssociation
      *  @param  pClusterList the list of all clusters
      *  @param  clusterToCaloHitListMap the output map [parent cluster -> list of hits which belong to the main track]
      */
     void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList,
         ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
-    
+
     /**
      *  @brief  Check whether the extrapolatedCaloHitVector contains a continuous line of hits between the cluster merge points
      *
@@ -249,7 +249,7 @@ public:
     bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;
 
     /**
-     *  @brief  Merge together the split track alongside extrapolated hits 
+     *  @brief  Merge together the split track alongside extrapolated hits
      *
      *  @param  clusterAssociation the clusterAssociation
      *  @param  clusterToCaloHitListMap the map [parent cluster -> list of hits which belong to the main track]
@@ -286,7 +286,7 @@ public:
      *  @param  caloHitsToMerge the list of calo hits to remove from the shower cluster
      *  @param  clusterAssociation the clusterAssociation
      *  @param  remnantClusterList the input list to store the remnant clusters
-     */    
+     */
     void AddHitsToMainTrack(const pandora::Cluster *const pShowerCluster, const pandora::Cluster *const pMainTrackCluster, const pandora::CaloHitList &caloHitsToMerge,
         const ClusterAssociation &clusterAssociation, pandora::ClusterList &remnantClusterList) const;
 
@@ -296,7 +296,7 @@ public:
      *  @param  remnantClusterList the list of remnant clusters
      *  @param  pMainTrackCluster the main track cluster
      *  @param  pClusterList the list of all clusters
-     */   
+     */
     void ProcessRemnantClusters(const pandora::ClusterList &remnantClusterList, const pandora::Cluster *const pMainTrackCluster, const pandora::ClusterList *const pClusterList) const;
 
     /**
@@ -305,14 +305,14 @@ public:
      *  @param  pClusterToMerge the cluster to merge
      *  @param  pMainTrackCluster the main track cluster
      *  @param  pClusterList the list of all clusters
-     */   
+     */
     void AddToNearestCluster(const pandora::Cluster *const pClusterToMerge, const pandora::Cluster *const pClusterToEnlarge, const pandora::ClusterList *const pClusterList) const;
 
     /**
      *  @brief  Whether a remnant cluster is considered to be disconnected and therefore should undergo further fragmentation
      *
      *  @param  pRemnantCluster the input remnant cluster
-     */       
+     */
     bool IsClusterRemnantDisconnected(const pandora::Cluster *const pRemnantCluster) const;
 
     /**
@@ -320,7 +320,7 @@ public:
      *
      *  @param  pRemnantCluster the input remnant cluster to fragment
      *  @param  fragmentedClusterList the list of created clusters
-     */    
+     */
     void FragmentRemnantCluster(const pandora::Cluster *const pRemnantCluster, pandora::ClusterList &fragmentedClusterList) const;
 
     /**
@@ -330,7 +330,7 @@ public:
      *  @param  clusterVector the vector of 'relevant' clusters
      *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
      *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
-     */    
+     */
     void UpdateForClusterDeletion(const pandora::Cluster *const pCluster, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
         TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
 
@@ -341,7 +341,7 @@ public:
      *  @param  clusterVector the vector of 'relevant' clusters
      *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
      *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
-     */        
+     */
     void UpdateAfterMainTrackCreation(const pandora::Cluster *const pMainTrackCluster, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
         TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
 
@@ -349,17 +349,17 @@ public:
     unsigned int   m_minCaloHits;                           ///< The threshold number of calo hits
     unsigned int   m_slidingFitWindow;                      ///< The sliding fit window used in the fits contained within the microSlidingFitResultMap
     unsigned int   m_macroSlidingFitWindow;                 ///< The sliding fit window for macro fits
-    float          m_minClusterLengthSum;                   ///< The threshold cluster and associated cluster length sum    
+    float          m_minClusterLengthSum;                   ///< The threshold cluster and associated cluster length sum
     float          m_stableRegionClusterFraction;           ///< The threshold fraction of fit contributing layers which defines the stable region
     float          m_mergePointMinCosAngleDeviation;        ///< The threshold cos opening angle between the cluster local gradient and the associated cluster global gradient used to determine merge points
     float          m_minSeparationDistance;                 ///< The threshold separation distance between associated clusters
     float          m_minDirectionDeviationCosAngle;         ///< The threshold cos opening angle of the associated cluster directions
-    float          m_maxPredictedMergePointOffset;          ///< The threshold separation distance between the predicted and true cluster merge points 
+    float          m_maxPredictedMergePointOffset;          ///< The threshold separation distance between the predicted and true cluster merge points
     float          m_distanceFromLine;                      ///< The threshold hit distance of an extrapolated hit from the cluster connecting line
     unsigned int   m_maxTrackGaps;                          ///< The maximum number of graps allowed in the extrapolated hit vector
     float          m_lineSegmentLength;                     ///< The length of a track gap
     float          m_minHitFractionForHitRemoval;           ///< The threshold fraction of hits to be removed from the cluster for hit removal to proceed
-    float          m_maxDistanceFromMainTrack;              ///< The threshold distance for a hit to be added to the main track    
+    float          m_maxDistanceFromMainTrack;              ///< The threshold distance for a hit to be added to the main track
     float          m_maxHitDistanceFromCluster;             ///< The threshold separation between a hit and cluster for the hit to be merged into the cluster
     float          m_maxHitSeparationForConnectedCluster;   ///< The maximum separation between two adjacent (in z) hits in a connected cluster
 };
@@ -370,7 +370,7 @@ inline const pandora::Cluster *TrackInEMShowerAlgorithm::ClusterAssociation::Get
 {
     return m_pUpstreamCluster;
 }
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const pandora::Cluster *TrackInEMShowerAlgorithm::ClusterAssociation::GetDownstreamCluster() const
@@ -421,7 +421,7 @@ inline TrackInEMShowerAlgorithm::SortByDistanceAlongLine::SortByDistanceAlongLin
     m_lineDirection(lineDirection.GetUnitVector())
 {
 }
-    
+
 } //namespace lar_content
 
 #endif // #ifndef LAR_EM_TRACK_ALGORITHM_H
