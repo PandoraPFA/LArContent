@@ -108,8 +108,13 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
 
     const float matchingScore(1.f - pvalue);
-    const float locallyMatchedFraction(CalculateLocalMatchingFraction(resampledDiscreteProbabilityVector1, 
+    const unsigned int nLocallyMatchedSamplingPoints(this->CalculateNumberOfLocallyMatchingSamplingPoints(resampledDiscreteProbabilityVector1, 
         resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
+    const int nComparisons(static_cast<int>(resampledDiscreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
+    if (1 > nComparisons)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const float locallyMatchedFraction(static_cast<float>(nLocallyMatchedSamplingPoints) / static_cast<float>(nComparisons));
 
     overlapResult = TwoViewTransverseOverlapResult(matchingScore, resampledDiscreteProbabilityVector1.GetSize(), 
         correlation, locallyMatchedFraction, twoViewXOverlap);
@@ -119,8 +124,9 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const DiscreteProbabilityVector &discreteProbabilityVector1,
-    const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator)
+unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingSamplingPoints(
+    const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2, 
+    std::mt19937 &randomNumberGenerator)
 {
     if (discreteProbabilityVector1.GetSize() != discreteProbabilityVector2.GetSize() || 
         0 == discreteProbabilityVector1.GetSize()*discreteProbabilityVector2.GetSize())
@@ -130,7 +136,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
         throw STATUS_CODE_INVALID_PARAMETER;
 
     pandora::FloatVector localValues1, localValues2;
-    int nMatchedComparisons(0);
+    unsigned int nMatchedComparisons(0);
 
     for (unsigned int iValue = 0; iValue < discreteProbabilityVector1.GetSize(); ++iValue)
     {
@@ -148,12 +154,7 @@ float TwoViewTransverseTracksAlgorithm::CalculateLocalMatchingFraction(const Dis
             localValues2.erase(localValues2.begin());
         }
     }
-
-    const int nComparisons(static_cast<int>(discreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
-    if (1 > nComparisons)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    return (static_cast<float>(nMatchedComparisons) / static_cast<float>(nComparisons));
+    return nMatchedComparisons;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
