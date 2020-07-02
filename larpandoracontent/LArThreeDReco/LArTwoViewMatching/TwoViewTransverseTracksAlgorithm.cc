@@ -114,10 +114,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     if (1 > nComparisons)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    const float locallyMatchedFraction(static_cast<float>(nLocallyMatchedSamplingPoints) / static_cast<float>(nComparisons));
-
-    overlapResult = TwoViewTransverseOverlapResult(matchingScore, resampledDiscreteProbabilityVector1.GetSize(), 
-        correlation, locallyMatchedFraction, twoViewXOverlap);
+    overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,  
+        correlation, twoViewXOverlap);
 
     return STATUS_CODE_SUCCESS;
 }

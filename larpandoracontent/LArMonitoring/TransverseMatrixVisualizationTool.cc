@@ -71,6 +71,9 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
                 eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() << std::endl;
             std::cout <<" ---Matching score: " << eIter->GetOverlapResult().GetMatchingScore() << std::endl;
             std::cout <<" ---N. sampling points: " << eIter->GetOverlapResult().GetNSamplingPoints() << std::endl;
+            std::cout <<" ---N. matched sampling points: " << eIter->GetOverlapResult().GetNMatchedSamplingPoints() << std::endl;
+            std::cout <<" ---N. (re-)upsampled sampling points: " << eIter->GetOverlapResult().GetNReUpsampledSamplingPoints() << std::endl;
+            std::cout <<" ---N. (re-)upsampled matched sampling points: " << eIter->GetOverlapResult().GetNMatchedReUpsampledSamplingPoints() << std::endl;
             std::cout <<" ---Correlation coeff.: " << eIter->GetOverlapResult().GetCorrelationCoefficient() << std::endl;
             std::cout <<" ---Locally matched fraction: " << eIter->GetOverlapResult().GetLocallyMatchedFraction() << std::endl;
 
