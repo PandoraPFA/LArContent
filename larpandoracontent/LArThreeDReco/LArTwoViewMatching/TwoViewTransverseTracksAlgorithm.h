@@ -54,15 +54,15 @@ private:
         TwoViewTransverseOverlapResult &overlapResult);
 
     /**
-     *  @brief  Calculates the fraction of the sliding windows that contains charge bins that locally match
+     *  @brief  Calculates the number of the sliding windows that contains charge bins that locally match
      *
      *  @param  discreteProbabilityVector1 the view 0 discrete probability vector containing the charge information
      *  @param  pCluster2 the view 1 discrete probability vector containing the charge information
      *  @param  randomNumberGenerator a seeded random number generator
      *
-     *  @result the matched window fraction
+     *  @result the number of locally matching sampling points
      */
-    float CalculateLocalMatchingFraction(const DiscreteProbabilityVector &discreteProbabilityVector1, 
+    unsigned int CalculateNumberOfLocallyMatchingSamplingPoints(const DiscreteProbabilityVector &discreteProbabilityVector1, 
         const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator);
 
     void ExamineOverlapContainer();
