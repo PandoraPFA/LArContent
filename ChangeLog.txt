@@ -2,6 +2,8 @@
 TAG v03_17_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Update to C++17 standard.
+Added LArTwoViewXOverlap, LArTrackTwoViewOverlapResult, LArDiscreteProbabilityVector and LArDiscreteProbabilityHelper classes.
+Overhauled TwoViewTransverseTracksAlgorithm and TwoViewClearTracksTool to calculate and use calorimetry-based metrics.
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_16_02
