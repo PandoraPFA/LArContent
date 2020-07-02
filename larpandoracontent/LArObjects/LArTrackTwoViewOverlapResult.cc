@@ -14,7 +14,8 @@ namespace lar_content
 {
 
 TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() :
-    m_isInitialized(false) 
+    m_isInitialized(false),
+    m_matchingScore(0)
 {
 }
 
