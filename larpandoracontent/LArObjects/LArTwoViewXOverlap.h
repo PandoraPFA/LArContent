@@ -209,7 +209,7 @@ inline float TwoViewXOverlap::GetXOverlapFraction0() const
 
 inline float TwoViewXOverlap::GetXOverlapFraction1() const
 {
-    return (std::numeric_limits<float>::epsilon() < this->GetXSpan0()) ? m_xOverlapSpan / this->GetXSpan0() : 0.f;
+    return (std::numeric_limits<float>::epsilon() < this->GetXSpan1()) ? m_xOverlapSpan / this->GetXSpan1() : 0.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
