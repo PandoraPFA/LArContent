@@ -63,7 +63,30 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
                 allClusterList2.push_back(eIter->GetCluster2());
             usedKeyClusters.insert(eIter->GetCluster1());
 
+            int pdg0(0);
+            int pdg1(0);
+            bool isPrimary0(false);
+            bool isPrimary1(false);
+            bool sameParticle(false);
+            try{
+                const MCParticle* particle0(MCParticleHelper::GetMainMCParticle(eIter->GetCluster1())); 
+                const MCParticle* particle1(MCParticleHelper::GetMainMCParticle(eIter->GetCluster2())); 
+                pdg0=(particle0->GetParticleId());
+                isPrimary0=(particle0->IsRootParticle());
+                pdg1=(particle1->GetParticleId());
+                isPrimary1=(particle1->IsRootParticle());
+                sameParticle=(particle0->GetUid() == particle1->GetUid());
+            }
+            catch(...){};
+
             std::cout << " Element " << counter++ << std::endl;
+            std::cout <<" ---True PDG 0: " << pdg0 << std::endl;
+            std::cout <<" ---True PDG 1: " << pdg1 << std::endl;
+            std::cout <<" ---True is primary 0: " << isPrimary0 << std::endl;
+            std::cout <<" ---True is primary 1: " << isPrimary1 << std::endl;
+            std::cout <<" ---True is same particle: " << sameParticle << std::endl;
+            std::cout <<" ---Is cluster 0 available: " << eIter->GetCluster1()->IsAvailable() << std::endl;
+            std::cout <<" ---Is cluster 1 available: " << eIter->GetCluster2()->IsAvailable() << std::endl;
             std::cout <<" ---XOverlap: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetTwoViewXOverlapSpan() <<std::endl;
             std::cout <<" ---XOverlap fraction view0: " << 
                 eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() << std::endl;
