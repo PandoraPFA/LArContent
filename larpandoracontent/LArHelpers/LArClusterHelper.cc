@@ -757,7 +757,7 @@ bool LArClusterHelper::SortHitsByPositionInX(const pandora::CaloHit *const pLhs,
     if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
         return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
 
-    return SortHitsByPositionInX(pLhs, pRhs);
+    return SortHitsByPosition(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
