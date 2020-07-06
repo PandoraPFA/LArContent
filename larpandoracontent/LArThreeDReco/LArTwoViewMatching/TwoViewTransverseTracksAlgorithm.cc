@@ -25,6 +25,7 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_minSamples(11),
     m_nPermutations(10000),
     m_localMatchingScoreThreshold(0.99f),
+    m_minOverallMatchingScore(0.5f),
     m_minOverallLocallyMatchedFraction(0.4f),
     m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
 {
@@ -109,6 +110,9 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
 
     const float matchingScore(1.f - pvalue);
+    if (matchingScore < m_minOverallMatchingScore)
+        return STATUS_CODE_NOT_FOUND;
+
     const unsigned int nLocallyMatchedSamplingPoints(this->CalculateNumberOfLocallyMatchingSamplingPoints(resampledDiscreteProbabilityVector1, 
         resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
     const int nComparisons(static_cast<int>(resampledDiscreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
