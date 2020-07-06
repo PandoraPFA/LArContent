@@ -16,7 +16,7 @@ namespace lar_content
 {
 
 TwoViewLongTracksTool::TwoViewLongTracksTool() :
-    m_minMatchedFraction(0.9f),
+    m_minMatchedFraction(0.5f),
     m_minMatchingScore(0.98f),
     m_minMatchedSamplingPoints(20),
     m_minXOverlapFraction(0.9f),
