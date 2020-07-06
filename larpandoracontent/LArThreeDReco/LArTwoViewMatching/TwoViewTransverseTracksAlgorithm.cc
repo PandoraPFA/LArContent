@@ -21,12 +21,12 @@ namespace lar_content
 
 TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_nMaxMatrixToolRepeats(1000),
-    m_downsampleFactor(10),
+    m_downsampleFactor(5),
     m_minSamples(11),
     m_nPermutations(1000),
-    m_localMatchingScoreThreshold(0.97f),
-    m_minOverallMatchingScore(0.7f),
-    m_minOverallLocallyMatchedFraction(0.4f),
+    m_localMatchingScoreThreshold(0.99f),
+    m_minOverallMatchingScore(0.5f),
+    m_minOverallLocallyMatchedFraction(0.3f),
     m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
 {
 }
