@@ -25,6 +25,7 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_minSamples(11),
     m_nPermutations(10000),
     m_localMatchingScoreThreshold(0.99f),
+    m_minOverallLocallyMatchedFraction(0.4f),
     m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
 {
 }
@@ -113,6 +114,10 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const int nComparisons(static_cast<int>(resampledDiscreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
     if (1 > nComparisons)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+    const float locallyMatchedFraction(static_cast<float>(nLocallyMatchedSamplingPoints) / static_cast<float>(nComparisons));
+    if (locallyMatchedFraction < m_minOverallLocallyMatchedFraction)
+        return STATUS_CODE_NOT_FOUND;
 
     overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,  
         correlation, twoViewXOverlap);

@@ -69,14 +69,15 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<TransverseMatrixTool*> MatrixToolVector;
-    MatrixToolVector            m_algorithmToolVector;           ///< The algorithm tool vector
+    MatrixToolVector            m_algorithmToolVector;                   ///< The algorithm tool vector
 
-    unsigned int                m_nMaxMatrixToolRepeats;         ///< The maximum number of repeat loops over matrix tools
-    unsigned int                m_downsampleFactor;              ///< The downsampling (hit merging) applied to hits in the overlap region
-    unsigned int                m_minSamples;                    ///< The minimum number of samples needed for comparing charges
-    unsigned int                m_nPermutations;                 ///< The number of permutations for calculating p-values
-    float                       m_localMatchingScoreThreshold;   ///< The minimum score to classify a local region as matching
-    std::mt19937                m_randomNumberGenerator;         ///< The random number generator
+    unsigned int                m_nMaxMatrixToolRepeats;                 ///< The maximum number of repeat loops over matrix tools
+    unsigned int                m_downsampleFactor;                      ///< The downsampling (hit merging) applied to hits in the overlap region
+    unsigned int                m_minSamples;                            ///< The minimum number of samples needed for comparing charges
+    unsigned int                m_nPermutations;                         ///< The number of permutations for calculating p-values
+    float                       m_localMatchingScoreThreshold;           ///< The minimum score to classify a local region as matching
+    float                       m_minOverallLocallyMatchedFraction;      ///< The minimum required lcoally matched fraction to fill the overlap result
+    std::mt19937                m_randomNumberGenerator;                 ///< The random number generator
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
