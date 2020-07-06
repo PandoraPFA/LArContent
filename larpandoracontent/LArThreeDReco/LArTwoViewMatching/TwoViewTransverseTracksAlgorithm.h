@@ -76,6 +76,7 @@ private:
     unsigned int                m_minSamples;                            ///< The minimum number of samples needed for comparing charges
     unsigned int                m_nPermutations;                         ///< The number of permutations for calculating p-values
     float                       m_localMatchingScoreThreshold;           ///< The minimum score to classify a local region as matching
+    float                       m_minOverallMatchingScore;              ///< The minimum required global matching score to fill the overlap result
     float                       m_minOverallLocallyMatchedFraction;      ///< The minimum required lcoally matched fraction to fill the overlap result
     std::mt19937                m_randomNumberGenerator;                 ///< The random number generator
 };
