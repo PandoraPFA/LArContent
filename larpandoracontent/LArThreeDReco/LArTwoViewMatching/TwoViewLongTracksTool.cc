@@ -17,6 +17,7 @@ namespace lar_content
 
 TwoViewLongTracksTool::TwoViewLongTracksTool() :
     m_minMatchedFraction(0.9f),
+    m_minMatchingScore(0.98f),
     m_minMatchedSamplingPoints(20),
     m_minXOverlapFraction(0.9f),
     m_minMatchedSamplingPointRatio(2)
@@ -129,6 +130,9 @@ void TwoViewLongTracksTool::SelectLongElements(const MatrixType::ElementList &el
             continue;
 
         if (eIter->GetOverlapResult().GetLocallyMatchedFraction() < m_minMatchedFraction)
+            continue;
+
+        if (eIter->GetOverlapResult().GetMatchingScore() < m_minMatchingScore)
             continue;
 
         if (eIter->GetOverlapResult().GetNMatchedReUpsampledSamplingPoints() < m_minMatchedSamplingPoints)
