@@ -18,7 +18,8 @@ namespace lar_content
 TransverseMatrixVisualizationTool::TransverseMatrixVisualizationTool() :
     m_minClusterConnections(1),
     m_ignoreUnavailableClusters(true),
-    m_showEachIndividualElement(false)
+    m_showEachIndividualElement(false),
+    m_showOnlyTrueMatchIndividualElements(false)
 {
 }
 
@@ -84,6 +85,9 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
             }
             catch(...){};
 
+            if (m_showOnlyTrueMatchIndividualElements && !sameParticle)
+                continue;
+
             std::cout << " Element " << counter++ << std::endl;
             std::cout <<" ---True PDG 0: " << pdg0 << std::endl;
             std::cout <<" ---True PDG 1: " << pdg1 << std::endl;
@@ -104,7 +108,6 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
             std::cout <<" ---N. (re-)upsampled matched sampling points: " << eIter->GetOverlapResult().GetNMatchedReUpsampledSamplingPoints() << std::endl;
             std::cout <<" ---Correlation coeff.: " << eIter->GetOverlapResult().GetCorrelationCoefficient() << std::endl;
             std::cout <<" ---Locally matched fraction: " << eIter->GetOverlapResult().GetLocallyMatchedFraction() << std::endl;
-
 
             if (m_showEachIndividualElement)
             {
@@ -141,6 +144,9 @@ StatusCode TransverseMatrixVisualizationTool::ReadSettings(const TiXmlHandle xml
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShowEachIndividualElement", m_showEachIndividualElement));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ShowOnlyTrueMatchIndividualElements", m_showOnlyTrueMatchIndividualElements));
 
     return STATUS_CODE_SUCCESS;
 }
