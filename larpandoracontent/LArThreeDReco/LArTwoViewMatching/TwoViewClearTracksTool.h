@@ -40,6 +40,7 @@ private:
         const MatrixType::ElementList &elementList, bool &particlesMade) const;
 
     float           m_minXOverlapFraction;           ///< The min x overlap fraction value for particle creation
+    float           m_minMatchingScore;              ///< The min global matching score for particle creation
     float           m_minLocallyMatchedFraction;     ///< The min locally matched fraction for particle creation
 };
 

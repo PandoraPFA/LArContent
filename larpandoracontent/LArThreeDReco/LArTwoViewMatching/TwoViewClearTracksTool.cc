@@ -19,6 +19,7 @@ namespace lar_content
 
 TwoViewClearTracksTool::TwoViewClearTracksTool() :
     m_minXOverlapFraction(0.1f),
+    m_minMatchingScore(0.95),
     m_minLocallyMatchedFraction(0.4f)
 {
 }
@@ -50,6 +51,9 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
         if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
             continue;
         if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
+            continue;
+
+        if (iter->GetOverlapResult().GetMatchingScore() - m_minMatchingScore < std::numeric_limits<float>::epsilon())
             continue;
 
         if (iter->GetOverlapResult().GetLocallyMatchedFraction() - m_minLocallyMatchedFraction < std::numeric_limits<float>::epsilon())
