@@ -19,7 +19,7 @@ namespace lar_content
 
 TwoViewClearTracksTool::TwoViewClearTracksTool() :
     m_minXOverlapFraction(0.1f),
-    m_minLocallyMatchedFraction(0.5f)
+    m_minLocallyMatchedFraction(0.4f)
 {
 }
 
