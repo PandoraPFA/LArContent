@@ -53,7 +53,7 @@ bool CosmicRayTrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const T
     associatedMacroFitResult.GetGlobalDirection(associatedMacroFitResult.GetLayerFitResultMap().begin()->second.GetGradient(), associatedAverageDirection);    
 
     //ISOBEL CHANGE THIS
-    float m_stableRegionClusterFraction(0.1);
+    float m_stableRegionClusterFraction(0.05);
     float m_mergePointMinCosAngleDeviation(0.995);
     
     const LayerFitResultMap &clusterMicroLayerFitResultMap(clusterMicroFitResult.GetLayerFitResultMap());

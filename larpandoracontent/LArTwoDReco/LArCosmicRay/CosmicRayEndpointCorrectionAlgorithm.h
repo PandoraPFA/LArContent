@@ -39,7 +39,7 @@ private:
     void IsCosmicRay(const pandora::CartesianVector &clusterEndpoint, const pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection,
         const bool isUpstream, const TwoDSlidingFitResult &microFitResult, const pandora::CartesianVector &averageDirection,  const pandora::Cluster *const pCluster) const;
 
-    void NewIsCosmicRay(const pandora::CartesianVector &clusterEndpoint, const pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection, const pandora::Cluster *const pCluster, const bool isUpstream) const;
+    bool NewIsCosmicRay(const pandora::CartesianVector &clusterEndpoint, const pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection, const pandora::Cluster *const pCluster, const bool isUpstream) const;
     
 };
 

@@ -39,26 +39,8 @@ StatusCode CosmicRayEndpointCorrectionAlgorithm::Run()
     TwoDSlidingFitResultMap microSlidingFitResultMap, macroSlidingFitResultMap;
     this->InitialiseSlidingFitResultMaps(clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
 
-    const LArTPC &pLArTPC(this->GetPandora().GetGeometry()->GetLArTPC());
-
-    const float tpcEdge1(pLArTPC.GetCenterX() + (pLArTPC.GetWidthX() / 2.f));
-    const float tpcEdge2(pLArTPC.GetCenterX() - (pLArTPC.GetWidthX() / 2.f));
-
-    const float minZ(pLArTPC.GetCenterZ() - (pLArTPC.GetWidthZ() / 2.f));
-    const float maxZ(pLArTPC.GetCenterZ() + (pLArTPC.GetWidthZ() / 2.f));
-
-    const float bufferRegion(10.f);
-
-    CartesianVector tpcBoundary1_1(tpcEdge1 - bufferRegion, 0.f, minZ), tpcBoundary1_2(tpcEdge1 - bufferRegion, 0.f, maxZ);
-    CartesianVector tpcBoundary2_1(tpcEdge2 + bufferRegion, 0.f, minZ), tpcBoundary2_2(tpcEdge2 + bufferRegion, 0.f, maxZ);
-
-
     for (const Cluster *const pCluster : clusterVector)
     {
-
-    PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &tpcBoundary1_1, &tpcBoundary1_2, "EDGE", RED, 2, 2);
-    PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &tpcBoundary2_1, &tpcBoundary2_2, "EDGE", RED, 2, 2);
-        
         TwoDSlidingFitResultMap::const_iterator microFitResult(microSlidingFitResultMap.find(pCluster));
         TwoDSlidingFitResultMap::const_iterator macroFitResult(macroSlidingFitResultMap.find(pCluster));
 
@@ -66,31 +48,8 @@ StatusCode CosmicRayEndpointCorrectionAlgorithm::Run()
             continue;        
 
         const CartesianVector &upstreamPosition(microFitResult->second.GetGlobalMinLayerPosition()), &downstreamPosition(microFitResult->second.GetGlobalMaxLayerPosition());
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &upstreamPosition, "UPSTREAM", RED, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &downstreamPosition, "DOWNSTREAM", RED, 2);
-        const CartesianVector &averageMinLayerDirection(macroFitResult->second.GetGlobalMinLayerDirection()), &averageMaxLayerDirection(macroFitResult->second.GetGlobalMaxLayerDirection());
-
-        std::cout << "MIN LAYER DIRECTION (AVERAGE): " << averageMinLayerDirection << std::endl;
-        std::cout << "MAX LAYER DIRECTION (AVERAGE): " << averageMaxLayerDirection << std::endl;
-        
-        //const float upstreamX(microFitResult->second.GetGlobalMinLayerPosition().GetX()), downstreamX(microFitResult->second.GetGlobalMaxLayerPosition().GetX());
-
-        //bool upstreamModification(true);
-        /*
-        if (upstreamX < (tpcEdge2 + bufferRegion) || upstreamX > (tpcEdge1 - bufferRegion))
-        {
-            upstreamModification = true;
-            std::cout << "UPSTREAM POINT CLOSE ENOUGH TO TPC BOUNDARY" << std::endl;
-        }
-        */
-        //bool downstreamModification(true);
-        /*
-        if (downstreamX > (tpcEdge1 - bufferRegion) || downstreamX < (tpcEdge2 + bufferRegion))
-        {
-            downstreamModification = true;
-            std::cout << "DOWNSTREAM POINT CLOSE ENOUGH TO TPC BOUNDARY" << std::endl;
-        }
-        */
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &upstreamPosition, "UPSTREAM", RED, 2);
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &downstreamPosition, "DOWNSTREAM", RED, 2);
 
         CartesianVector upstreamMergePoint(0.f, 0.f, 0.f), upstreamMergeDirection(0.f, 0.f, 0.f), downstreamMergePoint(0.f, 0.f, 0.f), downstreamMergeDirection(0.f, 0.f, 0.f);
         if (!GetClusterMergingCoordinates(microFitResult->second, macroFitResult->second, macroFitResult->second, false, upstreamMergePoint, upstreamMergeDirection))
@@ -98,24 +57,35 @@ StatusCode CosmicRayEndpointCorrectionAlgorithm::Run()
         if (!GetClusterMergingCoordinates(microFitResult->second, macroFitResult->second, macroFitResult->second, true, downstreamMergePoint, downstreamMergeDirection))
             continue;
 
+        /*
         ClusterList theCluster({pCluster});
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "THE CLUSTER", BLUE);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &upstreamMergePoint, "UPSTREAM MERGE POINT", BLACK, 2);
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &downstreamMergePoint, "DOWNSTREAM MERGE POINT", BLACK, 2);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
-
-        this->NewIsCosmicRay(downstreamPosition, downstreamMergePoint, downstreamMergeDirection, pCluster, true);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        this->NewIsCosmicRay(upstreamPosition, upstreamMergePoint, upstreamMergeDirection, pCluster, false);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        
-        /*
-        this->IsCosmicRay(downstreamPosition, downstreamMergePoint, downstreamMergeDirection, true, microFitResult->second, averageMinLayerDirection, pCluster);
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                this->IsCosmicRay(upstreamPosition, upstreamMergePoint, upstreamMergeDirection, false, microFitResult->second, averageMinLayerDirection, pCluster);
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
         */
+
+        if (this->NewIsCosmicRay(downstreamPosition, downstreamMergePoint, downstreamMergeDirection, pCluster, true))
+        {
+            std::cout << "WILL REMOVE" << std::endl;
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        }
+        else
+        {
+            std::cout << "WILL NOT REMOVE" << std::endl;
+        }
+        
+        if (this->NewIsCosmicRay(upstreamPosition, upstreamMergePoint, upstreamMergeDirection, pCluster, false))
+        {
+            std::cout << "WILL REMOVE" << std::endl;
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        }
+        else
+        {
+            std::cout << "WILL NOT REMOVE" << std::endl;
+        }            
+
+        
+        
         
         // search for region along theorised CR that has the largest angle deviation from the mergin point direction
         // if found, remove hits??
@@ -131,7 +101,7 @@ void CosmicRayEndpointCorrectionAlgorithm::SelectCleanClusters(const ClusterList
 {
     for (const Cluster *const pCluster : *pClusterList)
     {
-        if (pCluster->GetNCaloHits() < 100)
+        if (pCluster->GetNCaloHits() < 50)
             continue;
 
         clusterVector.push_back(pCluster);
@@ -143,87 +113,199 @@ void CosmicRayEndpointCorrectionAlgorithm::SelectCleanClusters(const ClusterList
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 
-    void CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector &clusterEndpoint, const CartesianVector &clusterMergePoint, const CartesianVector &clusterMergeDirection, const Cluster *const pCluster, const bool isUpstream) const
+bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector &clusterEndpoint, const CartesianVector &clusterMergePoint,
+    const CartesianVector &clusterMergeDirection, const Cluster *const pCluster, const bool isUpstream) const
 {
-    float straightLinePrediction(clusterEndpoint.GetX() - clusterMergePoint.GetX(), 0.f, clusterEndpoint.GetZ() - clusterMergePoint.GetZ());
 
-    CartesianPointVector hitSubset;
-    if (straightLinePrediction.GetMagnitude() > std::numeric_limits<float>::epsilon())
+    ClusterList theCluster({pCluster});
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "THE CLUSTER", BLUE);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &clusterEndpoint, "ENDPOINT", BLACK, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &clusterMergePoint, "CLUSTER MERGE POINT", RED, 2);
+    
+    // Whether the CR endpoint is near the TPC boundary
+    const LArTPC &pLArTPC(this->GetPandora().GetGeometry()->GetLArTPC());
+    const float tpcHighXEdge(pLArTPC.GetCenterX() + (pLArTPC.GetWidthX() / 2.f)), tpcLowXEdge(pLArTPC.GetCenterX() - (pLArTPC.GetWidthX() / 2.f));
+    const float allowanceWidth(10.f), allowanceHighXEdge(tpcHighXEdge - allowanceWidth), allowanceLowXEdge(tpcLowXEdge + allowanceWidth);
+
+    const bool isClusterEndpointInBoundary((clusterEndpoint.GetX() < allowanceLowXEdge) || (clusterEndpoint.GetX() > allowanceHighXEdge));
+    const bool isClusterMergePointInBoundary((clusterMergePoint.GetX() < allowanceLowXEdge) || (clusterMergePoint.GetX() > allowanceHighXEdge));
+
+    if (!(isClusterEndpointInBoundary || isClusterMergePointInBoundary))
     {
-        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
-        {
-            for (const CaloHit *const pCaloHit : *mapEntry.second) 
-            {
-                const CartesianVector &position(pCaloHit->GetPositionVector());
-
-                if ((isUpstream && (position.GetZ() > clusterMergePoint.GetZ())) || (!isUpstream && (position.GetZ() < clusterMergePoint.GetZ())))
-                {
-                    hitSubset.push_back(position);                
-                }
-            }
-        }
-
-        try
-        {
-            const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-            const int m_slidingFitWindow(5);
-            const TwoDSlidingFitResult subsetFit(&hitSubset, m_slidingFitWindow, slidingFitPitch);
-
-            const LayerFitResultMap &clusterMicroLayerFitResultMap(subsetFit.GetLayerFitResultMap());
-            const int startLayer(subsetFit.GetMinLayer());
-            const int endLayer(subsetFit.GetMaxLayer());
-            const int loopTerminationLayer(endLayer + 1);
-            const int step(1);
-
-            int count(0);
-            int angleCount(0);
-            float angleSum(0.f);
-
-            CartesianVector previousDirection(0.f,0.f,0.f);
-            
-            for (int i = startLayer; i != loopTerminationLayer; i += step)
-            {
-                const auto microIter(clusterMicroLayerFitResultMap.find(i));
-
-                if (microIter == clusterMicroLayerFitResultMap.end())
-                    continue;
-
-                CartesianVector microDirection(0.f, 0.f, 0.f);
-                subsetFit.GetGlobalDirection(microIter->second.GetGradient(), microDirection);
-                //std::cout << "ANGLE DEVIATION: " << (microDirection.GetOpeningAngle(clusterMergeDirection)*180/3.14) << std::endl;
-
-                if ((microDirection.GetOpeningAngle(clusterMergeDirection)*180/3.14) > 5)
-                {
-                    angleSum += (microDirection.GetOpeningAngle(clusterMergeDirection)*180/3.14);
-                    ++angleCount;
-                }
-                
-                ++count;
-                
-                if(count != 1)
-                {
-                    //std::cout << "ANGLE FROM LAST ANGLE: " << microDirection.GetOpeningAngle(previousDirection) << std::endl;
-                }
-
-                previousDirection = microDirection;
-
-                CartesianVector position(0.f, 0.f, 0.f);
-                subsetFit.GetGlobalFitPosition(microIter->second.GetL(), position);
-                PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "POSITION", BLACK, 2);
-            }
-
-            if (angleCount > 0)
-                std::cout << "AVERAGE OPENING ANGLE: " << angleSum / angleCount << std::endl;
-        }
-        catch (StatusCodeException &)
-        {
-            std::cout << "CANNOT MAKE A FIT" << std::endl;
-            return;
-        }
-
-
+        std::cout << "NOT CLOSE ENOUGH TO THE BOUNDARY" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());        
+        return false;
     }
+
+    // Investigate the separation of the endpoints points
+    const float endpointSeparation((clusterEndpoint - clusterMergePoint).GetMagnitude());
+    std::cout << "Endpoint Separation: " << endpointSeparation << std::endl;
+
+    // ISOBEL: MAKE THIS LARGER?
+    if (endpointSeparation < std::numeric_limits<float>::epsilon())
+    {
+        std::cout << "MERGE POINT AND ENDPOINT ARE THE SAME" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());        
+        return false;
+    }
+
+    // Investigate the cluster subset
+    CartesianPointVector hitSubset;
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+    {
+        for (const CaloHit *const pCaloHit : *mapEntry.second) 
+        {
+            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+
+            if ((isUpstream && (hitPosition.GetZ() > clusterMergePoint.GetZ())) || (!isUpstream && (hitPosition.GetZ() < clusterMergePoint.GetZ())))
+                hitSubset.push_back(hitPosition);          
+        }
+    }
+
+    TwoDSlidingFitResultList subsetFitVector;
+    try
+    {
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const int m_slidingFitWindow(5);
+        const TwoDSlidingFitResult subsetFit(&hitSubset, m_slidingFitWindow, slidingFitPitch);
+
+        subsetFitVector.push_back(subsetFit);
+    }
+    catch (const StatusCodeException &)
+    {
+        std::cout << "CANNOT MAKE A FIT" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());        
+        return false;
+    }
+
+    // INVESTIGATE THE STRAIGHTNESS OF THE CLUSTER SUBSET
+    const CartesianVector &minPosition(subsetFitVector.front().GetGlobalMinLayerPosition()), &maxPosition(subsetFitVector.front().GetGlobalMaxLayerPosition());
+    CartesianVector straightLinePrediction(maxPosition - minPosition);
+    straightLinePrediction = straightLinePrediction.GetUnitVector();
+    
+    float distanceFromLine(0.f);
+    unsigned int distanceCount(0);
+    for (const CartesianVector &hitPosition : hitSubset)
+    {
+        if (hitPosition.GetZ() < minPosition.GetZ() || hitPosition.GetZ() > maxPosition.GetZ())
+            continue;
+
+        distanceFromLine += (straightLinePrediction.GetCrossProduct(hitPosition - minPosition).GetMagnitude());
+
+        ++distanceCount;
+    }
+
+    const float averageDistanceFromLine(distanceFromLine / distanceCount);
+    std::cout << "averageDistanceFromLine: " << averageDistanceFromLine << std::endl;
+
+    if (distanceCount == 0)
+    {
+        std::cout << "DISTANCE COUNT TOO SMALL" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());        
+        return false;
+    }
+    
+    if (averageDistanceFromLine < 0.3)
+    {
+        std::cout << "TOO STRAIGHT" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());        
+        return false;
+    }
+
+    
+    //CartesianVector predictedPosition(isUpstream ? clusterMergePoint + (clusterMergeDirection * endpointSeparation) : clusterMergePoint - (clusterMergeDirection * endpointSeparation));
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &predictedPosition, "PREDICTION", VIOLET, 2);
+    //float error((predictedPosition - clusterEndpoint).GetMagnitude());
+    //std::cout << "Extrapolation Distance: " << error << std::endl;
+
+    
+    const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
+    const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
+    const float deltaZ(std::fabs(clusterEndpoint.GetZ() - (predictedIntercept + (predictedGradient * clusterEndpoint.GetX()))));
+
+    const float scaledDeltaZ(deltaZ / endpointSeparation); 
+    std::cout << "deltaZ: " << deltaZ << std::endl;
+    std::cout << "scaled deltaZ: " << scaledDeltaZ << std::endl;
+
+    if (scaledDeltaZ < 0.25)
+    {
+        std::cout << "SCALED DELTA Z IS TOO HIGH" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        return false;
+    }
+
+    
+    const TwoDSlidingFitResult subsetFit(subsetFitVector.front());
+    const LayerFitResultMap &clusterMicroLayerFitResultMap(subsetFit.GetLayerFitResultMap());
+    const int startLayer(isUpstream ? subsetFit.GetMinLayer() : subsetFit.GetMaxLayer());
+    const int endLayer(isUpstream ? subsetFit.GetMaxLayer() : subsetFit.GetMinLayer());
+    const int loopTerminationLayer(isUpstream ? endLayer + 1 : endLayer - 1);
+    const int step(isUpstream ? 1 : -1);
+
+    bool reachedFirstCurve(false);
+    bool isClockwise(false);
+
+    float previousOpeningAngle(0.f);
+
+    unsigned int numberOfWobbles(0);
+    unsigned int maxNumberOfWobbles(1);
+            
+    for (int i = startLayer; i != loopTerminationLayer; i += step)
+    {
+        const auto microIter(clusterMicroLayerFitResultMap.find(i));
+
+        if (microIter == clusterMicroLayerFitResultMap.end())
+            continue;
+
+        CartesianVector microDirection(0.f, 0.f, 0.f);
+        subsetFit.GetGlobalDirection(microIter->second.GetGradient(), microDirection);
+        float microOpeningAngle(microDirection.GetOpeningAngle(clusterMergeDirection) * 180 / 3.14);
+
+        if (microDirection.GetZ() < clusterMergeDirection.GetZ())
+            microOpeningAngle *= (-1.f);
+
+        std::cout << "ANGLE DEVIATION: " << microOpeningAngle << std::endl;
+
+        float layerAngleDeviation(0.f);
+        if (reachedFirstCurve)
+        {
+            layerAngleDeviation = (std::fabs(microOpeningAngle - previousOpeningAngle));
+            std::cout << "<-------------------- CHANGE FROM LAST LAYER: " << layerAngleDeviation << std::endl;
+        }
+        
+        if (((microOpeningAngle > 10.f) || (microOpeningAngle < -10.f)) && !reachedFirstCurve)
+        {
+            reachedFirstCurve = true;
+            isClockwise = (microOpeningAngle < 0.f);
+            previousOpeningAngle = microOpeningAngle;
+            continue;
+        }
+
+        if (reachedFirstCurve)
+        {
+            if (((isClockwise && (microOpeningAngle > previousOpeningAngle)) || (!isClockwise && (microOpeningAngle < previousOpeningAngle))) && (layerAngleDeviation > 0.5 ))
+            {
+                ++numberOfWobbles;
+
+                if (numberOfWobbles > maxNumberOfWobbles)
+                {
+                    std::cout << "TOO MANY WOBBLES" << std::endl;
+                    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                }
+            }
+
+            if ((isClockwise && (microOpeningAngle < -20.f)) || (!isClockwise && (microOpeningAngle > 20.f)))
+            {
+                std::cout << "MEET ANGLE CRITERIA" << std::endl;
+                break;
+            }
+        }
+
+        previousOpeningAngle = microOpeningAngle;
+    }
+
+    return true;
 
 }
 
