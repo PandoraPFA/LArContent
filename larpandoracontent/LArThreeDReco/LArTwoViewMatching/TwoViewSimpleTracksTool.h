@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  TwoViewSimpleTracksTool class
  */
-class TwoViewSimpleTracksTool : public ShowerTensorTool
+class TwoViewSimpleTracksTool : public TransverseMatrixTool
 {
 public:
     /**
@@ -24,29 +24,31 @@ public:
      */
     TwoViewSimpleTracksTool();
 
-    bool Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(TwoViewTransverseTracksAlgorithm *const pAlgorithm, MatrixType &overlapMatrix);
 
 private:
     /**
-     *  @brief  Find best shower match as a simple way to (try to) resolve ambiguities in the tensor
+     *  @brief  Find best shower match as a simple way to (try to) resolve ambiguities in the matrix 
      *
-     *  @param  overlapTensor the overlap tensor
+     *  @param  overlapMatrix the overlap matrix
      *  @param  protoParticleVector to receive the list of proto particles
      */
-    void FindBestShower(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const;
+    void FindBestShower(const MatrixType &overlapMatrix, ProtoParticleVector &protoParticleVector) const;
 
     /**
-     *  @brief  Whether a provided (iterator to a) tensor element passes the selection cuts for particle creation
+     *  @brief  Whether a provided (iterator to a) matrix element passes the selection cuts for particle creation
      *
-     *  @param  eIter the iterator to the tensor element
+     *  @param  eIter the iterator to the matrix element
      */
-    bool PassesElementCuts(TensorType::ElementList::const_iterator eIter) const;
+    bool PassesElementCuts(MatrixType::ElementList::const_iterator eIter) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
+    float           m_minMatchingScore;                 ///< The min global matching score for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
+    //unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
 };
 
 } // namespace lar_content
