@@ -18,7 +18,7 @@ namespace lar_content
 {
 
 TrackInEMShowerAlgorithm::TrackInEMShowerAlgorithm() :
-    m_maxMainLoopIterations(5),
+    m_maxMainLoopIterations(20),
     m_minCaloHits(15),
     m_slidingFitWindow(20),
     m_macroSlidingFitWindow(1000),
@@ -324,6 +324,12 @@ bool TrackInEMShowerAlgorithm::IsTrackContinuous(const ClusterAssociation &clust
     CartesianPointVector trackSegmentBoundaries;
     this->GetTrackSegmentBoundaries(clusterAssociation, trackSegmentBoundaries);
 
+    if (trackSegmentBoundaries.size() < 2)
+    {
+        std::cout << "TrackInEMShowerAlgorithm: Less than two track segment boundaries" << std::endl;
+        throw STATUS_CODE_NOT_ALLOWED;
+    }
+
     unsigned int segmentsWithoutHits(0);
     CaloHitVector::const_iterator caloHitIter(extrapolatedCaloHitVector.begin());
     for (int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
@@ -371,6 +377,10 @@ void TrackInEMShowerAlgorithm::GetTrackSegmentBoundaries(const ClusterAssociatio
     const CartesianVector &trackDirection(clusterAssociation.GetConnectingLineDirection());
     const float trackLength((clusterAssociation.GetDownstreamMergePoint() - clusterAssociation.GetUpstreamMergePoint()).GetMagnitude());
     const int fullSegments(std::floor(trackLength / m_lineSegmentLength));
+
+    if (fullSegments == 0)
+        trackSegmentBoundaries = {clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint()};
+    
     const float lengthOfTrackRemainder(trackLength - (fullSegments * m_lineSegmentLength));
     const bool splitFinalSegment(lengthOfTrackRemainder > m_lineSegmentLength * 0.5f);
     const int numberOfBoundaries(fullSegments + (splitFinalSegment ? 2 : 1));
@@ -460,14 +470,6 @@ const Cluster *TrackInEMShowerAlgorithm::RemoveOffAxisHitsFromTrack(const Cluste
     const ClusterToCaloHitListMap &clusterToCaloHitListMap, ClusterList &remnantClusterList, TwoDSlidingFitResultMap &microSlidingFitResultMap,
     TwoDSlidingFitResultMap &macroSlidingFitResultMap, ClusterVector &clusterVector) const
 {
-    const auto extrapolatedCaloHitIter(clusterToCaloHitListMap.find(pCluster));
-
-    if (extrapolatedCaloHitIter == clusterToCaloHitListMap.end())
-    {
-        this->UpdateForClusterDeletion(pCluster, clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
-        return pCluster;
-    }
-
     float rL(0.f), rT(0.f);
     const TwoDSlidingFitResult &microFitResult(microSlidingFitResultMap.at(pCluster));
     microFitResult.GetLocalPosition(splitPosition, rL, rT);
@@ -497,7 +499,12 @@ const Cluster *TrackInEMShowerAlgorithm::RemoveOffAxisHitsFromTrack(const Cluste
 
             microFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), thisL, thisT);
 
-            const bool isAnExtrapolatedHit(std::find(extrapolatedCaloHitIter->second.begin(), extrapolatedCaloHitIter->second.end(), pCaloHit) != extrapolatedCaloHitIter->second.end());
+            bool isAnExtrapolatedHit(false);
+            const auto extrapolatedCaloHitIter(clusterToCaloHitListMap.find(pCluster));
+            
+            if (extrapolatedCaloHitIter != clusterToCaloHitListMap.end())
+                isAnExtrapolatedHit = std::find(extrapolatedCaloHitIter->second.begin(), extrapolatedCaloHitIter->second.end(), pCaloHit) != extrapolatedCaloHitIter->second.end();
+            
             const bool isAbove(((clusterGradient * hitPosition.GetX()) + clusterIntercept) < (isVertical ? hitPosition.GetX() : hitPosition.GetZ()));
             const bool isToRemove(!isAnExtrapolatedHit && (((thisL > rL) && isUpstream) || ((thisL < rL) && !isUpstream)));
 
@@ -522,8 +529,18 @@ const Cluster *TrackInEMShowerAlgorithm::RemoveOffAxisHitsFromTrack(const Cluste
     this->UpdateForClusterDeletion(pCluster, clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
 
     // End fragmentation
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, fragmentListName, originalListName));
-    return pMainTrackCluster;
+    if (pAboveCluster || pBelowCluster)
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, fragmentListName, originalListName));
+        return pMainTrackCluster;
+    }
+    else
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, originalListName, fragmentListName));
+        return pCluster;
+    }
+    
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -805,7 +822,11 @@ bool TrackInEMShowerAlgorithm::SortByDistanceAlongLine::operator() (const pandor
     const float lhsProjectedDistance(lhsDistanceVector.GetDotProduct(m_lineDirection));
     const float rhsProjectedDistance(rhsDistanceVector.GetDotProduct(m_lineDirection));
 
-    return (lhsProjectedDistance < rhsProjectedDistance);
+    if (std::fabs(lhsProjectedDistance - rhsProjectedDistance) > std::numeric_limits<float>::epsilon())
+        return (lhsProjectedDistance < rhsProjectedDistance);
+
+    // To deal with tiebreaks
+    return LArClusterHelper::SortHitsByPulseHeight(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
