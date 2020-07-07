@@ -92,9 +92,9 @@ void TwoViewLongTracksTool::FindLongTracks(const MatrixType &overlapMatrix, Prot
         if (!pKeyCluster->IsAvailable())
             continue;
 
-        unsigned int nU(0), nV(0);
+        unsigned int n1(0), n2(0);
         MatrixType::ElementList elementList;
-        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList, nU, nV);
+        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList, n1, n2);
 
         IteratorList iteratorList;
         this->SelectLongElements(elementList, usedClusters, iteratorList);
@@ -154,6 +154,9 @@ StatusCode TwoViewLongTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedFraction", m_minMatchedFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchingScore", m_minMatchingScore));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
