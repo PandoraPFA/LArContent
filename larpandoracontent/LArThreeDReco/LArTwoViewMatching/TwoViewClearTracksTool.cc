@@ -7,7 +7,10 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
+
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewClearTracksTool.h"
+
+#include <limits>
 
 using namespace pandora;
 
@@ -15,7 +18,8 @@ namespace lar_content
 {
 
 TwoViewClearTracksTool::TwoViewClearTracksTool() :
-    m_minXOverlap(0.1f)
+    m_minXOverlapFraction(0.1f),
+    m_minLocallyMatchedFraction(0.5f)
 {
 }
 
@@ -37,17 +41,19 @@ bool TwoViewClearTracksTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList,
-    bool &particlesMade) const
+void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList, bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
 
     for (MatrixType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->GetOverlapResult() < m_minXOverlap)
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
+            continue;
+        if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
             continue;
 
-        // TODO Add real logic here
+        if (iter->GetOverlapResult().GetLocallyMatchedFraction() - m_minLocallyMatchedFraction < std::numeric_limits<float>::epsilon())
+            continue;
 
         ProtoParticle protoParticle;
         protoParticle.m_clusterList.push_back(iter->GetCluster1());
@@ -63,7 +69,7 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
 StatusCode TwoViewClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlap", m_minXOverlap));
+        "MinXOverlapFraction", m_minXOverlapFraction));
 
     return STATUS_CODE_SUCCESS;
 }

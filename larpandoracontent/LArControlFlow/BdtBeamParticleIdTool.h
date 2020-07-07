@@ -236,13 +236,6 @@ private:
         SliceFeatures(const SliceFeatures&) = default;
 
         /**
-         *  @brief  Assignment operator
-         *
-         *  @param  The SliceFeatures to assign
-         */
-        SliceFeatures &operator=(const SliceFeatures&) = default;
-
-        /**
          *  @brief  Destructor
          */
         ~SliceFeatures() = default;

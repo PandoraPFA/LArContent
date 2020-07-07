@@ -641,7 +641,12 @@ StatusCode MasterAlgorithm::Reset()
 
 StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
 {
-    const LArCaloHit *const pLArCaloHit = dynamic_cast<const LArCaloHit*>(pCaloHit);
+    const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit*>(pCaloHit)};
+    if (pLArCaloHit == nullptr)
+    {
+        std::cout << "MasterAlgorithm: Could not cast CaloHit to LArCaloHit" << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
     LArCaloHitParameters parameters;
     parameters.m_positionVector = pCaloHit->GetPositionVector();
     parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
