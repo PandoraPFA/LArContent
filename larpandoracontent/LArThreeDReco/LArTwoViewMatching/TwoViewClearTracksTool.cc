@@ -19,7 +19,8 @@ namespace lar_content
 
 TwoViewClearTracksTool::TwoViewClearTracksTool() :
     m_minXOverlapFraction(0.1f),
-    m_minLocallyMatchedFraction(0.5f)
+    m_minMatchingScore(0.95),
+    m_minLocallyMatchedFraction(0.4f)
 {
 }
 
@@ -52,6 +53,9 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
         if (iter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
             continue;
 
+        if (iter->GetOverlapResult().GetMatchingScore() - m_minMatchingScore < std::numeric_limits<float>::epsilon())
+            continue;
+
         if (iter->GetOverlapResult().GetLocallyMatchedFraction() - m_minLocallyMatchedFraction < std::numeric_limits<float>::epsilon())
             continue;
 
@@ -68,6 +72,12 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
 
 StatusCode TwoViewClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinMatchingScore", m_minMatchingScore));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinLocallyMatchedFraction", m_minLocallyMatchedFraction));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 

@@ -21,12 +21,12 @@ namespace lar_content
 
 TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_nMaxMatrixToolRepeats(1000),
-    m_downsampleFactor(10),
+    m_downsampleFactor(5),
     m_minSamples(11),
     m_nPermutations(1000),
-    m_localMatchingScoreThreshold(0.97f),
-    m_minOverallMatchingScore(0.7f),
-    m_minOverallLocallyMatchedFraction(0.4f),
+    m_localMatchingScoreThreshold(0.99f),
+    m_minOverallMatchingScore(0.20f),
+    m_minOverallLocallyMatchedFraction(0.20f),
     m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
 {
 }
@@ -151,8 +151,25 @@ unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingS
         localValues2.emplace_back(discreteProbabilityVector2.GetProbability(iValue));
         if (localValues1.size() == m_minSamples)
         {
-            const float localPValue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
-                localValues1, localValues2, randomNumberGenerator, m_nPermutations));
+            float localPValue(0);
+            try
+            {
+                localPValue = LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
+                    localValues1, localValues2, randomNumberGenerator, m_nPermutations);
+            }
+            catch (StatusCodeException &)
+            {
+                std::cout << "TwoViewTransverseTracksAlgorithm: failed to calculate correlation coefficient p-value for these numbers" << std::endl;;
+                std::cout << "----view 0: ";
+                for (unsigned int iElement = 0; iElement < localValues1.size(); ++iElement)
+                    std::cout<<localValues1.at(iElement) << " ";
+                std::cout << std::endl;
+                std::cout << "----view 1: ";
+                for (unsigned int iElement = 0; iElement < localValues2.size(); ++iElement)
+                    std::cout<<localValues2.at(iElement) << " ";
+                std::cout << std::endl;
+
+            }
 
             if ((1.f - localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
                 nMatchedComparisons++;
