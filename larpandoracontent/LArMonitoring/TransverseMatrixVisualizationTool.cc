@@ -55,6 +55,7 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
         ClusterList allClusterList1, allClusterList2;
         std::cout << " Connections: n1 " << n1 << ", n2 " << n2 << ", nElements " << elementList.size() << std::endl;
 
+
         for (MatrixType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
             if (allClusterList1.end() == std::find(allClusterList1.begin(), allClusterList1.end(), eIter->GetCluster1())) 
@@ -63,6 +64,10 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
                 allClusterList2.push_back(eIter->GetCluster2());
             usedKeyClusters.insert(eIter->GetCluster1());
 
+        }
+
+        for (MatrixType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
+        {
             int pdg0(0);
             int pdg1(0);
             bool isPrimary0(false);
@@ -100,10 +105,13 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
             std::cout <<" ---Correlation coeff.: " << eIter->GetOverlapResult().GetCorrelationCoefficient() << std::endl;
             std::cout <<" ---Locally matched fraction: " << eIter->GetOverlapResult().GetLocallyMatchedFraction() << std::endl;
 
+
             if (m_showEachIndividualElement)
             {
                 const ClusterList clusterList1(1, eIter->GetCluster1()), clusterList2(1, eIter->GetCluster2());
                 PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterList1, "AllClusters1", LIGHTORANGE));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterList2, "AllClusters2", LIGHTYELLOW));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList1, "Cluster1", RED));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList2, "Cluster2", GREEN));
                 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
