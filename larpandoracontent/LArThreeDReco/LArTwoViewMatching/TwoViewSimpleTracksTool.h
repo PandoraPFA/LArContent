@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/TwoViewSimpleTracksTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArTrackMatching/TwoViewSimpleTracksTool.h
  *
  *  @brief  Header file for the simple showers tool class.
  *
@@ -8,7 +8,7 @@
 #ifndef TWO_VIEW_SIMPLE_TRACKS_TOOL_H
 #define TWO_VIEW_SIMPLE_TRACKS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeViewShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {
@@ -33,7 +33,7 @@ private:
      *  @param  overlapMatrix the overlap matrix
      *  @param  protoParticleVector to receive the list of proto particles
      */
-    void FindBestShower(const MatrixType &overlapMatrix, ProtoParticleVector &protoParticleVector) const;
+    void FindBestTrack(const MatrixType &overlapMatrix, ProtoParticleVector &protoParticleVector) const;
 
     /**
      *  @brief  Whether a provided (iterator to a) matrix element passes the selection cuts for particle creation

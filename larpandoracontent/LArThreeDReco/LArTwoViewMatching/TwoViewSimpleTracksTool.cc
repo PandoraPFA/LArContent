@@ -8,7 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArThreeDReco/TwoViewMatching/TwoViewSimpleTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.h"
 
 using namespace pandora;
 
@@ -26,7 +26,7 @@ TwoViewSimpleTracksTool::TwoViewSimpleTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewSimpleTracksTool::Run(ThreeViewShowersAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
+bool TwoViewSimpleTracksTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -115,8 +115,8 @@ StatusCode TwoViewSimpleTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
+    //PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        //"MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
     return STATUS_CODE_SUCCESS;
 }
