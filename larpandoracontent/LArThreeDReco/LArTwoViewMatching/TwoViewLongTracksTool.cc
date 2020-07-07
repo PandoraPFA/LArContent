@@ -92,9 +92,9 @@ void TwoViewLongTracksTool::FindLongTracks(const MatrixType &overlapMatrix, Prot
         if (!pKeyCluster->IsAvailable())
             continue;
 
-        unsigned int nU(0), nV(0);
+        unsigned int n1(0), n2(0);
         MatrixType::ElementList elementList;
-        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList, nU, nV);
+        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList, n1, n2);
 
         IteratorList iteratorList;
         this->SelectLongElements(elementList, usedClusters, iteratorList);
