@@ -25,8 +25,8 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_minSamples(11),
     m_nPermutations(1000),
     m_localMatchingScoreThreshold(0.99f),
-    m_minOverallMatchingScore(0.5f),
-    m_minOverallLocallyMatchedFraction(0.3f),
+    m_minOverallMatchingScore(0.20f),
+    m_minOverallLocallyMatchedFraction(0.20f),
     m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
 {
 }
