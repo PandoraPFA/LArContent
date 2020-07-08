@@ -92,9 +92,9 @@ void TwoViewLongTracksTool::FindLongTracks(const MatrixType &overlapMatrix, Prot
         if (!pKeyCluster->IsAvailable())
             continue;
 
-        unsigned int n1(0), n2(0);
+        unsigned int n0(0), n1(0);
         MatrixType::ElementList elementList;
-        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList, n1, n2);
+        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList, n0, n1);
 
         IteratorList iteratorList;
         this->SelectLongElements(elementList, usedClusters, iteratorList);
@@ -141,7 +141,7 @@ void TwoViewLongTracksTool::SelectLongElements(const MatrixType::ElementList &el
         const TwoViewXOverlap &xOverlap(eIter->GetOverlapResult().GetTwoViewXOverlap());
 
         if ((xOverlap.GetXSpan0() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetTwoViewXOverlapSpan() / xOverlap.GetXSpan0() > m_minXOverlapFraction) &&
-            (xOverlap.GetXSpan1() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetTwoViewXOverlapSpan() / xOverlap.GetXSpan1() > m_minXOverlapFraction))
+            (xOverlap.GetXSpan0() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetTwoViewXOverlapSpan() / xOverlap.GetXSpan0() > m_minXOverlapFraction))
         {
             iteratorList.push_back(eIter);
         }
