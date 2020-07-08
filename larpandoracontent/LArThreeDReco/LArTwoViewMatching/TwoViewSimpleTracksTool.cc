@@ -50,9 +50,9 @@ void TwoViewSimpleTracksTool::FindBestTrack(const MatrixType &overlapMatrix, Pro
         if (!pKeyCluster->IsAvailable())
             continue;
 
-        unsigned int nU(0), nV(0);
+        unsigned int n0(0), n1(0);
         MatrixType::ElementList elementList;
-        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList, nU, nV);
+        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList, n0, n1);
 
         if (elementList.empty())
             continue;
