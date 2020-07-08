@@ -270,6 +270,12 @@ StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxDotProduct", m_maxDotProduct));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinOverallMatchingScore", m_minOverallMatchingScore));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinOverallLocallyMatchedFraction", m_minOverallLocallyMatchedFraction));
+
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
