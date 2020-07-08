@@ -144,7 +144,7 @@ bool TwoViewTransverseOverlapResult::operator<(const TwoViewTransverseOverlapRes
     if (!rhs.m_isInitialized)
         return false;
 
-    if (m_matchingScore != rhs.m_matchingScore)
+    if (std::fabs(m_matchingScore - rhs.m_matchingScore) > std::numeric_limits<float>::epsilon())
         return (m_matchingScore < rhs.m_matchingScore);
 
     if (std::fabs(m_correlationCoefficient - rhs.m_correlationCoefficient) > std::numeric_limits<float>::epsilon())
@@ -156,7 +156,7 @@ bool TwoViewTransverseOverlapResult::operator<(const TwoViewTransverseOverlapRes
     if (m_nSamplingPoints != rhs.m_nSamplingPoints)
 	return (m_nSamplingPoints < rhs.m_nSamplingPoints);
 
-    if (this->GetLocallyMatchedFraction() != rhs.GetLocallyMatchedFraction())
+    if (std::fabs(this->GetLocallyMatchedFraction() - rhs.GetLocallyMatchedFraction()) > std::numeric_limits<float>::epsilon())
 	return (this->GetLocallyMatchedFraction() < rhs.GetLocallyMatchedFraction());
     
     if (std::fabs(m_twoViewXOverlap.GetTwoViewXOverlapSpan() - rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan()) > std::numeric_limits<float>::epsilon())
