@@ -175,6 +175,13 @@ public:
     const TwoViewXOverlap &GetTwoViewXOverlap() const;
 
     /**
+     *  @brief  Track two view overlap result less than operator
+     *
+     *  @param  rhs the track two view overlap result for comparison
+     */
+    bool operator<(const TwoViewTransverseOverlapResult &rhs) const;
+
+    /**
      *  @brief  Track overlap result assigment operator
      *
      *  @param  rhs the track overlap result to assign

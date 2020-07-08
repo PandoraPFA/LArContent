@@ -130,6 +130,46 @@ TwoViewTransverseOverlapResult::~TwoViewTransverseOverlapResult()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool TwoViewTransverseOverlapResult::operator<(const TwoViewTransverseOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    if (!m_isInitialized && !rhs.m_isInitialized)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (!m_isInitialized)
+        return true;
+
+    if (!rhs.m_isInitialized)
+        return false;
+
+    if (m_matchingScore != rhs.m_matchingScore)
+        return (m_matchingScore < rhs.m_matchingScore);
+
+    if (std::fabs(m_correlationCoefficient - rhs.m_correlationCoefficient) > std::numeric_limits<float>::epsilon())
+	return (m_correlationCoefficient < rhs.m_correlationCoefficient);
+
+    if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
+	return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+
+    if (m_nSamplingPoints != rhs.m_nSamplingPoints)
+	return (m_nSamplingPoints < rhs.m_nSamplingPoints);
+
+    if (this->GetLocallyMatchedFraction() != rhs.GetLocallyMatchedFraction())
+	return (this->GetLocallyMatchedFraction() < rhs.GetLocallyMatchedFraction());
+    
+    if (std::fabs(m_twoViewXOverlap.GetTwoViewXOverlapSpan() - rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan()) > std::numeric_limits<float>::epsilon())
+        return (m_twoViewXOverlap.GetTwoViewXOverlapSpan() < rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan());
+
+    if (std::fabs(m_twoViewXOverlap.GetXSpan0() - rhs.m_twoViewXOverlap.GetXSpan0()) > std::numeric_limits<float>::epsilon())
+        return (m_twoViewXOverlap.GetXSpan0() < rhs.m_twoViewXOverlap.GetXSpan0());
+
+    return (m_twoViewXOverlap.GetXSpan1() < rhs.m_twoViewXOverlap.GetXSpan1());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 TwoViewTransverseOverlapResult &TwoViewTransverseOverlapResult::operator=(const TwoViewTransverseOverlapResult &rhs)
 {
     this->TrackTwoViewOverlapResult::operator=(rhs);
