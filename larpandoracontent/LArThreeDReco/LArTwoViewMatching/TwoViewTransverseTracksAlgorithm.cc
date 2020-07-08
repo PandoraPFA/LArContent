@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArDiscreteProbabilityHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
@@ -23,10 +24,11 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_nMaxMatrixToolRepeats(1000),
     m_downsampleFactor(5),
     m_minSamples(11),
-    m_nPermutations(1000),
+    m_nPermutations(10000),
     m_localMatchingScoreThreshold(0.99f),
-    m_minOverallMatchingScore(0.15f),
-    m_minOverallLocallyMatchedFraction(0.15f),
+    m_maxDotProduct(0.995f),
+    m_minOverallMatchingScore(0.5f),
+    m_minOverallLocallyMatchedFraction(0.4f),
     m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
 {
 }
@@ -50,6 +52,9 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, 
     const Cluster *const pCluster2, TwoViewTransverseOverlapResult &overlapResult)
 {
+    if (this->GetPrimaryAxisDotDriftAxis(pCluster1) > m_maxDotProduct || this->GetPrimaryAxisDotDriftAxis(pCluster2) > m_maxDotProduct)
+        return STATUS_CODE_NOT_FOUND;
+
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
     LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
@@ -183,6 +188,33 @@ unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float TwoViewTransverseTracksAlgorithm::GetPrimaryAxisDotDriftAxis(const pandora::Cluster *const pCluster)
+{
+    DotProductMap::const_iterator iter(m_dotProductMap.find(pCluster));
+    if (m_dotProductMap.end() == iter)
+    {
+        pandora::CartesianPointVector pointVector;
+        LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+
+        pandora::CartesianVector centroid(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenVectors eigenVecs;
+        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+        LArPcaHelper::RunPca(pointVector, centroid, eigenValues, eigenVecs);
+
+        const pandora::CartesianVector primaryAxis(eigenVecs.at(0));
+        const pandora::CartesianVector driftAxis(1.f, 0.f, 0.f);
+        const float dotProduct(primaryAxis.GetDotProduct(driftAxis));
+        if (!m_dotProductMap.insert(DotProductMap::value_type(pCluster, dotProduct)).second)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        return dotProduct;
+    }
+
+    return iter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
@@ -234,6 +266,9 @@ StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "LocalMatchingScoreThreshold", m_localMatchingScoreThreshold));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxDotProduct", m_maxDotProduct));
 
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }
