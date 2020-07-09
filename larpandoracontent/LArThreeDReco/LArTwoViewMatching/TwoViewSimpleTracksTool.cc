@@ -59,6 +59,15 @@ void TwoViewSimpleTracksTool::FindBestTrack(const MatrixType &overlapMatrix, Pro
 
         MatrixType::Element bestElement(elementList.back());
 
+        for (MatrixType::ElementList::const_reverse_iterator iIter = elementList.rbegin(), iIterEnd = elementList.rend(); iIter != iIterEnd; ++iIter)
+	{
+	  if(PassesElementCuts(iIter))
+	  {
+	    bestElement = *iIter;
+	    break;
+	  }
+	}
+
         if (!bestElement.GetOverlapResult().IsInitialized())
             continue;
 
@@ -76,7 +85,7 @@ void TwoViewSimpleTracksTool::FindBestTrack(const MatrixType &overlapMatrix, Pro
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewSimpleTracksTool::PassesElementCuts(MatrixType::ElementList::const_iterator eIter) const
+bool TwoViewSimpleTracksTool::PassesElementCuts(MatrixType::ElementList::const_reverse_iterator eIter) const
 {
     if (eIter->GetOverlapResult().GetLocallyMatchedFraction() < m_minMatchedFraction)
         return false;
@@ -89,8 +98,8 @@ bool TwoViewSimpleTracksTool::PassesElementCuts(MatrixType::ElementList::const_i
 
     const TwoViewXOverlap &xOverlap(eIter->GetOverlapResult().GetTwoViewXOverlap());
 
-    if ((xOverlap.GetXSpan0() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetTwoViewXOverlapSpan() / xOverlap.GetXSpan0() > m_minXOverlapFraction) &&
-        (xOverlap.GetXSpan1() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetTwoViewXOverlapSpan() / xOverlap.GetXSpan1() > m_minXOverlapFraction))
+    if ((xOverlap.GetXSpan0() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapFraction0() > m_minXOverlapFraction) &&
+        (xOverlap.GetXSpan1() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapFraction1() > m_minXOverlapFraction))
     {
         return true;
     }
