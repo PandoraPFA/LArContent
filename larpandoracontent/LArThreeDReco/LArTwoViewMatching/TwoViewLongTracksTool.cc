@@ -140,8 +140,8 @@ void TwoViewLongTracksTool::SelectLongElements(const MatrixType::ElementList &el
 
         const TwoViewXOverlap &xOverlap(eIter->GetOverlapResult().GetTwoViewXOverlap());
 
-        if ((xOverlap.GetXSpan0() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetTwoViewXOverlapSpan() / xOverlap.GetXSpan0() > m_minXOverlapFraction) &&
-            (xOverlap.GetXSpan1() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetTwoViewXOverlapSpan() / xOverlap.GetXSpan1() > m_minXOverlapFraction))
+        if ((xOverlap.GetXSpan0() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapFraction0() > m_minXOverlapFraction) &&
+            (xOverlap.GetXSpan1() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapFraction1() > m_minXOverlapFraction))
         {
             iteratorList.push_back(eIter);
         }
