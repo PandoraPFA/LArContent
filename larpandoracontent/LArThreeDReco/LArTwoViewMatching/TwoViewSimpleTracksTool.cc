@@ -17,8 +17,8 @@ namespace lar_content
 
 TwoViewSimpleTracksTool::TwoViewSimpleTracksTool() :
     m_minMatchedFraction(0.2f),
-    m_minMatchingScore(0.98f),
-    m_minMatchedSamplingPoints(40),
+    m_minMatchingScore(0.9f),
+    m_minMatchedSamplingPoints(5),
     m_minXOverlapFraction(0.5f)
     //m_minMatchedSamplingPointRatio(2)
 {
@@ -60,26 +60,24 @@ void TwoViewSimpleTracksTool::FindBestTrack(const MatrixType &overlapMatrix, Pro
         MatrixType::Element bestElement(elementList.back());
 
         for (MatrixType::ElementList::const_reverse_iterator iIter = elementList.rbegin(), iIterEnd = elementList.rend(); iIter != iIterEnd; ++iIter)
-	{
-	  if(PassesElementCuts(iIter))
-	  {
-	    bestElement = *iIter;
-	    break;
-	  }
-	}
+        {
+            if(this->PassesElementCuts(iIter))
+            {
+                bestElement = *iIter;
+               if (!bestElement.GetOverlapResult().IsInitialized())
+                    continue;
 
-        if (!bestElement.GetOverlapResult().IsInitialized())
-            continue;
+                if ((NULL == bestElement.GetCluster1()) || (NULL == bestElement.GetCluster2()))
+                    continue;
 
-        if ((NULL == bestElement.GetCluster1()) || (NULL == bestElement.GetCluster2()))
-            continue;
+                ProtoParticle protoParticle;
+                protoParticle.m_clusterList.push_back(bestElement.GetCluster1());
+                protoParticle.m_clusterList.push_back(bestElement.GetCluster2());
+                protoParticleVector.push_back(protoParticle);
 
-        ProtoParticle protoParticle;
-        protoParticle.m_clusterList.push_back(bestElement.GetCluster1());
-        protoParticle.m_clusterList.push_back(bestElement.GetCluster2());
-        protoParticleVector.push_back(protoParticle);
-
-        return;
+                return;
+            }
+        }
     }
 }
 

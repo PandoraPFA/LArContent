@@ -40,7 +40,7 @@ private:
      *
      *  @param  eIter the iterator to the matrix element
      */
-    bool PassesElementCuts(MatrixType::ElementList::const_iterator eIter) const;
+    bool PassesElementCuts(MatrixType::ElementList::const_reverse_iterator eIter) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
