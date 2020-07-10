@@ -20,7 +20,6 @@ TwoViewSimpleTracksTool::TwoViewSimpleTracksTool() :
     m_minMatchingScore(0.9f),
     m_minMatchedSamplingPoints(5),
     m_minXOverlapFraction(0.5f)
-    //m_minMatchedSamplingPointRatio(2)
 {
 }
 
@@ -121,9 +120,6 @@ StatusCode TwoViewSimpleTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinXOverlapFraction", m_minXOverlapFraction));
-
-    //PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        //"MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
     return STATUS_CODE_SUCCESS;
 }
