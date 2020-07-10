@@ -48,7 +48,6 @@ private:
     float           m_minMatchingScore;                 ///< The min global matching score for particle creation
     unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
-    //unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
 };
 
 } // namespace lar_content
