@@ -24,11 +24,11 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_nMaxMatrixToolRepeats(1000),
     m_downsampleFactor(5),
     m_minSamples(11),
-    m_nPermutations(10000),
+    m_nPermutations(1000),
     m_localMatchingScoreThreshold(0.99f),
-    m_maxDotProduct(0.995f),
-    m_minOverallMatchingScore(0.5f),
-    m_minOverallLocallyMatchedFraction(0.4f),
+    m_maxDotProduct(0.998f),
+    m_minOverallMatchingScore(0.1f),
+    m_minOverallLocallyMatchedFraction(0.1f),
     m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
 {
 }
