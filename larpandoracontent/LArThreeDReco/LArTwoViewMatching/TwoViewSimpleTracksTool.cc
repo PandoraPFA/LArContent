@@ -77,6 +77,9 @@ void TwoViewSimpleTracksTool::FindBestTrack(const MatrixType &overlapMatrix, Pro
 
 bool TwoViewSimpleTracksTool::PassesElementCuts(MatrixType::ElementList::const_reverse_iterator eIter) const
 {
+    if (!eIter->GetOverlapResult().IsInitialized())
+        return false;
+
     if (eIter->GetOverlapResult().GetLocallyMatchedFraction() < m_minMatchedFraction)
         return false;
 
@@ -93,9 +96,6 @@ bool TwoViewSimpleTracksTool::PassesElementCuts(MatrixType::ElementList::const_r
     {
         return false;
     }
-
-    if (!eIter->GetOverlapResult().IsInitialized())
-        return false;
 
     return true;
 }
