@@ -190,27 +190,17 @@ unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingS
 
 float TwoViewTransverseTracksAlgorithm::GetPrimaryAxisDotDriftAxis(const pandora::Cluster *const pCluster)
 {
-    DotProductMap::const_iterator iter(m_dotProductMap.find(pCluster));
-    if (m_dotProductMap.end() == iter)
-    {
-        pandora::CartesianPointVector pointVector;
-        LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
+    pandora::CartesianPointVector pointVector;
+    LArClusterHelper::GetCoordinateVector(pCluster, pointVector);
 
-        pandora::CartesianVector centroid(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenVectors eigenVecs;
-        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-        LArPcaHelper::RunPca(pointVector, centroid, eigenValues, eigenVecs);
+    pandora::CartesianVector centroid(0.f, 0.f, 0.f);
+    LArPcaHelper::EigenVectors eigenVecs;
+    LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+    LArPcaHelper::RunPca(pointVector, centroid, eigenValues, eigenVecs);
 
-        const pandora::CartesianVector primaryAxis(eigenVecs.at(0));
-        const pandora::CartesianVector driftAxis(1.f, 0.f, 0.f);
-        const float dotProduct(primaryAxis.GetDotProduct(driftAxis));
-        if (!m_dotProductMap.insert(DotProductMap::value_type(pCluster, dotProduct)).second)
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-
-        return dotProduct;
-    }
-
-    return iter->second;
+    const pandora::CartesianVector primaryAxis(eigenVecs.at(0));
+    const pandora::CartesianVector driftAxis(1.f, 0.f, 0.f);
+    return primaryAxis.GetDotProduct(driftAxis);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
