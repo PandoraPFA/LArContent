@@ -28,7 +28,7 @@ public:
 
 private:
     /**
-     *  @brief  Find best shower match as a simple way to (try to) resolve ambiguities in the matrix 
+     *  @brief  Find best track match as a simple way to (try to) resolve ambiguities in the matrix 
      *
      *  @param  overlapMatrix the overlap matrix
      *  @param  protoParticleVector to receive the list of proto particles

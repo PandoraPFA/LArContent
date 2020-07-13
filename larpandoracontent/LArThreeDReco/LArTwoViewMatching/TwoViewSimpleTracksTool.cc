@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerMatching/TwoViewSimpleTracksTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.cc
  *
  *  @brief  Implementation of the clear showers tool class.
  *
@@ -33,8 +33,7 @@ bool TwoViewSimpleTracksTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgor
     ProtoParticleVector protoParticleVector;
     this->FindBestTrack(overlapMatrix, protoParticleVector);
 
-    const bool particlesMade(pAlgorithm->CreateThreeDParticles(protoParticleVector));
-    return particlesMade;
+    return pAlgorithm->CreateThreeDParticles(protoParticleVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -56,22 +55,16 @@ void TwoViewSimpleTracksTool::FindBestTrack(const MatrixType &overlapMatrix, Pro
         if (elementList.empty())
             continue;
 
-        MatrixType::Element bestElement(elementList.back());
-
-        for (MatrixType::ElementList::const_reverse_iterator iIter = elementList.rbegin(), iIterEnd = elementList.rend(); iIter != iIterEnd; ++iIter)
+	for (MatrixType::ElementList::const_reverse_iterator iIter = elementList.rbegin(); iIter != elementList.rend(); ++iIter)
         {
             if(this->PassesElementCuts(iIter))
             {
-                bestElement = *iIter;
-               if (!bestElement.GetOverlapResult().IsInitialized())
-                    continue;
-
-                if ((NULL == bestElement.GetCluster1()) || (NULL == bestElement.GetCluster2()))
+                if ((nullptr == iIter->GetCluster1()) || (nullptr == iIter->GetCluster2()))
                     continue;
 
                 ProtoParticle protoParticle;
-                protoParticle.m_clusterList.push_back(bestElement.GetCluster1());
-                protoParticle.m_clusterList.push_back(bestElement.GetCluster2());
+                protoParticle.m_clusterList.push_back(iIter->GetCluster1());
+                protoParticle.m_clusterList.push_back(iIter->GetCluster2());
                 protoParticleVector.push_back(protoParticle);
 
                 return;
@@ -95,13 +88,16 @@ bool TwoViewSimpleTracksTool::PassesElementCuts(MatrixType::ElementList::const_r
 
     const TwoViewXOverlap &xOverlap(eIter->GetOverlapResult().GetTwoViewXOverlap());
 
-    if ((xOverlap.GetXSpan0() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapFraction0() > m_minXOverlapFraction) &&
-        (xOverlap.GetXSpan1() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapFraction1() > m_minXOverlapFraction))
+    if (!((xOverlap.GetXOverlapFraction0() > m_minXOverlapFraction) &&
+         (xOverlap.GetXOverlapFraction1() > m_minXOverlapFraction)))
     {
-        return true;
+        return false;
     }
 
-    return false;
+    if (!eIter->GetOverlapResult().IsInitialized())
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -113,7 +109,6 @@ StatusCode TwoViewSimpleTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchingScore", m_minMatchingScore));
-
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
