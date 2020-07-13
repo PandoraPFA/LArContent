@@ -104,13 +104,14 @@ public:
      *  @brief  Constructor
      *
      *  @param  matchingScore the matching candidate matching score
+     *  @param  downsamplingFactor the downsampling factor
      *  @param  nSamplingPoints the number of sampling points used in the matching
+     *  @param  nMatchedSamplingPoints the number of matched sampling points
      *  @param  correlationCoefficient the corerlation coefficient for the matching candidate
-     *  @param locallyMatchedFraction the fraction of locally matching regions in the matching candidate
      *  @param  twoViewXOverlap the description of the geometrical overlap for the matching candidate
      */
-    TwoViewTransverseOverlapResult(const float matchingScore, const unsigned int nSamplingPoints, 
-        const float correlationCoefficient, const float locallyMatchedFraction, const TwoViewXOverlap &twoViewXOverlap);
+    TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor, const unsigned int nSamplingPoints,
+        const unsigned int nMatchedSamplingPoints, const float correlationCoefficient, const TwoViewXOverlap &twoViewXOverlap);
 
     /**
      *  @brief  Copy constructor
@@ -130,6 +131,27 @@ public:
      *  @return the number of sampling points
      */
     unsigned int GetNSamplingPoints() const;
+
+    /**
+     *  @brief  Get the number of matched sampling points
+     *
+     *  @return the number of matched sampling points
+     */
+    unsigned int GetNMatchedSamplingPoints() const;
+
+    /**
+     *  @brief  Get the number of re-upsampled sampling points
+     *
+     *  @return the number of re-upsampled sampling points
+     */
+    unsigned int GetNReUpsampledSamplingPoints() const;
+
+    /**
+     *  @brief  Get the number of matched re-upsampled sampling points
+     *
+     *  @return the number of matched re-upsampled sampling points
+     */
+    unsigned int GetNMatchedReUpsampledSamplingPoints() const;
 
     /**
      *  @brief  Get the correlation coefficient
@@ -153,6 +175,13 @@ public:
     const TwoViewXOverlap &GetTwoViewXOverlap() const;
 
     /**
+     *  @brief  Track two view overlap result less than operator
+     *
+     *  @param  rhs the track two view overlap result for comparison
+     */
+    bool operator<(const TwoViewTransverseOverlapResult &rhs) const;
+
+    /**
      *  @brief  Track overlap result assigment operator
      *
      *  @param  rhs the track overlap result to assign
@@ -160,9 +189,10 @@ public:
     TwoViewTransverseOverlapResult &operator=(const TwoViewTransverseOverlapResult &rhs);
 
 private:
+    float                  m_downsamplingFactor;                  ///< The downsampling factor
     unsigned int           m_nSamplingPoints;                     ///< The number of sampling points
+    unsigned int           m_nMatchedSamplingPoints;              ///< The number of matched sampling points
     float                  m_correlationCoefficient;              ///< The correlation coefficient
-    float                  m_locallyMatchedFraction;              ///< The locally matched fraction
     TwoViewXOverlap        m_twoViewXOverlap;                     ///< The two view x overlap object
 };
 
@@ -193,7 +223,37 @@ inline unsigned int TwoViewTransverseOverlapResult::GetNSamplingPoints() const
 {
     if (m_isInitialized)
         return m_nSamplingPoints;
-   
+
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline unsigned int TwoViewTransverseOverlapResult::GetNMatchedSamplingPoints() const
+{
+    if (m_isInitialized)
+        return m_nMatchedSamplingPoints;
+
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline unsigned int TwoViewTransverseOverlapResult::GetNReUpsampledSamplingPoints() const
+{
+    if (m_isInitialized)
+        return static_cast<unsigned int>(m_downsamplingFactor * static_cast<float>(m_nSamplingPoints));
+
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline unsigned int TwoViewTransverseOverlapResult::GetNMatchedReUpsampledSamplingPoints() const
+{
+    if (m_isInitialized)
+        return static_cast<unsigned int>(m_downsamplingFactor * static_cast<float>(m_nMatchedSamplingPoints));
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
@@ -203,7 +263,7 @@ inline float TwoViewTransverseOverlapResult::GetCorrelationCoefficient() const
 {
     if (m_isInitialized)
         return m_correlationCoefficient;
-   
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
@@ -212,8 +272,8 @@ inline float TwoViewTransverseOverlapResult::GetCorrelationCoefficient() const
 inline float TwoViewTransverseOverlapResult::GetLocallyMatchedFraction() const
 {
     if (m_isInitialized)
-        return m_locallyMatchedFraction;
-   
+        return (m_nSamplingPoints > 0 ? static_cast<float>(m_nMatchedSamplingPoints) / static_cast<float>(m_nSamplingPoints) : 0.f);
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 

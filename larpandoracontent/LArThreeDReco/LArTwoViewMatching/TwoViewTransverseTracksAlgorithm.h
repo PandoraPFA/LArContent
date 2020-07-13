@@ -40,7 +40,7 @@ public:
     TwoViewTransverseTracksAlgorithm();
 
 private:
-    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, 
+    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         const pandora::Cluster *const);
 
     /**
@@ -50,33 +50,45 @@ private:
      *  @param  pCluster2 the view 1 cluster
      *  @param  overlapResult the two view overlap result
      */
-    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, 
+    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         TwoViewTransverseOverlapResult &overlapResult);
 
     /**
-     *  @brief  Calculates the fraction of the sliding windows that contains charge bins that locally match
+     *  @brief  Calculates the number of the sliding windows that contains charge bins that locally match
      *
      *  @param  discreteProbabilityVector1 the view 0 discrete probability vector containing the charge information
      *  @param  pCluster2 the view 1 discrete probability vector containing the charge information
      *  @param  randomNumberGenerator a seeded random number generator
      *
-     *  @result the matched window fraction
+     *  @result the number of locally matching sampling points
      */
-    float CalculateLocalMatchingFraction(const DiscreteProbabilityVector &discreteProbabilityVector1, 
+    unsigned int CalculateNumberOfLocallyMatchingSamplingPoints(const DiscreteProbabilityVector &discreteProbabilityVector1,
         const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator);
+
+    /**
+     *  @brief  Get the dot product between the cluster's primary axis and the drift axis
+     *
+     *  @param  pCluster the cluster
+     *
+     *  @result dot product
+     */
+    float GetPrimaryAxisDotDriftAxis(const pandora::Cluster *const pCluster);
 
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<TransverseMatrixTool*> MatrixToolVector;
-    MatrixToolVector            m_algorithmToolVector;           ///< The algorithm tool vector
+    MatrixToolVector            m_algorithmToolVector;                   ///< The algorithm tool vector
 
-    unsigned int                m_nMaxMatrixToolRepeats;         ///< The maximum number of repeat loops over matrix tools
-    unsigned int                m_downsampleFactor;              ///< The downsampling (hit merging) applied to hits in the overlap region
-    unsigned int                m_minSamples;                    ///< The minimum number of samples needed for comparing charges
-    unsigned int                m_nPermutations;                 ///< The number of permutations for calculating p-values
-    float                       m_localMatchingScoreThreshold;   ///< The minimum score to classify a local region as matching
-    std::mt19937                m_randomNumberGenerator;         ///< The random number generator
+    unsigned int                m_nMaxMatrixToolRepeats;                 ///< The maximum number of repeat loops over matrix tools
+    unsigned int                m_downsampleFactor;                      ///< The downsampling (hit merging) applied to hits in the overlap region
+    unsigned int                m_minSamples;                            ///< The minimum number of samples needed for comparing charges
+    unsigned int                m_nPermutations;                         ///< The number of permutations for calculating p-values
+    float                       m_localMatchingScoreThreshold;           ///< The minimum score to classify a local region as matching
+    float                       m_maxDotProduct;                         ///M The maximum allowed cluster primary qxis Dot drift axis to fill the overlap result
+    float                       m_minOverallMatchingScore;               ///< The minimum required global matching score to fill the overlap result
+    float                       m_minOverallLocallyMatchedFraction;      ///< The minimum required lcoally matched fraction to fill the overlap result
+    std::mt19937                m_randomNumberGenerator;                 ///< The random number generator
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
