@@ -80,8 +80,8 @@ private:
     typedef std::vector<TransverseMatrixTool*> MatrixToolVector;
     MatrixToolVector            m_algorithmToolVector;                   ///< The algorithm tool vector
 
-    typedef std::unordered_map<const pandora::Cluster*, float> DotProductMap;
-    DotProductMap               m_dotProductMap;                         ///< Map between cluster and it's primary axis dot product with the dirft axis
+    //typedef std::unordered_map<const pandora::Cluster*, float> DotProductMap;
+    //DotProductMap               m_dotProductMap;                         ///< Map between cluster and it's primary axis dot product with the dirft axis
 
     unsigned int                m_nMaxMatrixToolRepeats;                 ///< The maximum number of repeat loops over matrix tools
     unsigned int                m_downsampleFactor;                      ///< The downsampling (hit merging) applied to hits in the overlap region
