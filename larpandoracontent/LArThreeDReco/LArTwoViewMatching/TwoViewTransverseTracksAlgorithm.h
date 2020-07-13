@@ -40,7 +40,7 @@ public:
     TwoViewTransverseTracksAlgorithm();
 
 private:
-    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, 
+    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         const pandora::Cluster *const);
 
     /**
@@ -50,7 +50,7 @@ private:
      *  @param  pCluster2 the view 1 cluster
      *  @param  overlapResult the two view overlap result
      */
-    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, 
+    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         TwoViewTransverseOverlapResult &overlapResult);
 
     /**
@@ -62,7 +62,7 @@ private:
      *
      *  @result the number of locally matching sampling points
      */
-    unsigned int CalculateNumberOfLocallyMatchingSamplingPoints(const DiscreteProbabilityVector &discreteProbabilityVector1, 
+    unsigned int CalculateNumberOfLocallyMatchingSamplingPoints(const DiscreteProbabilityVector &discreteProbabilityVector1,
         const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator);
 
     /**

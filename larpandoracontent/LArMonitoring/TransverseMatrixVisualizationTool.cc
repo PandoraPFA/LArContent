@@ -58,9 +58,9 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
 
         for (MatrixType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
-            if (allClusterList1.end() == std::find(allClusterList1.begin(), allClusterList1.end(), eIter->GetCluster1())) 
+            if (allClusterList1.end() == std::find(allClusterList1.begin(), allClusterList1.end(), eIter->GetCluster1()))
                 allClusterList1.push_back(eIter->GetCluster1());
-            if (allClusterList2.end() == std::find(allClusterList2.begin(), allClusterList2.end(), eIter->GetCluster2())) 
+            if (allClusterList2.end() == std::find(allClusterList2.begin(), allClusterList2.end(), eIter->GetCluster2()))
                 allClusterList2.push_back(eIter->GetCluster2());
             usedKeyClusters.insert(eIter->GetCluster1());
 
@@ -75,8 +75,8 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
             bool sameParticle(false);
             try
             {
-                const MCParticle* particle0(MCParticleHelper::GetMainMCParticle(eIter->GetCluster1())); 
-                const MCParticle* particle1(MCParticleHelper::GetMainMCParticle(eIter->GetCluster2())); 
+                const MCParticle* particle0(MCParticleHelper::GetMainMCParticle(eIter->GetCluster1()));
+                const MCParticle* particle1(MCParticleHelper::GetMainMCParticle(eIter->GetCluster2()));
                 pdg0 = (particle0->GetParticleId());
                 isPrimary0 = (particle0->IsRootParticle());
                 pdg1 = (particle1->GetParticleId());
@@ -97,9 +97,9 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
             std::cout <<" ---Is cluster 0 available: " << eIter->GetCluster1()->IsAvailable() << std::endl;
             std::cout <<" ---Is cluster 1 available: " << eIter->GetCluster2()->IsAvailable() << std::endl;
             std::cout <<" ---XOverlap: " << eIter->GetOverlapResult().GetTwoViewXOverlap().GetTwoViewXOverlapSpan() <<std::endl;
-            std::cout <<" ---XOverlap fraction view0: " << 
+            std::cout <<" ---XOverlap fraction view0: " <<
                 eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() << std::endl;
-            std::cout <<" ---XOverlap fraction view1: " << 
+            std::cout <<" ---XOverlap fraction view1: " <<
                 eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() << std::endl;
             std::cout <<" ---Matching score: " << eIter->GetOverlapResult().GetMatchingScore() << std::endl;
             std::cout <<" ---N. sampling points: " << eIter->GetOverlapResult().GetNSamplingPoints() << std::endl;

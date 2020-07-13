@@ -35,7 +35,7 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, 
+void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2,
     const Cluster *const)
 {
     m_randomNumberGenerator.seed(static_cast<std::mt19937::result_type>(pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
@@ -49,7 +49,7 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, 
+pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1,
     const Cluster *const pCluster2, TwoViewTransverseOverlapResult &overlapResult)
 {
     if (this->GetPrimaryAxisDotDriftAxis(pCluster1) > m_maxDotProduct || this->GetPrimaryAxisDotDriftAxis(pCluster2) > m_maxDotProduct)
@@ -101,7 +101,7 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     DiscreteProbabilityVector::ResamplingPoints resamplingPointsX;
     for (unsigned int iSample = 0; iSample < nSamples; ++iSample)
     {
-        resamplingPointsX.emplace_back((xOverlapMin + (xOverlapMax - xOverlapMin) * 
+        resamplingPointsX.emplace_back((xOverlapMin + (xOverlapMax - xOverlapMin) *
             static_cast<float>(iSample + 1) / static_cast<float>(nSamples + 1)));
     }
 
@@ -118,7 +118,7 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     if (matchingScore < m_minOverallMatchingScore)
         return STATUS_CODE_NOT_FOUND;
 
-    const unsigned int nLocallyMatchedSamplingPoints(this->CalculateNumberOfLocallyMatchingSamplingPoints(resampledDiscreteProbabilityVector1, 
+    const unsigned int nLocallyMatchedSamplingPoints(this->CalculateNumberOfLocallyMatchingSamplingPoints(resampledDiscreteProbabilityVector1,
         resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
     const int nComparisons(static_cast<int>(resampledDiscreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
     if (1 > nComparisons)
@@ -128,7 +128,7 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     if (locallyMatchedFraction < m_minOverallLocallyMatchedFraction)
         return STATUS_CODE_NOT_FOUND;
 
-    overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,  
+    overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,
         correlation, twoViewXOverlap);
 
     return STATUS_CODE_SUCCESS;
@@ -137,10 +137,10 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingSamplingPoints(
-    const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2, 
+    const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2,
     std::mt19937 &randomNumberGenerator)
 {
-    if (discreteProbabilityVector1.GetSize() != discreteProbabilityVector2.GetSize() || 
+    if (discreteProbabilityVector1.GetSize() != discreteProbabilityVector2.GetSize() ||
         0 == discreteProbabilityVector1.GetSize()*discreteProbabilityVector2.GetSize())
         throw STATUS_CODE_INVALID_PARAMETER;
 

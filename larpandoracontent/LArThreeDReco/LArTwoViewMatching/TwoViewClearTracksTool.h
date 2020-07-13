@@ -36,7 +36,7 @@ private:
      *  @param  elementList the tensor element list
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
-    void CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, 
+    void CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm,
         const MatrixType::ElementList &elementList, bool &particlesMade) const;
 
     float           m_minXOverlapFraction;           ///< The min x overlap fraction value for particle creation

@@ -98,8 +98,8 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor, 
-        const unsigned int nSamplingPoints, const unsigned int nMatchedSamplingPoints, const float correlationCoefficient, 
+TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor,
+        const unsigned int nSamplingPoints, const unsigned int nMatchedSamplingPoints, const float correlationCoefficient,
         const TwoViewXOverlap &twoViewXOverlap) :
     TrackTwoViewOverlapResult(matchingScore),
     m_downsamplingFactor(downsamplingFactor),
@@ -158,7 +158,7 @@ bool TwoViewTransverseOverlapResult::operator<(const TwoViewTransverseOverlapRes
 
     if (std::fabs(this->GetLocallyMatchedFraction() - rhs.GetLocallyMatchedFraction()) > std::numeric_limits<float>::epsilon())
 	return (this->GetLocallyMatchedFraction() < rhs.GetLocallyMatchedFraction());
-    
+
     if (std::fabs(m_twoViewXOverlap.GetTwoViewXOverlapSpan() - rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan()) > std::numeric_limits<float>::epsilon())
         return (m_twoViewXOverlap.GetTwoViewXOverlapSpan() < rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan());
 

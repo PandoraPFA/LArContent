@@ -51,9 +51,9 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Find long tracks, hidden by simple ambiguities in the matrix 
+     *  @brief  Find long tracks, hidden by simple ambiguities in the matrix
      *
-     *  @param  overlapMatrix the overlap matrix 
+     *  @param  overlapMatrix the overlap matrix
      *  @param  protoParticleVector to receive the list of proto particles
      */
     void FindLongTracks(const MatrixType &overlapMatrix, ProtoParticleVector &protoParticleVector) const;

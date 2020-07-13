@@ -110,7 +110,7 @@ public:
      *  @param  correlationCoefficient the corerlation coefficient for the matching candidate
      *  @param  twoViewXOverlap the description of the geometrical overlap for the matching candidate
      */
-    TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor, const unsigned int nSamplingPoints, 
+    TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor, const unsigned int nSamplingPoints,
         const unsigned int nMatchedSamplingPoints, const float correlationCoefficient, const TwoViewXOverlap &twoViewXOverlap);
 
     /**
@@ -223,7 +223,7 @@ inline unsigned int TwoViewTransverseOverlapResult::GetNSamplingPoints() const
 {
     if (m_isInitialized)
         return m_nSamplingPoints;
-   
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
@@ -233,7 +233,7 @@ inline unsigned int TwoViewTransverseOverlapResult::GetNMatchedSamplingPoints() 
 {
     if (m_isInitialized)
         return m_nMatchedSamplingPoints;
-   
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
@@ -243,7 +243,7 @@ inline unsigned int TwoViewTransverseOverlapResult::GetNReUpsampledSamplingPoint
 {
     if (m_isInitialized)
         return static_cast<unsigned int>(m_downsamplingFactor * static_cast<float>(m_nSamplingPoints));
-   
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
@@ -253,7 +253,7 @@ inline unsigned int TwoViewTransverseOverlapResult::GetNMatchedReUpsampledSampli
 {
     if (m_isInitialized)
         return static_cast<unsigned int>(m_downsamplingFactor * static_cast<float>(m_nMatchedSamplingPoints));
-   
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
@@ -263,7 +263,7 @@ inline float TwoViewTransverseOverlapResult::GetCorrelationCoefficient() const
 {
     if (m_isInitialized)
         return m_correlationCoefficient;
-   
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
@@ -273,7 +273,7 @@ inline float TwoViewTransverseOverlapResult::GetLocallyMatchedFraction() const
 {
     if (m_isInitialized)
         return (m_nSamplingPoints > 0 ? static_cast<float>(m_nMatchedSamplingPoints) / static_cast<float>(m_nSamplingPoints) : 0.f);
-   
+
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
 
