@@ -162,7 +162,7 @@ unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingS
                 localPValue = LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
                     localValues1, localValues2, randomNumberGenerator, m_nPermutations);
             }
-            catch (StatusCodeException &)
+            catch (const StatusCodeException &)
             {
                 std::cout << "TwoViewTransverseTracksAlgorithm: failed to calculate correlation coefficient p-value for these numbers" << std::endl;;
                 std::cout << "----view 0: ";
@@ -173,7 +173,6 @@ unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingS
                 for (unsigned int iElement = 0; iElement < localValues2.size(); ++iElement)
                     std::cout<<localValues2.at(iElement) << " ";
                 std::cout << std::endl;
-
             }
 
             if ((1.f - localPValue) - m_localMatchingScoreThreshold > std::numeric_limits<float>::epsilon())
