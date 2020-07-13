@@ -33,7 +33,6 @@ private:
     bool            m_ignoreUnavailableClusters;               ///< Whether to ignore (skip-over) unavailable clusters in the matrix
     bool            m_showEachIndividualElement;               ///< Whether to draw each individual matrix element
     bool            m_showOnlyTrueMatchIndividualElements;     ///< Whether to draw only truly matching individual matrix elements
-
 };
 
 } // namespace lar_content

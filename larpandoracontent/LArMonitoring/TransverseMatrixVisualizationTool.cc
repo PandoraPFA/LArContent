@@ -56,7 +56,6 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
         ClusterList allClusterList1, allClusterList2;
         std::cout << " Connections: n1 " << n1 << ", n2 " << n2 << ", nElements " << elementList.size() << std::endl;
 
-
         for (MatrixType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
             if (allClusterList1.end() == std::find(allClusterList1.begin(), allClusterList1.end(), eIter->GetCluster1())) 
@@ -74,16 +73,17 @@ bool TransverseMatrixVisualizationTool::Run(TwoViewTransverseTracksAlgorithm *co
             bool isPrimary0(false);
             bool isPrimary1(false);
             bool sameParticle(false);
-            try{
+            try
+            {
                 const MCParticle* particle0(MCParticleHelper::GetMainMCParticle(eIter->GetCluster1())); 
                 const MCParticle* particle1(MCParticleHelper::GetMainMCParticle(eIter->GetCluster2())); 
-                pdg0=(particle0->GetParticleId());
-                isPrimary0=(particle0->IsRootParticle());
-                pdg1=(particle1->GetParticleId());
-                isPrimary1=(particle1->IsRootParticle());
-                sameParticle=(particle0->GetUid() == particle1->GetUid());
+                pdg0 = (particle0->GetParticleId());
+                isPrimary0 = (particle0->IsRootParticle());
+                pdg1 = (particle1->GetParticleId());
+                isPrimary1 = (particle1->IsRootParticle());
+                sameParticle = (particle0->GetUid() == particle1->GetUid());
             }
-            catch(...){};
+            catch(const StatusCodeException &){};
 
             if (m_showOnlyTrueMatchIndividualElements && !sameParticle)
                 continue;
