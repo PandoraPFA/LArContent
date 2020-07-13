@@ -242,7 +242,7 @@ inline unsigned int TwoViewTransverseOverlapResult::GetNMatchedSamplingPoints() 
 inline unsigned int TwoViewTransverseOverlapResult::GetNReUpsampledSamplingPoints() const
 {
     if (m_isInitialized)
-        return static_cast<unsigned int>(m_downsamplingFactor*m_nSamplingPoints);
+        return static_cast<unsigned int>(m_downsamplingFactor * static_cast<float>(m_nSamplingPoints));
    
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
@@ -252,7 +252,7 @@ inline unsigned int TwoViewTransverseOverlapResult::GetNReUpsampledSamplingPoint
 inline unsigned int TwoViewTransverseOverlapResult::GetNMatchedReUpsampledSamplingPoints() const
 {
     if (m_isInitialized)
-        return static_cast<unsigned int>(m_downsamplingFactor*m_nMatchedSamplingPoints);
+        return static_cast<unsigned int>(m_downsamplingFactor * static_cast<float>(m_nMatchedSamplingPoints));
    
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
 }
