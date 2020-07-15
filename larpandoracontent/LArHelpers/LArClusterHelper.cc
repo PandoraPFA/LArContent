@@ -600,7 +600,7 @@ void LArClusterHelper::GetCoordinateVector(const Cluster *const pCluster, Cartes
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound, 
+void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBound,
         const pandora::CartesianVector &upperBound, pandora::CaloHitList &caloHitList)
 {
     const bool useX(std::fabs(upperBound.GetX() - lowerBound.GetX()) > std::numeric_limits<float>::epsilon());
@@ -621,15 +621,15 @@ void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const
         for (const CaloHit *const pCaloHit : *layerEntry.second)
         {
             const CartesianVector &hitPosition = pCaloHit->GetPositionVector();
-            if (useX && 
+            if (useX &&
                 (hitPosition.GetX() < minX - std::numeric_limits<float>::epsilon() ||
                  hitPosition.GetX() > maxX + std::numeric_limits<float>::epsilon()))
                     continue;
-            else if (useY && 
+            else if (useY &&
                 (hitPosition.GetY() < minY - std::numeric_limits<float>::epsilon() ||
                  hitPosition.GetY() > maxY + std::numeric_limits<float>::epsilon()))
                     continue;
-            else if (useZ && 
+            else if (useZ &&
                 (hitPosition.GetZ() < minZ - std::numeric_limits<float>::epsilon() ||
                  hitPosition.GetZ() > maxZ + std::numeric_limits<float>::epsilon()))
                     continue;
@@ -757,7 +757,7 @@ bool LArClusterHelper::SortHitsByPositionInX(const pandora::CaloHit *const pLhs,
     if (std::fabs(deltaPosition.GetX()) > std::numeric_limits<float>::epsilon())
         return (deltaPosition.GetX() > std::numeric_limits<float>::epsilon());
 
-    return SortHitsByPositionInX(pLhs, pRhs);
+    return SortHitsByPosition(pLhs, pRhs);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
