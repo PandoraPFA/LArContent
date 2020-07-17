@@ -87,8 +87,8 @@ bool CosmicRayTrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const T
             {
                 // ATTN: Cluster direction vectors must point to one another
                 //clusterMergeDirection = clusterAverageDirection * (isUpstream ? 1.f : -1.f);
-                clusterMergeDirection = microDirection;
-                //clusterMergeDirection = clusterAverageDirection;
+                //clusterMergeDirection = microDirection;
+                clusterMergeDirection = clusterAverageDirection;
                 clusterMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), clusterMergePosition);
             }
             
