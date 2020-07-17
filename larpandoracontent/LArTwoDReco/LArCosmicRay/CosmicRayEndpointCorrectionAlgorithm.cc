@@ -125,11 +125,15 @@ bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector 
     // Whether the CR endpoint is near the TPC boundary
     const LArTPC &pLArTPC(this->GetPandora().GetGeometry()->GetLArTPC());
     const float tpcHighXEdge(pLArTPC.GetCenterX() + (pLArTPC.GetWidthX() / 2.f)), tpcLowXEdge(pLArTPC.GetCenterX() - (pLArTPC.GetWidthX() / 2.f));
-    const float allowanceWidth(10.f), allowanceHighXEdge(tpcHighXEdge - allowanceWidth), allowanceLowXEdge(tpcLowXEdge + allowanceWidth);
+    const float allowanceWidth(15.f), allowanceHighXEdge(tpcHighXEdge - allowanceWidth), allowanceLowXEdge(tpcLowXEdge + allowanceWidth);
 
     const bool isClusterEndpointInBoundary((clusterEndpoint.GetX() < allowanceLowXEdge) || (clusterEndpoint.GetX() > allowanceHighXEdge));
     const bool isClusterMergePointInBoundary((clusterMergePoint.GetX() < allowanceLowXEdge) || (clusterMergePoint.GetX() > allowanceHighXEdge));
 
+    std::cout << "Distance from boundary: " << std::min(std::fabs(clusterMergePoint.GetX() - tpcHighXEdge), std::fabs(clusterMergePoint.GetX() - tpcLowXEdge)) << std::endl;
+
+    //ISOBEL: NEED TO MAKE SURE NOT THE OUTER EDGE OF THE DETECTOR
+    
     if (!(isClusterEndpointInBoundary || isClusterMergePointInBoundary))
     {
         std::cout << "NOT CLOSE ENOUGH TO THE BOUNDARY" << std::endl;
@@ -196,15 +200,15 @@ bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector 
         ++distanceCount;
     }
 
-    const float averageDistanceFromLine(distanceFromLine / distanceCount);
-    std::cout << "averageDistanceFromLine: " << averageDistanceFromLine << std::endl;
-
     if (distanceCount == 0)
     {
         std::cout << "DISTANCE COUNT TOO SMALL" << std::endl;
         PandoraMonitoringApi::ViewEvent(this->GetPandora());        
         return false;
     }
+
+    const float averageDistanceFromLine(distanceFromLine / distanceCount);
+    std::cout << "averageDistanceFromLine: " << averageDistanceFromLine << std::endl;    
     
     if (averageDistanceFromLine < 0.3)
     {
@@ -214,17 +218,20 @@ bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector 
     }
 
     
-    //CartesianVector predictedPosition(isUpstream ? clusterMergePoint + (clusterMergeDirection * endpointSeparation) : clusterMergePoint - (clusterMergeDirection * endpointSeparation));
-    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &predictedPosition, "PREDICTION", VIOLET, 2);
-    //float error((predictedPosition - clusterEndpoint).GetMagnitude());
-    //std::cout << "Extrapolation Distance: " << error << std::endl;
-
-    
+    // INVESTIGATE ENDPOINT Z SEPARATION
     const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
     const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
+    
+    const CartesianVector extrapolatedPoint(clusterEndpoint.GetX(), 0.f, predictedIntercept + (predictedGradient * clusterEndpoint.GetX()));
     const float deltaZ(std::fabs(clusterEndpoint.GetZ() - (predictedIntercept + (predictedGradient * clusterEndpoint.GetX()))));
+    const float extrapolatedSeparation((extrapolatedPoint - clusterMergePoint).GetMagnitude());
 
-    const float scaledDeltaZ(deltaZ / endpointSeparation); 
+    const CartesianVector start(clusterMergePoint + (clusterMergeDirection*20));
+    const CartesianVector end(clusterMergePoint - (clusterMergeDirection*20));
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedPoint, "JAM", GREEN, 2);
+    PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &start, &end, "JAM LINE", GREEN, 2, 2);
+    
+    const float scaledDeltaZ(deltaZ / extrapolatedSeparation); 
     std::cout << "deltaZ: " << deltaZ << std::endl;
     std::cout << "scaled deltaZ: " << scaledDeltaZ << std::endl;
 
@@ -235,7 +242,7 @@ bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector 
         return false;
     }
 
-    
+    // INVESTIGATE THE DIRECTION CHANGE
     const TwoDSlidingFitResult subsetFit(subsetFitVector.front());
     const LayerFitResultMap &clusterMicroLayerFitResultMap(subsetFit.GetLayerFitResultMap());
     const int startLayer(isUpstream ? subsetFit.GetMinLayer() : subsetFit.GetMaxLayer());
@@ -249,8 +256,9 @@ bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector 
     float previousOpeningAngle(0.f);
 
     unsigned int numberOfWobbles(0);
-    unsigned int maxNumberOfWobbles(1);
-            
+    unsigned int maxNumberOfWobbles(3);
+
+    bool metCriteria(false);
     for (int i = startLayer; i != loopTerminationLayer; i += step)
     {
         const auto microIter(clusterMicroLayerFitResultMap.find(i));
@@ -262,7 +270,14 @@ bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector 
         subsetFit.GetGlobalDirection(microIter->second.GetGradient(), microDirection);
         float microOpeningAngle(microDirection.GetOpeningAngle(clusterMergeDirection) * 180 / 3.14);
 
-        if (microDirection.GetZ() < clusterMergeDirection.GetZ())
+        /////////////////////
+        CartesianVector microPosition(0.f, 0.f, 0.f);
+        subsetFit.GetGlobalPosition(microIter->second.GetL(), microIter->second.GetFitT(), microPosition);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &microPosition, "MICRO POSITION", BLACK, 2);
+        /////////////////////
+        
+        bool isAbove(microDirection.GetZ() > (predictedGradient*microDirection.GetX()));
+        if (!isAbove)
             microOpeningAngle *= (-1.f);
 
         std::cout << "ANGLE DEVIATION: " << microOpeningAngle << std::endl;
@@ -284,20 +299,22 @@ bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector 
 
         if (reachedFirstCurve)
         {
-            if (((isClockwise && (microOpeningAngle > previousOpeningAngle)) || (!isClockwise && (microOpeningAngle < previousOpeningAngle))) && (layerAngleDeviation > 0.5 ))
+            if (((isClockwise && (microOpeningAngle > previousOpeningAngle)) || (!isClockwise && (microOpeningAngle < previousOpeningAngle))) && (layerAngleDeviation > 1 ))
             {
                 ++numberOfWobbles;
 
                 if (numberOfWobbles > maxNumberOfWobbles)
                 {
-                    std::cout << "TOO MANY WOBBLES" << std::endl;
+                    std::cout << "TOO MANY WOBBLES - RESET" << std::endl;
                     PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                    return false;
                 }
             }
 
-            if ((isClockwise && (microOpeningAngle < -20.f)) || (!isClockwise && (microOpeningAngle > 20.f)))
+            if ((isClockwise && (microOpeningAngle < -25.f)) || (!isClockwise && (microOpeningAngle > 25.f)))
             {
                 std::cout << "MEET ANGLE CRITERIA" << std::endl;
+                metCriteria = true;
                 break;
             }
         }
@@ -305,6 +322,14 @@ bool CosmicRayEndpointCorrectionAlgorithm::NewIsCosmicRay(const CartesianVector 
         previousOpeningAngle = microOpeningAngle;
     }
 
+
+    if(!metCriteria)
+    {
+        std::cout << "DIDN'T FIND ANGLE CRITERIA" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        return false;
+    }
+    
     return true;
 
 }
