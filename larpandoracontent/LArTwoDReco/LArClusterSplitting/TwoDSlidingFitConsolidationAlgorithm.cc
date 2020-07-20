@@ -101,13 +101,7 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
 StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract, ClusterSet &unavailableClusters) const
 {
     ClusterList clusterList;
-
-    for (const auto &mapEntry : clustersToExpand)
-    { 
-        if (!unavailableClusters.count(mapEntry.first))
-            clusterList.push_back(mapEntry.first);
-    }
-
+    for (const auto &mapEntry : clustersToContract) clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)
@@ -151,7 +145,11 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand, ClusterSet &unavailableClusters) const
 {
     ClusterList clusterList;
-    for (const auto &mapEntry : clustersToExpand) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : clustersToExpand)
+    { 
+        if (!unavailableClusters.count(mapEntry.first))
+            clusterList.push_back(mapEntry.first);
+    }
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)
