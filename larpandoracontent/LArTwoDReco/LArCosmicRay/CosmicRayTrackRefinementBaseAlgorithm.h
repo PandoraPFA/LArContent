@@ -110,6 +110,9 @@ protected:
         pandora::CartesianVector    m_downstreamMergeDirection;    ///< The downstream cluster direction at the downstream merge point (points in the direction of the upstream cluster)
         pandora::CartesianVector    m_connectingLineDirection;     ///< The unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
     };
+
+    typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToCaloHitListMap;
+    typedef std::vector<TwoDSlidingFitResultMap*> SlidingFitResultMapVector;    
     
     virtual pandora::StatusCode Run() = 0;
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
@@ -139,6 +142,51 @@ protected:
     bool GetClusterMergingCoordinates(const TwoDSlidingFitResult &currentMicroFitResult, const TwoDSlidingFitResult &currentMacroFitResult,
         const TwoDSlidingFitResult &associatedMacroFitResult, const bool isUpstream, pandora::CartesianVector &currentMergePosition,
         pandora::CartesianVector &currentMergeDirection) const;
+
+    void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList,
+        ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+
+    void GetExtrapolatedCaloHits(const pandora::CartesianVector &upstreamPoint, const pandora::CartesianVector &downstreamPoint,
+        const pandora::CartesianVector &connectingLineDirection, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+
+    /**
+     *  @brief  Update the sliding fit maps and cluster vector in preparation for a cluster deletion
+     *
+     *  @param  pCluster the cluster to be deleted
+     *  @param  clusterVector the vector of 'relevant' clusters
+     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
+     */    
+    void UpdateForClusterDeletion(const pandora::Cluster *const pCluster, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
+
+    /**
+     *  @brief  Add only the created main track cluster to the sliding fit maps and cluster vector after the main track creation process
+     *
+     *  @param  pMainTrackCluster the main track cluster
+     *  @param  clusterVector the vector of 'relevant' clusters
+     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
+     */        
+    void UpdateAfterMainTrackCreation(const pandora::Cluster *const pMainTrackCluster, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
+
+    /**
+     *  @brief  Remove any hits in the upstream/downstream cluster that lie off of the main track axis (i.e. clustering errors)
+     *
+     *  @param  pCluster the input cluster
+     *  @param  splitPosition the position after which hits are considered for removal
+     *  @param  isUpstream whether the input cluster is the upstream cluster
+     *  @param  clusterToCaloHitListMap the map [parent cluster -> list of hits which belong to the main track]
+     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
+     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global cluster gradients
+     *  @param  clusterVector the vector of 'relevant' clusters
+     *
+     *  @return Cluster the address of the (possibly) modified cluster
+     */
+    const pandora::Cluster *RemoveOffAxisHitsFromTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, const bool isUpstream,
+        const ClusterToCaloHitListMap &clusterToCaloHitListMap, pandora::ClusterList &remnantClusterList, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap, pandora::ClusterVector &clusterVector) const;    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
