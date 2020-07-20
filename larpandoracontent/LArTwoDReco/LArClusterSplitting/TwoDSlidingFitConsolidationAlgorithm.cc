@@ -145,13 +145,13 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const Cl
 StatusCode TwoDSlidingFitConsolidationAlgorithm::AddHitsToClusters(const ClusterToHitMap &clustersToExpand, ClusterSet &unavailableClusters) const
 {
     ClusterList clusterList;
-    
+
     for (const auto &mapEntry : clustersToExpand)
-    { 
+    {
         if (!unavailableClusters.count(mapEntry.first))
             clusterList.push_back(mapEntry.first);
     }
-    
+
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)

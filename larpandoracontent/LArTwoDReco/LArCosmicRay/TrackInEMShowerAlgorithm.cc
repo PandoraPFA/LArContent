@@ -380,7 +380,7 @@ void TrackInEMShowerAlgorithm::GetTrackSegmentBoundaries(const ClusterAssociatio
 
     if (fullSegments == 0)
         trackSegmentBoundaries = {clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint()};
-    
+
     const float lengthOfTrackRemainder(trackLength - (fullSegments * m_lineSegmentLength));
     const bool splitFinalSegment(lengthOfTrackRemainder > m_lineSegmentLength * 0.5f);
     const int numberOfBoundaries(fullSegments + (splitFinalSegment ? 2 : 1));
@@ -501,10 +501,10 @@ const Cluster *TrackInEMShowerAlgorithm::RemoveOffAxisHitsFromTrack(const Cluste
 
             bool isAnExtrapolatedHit(false);
             const auto extrapolatedCaloHitIter(clusterToCaloHitListMap.find(pCluster));
-            
+
             if (extrapolatedCaloHitIter != clusterToCaloHitListMap.end())
                 isAnExtrapolatedHit = std::find(extrapolatedCaloHitIter->second.begin(), extrapolatedCaloHitIter->second.end(), pCaloHit) != extrapolatedCaloHitIter->second.end();
-            
+
             const bool isAbove(((clusterGradient * hitPosition.GetX()) + clusterIntercept) < (isVertical ? hitPosition.GetX() : hitPosition.GetZ()));
             const bool isToRemove(!isAnExtrapolatedHit && (((thisL > rL) && isUpstream) || ((thisL < rL) && !isUpstream)));
 
@@ -539,7 +539,7 @@ const Cluster *TrackInEMShowerAlgorithm::RemoveOffAxisHitsFromTrack(const Cluste
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, originalListName, fragmentListName));
         return pCluster;
     }
-    
+
 
 }
 
