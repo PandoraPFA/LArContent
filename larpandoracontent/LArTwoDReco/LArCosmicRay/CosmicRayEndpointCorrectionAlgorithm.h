@@ -35,9 +35,13 @@ private:
      */
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector) const;
 
-    bool IsCosmicRay(const ClusterAssociation &clusterAssociation, const pandora::CartesianVector &clusterEndpoint, const bool isUpstream) const;
-                     
-    void ModifyClusterEndpoint(const pandora::Cluster *const pCluster, const bool isUpstream, const TwoDSlidingFitResult &microFitResult, const TwoDSlidingFitResult &macroFitResult);
+    bool IsDeltaRay(const ClusterAssociation &clusterAssociation, const bool isUpstream) const;
+
+    
+    bool InvestigateClusterEnd(const pandora::Cluster *const pCluster, const bool isUpstream, const TwoDSlidingFitResult &microFitResult, const TwoDSlidingFitResult &macroFitResult, ClusterAssociation &clusterAssociation);
+    
+
+    void RefineTrackEndpoint(const pandora::Cluster *const pCluster, const pandora::CartesianVector &clusterUpstreamMergePoint, const pandora::CartesianVector &clusterDownstreamMergePoint, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapVector) const;
 
     
     int m_minCaloHits;
@@ -46,7 +50,7 @@ private:
     float m_minScaledZOffset;
     float m_thresholdAngleDeviation;
     float m_thresholdAngleDeviationBetweenLayers;
-    int m_maxSmoothPoints;
+    int m_maxAnomalousPoints;
     float m_thresholdMaxAngleDeviation;
     
 };

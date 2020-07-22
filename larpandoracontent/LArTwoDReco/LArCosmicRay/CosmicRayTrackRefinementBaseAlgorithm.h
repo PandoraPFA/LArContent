@@ -112,20 +112,10 @@ protected:
     };
 
     typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToCaloHitListMap;
-    typedef std::vector<TwoDSlidingFitResultMap*> SlidingFitResultMapVector;    
+    typedef std::pair<TwoDSlidingFitResultMap*, TwoDSlidingFitResultMap*> SlidingFitResultMapPair;    
     
     virtual pandora::StatusCode Run() = 0;
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
-
-    /**
-     *  @brief  Cache the sliding fits of input clusters
-     *
-     *  @param  clusterVector the input cluster vector
-     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
-     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global cluster gradients
-     */
-    void InitialiseSlidingFitResultMaps(const pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
-        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
 
     /**
      *  @brief  Get the merging coordinate and direction for an input cluster with respect to an associated cluster
@@ -150,28 +140,6 @@ protected:
         const pandora::CartesianVector &connectingLineDirection, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
     /**
-     *  @brief  Update the sliding fit maps and cluster vector in preparation for a cluster deletion
-     *
-     *  @param  pCluster the cluster to be deleted
-     *  @param  clusterVector the vector of 'relevant' clusters
-     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
-     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
-     */    
-    void UpdateForClusterDeletion(const pandora::Cluster *const pCluster, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
-        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
-
-    /**
-     *  @brief  Add only the created main track cluster to the sliding fit maps and cluster vector after the main track creation process
-     *
-     *  @param  pMainTrackCluster the main track cluster
-     *  @param  clusterVector the vector of 'relevant' clusters
-     *  @param  microSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to local gradients
-     *  @param  macroSlidingFitResultMap the mapping [cluster -> TwoDSlidingFitResult] where fits correspond to global gradients
-     */        
-    void UpdateAfterMainTrackCreation(const pandora::Cluster *const pMainTrackCluster, pandora::ClusterVector &clusterVector, TwoDSlidingFitResultMap &microSlidingFitResultMap,
-        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
-
-    /**
      *  @brief  Remove any hits in the upstream/downstream cluster that lie off of the main track axis (i.e. clustering errors)
      *
      *  @param  pCluster the input cluster
@@ -186,7 +154,73 @@ protected:
      */
     const pandora::Cluster *RemoveOffAxisHitsFromTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, const bool isUpstream,
         const ClusterToCaloHitListMap &clusterToCaloHitListMap, pandora::ClusterList &remnantClusterList, TwoDSlidingFitResultMap &microSlidingFitResultMap,
-        TwoDSlidingFitResultMap &macroSlidingFitResultMap, pandora::ClusterVector &clusterVector) const;    
+        TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
+
+    /**
+     *  @brief  Remove the hits from a shower cluster that belong to the main track and add them into the main track cluster
+     *
+     *  @param  pShowerCluster the input shower cluster
+     *  @param  pMainTrackCluster the main track cluster
+     *  @param  caloHitsToMerge the list of calo hits to remove from the shower cluster
+     *  @param  clusterAssociation the clusterAssociation
+     *  @param  remnantClusterList the input list to store the remnant clusters
+     */
+    void AddHitsToMainTrack(const pandora::Cluster *const pShowerCluster, const pandora::Cluster *const pMainTrackCluster, const pandora::CaloHitList &caloHitsToMerge,
+        const ClusterAssociation &clusterAssociation, pandora::ClusterList &remnantClusterList) const;
+
+    /**
+     *  @brief  Process the remnant clusters separating those that stradle the main track
+     *
+     *  @param  remnantClusterList the list of remnant clusters
+     *  @param  pMainTrackCluster the main track cluster
+     *  @param  pClusterList the list of all clusters
+     */
+    void ProcessRemnantClusters(const pandora::ClusterList &remnantClusterList, const pandora::Cluster *const pMainTrackCluster, const pandora::ClusterList *const pClusterList, pandora::ClusterList &createdClusters) const;
+
+    /**
+     *  @brief  Add a cluster to the nearest cluster satisfying separation distance thresholds
+     *
+     *  @param  pClusterToMerge the cluster to merge
+     *  @param  pMainTrackCluster the main track cluster
+     *  @param  pClusterList the list of all clusters
+     */
+    bool AddToNearestCluster(const pandora::Cluster *const pClusterToMerge, const pandora::Cluster *const pClusterToEnlarge, const pandora::ClusterList *const pClusterList) const;
+
+    /**
+     *  @brief  Whether a remnant cluster is considered to be disconnected and therefore should undergo further fragmentation
+     *
+     *  @param  pRemnantCluster the input remnant cluster
+     */
+    bool IsClusterRemnantDisconnected(const pandora::Cluster *const pRemnantCluster) const;
+
+    /**
+     *  @brief  Fragment a cluster using simple hit separation logic
+     *
+     *  @param  pRemnantCluster the input remnant cluster to fragment
+     *  @param  fragmentedClusterList the list of created clusters
+     */
+    void FragmentRemnantCluster(const pandora::Cluster *const pRemnantCluster, pandora::ClusterList &fragmentedClusterList) const;    
+
+
+    void InitialiseContainers(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
+
+    void UpdateContainers(const pandora::ClusterVector &clustersToDelete, const pandora::ClusterList &clustersToAdd, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+
+    unsigned int m_microSlidingFitWindow;
+    unsigned int m_macroSlidingFitWindow;
+    float m_stableRegionClusterFraction;
+    float m_mergePointMinCosAngleDeviation;
+    float m_distanceFromLine;
+    float          m_minHitFractionForHitRemoval;           ///< The threshold fraction of hits to be removed from the cluster for hit removal to proceed
+    float m_maxDistanceFromMainTrack;
+    float m_maxHitDistanceFromCluster;
+    float m_maxHitSeparationForConnectedCluster;
+    
+
+    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
