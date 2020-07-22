@@ -35,9 +35,11 @@ private:
      */
     void SelectCleanClusters(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector) const;
 
-    bool NewIsCosmicRay(const pandora::CartesianVector &clusterEndpoint, const pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection, const pandora::Cluster *const pCluster, const bool isUpstream) const;
+    bool IsCosmicRay(const ClusterAssociation &clusterAssociation, const pandora::CartesianVector &clusterEndpoint, const bool isUpstream) const;
+                     
+    void ModifyClusterEndpoint(const pandora::Cluster *const pCluster, const bool isUpstream, const TwoDSlidingFitResult &microFitResult, const TwoDSlidingFitResult &macroFitResult);
 
-
+    
     int m_minCaloHits;
     float m_maxDistanceFromTPC;
     float m_curveThreshold;
