@@ -86,9 +86,9 @@ bool CosmicRayTrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const T
             if (goodLayerCount == 0)
             {
                 // ATTN: Cluster direction vectors must point to one another
-                //clusterMergeDirection = clusterAverageDirection * (isUpstream ? 1.f : -1.f);
+                clusterMergeDirection = clusterAverageDirection * (isUpstream ? 1.f : -1.f);
                 //clusterMergeDirection = microDirection;
-                clusterMergeDirection = clusterAverageDirection;
+                //clusterMergeDirection = clusterAverageDirection;
                 clusterMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), clusterMergePosition);
             }
             
@@ -253,5 +253,39 @@ void CosmicRayTrackRefinementBaseAlgorithm::UpdateAfterMainTrackCreation(const C
     this->InitialiseSlidingFitResultMaps(mainTrackClusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::ClusterAssociation() :
+    m_pUpstreamCluster(nullptr),
+    m_pDownstreamCluster(nullptr),
+    m_upstreamMergePoint(CartesianVector(0.f, 0.f, 0.f)),
+    m_upstreamMergeDirection(CartesianVector(0.f, 0.f, 0.f)),
+    m_downstreamMergePoint(CartesianVector(0.f, 0.f, 0.f)),
+    m_downstreamMergeDirection(CartesianVector(0.f, 0.f, 0.f)),
+    m_connectingLineDirection(CartesianVector(0.f, 0.f, 0.f))
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::ClusterAssociation(const Cluster *const pUpstreamCluster, const Cluster *const pDownstreamCluster,const CartesianVector &upstreamMergePoint,
+        const CartesianVector &upstreamMergeDirection, const CartesianVector &downstreamMergePoint, const CartesianVector &downstreamMergeDirection) :
+    m_pUpstreamCluster(pUpstreamCluster),
+    m_pDownstreamCluster(pDownstreamCluster),
+    m_upstreamMergePoint(upstreamMergePoint),
+    m_upstreamMergeDirection(upstreamMergeDirection),
+    m_downstreamMergePoint(downstreamMergePoint),
+    m_downstreamMergeDirection(downstreamMergeDirection),
+    m_connectingLineDirection(0.f, 0.f, 0.f)
+{
+    const CartesianVector connectingLineDirection(m_downstreamMergePoint.GetX() - m_upstreamMergePoint.GetX(), 0.f, m_downstreamMergePoint.GetZ() - m_upstreamMergePoint.GetZ());
+    m_connectingLineDirection = connectingLineDirection.GetUnitVector();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+    
 
 } // namespace lar_content
