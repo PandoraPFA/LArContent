@@ -228,7 +228,7 @@ bool TrackInEMShowerAlgorithm::GetClusterMergingCoordinates(const TwoDSlidingFit
             {
                 // ATTN: Cluster direction vectors must point to one another
                 clusterMergeDirection = clusterAverageDirection * (isUpstream ? 1.f : -1.f);
-                clusterMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), clusterMergePosition);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, clusterMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), clusterMergePosition));
             }
 
             ++goodLayerCount;
