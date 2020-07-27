@@ -332,7 +332,7 @@ bool TrackInEMShowerAlgorithm::IsTrackContinuous(const ClusterAssociation &clust
 
     unsigned int segmentsWithoutHits(0);
     CaloHitVector::const_iterator caloHitIter(extrapolatedCaloHitVector.begin());
-    for (int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
+    for (unsigned int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
     {
         if (caloHitIter == extrapolatedCaloHitVector.end())
         {
