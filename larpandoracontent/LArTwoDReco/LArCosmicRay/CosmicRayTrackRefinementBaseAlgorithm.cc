@@ -26,7 +26,9 @@ CosmicRayTrackRefinementBaseAlgorithm::CosmicRayTrackRefinementBaseAlgorithm() :
     m_minHitFractionForHitRemoval(0.05f),
     m_maxDistanceFromMainTrack(0.75f),
     m_maxHitDistanceFromCluster(4.f),
-    m_maxHitSeparationForConnectedCluster(4.f)
+    m_maxHitSeparationForConnectedCluster(4.f),
+    m_maxTrackGaps(3),
+    m_lineSegmentLength(3.f)    
 {
 }
 
@@ -90,12 +92,11 @@ bool CosmicRayTrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const T
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackRefinementBaseAlgorithm::GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const ClusterList *const pClusterList,
-    ClusterToCaloHitListMap &clusterToCaloHitListMap) const
+void CosmicRayTrackRefinementBaseAlgorithm::GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const
 {
     const CartesianVector &upstreamPoint(clusterAssociation.GetUpstreamMergePoint()), &downstreamPoint(clusterAssociation.GetDownstreamMergePoint());
     const float minX(std::min(upstreamPoint.GetX(), downstreamPoint.GetX())), maxX(std::max(upstreamPoint.GetX(), downstreamPoint.GetX()));
-
+        
     for (const Cluster *const pCluster : *pClusterList)
     {
         const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
@@ -115,11 +116,132 @@ void CosmicRayTrackRefinementBaseAlgorithm::GetExtrapolatedCaloHits(const Cluste
             }
         }
     }
-}    
+}
+ 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CosmicRayTrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const
+{
+    // ATTN: Collect extrapolated calo hits and sort by projected distance from the upstreamMergePoint
+    CaloHitVector extrapolatedCaloHitVector;
+    for (const auto &entry : clusterToCaloHitListMap)
+        extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end());    
+
+    std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), SortByDistanceAlongLine(clusterAssociation->GetUpstreamMergePoint(),
+        clusterAssociation->GetConnectingLineDirection()));
+
+    CartesianPointVector trackSegmentBoundaries;
+    this->GetTrackSegmentBoundaries(*clusterAssociation, trackSegmentBoundaries);
+
+    if (trackSegmentBoundaries.size() < 2)
+    {
+        std::cout << "TrackInEMShowerAlgorithm: Less than two track segment boundaries" << std::endl;
+        throw STATUS_CODE_NOT_ALLOWED;
+    }
+
+    unsigned int segmentsWithoutHits(0);
+    CaloHitVector::const_iterator caloHitIter(extrapolatedCaloHitVector.begin());
+        
+    for (int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
+    {
+        if (caloHitIter == extrapolatedCaloHitVector.end())
+        {
+            ++segmentsWithoutHits;
+
+            if (segmentsWithoutHits > m_maxTrackGaps)
+                return false;
+
+            continue;
+        }
+
+        unsigned int hitsInSegment(0);
+        while (this->IsInLineSegment(trackSegmentBoundaries.at(i), trackSegmentBoundaries.at(i + 1), (*caloHitIter)->GetPositionVector()))
+        {
+            ++hitsInSegment;
+            ++caloHitIter;
+
+            if (caloHitIter == extrapolatedCaloHitVector.end())
+                break;
+        }
+
+        segmentsWithoutHits = hitsInSegment ? 0 : segmentsWithoutHits + 1;
+
+        if (segmentsWithoutHits > m_maxTrackGaps)
+            return false;
+    }
+
+    return true;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *CosmicRayTrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack(const Cluster *const pCluster, const CartesianVector &splitPosition, const bool isUpstream,
+void CosmicRayTrackRefinementBaseAlgorithm::GetTrackSegmentBoundaries(const ClusterAssociation &clusterAssociation, CartesianPointVector &trackSegmentBoundaries) const
+{
+    if (m_lineSegmentLength < std::numeric_limits<float>::epsilon())
+    {
+        std::cout << "TrackInEMShowerAlgorithm: Line segment length must be positive and nonzero" << std::endl;
+        throw STATUS_CODE_INVALID_PARAMETER;
+    }
+
+    // ATTN: To handle final segment merge track remainder with preceding segment and if track remainder was more than half of the segment length split into two
+    const CartesianVector &trackDirection(clusterAssociation.GetConnectingLineDirection());
+    const float trackLength((clusterAssociation.GetDownstreamMergePoint() - clusterAssociation.GetUpstreamMergePoint()).GetMagnitude());
+    const int fullSegments(std::floor(trackLength / m_lineSegmentLength));
+
+    if (fullSegments == 0)
+        trackSegmentBoundaries = {clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint()};
+    
+    const float lengthOfTrackRemainder(trackLength - (fullSegments * m_lineSegmentLength));
+    const bool splitFinalSegment(lengthOfTrackRemainder > m_lineSegmentLength * 0.5f);
+    const int numberOfBoundaries(fullSegments + (splitFinalSegment ? 2 : 1));
+
+    for (int i = 0; i < numberOfBoundaries; ++i)
+    {
+        if (i == 0)
+        {
+            trackSegmentBoundaries.push_back(clusterAssociation.GetUpstreamMergePoint());
+        }
+        else if (i < fullSegments)
+        {
+            trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * m_lineSegmentLength));
+        }
+        else
+        {
+            if (splitFinalSegment)
+            {
+                trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * (m_lineSegmentLength + lengthOfTrackRemainder) * 0.5f));
+            }
+            else
+            {
+                trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * (m_lineSegmentLength + lengthOfTrackRemainder)));
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CosmicRayTrackRefinementBaseAlgorithm::IsInLineSegment(const CartesianVector &lowerBoundary, const CartesianVector &upperBoundary, const CartesianVector &point) const
+{
+    const float segmentBoundaryGradient = (-1.f) * (upperBoundary.GetX() - lowerBoundary.GetX()) / (upperBoundary.GetZ() - lowerBoundary.GetZ());
+    const float xPointOnUpperLine((point.GetZ() - upperBoundary.GetZ()) / segmentBoundaryGradient + upperBoundary.GetX());
+    const float xPointOnLowerLine((point.GetZ() - lowerBoundary.GetZ()) / segmentBoundaryGradient + lowerBoundary.GetX());
+    const CartesianVector upper(xPointOnUpperLine, 0.f, point.GetZ());
+    const CartesianVector lower(xPointOnLowerLine, 0.f, point.GetZ());
+
+    if ((point.GetX() > xPointOnUpperLine) && (point.GetX() > xPointOnLowerLine))
+        return false;
+
+    if ((point.GetX() < xPointOnUpperLine) && (point.GetX() < xPointOnLowerLine))
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+/*    
+
+const Cluster *CosmicRayTrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack(const Cluster *const pCluster, const CartesianVector &splitPosition, const bool isUpstreamEnd,
     const ClusterToCaloHitListMap &clusterToCaloHitListMap, ClusterList &remnantClusterList, TwoDSlidingFitResultMap &microSlidingFitResultMap,
     TwoDSlidingFitResultMap &macroSlidingFitResultMap) const
 {
@@ -127,7 +249,7 @@ const Cluster *CosmicRayTrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack
     const TwoDSlidingFitResult &microFitResult(microSlidingFitResultMap.at(pCluster));
     microFitResult.GetLocalPosition(splitPosition, rL, rT);
 
-    const TwoDSlidingFitResult macroFitResult(macroSlidingFitResultMap.at(pCluster));
+    const TwoDSlidingFitResult &macroFitResult(macroSlidingFitResultMap.at(pCluster));
     CartesianVector averageDirection(0.f, 0.f, 0.f);
     macroFitResult.GetGlobalDirection(macroFitResult.GetLayerFitResultMap().begin()->second.GetGradient(), averageDirection);
 
@@ -159,7 +281,7 @@ const Cluster *CosmicRayTrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack
                 isAnExtrapolatedHit = std::find(extrapolatedCaloHitIter->second.begin(), extrapolatedCaloHitIter->second.end(), pCaloHit) != extrapolatedCaloHitIter->second.end();
             
             const bool isAbove(((clusterGradient * hitPosition.GetX()) + clusterIntercept) < (isVertical ? hitPosition.GetX() : hitPosition.GetZ()));
-            const bool isToRemove(!isAnExtrapolatedHit && (((thisL > rL) && isUpstream) || ((thisL < rL) && !isUpstream)));
+            const bool isToRemove(!isAnExtrapolatedHit && (((thisL < rL) && isUpstreamEnd) || ((thisL > rL) && !isUpstreamEnd)));
 
             const Cluster *&pClusterToModify(isToRemove ? (isAbove ? pAboveCluster : pBelowCluster) : pMainTrackCluster);
 
@@ -407,14 +529,17 @@ void CosmicRayTrackRefinementBaseAlgorithm::FragmentRemnantCluster(const Cluster
         fragmentedClusterList.insert(fragmentedClusterList.begin(), createdClusters.begin(), createdClusters.end());
     }
 }
-
+*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterList *pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
+void CosmicRayTrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterList *pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
+
+    unsigned int m_minCaloHits2(50);
+    
     for (const Cluster *const pCluster : *pClusterList)
     {
-        if (pCluster->GetNCaloHits() < m_minCaloHits)
+        if (pCluster->GetNCaloHits() < m_minCaloHits2)
             continue;
     
         const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -436,25 +561,31 @@ void CosmicRayTrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayEndpointCorrectionAlgorithm::UpdateContainers(const ClusterVector &clustersToDelete, const ClusterList &clustersToAdd, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
+void CosmicRayTrackRefinementBaseAlgorithm::UpdateContainers(const ClusterVector &clustersToDelete, const ClusterList &clustersToAdd, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
     for (const Cluster *const pClusterToDelete : clustersToDelete)
-    {
-        const TwoDSlidingFitResultMap::const_iterator microFitToDelete(slidingFitResultMapPair.first->find(pClusterToDelete));
-        if (microFitToDelete != slidingFitResultMapPair.first->end())
-            slidingFitResultMapPair.first->erase(microFitToDelete);
+        this->RemoveClusterFromContainers(pClusterToDelete, clusterVector, slidingFitResultMapPair);
 
-        const TwoDSlidingFitResultMap::const_iterator macroFitToDelete(slidingFitResultMapPair.second->find(pClusterToDelete));
-        if (macroFitToDelete != slidingFitResultMapPair.second->end())
-            slidingFitResultMapPair.second->erase(macroFitToDelete);        
-
-        const ClusterVector::const_iterator clusterToDelete(std::find(clusterVector.begin(), clusterVector.end(), pClusterToDelete));
-        if (clusterToDelete != clusterVector.end())
-            clusterVector.erase(clusterToDelete);
-    }
-
-    this->InitialiseContainers(clustersToAdd, clusterVector, slidingFitResultMapVector);
+    this->InitialiseContainers(&clustersToAdd, clusterVector, slidingFitResultMapPair);
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CosmicRayTrackRefinementBaseAlgorithm::RemoveClusterFromContainers(const Cluster *const pClusterToRemove, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
+{
+    const TwoDSlidingFitResultMap::const_iterator microFitToDelete(slidingFitResultMapPair.first->find(pClusterToRemove));
+    if (microFitToDelete != slidingFitResultMapPair.first->end())
+        slidingFitResultMapPair.first->erase(microFitToDelete);
+
+    const TwoDSlidingFitResultMap::const_iterator macroFitToDelete(slidingFitResultMapPair.second->find(pClusterToRemove));
+    if (macroFitToDelete != slidingFitResultMapPair.second->end())
+        slidingFitResultMapPair.second->erase(macroFitToDelete);        
+
+    const ClusterVector::const_iterator clusterToDelete(std::find(clusterVector.begin(), clusterVector.end(), pClusterToRemove));
+    if (clusterToDelete != clusterVector.end())
+        clusterVector.erase(clusterToDelete);
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -485,7 +616,19 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm::ReadSettings(const TiXmlHandle
         "MaxHitDistanceFromCluster", m_maxHitDistanceFromCluster));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxHitSeparationForConnectedCluster", m_maxHitSeparationForConnectedCluster));    
+        "MaxHitSeparationForConnectedCluster", m_maxHitSeparationForConnectedCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxTrackGaps", m_maxTrackGaps));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "LineSegmentLength", m_lineSegmentLength));
+
+    if (m_lineSegmentLength < std::numeric_limits<float>::epsilon())
+    {
+        std::cout << "TrackInEMShowerAlgorithm: Line segment length must be positive and nonzero" << std::endl;
+        throw STATUS_CODE_INVALID_PARAMETER;
+    }    
     
     return STATUS_CODE_SUCCESS;
 }
@@ -494,8 +637,6 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm::ReadSettings(const TiXmlHandle
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::ClusterAssociation() :
-    m_pUpstreamCluster(nullptr),
-    m_pDownstreamCluster(nullptr),
     m_upstreamMergePoint(CartesianVector(0.f, 0.f, 0.f)),
     m_upstreamMergeDirection(CartesianVector(0.f, 0.f, 0.f)),
     m_downstreamMergePoint(CartesianVector(0.f, 0.f, 0.f)),
@@ -506,10 +647,8 @@ CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::ClusterAssociation() 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::ClusterAssociation(const Cluster *const pUpstreamCluster, const Cluster *const pDownstreamCluster,const CartesianVector &upstreamMergePoint,
-        const CartesianVector &upstreamMergeDirection, const CartesianVector &downstreamMergePoint, const CartesianVector &downstreamMergeDirection) :
-    m_pUpstreamCluster(pUpstreamCluster),
-    m_pDownstreamCluster(pDownstreamCluster),
+CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::ClusterAssociation(const CartesianVector &upstreamMergePoint, const CartesianVector &upstreamMergeDirection,
+        const CartesianVector &downstreamMergePoint, const CartesianVector &downstreamMergeDirection) :
     m_upstreamMergePoint(upstreamMergePoint),
     m_upstreamMergeDirection(upstreamMergeDirection),
     m_downstreamMergePoint(downstreamMergePoint),
@@ -519,6 +658,40 @@ CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::ClusterAssociation(co
     const CartesianVector connectingLineDirection(m_downstreamMergePoint.GetX() - m_upstreamMergePoint.GetX(), 0.f, m_downstreamMergePoint.GetZ() - m_upstreamMergePoint.GetZ());
     m_connectingLineDirection = connectingLineDirection.GetUnitVector();
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::operator==(const ClusterAssociation &clusterAssociation) const
+{
+    // ISOBEL: ALSO CHECK DOWNSTREAM
+    return (m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint() &&  m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint());
+}
+
+
+bool CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::operator<(const ClusterAssociation &clusterAssociation) const
+{
+    // ISOBEL: ALSO CHECK DOWNSTREAM
+    return (LArClusterHelper::SortCoordinatesByPosition(m_upstreamMergePoint, clusterAssociation.GetUpstreamMergePoint()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CosmicRayTrackRefinementBaseAlgorithm::SortByDistanceAlongLine::operator() (const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs)
+{
+    const CartesianVector lhsDistanceVector(pLhs->GetPositionVector() - m_startPoint);
+    const CartesianVector rhsDistanceVector(pRhs->GetPositionVector() - m_startPoint);
+
+    const float lhsProjectedDistance(lhsDistanceVector.GetDotProduct(m_lineDirection));
+    const float rhsProjectedDistance(rhsDistanceVector.GetDotProduct(m_lineDirection));
+
+    if (std::fabs(lhsProjectedDistance - rhsProjectedDistance) > std::numeric_limits<float>::epsilon())
+        return (lhsProjectedDistance < rhsProjectedDistance);
+
+    // To deal with tiebreaks
+    return LArClusterHelper::SortHitsByPulseHeight(pLhs, pRhs);
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
