@@ -49,22 +49,8 @@ protected:
          *  @param  downstreamMergePoint the downstream cluster point to be used in the merging process
          *  @param  downstreamMergeDirection the downstream cluster direction at the downstream merge point
          */
-        ClusterAssociation(const pandora::Cluster *const pUpstreamCluster, const pandora::Cluster *const pDownstreamCluster, const pandora::CartesianVector &upstreamMergePoint,
-            const pandora::CartesianVector &upstreamMergeDirection, const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection);
-
-        /**
-         *  @brief  Returns the upstream cluster address
-         *
-         *  @return  Cluster the address of the upstream cluster
-         */
-        const pandora::Cluster *GetUpstreamCluster() const;
-
-        /**
-         *  @brief  Returns the downstream cluster address
-         *
-         *  @return  Cluster the address of the downstream cluster
-         */
-        const pandora::Cluster *GetDownstreamCluster() const;
+        ClusterAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
+            const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection);
 
         /**
          *  @brief  Returns the upstream cluster merge point
@@ -100,10 +86,11 @@ protected:
          *  @return  CartesianVector the unit displacement vector from the upstream merge point to the downstream merge point
          */           
         const pandora::CartesianVector GetConnectingLineDirection() const;
+
+        bool operator==(const ClusterAssociation &clusterAssociation) const;
+        bool operator<(const ClusterAssociation &clusterAssociation) const;
         
     private:
-        const pandora::Cluster     *m_pUpstreamCluster;            ///< The upstream cluster of the two associated clusters         
-        const pandora::Cluster     *m_pDownstreamCluster;          ///< The downstream cluster of the two associated clusters
         pandora::CartesianVector    m_upstreamMergePoint;          ///< The upstream cluster point to be used in the merging process
         pandora::CartesianVector    m_upstreamMergeDirection;      ///< The upstream cluster direction at the upstream merge point (points in the direction of the downstream cluster)
         pandora::CartesianVector    m_downstreamMergePoint;        ///< The downstream cluster point to be used in the merging process
@@ -111,8 +98,43 @@ protected:
         pandora::CartesianVector    m_connectingLineDirection;     ///< The unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
     };
 
+    
+    typedef std::pair<TwoDSlidingFitResultMap*, TwoDSlidingFitResultMap*> SlidingFitResultMapPair;
+
     typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToCaloHitListMap;
-    typedef std::pair<TwoDSlidingFitResultMap*, TwoDSlidingFitResultMap*> SlidingFitResultMapPair;    
+    typedef std::map<ClusterAssociation, ClusterToCaloHitListMap> ClusterAssociationCaloHitOwnershipMap;
+    typedef std::vector<ClusterAssociation> ClusterAssociationVector;
+
+    /**
+      *  @brief  SortByDistanceAlongLine class
+      */
+    class SortByDistanceAlongLine
+    {
+    public:
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  startPoint the line start point
+         *  @param  lineDirection the line direction unit vector
+         */
+	    SortByDistanceAlongLine(const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection);
+
+        /**
+         *  @brief  Sort hits by their perpendicular distance to a line
+         *
+         *  @param  pLhs the address of the first hit
+         *  @param  pRhs the address of the second hit
+         *
+         *  @return  bool
+         */
+        bool operator() (const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs);
+
+    private:
+        const pandora::CartesianVector m_startPoint;        ///< The line start point
+        const pandora::CartesianVector m_lineDirection;     ///< The line end point
+    };    
+
+
     
     virtual pandora::StatusCode Run() = 0;
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
@@ -133,12 +155,30 @@ protected:
         const TwoDSlidingFitResult &associatedMacroFitResult, const bool isUpstream, pandora::CartesianVector &currentMergePosition,
         pandora::CartesianVector &currentMergeDirection) const;
 
-    void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList,
-        ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+    void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
-    void GetExtrapolatedCaloHits(const pandora::CartesianVector &upstreamPoint, const pandora::CartesianVector &downstreamPoint,
-        const pandora::CartesianVector &connectingLineDirection, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+bool CosmicRayTrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const    
+    void IsTrackContinuous(ClusterAssociationCaloHitOwnershipMap &clusterAssociationCaloHitOwnershipMap) const;
 
+    /**
+     *  @brief  Obtain the segment boundaries of the connecting line to test whether extrapolated hits are continuous
+     *
+     *  @param  clusterAssociation the clusterAssociation
+     *  @param  trackSegmentBoundaries the output vector of segment boundaries
+     */
+    void GetTrackSegmentBoundaries(const ClusterAssociation &clusterAssociation, pandora::CartesianPointVector &trackSegmentBoundaries) const;
+
+    /**
+     *  @brief  Whether a calo hit falls within a specified segment of the cluster connecting line
+     *
+     *  @param  lowerBoundary the lower boundary of the segment
+     *  @param  upperBoundary the upper boundary of the segment
+     *  @param  point the position of the calo hit
+     *
+     *  @return bool whether the calo hit falls within segment
+     */
+    bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;
+    
     /**
      *  @brief  Remove any hits in the upstream/downstream cluster that lie off of the main track axis (i.e. clustering errors)
      *
@@ -206,6 +246,8 @@ protected:
 
     void UpdateContainers(const pandora::ClusterVector &clustersToDelete, const pandora::ClusterList &clustersToAdd, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
+    void RemoveClusterFromContainers(const pandora::Cluster *const pClustertoRemove, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const; 
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
 
@@ -218,24 +260,12 @@ protected:
     float m_maxDistanceFromMainTrack;
     float m_maxHitDistanceFromCluster;
     float m_maxHitSeparationForConnectedCluster;
+    unsigned int   m_maxTrackGaps;                          ///< The maximum number of graps allowed in the extrapolated hit vector
+    float          m_lineSegmentLength;                     ///< The length of a track gap
     
 
     
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::Cluster *CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::GetUpstreamCluster() const
-{
-    return m_pUpstreamCluster;
-}
-    
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::Cluster *CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::GetDownstreamCluster() const
-{
-    return m_pDownstreamCluster;
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -270,7 +300,16 @@ inline const pandora::CartesianVector CosmicRayTrackRefinementBaseAlgorithm::Clu
 inline const pandora::CartesianVector CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::GetConnectingLineDirection() const
 {
     return m_connectingLineDirection;
-} 
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline CosmicRayTrackRefinementBaseAlgorithm::SortByDistanceAlongLine::SortByDistanceAlongLine(const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection) :
+    m_startPoint(startPoint),
+    m_lineDirection(lineDirection.GetUnitVector())
+{
+}
     
 } // namespace lar_content
 
