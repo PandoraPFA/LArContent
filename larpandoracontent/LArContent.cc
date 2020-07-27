@@ -44,6 +44,8 @@
 #include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
 
+#include "larpandoracontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
+
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
@@ -215,6 +217,7 @@
     d("LArPreProcessing",                       PreProcessingAlgorithm)                                                         \
     d("LArSlicing",                             SlicingAlgorithm)                                                               \
     d("LArTrackParticleBuilding",               TrackParticleBuildingAlgorithm)                                                 \
+    d("LArDeepLearningTrackShowerId",           DeepLearningTrackShowerIdAlgorithm)                                             \
     d("LArNeutrinoCreation",                    NeutrinoCreationAlgorithm)                                                      \
     d("LArNeutrinoDaughterVertices",            NeutrinoDaughterVerticesAlgorithm)                                              \
     d("LArNeutrinoHierarchy",                   NeutrinoHierarchyAlgorithm)                                                     \
