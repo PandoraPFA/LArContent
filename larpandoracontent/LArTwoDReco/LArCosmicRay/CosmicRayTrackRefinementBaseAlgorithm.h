@@ -10,11 +10,11 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "larpandoracontent/LArTwoDReco/LArCosmicRay/ClusterAssociation.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 namespace lar_content
 {
-
 /**
  *  @brief CosmicRayTrackRefinementBaseAlgorithm class
  */
@@ -29,82 +29,11 @@ public:
     CosmicRayTrackRefinementBaseAlgorithm();
 
 protected:
-    /**
-     *  @brief  ClusterAssociation class
-     */
-    class ClusterAssociation
-    {
-    public:
-        /**
-         *  @brief  Default constructor
-         */
-        ClusterAssociation();
 
-        /**
-         *  @brief  Constructor
-         *
-         *  @param  pUpstreamCluster the upstream cluster of the two associated clusters
-         *  @param  pDownstreamCluster the downstream cluster of the two associated clusters
-         *  @param  upstreamMergePoint the upstream cluster point to be used in the merging process
-         *  @param  upstreamMergeDirection the upstream cluster direction at the upstream merge point
-         *  @param  downstreamMergePoint the downstream cluster point to be used in the merging process
-         *  @param  downstreamMergeDirection the downstream cluster direction at the downstream merge point
-         */
-        ClusterAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
-            const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection);
-
-        /**
-         *  @brief  Returns the upstream cluster merge point
-         *
-         *  @return  CartesianVector the merge point of the upstream cluster
-         */
-        const pandora::CartesianVector GetUpstreamMergePoint() const;
-
-        /**
-         *  @brief  Returns the upstream cluster direction at the upstream merge point
-         *
-         *  @return  CartesianVector the direction at the merge point of the upstream cluster
-         */        
-        const pandora::CartesianVector GetUpstreamMergeDirection() const;
-
-        /**
-         *  @brief  Returns the downstream cluster merge point
-         *
-         *  @return  CartesianVector the merge point of the downstream cluster
-         */
-        const pandora::CartesianVector GetDownstreamMergePoint() const;
-
-        /**
-         *  @brief  Returns the downstream cluster direction at the downstream merge point
-         *
-         *  @return  CartesianVector the direction at the merge point of the downstream cluster
-         */        
-        const pandora::CartesianVector GetDownstreamMergeDirection() const;
-
-        /**
-         *  @brief  Returns the unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
-         *
-         *  @return  CartesianVector the unit displacement vector from the upstream merge point to the downstream merge point
-         */           
-        const pandora::CartesianVector GetConnectingLineDirection() const;
-
-        bool operator==(const ClusterAssociation &clusterAssociation) const;
-        bool operator<(const ClusterAssociation &clusterAssociation) const;
-        
-    private:
-        pandora::CartesianVector    m_upstreamMergePoint;          ///< The upstream cluster point to be used in the merging process
-        pandora::CartesianVector    m_upstreamMergeDirection;      ///< The upstream cluster direction at the upstream merge point (points in the direction of the downstream cluster)
-        pandora::CartesianVector    m_downstreamMergePoint;        ///< The downstream cluster point to be used in the merging process
-        pandora::CartesianVector    m_downstreamMergeDirection;    ///< The downstream cluster direction at the downstream merge point (points in the direction of the upstream cluster)
-        pandora::CartesianVector    m_connectingLineDirection;     ///< The unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
-    };
-
-    
     typedef std::pair<TwoDSlidingFitResultMap*, TwoDSlidingFitResultMap*> SlidingFitResultMapPair;
-
     typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToCaloHitListMap;
-    typedef std::map<ClusterAssociation, ClusterToCaloHitListMap> ClusterAssociationCaloHitOwnershipMap;
-    typedef std::vector<ClusterAssociation> ClusterAssociationVector;
+    typedef std::map<T, ClusterToCaloHitListMap> ClusterAssociationCaloHitOwnershipMap;
+    typedef std::vector<T> ClusterAssociationVector;
 
     /**
       *  @brief  SortByDistanceAlongLine class
@@ -134,8 +63,6 @@ protected:
         const pandora::CartesianVector m_startPoint;        ///< The line start point
         const pandora::CartesianVector m_lineDirection;     ///< The line end point
     };    
-
-
     
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
@@ -251,7 +178,9 @@ protected:
 
     void UpdateContainers(const pandora::ClusterList &clustersToAdd, const pandora::ClusterList &clustersToDelete, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
-    void RemoveClusterFromContainers(const pandora::Cluster *const pClustertoRemove, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const; 
+    void RemoveClusterFromContainers(const pandora::Cluster *const pClustertoRemove, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
+
+    virtual void CreateMainTrack(T &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const = 0;
 
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
@@ -273,44 +202,10 @@ protected:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianVector CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::GetUpstreamMergePoint() const
-{
-    return m_upstreamMergePoint;
-}
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CartesianVector CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::GetUpstreamMergeDirection() const
-{
-    return m_upstreamMergeDirection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianVector CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::GetDownstreamMergePoint() const
-{
-    return m_downstreamMergePoint;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianVector CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::GetDownstreamMergeDirection() const
-{
-    return m_downstreamMergeDirection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::CartesianVector CosmicRayTrackRefinementBaseAlgorithm::ClusterAssociation::GetConnectingLineDirection() const
-{
-    return m_connectingLineDirection;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline CosmicRayTrackRefinementBaseAlgorithm::SortByDistanceAlongLine::SortByDistanceAlongLine(const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection) :
+template<typename T>    
+inline CosmicRayTrackRefinementBaseAlgorithm<T>::SortByDistanceAlongLine::SortByDistanceAlongLine(const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection) :
     m_startPoint(startPoint),
     m_lineDirection(lineDirection.GetUnitVector())
 {

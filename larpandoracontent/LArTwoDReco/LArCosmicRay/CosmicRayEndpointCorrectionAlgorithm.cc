@@ -40,63 +40,7 @@ CosmicRayEndpointCorrectionAlgorithm::CosmicRayEndpointCorrectionAlgorithm() :
                 clusterAssociationCaloHitOwnershipMap.begin()->first.GetUpstreamCluster());
  */
 ///
-/*
-StatusCode CosmicRayEndpointCorrectionAlgorithm::Run()
-{
-    //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
-    
-    const ClusterList *pClusterList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
-    const CaloHitList *pCaloHitList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
-
-    ClusterVector clusterVector;
-    TwoDSlidingFitResultMap microSlidingFitResultMap, macroSlidingFitResultMap;
-    SlidingFitResultMapPair slidingFitResultMapPair({&microSlidingFitResultMap, &macroSlidingFitResultMap});
-    
-    this->InitialiseContainers(pClusterList, clusterVector, slidingFitResultMapPair);
-
-    //CONSIDER CLUSTERS, ONCE CONSIDERED REMOVE FROM THE CLUSTER VECTOR 
-
-    bool mergeMade(false);
-    unsigned int loopIterations(0);
-    do
-    {
-        ++loopIterations;
-
-        ClusterAssociationVector clusterAssociationVector;
-        this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, clusterAssociationVector);
-        
-        if (clusterAssociationVector.empty())
-            break;
-
-        for (ClusterAssociation &clusterAssociation : clusterAssociationVector)
-        {
-            ClusterToCaloHitListMap clusterToCaloHitListMap;
-            this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, clusterToCaloHitListMap);
-
-            if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap))
-                continue;
-
-            //this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, *pClusterList, clusterVector, slidingFitResultMapPair);
-
-
-
-        mergeMade = true;
-
-        // ISOBEL: YOU DON'T HAVE TO GET RID OF THE CLUSTER - because newly created main track clusters are not added back into the CV
-
-            // UPDATE THE CV & MAPS - NEED TO PUT THE NEW CLUSTER BACK INTO THE MAP AND YOU NEED TO CHANGE THE CLUSTER ASSOCIATION
-        }
-
-        // remove from map
-    }
-    while(mergeMade && (loopIterations < 10));
-
-    return STATUS_CODE_SUCCESS;
-}
-*/
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
     
@@ -379,16 +323,6 @@ void CosmicRayEndpointCorrectionAlgorithm::UpdateAfterMainTrackModification(cons
     slidingFitResultMapPair.second->erase(macroFitToDeleteIter);
 
     clusterEndpointAssociation.SetMainTrackCluster(pMainTrackCluster);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-ClusterEndpointAssociation::ClusterEndpointAssociation(const CartesianVector &upstreamMergePoint, const CartesianVector &upstreamMergeDirection,
-    const CartesianVector &downstreamMergePoint, const CartesianVector &downstreamMergeDirection, const Cluster *pMainTrackCluster, const bool isEndUpstream) :
-        ClusterAssociation(upstreamMergePoint, upstreamMergeDirection, downstreamMergePoint, downstreamMergeDirection),
-        m_pMainTrackCluster(pMainTrackCluster),
-        m_isEndUpstream(isEndUpstream)
-{
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
