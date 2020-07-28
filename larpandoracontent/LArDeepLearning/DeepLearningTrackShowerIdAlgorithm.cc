@@ -144,6 +144,7 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xm
 
 StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
 {
+    const int SHOWER{1}, TRACK{2};
     for (const std::string listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList(nullptr);
@@ -166,7 +167,6 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
 
         featureVector.push_back(static_cast<double>(pCaloHitList->size()));
 
-        int discardedHits = 0;
         LArMCParticleHelper::PrimaryParameters parameters;
         // Only care about reconstructability with respect to the current view, so skip good view check
         parameters.m_minHitsForGoodView = 0;
@@ -178,19 +178,21 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
 
         for (const CaloHit *pCaloHit : *pCaloHitList)
         {
-            int isReconstructable = 1;
-            int pdg(-1);
+            int isReconstructable{1};
+            int pdg{-1};
+            int tag{TRACK};
 
             try
             {
                 const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
                 // Throw away non-reconstructable hits
                 if (targetMCParticleToHitsMap.find(pMCParticle) == targetMCParticleToHitsMap.end())
-                {
-                    ++discardedHits;
                     isReconstructable = 0;
-                }
-                pdg = pMCParticle->GetParticleId();
+                pdg = std::abs(pMCParticle->GetParticleId());
+                if (pdg == 11 || pdg == 22)
+                    tag = SHOWER;
+                else
+                    tag = TRACK;
                 if (isReconstructable)
                 {
                     if(isNeutronDaughter(pMCParticle))
@@ -205,9 +207,8 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
             }
 
             featureVector.push_back(static_cast<double>(pCaloHit->GetPositionVector().GetX()));
-            featureVector.push_back(static_cast<double>(pCaloHit->GetPositionVector().GetY()));
             featureVector.push_back(static_cast<double>(pCaloHit->GetPositionVector().GetZ()));
-            featureVector.push_back(static_cast<double>(pdg));
+            featureVector.push_back(static_cast<double>(tag));
             featureVector.push_back(static_cast<double>(isReconstructable));
         }
 
