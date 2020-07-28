@@ -18,6 +18,7 @@ namespace lar_content
 /**
  *  @brief CosmicRayTrackRefinementBaseAlgorithm class
  */
+template<typename T>    
 class CosmicRayTrackRefinementBaseAlgorithm : public pandora::Algorithm
 {
 public:
@@ -136,8 +137,12 @@ protected:
 
 
     
-    virtual pandora::StatusCode Run() = 0;
+    virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
+
+
+    virtual void FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
+        ClusterAssociationVector &clusterAssociationVector) = 0;    
 
     /**
      *  @brief  Get the merging coordinate and direction for an input cluster with respect to an associated cluster
@@ -157,8 +162,8 @@ protected:
 
     void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
-bool CosmicRayTrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const    
-    void IsTrackContinuous(ClusterAssociationCaloHitOwnershipMap &clusterAssociationCaloHitOwnershipMap) const;
+    bool IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+
 
     /**
      *  @brief  Obtain the segment boundaries of the connecting line to test whether extrapolated hits are continuous
@@ -244,7 +249,7 @@ bool CosmicRayTrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssoc
 
     void InitialiseContainers(const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
-    void UpdateContainers(const pandora::ClusterVector &clustersToDelete, const pandora::ClusterList &clustersToAdd, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
+    void UpdateContainers(const pandora::ClusterList &clustersToAdd, const pandora::ClusterList &clustersToDelete, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
     void RemoveClusterFromContainers(const pandora::Cluster *const pClustertoRemove, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const; 
 

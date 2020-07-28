@@ -8,6 +8,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayTrackRefinementBaseAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayEndpointCorrectionAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
@@ -31,6 +32,66 @@ CosmicRayTrackRefinementBaseAlgorithm::CosmicRayTrackRefinementBaseAlgorithm() :
     m_lineSegmentLength(3.f)    
 {
 }
+
+
+StatusCode CosmicRayTrackRefinementBaseAlgorithm::Run()
+{
+
+    //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
+    
+    const ClusterList *pClusterList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
+
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pCaloHitList));
+
+    ClusterVector clusterVector;
+    TwoDSlidingFitResultMap microSlidingFitResultMap, macroSlidingFitResultMap;
+    SlidingFitResultMapPair slidingFitResultMapPair({&microSlidingFitResultMap, &macroSlidingFitResultMap});
+    
+    this->InitialiseContainers(pClusterList, clusterVector, slidingFitResultMapPair);
+
+    //CONSIDER CLUSTERS, ONCE CONSIDERED REMOVE FROM THE CLUSTER VECTOR 
+
+    bool mergeMade(false);
+    unsigned int loopIterations(0);
+    do
+    {
+        ++loopIterations;
+
+        ClusterAssociationVector clusterAssociationVector;
+        this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, clusterAssociationVector);
+        
+        if (clusterAssociationVector.empty())
+            break;
+
+        for (ClusterAssociation &clusterAssociation : clusterAssociationVector)
+        {
+            ClusterToCaloHitListMap clusterToCaloHitListMap;
+            this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, clusterToCaloHitListMap);
+
+            if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap))
+                continue;
+
+            //this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, *pClusterList, clusterVector, slidingFitResultMapPair);
+
+
+
+        mergeMade = true;
+
+        // ISOBEL: YOU DON'T HAVE TO GET RID OF THE CLUSTER - because newly created main track clusters are not added back into the CV
+
+            // UPDATE THE CV & MAPS - NEED TO PUT THE NEW CLUSTER BACK INTO THE MAP AND YOU NEED TO CHANGE THE CLUSTER ASSOCIATION
+        }
+
+        // remove from map
+    }
+    while(mergeMade && (loopIterations < 10));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+    
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
 
@@ -127,11 +188,11 @@ bool CosmicRayTrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssoc
     for (const auto &entry : clusterToCaloHitListMap)
         extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end());    
 
-    std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), SortByDistanceAlongLine(clusterAssociation->GetUpstreamMergePoint(),
-        clusterAssociation->GetConnectingLineDirection()));
+    std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), SortByDistanceAlongLine(clusterAssociation.GetUpstreamMergePoint(),
+        clusterAssociation.GetConnectingLineDirection()));
 
     CartesianPointVector trackSegmentBoundaries;
-    this->GetTrackSegmentBoundaries(*clusterAssociation, trackSegmentBoundaries);
+    this->GetTrackSegmentBoundaries(clusterAssociation, trackSegmentBoundaries);
 
     if (trackSegmentBoundaries.size() < 2)
     {
@@ -142,7 +203,7 @@ bool CosmicRayTrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssoc
     unsigned int segmentsWithoutHits(0);
     CaloHitVector::const_iterator caloHitIter(extrapolatedCaloHitVector.begin());
         
-    for (int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
+    for (unsigned int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
     {
         if (caloHitIter == extrapolatedCaloHitVector.end())
         {
@@ -239,10 +300,9 @@ bool CosmicRayTrackRefinementBaseAlgorithm::IsInLineSegment(const CartesianVecto
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-/*    
 
-const Cluster *CosmicRayTrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack(const Cluster *const pCluster, const CartesianVector &splitPosition, const bool isUpstreamEnd,
-    const ClusterToCaloHitListMap &clusterToCaloHitListMap, ClusterList &remnantClusterList, TwoDSlidingFitResultMap &microSlidingFitResultMap,
+const Cluster *CosmicRayTrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack(const Cluster *const pCluster, const CartesianVector &splitPosition,
+    const bool isUpstreamEnd, const ClusterToCaloHitListMap &clusterToCaloHitListMap, ClusterList &remnantClusterList, TwoDSlidingFitResultMap &microSlidingFitResultMap,
     TwoDSlidingFitResultMap &macroSlidingFitResultMap) const
 {
     float rL(0.f), rT(0.f);
@@ -301,8 +361,6 @@ const Cluster *CosmicRayTrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack
         }
     }
 
-    //this->UpdateForClusterDeletion(pCluster, clusterVector, microSlidingFitResultMap, macroSlidingFitResultMap);
-
     // End fragmentation
     if (pAboveCluster || pBelowCluster)
     {
@@ -319,7 +377,7 @@ const Cluster *CosmicRayTrackRefinementBaseAlgorithm::RemoveOffAxisHitsFromTrack
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackRefinementBaseAlgorithm::AddHitsToMainTrack(const Cluster *const pShowerCluster, const Cluster *const pMainTrackCluster, const CaloHitList &caloHitsToMerge,
+void CosmicRayTrackRefinementBaseAlgorithm::AddHitsToMainTrack(const Cluster *const pMainTrackCluster, const Cluster *const pShowerCluster, const CaloHitList &caloHitsToMerge,
     const ClusterAssociation &clusterAssociation, ClusterList &remnantClusterList) const
 {
     // To ignore crossing CR muon or test beam tracks
@@ -380,7 +438,6 @@ void CosmicRayTrackRefinementBaseAlgorithm::AddHitsToMainTrack(const Cluster *co
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, fragmentListName, originalListName));
 }
 
- 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -529,7 +586,7 @@ void CosmicRayTrackRefinementBaseAlgorithm::FragmentRemnantCluster(const Cluster
         fragmentedClusterList.insert(fragmentedClusterList.begin(), createdClusters.begin(), createdClusters.end());
     }
 }
-*/
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayTrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterList *pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
@@ -561,13 +618,14 @@ void CosmicRayTrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTrackRefinementBaseAlgorithm::UpdateContainers(const ClusterVector &clustersToDelete, const ClusterList &clustersToAdd, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
+void CosmicRayTrackRefinementBaseAlgorithm::UpdateContainers(const ClusterList &clustersToAdd, const ClusterList &clustersToDelete, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
     for (const Cluster *const pClusterToDelete : clustersToDelete)
         this->RemoveClusterFromContainers(pClusterToDelete, clusterVector, slidingFitResultMapPair);
 
     this->InitialiseContainers(&clustersToAdd, clusterVector, slidingFitResultMapPair);
 }
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -695,6 +753,8 @@ bool CosmicRayTrackRefinementBaseAlgorithm::SortByDistanceAlongLine::operator() 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+template class CosmicRayTrackRefinementBaseAlgorithm<ClusterEndpointAssociation>;
 
     
 

@@ -39,8 +39,8 @@ CosmicRayEndpointCorrectionAlgorithm::CosmicRayEndpointCorrectionAlgorithm() :
                 clusterAssociationCaloHitOwnershipMap.begin()->first.GetDownstreamCluster() :
                 clusterAssociationCaloHitOwnershipMap.begin()->first.GetUpstreamCluster());
  */
-
-    
+///
+/*
 StatusCode CosmicRayEndpointCorrectionAlgorithm::Run()
 {
     //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
@@ -58,7 +58,7 @@ StatusCode CosmicRayEndpointCorrectionAlgorithm::Run()
     this->InitialiseContainers(pClusterList, clusterVector, slidingFitResultMapPair);
 
     //CONSIDER CLUSTERS, ONCE CONSIDERED REMOVE FROM THE CLUSTER VECTOR 
-    
+
     bool mergeMade(false);
     unsigned int loopIterations(0);
     do
@@ -76,28 +76,28 @@ StatusCode CosmicRayEndpointCorrectionAlgorithm::Run()
             ClusterToCaloHitListMap clusterToCaloHitListMap;
             this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, clusterToCaloHitListMap);
 
-            this->IsTrackContinuous(clusterAssociationCaloHitOwnershipMap);
-        /* 
-        if (clusterAssociationCaloHitOwnershipMap.empty())
-        {
-            RemoveClusterFromContainers(pClusterToRemove, clusterVector, slidingFitResultMapPair);
-            continue;
-        }
-        */
-        //NEED TO CHECK IF CLUSTERS ARE CONTAINED IN BOTH LISTS.
-        
-        /*
-        this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, microSlidingFitResultMap, macroSlidingFitResultMap, clusterVector);
+            if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap))
+                continue;
+
+            //this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, *pClusterList, clusterVector, slidingFitResultMapPair);
+
+
 
         mergeMade = true;
-        */
+
+        // ISOBEL: YOU DON'T HAVE TO GET RID OF THE CLUSTER - because newly created main track clusters are not added back into the CV
+
+            // UPDATE THE CV & MAPS - NEED TO PUT THE NEW CLUSTER BACK INTO THE MAP AND YOU NEED TO CHANGE THE CLUSTER ASSOCIATION
         }
+
+        // remove from map
     }
     while(mergeMade && (loopIterations < 10));
 
     return STATUS_CODE_SUCCESS;
 }
-    
+*/
+
 //------------------------------------------------------------------------------------------------------------------------------------------    
     
 void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
@@ -306,117 +306,88 @@ bool CosmicRayEndpointCorrectionAlgorithm::IsDeltaRay(const Cluster *const pClus
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------ 
-/*
-void CosmicRayEndpointCorrectionAlgorithm::CreateMainTrack(const ClusterAssociationCaloHitOwnershipMap &clusterAssociationCaloHitOwnershipMap, const ClusterList *const pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
-{
-    ClusterAssociationVector clusterAssociationVector;
-    for (auto &entry : clusterAssociationCaloHitOwnershipMap)
-        clusterAssociationVector.push_back(&entry.first);
 
-    for (const ClusterAssociation *const clusterAssociation : clusterAssociationVector)
+void CosmicRayEndpointCorrectionAlgorithm::CreateMainTrack(ClusterEndpointAssociation &clusterEndpointAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const ClusterList *const pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
+{
+    const Cluster *pMainTrackCluster(clusterEndpointAssociation.GetMainTrackCluster());
+    const CartesianVector &clusterMergePoint(clusterEndpointAssociation.IsEndUpstream() ?
+        clusterEndpointAssociation.GetDownstreamMergePoint() : clusterEndpointAssociation.GetUpstreamMergePoint());    
+    
+    // Determine the shower clusters which contain hits that belong to the main track
+    ClusterVector showerClustersToFragment;
+    for (auto &entry : clusterToCaloHitListMap)
     {
-        const ClusterToCaloHitListMap &clusterToCaloHitListMap(clusterAssociationCaloHitOwnershipMap.at(*clusterAssociation));
-        
-        // Determine the shower clusters which contain hits that belong to the main track
-        ClusterVector showerClustersToFragment;
-        for (auto &entry : clusterToCaloHitListMap)
-        {
-            if (entry.first != clusterAssociation->GetUpstreamCluster() || entry.first != clusterAssociation->GetDownstreamCluster())
-                showerClustersToFragment.push_back(entry.first);
-        }
-
-        std::sort(showerClustersToFragment.begin(), showerClustersToFragment.end(), LArClusterHelper::SortByNHits);
-
-        ClusterList remnantClusterList;
-
-        const Cluster *pMainTrackCluster(clusterAssociation->GetUpstreamCluster());
-        const TwoDSlidingFitResult &microFitResult(slidingFitResultMapPair.first->at(pMainTrackCluster));
-        
-        bool isUpstreamEnd(std::min(clusterAssociation->GetUpstreamMergePoint().GetDistanceSquared(microFitResult.GetGlobalMinLayerPosition()),
-                                    clusterAssociation->GetDownstreamMergePoint().GetDistanceSquared(microFitResult.GetGlobalMinLayerPosition())) <
-                           std::min(clusterAssociation->GetUpstreamMergePoint().GetDistanceSquared(microFitResult.GetGlobalMaxLayerPosition()),
-                                    clusterAssociation->GetDownstreamMergePoint().GetDistanceSquared(microFitResult.GetGlobalMaxLayerPosition())));
-
-        if (isUpstreamEnd)
-        {
-            pMainTrackCluster = RemoveOffAxisHitsFromTrack(pMainTrackCluster, clusterAssociation->GetDownstreamMergePoint(), isUpstreamEnd,
-                clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second);
-        }
-        else
-        {
-            pMainTrackCluster = RemoveOffAxisHitsFromTrack(pMainTrackCluster, clusterAssociation->GetUpstreamMergePoint(), isUpstreamEnd,
-                clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second);
-        }
-
-        for (const Cluster *const pShowerCluster : showerClustersToFragment)
-        {
-            const CaloHitList &caloHitsToMerge(clusterToCaloHitListMap.at(pShowerCluster));
-            this->AddHitsToMainTrack(pShowerCluster, pMainTrackCluster, caloHitsToMerge, *clusterAssociation, remnantClusterList);
-        }
-    
-        ClusterList createdClusters;
-        this->ProcessRemnantClusters(remnantClusterList, pMainTrackCluster, pClusterList, createdClusters);
-
-        showerClustersToFragment.push_back(clusterAssociation->GetUpstreamCluster());
-        this->UpdateContainers(showerClustersToFragment, createdClusters, clusterVector, slidingFitResultMapPair);
-
-        //IF CV MORE THAN 2 NEED TO UPDATE AFTER MODIFICATION
+        if (entry.first != pMainTrackCluster) //COULD TURN THIS INTO A VECTOR - TO EXTEND TO EM SHOWER
+            showerClustersToFragment.push_back(entry.first);
     }
-}
-   
-//------------------------------------------------------------------------------------------------------------------------------------------
-void CosmicRayEndpointCorrectionAlgorithm::UpdateAfterMainModification(const Cluster *const pDeletedCluster, const Cluster *const pNewCluster, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair, ClusterAssociationCaloHitOwnershipMap &clusterAssociationCaloHitOwnershipMap) const
-{
-    // REPLACE IN MICRO FIT MAP
-    const TwoDSlidingFitResultMap::const_iterator microFitToDelete(slidingFitResultMapPair.first->find(pDeletedCluster));
+
+    std::sort(showerClustersToFragment.begin(), showerClustersToFragment.end(), LArClusterHelper::SortByNHits);
+
+    ClusterList remnantClusterList;
     
-    if (microFitToDelete == slidingFitResultMapPair.first->end())
+   pMainTrackCluster = RemoveOffAxisHitsFromTrack(pMainTrackCluster, clusterMergePoint, clusterEndpointAssociation.IsEndUpstream(),
+        clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second);
+
+    for (const Cluster *const pShowerCluster : showerClustersToFragment)
+    {
+        const CaloHitList &caloHitsToMerge(clusterToCaloHitListMap.at(pShowerCluster));
+        this->AddHitsToMainTrack(pMainTrackCluster, pShowerCluster, caloHitsToMerge, clusterEndpointAssociation, remnantClusterList);
+    }
+  
+    ClusterList createdClusters;
+    this->ProcessRemnantClusters(remnantClusterList, pMainTrackCluster, pClusterList, createdClusters);
+
+    // ATTN: Update containers and the cluster association
+    ClusterList modifiedClusters(showerClustersToFragment.begin(), showerClustersToFragment.end());   
+    this->UpdateContainers(createdClusters, modifiedClusters, clusterVector, slidingFitResultMapPair);
+
+    //ATTN: Update references to pMainTrackCluster but delete from 'watched clusters' i.e. the ClusterVector 
+    this->UpdateAfterMainTrackModification(pMainTrackCluster, clusterEndpointAssociation, clusterVector, slidingFitResultMapPair);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void CosmicRayEndpointCorrectionAlgorithm::UpdateAfterMainTrackModification(const Cluster *const pMainTrackCluster, ClusterEndpointAssociation &clusterEndpointAssociation, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
+{
+
+    const Cluster *const pDeletedTrackCluster(clusterEndpointAssociation.GetMainTrackCluster());
+    
+    const ClusterVector::const_iterator clusterToDeleteIter(std::find(clusterVector.begin(), clusterVector.end(), pDeletedTrackCluster));
+    if (clusterToDeleteIter != clusterVector.end())
+        clusterVector.erase(clusterToDeleteIter);
+
+    // REPLACE IN MICRO FIT MAP
+    const TwoDSlidingFitResultMap::const_iterator microFitToDeleteIter(slidingFitResultMapPair.first->find(pDeletedTrackCluster));
+    if (microFitToDeleteIter == slidingFitResultMapPair.first->end())
     {
         std::cout << "ISOBEL THIS IS BAD" << std::endl;
         throw STATUS_CODE_FAILURE;
     }
     
-    slidingFitResultMapPair.first->insert(std::make_pair(pNewCluster, microFitToDelete->second));
-    slidingFitResultMapPair.first->erase(microFitToDelete);
+    slidingFitResultMapPair.first->insert(std::make_pair(pMainTrackCluster, microFitToDeleteIter->second));
+    slidingFitResultMapPair.first->erase(microFitToDeleteIter);
 
     // REPLACE IN MACRO FIT MAP
-    const TwoDSlidingFitResultMap::const_iterator macroFitToDelete(slidingFitResultMapPair.second->find(pDeletedCluster));
-    
-    if (macroFitToDelete == slidingFitResultMapPair.second->end())
+    const TwoDSlidingFitResultMap::const_iterator macroFitToDeleteIter(slidingFitResultMapPair.second->find(pDeletedTrackCluster));
+    if (macroFitToDeleteIter == slidingFitResultMapPair.second->end())
     {
         std::cout << "ISOBEL THIS IS BAD" << std::endl;
         throw STATUS_CODE_FAILURE;
     }
     
-    slidingFitResultMapPair.second->insert(std::make_pair(pNewCluster, macroFitToDelete->second));
-    slidingFitResultMapPair.second->erase(microFitToDelete);
+    slidingFitResultMapPair.second->insert(std::make_pair(pMainTrackCluster, macroFitToDeleteIter->second));
+    slidingFitResultMapPair.second->erase(macroFitToDeleteIter);
 
-    ClusterAssociationVector clusterAssociationVector;
-    for (auto &entry : clusterAssociationCaloHitOwnershipMap)
-        clusterAssociationVector.push_back(&entry.first);
-    
-    for (const ClusterAssociation *clusterAssociation : clusterAssociationVector)
-    {
-        if (pDeletedCluster == clusterAssociation->GetUpstreamCluster())
-            clusterAssociation->SetUpstreamCluster(pNewCluster);
-
-        if (pDeletedCluster == clusterAssociation->GetDownstreamCluster())
-            clusterAssociation->SetDownstreamCluster(pNewCluster);
-        
-        // then alter this
-        //const ClusterToCaloHitListMap &clusterToCaloHitListMap(clusterAssociationCaloHitOwnershipMap.at(*clusterAssociation));
-    }
-
+    clusterEndpointAssociation.SetMainTrackCluster(pMainTrackCluster);
 }
-*/
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CosmicRayEndpointCorrectionAlgorithm::ClusterEndpointAssociation::ClusterEndpointAssociation(const CartesianVector &upstreamMergePoint, const CartesianVector &upstreamMergeDirection,
-    const CartesianVector &downstreamMergePoint, const CartesianVector &downstreamMergeDirection, const Cluster *pMainTrackCluster) :
+ClusterEndpointAssociation::ClusterEndpointAssociation(const CartesianVector &upstreamMergePoint, const CartesianVector &upstreamMergeDirection,
+    const CartesianVector &downstreamMergePoint, const CartesianVector &downstreamMergeDirection, const Cluster *pMainTrackCluster, const bool isEndUpstream) :
         ClusterAssociation(upstreamMergePoint, upstreamMergeDirection, downstreamMergePoint, downstreamMergeDirection),
-        m_pMainTrackCluster(pMainTrackCluster)
+        m_pMainTrackCluster(pMainTrackCluster),
+        m_isEndUpstream(isEndUpstream)
 {
 }
 
