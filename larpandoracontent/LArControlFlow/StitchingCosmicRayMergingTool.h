@@ -229,13 +229,14 @@ private:
     int             m_halfWindowLayers;
     float           m_minLengthSquared;
     float           m_minCosRelativeAngle;
+    float           m_relaxMinLongitudinalDisplacement;   ///< The minimum value of the longitudinal impact parameter for association if both verticies fall in the detector gap
     float           m_maxLongitudinalDisplacementX;
     float           m_maxTransverseDisplacement;
     float           m_relaxCosRelativeAngle;
     float           m_relaxTransverseDisplacement;
     unsigned int    m_minNCaloHits3D;
-    float           m_maxX0FractionalDeviation;     ///< The maximum allowed fractional difference of an X0 contribution for matches to be stitched
-    float           m_boundaryToleranceWidth;       ///< The distance from the APA/CPA boundary inside which the deviation consideration is ignored
+    float           m_maxX0FractionalDeviation;           ///< The maximum allowed fractional difference of an X0 contribution for matches to be stitched
+    float           m_boundaryToleranceWidth;             ///< The distance from the APA/CPA boundary inside which the deviation consideration is ignored
 };
 
 } // namespace lar_content

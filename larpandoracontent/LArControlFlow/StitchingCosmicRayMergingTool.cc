@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
@@ -27,6 +28,7 @@ StitchingCosmicRayMergingTool::StitchingCosmicRayMergingTool() :
     m_halfWindowLayers(30),
     m_minLengthSquared(50.f),
     m_minCosRelativeAngle(0.966),
+    m_relaxMinLongitudinalDisplacement(-5.f),
     m_maxLongitudinalDisplacementX(15.f),
     m_maxTransverseDisplacement(5.f),
     m_relaxCosRelativeAngle(0.906),
@@ -250,8 +252,8 @@ void StitchingCosmicRayMergingTool::CreatePfoMatches(const LArTPC &larTPC1, cons
         return;
     }
 
-    // Selection cuts on longitudinal impact parameters
-    const float minL(-1.f);
+    const float minL((!LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex1.GetPosition(),  TPC_3D) ||
+        !LArGeometryHelper::IsInGap(this->GetPandora(), pointingVertex2.GetPosition(),  TPC_3D)) ? -1.f : m_relaxMinLongitudinalDisplacement);
     const float dXdL1(m_useXcoordinate ? pX1 :
         (1.f - pX1 * pX1 > std::numeric_limits<float>::epsilon()) ? pX1 / std::sqrt(1.f - pX1 * pX1) : minL);
     const float dXdL2(m_useXcoordinate ? pX2 :
@@ -812,6 +814,9 @@ StatusCode StitchingCosmicRayMergingTool::ReadSettings(const TiXmlHandle xmlHand
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinCosRelativeAngle", m_minCosRelativeAngle));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "RelaxMinLongitudinalDisplacement", m_relaxMinLongitudinalDisplacement));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLongitudinalDisplacementX", m_maxLongitudinalDisplacementX));

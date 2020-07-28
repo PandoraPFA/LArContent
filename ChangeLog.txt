@@ -1,4 +1,12 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_19_00
+--------------------------------------------------------------------------------------------------------------------------------------------
+Added TrackInEMShower algorithm.
+Corrected pointer dereferencing in TwoDSlidingFitConsolidation algorithm
+Made adjustments to StitchingCosmicRayMergingTool impact parameter cuts
+Added try/catch statement to TracksCrossingGapsTool
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_18_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Added TwoViewLongTracks and TwoViewSImpleTracks tools to LArTwoViewMatching.

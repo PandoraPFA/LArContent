@@ -214,15 +214,19 @@ bool TracksCrossingGapsTool::PassesGapChecks(ThreeViewTransverseTracksAlgorithm 
     if ((STATUS_CODE_SUCCESS == statusCodeU) && (STATUS_CODE_SUCCESS == statusCodeV) && (STATUS_CODE_SUCCESS == statusCodeW))
         return false;
 
-    // Note: argument order important - initially assume first view has a gap, but inside CheckXPositionInGap do check other two views
-    if ((STATUS_CODE_SUCCESS != statusCodeU) && (!this->IsEndOfCluster(xSample, slidingFitResultU)))
-        return this->CheckXPositionInGap(xSample, slidingFitResultU, slidingFitResultV, slidingFitResultW, gapInU, gapInV, gapInW);
+    try
+    {
+        // Note: argument order important - initially assume first view has a gap, but inside CheckXPositionInGap do check other two views
+        if ((STATUS_CODE_SUCCESS != statusCodeU) && (!this->IsEndOfCluster(xSample, slidingFitResultU)))
+            return this->CheckXPositionInGap(xSample, slidingFitResultU, slidingFitResultV, slidingFitResultW, gapInU, gapInV, gapInW);
 
-    if ((STATUS_CODE_SUCCESS != statusCodeV) && (!this->IsEndOfCluster(xSample, slidingFitResultV)))
-        return this->CheckXPositionInGap(xSample, slidingFitResultV, slidingFitResultU, slidingFitResultW, gapInV, gapInU, gapInW);
+        if ((STATUS_CODE_SUCCESS != statusCodeV) && (!this->IsEndOfCluster(xSample, slidingFitResultV)))
+            return this->CheckXPositionInGap(xSample, slidingFitResultV, slidingFitResultU, slidingFitResultW, gapInV, gapInU, gapInW);
 
-    if ((STATUS_CODE_SUCCESS != statusCodeW) && (!this->IsEndOfCluster(xSample, slidingFitResultW)))
-        return this->CheckXPositionInGap(xSample, slidingFitResultW, slidingFitResultU, slidingFitResultV, gapInW, gapInU, gapInV);
+        if ((STATUS_CODE_SUCCESS != statusCodeW) && (!this->IsEndOfCluster(xSample, slidingFitResultW)))
+            return this->CheckXPositionInGap(xSample, slidingFitResultW, slidingFitResultU, slidingFitResultV, gapInW, gapInU, gapInV);
+    }
+    catch (const StatusCodeException &statusCodeException) {}
 
     return false;
 }
