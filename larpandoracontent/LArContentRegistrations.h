@@ -1,16 +1,13 @@
 /**
- *  @file   larpandoracontent/LArContent.cc
+ *  @file   larpandoracontent/LArContentRegistrations.h
  *
- *  @brief  Factory implementations for content intended for use with particle flow reconstruction at liquid argon time projection chambers
+ *  @brief  Macro definitions for standard algorithm and tool registration
  *
  *  $Log: $
  */
 
-#include "Api/PandoraApi.h"
-
-#include "Pandora/Algorithm.h"
-#include "Pandora/AlgorithmTool.h"
-#include "Pandora/Pandora.h"
+#ifndef LAR_CONTENT_REGISTRATIONS_H
+#define LAR_CONTENT_REGISTRATIONS_H 1
 
 #include "larpandoracontent/LArCheating/CheatingBeamParticleIdTool.h"
 #include "larpandoracontent/LArCheating/CheatingBeamParticleSliceSelectionTool.h"
@@ -164,7 +161,6 @@
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArCosmicRay/TrackMergeRefinementAlgorithm.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
@@ -186,8 +182,6 @@
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h"
-
-#include "larpandoracontent/LArContent.h"
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
     d("LArNeutrinoEventValidation",             NeutrinoEventValidationAlgorithm)                                               \
@@ -265,7 +259,6 @@
     d("LArCosmicRaySplitting",                  CosmicRaySplittingAlgorithm)                                                    \
     d("LArDeltaRayExtension",                   DeltaRayExtensionAlgorithm)                                                     \
     d("LArDeltaRayGrowing",                     DeltaRayGrowingAlgorithm)                                                       \
-    d("LArTrackMergeRefinement",                TrackMergeRefinementAlgorithm)                                                  \
     d("LArBranchSplitting",                     BranchSplittingAlgorithm)                                                       \
     d("LArCrossedTrackSplitting",               CrossedTrackSplittingAlgorithm)                                                 \
     d("LArDeltaRaySplitting",                   DeltaRaySplittingAlgorithm)                                                     \
@@ -345,77 +338,10 @@
     d("LArThreeDVertexDistanceFeatureTool",     ThreeDVertexDistanceFeatureTool)                                                \
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
-    d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
-    d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)
+    d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)
 
-#define FACTORY Factory
+#endif // #ifndef LAR_CONTENT_REGISTRATIONS_H
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-namespace lar_content
-{
-
-#define LAR_CONTENT_CREATE_ALGORITHM_FACTORY(a, b)                                                                              \
-class b##FACTORY : public pandora::AlgorithmFactory                                                                             \
-{                                                                                                                               \
-public:                                                                                                                         \
-    pandora::Algorithm *CreateAlgorithm() const {return new b;};                                                                \
-};
-
-LAR_ALGORITHM_LIST(LAR_CONTENT_CREATE_ALGORITHM_FACTORY)
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-#define LAR_CONTENT_CREATE_ALGORITHM_TOOL_FACTORY(a, b)                                                                         \
-class b##FACTORY : public pandora::AlgorithmToolFactory                                                                         \
-{                                                                                                                               \
-public:                                                                                                                         \
-    pandora::AlgorithmTool *CreateAlgorithmTool() const {return new b;};                                                        \
-};
-
-LAR_ALGORITHM_TOOL_LIST(LAR_CONTENT_CREATE_ALGORITHM_TOOL_FACTORY)
-
-} // namespace lar_content
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-#define LAR_CONTENT_REGISTER_ALGORITHM(a, b)                                                                                    \
-{                                                                                                                               \
-    const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmFactory(pandora, a, new lar_content::b##FACTORY));        \
-    if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                             \
-        return statusCode;                                                                                                      \
-}
-
-#define LAR_CONTENT_REGISTER_ALGORITHM_TOOL(a, b)                                                                               \
-{                                                                                                                               \
-    const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmToolFactory(pandora, a, new lar_content::b##FACTORY));    \
-    if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                             \
-        return statusCode;                                                                                                      \
-}
-
-pandora::StatusCode LArContent::RegisterAlgorithms(const pandora::Pandora &pandora)
-{
-    LAR_ALGORITHM_LIST(LAR_CONTENT_REGISTER_ALGORITHM);
-    LAR_ALGORITHM_TOOL_LIST(LAR_CONTENT_REGISTER_ALGORITHM_TOOL);
-    return pandora::STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-#define LAR_CONTENT_REGISTER_PARTICLE_ID(a, b)                                                                                  \
-{                                                                                                                               \
-    const pandora::StatusCode statusCode(PandoraApi::RegisterParticleIdPlugin(pandora, a, new lar_content::b));                 \
-    if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                             \
-        return statusCode;                                                                                                      \
-}
-
-pandora::StatusCode LArContent::RegisterBasicPlugins(const pandora::Pandora &pandora)
-{
-    LAR_PARTICLE_ID_LIST(LAR_CONTENT_REGISTER_PARTICLE_ID);
-    return pandora::STATUS_CODE_SUCCESS;
-}

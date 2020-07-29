@@ -59,9 +59,17 @@ else()
         message(FATAL_ERROR "LArPandoraContent requires an out-of-source build.")
     endif()
 
-    # project name
-    if(NOT LAR_CONTENT_LIBRARY_NAME STREQUAL "LArPandoraContent")
-        set(LAR_CONTENT_LIBRARY_NAME "LArContent")
+    # check if we're building the deep learning version of the library
+    if(TORCHLIB)
+        # project name
+        if(NOT LAR_CONTENT_LIBRARY_NAME STREQUAL "LArPandoraContent")
+            set(LAR_CONTENT_LIBRARY_NAME "LArDLContent")
+        endif()
+    else()
+        # project name
+        if(NOT LAR_CONTENT_LIBRARY_NAME STREQUAL "LArPandoraContent")
+            set(LAR_CONTENT_LIBRARY_NAME "LArContent")
+        endif()
     endif()
     project(${LAR_CONTENT_LIBRARY_NAME})
 
@@ -101,6 +109,7 @@ else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
         include_directories(${TORCH_INCLUDE_DIRECTORIES})
         link_libraries(${TORCH_LIBRARIES})
+        add_definitions(-DDEEP_LEARNING=1)
     endif()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
@@ -120,6 +129,17 @@ else()
 
     # - Collect sources - not ideal because you have to keep running CMake to pick up changes
     file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larpandoracontent/*.cc")
+
+    # Avoid building deep learning code if deep learning library is not requested
+    if(NOT TORCHLIB)
+        set(EXCLUDE_DIR "larpandoracontent/LArDeepLearning")
+        foreach(TMP_PATH ${LAR_CONTENT_SRCS})
+            string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
+            if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
+                list(REMOVE_ITEM LAR_CONTENT_SRCS ${TMP_PATH})
+            endif()
+        endforeach(TMP_PATH)
+    endif()
 
     # - Add library and properties
     add_library(${PROJECT_NAME} SHARED ${LAR_CONTENT_SRCS})
