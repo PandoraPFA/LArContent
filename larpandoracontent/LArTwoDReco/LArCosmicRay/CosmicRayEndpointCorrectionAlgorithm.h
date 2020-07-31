@@ -30,13 +30,16 @@ private:
         ClusterAssociationVector &clusterAssociationVector);
     
     bool IsDeltaRay(const pandora::Cluster *const pCluster, const pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection,
-        const bool isEndUpstream) const;   
+        const bool isEndUpstream, pandora::CartesianVector &mergePosition) const;
 
     void CreateMainTrack(ClusterEndpointAssociation &clusterEndpointAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
     
-    void UpdateAfterMainTrackModification(const pandora::Cluster *const pMainTrackCluster, ClusterEndpointAssociation &clusterEndpointAssociation, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPai) const;   
+    void UpdateAfterMainTrackModification(const pandora::Cluster *const pMainTrackCluster, ClusterEndpointAssociation &clusterEndpointAssociation, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
+    void RemoveClusterAssociationFromClusterVector(const ClusterEndpointAssociation &clusterAssociation, pandora::ClusterVector &clusterVector) const;
+
+    void GetExtrapolatedCaloHits(const ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
     
     int m_minCaloHits;
     float m_maxDistanceFromTPC;

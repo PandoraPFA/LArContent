@@ -34,10 +34,14 @@ CosmicRayTrackRefinementBaseAlgorithm<T>::CosmicRayTrackRefinementBaseAlgorithm(
 {
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------    
+    
 template<typename T>
 StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
 {
-    //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
+    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
+
+    std::cout << "IF TRACK IN EM SHOWER REMEMBER YOU CHANGED THE DIRECTION!" << std::endl;
     
     const ClusterList *pClusterList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
@@ -51,42 +55,44 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
     
     this->InitialiseContainers(pClusterList, clusterVector, slidingFitResultMapPair);
 
-    //CONSIDER CLUSTERS, ONCE CONSIDERED REMOVE FROM THE CLUSTER VECTOR 
-
-    bool mergeMade(false);
     unsigned int loopIterations(0);
-    do
+    while(loopIterations < 10)
     {
         ++loopIterations;
 
+        std::cout << "\033[31m" <<"Finding best association..." << "\033[0m" <<std::endl;
+        
         ClusterAssociationVector clusterAssociationVector;
         this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, clusterAssociationVector);
         
         if (clusterAssociationVector.empty())
+        {
+            std::cout << "\033[31m" << "Couldn't find an association" << "\033[0m" << std::endl;
             break;
+        }
 
+        // ATTN: Considering clusterAssociation so remove from 'to consider' clusters i.e. the clusterVector
+        this->RemoveClusterAssociationFromClusterVector(clusterAssociationVector.front(), clusterVector);
+
+        std::cout << "\033[31m" <<"Refining endpoint..." << "\033[0m" <<std::endl;
+        
         for (T &clusterAssociation : clusterAssociationVector)
         {
             ClusterToCaloHitListMap clusterToCaloHitListMap;
             this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, clusterToCaloHitListMap);
 
             if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap))
+            {
+                PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                std::cout << "GAP IN HIT VECTOR" << std::endl;
                 continue;
+            }
+
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
             this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, clusterVector, slidingFitResultMapPair);
-
-
-
-        mergeMade = true;
-
-        // ISOBEL: YOU DON'T HAVE TO GET RID OF THE CLUSTER - because newly created main track clusters are not added back into the CV
-
-            // UPDATE THE CV & MAPS - NEED TO PUT THE NEW CLUSTER BACK INTO THE MAP AND YOU NEED TO CHANGE THE CLUSTER ASSOCIATION
         }
-
-        // remove from map
     }
-    while(mergeMade && (loopIterations < 10));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -129,7 +135,8 @@ bool CosmicRayTrackRefinementBaseAlgorithm<T>::GetClusterMergingCoordinates(cons
             if (goodLayerCount == 0)
             {
                 // ATTN: Cluster direction vectors must point to one another
-                clusterMergeDirection = clusterAverageDirection * (isUpstream ? 1.f : -1.f);
+                //clusterMergeDirection = clusterAverageDirection * (isUpstream ? 1.f : -1.f);
+                clusterMergeDirection = clusterAverageDirection;
                 clusterMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), clusterMergePosition);
             }
 
@@ -152,6 +159,7 @@ bool CosmicRayTrackRefinementBaseAlgorithm<T>::GetClusterMergingCoordinates(cons
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+/*
 template<typename T>    
 void CosmicRayTrackRefinementBaseAlgorithm<T>::GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const
 {
@@ -178,7 +186,7 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::GetExtrapolatedCaloHits(const Clu
         }
     }
 }
- 
+*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 template<typename T>    
 bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const
@@ -186,7 +194,15 @@ bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAs
     // ATTN: Collect extrapolated calo hits and sort by projected distance from the upstreamMergePoint
     CaloHitVector extrapolatedCaloHitVector;
     for (const auto &entry : clusterToCaloHitListMap)
-        extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end());    
+        extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end());
+
+    ///////////////
+    for (auto &entry : extrapolatedCaloHitVector)
+    {
+        const CartesianVector &hitPosition(entry->GetPositionVector());
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "EXTRAPOLATED HIT", GREEN, 2);
+    }
+    ///////////////    
 
     std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), SortByDistanceAlongLine(clusterAssociation.GetUpstreamMergePoint(),
         clusterAssociation.GetConnectingLineDirection()));
@@ -289,8 +305,6 @@ bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsInLineSegment(const CartesianVe
     const float segmentBoundaryGradient = (-1.f) * (upperBoundary.GetX() - lowerBoundary.GetX()) / (upperBoundary.GetZ() - lowerBoundary.GetZ());
     const float xPointOnUpperLine((point.GetZ() - upperBoundary.GetZ()) / segmentBoundaryGradient + upperBoundary.GetX());
     const float xPointOnLowerLine((point.GetZ() - lowerBoundary.GetZ()) / segmentBoundaryGradient + lowerBoundary.GetX());
-    const CartesianVector upper(xPointOnUpperLine, 0.f, point.GetZ());
-    const CartesianVector lower(xPointOnLowerLine, 0.f, point.GetZ());
 
     if ((point.GetX() > xPointOnUpperLine) && (point.GetX() > xPointOnLowerLine))
         return false;
@@ -696,7 +710,6 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::ReadSettings(const TiXmlHan
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 
 template<typename T>    
 bool CosmicRayTrackRefinementBaseAlgorithm<T>::SortByDistanceAlongLine::operator() (const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs)

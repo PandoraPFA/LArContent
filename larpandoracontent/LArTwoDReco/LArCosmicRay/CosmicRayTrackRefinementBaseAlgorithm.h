@@ -87,7 +87,7 @@ protected:
         const TwoDSlidingFitResult &associatedMacroFitResult, const bool isUpstream, pandora::CartesianVector &currentMergePosition,
         pandora::CartesianVector &currentMergeDirection) const;
 
-    void GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+    virtual void GetExtrapolatedCaloHits(const T &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const = 0;
 
     bool IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
@@ -181,6 +181,8 @@ protected:
     void RemoveClusterFromContainers(const pandora::Cluster *const pClustertoRemove, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
     virtual void CreateMainTrack(T &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const = 0;
+
+    virtual void RemoveClusterAssociationFromClusterVector(const T &clusterAssociation, pandora::ClusterVector &clusterVector) const = 0;
 
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
