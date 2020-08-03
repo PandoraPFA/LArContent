@@ -87,7 +87,7 @@ protected:
         const TwoDSlidingFitResult &associatedMacroFitResult, const bool isUpstream, pandora::CartesianVector &currentMergePosition,
         pandora::CartesianVector &currentMergeDirection) const;
 
-    virtual void GetExtrapolatedCaloHits(const T &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const = 0;
+    virtual void GetExtrapolatedCaloHits(T &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const = 0;
 
     bool IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
