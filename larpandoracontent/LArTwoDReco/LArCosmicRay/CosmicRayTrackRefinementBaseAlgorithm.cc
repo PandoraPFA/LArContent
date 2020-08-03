@@ -20,10 +20,10 @@ namespace lar_content
 
 template<typename T>    
 CosmicRayTrackRefinementBaseAlgorithm<T>::CosmicRayTrackRefinementBaseAlgorithm() :
-    m_microSlidingFitWindow(10), //ISOBEL THIS WAS 20?
+    m_microSlidingFitWindow(20), // was developed with 10
     m_macroSlidingFitWindow(1000),
     m_stableRegionClusterFraction(0.05),
-    m_mergePointMinCosAngleDeviation(0.995),
+    m_mergePointMinCosAngleDeviation(0.999), // was developed with 0.995
     m_distanceFromLine(0.35f),
     m_minHitFractionForHitRemoval(0.05f),
     m_maxDistanceFromMainTrack(0.75f),
@@ -39,9 +39,9 @@ CosmicRayTrackRefinementBaseAlgorithm<T>::CosmicRayTrackRefinementBaseAlgorithm(
 template<typename T>
 StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
 {
-    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
+    //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
 
-    std::cout << "IF TRACK IN EM SHOWER REMEMBER YOU CHANGED THE DIRECTION!" << std::endl;
+    //std::cout << "IF TRACK IN EM SHOWER REMEMBER YOU CHANGED THE DIRECTION!" << std::endl;
     
     const ClusterList *pClusterList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
@@ -60,21 +60,21 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
     {
         ++loopIterations;
 
-        std::cout << "\033[31m" <<"Finding best association..." << "\033[0m" <<std::endl;
+        //std::cout << "\033[31m" <<"Finding best association..." << "\033[0m" <<std::endl;
         
         ClusterAssociationVector clusterAssociationVector;
         this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, clusterAssociationVector);
         
         if (clusterAssociationVector.empty())
         {
-            std::cout << "\033[31m" << "Couldn't find an association" << "\033[0m" << std::endl;
+            //std::cout << "\033[31m" << "Couldn't find an association" << "\033[0m" << std::endl;
             break;
         }
 
         // ATTN: Considering clusterAssociation so remove from 'to consider' clusters i.e. the clusterVector
         this->RemoveClusterAssociationFromClusterVector(clusterAssociationVector.front(), clusterVector);
 
-        std::cout << "\033[31m" <<"Refining endpoint..." << "\033[0m" <<std::endl;
+        //std::cout << "\033[31m" <<"Refining endpoint..." << "\033[0m" <<std::endl;
         
         for (T &clusterAssociation : clusterAssociationVector)
         {
@@ -83,12 +83,12 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
 
             if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap))
             {
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                std::cout << "GAP IN HIT VECTOR" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                //std::cout << "GAP IN HIT VECTOR" << std::endl;
                 continue;
             }
 
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
             this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, clusterVector, slidingFitResultMapPair);
         }
@@ -197,11 +197,13 @@ bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAs
         extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end());
 
     ///////////////
+    /*
     for (auto &entry : extrapolatedCaloHitVector)
     {
         const CartesianVector &hitPosition(entry->GetPositionVector());
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "EXTRAPOLATED HIT", GREEN, 2);
     }
+    */
     ///////////////    
 
     std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), SortByDistanceAlongLine(clusterAssociation.GetUpstreamMergePoint(),
