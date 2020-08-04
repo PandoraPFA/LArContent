@@ -11,6 +11,9 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArContent.h"
+#ifdef DEEP_LEARNING
+    #include "larpandoradlcontent/LArDLContent.h"
+#endif
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
@@ -934,6 +937,9 @@ const Pandora *MasterAlgorithm::CreateWorkerInstance(const LArTPC &larTPC, const
     // The Pandora instance
     const Pandora *const pPandora(new Pandora(name));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterAlgorithms(*pPandora));
+#ifdef DEEP_LEARNING
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLContent::RegisterAlgorithms(*pPandora));
+#endif
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArContent::RegisterBasicPlugins(*pPandora));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetPseudoLayerPlugin(*pPandora, new lar_content::LArPseudoLayerPlugin));
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetLArTransformationPlugin(*pPandora, new lar_content::LArRotationalTransformationPlugin));

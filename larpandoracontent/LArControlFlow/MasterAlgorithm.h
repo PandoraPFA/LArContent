@@ -433,4 +433,11 @@ public:
 
 } // namespace lar_content
 
+// Macro allowing use of DL content based on pre-processor flag
+#ifdef DEEP_LEARNING
+    #define PANDORA_DEEP_LEARNING_API(command) command;
+#else
+    #define PANDORA_DEEP_LEARNING_API(command)
+#endif
+
 #endif // #ifndef LAR_MASTER_ALGORITHM_H

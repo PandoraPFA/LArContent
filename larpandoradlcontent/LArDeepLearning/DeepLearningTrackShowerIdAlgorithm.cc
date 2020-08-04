@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.cc
+ *  @file   larpandoradlcontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.cc
  *
  *  @brief  Implementation of the deep learning track shower id algorithm.
  *
@@ -11,7 +11,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#include "larpandoracontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
+#include "larpandoradlcontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
@@ -20,8 +20,9 @@
 #include <chrono>
 
 using namespace pandora;
+using namespace lar_content;
 
-namespace lar_content
+namespace lar_dl_content
 {
 
 DeepLearningTrackShowerIdAlgorithm::DeepLearningTrackShowerIdAlgorithm() :
@@ -414,4 +415,4 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar_content
+} // namespace lar_dl_content

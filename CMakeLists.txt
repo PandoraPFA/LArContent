@@ -59,19 +59,23 @@ else()
         message(FATAL_ERROR "LArPandoraContent requires an out-of-source build.")
     endif()
 
-    # check if we're building the deep learning version of the library
-    if(TORCHLIB)
-        # project name
-        if(NOT LAR_CONTENT_LIBRARY_NAME STREQUAL "LArPandoraContent")
-            set(LAR_CONTENT_LIBRARY_NAME "LArDLContent")
-        endif()
-    else()
-        # project name
-        if(NOT LAR_CONTENT_LIBRARY_NAME STREQUAL "LArPandoraContent")
-            set(LAR_CONTENT_LIBRARY_NAME "LArContent")
-        endif()
+    # project name
+    if(NOT LAR_CONTENT_LIBRARY_NAME STREQUAL "LArPandoraContent")
+        set(LAR_CONTENT_LIBRARY_NAME "LArContent")
     endif()
     project(${LAR_CONTENT_LIBRARY_NAME})
+    
+    # DL Content
+    if(TORCHLIB)
+        set(DL_PROJECT_NAME "LArDLContent")
+        set(LAR_DL_CONTENT_LIBRARY_NAME "${DL_PROJECT_NAME}")
+        
+        set(${DL_PROJECT_NAME}_VERSION_MAJOR 03)
+        set(${DL_PROJECT_NAME}_VERSION_MINOR 18)
+        set(${DL_PROJECT_NAME}_VERSION_PATCH 00)
+        set(${DL_PROJECT_NAME}_VERSION "${${DL_PROJECT_NAME}_VERSION_MAJOR}.${${DL_PROJECT_NAME}_VERSION_MINOR}.${${DL_PROJECT_NAME}_VERSION_PATCH}")
+        set(${DL_PROJECT_NAME}_SOVERSION "${${DL_PROJECT_NAME}_VERSION_MAJOR}.${${DL_PROJECT_NAME}_VERSION_MINOR}")
+    endif()
 
     # project version
     # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
@@ -130,19 +134,9 @@ else()
     # - Collect sources - not ideal because you have to keep running CMake to pick up changes
     file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larpandoracontent/*.cc")
 
-    # Avoid building deep learning code if deep learning library is not requested
-    if(NOT TORCHLIB)
-        set(EXCLUDE_DIR "larpandoracontent/LArDeepLearning")
-        foreach(TMP_PATH ${LAR_CONTENT_SRCS})
-            string(FIND ${TMP_PATH} ${EXCLUDE_DIR} EXCLUDE_DIR_FOUND)
-            if(NOT ${EXCLUDE_DIR_FOUND} EQUAL -1)
-                list(REMOVE_ITEM LAR_CONTENT_SRCS ${TMP_PATH})
-            endif()
-        endforeach(TMP_PATH)
-    endif()
-
     # - Add library and properties
     add_library(${PROJECT_NAME} SHARED ${LAR_CONTENT_SRCS})
+    message(STATUS "Lib versions {${PROJECT_NAME}: ${${PROJECT_NAME}_VERSION} ${${PROJECT_NAME}_SOVERSION}")
     set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION} SOVERSION ${${PROJECT_NAME}_SOVERSION})
 
     # - Optional documents
@@ -151,7 +145,20 @@ else()
         add_subdirectory(doc)
     endif()
 
-    #-------------------------------------------------------------------------------------------------------------------------------------------
+    # DL Build products
+    if(TORCHLIB)
+        # - Collect sources - not ideal because you have to keep running CMake to pick up changes
+        file(GLOB_RECURSE LAR_DL_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larpandoradlcontent/*.cc")
+
+        # - Add library and properties
+        add_library(${DL_PROJECT_NAME} SHARED ${LAR_DL_CONTENT_SRCS})
+        # Version should match LArContent version
+        message(STATUS "Lib versions {${DL_PROJECT_NAME}: ${${DL_PROJECT_NAME}_VERSION} ${${DL_PROJECT_NAME}_SOVERSION}")
+        set_target_properties(${DL_PROJECT_NAME} PROPERTIES VERSION ${${DL_PROJECT_NAME}_VERSION} SOVERSION ${${DL_PROJECT_NAME}_SOVERSION})
+   endif()
+
+
+ #-------------------------------------------------------------------------------------------------------------------------------------------
     # Install products
 
     # - library
@@ -162,6 +169,18 @@ else()
 
     # - support files
     PANDORA_GENERATE_PACKAGE_CONFIGURATION_FILES(${PROJECT_NAME}Config.cmake ${PROJECT_NAME}ConfigVersion.cmake ${PROJECT_NAME}LibDeps.cmake)
+
+    # DL Install products
+    if(TORCHLIB)
+        # - library
+        install(TARGETS ${DL_PROJECT_NAME} DESTINATION lib COMPONENT Runtime)
+
+        # - headers
+        install(DIRECTORY ./larpandoradlcontent DESTINATION include COMPONENT Development FILES_MATCHING PATTERN "*.h")
+
+        # - support files
+        PANDORA_GENERATE_PACKAGE_CONFIGURATION_FILES(${DL_PROJECT_NAME}Config.cmake ${DL_PROJECT_NAME}ConfigVersion.cmake ${DL_PROJECT_NAME}LibDeps.cmake)
+    endif()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # display some variables and write them to cache
