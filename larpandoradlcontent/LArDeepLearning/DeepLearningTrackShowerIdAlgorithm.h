@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArMonitoring/DeepLearningTrackShowerIdAlgorithm.h
+ *  @file   larpandoradlcontent/LArMonitoring/DeepLearningTrackShowerIdAlgorithm.h
  *
  *  @brief  Header file for the deep learning track shower id algorithm.
  *
@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar_content
+namespace lar_dl_content
 {
 
 /**
@@ -48,6 +48,6 @@ private:
     std::string               m_trainingOutputFile;  ///< Output file name for training examples
 };
 
-} // namespace lar_content
+} // namespace lar_dl_content
 
 #endif // LAR_DEEP_LEARNING_TRACK_SHOWER_ID_ALGORITHM_H

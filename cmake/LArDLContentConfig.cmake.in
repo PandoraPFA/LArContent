@@ -34,7 +34,7 @@ SET( LArDLContent_INCLUDE_DIRS LArDLContent_INCLUDE_DIRS-NOTFOUND )
 MARK_AS_ADVANCED( LArDLContent_INCLUDE_DIRS )
 
 FIND_PATH( LArDLContent_INCLUDE_DIRS
-	NAMES larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h
+	NAMES larpandoradlcontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h
 	PATHS ${LArDLContent_ROOT} ${LArDLContent_ROOT}/include
 	NO_DEFAULT_PATH
 )
