@@ -184,6 +184,8 @@ protected:
 
     virtual void RemoveClusterAssociationFromClusterVector(const T &clusterAssociation, pandora::ClusterVector &clusterVector) const = 0;
 
+    float GetAverageDeviationFromLine(const pandora::Cluster *const pCluster, const pandora::CartesianVector &line, const pandora::CartesianVector &startPoint) const;
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
 

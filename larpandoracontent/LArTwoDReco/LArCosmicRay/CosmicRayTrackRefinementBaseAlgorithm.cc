@@ -74,7 +74,7 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
         // ATTN: Considering clusterAssociation so remove from 'to consider' clusters i.e. the clusterVector
         this->RemoveClusterAssociationFromClusterVector(clusterAssociationVector.front(), clusterVector);
 
-        //std::cout << "\033[31m" <<"Refining endpoint..." << "\033[0m" <<std::endl;
+        //std::cout << "\033[31m" << "Refining endpoint... " << clusterAssociationVector.size() << " association(s)" << "\033[0m" <<std::endl;
         
         for (T &clusterAssociation : clusterAssociationVector)
         {
@@ -625,6 +625,15 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::InitialiseContainers(const Cluste
              const TwoDSlidingFitResult microSlidingFitResult(pCluster, m_microSlidingFitWindow, slidingFitPitch);
              const TwoDSlidingFitResult macroSlidingFitResult(pCluster, m_macroSlidingFitWindow, slidingFitPitch);
 
+             if ((pCluster->GetNCaloHits() < 300))
+             {
+                 CartesianVector clusterAverageDirection(0.f, 0.f, 0.f);
+                 macroSlidingFitResult.GetGlobalDirection(macroSlidingFitResult.GetLayerFitResultMap().begin()->second.GetGradient(), clusterAverageDirection);
+
+                 if (this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) > 0.5)
+                     continue;
+             }
+                 
              slidingFitResultMapPair.first->insert(TwoDSlidingFitResultMap::value_type(pCluster, microSlidingFitResult));
              slidingFitResultMapPair.second->insert(TwoDSlidingFitResultMap::value_type(pCluster, macroSlidingFitResult));
              clusterVector.push_back(pCluster);
@@ -639,6 +648,7 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::InitialiseContainers(const Cluste
 template<typename T>    
 void CosmicRayTrackRefinementBaseAlgorithm<T>::UpdateContainers(const ClusterList &clustersToAdd, const ClusterList &clustersToDelete, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
+    //ATTN: VERY IMPORTANT TO DELETE FROM THE CONTAINERS FIRST
     for (const Cluster *const pClusterToDelete : clustersToDelete)
         this->RemoveClusterFromContainers(pClusterToDelete, clusterVector, slidingFitResultMapPair);
 
@@ -665,6 +675,27 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::RemoveClusterFromContainers(const
 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+template<typename T>   
+float CosmicRayTrackRefinementBaseAlgorithm<T>::GetAverageDeviationFromLine(const Cluster *const pCluster, const CartesianVector &line, const CartesianVector &startPoint) const
+{
+    float distanceFromLine(0.f);
+
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+    {
+        for (const CaloHit *const pCaloHit : *mapEntry.second)
+         {
+             const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+
+             distanceFromLine += (line.GetCrossProduct(hitPosition - startPoint).GetMagnitude());
+         }
+    }
+
+    return (distanceFromLine / pCluster->GetNCaloHits());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 template<typename T>    
 StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {

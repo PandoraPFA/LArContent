@@ -19,6 +19,9 @@ namespace lar_content
 class LArClusterHelper
 {
 public:
+
+    static float GetAverageHitSeparation(const pandora::Cluster *const pCluster);
+    
     /**
      *  @brief  Get the hit type associated with a two dimensional cluster
      *
