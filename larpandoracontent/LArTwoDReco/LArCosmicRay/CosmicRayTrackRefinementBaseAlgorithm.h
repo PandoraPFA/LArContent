@@ -89,7 +89,10 @@ protected:
 
     virtual void GetExtrapolatedCaloHits(T &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const = 0;
 
-    bool IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+    virtual bool IsExtrapolatedEndpointNearBoundary(const T &clusterAssociation, const float boundaryTolerance) const = 0;
+
+    bool IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const unsigned int maxTrackGaps,
+        const float lineSegmentLength) const;
 
 
     /**
@@ -98,7 +101,7 @@ protected:
      *  @param  clusterAssociation the clusterAssociation
      *  @param  trackSegmentBoundaries the output vector of segment boundaries
      */
-    void GetTrackSegmentBoundaries(const ClusterAssociation &clusterAssociation, pandora::CartesianPointVector &trackSegmentBoundaries) const;
+    void GetTrackSegmentBoundaries(const ClusterAssociation &clusterAssociation, pandora::CartesianPointVector &trackSegmentBoundaries, const float lineSegmentLength) const;
 
     /**
      *  @brief  Whether a calo hit falls within a specified segment of the cluster connecting line
@@ -189,6 +192,8 @@ protected:
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
 
+    unsigned int m_minCaloHits;
+    float m_maxCurviness;
     unsigned int m_microSlidingFitWindow;
     unsigned int m_macroSlidingFitWindow;
     float m_stableRegionClusterFraction;

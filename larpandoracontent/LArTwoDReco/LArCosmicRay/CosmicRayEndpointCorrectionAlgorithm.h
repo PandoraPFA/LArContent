@@ -41,6 +41,8 @@ private:
 
     void GetExtrapolatedCaloHits(ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
+    bool IsExtrapolatedEndpointNearBoundary(const ClusterEndpointAssociation &clusterAssociation, const float boundaryTolerance) const;
+
     int m_minCaloHits;
     float m_maxDistanceFromTPC;
     float m_minScaledZOffset;
