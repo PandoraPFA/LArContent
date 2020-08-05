@@ -43,21 +43,21 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
     ClusterAssociationVector &clusterAssociationVector)
 {
     // Collect LArTPC information
-    const Pandora *primaryPandoraInstance;
+    const Pandora *pPrimaryPandoraInstance;
     try
     {
-        primaryPandoraInstance = MultiPandoraApi::GetPrimaryPandoraInstance(&this->GetPandora());
+        pPrimaryPandoraInstance = MultiPandoraApi::GetPrimaryPandoraInstance(&this->GetPandora());
     }
     catch (const StatusCodeException &)
     {
-        primaryPandoraInstance = &this->GetPandora();
+        pPrimaryPandoraInstance = &this->GetPandora();
     }
            
     float detectorMinXEdge(std::numeric_limits<float>::max());
     float detectorMaxXEdge(-std::numeric_limits<float>::max());
 
     const LArTPC *pLArTPC(&this->GetPandora().GetGeometry()->GetLArTPC());
-    const LArTPCMap &larTPCMap(primaryPandoraInstance->GetGeometry()->GetLArTPCMap());
+    const LArTPCMap &larTPCMap(pPrimaryPandoraInstance->GetGeometry()->GetLArTPCMap());
     
     for (const LArTPCMap::value_type &mapEntry : larTPCMap)
     {
@@ -70,7 +70,8 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
             pLArTPC = pSubLArTPC;
     }
     
-    //ATTN: Find best cluster association - method assumes clusters ordered by their hits 
+    //ATTN: Find best cluster association - method assumes clusters ordered by their hits
+    
     for (const Cluster *const pCluster : clusterVector)
     {
         const TwoDSlidingFitResult &microSlidingFitResult(slidingFitResultMapPair.first->at(pCluster));
@@ -80,11 +81,9 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
         for (unsigned int isEndUpstream = 0; isEndUpstream < 2; ++isEndUpstream)
         {
             /////////////////
-            /*
-            ClusterList theCluster({pCluster});
-            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CONSIDERED CLUSTER", BLACK);
-            std::cout << "isEndUpstream: " << isEndUpstream << std::endl;
-            */
+            //ClusterList theCluster({pCluster});
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CONSIDERED CLUSTER", BLACK);
+            //std::cout << "isEndUpstream: " << isEndUpstream << std::endl;
             ////////////////
 
             // ATTN: Match the cluster to itself to get the cluster merging points
@@ -93,10 +92,8 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
             CartesianVector clusterMergePoint(0.f, 0.f, 0.f), clusterMergeDirection(0.f, 0.f, 0.f);
             if (!GetClusterMergingCoordinates(microSlidingFitResult, macroSlidingFitResult, macroSlidingFitResult, isClusterUpstream, clusterMergePoint, clusterMergeDirection))
             {
-                /*
-                std::cout << "CANNOT FIND MERGE POSITION" << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                */
+                //std::cout << "CANNOT FIND MERGE POSITION" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
             
@@ -105,15 +102,14 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
             
             /////////////////
             //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &endpointPosition, "ENDPOINT", BLUE, 2);
+            //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &clusterMergePoint, "MERGE POINT", BLUE, 2);
             //std::cout << "Endpoint Separation: " << endpointSeparation << std::endl;
             /////////////////    
 
             if (endpointSeparation < std::numeric_limits<float>::epsilon())
             {
-                /*
-                std::cout << "MERGE POINT AND ENDPOINT ARE THE SAME" << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                */
+                //std::cout << "MERGE POINT AND ENDPOINT ARE THE SAME" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
 
@@ -124,10 +120,8 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
             if ((std::fabs(nearestTPCBoundaryX - detectorMinXEdge) < std::numeric_limits<float>::epsilon()) ||
                 (std::fabs(nearestTPCBoundaryX - detectorMaxXEdge) < std::numeric_limits<float>::epsilon()))
             {
-                /*
-                std::cout << "ENDPOINT IS NEAR DETECTOR EDGE" << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                */
+                //std::cout << "ENDPOINT IS NEAR DETECTOR EDGE" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
 
@@ -136,10 +130,8 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
 
             if (std::fabs(endpointPosition.GetX() - nearestTPCBoundaryX) > std::fabs(otherEndpointPosition.GetX() - nearestTPCBoundaryX))
             {
-                /*
-                std::cout << "OTHER ENDPOINT IS CLOSE TO THIS BOUNDARY" << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                */
+                //std::cout << "OTHER ENDPOINT IS CLOSE TO THIS BOUNDARY" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
 
@@ -150,14 +142,19 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
 
             if (!(isMergePointInAllowanceRegion || isEndpointInAllowanceRegion))
             {
-                /*
-                std::cout << "NOT CLOSE ENOUGH TO THE BOUNDARY" << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                */
+                //std::cout << "NOT CLOSE ENOUGH TO THE BOUNDARY" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
 
             // INVESTIGATE ENDPOINT Z SEPARATION
+            if (std::fabs(clusterMergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
+            {
+                //std::cout << "MERGE DIRECTION HAS NO X COMPONENT" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                continue;
+            }
+            
             const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
             const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
             const CartesianVector fitEndpointPosition(endpointPosition.GetX(), 0.f, predictedIntercept + (predictedGradient * endpointPosition.GetX()));
@@ -173,15 +170,13 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
             PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &start, &end, "CLUSTER DIRECTION", GREEN, 4, 2);            
             std::cout << "deltaZ: " << deltaZ << std::endl;
             std::cout << "scaled deltaZ: " << scaledDeltaZ << std::endl;  
-            */  
+            */
             /////////////////
 
             if (deltaZ < m_minScaledZOffset)
             {
-                /*
-                std::cout << "DELTA Z IS TOO LOW" << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                */
+                //std::cout << "DELTA Z IS TOO LOW" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
            
@@ -189,12 +184,37 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
             if(this->IsDeltaRay(pCluster, clusterMergePoint, clusterMergeDirection, isEndUpstream))
             {
                 // ATTN: Temporarily set the other merge point to define region to search for in extrapolate hits
-                const LArTPC *const pNeighboughTPC(&LArStitchingHelper::FindClosestTPC(*primaryPandoraInstance, *pLArTPC, isNearestBoundaryHigherX));
+                const LArTPC *const pNeighboughTPC(&LArStitchingHelper::FindClosestTPC(*pPrimaryPandoraInstance, *pLArTPC, isNearestBoundaryHigherX));
                 
                 const float gapSizeX(std::fabs(pNeighboughTPC->GetCenterX() - pLArTPC->GetCenterX()) - (pNeighboughTPC->GetWidthX() * 0.5f) - (pLArTPC->GetWidthX() * 0.5f));
                 const float endpointX(nearestTPCBoundaryX + (gapSizeX * 0.5f * (isNearestBoundaryHigherX ? 1.f : -1.f)));
                 
                 const CartesianVector extrapolatedEndpointPosition(endpointX, 0.f, predictedIntercept + (predictedGradient * endpointX));
+
+                /*
+                //Check whether endpoint is in the detector
+                const float detectorMinZEdge = pLArTPC->GetCenterZ() - 0.5f * pLArTPC->GetWidthZ();                
+                const float detectorMaxZEdge = pLArTPC->GetCenterZ() + 0.5f * pLArTPC->GetWidthZ();
+
+                if ((extrapolatedEndpointPosition.GetZ() < detectorMinZEdge) || (extrapolatedEndpointPosition.GetZ() > detectorMaxZEdge))
+                {
+                    std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN THE DETECTOR" << std::endl;
+                    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                    continue;
+                }
+                */
+
+                if (isEndUpstream ? extrapolatedEndpointPosition.GetZ() > clusterMergePoint.GetZ() : extrapolatedEndpointPosition.GetZ() < clusterMergePoint.GetZ())
+                {
+                    //std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
+                    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                    continue;
+                }
+
+                //std::cout << "LArClusterHelper::GetAverageHitSeparation: " << LArClusterHelper::GetAverageHitSeparation(pCluster) << std::endl;
+                //std::cout << "Cluster Hits: " <<  pCluster->GetNCaloHits() << std::endl;
+                //std::cout << "Cluster Hits / Length: " << pCluster->GetNCaloHits() / LArClusterHelper::GetLength(pCluster) << std::endl;
+                //std::cout << "distance from line: " << GetAverageDeviationFromLine(pCluster, clusterMergeDirection, clusterMergePoint) << std::endl;
                 
                 ClusterEndpointAssociation clusterEndpointAssociation(isEndUpstream ?
                     ClusterEndpointAssociation(extrapolatedEndpointPosition, clusterMergeDirection, clusterMergePoint, clusterMergeDirection * (-1.f), pCluster, true) :
@@ -258,10 +278,8 @@ bool CosmicRayEndpointCorrectionAlgorithm::IsDeltaRay(const Cluster *const pClus
     }
     catch (const StatusCodeException &)
     {
-        /*
-        std::cout << "CANNOT MAKE A FIT" << std::endl;
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());  
-        */      
+        //std::cout << "CANNOT MAKE A FIT" << std::endl;
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());  
         return false;
     }
 
@@ -334,17 +352,14 @@ bool CosmicRayEndpointCorrectionAlgorithm::IsDeltaRay(const Cluster *const pClus
     // CHECK CLUSTER ENDPOINT END
     CartesianVector endDirection(isEndUpstream ? subsetFit.GetGlobalMinLayerDirection() : subsetFit.GetGlobalMaxLayerDirection());
     float endOpeningAngle(endDirection.GetOpeningAngle(clusterMergeDirection) * 180 / 3.14);
-    
     if (std::fabs(endOpeningAngle) < m_thresholdMaxAngleDeviation)
     {
-        /*
-        std::cout << "END DEVIATION ANGLE NOT BIG ENOUGH" << std::endl;
-        std::cout << "endOpeningAngle: " << endOpeningAngle << std::endl;
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        */
+        //std::cout << "END DEVIATION ANGLE NOT BIG ENOUGH" << std::endl;
+        //std::cout << "endOpeningAngle: " << endOpeningAngle << std::endl;
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
     }
-
+    
     startLayer = (isEndUpstream ? subsetFit.GetMinLayer() : subsetFit.GetMaxLayer());
     endLayer = (isEndUpstream ? subsetFit.GetMaxLayer() : subsetFit.GetMinLayer());
     loopTerminationLayer = (isEndUpstream ? endLayer + 1 : endLayer - 1);
@@ -432,10 +447,12 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
         }
     }
 
-    // ATTN: hitsInRegion is ordered
+    // ATTN: hitsInRegion is ordered (it isnt)
     ClusterVector clustersInRegion;
     for (const ClusterToCaloHitListMap::value_type &entry : hitsInRegion)
         clustersInRegion.push_back(entry.first);
+
+    std::sort(clustersInRegion.begin(), clustersInRegion.end(), LArClusterHelper::SortByNHits);
     
     CartesianVector extrapolatedStartPosition(clusterAssociation.IsEndUpstream() ? clusterAssociation.GetDownstreamMergePoint() : clusterAssociation.GetUpstreamMergePoint());
     CartesianVector extrapolatedDirection(clusterAssociation.IsEndUpstream() ? clusterAssociation.GetDownstreamMergeDirection() : clusterAssociation.GetUpstreamMergeDirection());
@@ -487,7 +504,9 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
 
             for (const Cluster *const pCluster : clustersInRegion)
             {
-                for (const CaloHit *const pCaloHit : hitsInRegion.at(pCluster))
+                const CaloHitList &theCaloHits(hitsInRegion.at(pCluster));
+
+                for (const CaloHit *const pCaloHit : theCaloHits)
                 {
                     const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
 
@@ -530,7 +549,6 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
         }
         catch (const StatusCodeException &)
         {
-            std::cout << "FIT FAILED IN EXTRAPOLATED HITS" << std::endl;
             return;
         }
 
@@ -632,16 +650,19 @@ void CosmicRayEndpointCorrectionAlgorithm::CreateMainTrack(ClusterEndpointAssoci
     ////////////////
     /*
     PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &createdClusters, "CREATED CLUSTERS", RED);
+    ClusterList extendedCluster({pMainTrackCluster});
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &extendedCluster, "REFINED MAIN TRACK", BLACK);
     PandoraMonitoringApi::ViewEvent(this->GetPandora());     
     */
     ////////////////       
 
+    //ATTN: Update references to pMainTrackCluster
+    //      IT IS REALLY IMPORTANT THAT THIS IS DONE FIRST I.E. DELETE NULL POINTERS FROM MAP BEFORE ANY ARE ADDED IN AS THEY CAN BECOME THE SAME
+    this->UpdateAfterMainTrackModification(pMainTrackCluster, clusterEndpointAssociation, slidingFitResultMapPair);
+    
     // ATTN: Update containers and the cluster association
     ClusterList modifiedClusters(showerClustersToFragment.begin(), showerClustersToFragment.end());   
     this->UpdateContainers(createdClusters, modifiedClusters, clusterVector, slidingFitResultMapPair);
-
-    //ATTN: Update references to pMainTrackCluster 
-    this->UpdateAfterMainTrackModification(pMainTrackCluster, clusterEndpointAssociation, slidingFitResultMapPair);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -685,6 +706,9 @@ void CosmicRayEndpointCorrectionAlgorithm::RemoveClusterAssociationFromClusterVe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
 
 StatusCode CosmicRayEndpointCorrectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {

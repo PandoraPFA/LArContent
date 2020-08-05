@@ -40,7 +40,7 @@ private:
     void RemoveClusterAssociationFromClusterVector(const ClusterEndpointAssociation &clusterAssociation, pandora::ClusterVector &clusterVector) const;
 
     void GetExtrapolatedCaloHits(ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
-    
+
     int m_minCaloHits;
     float m_maxDistanceFromTPC;
     float m_minScaledZOffset;
