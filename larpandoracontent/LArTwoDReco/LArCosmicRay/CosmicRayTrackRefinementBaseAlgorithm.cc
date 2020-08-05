@@ -20,6 +20,8 @@ namespace lar_content
 
 template<typename T>    
 CosmicRayTrackRefinementBaseAlgorithm<T>::CosmicRayTrackRefinementBaseAlgorithm() :
+    m_minCaloHits(50),
+    m_maxCurviness(0.3),
     m_microSlidingFitWindow(20), // was developed with 10
     m_macroSlidingFitWindow(1000),
     m_stableRegionClusterFraction(0.05),
@@ -53,6 +55,7 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
     TwoDSlidingFitResultMap microSlidingFitResultMap, macroSlidingFitResultMap;
     SlidingFitResultMapPair slidingFitResultMapPair({&microSlidingFitResultMap, &macroSlidingFitResultMap});
     
+    //std::cout << "\033[31m" <<"Initialise clusters..." << "\033[0m" <<std::endl;
     this->InitialiseContainers(pClusterList, clusterVector, slidingFitResultMapPair);
 
     unsigned int loopIterations(0);
@@ -81,10 +84,31 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
             ClusterToCaloHitListMap clusterToCaloHitListMap;
             this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, clusterToCaloHitListMap);
 
-            if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap))
+            /////////////////////
+            /*
+            CaloHitVector extrapolatedCaloHitVector;
+            for (const auto &entry : clusterToCaloHitListMap)
+                extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end());
+            
+            for (auto &entry : extrapolatedCaloHitVector)
             {
+                const CartesianVector &hitPosition(entry->GetPositionVector());
+                PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "EXTRAPOLATED HIT", GREEN, 2);
+            }
+            */
+            //////////////////////////////
+
+            if (!this->IsExtrapolatedEndpointNearBoundary(clusterAssociation, 5.f))
+            {
+                //std::cout << "ENDPOINT NOT NEAR THE BOUNDARY" << std::endl;                
                 //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                continue;
+            }
+
+            if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap, m_maxTrackGaps, m_lineSegmentLength))
+            {
                 //std::cout << "GAP IN HIT VECTOR" << std::endl;
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
 
@@ -189,28 +213,19 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::GetExtrapolatedCaloHits(const Clu
 */
 //------------------------------------------------------------------------------------------------------------------------------------------
 template<typename T>    
-bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const
+bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
+    const unsigned int maxTrackGaps, const float lineSegmentLength) const
 {
     // ATTN: Collect extrapolated calo hits and sort by projected distance from the upstreamMergePoint
     CaloHitVector extrapolatedCaloHitVector;
     for (const auto &entry : clusterToCaloHitListMap)
-        extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end());
-
-    ///////////////
-    /*
-    for (auto &entry : extrapolatedCaloHitVector)
-    {
-        const CartesianVector &hitPosition(entry->GetPositionVector());
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "EXTRAPOLATED HIT", GREEN, 2);
-    }
-    */
-    ///////////////    
+        extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end()); 
 
     std::sort(extrapolatedCaloHitVector.begin(), extrapolatedCaloHitVector.end(), SortByDistanceAlongLine(clusterAssociation.GetUpstreamMergePoint(),
         clusterAssociation.GetConnectingLineDirection()));
 
     CartesianPointVector trackSegmentBoundaries;
-    this->GetTrackSegmentBoundaries(clusterAssociation, trackSegmentBoundaries);
+    this->GetTrackSegmentBoundaries(clusterAssociation, trackSegmentBoundaries, lineSegmentLength);
 
     if (trackSegmentBoundaries.size() < 2)
     {
@@ -227,7 +242,7 @@ bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAs
         {
             ++segmentsWithoutHits;
 
-            if (segmentsWithoutHits > m_maxTrackGaps)
+            if (segmentsWithoutHits > maxTrackGaps)
                 return false;
 
             continue;
@@ -245,7 +260,7 @@ bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAs
 
         segmentsWithoutHits = hitsInSegment ? 0 : segmentsWithoutHits + 1;
 
-        if (segmentsWithoutHits > m_maxTrackGaps)
+        if (segmentsWithoutHits > maxTrackGaps)
             return false;
     }
 
@@ -255,9 +270,10 @@ bool CosmicRayTrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAs
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>    
-void CosmicRayTrackRefinementBaseAlgorithm<T>::GetTrackSegmentBoundaries(const ClusterAssociation &clusterAssociation, CartesianPointVector &trackSegmentBoundaries) const
+void CosmicRayTrackRefinementBaseAlgorithm<T>::GetTrackSegmentBoundaries(const ClusterAssociation &clusterAssociation, CartesianPointVector &trackSegmentBoundaries,
+    const float lineSegmentLength) const
 {
-    if (m_lineSegmentLength < std::numeric_limits<float>::epsilon())
+    if (lineSegmentLength < std::numeric_limits<float>::epsilon())
     {
         std::cout << "TrackInEMShowerAlgorithm: Line segment length must be positive and nonzero" << std::endl;
         throw STATUS_CODE_INVALID_PARAMETER;
@@ -266,13 +282,13 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::GetTrackSegmentBoundaries(const C
     // ATTN: To handle final segment merge track remainder with preceding segment and if track remainder was more than half of the segment length split into two
     const CartesianVector &trackDirection(clusterAssociation.GetConnectingLineDirection());
     const float trackLength((clusterAssociation.GetDownstreamMergePoint() - clusterAssociation.GetUpstreamMergePoint()).GetMagnitude());
-    const int fullSegments(std::floor(trackLength / m_lineSegmentLength));
+    const int fullSegments(std::floor(trackLength / lineSegmentLength));
 
     if (fullSegments == 0)
         trackSegmentBoundaries = {clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint()};
     
-    const float lengthOfTrackRemainder(trackLength - (fullSegments * m_lineSegmentLength));
-    const bool splitFinalSegment(lengthOfTrackRemainder > m_lineSegmentLength * 0.5f);
+    const float lengthOfTrackRemainder(trackLength - (fullSegments * lineSegmentLength));
+    const bool splitFinalSegment(lengthOfTrackRemainder > lineSegmentLength * 0.5f);
     const int numberOfBoundaries(fullSegments + (splitFinalSegment ? 2 : 1));
 
     for (int i = 0; i < numberOfBoundaries; ++i)
@@ -283,17 +299,17 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::GetTrackSegmentBoundaries(const C
         }
         else if (i < fullSegments)
         {
-            trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * m_lineSegmentLength));
+            trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * lineSegmentLength));
         }
         else
         {
             if (splitFinalSegment)
             {
-                trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * (m_lineSegmentLength + lengthOfTrackRemainder) * 0.5f));
+                trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * (lineSegmentLength + lengthOfTrackRemainder) * 0.5f));
             }
             else
             {
-                trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * (m_lineSegmentLength + lengthOfTrackRemainder)));
+                trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * (lineSegmentLength + lengthOfTrackRemainder)));
             }
         }
     }
@@ -611,11 +627,11 @@ template<typename T>
 void CosmicRayTrackRefinementBaseAlgorithm<T>::InitialiseContainers(const ClusterList *pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
 
-    unsigned int m_minCaloHits2(50);
+    //unsigned int m_minCaloHits2(50);
     
     for (const Cluster *const pCluster : *pClusterList)
     {
-        if (pCluster->GetNCaloHits() < m_minCaloHits2)
+        if (pCluster->GetNCaloHits() < m_minCaloHits)
             continue;
     
         const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -627,11 +643,21 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::InitialiseContainers(const Cluste
 
              if ((pCluster->GetNCaloHits() < 300))
              {
+
                  CartesianVector clusterAverageDirection(0.f, 0.f, 0.f);
                  macroSlidingFitResult.GetGlobalDirection(macroSlidingFitResult.GetLayerFitResultMap().begin()->second.GetGradient(), clusterAverageDirection);
 
-                 if (this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) > 0.5)
+                 //ClusterList chosenClusters({pCluster});
+                 //std::cout << "MIN: " << this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) << std::endl;
+                 //std::cout << "MAX: " << this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMaxLayerPosition()) << std::endl;
+                 //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &chosenClusters, "CHOSEN", VIOLET);
+                 //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                
+                 if ((this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) > m_maxCurviness) &&
+                     (this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMaxLayerPosition()) > m_maxCurviness))
+                 {
                      continue;
+                 }
              }
                  
              slidingFitResultMapPair.first->insert(TwoDSlidingFitResultMap::value_type(pCluster, microSlidingFitResult));
@@ -642,6 +668,13 @@ void CosmicRayTrackRefinementBaseAlgorithm<T>::InitialiseContainers(const Cluste
     }
 
     std::sort(clusterVector.begin(), clusterVector.end(), LArClusterHelper::SortByNHits);
+    
+    //////////
+    /*
+    ClusterList chosenClusters(clusterVector.begin(), clusterVector.end());
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &chosenClusters, "CHOSEN", VIOLET);
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -699,6 +732,13 @@ float CosmicRayTrackRefinementBaseAlgorithm<T>::GetAverageDeviationFromLine(cons
 template<typename T>    
 StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinCaloHits", m_minCaloHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxCurviness", m_maxCurviness));    
+    
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MicroSlidingFitWindow", m_microSlidingFitWindow));
 
@@ -725,7 +765,7 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::ReadSettings(const TiXmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxHitSeparationForConnectedCluster", m_maxHitSeparationForConnectedCluster));
-
+    
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxTrackGaps", m_maxTrackGaps));
 

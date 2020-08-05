@@ -357,6 +357,7 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
         const CartesianVector &branchSplitPosition = thisSplit.GetBranchVertex();
         const CartesianVector &branchSplitDirection = thisSplit.GetBranchDirection();
         ////
+        /*
         const LArTPC &pLArTPC(this->GetPandora().GetGeometry()->GetLArTPC());
         const float tpcXCentre(pLArTPC.GetCenterX());
         if (std::fabs(tpcXCentre - 179.715103149) < 5)
@@ -375,6 +376,7 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
         PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &start, &end, "INV DIRECTION", RED, 2, 1);            
         PandoraMonitoringApi::ViewEvent(this->GetPandora());
         }
+        */
         ////
         
         TwoDSlidingFitResultMap::iterator iterBranch1 = branchResultMap.find(pBranchCluster);
