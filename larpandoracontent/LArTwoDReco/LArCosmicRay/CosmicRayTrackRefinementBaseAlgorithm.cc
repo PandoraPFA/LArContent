@@ -42,7 +42,6 @@ template<typename T>
 StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
 {
     //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
-
     //std::cout << "IF TRACK IN EM SHOWER REMEMBER YOU CHANGED THE DIRECTION!" << std::endl;
     
     const ClusterList *pClusterList(nullptr);
@@ -86,6 +85,7 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
 
             /////////////////////
             /*
+            std::cout << "after hits collected" << std::endl;
             CaloHitVector extrapolatedCaloHitVector;
             for (const auto &entry : clusterToCaloHitListMap)
                 extrapolatedCaloHitVector.insert(extrapolatedCaloHitVector.begin(), entry.second.begin(), entry.second.end());
@@ -98,12 +98,16 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
             */
             //////////////////////////////
 
+            //std::cout << "BEFORE IS NEAR BOUNDARY" << std::endl;
+
             if (!this->IsExtrapolatedEndpointNearBoundary(clusterAssociation, 5.f))
             {
                 //std::cout << "ENDPOINT NOT NEAR THE BOUNDARY" << std::endl;                
                 //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
+
+            //std::cout << "before is continuous" << std::endl;
 
             if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap, m_maxTrackGaps, m_lineSegmentLength))
             {
@@ -114,7 +118,9 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
 
             //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
-            this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, clusterVector, slidingFitResultMapPair);
+            //std::cout << "before create main track" << std::endl;
+
+            this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, clusterVector, slidingFitResultMapPair, clusterAssociationVector);
         }
     }
 

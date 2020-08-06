@@ -183,7 +183,7 @@ protected:
 
     void RemoveClusterFromContainers(const pandora::Cluster *const pClustertoRemove, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
-    virtual void CreateMainTrack(T &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const = 0;
+    virtual void CreateMainTrack(T &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair, ClusterAssociationVector &clusterAssociationVector) const = 0;
 
     virtual void RemoveClusterAssociationFromClusterVector(const T &clusterAssociation, pandora::ClusterVector &clusterVector) const = 0;
 
