@@ -32,10 +32,10 @@ private:
     bool IsDeltaRay(const pandora::Cluster *const pCluster, pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection,
         const bool isEndUpstream) const;
 
-    void CreateMainTrack(ClusterEndpointAssociation &clusterEndpointAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
+    void CreateMainTrack(ClusterEndpointAssociation &clusterEndpointAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair, ClusterAssociationVector &clusterAssociationVector) const;
 
     
-    void UpdateAfterMainTrackModification(const pandora::Cluster *const pMainTrackCluster, ClusterEndpointAssociation &clusterEndpointAssociation, SlidingFitResultMapPair &slidingFitResultMapPair) const;
+    void UpdateAfterMainTrackModification(const pandora::Cluster *const pMainTrackCluster, ClusterEndpointAssociation &clusterEndpointAssociation, SlidingFitResultMapPair &slidingFitResultMapPair, ClusterAssociationVector &clusterAssociationVector) const;
 
     void RemoveClusterAssociationFromClusterVector(const ClusterEndpointAssociation &clusterAssociation, pandora::ClusterVector &clusterVector) const;
 

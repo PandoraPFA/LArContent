@@ -434,6 +434,7 @@ bool CosmicRayEndpointCorrectionAlgorithm::IsDeltaRay(const Cluster *const pClus
 void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpointAssociation &clusterAssociation, const ClusterList *const pClusterList,
     ClusterToCaloHitListMap &clusterToCaloHitListMap) const
 {
+
     // Look for clusters in the region of interest
     ClusterToCaloHitListMap hitsInRegion;
     for (const Cluster *const pCluster : *pClusterList)
@@ -474,13 +475,14 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
         for (const CaloHit *const pCaloHit : *mapEntry.second)
         {
             const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+
             if ((hitPosition.GetX() < minX) || (hitPosition.GetX() > maxX) || (hitPosition.GetZ() < minZ) || (hitPosition.GetZ() > maxZ))
                 continue;
 
             hitPositionVector.push_back(hitPosition);    
         }
     }
-
+    
     unsigned int count(0);
     //unsigned int count(1);
     unsigned int hitsCollected(std::numeric_limits<int>::max());
@@ -502,7 +504,7 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
             
             extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);
             const float gradient((extrapolatedEndPosition.GetZ() - extrapolatedStartPosition.GetZ()) / (extrapolatedEndPosition.GetX() - extrapolatedStartPosition.GetX()));
-
+                        
             ////////////////
             //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedStartPosition, "start", RED, 2);
             //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedEndPosition, "end", RED, 2);
@@ -511,7 +513,6 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
             for (const Cluster *const pCluster : clustersInRegion)
             {
                 const CaloHitList &theCaloHits(hitsInRegion.at(pCluster));
-
                 for (const CaloHit *const pCaloHit : theCaloHits)
                 {
                     const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
@@ -523,7 +524,7 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
                         if (std::find(iter->second.begin(), iter->second.end(), pCaloHit) != iter->second.end())
                             continue;
                     }
-                    
+
                     if (!IsInLineSegment(extrapolatedStartPosition, extrapolatedEndPosition, hitPosition))
                         continue;
 
@@ -589,7 +590,7 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayEndpointCorrectionAlgorithm::CreateMainTrack(ClusterEndpointAssociation &clusterEndpointAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
-    const ClusterList *const pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
+    const ClusterList *const pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair, ClusterAssociationVector &clusterAssociationVector) const
 {
     const Cluster *pMainTrackCluster(clusterEndpointAssociation.GetMainTrackCluster());
     const CartesianVector &clusterMergePoint(clusterEndpointAssociation.IsEndUpstream() ?
@@ -621,7 +622,6 @@ void CosmicRayEndpointCorrectionAlgorithm::CreateMainTrack(ClusterEndpointAssoci
     ////////////////    
 
     ClusterList remnantClusterList;
-    
     pMainTrackCluster = RemoveOffAxisHitsFromTrack(pMainTrackCluster, clusterMergePoint, clusterEndpointAssociation.IsEndUpstream(),
         clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second);
    
@@ -664,7 +664,7 @@ void CosmicRayEndpointCorrectionAlgorithm::CreateMainTrack(ClusterEndpointAssoci
 
     //ATTN: Update references to pMainTrackCluster
     //      IT IS REALLY IMPORTANT THAT THIS IS DONE FIRST I.E. DELETE NULL POINTERS FROM MAP BEFORE ANY ARE ADDED IN AS THEY CAN BECOME THE SAME
-    this->UpdateAfterMainTrackModification(pMainTrackCluster, clusterEndpointAssociation, slidingFitResultMapPair);
+    this->UpdateAfterMainTrackModification(pMainTrackCluster, clusterEndpointAssociation, slidingFitResultMapPair, clusterAssociationVector);
     
     // ATTN: Update containers and the cluster association
     ClusterList modifiedClusters(showerClustersToFragment.begin(), showerClustersToFragment.end());   
@@ -673,7 +673,8 @@ void CosmicRayEndpointCorrectionAlgorithm::CreateMainTrack(ClusterEndpointAssoci
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayEndpointCorrectionAlgorithm::UpdateAfterMainTrackModification(const Cluster *const pMainTrackCluster, ClusterEndpointAssociation &clusterEndpointAssociation, SlidingFitResultMapPair &slidingFitResultMapPair) const
+void CosmicRayEndpointCorrectionAlgorithm::UpdateAfterMainTrackModification(const Cluster *const pMainTrackCluster, ClusterEndpointAssociation &clusterEndpointAssociation,
+    SlidingFitResultMapPair &slidingFitResultMapPair, ClusterAssociationVector &clusterAssociationVector) const
 {
     const Cluster *const pDeletedTrackCluster(clusterEndpointAssociation.GetMainTrackCluster());
     
@@ -699,7 +700,11 @@ void CosmicRayEndpointCorrectionAlgorithm::UpdateAfterMainTrackModification(cons
     slidingFitResultMapPair.second->insert(std::make_pair(pMainTrackCluster, macroFitToDeleteIter->second));
     slidingFitResultMapPair.second->erase(macroFitToDeleteIter);
 
-    clusterEndpointAssociation.SetMainTrackCluster(pMainTrackCluster);
+    for (ClusterEndpointAssociation &clusterAssociation : clusterAssociationVector)
+    {
+        if (clusterAssociation.GetMainTrackCluster() == pDeletedTrackCluster)
+            clusterAssociation.SetMainTrackCluster(pMainTrackCluster);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -726,8 +731,7 @@ bool CosmicRayEndpointCorrectionAlgorithm::IsExtrapolatedEndpointNearBoundary(co
     return (distanceFromTPCBoundary < boundaryTolerance);
 }
 
-
-
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode CosmicRayEndpointCorrectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
