@@ -41,7 +41,7 @@ CosmicRayTrackRefinementBaseAlgorithm<T>::CosmicRayTrackRefinementBaseAlgorithm(
 template<typename T>
 StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
 {
-    //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
+    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
     //std::cout << "IF TRACK IN EM SHOWER REMEMBER YOU CHANGED THE DIRECTION!" << std::endl;
     
     const ClusterList *pClusterList(nullptr);
@@ -62,21 +62,21 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
     {
         ++loopIterations;
 
-        //std::cout << "\033[31m" <<"Finding best association..." << "\033[0m" <<std::endl;
+        std::cout << "\033[31m" <<"Finding best association..." << "\033[0m" <<std::endl;
         
         ClusterAssociationVector clusterAssociationVector;
         this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, clusterAssociationVector);
         
         if (clusterAssociationVector.empty())
         {
-            //std::cout << "\033[31m" << "Couldn't find an association" << "\033[0m" << std::endl;
+            std::cout << "\033[31m" << "Couldn't find an association" << "\033[0m" << std::endl;
             break;
         }
 
         // ATTN: Considering clusterAssociation so remove from 'to consider' clusters i.e. the clusterVector
         this->RemoveClusterAssociationFromClusterVector(clusterAssociationVector.front(), clusterVector);
 
-        //std::cout << "\033[31m" << "Refining endpoint... " << clusterAssociationVector.size() << " association(s)" << "\033[0m" <<std::endl;
+        std::cout << "\033[31m" << "Refining endpoint... " << clusterAssociationVector.size() << " association(s)" << "\033[0m" <<std::endl;
         
         for (T &clusterAssociation : clusterAssociationVector)
         {
@@ -84,7 +84,7 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
             this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, clusterToCaloHitListMap);
 
             /////////////////////
-            /*
+            
             std::cout << "after hits collected" << std::endl;
             CaloHitVector extrapolatedCaloHitVector;
             for (const auto &entry : clusterToCaloHitListMap)
@@ -95,15 +95,15 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
                 const CartesianVector &hitPosition(entry->GetPositionVector());
                 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "EXTRAPOLATED HIT", GREEN, 2);
             }
-            */
+            
             //////////////////////////////
 
-            //std::cout << "BEFORE IS NEAR BOUNDARY" << std::endl;
+            std::cout << "BEFORE IS NEAR BOUNDARY" << std::endl;
 
             if (!this->IsExtrapolatedEndpointNearBoundary(clusterAssociation, 5.f))
             {
-                //std::cout << "ENDPOINT NOT NEAR THE BOUNDARY" << std::endl;                
-                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                std::cout << "ENDPOINT NOT NEAR THE BOUNDARY" << std::endl;                
+                PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
 
@@ -111,14 +111,14 @@ StatusCode CosmicRayTrackRefinementBaseAlgorithm<T>::Run()
 
             if (!this->IsTrackContinuous(clusterAssociation, clusterToCaloHitListMap, m_maxTrackGaps, m_lineSegmentLength))
             {
-                //std::cout << "GAP IN HIT VECTOR" << std::endl;
-                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                std::cout << "GAP IN HIT VECTOR" << std::endl;
+                PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 continue;
             }
 
-            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
-            //std::cout << "before create main track" << std::endl;
+            std::cout << "before create main track" << std::endl;
 
             this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, clusterVector, slidingFitResultMapPair, clusterAssociationVector);
         }

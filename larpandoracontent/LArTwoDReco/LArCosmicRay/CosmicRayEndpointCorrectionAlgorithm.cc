@@ -233,7 +233,7 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
         if (!clusterAssociationVector.empty())
         {
             /////////////////
-            /*
+            
             std::cout << "clusterAssociationVector size: " << clusterAssociationVector.size() << std::endl; 
             for (const ClusterEndpointAssociation &clusterEndpointAssociation : clusterAssociationVector)
             {
@@ -246,7 +246,7 @@ void CosmicRayEndpointCorrectionAlgorithm::FindBestClusterAssociation(const Clus
                 PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &mainCluster, "CLUSTER", BLACK);
                 PandoraMonitoringApi::ViewEvent(this->GetPandora());
             }
-            */
+            
             /////////////////
             break;
         }
@@ -573,7 +573,7 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
     }
 
     //////////////////////////
-    /*
+    
     std::cout << "VIEW IN EXTRAPOLATED HIT FUNCTION" << std::endl;
     ClusterList mainCluster({clusterAssociation.GetMainTrackCluster()});
     const CartesianVector &upstream(clusterAssociation.GetUpstreamMergePoint());
@@ -583,7 +583,7 @@ void CosmicRayEndpointCorrectionAlgorithm::GetExtrapolatedCaloHits(ClusterEndpoi
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &downstream, "DOWNSTREAM", BLACK, 2);
     PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &mainCluster, "CLUSTER", BLACK);
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
+    
     //////////////////////////    
 }
 
