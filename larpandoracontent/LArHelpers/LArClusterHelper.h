@@ -236,15 +236,6 @@ public:
         pandora::CartesianVector &maximumCoordinate);
 
     /**
-     *  @brief  Get minimum and maximum X positions of the calo hits in a cluster
-     *
-     *  @param  pCluster address of the cluster
-     *  @param  the minimum position of x
-     *  @param  the maximum position of x
-     */
-    static void GetClusterSpanX(const pandora::Cluster *const pCluster, float &xmin, float &xmax);
-
-    /**
      *  @brief  Get upper and lower Z positions of the calo hits in a cluster in range xmin to xmax
      *
      *  @param  pCluster address of the cluster

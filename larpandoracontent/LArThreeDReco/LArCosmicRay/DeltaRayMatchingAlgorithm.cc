@@ -437,7 +437,7 @@ void DeltaRayMatchingAlgorithm::CreateParticles(const ParticleList &particleList
 bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster1, const Cluster *const pCluster2,
     const Cluster *const pCluster3) const
 {
-    if (NULL == pCluster1 && NULL == pCluster2 && NULL == pCluster3)
+    if (nullptr == pCluster1 && nullptr == pCluster2 && nullptr == pCluster3)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     // First step: Check X overlap
@@ -445,14 +445,14 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
     float xMin2(-std::numeric_limits<float>::max()), xMax2(+std::numeric_limits<float>::max());
     float xMin3(-std::numeric_limits<float>::max()), xMax3(+std::numeric_limits<float>::max());
 
-    if (NULL != pCluster1)
-        LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
+    if (nullptr != pCluster1)
+        pCluster1->GetClusterSpanX(xMin1, xMax1);
 
-    if (NULL != pCluster2)
-        LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
+    if (nullptr != pCluster2)
+        pCluster2->GetClusterSpanX(xMin2, xMax2);
 
-    if (NULL != pCluster3)
-        LArClusterHelper::GetClusterSpanX(pCluster3, xMin3, xMax3);
+    if (nullptr != pCluster3)
+        pCluster3->GetClusterSpanX(xMin3, xMax3);
 
     const float xPitch(0.5 * m_xOverlapWindow);
     const float xMin(std::max(xMin1, std::max(xMin2, xMin3)) - xPitch);
@@ -462,7 +462,7 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
     if (xOverlap < std::numeric_limits<float>::epsilon())
         return false;
 
-    if (NULL == pCluster1 || NULL == pCluster2 || NULL == pCluster3)
+    if (nullptr == pCluster1 || nullptr == pCluster2 || nullptr == pCluster3)
         return true;
 
     // Second step: Check 3D matching

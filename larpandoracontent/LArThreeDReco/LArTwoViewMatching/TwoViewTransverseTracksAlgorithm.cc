@@ -56,8 +56,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
         return STATUS_CODE_NOT_FOUND;
 
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
-    LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
-    LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
+    pCluster1->GetClusterSpanX(xMin1, xMax1);
+    pCluster2->GetClusterSpanX(xMin2, xMax2);
 
     const TwoViewXOverlap twoViewXOverlap(xMin1, xMax1, xMin2, xMax2);
     if (twoViewXOverlap.GetXSpan0() < std::numeric_limits<float>::epsilon() || twoViewXOverlap.GetXSpan1() < std::numeric_limits<float>::epsilon())

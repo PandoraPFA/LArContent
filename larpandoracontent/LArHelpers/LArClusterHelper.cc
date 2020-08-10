@@ -345,26 +345,6 @@ void LArClusterHelper::GetClusterBoundingBox(const Cluster *const pCluster, Cart
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetClusterSpanX(const Cluster *const pCluster, float &xmin, float &xmax)
-{
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-    xmin = std::numeric_limits<float>::max();
-    xmax = -std::numeric_limits<float>::max();
-
-    for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
-    {
-        for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
-        {
-            const CaloHit *const pCaloHit = *hIter;
-            const CartesianVector &hit(pCaloHit->GetPositionVector());
-            xmin = std::min(hit.GetX(), xmin);
-            xmax = std::max(hit.GetX(), xmax);
-        }
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void LArClusterHelper::GetClusterSpanZ(const Cluster *const pCluster, const float xmin, const float xmax,
     float &zmin, float &zmax)
 {
