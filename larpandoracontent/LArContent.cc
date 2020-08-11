@@ -165,7 +165,8 @@
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayGrowingAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArCosmicRay/TrackInEMShowerAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArCosmicRay/ExtensionPastDeltaRayAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArCosmicRay/ExtensionThroughShowerAlgorithm.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
@@ -267,7 +268,8 @@
     d("LArCosmicRaySplitting",                  CosmicRaySplittingAlgorithm)                                                    \
     d("LArDeltaRayExtension",                   DeltaRayExtensionAlgorithm)                                                     \
     d("LArDeltaRayGrowing",                     DeltaRayGrowingAlgorithm)                                                       \
-    d("LArTrackInEMShower",                     TrackInEMShowerAlgorithm)                                                       \
+    d("LArExtensionPastDeltaRay",               ExtensionPastDeltaRayAlgorithm)                                                 \
+    d("LArExtensionThroughShower",              ExtensionThroughShowerAlgorithm)                                                \
     d("LArBranchSplitting",                     BranchSplittingAlgorithm)                                                       \
     d("LArCrossedTrackSplitting",               CrossedTrackSplittingAlgorithm)                                                 \
     d("LArDeltaRaySplitting",                   DeltaRaySplittingAlgorithm)                                                     \
