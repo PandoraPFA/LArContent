@@ -140,9 +140,14 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
         ++mcPrimaryIndex;
         const CaloHitList &mcPrimaryHitList(validationInfo.GetAllMCParticleToHitsMap().at(pMCPrimary));
 
+        /*
         const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
         const int isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary));
         const int isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary));
+        */
+        const int mcNuanceCode(3000);
+        const int isBeamParticle(0);
+        int isCosmicRay(1);
 #ifdef MONITORING
         const int nTargetPrimaries(associatedMCPrimaries.size());
         const CartesianVector &targetVertex(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)->GetVertex());
@@ -308,7 +313,8 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
 
         if (isBeamParticle || isCosmicRay)
         {
-            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
+            //const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
+            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::InteractionType::COSMIC_RAY_MU);
 #ifdef MONITORING
             const int interactionTypeInt(static_cast<int>(interactionType));
 #endif
