@@ -21,6 +21,8 @@ class LArClusterHelper
 public:
 
     static float GetAverageHitSeparation(const pandora::Cluster *const pCluster);
+    static float GetAverageHitSeparation(const pandora::CaloHitList &caloHitList);
+    static float GetAverageHitSeparation(const pandora::OrderedCaloHitList &orderedCaloHitList);
     
     /**
      *  @brief  Get the hit type associated with a two dimensional cluster

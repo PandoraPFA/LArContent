@@ -92,6 +92,8 @@ public:
     /**
      *  @brief  Default constructor
      */
+    ClusterEndpointAssociation();
+    
     ClusterEndpointAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
         const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pMainTrackCluster, const bool isEndUpstream);
 
@@ -216,6 +218,15 @@ inline ClusterEndpointAssociation::ClusterEndpointAssociation(const pandora::Car
         ClusterAssociation(upstreamMergePoint, upstreamMergeDirection, downstreamMergePoint, downstreamMergeDirection),
         m_pMainTrackCluster(pMainTrackCluster),
         m_isEndUpstream(isEndUpstream)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ClusterEndpointAssociation::ClusterEndpointAssociation() :
+        ClusterAssociation(),
+        m_pMainTrackCluster(nullptr),
+        m_isEndUpstream(false)
 {
 }
 

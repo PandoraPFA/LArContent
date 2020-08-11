@@ -17,20 +17,40 @@ using namespace pandora;
 namespace lar_content
 {
 
-
-
-    
 float LArClusterHelper::GetAverageHitSeparation(const Cluster *const pCluster)
 {
     if (pCluster->GetNCaloHits() == 1)
         return 0.f;
 
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    return LArClusterHelper::GetAverageHitSeparation(orderedCaloHitList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetAverageHitSeparation(const CaloHitList &caloHitList)
+{
+    if (caloHitList.size() == 1)
+        return 0.f;
+
+    OrderedCaloHitList orderedCaloHitList;
+    orderedCaloHitList.Add(caloHitList);
+
+    return LArClusterHelper::GetAverageHitSeparation(orderedCaloHitList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+
+float LArClusterHelper::GetAverageHitSeparation(const OrderedCaloHitList &orderedCaloHitList)
+{
     const CaloHit *pPreviousCaloHit(orderedCaloHitList.begin()->second->front());
 
     float separationSum(0.f);
+    unsigned int caloHitCount(0);
     for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
     {
+        caloHitCount += mapEntry.second->size();
         for (const CaloHit *const pCaloHit : *mapEntry.second)
         {
             if (pCaloHit == pPreviousCaloHit)
@@ -41,8 +61,7 @@ float LArClusterHelper::GetAverageHitSeparation(const Cluster *const pCluster)
         }
     }
 
-    return (separationSum / pCluster->GetNCaloHits());
-
+    return (separationSum / caloHitCount);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
