@@ -254,15 +254,16 @@ void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
 {
   	if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
     	std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-  
-    LArMvaHelper::MvaFeature nAllDaughter, nHits3DDaughterTotal, daughterParentNhitsRatio;
 
+    LArMvaHelper::MvaFeature nAllDaughter, nHits3DDaughterTotal, daughterParentNhitsRatio;
     CaloHitList nHits3DParentList;    
+
     size_t nHits3DDaughter(0);
     PfoList newPfoList(1, pInputPfo);
     size_t nHits3DParent(1.f);
     PfoList allDaughtersPfoList;
     float nHits3DDaughterTotalNumber(0);
+
 
     LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, nHits3DParentList);
     nHits3DParent = nHits3DParentList.size();
@@ -286,8 +287,7 @@ void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
 
     nHits3DDaughterTotal = nHits3DDaughterTotalNumber;
     daughterParentNhitsRatio = ((nHits3DDaughterTotal.Get()))/(static_cast<double>(nHits3DParent));
-  
-  //---------------push_back into feature vector-----------------------------------------------------------------------------
+
 	featureVector.push_back(nAllDaughter);
 	featureVector.push_back(nHits3DDaughterTotal);
 	featureVector.push_back(daughterParentNhitsRatio);
@@ -512,7 +512,6 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
     {
         CartesianPointVector pointVectorStart, pointVectorEnd;
         this->Divide3DCaloHitList(pAlgorithm, threeDCaloHitList, pointVectorStart, pointVectorEnd);
-
         //able to calculate angles only if > 1 point provided
         if ((pointVectorStart.size() > 1) && (pointVectorEnd.size() > 1))
         {
@@ -528,14 +527,13 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
 
                 const float openingAngle(this->OpeningAngle(eigenVecsStart.at(0), eigenVecsStart.at(1), eigenValuesStart));
                 const float closingAngle(this->OpeningAngle(eigenVecsEnd.at(0), eigenVecsEnd.at(1), eigenValuesEnd));
+
                 diffAngle = std::fabs(openingAngle-closingAngle);
             }
             catch (const StatusCodeException &){}
         }
-		else
-		{
-		throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-		}    
+        else
+            diffAngle = 0.1; // if pointVectorStart/End.size() == 1 then default to 0.1 based on this variable's distribution to make it unbiased towards tracks or showers
 
     }
 
