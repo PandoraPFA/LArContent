@@ -12,6 +12,7 @@
 #include <torch/torch.h>
 
 #include "larpandoradlcontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
+#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
@@ -106,6 +107,7 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xm
         "CaloHitListNames", m_caloHitListNames));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileName", m_modelFileName));
+    m_modelFileName = LArFileHelper::FindFileInPath(m_modelFileName, "FW_SEARCH_PATH");
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Visualize", m_visualize));
