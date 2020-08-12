@@ -345,41 +345,6 @@ void LArClusterHelper::GetClusterBoundingBox(const Cluster *const pCluster, Cart
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArClusterHelper::GetClusterSpanZ(const Cluster *const pCluster, const float xmin, const float xmax,
-    float &zmin, float &zmax)
-{
-    if (xmin > xmax)
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    zmin = std::numeric_limits<float>::max();
-    zmax = -std::numeric_limits<float>::max();
-
-    bool foundHits(false);
-
-    for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
-    {
-        for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
-        {
-            const CaloHit *const pCaloHit = *hIter;
-            const CartesianVector &hit(pCaloHit->GetPositionVector());
-
-            if (hit.GetX() < xmin || hit.GetX() > xmax)
-                continue;
-
-            zmin = std::min(hit.GetZ(), zmin);
-            zmax = std::max(hit.GetZ(), zmax);
-            foundHits = true;
-        }
-    }
-
-    if (!foundHits)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode LArClusterHelper::GetAverageZ(const Cluster *const pCluster, const float xmin, const float xmax, float &averageZ)
 {
     averageZ = std::numeric_limits<float>::max();

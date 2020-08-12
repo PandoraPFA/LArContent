@@ -484,9 +484,9 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
         try
         {
             float zMin1(0.f), zMin2(0.f), zMin3(0.f), zMax1(0.f), zMax2(0.f), zMax3(0.f);
-            LArClusterHelper::GetClusterSpanZ(pCluster1, xmin, xmax, zMin1, zMax1);
-            LArClusterHelper::GetClusterSpanZ(pCluster2, xmin, xmax, zMin2, zMax2);
-            LArClusterHelper::GetClusterSpanZ(pCluster3, xmin, xmax, zMin3, zMax3);
+            pCluster1->GetClusterSpanZ(xmin, xmax, zMin1, zMax1);
+            pCluster2->GetClusterSpanZ(xmin, xmax, zMin2, zMax2);
+            pCluster3->GetClusterSpanZ(xmin, xmax, zMin3, zMax3);
 
             const float z1(0.5f * (zMin1 + zMax1));
             const float z2(0.5f * (zMin2 + zMax2));
