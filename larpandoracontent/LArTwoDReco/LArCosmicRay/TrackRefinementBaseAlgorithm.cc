@@ -560,7 +560,7 @@ void TrackRefinementBaseAlgorithm<T>::InitialiseContainers(const ClusterList *pC
                  std::cout << "CLUSTER LENGTH: " << std::sqrt(LArClusterHelper::GetLengthSquared(pCluster)) << std::endl;
                  PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &chosenClusters, "CONSIDERED", VIOLET);
                  PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
+                 
                  
                  if ((this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) > m_maxCurviness) &&
                      (this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMaxLayerPosition()) > m_maxCurviness))
