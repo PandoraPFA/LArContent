@@ -108,7 +108,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
 
         std::cout << "FOUND " << showerClusterCount << " GOOD CLUSTER(S)" << std::endl;
         std::cout << "WITH " << showerClusterHitCount << " HIT(S)" << std::endl;
-        if (goodClusters.size() < 7 && showerClusterHitCount < 60)
+        if (goodClusters.size() < 5) //&& showerClusterHitCount < 60)
         {
             std::cout << "DOES NOT PASS CRITERIA" << std::endl;
             PandoraMonitoringApi::ViewEvent(this->GetPandora());
