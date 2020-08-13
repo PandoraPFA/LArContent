@@ -28,6 +28,7 @@ class LArCaloHitParameters : public object_creation::CaloHit::Parameters
 {
 public:
     pandora::InputUInt      m_larTPCVolumeId;       ///< The lar tpc volume id
+    pandora::InputUInt      m_daughterVolumeId;     ///< The daughter volume id
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -52,8 +53,16 @@ public:
      */
     unsigned int GetLArTPCVolumeId() const;
 
+    /**
+     *  @brief  Get the daughter volume id
+     *
+     *  @return the daughter volume id
+     */
+    unsigned int GetDaughterVolumeId() const;
+
 private:
     unsigned int            m_larTPCVolumeId;       ///< The lar tpc volume id
+    unsigned int            m_daughterVolumeId;     ///< The daughter volume id
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,7 +110,8 @@ public:
 
 inline LArCaloHit::LArCaloHit(const LArCaloHitParameters &parameters) :
     object_creation::CaloHit::Object(parameters),
-    m_larTPCVolumeId(parameters.m_larTPCVolumeId.Get())
+    m_larTPCVolumeId(parameters.m_larTPCVolumeId.Get()),
+    m_daughterVolumeId(parameters.m_daughterVolumeId.Get())
 {
 }
 
@@ -110,6 +120,13 @@ inline LArCaloHit::LArCaloHit(const LArCaloHitParameters &parameters) :
 inline unsigned int LArCaloHit::GetLArTPCVolumeId() const
 {
     return m_larTPCVolumeId;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline unsigned int LArCaloHit::GetDaughterVolumeId() const
+{
+    return m_daughterVolumeId;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,16 +153,19 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
 {
     // ATTN: To receive this call-back must have already set file reader mc particle factory to this factory
     unsigned int larTPCVolumeId(std::numeric_limits<unsigned int>::max());
+    unsigned int daughterVolumeId(std::numeric_limits<unsigned int>::max());
 
     if (pandora::BINARY == fileReader.GetFileType())
     {
         pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader&>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(larTPCVolumeId));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(daughterVolumeId));
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
         pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader&>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("LArTPCVolumeId", larTPCVolumeId));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("DaughterVolumeId", daughterVolumeId));
     }
     else
     {
@@ -154,6 +174,7 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
 
     LArCaloHitParameters &larCaloHitParameters(dynamic_cast<LArCaloHitParameters&>(parameters));
     larCaloHitParameters.m_larTPCVolumeId = larTPCVolumeId;
+    larCaloHitParameters.m_daughterVolumeId = daughterVolumeId;
 
     return pandora::STATUS_CODE_SUCCESS;
 }
@@ -172,11 +193,13 @@ inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject,
     {
         pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter&>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetLArTPCVolumeId()));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetDaughterVolumeId()));
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
         pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter&>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("LArTPCVolumeId", pLArCaloHit->GetLArTPCVolumeId()));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("DaughterVolumeId", pLArCaloHit->GetDaughterVolumeId()));
     }
     else
     {
