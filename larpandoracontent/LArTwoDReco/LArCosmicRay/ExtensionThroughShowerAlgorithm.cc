@@ -19,7 +19,7 @@ namespace lar_content
     
 ExtensionThroughShowerAlgorithm::ExtensionThroughShowerAlgorithm()
 {
-    std::cout << "jam" << std::endl;
+    //std::cout << "jam" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
@@ -42,24 +42,26 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
         const bool isClusterUpstream(!isEndUpstream);
         
         /////////////////
+        /*
         ClusterList theCluster({pCluster});
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CONSIDERED CLUSTER", BLACK);
         std::cout << "isEndUpstream: " << isEndUpstream << std::endl;
+        */
         ////////////////
             
         CartesianVector clusterMergePoint(0.f, 0.f, 0.f), clusterMergeDirection(0.f, 0.f, 0.f);
         if (!GetClusterMergingCoordinates(microSlidingFitResult, macroSlidingFitResult, macroSlidingFitResult, isClusterUpstream, clusterMergePoint, clusterMergeDirection))
         {
-            std::cout << "CANNOT FIND MERGE POSITION" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //std::cout << "CANNOT FIND MERGE POSITION" << std::endl;
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
         }
 
         // WILL NOT CROSS TPC BOUNDARY
         if (std::fabs(clusterMergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
         {
-            std::cout << "MERGE DIRECTION HAS NO X COMPONENT" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //std::cout << "MERGE DIRECTION HAS NO X COMPONENT" << std::endl;
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
         }    
 
@@ -97,21 +99,21 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
 
             if ((closestTransverse < 3.f) && (closestLongitudinal < 20.f))
             {
-                ClusterList frog({pTestCluster});
-                std::string frogString("L: " + std::to_string(closestLongitudinal) + " T: " + std::to_string(closestTransverse));
-                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, frogString, BLUE);
+                //ClusterList frog({pTestCluster});
+                //std::string frogString("L: " + std::to_string(closestLongitudinal) + " T: " + std::to_string(closestTransverse));
+                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, frogString, BLUE);
                 goodClusters.push_back(pTestCluster);
                 ++showerClusterCount;
                 showerClusterHitCount += pTestCluster->GetNCaloHits();
             }
         }
 
-        std::cout << "FOUND " << showerClusterCount << " GOOD CLUSTER(S)" << std::endl;
-        std::cout << "WITH " << showerClusterHitCount << " HIT(S)" << std::endl;
+        //std::cout << "FOUND " << showerClusterCount << " GOOD CLUSTER(S)" << std::endl;
+        //std::cout << "WITH " << showerClusterHitCount << " HIT(S)" << std::endl;
         if (goodClusters.size() < 5) //&& showerClusterHitCount < 60)
         {
-            std::cout << "DOES NOT PASS CRITERIA" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //std::cout << "DOES NOT PASS CRITERIA" << std::endl;
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
         }
                 
@@ -124,7 +126,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
         if (isEndUpstream ? extrapolatedEndpointPosition.GetZ() > clusterMergePoint.GetZ() : extrapolatedEndpointPosition.GetZ() < clusterMergePoint.GetZ())
         {
             std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
         }
                 
@@ -132,6 +134,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
             ClusterEndpointAssociation(extrapolatedEndpointPosition, clusterMergeDirection, clusterMergePoint, clusterMergeDirection * (-1.f), pCluster, true) :
             ClusterEndpointAssociation(clusterMergePoint, clusterMergeDirection, extrapolatedEndpointPosition, clusterMergeDirection * (-1.f), pCluster, false);
 
+        /*
         ClusterList mainCluster({clusterAssociation.GetMainTrackCluster()});
         const CartesianVector &upstream(clusterAssociation.GetUpstreamMergePoint());
         const CartesianVector &downstream(clusterAssociation.GetDownstreamMergePoint());
@@ -139,10 +142,12 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &downstream, "DOWNSTREAM", RED, 2);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &mainCluster, "CLUSTER", BLACK);
         PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        */
         
         return true;
     }
-                
+
+    //std::cout << "DID NOT FIND AN ASSOCIATION" << std::endl;
     return false;
     
 }

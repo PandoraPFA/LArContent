@@ -43,16 +43,16 @@ protected:
 
     pandora::StatusCode Run();
     
-    void GetExtrapolatedCaloHits(ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+    void GetExtrapolatedCaloHits(ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, const pandora::ClusterList &consideredClusters, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
     bool IsExtrapolatedEndpointNearBoundary(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const float boundaryTolerance) const;
 
-    void CreateMainTrack(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair, pandora::ClusterList &consideredClusters) const;
+    const pandora::Cluster *CreateMainTrack(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair, pandora::ClusterList &consideredClusters) const;
 
-    void ConsiderCluster(const ClusterEndpointAssociation &clusterAssociation, pandora::ClusterVector &clusterVector) const;
+    void ConsiderClusterAssociation(const ClusterEndpointAssociation &clusterAssociation, pandora::ClusterVector &clusterVector, pandora::ClusterList &consideredClusters,
+        SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
     void InitialiseGeometry();
-
 
     
     bool AreExtrapolatedHitsGood(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const bool isHigherXBoundary) const;
