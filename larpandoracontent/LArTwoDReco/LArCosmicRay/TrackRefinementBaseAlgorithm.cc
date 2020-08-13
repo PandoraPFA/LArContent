@@ -533,7 +533,7 @@ template<typename T>
 void TrackRefinementBaseAlgorithm<T>::InitialiseContainers(const ClusterList *pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
 
-    std::cout << " m_minCaloHits: " <<  m_minCaloHits << std::endl;
+    //std::cout << " m_minCaloHits: " <<  m_minCaloHits << std::endl;
     
     for (const Cluster *const pCluster : *pClusterList)
     {
@@ -552,7 +552,8 @@ void TrackRefinementBaseAlgorithm<T>::InitialiseContainers(const ClusterList *pC
 
                  CartesianVector clusterAverageDirection(0.f, 0.f, 0.f);
                  macroSlidingFitResult.GetGlobalDirection(macroSlidingFitResult.GetLayerFitResultMap().begin()->second.GetGradient(), clusterAverageDirection);
-                 
+
+                 /*
                  ClusterList chosenClusters({pCluster});
                  std::cout << "MIN: " << this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) << std::endl;
                  std::cout << "MAX: " << this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMaxLayerPosition()) << std::endl;
@@ -560,7 +561,7 @@ void TrackRefinementBaseAlgorithm<T>::InitialiseContainers(const ClusterList *pC
                  std::cout << "CLUSTER LENGTH: " << std::sqrt(LArClusterHelper::GetLengthSquared(pCluster)) << std::endl;
                  PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &chosenClusters, "CONSIDERED", VIOLET);
                  PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                 
+                 */
                  
                  if ((this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) > m_maxCurviness) &&
                      (this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMaxLayerPosition()) > m_maxCurviness))

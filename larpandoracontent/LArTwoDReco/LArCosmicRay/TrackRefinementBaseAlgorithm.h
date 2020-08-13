@@ -65,9 +65,10 @@ protected:
     virtual pandora::StatusCode Run() = 0;
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
     
-    virtual void GetExtrapolatedCaloHits(T &clusterAssociation, const pandora::ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const = 0;
+    virtual void GetExtrapolatedCaloHits(T &clusterAssociation, const pandora::ClusterList *const pClusterList, const pandora::ClusterList &consideredClusters, ClusterToCaloHitListMap &clusterToCaloHitListMap) const = 0;
 
-    virtual void ConsiderCluster(const T &clusterAssociation, pandora::ClusterVector &clusterVector) const = 0;
+    virtual void ConsiderClusterAssociation(const T &clusterAssociation, pandora::ClusterVector &clusterVector, pandora::ClusterList &consideredClusters,
+        SlidingFitResultMapPair &slidingFitResultMapPair) const = 0;
     
     /**
      *  @brief  Get the merging coordinate and direction for an input cluster with respect to an associated cluster
