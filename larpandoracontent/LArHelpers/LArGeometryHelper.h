@@ -198,6 +198,14 @@ public:
     static pandora::CartesianVector GetWireAxis(const pandora::Pandora &pandora, const pandora::HitType view);
 
     /**
+     *  @brief  Return the set of common daughter volumes between two 2D clusters
+     *
+     *  @param  Cluster 1
+     *  @param  Cluster 2
+     */
+    static std::set<unsigned int> GetCommonDaughterVolumes (const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
+ 
+    /**
      *  @brief  Whether a 2D test point lies in a registered gap with the associated hit type
      *
      *  @param  pandora the associated pandora instance
