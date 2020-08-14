@@ -255,6 +255,15 @@ public:
         const pandora::CartesianVector &upperBound, pandora::CaloHitList &caloHitList);
 
     /**
+     *  @brief  Get the set of the daughter volumes that contains the cluster
+     *
+     *  @param  pCluster1 address of the cluster
+     *
+     *  @return the set of daughter volumes
+     */
+    static std::set<unsigned int> GetDaughterVolumeIDs(const pandora::Cluster *const pCluster);
+
+    /**
      *  @brief  Get average Z positions of the calo hits in a cluster in range xmin to xmax
      *
      *  @param  pCluster address of the cluster
