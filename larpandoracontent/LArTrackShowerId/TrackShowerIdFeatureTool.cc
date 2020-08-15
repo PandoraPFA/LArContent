@@ -461,6 +461,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     LArMvaHelper::MvaFeature vertexDistance;
+    bool error = true;
     const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
@@ -469,8 +470,15 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
         try
         {
             vertexDistance = (pVertexList->front()->GetPosition() - LArPfoHelper::GetVertex(pInputPfo)->GetPosition()).GetMagnitude();
+            error = false;
         }
         catch (const StatusCodeException &) {}
+    }
+    if (error == true)
+    {
+        CaloHitList threeDCaloHitList;
+        LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
+        vertexDistance = (pVertexList->front()->GetPosition() - (threeDCaloHitList.front())->GetPositionVector()).GetMagnitude(); // if n3dHits == 1, can't calculate vertex postion of input pfos hence default to 10.0 based on this variable's distribution to make it unbiased towards tracks or showers
     }
 
     featureVector.push_back(vertexDistance);
@@ -651,10 +659,17 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
         {
             LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
             const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
+
             if (principalEigenvalue > std::numeric_limits<float>::epsilon())
             {
                 pca1 = secondaryEigenvalue/principalEigenvalue;
                 pca2 = tertiaryEigenvalue/principalEigenvalue;
+            }
+
+            else if(principalEigenvalue == 0)
+            {
+                pca1 = 0.0; // if n3dHits == 1 then principal, secondary, and tertiary eigenvalues are zero hence default to pca1 == 0
+                pca2 = 0.0; // if n3dHits == 1 then principal, secondary, and tertiary eigenvalues are zero hence default to pca2 == 0
             }
         }
         catch (const StatusCodeException &){}
