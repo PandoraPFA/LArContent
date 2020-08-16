@@ -71,38 +71,61 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
         const float separationDistance((endpointPosition - clusterMergePoint).GetMagnitude());
         const CartesianVector extrapolatedPoint(clusterMergePoint + (clusterMergeDirection * directionFactor * separationDistance));
 
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedPoint, "extrapolatedPoint", RED, 2);
+
         // Is there a shower near the cluster endpoint?
-        ClusterList goodClusters;
         unsigned int showerClusterCount(0);
         unsigned int showerClusterHitCount(0);
+
+
+        const unsigned int currentInnerPseudoLayer(pCluster->GetInnerPseudoLayer()), currentOuterPseudoLayer(pCluster->GetOuterPseudoLayer());
+        
         for (const Cluster *const pTestCluster : *pClusterList)
         {
             if (pTestCluster == pCluster)
                 continue;
                 
             const unsigned int testInnerPseudoLayer(pTestCluster->GetInnerPseudoLayer()), testOuterPseudoLayer(pTestCluster->GetOuterPseudoLayer());
-            const CartesianVector &innerPoint(pTestCluster->GetCentroid(testInnerPseudoLayer)), &outerPoint(pTestCluster->GetCentroid(testOuterPseudoLayer));
+            const CartesianVector &innerPoint(pTestCluster->GetCentroid(testInnerPseudoLayer)), &outerPoint(pTestCluster->GetCentroid(testOuterPseudoLayer));              
 
             const float innerLongitudinalDistance(clusterMergeDirection.GetDotProduct(innerPoint - extrapolatedPoint) * directionFactor);
-            const float outerLongitudinalDistance(clusterMergeDirection.GetDotProduct(innerPoint - extrapolatedPoint) * directionFactor);
-
-            // think about getting rid of this? 
-            if (!((innerLongitudinalDistance > 0.f) && (outerLongitudinalDistance > 0.f)))
-                continue;
-
-            float closestLongitudinal(0.f), closestTransverse(0.f);
+            const float outerLongitudinalDistance(clusterMergeDirection.GetDotProduct(outerPoint - extrapolatedPoint) * directionFactor);
+            
             const float innerTransverseDistance(clusterMergeDirection.GetCrossProduct(innerPoint - extrapolatedPoint).GetMagnitude());
             const float outerTransverseDistance(clusterMergeDirection.GetCrossProduct(outerPoint - extrapolatedPoint).GetMagnitude());
+            
+            if ((currentInnerPseudoLayer > testInnerPseudoLayer) && (currentOuterPseudoLayer < testOuterPseudoLayer))
+            {
+                /*
+                std::cout << "CONTAINED SEGMENT OF THE TRACK" << std::endl;
+                std::cout << "innerTransverseDistance: " << innerTransverseDistance << std::endl;
+                std::cout << "outerTransverseDistance: " << outerTransverseDistance << std::endl;
 
+                ClusterList frog({pTestCluster});
+                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, "CONTAINED", VIOLET);
+                */
+                if ((innerTransverseDistance < 10.f) && (outerTransverseDistance < 10.f))
+                {
+                    std::cout << "contained segement of the track" << std::endl;
+                    showerClusterCount = 0; showerClusterHitCount = 0;
+                    break;
+                }
+            }
+
+
+            if (!((innerLongitudinalDistance > 0.f) && (outerLongitudinalDistance > 0.f)))
+                continue;
+                        
+            float closestLongitudinal(0.f), closestTransverse(0.f);
             closestTransverse = (innerTransverseDistance < outerTransverseDistance) ? innerTransverseDistance : outerTransverseDistance;
             closestLongitudinal = (innerTransverseDistance < outerTransverseDistance) ? innerLongitudinalDistance : outerLongitudinalDistance;
 
+            
             if ((closestTransverse < 3.f) && (closestLongitudinal < 20.f))
             {
                 //ClusterList frog({pTestCluster});
                 //std::string frogString("L: " + std::to_string(closestLongitudinal) + " T: " + std::to_string(closestTransverse));
-                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, frogString, BLUE);
-                goodClusters.push_back(pTestCluster);
+                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, frogString, BLUE);    
                 ++showerClusterCount;
                 showerClusterHitCount += pTestCluster->GetNCaloHits();
             }
@@ -110,7 +133,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
 
         //std::cout << "FOUND " << showerClusterCount << " GOOD CLUSTER(S)" << std::endl;
         //std::cout << "WITH " << showerClusterHitCount << " HIT(S)" << std::endl;
-        if (goodClusters.size() < 5) //&& showerClusterHitCount < 60)
+        if ((showerClusterCount < 5)) //|| (showerClusterHitCount < 50))
         {
             //std::cout << "DOES NOT PASS CRITERIA" << std::endl;
             //PandoraMonitoringApi::ViewEvent(this->GetPandora());
@@ -125,7 +148,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
         // IS THIS EVER NEEDED? - I THINK IT CAN GO WRONG IF THE FIT DOESN'T MAKE SENSE
         if (isEndUpstream ? extrapolatedEndpointPosition.GetZ() > clusterMergePoint.GetZ() : extrapolatedEndpointPosition.GetZ() < clusterMergePoint.GetZ())
         {
-            std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
+            //std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
             //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
         }
