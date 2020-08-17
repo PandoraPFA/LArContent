@@ -12,6 +12,7 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArHitWidthHelper.h"
 
 using namespace pandora;
 
@@ -141,7 +142,8 @@ bool TrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation
 
     unsigned int segmentsWithoutHits(0);
     CaloHitVector::const_iterator caloHitIter(extrapolatedCaloHitVector.begin());
-        
+    CartesianVector closestPoint(0.f, 0.f, 0.f);
+    LArHitWidthHelper::GetClosestPointToLine2D(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetConnectingLineDirection(), *caloHitIter, closestPoint);
     for (unsigned int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
     {
         if (caloHitIter == extrapolatedCaloHitVector.end())
@@ -155,13 +157,16 @@ bool TrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation
         }
 
         unsigned int hitsInSegment(0);
-        while (this->IsInLineSegment(trackSegmentBoundaries.at(i), trackSegmentBoundaries.at(i + 1), (*caloHitIter)->GetPositionVector()))
+        
+        while (this->IsInLineSegment(trackSegmentBoundaries.at(i), trackSegmentBoundaries.at(i + 1), closestPoint))
         {
             ++hitsInSegment;
             ++caloHitIter;
 
             if (caloHitIter == extrapolatedCaloHitVector.end())
                 break;
+
+            LArHitWidthHelper::GetClosestPointToLine2D(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetConnectingLineDirection(), *caloHitIter, closestPoint);
         }
 
         segmentsWithoutHits = hitsInSegment ? 0 : segmentsWithoutHits + 1;
@@ -701,14 +706,14 @@ StatusCode TrackRefinementBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHa
 template<typename T>    
 bool TrackRefinementBaseAlgorithm<T>::SortByDistanceAlongLine::operator() (const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs)
 {
-    const CartesianVector lhsDistanceVector(pLhs->GetPositionVector() - m_startPoint);
-    const CartesianVector rhsDistanceVector(pRhs->GetPositionVector() - m_startPoint);
+    float lhsTransverse, lhsLongitudinal;
+    LArHitWidthHelper::GetImpactParameters2D(m_startPoint, m_lineDirection, pLhs, lhsLongitudinal, lhsTransverse);
+    
+    float rhsTransverse, rhsLongitudinal;
+    LArHitWidthHelper::GetImpactParameters2D(m_startPoint, m_lineDirection, pRhs, rhsLongitudinal, rhsTransverse);    
 
-    const float lhsProjectedDistance(lhsDistanceVector.GetDotProduct(m_lineDirection));
-    const float rhsProjectedDistance(rhsDistanceVector.GetDotProduct(m_lineDirection));
-
-    if (std::fabs(lhsProjectedDistance - rhsProjectedDistance) > std::numeric_limits<float>::epsilon())
-        return (lhsProjectedDistance < rhsProjectedDistance);
+    if (std::fabs(lhsLongitudinal - rhsLongitudinal) > std::numeric_limits<float>::epsilon())
+        return (lhsLongitudinal < rhsLongitudinal);
 
     // To deal with tiebreaks
     return LArClusterHelper::SortHitsByPulseHeight(pLhs, pRhs);
