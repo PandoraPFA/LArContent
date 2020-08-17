@@ -474,7 +474,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
         }
         catch (const StatusCodeException &) {}
     }
-    if (error == true)
+    if (error)
     {
         CaloHitList threeDCaloHitList;
         LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
@@ -674,7 +674,6 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
         }
         catch (const StatusCodeException &){}
     }
-
     featureVector.push_back(pca1);
     featureVector.push_back(pca2);
 }
