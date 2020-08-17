@@ -285,6 +285,20 @@ public:
      */
     static void GetExtremalCoordinatesX(const ConstituentHitVector &constituentHitVector, pandora::CartesianVector &lowerXCoordinate,
         pandora::CartesianVector &higherXCoordinate);
+
+
+    static void GetClosestPointToLine2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit,
+        pandora::CartesianVector &closestPoint);
+
+    static void GetImpactParameters2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit,
+        float &longitudinal, float &transverse);
+
+    //static float GetClosestDistanceToLine(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit);
+
+    static float GetClosestDistanceBetweenHits(const pandora::CaloHit *const pCaloHit1, const pandora::CaloHit *const pCaloHit2);
+
+    static float GetClosestDistanceToPoint2D(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector &point2D);
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

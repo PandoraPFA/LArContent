@@ -104,7 +104,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
                 ClusterList frog({pTestCluster});
                 PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, "CONTAINED", VIOLET);
                 */
-                if ((innerTransverseDistance < 10.f) && (outerTransverseDistance < 10.f))
+                if ((innerTransverseDistance < 20.f) || (outerTransverseDistance < 20.f))
                 {
                     std::cout << "contained segement of the track" << std::endl;
                     showerClusterCount = 0; showerClusterHitCount = 0;
@@ -123,11 +123,13 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
             
             if ((closestTransverse < 3.f) && (closestLongitudinal < 20.f))
             {
-                //ClusterList frog({pTestCluster});
-                //std::string frogString("L: " + std::to_string(closestLongitudinal) + " T: " + std::to_string(closestTransverse));
-                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, frogString, BLUE);    
+                /*
+                ClusterList frog({pTestCluster});
+                std::string frogString("L: " + std::to_string(closestLongitudinal) + " T: " + std::to_string(closestTransverse));
+                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, frogString, BLUE);    
+                */
                 ++showerClusterCount;
-                showerClusterHitCount += pTestCluster->GetNCaloHits();
+                //showerClusterHitCount += pTestCluster->GetNCaloHits();
             }
         }
 
@@ -148,7 +150,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
         // IS THIS EVER NEEDED? - I THINK IT CAN GO WRONG IF THE FIT DOESN'T MAKE SENSE
         if (isEndUpstream ? extrapolatedEndpointPosition.GetZ() > clusterMergePoint.GetZ() : extrapolatedEndpointPosition.GetZ() < clusterMergePoint.GetZ())
         {
-            //std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
+            std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
             //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
         }
