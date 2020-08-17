@@ -478,7 +478,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
     {
         CaloHitList threeDCaloHitList;
         LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
-        vertexDistance = (pVertexList->front()->GetPosition() - (threeDCaloHitList.front())->GetPositionVector()).GetMagnitude(); // if n3dHits == 1, can't calculate vertex postion of input pfos hence default to 10.0 based on this variable's distribution to make it unbiased towards tracks or showers
+        vertexDistance = (pVertexList->front()->GetPosition() - (threeDCaloHitList.front())->GetPositionVector()).GetMagnitude(); // if n3dHits == 1, can't calculate vertex postion of input pfos hence ask for the position of the single 3D hit instead and set vertexDistance to be the magnitude of the difference between the interaction vertex and the hit's position.
     }
 
     featureVector.push_back(vertexDistance);
