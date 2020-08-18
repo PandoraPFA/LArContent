@@ -86,6 +86,8 @@ protected:
     pandora::CartesianVector    m_connectingLineDirection;     ///< The unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------    
+
 class ClusterEndpointAssociation : public ClusterAssociation
 {
 public:
@@ -112,6 +114,39 @@ public:
 private:
     const pandora::Cluster    *m_pMainTrackCluster;
     bool                       m_isEndUpstream;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+class ClusterPairAssociation : public ClusterAssociation
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    ClusterPairAssociation();
+    
+    ClusterPairAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
+        const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pUpstreamCluster,
+        const pandora::Cluster *pDownstreamCluster);
+
+    /**
+     *  @brief  Returns the upstream cluster address
+     *
+     *  @return  Cluster the address of the upstream cluster
+     */
+    const pandora::Cluster *GetUpstreamCluster() const;
+
+    /**
+     *  @brief  Returns the upstream cluster address
+     *
+     *  @return  Cluster the address of the upstream cluster
+     */
+    const pandora::Cluster *GetDownstreamCluster() const;    
+
+private:
+    const pandora::Cluster    *m_pUpstreamCluster;
+    const pandora::Cluster    *m_pDownstreamCluster;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -249,7 +284,42 @@ inline bool ClusterEndpointAssociation::IsEndUpstream() const
 inline void ClusterEndpointAssociation::SetMainTrackCluster(const pandora::Cluster *const pMainTrackCluster)
 {
     m_pMainTrackCluster = pMainTrackCluster;
-}            
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ClusterPairAssociation::ClusterPairAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
+    const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pUpstreamCluster,
+    const pandora::Cluster *pDownstreamCluster) :
+        ClusterAssociation(upstreamMergePoint, upstreamMergeDirection, downstreamMergePoint, downstreamMergeDirection),
+        m_pUpstreamCluster(pUpstreamCluster),
+        m_pDownstreamCluster(pDownstreamCluster)      
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ClusterPairAssociation::ClusterPairAssociation() :
+        ClusterAssociation(),
+        m_pUpstreamCluster(nullptr),
+        m_pDownstreamCluster(nullptr)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::Cluster *ClusterPairAssociation::GetUpstreamCluster() const
+{
+    return m_pUpstreamCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::Cluster *ClusterPairAssociation::GetDownstreamCluster() const
+{
+    return m_pDownstreamCluster;
+}
     
 } // namespace lar_content
 
