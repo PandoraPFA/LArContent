@@ -98,34 +98,7 @@ bool TrackRefinementBaseAlgorithm<T>::GetClusterMergingCoordinates(const TwoDSli
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-/*
-template<typename T>    
-void TrackRefinementBaseAlgorithm<T>::GetExtrapolatedCaloHits(const ClusterAssociation &clusterAssociation, const ClusterList *const pClusterList, ClusterToCaloHitListMap &clusterToCaloHitListMap) const
-{
-    const CartesianVector &upstreamPoint(clusterAssociation.GetUpstreamMergePoint()), &downstreamPoint(clusterAssociation.GetDownstreamMergePoint());
-    const float minX(std::min(upstreamPoint.GetX(), downstreamPoint.GetX())), maxX(std::max(upstreamPoint.GetX(), downstreamPoint.GetX()));
-        
-    for (const Cluster *const pCluster : *pClusterList)
-    {
-        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
-        {
-            for (const CaloHit *const pCaloHit : *mapEntry.second)
-            {
-                const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-                if ((hitPosition.GetX() < minX) || (hitPosition.GetX() > maxX) || (hitPosition.GetZ() < upstreamPoint.GetZ()) || (hitPosition.GetZ() > downstreamPoint.GetZ()))
-                    continue;
 
-                const float distanceFromLine(clusterAssociation.GetConnectingLineDirection().GetCrossProduct(hitPosition - upstreamPoint).GetMagnitude());
-                if (distanceFromLine > m_distanceFromLine)
-                    continue;
-
-                clusterToCaloHitListMap[pCluster].push_back(pCaloHit);
-            }
-        }
-    }
-}
-*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 template<typename T>    
 bool TrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation &clusterAssociation, const CaloHitVector &extrapolatedCaloHitVector,
@@ -146,10 +119,16 @@ bool TrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation
     LArHitWidthHelper::GetClosestPointToLine2D(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetConnectingLineDirection(), *caloHitIter, closestPoint);
     for (unsigned int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
     {
+        /*
+        CartesianVector up(trackSegmentBoundaries.at(i));
+        CartesianVector down(trackSegmentBoundaries.at(i + 1));
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &up, "UP", BLACK, 2);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &down, "DOWN", BLACK, 2);
+        */
         if (caloHitIter == extrapolatedCaloHitVector.end())
         {
             ++segmentsWithoutHits;
-
+            //std::cout << "HERE" << std::endl;
             if (segmentsWithoutHits > maxTrackGaps)
                 return false;
 
@@ -161,6 +140,7 @@ bool TrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation
         while (this->IsInLineSegment(trackSegmentBoundaries.at(i), trackSegmentBoundaries.at(i + 1), closestPoint))
         {
             ++hitsInSegment;
+            //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &closestPoint, "Y", GREEN, 2);
             ++caloHitIter;
 
             if (caloHitIter == extrapolatedCaloHitVector.end())
@@ -168,6 +148,9 @@ bool TrackRefinementBaseAlgorithm<T>::IsTrackContinuous(const ClusterAssociation
 
             LArHitWidthHelper::GetClosestPointToLine2D(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetConnectingLineDirection(), *caloHitIter, closestPoint);
         }
+
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &closestPoint, "N", RED, 2);
+        //PandoraMonitoringApi::Pause(this->GetPandora());
 
         segmentsWithoutHits = hitsInSegment ? 0 : segmentsWithoutHits + 1;
 
@@ -234,7 +217,18 @@ bool TrackRefinementBaseAlgorithm<T>::IsInLineSegment(const CartesianVector &low
     const float segmentBoundaryGradient = (-1.f) * (upperBoundary.GetX() - lowerBoundary.GetX()) / (upperBoundary.GetZ() - lowerBoundary.GetZ());
     const float xPointOnUpperLine((point.GetZ() - upperBoundary.GetZ()) / segmentBoundaryGradient + upperBoundary.GetX());
     const float xPointOnLowerLine((point.GetZ() - lowerBoundary.GetZ()) / segmentBoundaryGradient + lowerBoundary.GetX());
+    /*
+    CartesianVector jam(xPointOnLowerLine, 0, point.GetZ());
+    CartesianVector frog(xPointOnUpperLine, 0, point.GetZ());
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &jam, "N", BLUE, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &frog, "N", BLUE, 2);    
+    */
+    if (std::fabs(xPointOnUpperLine - point.GetX()) < std::numeric_limits<float>::epsilon())
+        return true;
 
+    if (std::fabs(xPointOnLowerLine - point.GetX()) < std::numeric_limits<float>::epsilon())
+        return true;
+    
     if ((point.GetX() > xPointOnUpperLine) && (point.GetX() > xPointOnLowerLine))
         return false;
 
@@ -724,7 +718,7 @@ bool TrackRefinementBaseAlgorithm<T>::SortByDistanceAlongLine::operator() (const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class TrackRefinementBaseAlgorithm<ClusterEndpointAssociation>;
-
+template class TrackRefinementBaseAlgorithm<ClusterPairAssociation>;
     
 
 } // namespace lar_content

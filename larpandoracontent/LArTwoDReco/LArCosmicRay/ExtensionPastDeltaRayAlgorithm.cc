@@ -139,7 +139,7 @@ bool ExtensionPastDeltaRayAlgorithm::FindBestClusterAssociation(const ClusterVec
         // IS THIS EVER NEEDED? - I THINK IT CAN GO WRONG IF THE FIT DOESN'T MAKE SENSE
         if (isEndUpstream ? extrapolatedEndpointPosition.GetZ() > clusterMergePoint.GetZ() : extrapolatedEndpointPosition.GetZ() < clusterMergePoint.GetZ())
         {
-            std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
+            //std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
             //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
         }
@@ -197,7 +197,7 @@ bool ExtensionPastDeltaRayAlgorithm::IsDeltaRay(const Cluster *const pCluster, C
     }
     catch (const StatusCodeException &)
     {
-        //std::cout << "CANNOT MAKE A FIT" << std::endl;
+        std::cout << "CANNOT MAKE A FIT" << std::endl;
         //PandoraMonitoringApi::ViewEvent(this->GetPandora());  
         return false;
     }
@@ -258,7 +258,7 @@ bool ExtensionPastDeltaRayAlgorithm::IsDeltaRay(const Cluster *const pCluster, C
                 std::cout << "MERGE POINT END MEET ANGLE CRITERIA" << std::endl;
                 // ATTN: Make cluster merge points more precise - NEED CLUSTER FIT START
                 clusterMergePoint = isEndUpstream ? subsetFit.GetGlobalMaxLayerPosition() : subsetFit.GetGlobalMinLayerPosition();
-                
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 return true;
             }
 

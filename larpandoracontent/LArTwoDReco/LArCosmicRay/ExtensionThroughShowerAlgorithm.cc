@@ -75,7 +75,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
 
         // Is there a shower near the cluster endpoint?
         unsigned int showerClusterCount(0);
-        unsigned int showerClusterHitCount(0);
+        //unsigned int showerClusterHitCount(0);
 
 
         const unsigned int currentInnerPseudoLayer(pCluster->GetInnerPseudoLayer()), currentOuterPseudoLayer(pCluster->GetOuterPseudoLayer());
@@ -104,10 +104,10 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
                 ClusterList frog({pTestCluster});
                 PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, "CONTAINED", VIOLET);
                 */
-                if ((innerTransverseDistance < 20.f) || (outerTransverseDistance < 20.f))
+                if ((innerTransverseDistance < 30.f) || (outerTransverseDistance < 30.f))
                 {
-                    std::cout << "contained segement of the track" << std::endl;
-                    showerClusterCount = 0; showerClusterHitCount = 0;
+                    //std::cout << "contained segement of the track" << std::endl;
+                    showerClusterCount = 0; //showerClusterHitCount = 0;
                     break;
                 }
             }
@@ -150,7 +150,7 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
         // IS THIS EVER NEEDED? - I THINK IT CAN GO WRONG IF THE FIT DOESN'T MAKE SENSE
         if (isEndUpstream ? extrapolatedEndpointPosition.GetZ() > clusterMergePoint.GetZ() : extrapolatedEndpointPosition.GetZ() < clusterMergePoint.GetZ())
         {
-            std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
+            //std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
             //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
         }
