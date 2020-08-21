@@ -277,8 +277,7 @@ void LArHitWidthHelper::GetExtremalCoordinatesX(const ConstituentHitVector &cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector &lineStart, const CartesianVector &lineDirection, const CaloHit *const pCaloHit,
-    CartesianVector &closestPoint)
+CartesianVector LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector &lineStart, const CartesianVector &lineDirection, const CaloHit *const pCaloHit)
 {
     float xOnLine;
     const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
@@ -296,15 +295,18 @@ void LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector &lineStart
     const float &hitWidth(pCaloHit->GetCellSize1());    
     const float hitLowXEdge(hitPosition.GetX() - (hitWidth * 0.5f));    
     const float hitHighXEdge(hitPosition.GetX() + (hitWidth * 0.5f));
-    
+
+    float closestPointX;
     if ((xOnLine > hitLowXEdge) && (xOnLine < hitHighXEdge))
     {
-        closestPoint = CartesianVector(xOnLine, 0, hitPosition.GetZ());
+        closestPointX = xOnLine;
     }
     else
     {
-        closestPoint = hitLowXEdge > xOnLine ? CartesianVector(hitLowXEdge, 0, hitPosition.GetZ()) : CartesianVector(hitHighXEdge, 0, hitPosition.GetZ());
+        closestPointX = hitLowXEdge > xOnLine ? hitLowXEdge : hitHighXEdge;
     }
+
+    return CartesianVector(closestPointX, 0.f, hitPosition.GetZ());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -312,8 +314,7 @@ void LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector &lineStart
 void LArHitWidthHelper::GetImpactParameters2D(const CartesianVector &lineStart, const CartesianVector &lineDirection, const CaloHit *const pCaloHit,
     float &longitudinal, float &transverse)
 {
-    CartesianVector closestPointToLine(0.f, 0.f, 0.f);
-    LArHitWidthHelper::GetClosestPointToLine2D(lineStart, lineDirection, pCaloHit, closestPointToLine);
+    CartesianVector closestPointToLine(LArHitWidthHelper::GetClosestPointToLine2D(lineStart, lineDirection, pCaloHit));
     
     longitudinal = lineDirection.GetDotProduct(closestPointToLine - lineStart);
     transverse = lineDirection.GetCrossProduct(closestPointToLine - lineStart).GetMagnitude();

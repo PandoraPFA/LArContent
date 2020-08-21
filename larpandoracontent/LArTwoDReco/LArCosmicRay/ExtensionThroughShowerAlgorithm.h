@@ -26,7 +26,7 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     bool FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
-                                    ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, const bool isHigherXBoundary);
+        const pandora::ClusterList *const pClusterList, const bool isHigherXBoundary, ClusterEndpointAssociation &clusterAssociation);
 };
  
 } // namespace lar_content
