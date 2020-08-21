@@ -26,7 +26,7 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     bool FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
-        ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, const bool isHigherXBoundary);
+        const pandora::ClusterList *const pClusterList, const bool isHigherXBoundary, ClusterEndpointAssociation &clusterAssociation);
 
     
     bool IsDeltaRay(const pandora::Cluster *const pCluster, pandora::CartesianVector &clusterMergePoint, const pandora::CartesianVector &clusterMergeDirection,

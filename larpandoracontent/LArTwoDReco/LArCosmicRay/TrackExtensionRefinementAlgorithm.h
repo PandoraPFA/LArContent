@@ -15,56 +15,43 @@ namespace lar_content
 /**
  *  @brief TrackExtensionRefinementAlgorithm class
  */
-class TrackExtensionRefinementAlgorithm :  public TrackRefinementBaseAlgorithm<ClusterEndpointAssociation>
+class TrackExtensionRefinementAlgorithm :  public TrackRefinementBaseAlgorithm
 {
 public:
-    
+    /**
+     *  @brief  Default constructor
+     */    
     TrackExtensionRefinementAlgorithm();
-
-    class SortByDistanceToTPCBoundary
-    {
-    public:
-
-        SortByDistanceToTPCBoundary(const float tpcXBoundary);
-        bool operator() (const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
-
-    private:
-        float m_tpcXBoundary;
-    };
     
 protected:
-
-    typedef std::vector<ClusterEndpointAssociation> ClusterAssociaEtionVector;
-    
+    pandora::StatusCode Run();    
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
+
+    /**
+     *  @brief  Initialise the detector and TPC edge member parameters taking into account the gap in the case of a CPA
+     */       
+    void InitialiseGeometry();
     
     virtual bool FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
-        ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, const bool isHigherXBoundary) = 0;    
+        const pandora::ClusterList *const pClusterList, const bool isHigherXBoundary, ClusterEndpointAssociation &clusterAssociation) = 0;    
 
-    pandora::StatusCode Run();
+
     
     void GetExtrapolatedCaloHits(ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, const pandora::ClusterList &consideredClusters, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
-    bool IsExtrapolatedEndpointNearBoundary(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const float boundaryTolerance) const;
+    const pandora::Cluster *CreateMainTrack(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair, pandora::ClusterList &consideredClusters, bool isHigherXBoundary) const;
 
-    const pandora::Cluster *CreateMainTrack(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair, pandora::ClusterList &consideredClusters) const;
+    void ConsiderClusterAssociation(const pandora::Cluster *const pOldConsideredCluster, const pandora::Cluster *const pNewConsideredCluster, pandora::ClusterVector &clusterVector, pandora::ClusterList &consideredClusters, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
-    void ConsiderClusterAssociation(const ClusterEndpointAssociation &clusterAssociation, pandora::ClusterVector &clusterVector, pandora::ClusterList &consideredClusters,
-        SlidingFitResultMapPair &slidingFitResultMapPair) const;
+    
 
-    void InitialiseGeometry();
 
     
     bool AreExtrapolatedHitsGood(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const bool isHigherXBoundary) const;
 
-    bool IsExtrapolatedEndpointNearBoundary(const pandora::CaloHitVector &extrapolatedHitVector, const bool isHigherXBoundary, const float boundaryTolerance, 
+    bool IsExtrapolatedEndpointNearBoundary(const pandora::CaloHitVector &extrapolatedHitVector, const bool isHigherXBoundary, 
         ClusterEndpointAssociation &clusterAssociation) const;
 
-
-    float GetAverageHitSeparation(const pandora::CaloHitVector &orderedCaloHitVector) const;
-
-    // void UpdateAfterMainTrackModification(const pandora::Cluster *const pMainTrackCluster, ClusterEndpointAssociation &clusterEndpointAssociation,
-    //SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
     float m_growingFitInitialLength;
     float m_growingFitSegmentLength;
@@ -76,6 +63,9 @@ protected:
     const pandora::LArTPC *m_pLArTPC;
     float m_tpcMinXEdge;
     float m_tpcMaxXEdge;
+    unsigned int m_maxLoopIterations;
+    float   m_distanceToLine;
+    float m_boundaryTolerance;
     
 };
 
@@ -85,10 +75,6 @@ protected:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline TrackExtensionRefinementAlgorithm::SortByDistanceToTPCBoundary::SortByDistanceToTPCBoundary(const float tpcXBoundary) :
-    m_tpcXBoundary(tpcXBoundary)
-{
-}    
     
     
 } // namespace lar_content

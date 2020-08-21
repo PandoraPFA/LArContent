@@ -287,8 +287,7 @@ public:
         pandora::CartesianVector &higherXCoordinate);
 
 
-    static void GetClosestPointToLine2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit,
-        pandora::CartesianVector &closestPoint);
+    static pandora::CartesianVector GetClosestPointToLine2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit);
 
     static void GetImpactParameters2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit,
         float &longitudinal, float &transverse);

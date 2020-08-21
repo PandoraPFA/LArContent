@@ -15,7 +15,7 @@ namespace lar_content
 /**
  *  @brief TrackMergeRefinementAlgorithm class
  */
-class TrackMergeRefinementAlgorithm :  public TrackRefinementBaseAlgorithm<ClusterPairAssociation>
+class TrackMergeRefinementAlgorithm :  public TrackRefinementBaseAlgorithm
 {
 public:
     
@@ -34,17 +34,23 @@ protected:
     
     void GetExtrapolatedCaloHits(ClusterPairAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList, const pandora::ClusterList &createdMainTrackClusters, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
-    //const pandora::Cluster *CreateMainTrack(ClusterPairAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
+    bool AreExtrapolatedHitsGood(ClusterPairAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
+    
+    bool AreExtrapolatedHitsNearMergePoints(const pandora::CaloHitVector &extrapolatedHitVector, const float boundaryTolerance, ClusterPairAssociation &clusterAssociation) const;
 
-    void ConsiderClusterAssociation(const ClusterPairAssociation &clusterAssociation, pandora::ClusterVector &clusterVector, pandora::ClusterList &consideredClusters,
+    void ConsiderClusterAssociation(const ClusterPairAssociation &clusterAssociation, pandora::ClusterVector &clusterVector,
         SlidingFitResultMapPair &slidingFitResultMapPair) const;
+
+    const pandora::Cluster *CreateMainTrack(const ClusterPairAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
     //bool AreExtrapolatedHitsGood(ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap, const bool isHigherXBoundary) const;
 
     float m_minClusterLengthSum;
     float m_minSeparationDistance;
     float m_minDirectionDeviationCosAngle;
-    float m_maxPredictedMergePointOffset;    
+    float m_maxPredictedMergePointOffset;
+    float m_distanceFromLine;
+    float m_boundaryTolerance;
 };
     
 } // namespace lar_content
