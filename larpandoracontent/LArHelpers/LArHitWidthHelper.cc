@@ -311,56 +311,14 @@ CartesianVector LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHitWidthHelper::GetImpactParameters2D(const CartesianVector &lineStart, const CartesianVector &lineDirection, const CaloHit *const pCaloHit,
-    float &longitudinal, float &transverse)
-{
-    CartesianVector closestPointToLine(LArHitWidthHelper::GetClosestPointToLine2D(lineStart, lineDirection, pCaloHit));
-    
-    longitudinal = lineDirection.GetDotProduct(closestPointToLine - lineStart);
-    transverse = lineDirection.GetCrossProduct(closestPointToLine - lineStart).GetMagnitude();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-/*
-float LArHitWidthHelper::GetClosestDistanceToLine(const CartesianVector &lineStart, const CartesianVector &lineDirection, const CaloHit *const pCaloHit)
-{
-    CartesianVector closestPointToLine(0.f, 0.f, 0.f);
-    LArHitWidthHelper::GetClosestPointToLine2D(lineStart, lineDirection, pCaloHit, closestPointToLine);
-    
-    return (pCaloHit->GetPositionVector() - closestPointToLine).GetMagnitude();
-}
-*/
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArHitWidthHelper::GetClosestDistanceBetweenHits(const CaloHit *const pCaloHit1, const CaloHit *const pCaloHit2)
-{
-    const CartesianVector &hitPosition1(pCaloHit1->GetPositionVector()), &hitPosition2(pCaloHit2->GetPositionVector());
-    const float &hitWidth1(pCaloHit1->GetCellSize1()), &hitWidth2(pCaloHit2->GetCellSize1());
-    const float hitLowXEdge1(hitPosition1.GetX() - (hitWidth1 * 0.5f)), hitLowXEdge2(hitPosition2.GetX() - (hitWidth2 * 0.5f));
-    const float hitHighXEdge1(hitPosition1.GetX() + (hitWidth1 * 0.5f)), hitHighXEdge2(hitPosition2.GetX() + (hitWidth2 * 0.5f));
-
-    const float modDeltaZ(std::fabs(hitPosition1.GetZ() - hitPosition2.GetZ()));
-    if (((hitLowXEdge1 > hitLowXEdge2) && (hitLowXEdge1 < hitHighXEdge2)) ||
-        ((hitHighXEdge1 > hitLowXEdge2) && (hitHighXEdge1 < hitHighXEdge2)))
-    {
-        return modDeltaZ;
-    }
-
-    const float deltaX = hitLowXEdge1 > hitLowXEdge2 ? (hitHighXEdge2 - hitLowXEdge1) : (hitHighXEdge1 - hitLowXEdge2);
-
-    return std::sqrt((deltaX * deltaX) + (modDeltaZ * modDeltaZ));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 float LArHitWidthHelper::GetClosestDistanceToPoint2D(const CaloHit *const pCaloHit, const CartesianVector &point2D)
 {
     const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
     const float &hitWidth(pCaloHit->GetCellSize1());
     const float hitLowXEdge(hitPosition.GetX() - (hitWidth * 0.5f));
     const float hitHighXEdge(hitPosition.GetX() + (hitWidth * 0.5f));
-
     const float modDeltaZ(std::fabs(hitPosition.GetZ() - point2D.GetZ()));
+    
     if ((hitLowXEdge < point2D.GetX()) && (hitHighXEdge > point2D.GetX()))
         return modDeltaZ;
 

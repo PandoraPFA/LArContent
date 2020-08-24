@@ -26,12 +26,10 @@ public:
     /**
      *  @brief  Constructor
      *
-     *  @param  pUpstreamCluster the upstream cluster of the two associated clusters
-     *  @param  pDownstreamCluster the downstream cluster of the two associated clusters
-     *  @param  upstreamMergePoint the upstream cluster point to be used in the merging process
-     *  @param  upstreamMergeDirection the upstream cluster direction at the upstream merge point
-     *  @param  downstreamMergePoint the downstream cluster point to be used in the merging process
-     *  @param  downstreamMergeDirection the downstream cluster direction at the downstream merge point
+     *  @param  upstreamMergePoint the upstream merge point
+     *  @param  upstreamMergeDirection the cluster direction at the upstream merge point
+     *  @param  downstreamMergePoint the downstream merge point
+     *  @param  downstreamMergeDirection the cluster direction at the downstream merge point
      */
      ClusterAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
         const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection);
@@ -39,28 +37,28 @@ public:
     /**
      *  @brief  Returns the upstream cluster merge point
      *
-     *  @return  CartesianVector the merge point of the upstream cluster
+     *  @return  CartesianVector the upstream merge point
      */
     const pandora::CartesianVector GetUpstreamMergePoint() const;
 
     /**
-     *  @brief  Returns the upstream cluster direction at the upstream merge point
+     *  @brief  Returns the cluster direction at the upstream merge point
      *
-     *  @return  CartesianVector the direction at the merge point of the upstream cluster
+     *  @return  CartesianVector the cluster direction at the upstream merge point
      */        
     const pandora::CartesianVector GetUpstreamMergeDirection() const;
 
     /**
      *  @brief  Returns the downstream cluster merge point
      *
-     *  @return  CartesianVector the merge point of the downstream cluster
+     *  @return  CartesianVector the downstream merge point
      */
     const pandora::CartesianVector GetDownstreamMergePoint() const;
 
     /**
-     *  @brief  Returns the downstream cluster direction at the downstream merge point
+     *  @brief  Returns the cluster direction at the downstream merge point
      *
-     *  @return  CartesianVector the direction at the merge point of the downstream cluster
+     *  @return  CartesianVector the cluster direction at the downstream merge point
      */        
      const pandora::CartesianVector GetDownstreamMergeDirection() const;
 
@@ -71,8 +69,18 @@ public:
      */           
     const pandora::CartesianVector GetConnectingLineDirection() const;
 
+    /**
+     *  @brief  Set the upstream merge point
+     *
+     *  @param  upstreamMergePoint the new upstream merge point
+     */         
     void SetUpstreamMergePoint(const pandora::CartesianVector &upstreamMergePoint);
 
+    /**
+     *  @brief  Set the downstream merge point
+     *
+     *  @param  downstreamMergePoint the new downstream merge point
+     */        
     void SetDownstreamMergePoint(const pandora::CartesianVector &downstreamMergePoint);
 
     bool operator==(const ClusterAssociation &clusterAssociation) const;
@@ -95,25 +103,38 @@ public:
      *  @brief  Default constructor
      */
     ClusterEndpointAssociation();
-    
-    ClusterEndpointAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
-        const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pMainTrackCluster, const bool isEndUpstream);
 
     /**
-     *  @brief  Returns the upstream cluster address
+     *  @brief  Constructor
      *
-     *  @return  Cluster the address of the upstream cluster
+     *  @param  upstreamMergePoint the upstream merge point
+     *  @param  upstreamMergeDirection the cluster direction at the upstream merge point
+     *  @param  downstreamMergePoint the downstream merge point
+     *  @param  downstreamMergeDirection the cluster direction at the downstream merge point
+     *  @param  pMainTrackCluster the address of the main track cluster
+     *  @param  isEndUpstream whether the cluster endpoint is at the upstream end of the cluster (i.e. lower z component)
+     */
+    ClusterEndpointAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
+        const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pMainTrackCluster,
+        const bool isEndUpstream);
+
+    /**
+     *  @brief  Returns the address of the main track cluster
+     *
+     *  @return  Cluster the address of the main track cluster
      */
     const pandora::Cluster *GetMainTrackCluster() const;
 
-    void SetMainTrackCluster(const pandora::Cluster *const pMainTrackCluster);
-       
+    /**
+     *  @brief  Returns whether the cluster endpoint is at the upstream end of the cluster
+     *
+     *  @return  Whether the cluster endpoint is at the upstream end of the cluster
+     */    
     bool IsEndUpstream() const;        
 
-
 private:
-    const pandora::Cluster    *m_pMainTrackCluster;
-    bool                       m_isEndUpstream;
+    const pandora::Cluster    *m_pMainTrackCluster;    ///< The address of the main track cluster
+    bool                       m_isEndUpstream;        ///< Whether the cluster endpoint is at the upstream end of the cluster (i.e. lower z component)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -125,28 +146,38 @@ public:
      *  @brief  Default constructor
      */
     ClusterPairAssociation();
-    
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  upstreamMergePoint the upstream merge point
+     *  @param  upstreamMergeDirection the cluster direction at the upstream merge point
+     *  @param  downstreamMergePoint the downstream merge point
+     *  @param  downstreamMergeDirection the cluster direction at the downstream merge point
+     *  @param  pUpstreamCluster the address of the upstream cluster
+     *  @param  pDownstreamCluster the address of the downstream cluster
+     */    
     ClusterPairAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
         const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pUpstreamCluster,
         const pandora::Cluster *pDownstreamCluster);
 
     /**
-     *  @brief  Returns the upstream cluster address
+     *  @brief  Returns the address of the upstream cluster
      *
      *  @return  Cluster the address of the upstream cluster
      */
     const pandora::Cluster *GetUpstreamCluster() const;
 
     /**
-     *  @brief  Returns the upstream cluster address
+     *  @brief  Returns the address of the downstream cluster
      *
-     *  @return  Cluster the address of the upstream cluster
+     *  @return  Cluster the address of the downstream cluster
      */
     const pandora::Cluster *GetDownstreamCluster() const;    
 
 private:
-    const pandora::Cluster    *m_pUpstreamCluster;
-    const pandora::Cluster    *m_pDownstreamCluster;
+    const pandora::Cluster    *m_pUpstreamCluster;      ///< The address of the upstream cluster
+    const pandora::Cluster    *m_pDownstreamCluster;    ///< The address of the downstream cluster
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -178,15 +209,14 @@ inline ClusterAssociation::ClusterAssociation(const pandora::CartesianVector &up
 
 inline bool ClusterAssociation::operator==(const ClusterAssociation &clusterAssociation) const
 {
-    // ISOBEL: ALSO CHECK DOWNSTREAM
-    return (m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint() &&  m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint());
+    return (m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint() &&  m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint() &&
+        m_downstreamMergePoint == clusterAssociation.GetDownstreamMergePoint() &&  m_downstreamMergePoint == clusterAssociation.GetDownstreamMergePoint());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool ClusterAssociation::operator<(const ClusterAssociation &clusterAssociation) const
 {
-    // ISOBEL: ALSO CHECK DOWNSTREAM
     return (LArClusterHelper::SortCoordinatesByPosition(m_upstreamMergePoint, clusterAssociation.GetUpstreamMergePoint()));
 }
 
@@ -277,13 +307,6 @@ inline const pandora::Cluster *ClusterEndpointAssociation::GetMainTrackCluster()
 inline bool ClusterEndpointAssociation::IsEndUpstream() const
 {
     return m_isEndUpstream;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------        
-
-inline void ClusterEndpointAssociation::SetMainTrackCluster(const pandora::Cluster *const pMainTrackCluster)
-{
-    m_pMainTrackCluster = pMainTrackCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

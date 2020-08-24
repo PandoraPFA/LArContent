@@ -539,6 +539,8 @@ const Cluster *TrackInEMShowerAlgorithm::RemoveOffAxisHitsFromTrack(const Cluste
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, originalListName, fragmentListName));
         return pCluster;
     }
+
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

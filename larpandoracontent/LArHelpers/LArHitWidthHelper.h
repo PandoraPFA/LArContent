@@ -281,23 +281,31 @@ public:
      *  @param  constituentHitVector the input vector of contituent hits
      *  @param  lowerXCoordinate the lower x extremal point
      *  @param  higherXCoordinate the higher x extremal point
-     *
      */
     static void GetExtremalCoordinatesX(const ConstituentHitVector &constituentHitVector, pandora::CartesianVector &lowerXCoordinate,
         pandora::CartesianVector &higherXCoordinate);
 
+    /**
+     *  @brief  Consider the hit width to find the closest position of a calo hit to a specified line
+     *
+     *  @param  lineStart the start position of the line 
+     *  @param  lineDirection the direction of the line
+     *  @param  pCaloHit the input calo hit
+     *
+     *  @return  CartesianVector the closest position
+     */
+    static pandora::CartesianVector GetClosestPointToLine2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection,
+        const pandora::CaloHit *const pCaloHit);
 
-    static pandora::CartesianVector GetClosestPointToLine2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit);
-
-    static void GetImpactParameters2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit,
-        float &longitudinal, float &transverse);
-
-    //static float GetClosestDistanceToLine(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, const pandora::CaloHit *const pCaloHit);
-
-    static float GetClosestDistanceBetweenHits(const pandora::CaloHit *const pCaloHit1, const pandora::CaloHit *const pCaloHit2);
-
+    /**
+     *  @brief  Consider the hit width to find the smallest of a calo hit to a given point
+     *
+     *  @param  pCaloHit the input calo hit
+     *  @param  the position
+     *
+     *  @return  float the smallest distance
+     */    
     static float GetClosestDistanceToPoint2D(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector &point2D);
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
