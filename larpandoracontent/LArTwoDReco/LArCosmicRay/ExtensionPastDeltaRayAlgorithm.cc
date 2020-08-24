@@ -6,14 +6,10 @@
  *  $Log: $
  */
 #include "Pandora/AlgorithmHeaders.h"
-#include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/ExtensionPastDeltaRayAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
 
 using namespace pandora;
 
@@ -22,12 +18,12 @@ namespace lar_content
     
 ExtensionPastDeltaRayAlgorithm::ExtensionPastDeltaRayAlgorithm() :
     m_maxDistanceFromTPC(15.f),
-    m_minScaledZOffset(2.f), //0.25 m_curveThreshold(0.3f),
+    m_minZOffset(2.f),
+    m_deltaRayslidingFitWindow(5),    
     m_thresholdAngleDeviation(10.f),
+    m_thresholdMaxAngleDeviation(21.f),     
     m_thresholdAngleDeviationBetweenLayers(1.f),
-    m_maxAnomalousPoints(2),
-    m_thresholdMaxAngleDeviation(21.f),
-    m_deltaRayslidingFitWindow(5)
+    m_maxAnomalousPoints(2)
 {
 }
 
@@ -47,122 +43,64 @@ bool ExtensionPastDeltaRayAlgorithm::FindBestClusterAssociation(const ClusterVec
 
         const bool isEndUpstream = (std::fabs(microSlidingFitResult.GetGlobalMinLayerPosition().GetX() - nearestTPCBoundaryX) <
                                     std::fabs(microSlidingFitResult.GetGlobalMaxLayerPosition().GetX() - nearestTPCBoundaryX));
-
-        ////////////////
-        ClusterList theCluster({pCluster});
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CONSIDERED CLUSTER", BLACK);
-        std::cout << "isEndUpstream: " << isEndUpstream << std::endl;
-        ////////////////
             
         CartesianVector clusterMergePoint(0.f, 0.f, 0.f), clusterMergeDirection(0.f, 0.f, 0.f);
         if (!GetClusterMergingCoordinates(microSlidingFitResult, macroSlidingFitResult, macroSlidingFitResult, isEndUpstream, clusterMergePoint, clusterMergeDirection))
-        {
-            std::cout << "CANNOT FIND MERGE POSITION" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
-        }
 
-        // WILL NOT CROSS TPC BOUNDARY
+        // Reject clusters that do not cross TPC boundary
         if (std::fabs(clusterMergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
-        {
-            std::cout << "MERGE DIRECTION HAS NO X COMPONENT" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
-        }                
             
         const CartesianVector &endpointPosition(isEndUpstream ? microSlidingFitResult.GetGlobalMinLayerPosition() : microSlidingFitResult.GetGlobalMaxLayerPosition());
         const float endpointSeparation((endpointPosition - clusterMergePoint).GetMagnitude());
-            
-        /////////////////
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &endpointPosition, "ENDPOINT", BLUE, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &clusterMergePoint, "MERGE POINT", BLUE, 2);
-        std::cout << "Endpoint Separation: " << endpointSeparation << std::endl;
-        /////////////////    
 
+        // Reject if no clustering error
         if (endpointSeparation < std::numeric_limits<float>::epsilon())
-        {
-            std::cout << "MERGE POINT AND ENDPOINT ARE THE SAME" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
-        }
 
+        // Reject if not close enough to the TPC boundary
         const bool isMergePointInAllowanceRegion(std::fabs(nearestTPCBoundaryX - clusterMergePoint.GetX()) < m_maxDistanceFromTPC);
         const bool isEndpointInAllowanceRegion(std::fabs(nearestTPCBoundaryX - endpointPosition.GetX()) < m_maxDistanceFromTPC);
 
         if (!(isMergePointInAllowanceRegion || isEndpointInAllowanceRegion))
-        {
-            std::cout << "NOT CLOSE ENOUGH TO THE BOUNDARY" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
-        }
             
         const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
         const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
         const CartesianVector fitEndpointPosition(endpointPosition.GetX(), 0.f, predictedIntercept + (predictedGradient * endpointPosition.GetX()));
         const float deltaZ(std::fabs(endpointPosition.GetZ() - fitEndpointPosition.GetZ()));
 
-        ///////////////////
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &fitEndpointPosition, "FIT ENDPOINT", ORANGE, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &clusterMergePoint, "clusterMergePoint", VIOLET, 2);
-        const CartesianVector start(clusterMergePoint + (clusterMergeDirection*40));
-        const CartesianVector end(clusterMergePoint - (clusterMergeDirection*40));
-        PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &start, &end, "CLUSTER DIRECTION", GREEN, 4, 2);            
-        std::cout << "deltaZ: " << deltaZ << std::endl;
-        /////////////////
-
-        if (deltaZ < m_minScaledZOffset)
-        {
-            std::cout << "DELTA Z IS TOO LOW" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        // Reject if no significant endpoint deviation
+        if (deltaZ < m_minZOffset)
             continue;
-        }
-           
-        // SEARCH FOR DELTA RAY BEND    
-        if(!this->IsDeltaRay(pCluster, clusterMergePoint, clusterMergeDirection, isEndUpstream))
-        {
-            std::cout << "NOT A DELTA RAY" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());            
-            continue;
-        }
 
-        const CartesianVector extrapolatedEndpointPosition(nearestTPCBoundaryX, 0.f, predictedIntercept + (predictedGradient * nearestTPCBoundaryX));
-
-        // IS THIS EVER NEEDED? - I THINK IT CAN GO WRONG IF THE FIT DOESN'T MAKE SENSE
-        if (isEndUpstream ? extrapolatedEndpointPosition.GetZ() > clusterMergePoint.GetZ() : extrapolatedEndpointPosition.GetZ() < clusterMergePoint.GetZ())
-        {
-            std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        // Reject if cannot find a delta ray bend
+        if(!this->IsDeltaRay(pCluster, clusterMergeDirection, isEndUpstream, clusterMergePoint))
             continue;
-        }
+
+        // ATTN: Temporarily set the other merge point to define extrapolate hits search region        
+        const CartesianVector extrapolatedHitsEndpoint(nearestTPCBoundaryX, 0.f, predictedIntercept + (predictedGradient * nearestTPCBoundaryX));
+
+        if (isEndUpstream ? clusterMergePoint.GetZ() < extrapolatedHitsEndpoint.GetZ() : clusterMergePoint.GetZ() > extrapolatedHitsEndpoint.GetZ())
+            continue;    
 
         clusterAssociation = isEndUpstream ?
-            ClusterEndpointAssociation(extrapolatedEndpointPosition, clusterMergeDirection, clusterMergePoint, clusterMergeDirection * (-1.f), pCluster, true) :
-            ClusterEndpointAssociation(clusterMergePoint, clusterMergeDirection, extrapolatedEndpointPosition, clusterMergeDirection * (-1.f), pCluster, false);        
-
-        ////////////////////////////////
-        ClusterList mainCluster({clusterAssociation.GetMainTrackCluster()});
-        const CartesianVector &upstream(clusterAssociation.GetUpstreamMergePoint());
-        const CartesianVector &downstream(clusterAssociation.GetDownstreamMergePoint());
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &upstream, "UPSTREAM", VIOLET, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &downstream, "DOWNSTREAM", RED, 2);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &mainCluster, "CLUSTER", BLACK);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        ////////////////////////////////        
+            ClusterEndpointAssociation(extrapolatedHitsEndpoint, clusterMergeDirection, clusterMergePoint, clusterMergeDirection * (-1.f), pCluster, true) :
+            ClusterEndpointAssociation(clusterMergePoint, clusterMergeDirection, extrapolatedHitsEndpoint, clusterMergeDirection * (-1.f), pCluster, false);          
         
         return true;
     }
 
-    std::cout << "DID NOT FIND AN ASSOCIATION" << std::endl;
     return false;
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ExtensionPastDeltaRayAlgorithm::IsDeltaRay(const Cluster *const pCluster, CartesianVector &clusterMergePoint,
-    const CartesianVector &clusterMergeDirection, const bool isEndUpstream) const 
+bool ExtensionPastDeltaRayAlgorithm::IsDeltaRay(const Cluster *const pCluster, const CartesianVector &clusterMergeDirection, const bool isEndUpstream,
+    CartesianVector &clusterMergePoint) const 
 {
-    // MAKE MORE DETAILED FIT OF THE AMBIGUOUS SECTION
+    // Perform more detailed fit of hits past the clusterMergePoint
     CartesianPointVector hitSubset;
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
     for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
@@ -176,34 +114,49 @@ bool ExtensionPastDeltaRayAlgorithm::IsDeltaRay(const Cluster *const pCluster, C
         }
     }
 
-    TwoDSlidingFitResultList subsetFitVector;
     try
     {
         const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
         const TwoDSlidingFitResult subsetFit(&hitSubset, m_deltaRayslidingFitWindow, slidingFitPitch);
 
-        subsetFitVector.push_back(subsetFit);
-    }
-    catch (const StatusCodeException &)
-    {
-        std::cout << "CANNOT MAKE A FIT" << std::endl;
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());  
-        return false;
-    }
+        // Check for curve at the clusterMergePoint end
+        if(this->IsCurvePresent(subsetFit, isEndUpstream, true, clusterMergeDirection, clusterMergePoint))
+        {
+            return true;
+        }
+        else
+        {
+            // Check for curve at the endpoint end
+            const CartesianVector &endDirection(isEndUpstream ? subsetFit.GetGlobalMinLayerDirection() : subsetFit.GetGlobalMaxLayerDirection());
+            const float endOpeningAngle(endDirection.GetOpeningAngle(clusterMergeDirection) * 180 / 3.14);
+            
+            if (std::fabs(endOpeningAngle) < m_thresholdMaxAngleDeviation)
+                return false;
 
-    // INVESTIGATE THE DIRECTION CHANGE
-    const TwoDSlidingFitResult subsetFit(subsetFitVector.front());
+            if(this->IsCurvePresent(subsetFit, isEndUpstream, false, clusterMergeDirection, clusterMergePoint))
+                return true;
+        }
+    }
+    catch (const StatusCodeException &) {}
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ExtensionPastDeltaRayAlgorithm::IsCurvePresent(const TwoDSlidingFitResult &subsetFit, const bool isEndUpstream, const bool isClusterMergePointEnd,
+    const CartesianVector &clusterMergeDirection, CartesianVector &clusterMergePoint) const
+{
     const LayerFitResultMap &clusterMicroLayerFitResultMap(subsetFit.GetLayerFitResultMap());
-    int startLayer(isEndUpstream ? subsetFit.GetMaxLayer() : subsetFit.GetMinLayer());
-    int endLayer(isEndUpstream ? subsetFit.GetMinLayer() : subsetFit.GetMaxLayer());
-    int loopTerminationLayer(isEndUpstream ? endLayer - 1 : endLayer + 1);
-    int step(isEndUpstream ? -1 : 1);
-    
+    const bool isStartLayerUpstream(isEndUpstream ? (isClusterMergePointEnd ? false : true) : (isClusterMergePointEnd ? true : false)); 
+    const int startLayer(isStartLayerUpstream ? subsetFit.GetMinLayer() : subsetFit.GetMaxLayer());
+    const int endLayer(isStartLayerUpstream ? subsetFit.GetMaxLayer() : subsetFit.GetMinLayer());
+    const int loopTerminationLayer(isStartLayerUpstream ? endLayer + 1 : endLayer - 1);
+    const int step(isStartLayerUpstream ? 1 : -1);
     unsigned int anomalousLayerCount(0);
     bool reachedFirstCurve(false);
-    float previousOpeningAngle(std::numeric_limits<float>::max());
-
-    // CHECK MERGE POINT END
+    float previousOpeningAngle;
+    
     for (int i = startLayer; i != loopTerminationLayer; i += step)
     {
         const auto microIter(clusterMicroLayerFitResultMap.find(i));
@@ -220,154 +173,86 @@ bool ExtensionPastDeltaRayAlgorithm::IsDeltaRay(const Cluster *const pCluster, C
 
         if (!reachedFirstCurve)
         {
-            if (std::fabs(microOpeningAngle) > m_thresholdAngleDeviation)
-                reachedFirstCurve = true;
+            if (isClusterMergePointEnd)
+            {
+                if (std::fabs(microOpeningAngle) > m_thresholdAngleDeviation)
+                    reachedFirstCurve = true;
+            }
+            else
+            {
+               if (std::fabs(microOpeningAngle) < m_thresholdMaxAngleDeviation)
+                    reachedFirstCurve = true;                
+            }
             
             previousOpeningAngle = microOpeningAngle;
             continue;
         }
-
-        const float layerAngleDeviation(std::fabs(microOpeningAngle - previousOpeningAngle));
-
-        ///////////////////////////
-        CartesianVector microPosition(0.f, 0.f, 0.f);
-        subsetFit.GetGlobalPosition(microIter->second.GetL(), microIter->second.GetFitT(), microPosition);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &microPosition, "HIT", BLACK, 2);
-        ///////////////////////////
         
-        if ((std::fabs(microOpeningAngle) < std::fabs(previousOpeningAngle)) || (microOpeningAngle * previousOpeningAngle < 0.f) ||
-            (layerAngleDeviation < m_thresholdAngleDeviationBetweenLayers))
-        {
-            ++anomalousLayerCount;
-
-            if (anomalousLayerCount > m_maxAnomalousPoints)
-            {
-                std::cout << "MERGE POINT END TOO SMOOTH" << std::endl;
-                break;
-            }
-        }
-        else
-        {
-            if (std::fabs(microOpeningAngle) > m_thresholdMaxAngleDeviation)
-            {
-                std::cout << "MERGE POINT END MEET ANGLE CRITERIA" << std::endl;
-                // ATTN: Make cluster merge points more precise - NEED CLUSTER FIT START
-                clusterMergePoint = isEndUpstream ? subsetFit.GetGlobalMaxLayerPosition() : subsetFit.GetGlobalMinLayerPosition();
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                return true;
-            }
-
-            anomalousLayerCount = 0;
-        }
-
-        previousOpeningAngle = microOpeningAngle;
-    }
-
-    // CHECK CLUSTER ENDPOINT END
-    CartesianVector endDirection(isEndUpstream ? subsetFit.GetGlobalMinLayerDirection() : subsetFit.GetGlobalMaxLayerDirection());
-    float endOpeningAngle(endDirection.GetOpeningAngle(clusterMergeDirection) * 180 / 3.14);
-    if (std::fabs(endOpeningAngle) < m_thresholdMaxAngleDeviation)
-    {
-        std::cout << "END DEVIATION ANGLE NOT BIG ENOUGH" << std::endl;
-        std::cout << "endOpeningAngle: " << endOpeningAngle << std::endl;
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        return false;
-    }
-    
-    startLayer = (isEndUpstream ? subsetFit.GetMinLayer() : subsetFit.GetMaxLayer());
-    endLayer = (isEndUpstream ? subsetFit.GetMaxLayer() : subsetFit.GetMinLayer());
-    loopTerminationLayer = (isEndUpstream ? endLayer + 1 : endLayer - 1);
-    step = (isEndUpstream ? 1 : -1);
-    anomalousLayerCount = 0;    
-    reachedFirstCurve = false;
-
-    for (int i = startLayer; i != loopTerminationLayer; i += step)
-    {
-        const auto microIter(clusterMicroLayerFitResultMap.find(i));
-
-        if (microIter == clusterMicroLayerFitResultMap.end())
-            continue;
-
-        CartesianVector microDirection(0.f, 0.f, 0.f);
-        subsetFit.GetGlobalDirection(microIter->second.GetGradient(), microDirection);
-        float microOpeningAngle(microDirection.GetOpeningAngle(clusterMergeDirection) * 180 / 3.14);
-
-        if(microDirection.GetZ() < (clusterMergeDirection.GetZ() * microDirection.GetX() / clusterMergeDirection.GetX()))
-            microOpeningAngle *= (-1.f);
-
-        if (!reachedFirstCurve)
-        {
-            if (std::fabs(microOpeningAngle) < m_thresholdMaxAngleDeviation)
-                reachedFirstCurve = true;
-            
-            previousOpeningAngle = microOpeningAngle;
-            continue;
-        }
-
-        ///////////////////////////
-        CartesianVector microPosition(0.f, 0.f, 0.f);
-        subsetFit.GetGlobalPosition(microIter->second.GetL(), microIter->second.GetFitT(), microPosition);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &microPosition, "HIT", BLACK, 2);
-        ///////////////////////////
-
         const float layerAngleDeviation(std::fabs(microOpeningAngle - previousOpeningAngle));
-
-        if ((std::fabs(microOpeningAngle) > std::fabs(previousOpeningAngle)) || (microOpeningAngle * previousOpeningAngle < 0.f) ||
-            (layerAngleDeviation < m_thresholdAngleDeviationBetweenLayers))
+        const bool isBendConsistent((isClusterMergePointEnd && (std::fabs(microOpeningAngle) > std::fabs(previousOpeningAngle))) ||
+            (!isClusterMergePointEnd && (std::fabs(microOpeningAngle) < std::fabs(previousOpeningAngle))));
+            
+        if (!isBendConsistent || (microOpeningAngle * previousOpeningAngle < 0.f) || (layerAngleDeviation < m_thresholdAngleDeviationBetweenLayers))
         {
             ++anomalousLayerCount;
 
             if (anomalousLayerCount > m_maxAnomalousPoints)
-            {
-                std::cout << "ENDPOINT END TOO SMOOTH" << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 break;
-            }
         }
         else
         {
-            if (std::fabs(microOpeningAngle) < m_thresholdAngleDeviation)
+            if (isClusterMergePointEnd)
             {
-                std::cout << "ENDPOINT END MEET ANGLE CRITERIA" << std::endl;
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                // ATTN: Make cluster merge points more precise - NEED CLUSTER FIT START
-                clusterMergePoint = isEndUpstream ? subsetFit.GetGlobalMaxLayerPosition() : subsetFit.GetGlobalMinLayerPosition();
-                return true;
+                if (std::fabs(microOpeningAngle) > m_thresholdMaxAngleDeviation)
+                {
+                    clusterMergePoint = isEndUpstream ? subsetFit.GetGlobalMaxLayerPosition() : subsetFit.GetGlobalMinLayerPosition();
+                    return true;
+                }
+            }
+            else
+            {
+               if (std::fabs(microOpeningAngle) < m_thresholdAngleDeviation)
+               {
+                   clusterMergePoint = isEndUpstream ? subsetFit.GetGlobalMaxLayerPosition() : subsetFit.GetGlobalMinLayerPosition();
+                   return true;
+               }
             }
 
             anomalousLayerCount = 0;
         }
 
         previousOpeningAngle = microOpeningAngle;
-    }    
+        
+    }
 
     return false;
+    
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
+//------------------------------------------------------------------------------------------------------------------------------------------ 
+    
 StatusCode ExtensionPastDeltaRayAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxDistanceFromTPC", m_maxDistanceFromTPC));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinScaledZOffset", m_minScaledZOffset));
+        "MinZOffset", m_minZOffset));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DeltaRayslidingFitWindow", m_deltaRayslidingFitWindow));    
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ThresholdAngleDeviation", m_thresholdAngleDeviation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ThresholdMaxAngleDeviation", m_thresholdMaxAngleDeviation));    
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ThresholdAngleDeviationBetweenLayers", m_thresholdAngleDeviationBetweenLayers));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxAnomalousPoints", m_maxAnomalousPoints));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ThresholdMaxAngleDeviation", m_thresholdMaxAngleDeviation));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DeltaRayslidingFitWindow", m_deltaRayslidingFitWindow));
 
     return TrackExtensionRefinementAlgorithm::ReadSettings(xmlHandle);
 }

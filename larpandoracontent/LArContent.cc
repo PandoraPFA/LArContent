@@ -160,7 +160,6 @@
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/NearbyClusterMopUpAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterMopUp/SlidingConeClusterMopUpAlgorithm.h"
 
-#include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayEndpointCorrectionAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRayExtensionAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/CosmicRaySplittingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/DeltaRayExtensionAlgorithm.h"
@@ -168,7 +167,6 @@
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/ExtensionPastDeltaRayAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/ExtensionThroughShowerAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/TrackMergeRefinementAlgorithm.h"
-#include "larpandoracontent/LArTwoDReco/LArCosmicRay/TrackInEMShowerAlgorithm.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/BranchSplittingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/CrossedTrackSplittingAlgorithm.h"
@@ -231,7 +229,6 @@
     d("LArDeltaRayIdentification",              DeltaRayIdentificationAlgorithm)                                                \
     d("LArDeltaRayMatching",                    DeltaRayMatchingAlgorithm)                                                      \
     d("LArTrackMergeRefinement",                TrackMergeRefinementAlgorithm)                                                  \
-    d("LArTrackInEMShower",                     TrackInEMShowerAlgorithm)                                                       \
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
     d("LArThreeDLongitudinalTracks",            ThreeViewLongitudinalTracksAlgorithm)                                           \
@@ -267,7 +264,6 @@
     d("LArIsolatedClusterMopUp",                IsolatedClusterMopUpAlgorithm)                                                  \
     d("LArNearbyClusterMopUp",                  NearbyClusterMopUpAlgorithm)                                                    \
     d("LArSlidingConeClusterMopUp",             SlidingConeClusterMopUpAlgorithm)                                               \
-    d("LArCosmicRayEndpointCorrection",         CosmicRayEndpointCorrectionAlgorithm)                                           \
     d("LArCosmicRayExtension",                  CosmicRayExtensionAlgorithm)                                                    \
     d("LArCosmicRaySplitting",                  CosmicRaySplittingAlgorithm)                                                    \
     d("LArDeltaRayExtension",                   DeltaRayExtensionAlgorithm)                                                     \

@@ -19,10 +19,14 @@ namespace lar_content
 class LArClusterHelper
 {
 public:
-
+    /**
+     *  @brief  Get the average separation distance between cluster hits
+     *
+     *  @param  pCluster the address of the input cluster
+     *
+     *  @return the average hits separation
+     */    
     static float GetAverageHitSeparation(const pandora::Cluster *const pCluster);
-    static float GetAverageHitSeparation(const pandora::CaloHitList &caloHitList);
-    static float GetAverageHitSeparation(const pandora::OrderedCaloHitList &orderedCaloHitList);
     
     /**
      *  @brief  Get the hit type associated with a two dimensional cluster

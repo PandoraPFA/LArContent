@@ -22,32 +22,11 @@ float LArClusterHelper::GetAverageHitSeparation(const Cluster *const pCluster)
     if (pCluster->GetNCaloHits() == 1)
         return 0.f;
 
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    return LArClusterHelper::GetAverageHitSeparation(orderedCaloHitList);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float LArClusterHelper::GetAverageHitSeparation(const CaloHitList &caloHitList)
-{
-    if (caloHitList.size() == 1)
-        return 0.f;
-
-    OrderedCaloHitList orderedCaloHitList;
-    orderedCaloHitList.Add(caloHitList);
-
-    return LArClusterHelper::GetAverageHitSeparation(orderedCaloHitList);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------    
-
-float LArClusterHelper::GetAverageHitSeparation(const OrderedCaloHitList &orderedCaloHitList)
-{
-    const CaloHit *pPreviousCaloHit(orderedCaloHitList.begin()->second->front());
-
     float separationSum(0.f);
     unsigned int caloHitCount(0);
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    const CaloHit *pPreviousCaloHit(orderedCaloHitList.begin()->second->front());
+    
     for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
     {
         caloHitCount += mapEntry.second->size();
