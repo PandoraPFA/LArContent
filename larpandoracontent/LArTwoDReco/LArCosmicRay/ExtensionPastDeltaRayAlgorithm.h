@@ -43,14 +43,14 @@ private:
     /**
      *  @brief  Whether a significant curve is found at the cluster merge point end of the hits or at the endpoint end of the hits
      *
-     *  @param  pCluster the input cluster
+     *  @param  microSlidingFitResult the local TwoDSlidingFitResult of the cluster
      *  @param  clusterMergeDirection the merge direction of the cluster
      *  @param  isEndUpstream whether the cluster endpoint is at the upstream end of the cluster (i.e. lower z component)
      *  @param  clusterMergePoint the merge position of the cluster
      *
      *  @return  bool whether a curve was found
      */         
-    bool IsDeltaRay(const pandora::Cluster *const pCluster, const pandora::CartesianVector &clusterMergeDirection, const bool isEndUpstream,
+    bool IsDeltaRay(const TwoDSlidingFitResult &microSlidingFitResult, const pandora::CartesianVector &clusterMergeDirection, const bool isEndUpstream,
         pandora::CartesianVector &clusterMergePoint) const; 
 
     /**
