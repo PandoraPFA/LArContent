@@ -76,7 +76,7 @@ bool ExtensionPastDeltaRayAlgorithm::FindBestClusterAssociation(const ClusterVec
             continue;
 
         // Reject if cannot find a delta ray bend
-        if(!this->IsDeltaRay(pCluster, clusterMergeDirection, isEndUpstream, clusterMergePoint))
+        if(!this->IsDeltaRay(microSlidingFitResult, clusterMergeDirection, isEndUpstream, clusterMergePoint))
             continue;
 
         // ATTN: Temporarily set the other merge point to define extrapolate hits search region        
@@ -97,23 +97,28 @@ bool ExtensionPastDeltaRayAlgorithm::FindBestClusterAssociation(const ClusterVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ExtensionPastDeltaRayAlgorithm::IsDeltaRay(const Cluster *const pCluster, const CartesianVector &clusterMergeDirection, const bool isEndUpstream,
+bool ExtensionPastDeltaRayAlgorithm::IsDeltaRay(const TwoDSlidingFitResult &microSlidingFitResult, const CartesianVector &clusterMergeDirection, const bool isEndUpstream,
     CartesianVector &clusterMergePoint) const 
 {
     // Perform more detailed fit of hits past the clusterMergePoint
+    float rL(0.f), rT(0.f);
+    microSlidingFitResult.GetLocalPosition(clusterMergePoint, rL, rT);
+
     CartesianPointVector hitSubset;
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+    const OrderedCaloHitList &orderedCaloHitList(microSlidingFitResult.GetCluster()->GetOrderedCaloHitList());
     for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
     {
         for (const CaloHit *const pCaloHit : *mapEntry.second) 
         {
+            float thisL(0.f), thisT(0.f);
             const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+            microSlidingFitResult.GetLocalPosition(pCaloHit->GetPositionVector(), thisL, thisT);
 
-            if ((isEndUpstream && (hitPosition.GetZ() < clusterMergePoint.GetZ())) || (!isEndUpstream && (hitPosition.GetZ() > clusterMergePoint.GetZ())))
-                hitSubset.push_back(hitPosition);          
+            if ((isEndUpstream && (thisL < rL)) || (!isEndUpstream && (thisL > rL)))
+                hitSubset.push_back(hitPosition);
         }
     }
-
+    
     try
     {
         const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -222,7 +227,6 @@ bool ExtensionPastDeltaRayAlgorithm::IsCurvePresent(const TwoDSlidingFitResult &
         }
 
         previousOpeningAngle = microOpeningAngle;
-        
     }
 
     return false;
