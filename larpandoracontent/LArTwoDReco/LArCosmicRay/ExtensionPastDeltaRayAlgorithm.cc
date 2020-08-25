@@ -159,7 +159,7 @@ bool ExtensionPastDeltaRayAlgorithm::IsCurvePresent(const TwoDSlidingFitResult &
     const int step(isStartLayerUpstream ? 1 : -1);
     unsigned int anomalousLayerCount(0);
     bool reachedFirstCurve(false);
-    float previousOpeningAngle;
+    float previousOpeningAngle(0.f);
     
     for (int i = startLayer; i != loopTerminationLayer; i += step)
     {
