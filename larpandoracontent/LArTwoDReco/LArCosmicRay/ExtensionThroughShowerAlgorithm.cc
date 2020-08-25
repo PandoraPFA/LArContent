@@ -37,14 +37,28 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
 
         const bool isEndUpstream = (std::fabs(microSlidingFitResult.GetGlobalMinLayerPosition().GetX() - nearestTPCBoundaryX) <
                                     std::fabs(microSlidingFitResult.GetGlobalMaxLayerPosition().GetX() - nearestTPCBoundaryX));
+
+        /////////////////
+        ClusterList theCluster({pCurrentCluster});
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CONSIDERED CLUSTER", BLACK);
+        std::cout << "isEndUpstream: " << isEndUpstream << std::endl;
+        ////////////////
             
         CartesianVector clusterMergePoint(0.f, 0.f, 0.f), clusterMergeDirection(0.f, 0.f, 0.f);
         if (!GetClusterMergingCoordinates(microSlidingFitResult, macroSlidingFitResult, macroSlidingFitResult, isEndUpstream, clusterMergePoint, clusterMergeDirection))
+        {
+            std::cout << "CANNOT FIND MERGE POSITION" << std::endl;
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
             continue;
+        }
 
         // Reject clusters that do not cross TPC boundary
         if (std::fabs(clusterMergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
+        {
+            std::cout << "MERGE DIRECTION HAS NO X COMPONENT" << std::endl;
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());            
             continue;
+        }
 
         // Reject clusters that are not infront of a shower region
         if(!this->IsClusterEndpointInFrontOfShower(microSlidingFitResult, clusterMergePoint, clusterMergeDirection, isEndUpstream, pClusterList))
@@ -56,12 +70,26 @@ bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVe
         const CartesianVector extrapolatedHitsEndpoint(nearestTPCBoundaryX, 0.f, predictedIntercept + (predictedGradient * nearestTPCBoundaryX));
 
         if (isEndUpstream ? clusterMergePoint.GetZ() < extrapolatedHitsEndpoint.GetZ() : clusterMergePoint.GetZ() > extrapolatedHitsEndpoint.GetZ())
+        {
+            std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());            
             continue;
+        }
                 
         clusterAssociation = isEndUpstream ?
             ClusterEndpointAssociation(extrapolatedHitsEndpoint, clusterMergeDirection, clusterMergePoint, clusterMergeDirection * (-1.f), pCurrentCluster, true) :
             ClusterEndpointAssociation(clusterMergePoint, clusterMergeDirection, extrapolatedHitsEndpoint, clusterMergeDirection * (-1.f), pCurrentCluster, false);
 
+
+        ClusterList mainCluster({clusterAssociation.GetMainTrackCluster()});
+        const CartesianVector &upstream(clusterAssociation.GetUpstreamMergePoint());
+        const CartesianVector &downstream(clusterAssociation.GetDownstreamMergePoint());
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &upstream, "UPSTREAM", VIOLET, 2);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &downstream, "DOWNSTREAM", RED, 2);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &mainCluster, "CLUSTER", BLACK);
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+        
         return true;
     }
 
@@ -82,6 +110,9 @@ bool ExtensionThroughShowerAlgorithm::IsClusterEndpointInFrontOfShower(const Two
     const float separationDistance((endpointPosition - clusterMergePoint).GetMagnitude());
     const CartesianVector extrapolatedEndpoint(clusterMergePoint + (clusterMergeDirection * directionFactor * separationDistance));
 
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedEndpoint, "extrapolatedPoint", RED, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &endpointPosition, "endpoint", BLUE, 2);
+
     unsigned int showerClusterCount(0);
     for (const Cluster *const pTestCluster : *pClusterList)
     {
@@ -94,33 +125,41 @@ bool ExtensionThroughShowerAlgorithm::IsClusterEndpointInFrontOfShower(const Two
         // ATTN: If pCurrent cluster is contained within pTestCluster it is likely to be part of the shower
         if ((currentInnerPseudoLayer > testInnerPseudoLayer) && (currentOuterPseudoLayer < testOuterPseudoLayer))
         {
+            const float closestDistance(LArClusterHelper::GetClosestDistance(pCurrentCluster, pTestCluster));
+            ClusterList frog({pTestCluster});
+            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &frog, "CONTAINED: " + std::to_string(closestDistance), VIOLET);
+            
             if (LArClusterHelper::GetClosestDistance(pCurrentCluster, pTestCluster) < m_maxTrackDistanceToShowerBranch)
+            {
+                PandoraMonitoringApi::ViewEvent(this->GetPandora());
                 return false;
+            }
         }
 
-        const float innerTransverseDistance(clusterMergeDirection.GetCrossProduct(innerPoint - extrapolatedEndpoint).GetMagnitude());
-        const float outerTransverseDistance(clusterMergeDirection.GetCrossProduct(outerPoint - extrapolatedEndpoint).GetMagnitude());        
-        const float innerLongitudinalDistance(clusterMergeDirection.GetDotProduct(innerPoint - extrapolatedEndpoint));
-        const float outerLongitudinalDistance(clusterMergeDirection.GetDotProduct(outerPoint - extrapolatedEndpoint));
-
-        // ATTN: Only consider showers that are fully forwards of the extrapolatedEndpoint
-        const bool isForward((innerLongitudinalDistance > 0.f) && (outerLongitudinalDistance > 0.f));
-        if (!isForward)
-            continue;
-                        
-        const float closestTransverse(std::min(innerTransverseDistance, outerTransverseDistance));
-        const float closestLongitudinal(innerTransverseDistance < outerTransverseDistance ? innerLongitudinalDistance : outerLongitudinalDistance);
-
-        if ((closestTransverse < m_maxShowerBranchTransverseDistance) && (closestLongitudinal < m_maxShowerBranchLongitudinalDistance))
+        if (showerClusterCount != m_thresholdShowerClusterCount)
         {
-            ++showerClusterCount;
+            const float innerTransverseDistance(clusterMergeDirection.GetCrossProduct(innerPoint - extrapolatedEndpoint).GetMagnitude());
+            const float outerTransverseDistance(clusterMergeDirection.GetCrossProduct(outerPoint - extrapolatedEndpoint).GetMagnitude());    
+            const float innerLongitudinalDistance(clusterMergeDirection.GetDotProduct(innerPoint - extrapolatedEndpoint));
+            const float outerLongitudinalDistance(clusterMergeDirection.GetDotProduct(outerPoint - extrapolatedEndpoint));
 
-            if (showerClusterCount == m_thresholdShowerClusterCount)
-                return true;
+            // ATTN: Only consider showers that are fully forwards of the extrapolatedEndpoint
+            const bool isForward((innerLongitudinalDistance > 0.f) && (outerLongitudinalDistance > 0.f));
+            if (!isForward)
+                continue;
+                        
+            const float closestTransverse(std::min(innerTransverseDistance, outerTransverseDistance));
+            const float closestLongitudinal(innerTransverseDistance < outerTransverseDistance ? innerLongitudinalDistance : outerLongitudinalDistance);
+
+            if ((closestTransverse < m_maxShowerBranchTransverseDistance) && (closestLongitudinal < m_maxShowerBranchLongitudinalDistance))
+                ++showerClusterCount;
         }
     }
 
-    return false;
+    std::cout << "FOUND " << showerClusterCount << " GOOD CLUSTER(S)" << std::endl;
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    return (showerClusterCount == m_thresholdShowerClusterCount ? true : false);
 }    
 
 //------------------------------------------------------------------------------------------------------------------------------------------  
