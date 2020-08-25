@@ -356,7 +356,7 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
         const Cluster *const pReplacementCluster = thisSplit.GetReplacementCluster();
         const CartesianVector &branchSplitPosition = thisSplit.GetBranchVertex();
         const CartesianVector &branchSplitDirection = thisSplit.GetBranchDirection();
-        
+
         TwoDSlidingFitResultMap::iterator iterBranch1 = branchResultMap.find(pBranchCluster);
         TwoDSlidingFitResultMap::iterator iterBranch2 = branchResultMap.find(pReplacementCluster);
 
