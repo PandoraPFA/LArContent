@@ -23,10 +23,10 @@ TrackRefinementBaseAlgorithm::TrackRefinementBaseAlgorithm() :
     m_maxShowerLength(50.f),
     m_maxTrackCurviness(0.3f),
     m_maxTrackHitSeparation(0.6f),
-    m_microSlidingFitWindow(20), // Extension uses 10
+    m_microSlidingFitWindow(20),
     m_macroSlidingFitWindow(1000),
     m_stableRegionClusterFraction(0.05),
-    m_mergePointMinCosAngleDeviation(0.999), // Extension uses 0.999? maybe
+    m_mergePointMinCosAngleDeviation(0.999),
     m_minHitFractionForHitRemoval(0.05f),
     m_maxDistanceFromMainTrack(0.75f),
     m_maxHitDistanceFromCluster(4.f),
@@ -60,19 +60,6 @@ void TrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterList *pClus
                 CartesianVector clusterAverageDirection(0.f, 0.f, 0.f);
                 macroSlidingFitResult.GetGlobalDirection(macroSlidingFitResult.GetLayerFitResultMap().begin()->second.GetGradient(), clusterAverageDirection);
 
-                ////////////////////////////////////
-                
-                ClusterList possibleShower({pCluster});
-                std::cout << "min layer average deviation: " <<
-                    this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) << std::endl;
-                std::cout << "max layer average deviation: " <<
-                    this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMaxLayerPosition()) << std::endl;
-                std::cout << "average hit separation: " << LArClusterHelper::GetAverageHitSeparation(pCluster) << std::endl;
-                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &possibleShower, "possible shower", BLUE);
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());
-                
-                ////////////////////////////////////
-                 
                 if ((this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) > m_maxTrackCurviness) &&
                     (this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMaxLayerPosition()) > m_maxTrackCurviness))
                 {
@@ -191,16 +178,8 @@ bool TrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssociation &c
     
     for (unsigned int i = 0; i < (trackSegmentBoundaries.size() - 1); ++i)
     {
-        /*
-        CartesianVector up(trackSegmentBoundaries.at(i));
-        CartesianVector down(trackSegmentBoundaries.at(i + 1));
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &up, "low limit", BLACK, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &down, "high limit", BLACK, 2);
-        */
-        
         if (caloHitIter == extrapolatedCaloHitVector.end())
         {
-            //std::cout << "HERE" << std::endl;
             ++segmentsWithoutHits;
             
             if (segmentsWithoutHits > m_maxTrackGaps)
@@ -212,8 +191,6 @@ bool TrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssociation &c
         unsigned int hitsInSegment(0);
         while (this->IsInLineSegment(trackSegmentBoundaries.at(i), trackSegmentBoundaries.at(i + 1), hitPosition))
         {
-
-            //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "Y", GREEN, 2);
             ++hitsInSegment;
             ++caloHitIter;
 
@@ -224,13 +201,6 @@ bool TrackRefinementBaseAlgorithm::IsTrackContinuous(const ClusterAssociation &c
                 LArHitWidthHelper::GetClosestPointToLine2D(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetConnectingLineDirection(), *caloHitIter) :
                 (*caloHitIter)->GetPositionVector();
         }
-
-        /////////////////
-        /*
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "N", RED, 2);
-        PandoraMonitoringApi::Pause(this->GetPandora());
-        */
-        /////////////////
         
         segmentsWithoutHits = hitsInSegment ? 0 : segmentsWithoutHits + 1;
 
@@ -294,15 +264,6 @@ bool TrackRefinementBaseAlgorithm::IsInLineSegment(const CartesianVector &lowerB
     const float segmentBoundaryGradient = (-1.f) * (upperBoundary.GetX() - lowerBoundary.GetX()) / (upperBoundary.GetZ() - lowerBoundary.GetZ());
     const float xPointOnUpperLine((point.GetZ() - upperBoundary.GetZ()) / segmentBoundaryGradient + upperBoundary.GetX());
     const float xPointOnLowerLine((point.GetZ() - lowerBoundary.GetZ()) / segmentBoundaryGradient + lowerBoundary.GetX());
-    
-    /////////////////////
-    /*
-    CartesianVector jam(xPointOnLowerLine, 0, point.GetZ());
-    CartesianVector frog(xPointOnUpperLine, 0, point.GetZ());
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &jam, "X", BLUE, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &frog, "X", BLUE, 2);    
-    */
-    /////////////////////
     
     if (std::fabs(xPointOnUpperLine - point.GetX()) < std::numeric_limits<float>::epsilon())
         return true;
