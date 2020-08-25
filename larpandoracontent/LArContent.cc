@@ -229,8 +229,6 @@
     d("LArCosmicRayVertexBuilding",             CosmicRayVertexBuildingAlgorithm)                                               \
     d("LArDeltaRayIdentification",              DeltaRayIdentificationAlgorithm)                                                \
     d("LArDeltaRayMatching",                    DeltaRayMatchingAlgorithm)                                                      \
-    d("LArTrackMergeRefinement",                TrackMergeRefinementAlgorithm)                                                  \
-    d("LArTrackInEMShower",                     TrackInEMShowerAlgorithm)                                                       \
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
     d("LArThreeDLongitudinalTracks",            ThreeViewLongitudinalTracksAlgorithm)                                           \
@@ -272,6 +270,8 @@
     d("LArDeltaRayGrowing",                     DeltaRayGrowingAlgorithm)                                                       \
     d("LArExtensionPastDeltaRay",               ExtensionPastDeltaRayAlgorithm)                                                 \
     d("LArExtensionThroughShower",              ExtensionThroughShowerAlgorithm)                                                \
+    d("LArTrackMergeRefinement",                TrackMergeRefinementAlgorithm)                                                  \
+    d("LArTrackInEMShower",                     TrackInEMShowerAlgorithm)                                                       \    
     d("LArBranchSplitting",                     BranchSplittingAlgorithm)                                                       \
     d("LArCrossedTrackSplitting",               CrossedTrackSplittingAlgorithm)                                                 \
     d("LArDeltaRaySplitting",                   DeltaRaySplittingAlgorithm)                                                     \
