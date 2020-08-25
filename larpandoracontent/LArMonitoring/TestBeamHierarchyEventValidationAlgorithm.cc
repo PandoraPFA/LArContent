@@ -294,7 +294,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
                 bestMatchPfoNSharedHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList));
                 bestMatchPfoNSharedHitsW.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList));
                 bestMatchPfoX0.push_back(pfoToSharedHits.first->GetPropertiesMap().count("X0") ? pfoToSharedHits.first->GetPropertiesMap().at("X0") : std::numeric_limits<float>::max());
-#ifdef MONITORING                
+#ifdef MONITORING
                 try
                 {
                     const Vertex *const pRecoVertex(isRecoTestBeamHierarchy ? LArPfoHelper::GetTestBeamInteractionVertex(LArPfoHelper::GetParentPfo(pfoToSharedHits.first)) : LArPfoHelper::GetVertex(pfoToSharedHits.first));

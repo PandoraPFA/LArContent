@@ -22,7 +22,7 @@ namespace lar_content
 PreProcessingAlgorithm::PreProcessingAlgorithm() :
     m_mipEquivalentCut(std::numeric_limits<float>::epsilon()),
     m_minCellLengthScale(std::numeric_limits<float>::epsilon()),
-    m_maxCellLengthScale(3.f),//std::numeric_limits<float>::max()),//3.f),
+    m_maxCellLengthScale(3.f),
     m_searchRegion1D(0.1f),
     m_maxEventHits(std::numeric_limits<unsigned int>::max()),
     m_onlyAvailableCaloHits(true),
