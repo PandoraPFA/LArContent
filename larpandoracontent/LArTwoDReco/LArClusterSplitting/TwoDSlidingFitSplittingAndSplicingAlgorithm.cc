@@ -356,28 +356,6 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
         const Cluster *const pReplacementCluster = thisSplit.GetReplacementCluster();
         const CartesianVector &branchSplitPosition = thisSplit.GetBranchVertex();
         const CartesianVector &branchSplitDirection = thisSplit.GetBranchDirection();
-        ////
-        /*
-        const LArTPC &pLArTPC(this->GetPandora().GetGeometry()->GetLArTPC());
-        const float tpcXCentre(pLArTPC.GetCenterX());
-        if (std::fabs(tpcXCentre - 179.715103149) < 5)
-        {
-            PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
-        ClusterList theBranch({pBranchCluster}), theReplacement({pReplacementCluster});
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theBranch, "BRANCH CLUSTER", RED);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theReplacement, "REPLACEMENT CLUSTER", BLUE);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &branchSplitPosition, "SPLIT POSITION", BLACK, 2);
-        CartesianVector endPosition(branchSplitPosition + (branchSplitDirection * 10));
-        float invGrad(-branchSplitDirection.GetX() / branchSplitDirection.GetZ());
-        CartesianVector invDirection(1.f, 0.f, invGrad);
-        CartesianVector start(branchSplitPosition + (invDirection * 30));
-        CartesianVector end(branchSplitPosition - (invDirection * 30));        
-        PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &branchSplitPosition, &endPosition, "SPLIT DIRECTION", BLACK, 2, 1);
-        PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &start, &end, "INV DIRECTION", RED, 2, 1);            
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        }
-        */
-        ////
         
         TwoDSlidingFitResultMap::iterator iterBranch1 = branchResultMap.find(pBranchCluster);
         TwoDSlidingFitResultMap::iterator iterBranch2 = branchResultMap.find(pReplacementCluster);

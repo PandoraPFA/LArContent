@@ -141,18 +141,12 @@ void CosmicRayTrackRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVect
                 const TwoDSlidingFitResult slidingFitResult(*iter, m_halfWindowLayers, slidingFitPitch);
 
                 if (!slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(*iter, slidingFitResult)).second)
-                {
-                    std::cout << "1111111111111111" << std::endl;
                     throw StatusCodeException(STATUS_CODE_FAILURE);
-                }
             }
             catch (StatusCodeException &statusCodeException)
             {
                 if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                {
-                    std::cout << "2222222222222222222" << std::endl;
                     throw statusCodeException;
-                }
             }
         }
     }
@@ -183,14 +177,7 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster* const pSeedCl
     TwoDSlidingFitResultMap::const_iterator fsIter = slidingFitResultMap.find(pSeedCluster);
 
     if (slidingFitResultMap.end() == fsIter)
-    {
-        ClusterList theCluster({pSeedCluster});
-        PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "BAD CLUSTER", VIOLET);
-        std::cout << "333333333333333" << std::endl;
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
         throw StatusCodeException(STATUS_CODE_FAILURE);
-    }
 
     const TwoDSlidingFitResult &slidingFitResult1(fsIter->second);
     const CartesianVector &innerVertex1(slidingFitResult1.GetGlobalMinLayerPosition());
@@ -215,10 +202,7 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster* const pSeedCl
         TwoDSlidingFitResultMap::const_iterator ftIter = slidingFitResultMap.find(*tIter);
 
         if (slidingFitResultMap.end() == ftIter)
-        {
-            std::cout << "4444444444444444444" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
 
         const TwoDSlidingFitResult &slidingFitResult2(ftIter->second);
         const CartesianVector &innerVertex2(slidingFitResult2.GetGlobalMinLayerPosition());
@@ -277,10 +261,7 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster* const pSeedCl
         TwoDSlidingFitResultMap::const_iterator iterOuter = slidingFitResultMap.find(pBestClusterOuter);
 
         if (slidingFitResultMap.end() == iterInner || slidingFitResultMap.end() == iterOuter)
-        {
-            std::cout << "55555555555" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
 
         const LArPointingCluster pointingClusterInner(iterInner->second);
         const LArPointingCluster pointingClusterOuter(iterOuter->second);
@@ -658,10 +639,7 @@ void CosmicRayTrackRecoveryAlgorithm::BuildParticles(const ParticleList &particl
         this->MergeClusters(particle.m_clusterList, clusterList);
 
         if (clusterList.empty())
-        {
-            std::cout << "666666666666666" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
 
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
         pfoParameters.m_particleId = MU_MINUS; // TRACK
@@ -699,10 +677,7 @@ void CosmicRayTrackRecoveryAlgorithm::MergeClusters(const ClusterList &inputClus
         const Cluster *const pSeedCluster(clusterList.front());
 
         if (!PandoraContentApi::IsAvailable(*this, pSeedCluster))
-        {
-            std::cout << "77777777777777777" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
-        }
 
         for (const Cluster *const pAssociatedCluster : clusterList)
         {
