@@ -27,21 +27,11 @@ namespace lar_dl_content
 {
 
 DeepLearningTrackShowerIdAlgorithm::DeepLearningTrackShowerIdAlgorithm() :
-    m_xMin(-420),
-    m_zMinU(-350),
-    m_zMinV(0),
-    m_zMinW(-25),
-    m_nBins(512),
     m_visualize(false),
     m_useTrainingMode(false),
     m_profile(false),
     m_trainingOutputFile("")
 {
-    const float span(980);
-    m_xMax = m_xMin + span;
-    m_zMaxU = m_zMinU + span;
-    m_zMaxV = m_zMinV + span;
-    m_zMaxW = m_zMinW + span;
 }
 
 DeepLearningTrackShowerIdAlgorithm::~DeepLearningTrackShowerIdAlgorithm()
@@ -114,33 +104,6 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xm
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "Profile", m_profile));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ImageXMin", m_xMin));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ImageXMax", m_xMax));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ImageZMinU", m_zMinU));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ImageZMaxU", m_zMaxU));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ImageZMinV", m_zMinV));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ImageZMaxV", m_zMaxV));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ImageZMinW", m_zMinW));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ImageZMaxW", m_zMaxW));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NumberOfBins", m_nBins));
 
     return STATUS_CODE_SUCCESS;
 }
