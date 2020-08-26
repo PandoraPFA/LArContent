@@ -118,7 +118,8 @@ bool TrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const TwoDSlidin
     // ATTN: Search for stable region for which the local layer gradient agrees well with associated cluster global gradient
     unsigned int gradientStabilityWindow(std::ceil(clusterMicroLayerFitResultMap.size() *  m_stableRegionClusterFraction));
     unsigned int goodLayerCount(0);
-
+    bool foundLayer(false);
+    
     for (int i = startLayer; i != loopTerminationLayer; i += step)
     {
         const auto microIter(clusterMicroLayerFitResultMap.find(i));
@@ -147,14 +148,13 @@ bool TrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const TwoDSlidin
         }
 
         if (goodLayerCount > gradientStabilityWindow)
+        {
+            foundLayer = true;
             break;
-
-        // ATTN: Abort merging process have not found a stable region
-        if (i == endLayer)
-            return false;
+        }
     }
 
-    return true;
+    return foundLayer;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
