@@ -25,8 +25,8 @@ TrackRefinementBaseAlgorithm::TrackRefinementBaseAlgorithm() :
     m_maxTrackHitSeparation(0.6f),
     m_microSlidingFitWindow(20),
     m_macroSlidingFitWindow(1000),
-    m_stableRegionClusterFraction(0.05),
-    m_mergePointMinCosAngleDeviation(0.999),
+    m_stableRegionClusterFraction(0.05f),
+    m_mergePointMinCosAngleDeviation(0.999f),
     m_minHitFractionForHitRemoval(0.05f),
     m_maxDistanceFromMainTrack(0.75f),
     m_maxHitDistanceFromCluster(4.f),
@@ -112,13 +112,14 @@ bool TrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const TwoDSlidin
     const LayerFitResultMap &clusterMicroLayerFitResultMap(clusterMicroFitResult.GetLayerFitResultMap());
     const int startLayer(isEndUpstream ? clusterMicroFitResult.GetMinLayer() : clusterMicroFitResult.GetMaxLayer());
     const int endLayer(isEndUpstream ? clusterMicroFitResult.GetMaxLayer() : clusterMicroFitResult.GetMinLayer());
-    const int loopTerminationLayer(endLayer + (isEndUpstream ? 1 : +1));
+    const int loopTerminationLayer(endLayer + (isEndUpstream ? 1 : -1));
     const int step(isEndUpstream ? 1 : -1);
 
     // ATTN: Search for stable region for which the local layer gradient agrees well with associated cluster global gradient
     unsigned int gradientStabilityWindow(std::ceil(clusterMicroLayerFitResultMap.size() *  m_stableRegionClusterFraction));
     unsigned int goodLayerCount(0);
-    bool foundLayer(false);
+
+    clusterMicroLayerFitResultMap.at(endLayer);
     
     for (int i = startLayer; i != loopTerminationLayer; i += step)
     {
@@ -148,13 +149,14 @@ bool TrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const TwoDSlidin
         }
 
         if (goodLayerCount > gradientStabilityWindow)
-        {
-            foundLayer = true;
             break;
-        }
+        
+        // ATTN: Abort merging process have not found a stable region
+        if (i == endLayer)
+            return false;
     }
 
-    return foundLayer;
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
