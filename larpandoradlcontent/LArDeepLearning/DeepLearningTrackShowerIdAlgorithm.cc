@@ -129,11 +129,9 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
         std::string trainingOutputFileName(m_trainingOutputFile);
         LArMvaHelper::MvaFeatureVector featureVector;
 
-        if (isU) trainingOutputFileName += "_CaloHitListU.txt";
-        else if (isV) trainingOutputFileName += "_CaloHitListV.txt";
-        else if (isW) trainingOutputFileName += "_CaloHitListW.txt";
-
-        featureVector.push_back(static_cast<double>(pCaloHitList->size()));
+        if (isU) trainingOutputFileName += "_CaloHitListU.csv";
+        else if (isV) trainingOutputFileName += "_CaloHitListV.csv";
+        else if (isW) trainingOutputFileName += "_CaloHitListW.csv";
 
         LArMCParticleHelper::PrimaryParameters parameters;
         // Only care about reconstructability with respect to the current view, so skip good view check
@@ -142,32 +140,30 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
         parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
         LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList,
-                parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+            parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
 
         for (const CaloHit *pCaloHit : *pCaloHitList)
         {
-            int isReconstructable{1};
-            int pdg{-1};
             int tag{TRACK};
+            float inputEnergy{0.f};
 
             try
             {
                 const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
                 // Throw away non-reconstructable hits
                 if (targetMCParticleToHitsMap.find(pMCParticle) == targetMCParticleToHitsMap.end())
-                    isReconstructable = 0;
-                pdg = std::abs(pMCParticle->GetParticleId());
+                    continue;
+                if(isNeutronDaughter(pMCParticle))
+                    continue;
+                inputEnergy = pCaloHit->GetInputEnergy();
+                if (inputEnergy < 0)
+                    continue;
+
+                const int pdg{std::abs(pMCParticle->GetParticleId())};
                 if (pdg == 11 || pdg == 22)
                     tag = SHOWER;
                 else
                     tag = TRACK;
-                if (isReconstructable)
-                {
-                    if(isNeutronDaughter(pMCParticle))
-                    {
-                        isReconstructable = 0;
-                    }
-                }
             }
             catch (...)
             {
@@ -177,8 +173,11 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
             featureVector.push_back(static_cast<double>(pCaloHit->GetPositionVector().GetX()));
             featureVector.push_back(static_cast<double>(pCaloHit->GetPositionVector().GetZ()));
             featureVector.push_back(static_cast<double>(tag));
-            featureVector.push_back(static_cast<double>(isReconstructable));
+            featureVector.push_back(static_cast<double>(inputEnergy));
         }
+        // Add number of hits to end of vector than rotate (more efficient than direct insert at front)
+        featureVector.push_back(static_cast<double>(featureVector.size() / 4));
+        std::rotate(featureVector.rbegin(), featureVector.rbegin() + 1, featureVector.rend());
 
         LArMvaHelper::ProduceTrainingExample(trainingOutputFileName, true, featureVector);
     }
