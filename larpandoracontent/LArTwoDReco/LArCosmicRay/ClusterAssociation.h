@@ -87,6 +87,11 @@ public:
     bool operator<(const ClusterAssociation &clusterAssociation) const;
         
 protected:
+    /**
+     *  @brief  Update the connecting line
+     */        
+    void UpdateConnectingLine();
+    
     pandora::CartesianVector    m_upstreamMergePoint;          ///< The upstream cluster point to be used in the merging process
     pandora::CartesianVector    m_upstreamMergeDirection;      ///< The upstream cluster direction at the upstream merge point (points in the direction of the downstream cluster)
     pandora::CartesianVector    m_downstreamMergePoint;        ///< The downstream cluster point to be used in the merging process
@@ -95,7 +100,11 @@ protected:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
-
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+/**
+ *  @brief  ClusterEndpointAssociation class
+ */    
 class ClusterEndpointAssociation : public ClusterAssociation
 {
 public:
@@ -138,7 +147,11 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------     
 
+/**
+ *  @brief  ClusterPairAssociation class
+ */       
 class ClusterPairAssociation : public ClusterAssociation
 {
 public:
@@ -209,8 +222,8 @@ inline ClusterAssociation::ClusterAssociation(const pandora::CartesianVector &up
 
 inline bool ClusterAssociation::operator==(const ClusterAssociation &clusterAssociation) const
 {
-    return (m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint() &&  m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint() &&
-        m_downstreamMergePoint == clusterAssociation.GetDownstreamMergePoint() &&  m_downstreamMergePoint == clusterAssociation.GetDownstreamMergePoint());
+    return (m_upstreamMergePoint == clusterAssociation.GetUpstreamMergePoint() &&  m_upstreamMergeDirection == clusterAssociation.GetUpstreamMergeDirection() &&
+        m_downstreamMergePoint == clusterAssociation.GetDownstreamMergePoint() &&  m_downstreamMergeDirection == clusterAssociation.GetDownstreamMergeDirection());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -260,9 +273,7 @@ inline const pandora::CartesianVector ClusterAssociation::GetConnectingLineDirec
 inline void ClusterAssociation::SetUpstreamMergePoint(const pandora::CartesianVector &upstreamMergePoint)
 {
     m_upstreamMergePoint = upstreamMergePoint;
-    
-    const pandora::CartesianVector connectingLineDirection(m_downstreamMergePoint.GetX() - m_upstreamMergePoint.GetX(), 0.f, m_downstreamMergePoint.GetZ() - m_upstreamMergePoint.GetZ());
-    m_connectingLineDirection = connectingLineDirection.GetUnitVector();
+    this->UpdateConnectingLine();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -270,7 +281,13 @@ inline void ClusterAssociation::SetUpstreamMergePoint(const pandora::CartesianVe
 inline void ClusterAssociation::SetDownstreamMergePoint(const pandora::CartesianVector &downstreamMergePoint)
 {
     m_downstreamMergePoint = downstreamMergePoint;
-    
+    this->UpdateConnectingLine();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void ClusterAssociation::UpdateConnectingLine()
+{
     const pandora::CartesianVector connectingLineDirection(m_downstreamMergePoint.GetX() - m_upstreamMergePoint.GetX(), 0.f, m_downstreamMergePoint.GetZ() - m_upstreamMergePoint.GetZ());
     m_connectingLineDirection = connectingLineDirection.GetUnitVector();
 }

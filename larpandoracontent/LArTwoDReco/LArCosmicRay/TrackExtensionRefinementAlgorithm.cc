@@ -50,7 +50,7 @@ StatusCode TrackExtensionRefinementAlgorithm::Run()
 
     // ATTN: Keep track of created main track clusters so their hits can be protected in future iterations
     ClusterList createdMainTrackClusters;
-    for (unsigned int isHigherXBoundary = 0; isHigherXBoundary < 2; ++isHigherXBoundary)
+    for (bool isHigherXBoundary : { false, true })
     {
         const float nearestTPCBoundaryX(isHigherXBoundary ? m_tpcMaxXEdge : m_tpcMinXEdge);
         if ((std::fabs(nearestTPCBoundaryX - m_detectorMinXEdge) < std::numeric_limits<float>::epsilon()) ||
@@ -87,7 +87,7 @@ StatusCode TrackExtensionRefinementAlgorithm::Run()
                 consideredClusters));
         }
 
-        if (isHigherXBoundary == 0)
+        if (!isHigherXBoundary)
             this->InitialiseContainers(&consideredClusters, SortByDistanceToTPCBoundary(m_tpcMaxXEdge), clusterVector, slidingFitResultMapPair);
     }
 
