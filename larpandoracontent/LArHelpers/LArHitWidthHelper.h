@@ -298,10 +298,10 @@ public:
         const pandora::CaloHit *const pCaloHit);
 
     /**
-     *  @brief  Consider the hit width to find the smallest of a calo hit to a given point
+     *  @brief  Consider the hit width to find the smallest distance between a calo hit and a given point
      *
      *  @param  pCaloHit the input calo hit
-     *  @param  the position
+     *  @param  point2D the position
      *
      *  @return  float the smallest distance
      */    

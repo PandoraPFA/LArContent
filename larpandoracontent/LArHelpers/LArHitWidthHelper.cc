@@ -279,14 +279,13 @@ void LArHitWidthHelper::GetExtremalCoordinatesX(const ConstituentHitVector &cons
 
 CartesianVector LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector &lineStart, const CartesianVector &lineDirection, const CaloHit *const pCaloHit)
 {
-    float xOnLine;
     const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
     
-    if (std::fabs(lineDirection.GetX()) < std::numeric_limits<float>::epsilon())
-    {
-        xOnLine = lineStart.GetX();
-    }
-    else
+    if (std::fabs(lineDirection.GetZ()) < std::numeric_limits<float>::epsilon())
+        return hitPosition;
+    
+    float xOnLine(lineStart.GetX());
+    if (std::fabs(lineDirection.GetX()) > std::numeric_limits<float>::epsilon())
     {
         const float gradient(lineDirection.GetZ() / lineDirection.GetX());
         xOnLine = ((hitPosition.GetZ() - lineStart.GetZ()) / gradient) + lineStart.GetX();
@@ -295,16 +294,8 @@ CartesianVector LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector
     const float &hitWidth(pCaloHit->GetCellSize1());    
     const float hitLowXEdge(hitPosition.GetX() - (hitWidth * 0.5f));    
     const float hitHighXEdge(hitPosition.GetX() + (hitWidth * 0.5f));
-
-    float closestPointX;
-    if ((xOnLine > hitLowXEdge) && (xOnLine < hitHighXEdge))
-    {
-        closestPointX = xOnLine;
-    }
-    else
-    {
-        closestPointX = hitLowXEdge > xOnLine ? hitLowXEdge : hitHighXEdge;
-    }
+    const float closestPointX(xOnLine < hitLowXEdge ? hitLowXEdge :
+        xOnLine > hitHighXEdge ? hitHighXEdge : xOnLine);
 
     return CartesianVector(closestPointX, 0.f, hitPosition.GetZ());
 }
@@ -314,7 +305,7 @@ CartesianVector LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector
 float LArHitWidthHelper::GetClosestDistanceToPoint2D(const CaloHit *const pCaloHit, const CartesianVector &point2D)
 {
     const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-    const float &hitWidth(pCaloHit->GetCellSize1());
+    const float hitWidth(pCaloHit->GetCellSize1());
     const float hitLowXEdge(hitPosition.GetX() - (hitWidth * 0.5f));
     const float hitHighXEdge(hitPosition.GetX() + (hitWidth * 0.5f));
     const float modDeltaZ(std::fabs(hitPosition.GetZ() - point2D.GetZ()));
