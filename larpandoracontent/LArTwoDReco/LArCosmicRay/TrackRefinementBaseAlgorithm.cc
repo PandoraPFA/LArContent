@@ -19,10 +19,7 @@ namespace lar_content
 {
 
 TrackRefinementBaseAlgorithm::TrackRefinementBaseAlgorithm() :
-    m_minClusterLength(15.f),
-    m_maxShowerLength(50.f),
-    m_maxTrackCurviness(0.3f),
-    m_maxTrackHitSeparation(0.6f),
+    m_minClusterLength(50.f),
     m_microSlidingFitWindow(20),
     m_macroSlidingFitWindow(1000),
     m_stableRegionClusterFraction(0.05f),
@@ -53,22 +50,6 @@ void TrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterList *pClus
         {
             const TwoDSlidingFitResult microSlidingFitResult(pCluster, m_microSlidingFitWindow, slidingFitPitch);
             const TwoDSlidingFitResult macroSlidingFitResult(pCluster, m_macroSlidingFitWindow, slidingFitPitch);
-
-            // ISOBEL: Need to check whether this is worth doing i.e. is it worth having to avoid shower clusters to try and recover small tracks?
-            if ((LArClusterHelper::GetLengthSquared(pCluster) < m_maxShowerLength * m_maxShowerLength))
-            {
-                CartesianVector clusterAverageDirection(0.f, 0.f, 0.f);
-                macroSlidingFitResult.GetGlobalDirection(macroSlidingFitResult.GetLayerFitResultMap().begin()->second.GetGradient(), clusterAverageDirection);
-
-                if ((this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMinLayerPosition()) > m_maxTrackCurviness) &&
-                    (this->GetAverageDeviationFromLine(pCluster, clusterAverageDirection, macroSlidingFitResult.GetGlobalMaxLayerPosition()) > m_maxTrackCurviness))
-                {
-                    continue;
-                }
-
-                if (LArClusterHelper::GetAverageHitSeparation(pCluster) > m_maxTrackHitSeparation)
-                    continue;
-            }
              
             slidingFitResultMapPair.first->insert(TwoDSlidingFitResultMap::value_type(pCluster, microSlidingFitResult));
             slidingFitResultMapPair.second->insert(TwoDSlidingFitResultMap::value_type(pCluster, macroSlidingFitResult));
@@ -79,26 +60,6 @@ void TrackRefinementBaseAlgorithm::InitialiseContainers(const ClusterList *pClus
 
     std::sort(clusterVector.begin(), clusterVector.end(), sortFunction); 
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float TrackRefinementBaseAlgorithm::GetAverageDeviationFromLine(const Cluster *const pCluster, const CartesianVector &lineDirection, const CartesianVector &startPoint) const
-{
-    float distanceFromLine(0.f);
-    
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
-    {
-        for (const CaloHit *const pCaloHit : *mapEntry.second)
-         {
-             const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-
-             distanceFromLine += (lineDirection.GetCrossProduct(hitPosition - startPoint).GetMagnitude());
-         }
-    }
-
-    return (distanceFromLine / pCluster->GetNCaloHits());
-}    
     
 //------------------------------------------------------------------------------------------------------------------------------------------
        
@@ -138,7 +99,7 @@ bool TrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const TwoDSlidin
             if (goodLayerCount == 0)
             {
                 clusterMergeDirection = clusterAverageDirection;
-                clusterMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), clusterMergePosition);
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, clusterMicroFitResult.GetGlobalFitPosition(microIter->second.GetL(), clusterMergePosition));
             }
 
             ++goodLayerCount;
@@ -157,6 +118,100 @@ bool TrackRefinementBaseAlgorithm::GetClusterMergingCoordinates(const TwoDSlidin
     }
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrackRefinementBaseAlgorithm::GetHitsInBoundingBox(const CartesianVector &firstCorner, const CartesianVector &secondCorner, const ClusterList *const pClusterList,
+    ClusterToCaloHitListMap &clusterToCaloHitListMap, const ClusterList &unavailableProtectedClusters, const float distanceToLine) const 
+{
+    const float minX(std::min(firstCorner.GetX(), secondCorner.GetX())), maxX(std::max(firstCorner.GetX(), secondCorner.GetX()));
+    const float minZ(std::min(firstCorner.GetZ(), secondCorner.GetZ())), maxZ(std::max(firstCorner.GetZ(), secondCorner.GetZ()));
+
+    CartesianVector connectingLineDirection(firstCorner - secondCorner);
+    connectingLineDirection = connectingLineDirection.GetUnitVector();
+
+    for (const Cluster *const pCluster : *pClusterList)
+    {
+        if (std::find(unavailableProtectedClusters.begin(), unavailableProtectedClusters.end(), pCluster) != unavailableProtectedClusters.end())
+            continue;
+        
+        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+        {
+            for (const CaloHit *const pCaloHit : *mapEntry.second)
+            {
+                CartesianVector hitPosition(m_hitWidthMode ?
+                    LArHitWidthHelper::GetClosestPointToLine2D(firstCorner, connectingLineDirection, pCaloHit) :
+                    pCaloHit->GetPositionVector());                
+
+                this->IsInBoundingBox(minX, maxX, minZ, maxZ, hitPosition);
+
+                if (distanceToLine > 0.f)
+                {
+                    if (!this->IsCloseToLine(hitPosition, firstCorner, connectingLineDirection, distanceToLine))
+                        continue;
+                }
+
+                clusterToCaloHitListMap[pCluster].push_back(pCaloHit);
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackRefinementBaseAlgorithm::IsInBoundingBox(const float minX, const float maxX, const float minZ, const float maxZ, const CartesianVector &hitPosition) const
+{
+    if ((hitPosition.GetX() < minX) || (hitPosition.GetX() > maxX) || (hitPosition.GetZ() < minZ) || (hitPosition.GetZ() > maxZ))
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackRefinementBaseAlgorithm::IsCloseToLine(const CartesianVector &hitPosition, const CartesianVector &lineStart, const CartesianVector &lineDirection, const float distanceToLine) const
+{
+    const float transverseDistanceFromLine(lineDirection.GetCrossProduct(hitPosition - lineStart).GetMagnitude());
+    
+    if (transverseDistanceFromLine > distanceToLine)
+       return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackRefinementBaseAlgorithm::AreExtrapolatedHitsGood(const ClusterToCaloHitListMap &clusterToCaloHitListMap, ClusterAssociation &clusterAssociation) const
+{
+    CaloHitVector extrapolatedHitVector;
+    for (const auto &entry : clusterToCaloHitListMap)
+        extrapolatedHitVector.insert(extrapolatedHitVector.begin(), entry.second.begin(), entry.second.end());
+
+    // ATTN: Extrapolated hit checks require extrapolatedHitVector to be ordered from upstream -> downstream merge point  
+    std::sort(extrapolatedHitVector.begin(), extrapolatedHitVector.end(), SortByDistanceAlongLine(clusterAssociation.GetUpstreamMergePoint(),
+        clusterAssociation.GetConnectingLineDirection(), m_hitWidthMode));
+    
+    if (!this->AreExtrapolatedHitsNearBoundaries(extrapolatedHitVector, clusterAssociation))
+        return false;
+
+    if (clusterToCaloHitListMap.empty())
+        return true;
+
+    if (!this->IsTrackContinuous(clusterAssociation, extrapolatedHitVector))
+        return false;
+
+    return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackRefinementBaseAlgorithm::IsNearBoundary(const CaloHit *const pCaloHit, const CartesianVector &boundaryPosition2D, const float boundaryTolerance) const
+{
+    const float distanceToBoundary(LArHitWidthHelper::GetClosestDistanceToPoint2D(pCaloHit, boundaryPosition2D));
+
+    return (distanceToBoundary < boundaryTolerance);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -604,16 +659,7 @@ void TrackRefinementBaseAlgorithm::RemoveClusterFromContainers(const Cluster *co
 StatusCode TrackRefinementBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxShowerLength", m_maxShowerLength));      
-    
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTrackCurviness", m_maxTrackCurviness));    
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTrackHitSeparation", m_maxTrackHitSeparation));    
+        "MinClusterLength", m_minClusterLength));   
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MicroSlidingFitWindow", m_microSlidingFitWindow));
@@ -652,12 +698,11 @@ StatusCode TrackRefinementBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HitWidthMode", m_hitWidthMode));    
+        "HitWidthMode", m_hitWidthMode));  
     
     return STATUS_CODE_SUCCESS;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TrackRefinementBaseAlgorithm::SortByDistanceAlongLine::operator() (const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs) const
@@ -682,7 +727,6 @@ bool TrackRefinementBaseAlgorithm::SortByDistanceAlongLine::operator() (const pa
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
   
 bool TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary::operator() (const Cluster *const pLhs, const Cluster *const pRhs)
 {
@@ -700,7 +744,6 @@ bool TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary::operator() (cons
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 typedef bool (*SortFunction)(const Cluster*, const Cluster*);
 
@@ -710,4 +753,6 @@ template void TrackRefinementBaseAlgorithm::UpdateContainers<TrackRefinementBase
 template void TrackRefinementBaseAlgorithm::InitialiseContainers<SortFunction>(const ClusterList*, const SortFunction, ClusterVector&, SlidingFitResultMapPair&) const;
 template void TrackRefinementBaseAlgorithm::InitialiseContainers<TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary>(const ClusterList*, const TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary, ClusterVector&, SlidingFitResultMapPair&) const;
 
+
 } // namespace lar_content
+

@@ -38,14 +38,27 @@ protected:
      *  @param  clusterVector the vector of clusters to consider
      *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps 
      *  @param  pClusterList the list of all clusters
-     *  @param  isHigherXboundary whether to look for endpoints that are closer to the higher or lower x tpc boundary
      *  @param  clusterAssociation the output cluster endpoint association
      *
-     *  @return bool whether a cluster endpoint association was found
+     *  @return  whether a cluster endpoint association was found
      */    
-    virtual bool FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
-        const pandora::ClusterList *const pClusterList, const bool isHigherXBoundary, ClusterEndpointAssociation &clusterAssociation) = 0;    
+    bool FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
+        const pandora::ClusterList *const pClusterList, ClusterEndpointAssociation &clusterAssociation) const;
 
+    /**
+     *  @brief  Check whether the cluster endpoint passes a given criteria
+     *
+     *  @param  microSlidingFitResult the local TwoDSlidingFitResult of the cluster
+     *  @param  clusterMergeDirection the merge direction of the cluster
+     *  @param  isEndUpstream whether the cluster endpoint is at the upstream end of the cluster (i.e. lower z component)
+     *  @param  pClusterList the list of all clusters
+     *  @param  clusterMergePoint the merge position of the cluster
+     *
+     *  @return  whether the cluster endpoint meets the outlined criteria
+     */
+    virtual bool DoesPassCriteria(const TwoDSlidingFitResult &microSlidingFitResult, const pandora::CartesianVector &clusterMergeDirection,
+        const bool isEndUpstream, const pandora::ClusterList *const pClusterList, pandora::CartesianVector &clusterMergePoint) const = 0;
+    
     /**
      *  @brief  Collect the extrapolated hits beyond the cluster endpoint that lie close to the projected path of the cluster
      *
@@ -58,27 +71,24 @@ protected:
         const pandora::ClusterList &createdMainTrackClusters, ClusterToCaloHitListMap &clusterToCaloHitListMap) const;
 
     /**
-     *  @brief  Perform topological checks on the collected hits to ensure no gaps are present
+     *  @brief  Obtain a list of clusters whos hits are protected and cannot be reassigned
      *
-     *  @param  clusterToCaloHitListMap the input map [parent cluster -> list of hits which belong to the main track]
-     *  @param  isHigherXboundary whether the endpoint is closer to the higher x tpc boundary
      *  @param  clusterEndpointAssociation the clusterEndpointAssociation
-     *
-     *  @return  bool wether the checks pass
-     */        
-    bool AreExtrapolatedHitsGood(const ClusterToCaloHitListMap &clusterToCaloHitListMap, const bool isHigherXBoundary, ClusterEndpointAssociation &clusterAssociation) const;
+     *  @param  createdMainTrackClusters the list of main track clusters that have hitherto been created
+     *  @param  unavailableProtectedClusters the output list of protected clusters
+     */
+    void GetUnavailableProtectedClusters(const ClusterEndpointAssociation &clusterAssociation, const pandora::ClusterList &createdMainTrackClusters,
+        pandora::ClusterList &unavailableProtectedClusters)const;
 
     /**
      *  @brief  Check the separation of the extremal extrapolated hits with the TPC boundary and the clusterMergePoint or, in the case of no hits, the clusterMergePoint with the TPC boundary
      *
-     *  @param  clusterHitVector the extrapolated hit vector (ordered closest hit to the upstream merge point -> furthest hit)
-     *  @param  isHigherXboundary whether the endpoint is closer to the higher x tpc boundary
-     *  @param  clusterEndpointAssociation the clusterEndpointAssociation
+     *  @param  extrapolatedHitVector the extrapolated hit vector (ordered closest hit to the upstream merge point -> furthest hit)
+     *  @param  clusterAssociation the clusterAssociation
      *
-     *  @return  bool wether the checks pass
+     *  @return  wether the checks pass
      */      
-    bool IsExtrapolatedEndpointNearBoundary(const pandora::CaloHitVector &extrapolatedHitVector, const bool isHigherXBoundary, 
-        ClusterEndpointAssociation &clusterAssociation) const;
+    bool AreExtrapolatedHitsNearBoundaries(const pandora::CaloHitVector &extrapolatedHitVector, ClusterAssociation &clusterAssociation) const;
 
     /**
      *  @brief  Remove the cluster association from the cluster vector so that the cluster endpoint is not considered again
@@ -98,22 +108,22 @@ protected:
      *  @param  clusterAssociation the cluster endpoint association
      *  @param  clusterToCaloHitListMap the map [parent cluster -> list of hits which belong to the main track]
      *  @param  pClusterList the list of all clusters
-     *  @param  isHigherXboundary whether the endpoint is closer to the higher x tpc boundary
      *  @param  clusterVector the vector of clusters considered in future iterations of the algorithm
      *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps 
      *  @param  consideredClusters the list of clusters for which an endpoint has been considered
      *
-     *  @return  Cluster the address of the created main track cluster
+     *  @return  the address of the created main track cluster
      */
     const pandora::Cluster *CreateMainTrack(const ClusterEndpointAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
-        const pandora::ClusterList *pClusterList, const bool isHigherXBoundary, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair,
+        const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair,
         pandora::ClusterList &consideredClusters) const;
 
     unsigned int    m_maxLoopIterations;          ///< The maximum number of main loop iterations
     float           m_growingFitInitialLength;    ///< The length of hits used to initialise the extrapolated hits running fit
     float           m_growingFitSegmentLength;    ///< The length of the extrapolated hits running fit segments
-    float           m_distanceToLine;             ///< The threshold hit distance of an extrapolated hit from the segment connecting line
+    float           m_distanceToLine;             ///< The threshold hit distance of an extrapolated hit from the segment connecting line   
     float           m_boundaryTolerance;          ///< The maximum allowed distance of an extremal extrapolate hit to a reference point i.e. TPC boundary
+    bool            m_isHigherXBoundary;          ///< Whether the algorithm is investigating the endpoints that are closer to TPC boundary with the higher x coordinate    
     float           m_detectorMinXEdge;           ///< The minimum x coordinate of the detector edge
     float           m_detectorMaxXEdge;           ///< The maximum x coordinate of the detector edge
     float           m_tpcMinXEdge;                ///< The minimum x coordinate of the tpc volume

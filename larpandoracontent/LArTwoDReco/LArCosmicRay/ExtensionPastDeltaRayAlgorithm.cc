@@ -29,69 +29,35 @@ ExtensionPastDeltaRayAlgorithm::ExtensionPastDeltaRayAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
     
-bool ExtensionPastDeltaRayAlgorithm::FindBestClusterAssociation(const ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
-    const ClusterList *const /*pClusterList*/, const bool isHigherXBoundary, ClusterEndpointAssociation &clusterAssociation)
+bool ExtensionPastDeltaRayAlgorithm::DoesPassCriteria(const TwoDSlidingFitResult &microSlidingFitResult, const CartesianVector &clusterMergeDirection,
+    const bool isEndUpstream, const ClusterList *const /*pClusterList*/, CartesianVector &clusterMergePoint) const
 {
-    const float nearestTPCBoundaryX(isHigherXBoundary ? m_tpcMaxXEdge : m_tpcMinXEdge);
-    
-    //ATTN: Find best cluster association - method assumes clusters ordered by furthest distance from TPC
-    for (const Cluster *const pCluster : clusterVector)
-    {
-        const TwoDSlidingFitResult &microSlidingFitResult(slidingFitResultMapPair.first->at(pCluster));
-        const TwoDSlidingFitResult &macroSlidingFitResult(slidingFitResultMapPair.second->at(pCluster));
+    const CartesianVector &endpointPosition(isEndUpstream ? microSlidingFitResult.GetGlobalMinLayerPosition() : microSlidingFitResult.GetGlobalMaxLayerPosition());
+    const float endpointSeparation((endpointPosition - clusterMergePoint).GetMagnitude());
 
-        const bool isEndUpstream = (std::fabs(microSlidingFitResult.GetGlobalMinLayerPosition().GetX() - nearestTPCBoundaryX) <
-                                    std::fabs(microSlidingFitResult.GetGlobalMaxLayerPosition().GetX() - nearestTPCBoundaryX));
+    // Reject if no clustering error
+    if (endpointSeparation < std::numeric_limits<float>::epsilon())
+        return false;
 
-        CartesianVector clusterMergePoint(0.f, 0.f, 0.f), clusterMergeDirection(0.f, 0.f, 0.f);
-        if (!GetClusterMergingCoordinates(microSlidingFitResult, macroSlidingFitResult, macroSlidingFitResult, isEndUpstream, clusterMergePoint, clusterMergeDirection))
-            continue;
+    // Reject if not close enough to the TPC boundary
+    const float nearestTPCBoundaryX(m_isHigherXBoundary ? m_tpcMaxXEdge : m_tpcMinXEdge);    
+    const bool isMergePointInAllowanceRegion(std::fabs(nearestTPCBoundaryX - clusterMergePoint.GetX()) < m_maxDistanceFromTPC);
+    const bool isEndpointInAllowanceRegion(std::fabs(nearestTPCBoundaryX - endpointPosition.GetX()) < m_maxDistanceFromTPC);
 
-        // Reject clusters that do not cross TPC boundary
-        if (std::fabs(clusterMergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
-            continue;
+    if (!(isMergePointInAllowanceRegion || isEndpointInAllowanceRegion))
+        return false;
             
-        const CartesianVector &endpointPosition(isEndUpstream ? microSlidingFitResult.GetGlobalMinLayerPosition() : microSlidingFitResult.GetGlobalMaxLayerPosition());
-        const float endpointSeparation((endpointPosition - clusterMergePoint).GetMagnitude());
+    const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
+    const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
+    const CartesianVector fitEndpointPosition(endpointPosition.GetX(), 0.f, predictedIntercept + (predictedGradient * endpointPosition.GetX()));
+    const float deltaZ(std::fabs(endpointPosition.GetZ() - fitEndpointPosition.GetZ()));
 
-        // Reject if no clustering error
-        if (endpointSeparation < std::numeric_limits<float>::epsilon())
-            continue;
+    // Reject if no significant endpoint deviation
+    if (deltaZ < m_minZOffset)
+        return false;
 
-        // Reject if not close enough to the TPC boundary
-        const bool isMergePointInAllowanceRegion(std::fabs(nearestTPCBoundaryX - clusterMergePoint.GetX()) < m_maxDistanceFromTPC);
-        const bool isEndpointInAllowanceRegion(std::fabs(nearestTPCBoundaryX - endpointPosition.GetX()) < m_maxDistanceFromTPC);
-
-        if (!(isMergePointInAllowanceRegion || isEndpointInAllowanceRegion))
-            continue;
-            
-        const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
-        const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
-        const CartesianVector fitEndpointPosition(endpointPosition.GetX(), 0.f, predictedIntercept + (predictedGradient * endpointPosition.GetX()));
-        const float deltaZ(std::fabs(endpointPosition.GetZ() - fitEndpointPosition.GetZ()));
-
-        // Reject if no significant endpoint deviation
-        if (deltaZ < m_minZOffset)
-            continue;
-
-        // Reject if cannot find a delta ray bend
-        if(!this->IsDeltaRay(microSlidingFitResult, clusterMergeDirection, isEndUpstream, clusterMergePoint))
-            continue;
-
-        // ATTN: Temporarily set the other merge point to define extrapolate hits search region        
-        const CartesianVector extrapolatedHitsEndpoint(nearestTPCBoundaryX, 0.f, predictedIntercept + (predictedGradient * nearestTPCBoundaryX));
-
-        if (isEndUpstream ? clusterMergePoint.GetZ() < extrapolatedHitsEndpoint.GetZ() : clusterMergePoint.GetZ() > extrapolatedHitsEndpoint.GetZ())
-            continue;
-
-        clusterAssociation = isEndUpstream ?
-            ClusterEndpointAssociation(extrapolatedHitsEndpoint, clusterMergeDirection, clusterMergePoint, clusterMergeDirection * (-1.f), pCluster, true) :
-            ClusterEndpointAssociation(clusterMergePoint, clusterMergeDirection, extrapolatedHitsEndpoint, clusterMergeDirection * (-1.f), pCluster, false);          
-        
-        return true;
-    }
-
-    return false;
+    // Reject if cannot find a delta ray bend
+    return (this->IsDeltaRay(microSlidingFitResult, clusterMergeDirection, isEndUpstream, clusterMergePoint));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

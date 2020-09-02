@@ -24,7 +24,7 @@ TrackMergeRefinementAlgorithm::TrackMergeRefinementAlgorithm() :
     m_minSeparationDistance(0.f),
     m_minDirectionDeviationCosAngle(0.99f),
     m_maxPredictedMergePointOffset(5.f),
-    m_distanceFromLine(0.35f),
+    m_distanceToLine(0.35f),    
     m_boundaryTolerance(2.f)  
 {
 }
@@ -56,10 +56,14 @@ StatusCode TrackMergeRefinementAlgorithm::Run()
         if(!this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, clusterAssociation))
             break;
 
+        ClusterList unavailableProtectedClusters;
+        this->GetUnavailableProtectedClusters(clusterAssociation, createdMainTrackClusters, unavailableProtectedClusters);
+        
         ClusterToCaloHitListMap clusterToCaloHitListMap;
-        this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, createdMainTrackClusters, clusterToCaloHitListMap);
+        this->GetHitsInBoundingBox(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint(), pClusterList, clusterToCaloHitListMap,
+            unavailableProtectedClusters, m_distanceToLine);
 
-        if (!this->AreExtrapolatedHitsGood(clusterAssociation, clusterToCaloHitListMap))
+        if (!this->AreExtrapolatedHitsGood(clusterToCaloHitListMap, clusterAssociation))
         {
             this->ConsiderClusterAssociation(clusterAssociation, clusterVector, slidingFitResultMapPair);
             continue;
@@ -187,89 +191,30 @@ bool TrackMergeRefinementAlgorithm::AreClustersAssociated(const CartesianVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackMergeRefinementAlgorithm::GetExtrapolatedCaloHits(ClusterPairAssociation &clusterAssociation, const pandora::ClusterList *const pClusterList,
-    const pandora::ClusterList &createdMainTrackClusters, ClusterToCaloHitListMap &clusterToCaloHitListMap) const
+void TrackMergeRefinementAlgorithm::GetUnavailableProtectedClusters(const ClusterPairAssociation &clusterAssociation, const ClusterList &createdMainTrackClusters,
+    ClusterList &protectedClusters) const
 {
-    const CartesianVector &upstreamPoint(clusterAssociation.GetUpstreamMergePoint()), &downstreamPoint(clusterAssociation.GetDownstreamMergePoint());
-    const float minX(std::min(upstreamPoint.GetX(), downstreamPoint.GetX())), maxX(std::max(upstreamPoint.GetX(), downstreamPoint.GetX()));
-
-    for (const Cluster *const pCluster : *pClusterList)
+    for (const Cluster *const pMainTrackCluster : createdMainTrackClusters)
     {
-        if ((std::find(createdMainTrackClusters.begin(), createdMainTrackClusters.end(), pCluster) != createdMainTrackClusters.end()) &&
-            (pCluster != clusterAssociation.GetUpstreamCluster()) && (pCluster != clusterAssociation.GetDownstreamCluster()))
-        {
-            continue;
-        }
-        
-        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
-        {
-            for (const CaloHit *const pCaloHit : *mapEntry.second)
-            {
-                CartesianVector hitPosition(m_hitWidthMode ?
-                    LArHitWidthHelper::GetClosestPointToLine2D(upstreamPoint, clusterAssociation.GetConnectingLineDirection(), pCaloHit) :
-                    pCaloHit->GetPositionVector());                
-
-                if ((hitPosition.GetX() < minX) || (hitPosition.GetX() > maxX) ||
-                    (hitPosition.GetZ() < upstreamPoint.GetZ()) || (hitPosition.GetZ() > downstreamPoint.GetZ()))
-                {
-                    continue;
-                }
-
-                const float transverseDistanceFromLine(clusterAssociation.GetConnectingLineDirection().GetCrossProduct(hitPosition - upstreamPoint).GetMagnitude());
-                if (transverseDistanceFromLine > m_distanceFromLine)
-                    continue;
-
-                clusterToCaloHitListMap[pCluster].push_back(pCaloHit);
-            }
-        }
-    }    
+        if ((pMainTrackCluster != clusterAssociation.GetUpstreamCluster()) && (pMainTrackCluster != clusterAssociation.GetDownstreamCluster()))
+            protectedClusters.push_back(pMainTrackCluster);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackMergeRefinementAlgorithm::AreExtrapolatedHitsGood(const ClusterPairAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap) const
-{
-    CaloHitVector extrapolatedHitVector;
-    for (const auto &entry : clusterToCaloHitListMap)
-        extrapolatedHitVector.insert(extrapolatedHitVector.begin(), entry.second.begin(), entry.second.end());
-
-    // ATTN: SORTED FROM UPSTREAM -> DOWNSTREAM POINT
-    std::sort(extrapolatedHitVector.begin(), extrapolatedHitVector.end(), SortByDistanceAlongLine(clusterAssociation.GetUpstreamMergePoint(),
-        clusterAssociation.GetConnectingLineDirection(), m_hitWidthMode));
-
-    if (!this->AreExtrapolatedHitsNearMergePoints(clusterAssociation, extrapolatedHitVector))
-        return false;
-    
-    if (clusterToCaloHitListMap.empty())
-        return true;
-
-    if (!this->IsTrackContinuous(clusterAssociation, extrapolatedHitVector))
-        return false;
-
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool TrackMergeRefinementAlgorithm::AreExtrapolatedHitsNearMergePoints(const ClusterPairAssociation &clusterAssociation, const CaloHitVector &extrapolatedHitVector) const
+bool TrackMergeRefinementAlgorithm::AreExtrapolatedHitsNearBoundaries(const CaloHitVector &extrapolatedHitVector, ClusterAssociation &clusterAssociation) const
 {
     if (extrapolatedHitVector.empty())
     {
         const float separationDistance((clusterAssociation.GetUpstreamMergePoint() - clusterAssociation.GetDownstreamMergePoint()).GetMagnitude());
-        return (separationDistance > m_boundaryTolerance ? false : true);
+        return (separationDistance < m_boundaryTolerance);
     }
 
-    const CaloHit *const closestCaloHit(extrapolatedHitVector.front());
-    const float distanceToUpstreamMergePoint(LArHitWidthHelper::GetClosestDistanceToPoint2D(closestCaloHit, clusterAssociation.GetUpstreamMergePoint()));
-
-    if (distanceToUpstreamMergePoint > m_boundaryTolerance)
+    if (!this->IsNearBoundary(extrapolatedHitVector.front(), clusterAssociation.GetUpstreamMergePoint(), m_boundaryTolerance))
         return false;
 
-    const CaloHit *const furthestCaloHit(extrapolatedHitVector.back());
-    const float distanceToDownstreamMergePoint(LArHitWidthHelper::GetClosestDistanceToPoint2D(furthestCaloHit, clusterAssociation.GetDownstreamMergePoint()));
-
-    if (distanceToDownstreamMergePoint > m_boundaryTolerance)
+    if (!this->IsNearBoundary(extrapolatedHitVector.back(), clusterAssociation.GetDownstreamMergePoint(), m_boundaryTolerance))
         return false;
     
     return true;
@@ -346,7 +291,7 @@ StatusCode TrackMergeRefinementAlgorithm::ReadSettings(const pandora::TiXmlHandl
         "MaxPredictedMergePointOffset", m_maxPredictedMergePointOffset));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DistanceFromLine", m_distanceFromLine));
+        "DistanceToLine", m_distanceToLine));       
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BoundaryTolerance", m_boundaryTolerance));
