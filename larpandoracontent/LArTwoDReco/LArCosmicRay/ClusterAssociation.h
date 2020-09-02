@@ -37,35 +37,35 @@ public:
     /**
      *  @brief  Returns the upstream cluster merge point
      *
-     *  @return  CartesianVector the upstream merge point
+     *  @return  the upstream merge point
      */
     const pandora::CartesianVector GetUpstreamMergePoint() const;
 
     /**
      *  @brief  Returns the cluster direction at the upstream merge point
      *
-     *  @return  CartesianVector the cluster direction at the upstream merge point
+     *  @return  the cluster direction at the upstream merge point
      */        
     const pandora::CartesianVector GetUpstreamMergeDirection() const;
 
     /**
      *  @brief  Returns the downstream cluster merge point
      *
-     *  @return  CartesianVector the downstream merge point
+     *  @return  the downstream merge point
      */
     const pandora::CartesianVector GetDownstreamMergePoint() const;
 
     /**
      *  @brief  Returns the cluster direction at the downstream merge point
      *
-     *  @return  CartesianVector the cluster direction at the downstream merge point
+     *  @return  the cluster direction at the downstream merge point
      */        
      const pandora::CartesianVector GetDownstreamMergeDirection() const;
 
     /**
      *  @brief  Returns the unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
      *
-     *  @return  CartesianVector the unit displacement vector from the upstream merge point to the downstream merge point
+     *  @return  the unit displacement vector from the upstream merge point to the downstream merge point
      */           
     const pandora::CartesianVector GetConnectingLineDirection() const;
 
@@ -130,7 +130,7 @@ public:
     /**
      *  @brief  Returns the address of the main track cluster
      *
-     *  @return  Cluster the address of the main track cluster
+     *  @return  the address of the main track cluster
      */
     const pandora::Cluster *GetMainTrackCluster() const;
 
@@ -177,14 +177,14 @@ public:
     /**
      *  @brief  Returns the address of the upstream cluster
      *
-     *  @return  Cluster the address of the upstream cluster
+     *  @return  the address of the upstream cluster
      */
     const pandora::Cluster *GetUpstreamCluster() const;
 
     /**
      *  @brief  Returns the address of the downstream cluster
      *
-     *  @return  Cluster the address of the downstream cluster
+     *  @return  the address of the downstream cluster
      */
     const pandora::Cluster *GetDownstreamCluster() const;    
 

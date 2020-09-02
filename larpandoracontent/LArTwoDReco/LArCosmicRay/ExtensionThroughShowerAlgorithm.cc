@@ -23,55 +23,9 @@ ExtensionThroughShowerAlgorithm::ExtensionThroughShowerAlgorithm() :
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
-    
-bool ExtensionThroughShowerAlgorithm::FindBestClusterAssociation(const ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
-    const ClusterList *const pClusterList, const bool isHigherXBoundary, ClusterEndpointAssociation &clusterAssociation)
-{
-    const float nearestTPCBoundaryX(isHigherXBoundary ? m_tpcMaxXEdge : m_tpcMinXEdge);
-    
-    // ATTN: This assumes that clusterVector has been sorted furthest cluster to TPC boundary -> closest
-    for (const Cluster *const pCurrentCluster : clusterVector)
-    {
-        const TwoDSlidingFitResult &microSlidingFitResult(slidingFitResultMapPair.first->at(pCurrentCluster));
-        const TwoDSlidingFitResult &macroSlidingFitResult(slidingFitResultMapPair.second->at(pCurrentCluster));
 
-        const bool isEndUpstream = (std::fabs(microSlidingFitResult.GetGlobalMinLayerPosition().GetX() - nearestTPCBoundaryX) <
-                                    std::fabs(microSlidingFitResult.GetGlobalMaxLayerPosition().GetX() - nearestTPCBoundaryX));
-            
-        CartesianVector clusterMergePoint(0.f, 0.f, 0.f), clusterMergeDirection(0.f, 0.f, 0.f);
-        if (!GetClusterMergingCoordinates(microSlidingFitResult, macroSlidingFitResult, macroSlidingFitResult, isEndUpstream, clusterMergePoint, clusterMergeDirection))
-            continue;
-
-        // Reject clusters that do not cross TPC boundary
-        if (std::fabs(clusterMergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
-            continue;
-
-        // Reject clusters that are not infront of a shower region
-        if(!this->IsClusterEndpointInFrontOfShower(microSlidingFitResult, clusterMergePoint, clusterMergeDirection, isEndUpstream, pClusterList))
-            continue;
-                
-        // ATTN: Temporarily set the other merge point to define extrapolate hits search region
-        const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
-        const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
-        const CartesianVector extrapolatedHitsEndpoint(nearestTPCBoundaryX, 0.f, predictedIntercept + (predictedGradient * nearestTPCBoundaryX));
-
-        if (isEndUpstream ? clusterMergePoint.GetZ() < extrapolatedHitsEndpoint.GetZ() : clusterMergePoint.GetZ() > extrapolatedHitsEndpoint.GetZ())
-            continue;
-                
-        clusterAssociation = isEndUpstream ?
-            ClusterEndpointAssociation(extrapolatedHitsEndpoint, clusterMergeDirection, clusterMergePoint, clusterMergeDirection * (-1.f), pCurrentCluster, true) :
-            ClusterEndpointAssociation(clusterMergePoint, clusterMergeDirection, extrapolatedHitsEndpoint, clusterMergeDirection * (-1.f), pCurrentCluster, false);
-
-        return true;
-    }
-
-    return false;    
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------  
-    
-bool ExtensionThroughShowerAlgorithm::IsClusterEndpointInFrontOfShower(const TwoDSlidingFitResult &microSlidingFitResult, const CartesianVector &clusterMergePoint,
-    const CartesianVector &clusterMergeDirection, const bool isEndUpstream, const ClusterList *const pClusterList)
+bool ExtensionThroughShowerAlgorithm::DoesPassCriteria(const TwoDSlidingFitResult &microSlidingFitResult, const CartesianVector &clusterMergeDirection,
+    const bool isEndUpstream, const ClusterList *const pClusterList, CartesianVector &clusterMergePoint) const
 {
     const Cluster *const pCurrentCluster(microSlidingFitResult.GetCluster());
     const unsigned int currentInnerPseudoLayer(pCurrentCluster->GetInnerPseudoLayer()), currentOuterPseudoLayer(pCurrentCluster->GetOuterPseudoLayer());
@@ -118,7 +72,7 @@ bool ExtensionThroughShowerAlgorithm::IsClusterEndpointInFrontOfShower(const Two
         }
     }
 
-    return (showerClusterCount == m_thresholdShowerClusterCount ? true : false);
+    return (showerClusterCount == m_thresholdShowerClusterCount);
 }    
 
 //------------------------------------------------------------------------------------------------------------------------------------------  
