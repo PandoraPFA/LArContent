@@ -45,6 +45,8 @@ protected:
     bool FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
         const pandora::ClusterList *const pClusterList, ClusterEndpointAssociation &clusterAssociation) const;
 
+    bool IsContained(const pandora::Cluster *const pCurrentCluster, const pandora::ClusterList *const pClusterList) const;    
+
     /**
      *  @brief  Check whether the cluster endpoint passes a given criteria
      *
@@ -119,6 +121,7 @@ protected:
         pandora::ClusterList &consideredClusters) const;
 
     unsigned int    m_maxLoopIterations;          ///< The maximum number of main loop iterations
+    float           m_maxTrackDistanceToShowerBranch;         ///< The maximum distance of a track cluster from a shower branch    
     float           m_growingFitInitialLength;    ///< The length of hits used to initialise the extrapolated hits running fit
     float           m_growingFitSegmentLength;    ///< The length of the extrapolated hits running fit segments
     float           m_distanceToLine;             ///< The threshold hit distance of an extrapolated hit from the segment connecting line   
