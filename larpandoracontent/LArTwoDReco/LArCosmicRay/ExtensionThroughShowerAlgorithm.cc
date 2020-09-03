@@ -15,7 +15,6 @@ namespace lar_content
 {
 
 ExtensionThroughShowerAlgorithm::ExtensionThroughShowerAlgorithm() :
-    m_maxTrackDistanceToShowerBranch(5.f),
     m_maxShowerBranchTransverseDistance(3.f),
     m_maxShowerBranchLongitudinalDistance(20.f),
     m_thresholdShowerClusterCount(5)    
@@ -28,7 +27,6 @@ bool ExtensionThroughShowerAlgorithm::DoesPassCriteria(const TwoDSlidingFitResul
     const bool isEndUpstream, const ClusterList *const pClusterList, CartesianVector &clusterMergePoint) const
 {
     const Cluster *const pCurrentCluster(microSlidingFitResult.GetCluster());
-    const unsigned int currentInnerPseudoLayer(pCurrentCluster->GetInnerPseudoLayer()), currentOuterPseudoLayer(pCurrentCluster->GetOuterPseudoLayer());
     
     // Find the track endpoint accounting for possible clustering errors
     const int directionFactor(isEndUpstream ? -1 : 1);
@@ -36,7 +34,7 @@ bool ExtensionThroughShowerAlgorithm::DoesPassCriteria(const TwoDSlidingFitResul
     const float separationDistance((endpointPosition - clusterMergePoint).GetMagnitude());
     const CartesianVector extrapolatedEndpoint(clusterMergePoint + (clusterMergeDirection * directionFactor * separationDistance));
 
-    unsigned int showerClusterCount(0);
+    unsigned int showerClusterCount(0);    
     for (const Cluster *const pTestCluster : *pClusterList)
     {
         if (pTestCluster == pCurrentCluster)
@@ -44,13 +42,6 @@ bool ExtensionThroughShowerAlgorithm::DoesPassCriteria(const TwoDSlidingFitResul
                 
         const unsigned int testInnerPseudoLayer(pTestCluster->GetInnerPseudoLayer()), testOuterPseudoLayer(pTestCluster->GetOuterPseudoLayer());
         const CartesianVector &innerPoint(pTestCluster->GetCentroid(testInnerPseudoLayer)), &outerPoint(pTestCluster->GetCentroid(testOuterPseudoLayer));
-
-        // ATTN: If pCurrent cluster is contained within pTestCluster it is likely to be part of the shower
-        if ((currentInnerPseudoLayer > testInnerPseudoLayer) && (currentOuterPseudoLayer < testOuterPseudoLayer))
-        {
-            if (LArClusterHelper::GetClosestDistance(pCurrentCluster, pTestCluster) < m_maxTrackDistanceToShowerBranch)
-                return false;
-        }
 
         if (showerClusterCount != m_thresholdShowerClusterCount)
         {
@@ -79,9 +70,6 @@ bool ExtensionThroughShowerAlgorithm::DoesPassCriteria(const TwoDSlidingFitResul
  
 StatusCode ExtensionThroughShowerAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTrackDistanceToShowerBranch", m_maxTrackDistanceToShowerBranch));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxShowerBranchTransverseDistance", m_maxShowerBranchTransverseDistance));    
 

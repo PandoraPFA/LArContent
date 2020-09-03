@@ -22,7 +22,8 @@ namespace lar_content
 {
 
 TrackExtensionRefinementAlgorithm::TrackExtensionRefinementAlgorithm() :
-    m_maxLoopIterations(10),    
+    m_maxLoopIterations(10),
+    m_maxTrackDistanceToShowerBranch(5.f),    
     m_growingFitInitialLength(10.f),
     m_growingFitSegmentLength(5.0f),
     m_distanceToLine(1.0f),
@@ -168,6 +169,10 @@ bool TrackExtensionRefinementAlgorithm::FindBestClusterAssociation(const Cluster
         if (std::fabs(clusterMergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
             continue;
 
+        // If pCurrent cluster is contained within another close cluster it is likely to be part of a shower
+        if (this->IsContained(pCurrentCluster, pClusterList))
+            continue;
+
         // Reject clusters that do not fit criteria
         if(!this->DoesPassCriteria(microSlidingFitResult, clusterMergeDirection, isEndUpstream, pClusterList,  clusterMergePoint))
             continue;
@@ -191,6 +196,29 @@ bool TrackExtensionRefinementAlgorithm::FindBestClusterAssociation(const Cluster
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackExtensionRefinementAlgorithm::IsContained(const Cluster *const pCurrentCluster, const ClusterList *const pClusterList) const
+{
+    const unsigned int currentInnerPseudoLayer(pCurrentCluster->GetInnerPseudoLayer()), currentOuterPseudoLayer(pCurrentCluster->GetOuterPseudoLayer());
+
+    for (const Cluster *const pCluster : *pClusterList)
+    {
+        if (pCluster == pCurrentCluster)
+            continue;
+                
+        const unsigned int clusterInnerPseudoLayer(pCluster->GetInnerPseudoLayer()), clusterOuterPseudoLayer(pCluster->GetOuterPseudoLayer());
+
+        if ((currentInnerPseudoLayer > clusterInnerPseudoLayer) && (currentOuterPseudoLayer < clusterOuterPseudoLayer))
+        {
+            if (LArClusterHelper::GetClosestDistance(pCurrentCluster, pCluster) < m_maxTrackDistanceToShowerBranch)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
 
 void TrackExtensionRefinementAlgorithm::GetExtrapolatedCaloHits(const ClusterEndpointAssociation &clusterAssociation, const ClusterList *const pClusterList,
     const ClusterList &createdMainTrackClusters, ClusterToCaloHitListMap &clusterToCaloHitListMap) const
@@ -396,6 +424,9 @@ StatusCode TrackExtensionRefinementAlgorithm::ReadSettings(const TiXmlHandle xml
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLoopIterations", m_maxLoopIterations));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxTrackDistanceToShowerBranch", m_maxTrackDistanceToShowerBranch));    
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "GrowingFitInitialLength", m_growingFitInitialLength));

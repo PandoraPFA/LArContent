@@ -40,7 +40,6 @@ private:
     bool DoesPassCriteria(const TwoDSlidingFitResult &microSlidingFitResult, const pandora::CartesianVector &clusterMergeDirection,
         const bool isEndUpstream, const pandora::ClusterList *const pClusterList, pandora::CartesianVector &clusterMergePoint) const;  
     
-    float          m_maxTrackDistanceToShowerBranch;         ///< The maximum distance of a track cluster from a shower branch
     float          m_maxShowerBranchTransverseDistance;      ///< The maximum transverse projection of the closest pseudolayer position of a shower branch cluster  
     float          m_maxShowerBranchLongitudinalDistance;    ///< The maximum longitudinal projection of the closest pseudolayer position of a shower branch cluster  
     unsigned int   m_thresholdShowerClusterCount;            ///< The threshold number of shower branches of a significant shower region
