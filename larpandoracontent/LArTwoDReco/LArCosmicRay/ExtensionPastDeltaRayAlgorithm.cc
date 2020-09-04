@@ -35,9 +35,19 @@ bool ExtensionPastDeltaRayAlgorithm::DoesPassCriteria(const TwoDSlidingFitResult
     const CartesianVector &endpointPosition(isEndUpstream ? microSlidingFitResult.GetGlobalMinLayerPosition() : microSlidingFitResult.GetGlobalMaxLayerPosition());
     const float endpointSeparation((endpointPosition - clusterMergePoint).GetMagnitude());
 
+    /////////////////
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &endpointPosition, "ENDPOINT", BLUE, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &clusterMergePoint, "MERGE POINT", BLUE, 2);
+    std::cout << "Endpoint Separation: " << endpointSeparation << std::endl;
+    /////////////////            
+
     // Reject if no clustering error
     if (endpointSeparation < std::numeric_limits<float>::epsilon())
+    {
+        std::cout << "MERGE POINT AND ENDPOINT ARE THE SAME" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());    
         return false;
+    }
 
     // Reject if not close enough to the TPC boundary
     const float nearestTPCBoundaryX(m_isHigherXBoundary ? m_tpcMaxXEdge : m_tpcMinXEdge);    
@@ -45,8 +55,12 @@ bool ExtensionPastDeltaRayAlgorithm::DoesPassCriteria(const TwoDSlidingFitResult
     const bool isEndpointInAllowanceRegion(std::fabs(nearestTPCBoundaryX - endpointPosition.GetX()) < m_maxDistanceFromTPC);
 
     if (!(isMergePointInAllowanceRegion || isEndpointInAllowanceRegion))
+    {
+        std::cout << "NOT CLOSE ENOUGH TO THE BOUNDARY" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());      
         return false;
-            
+    }
+    
     const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
     const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
     const CartesianVector fitEndpointPosition(endpointPosition.GetX(), 0.f, predictedIntercept + (predictedGradient * endpointPosition.GetX()));
@@ -54,10 +68,23 @@ bool ExtensionPastDeltaRayAlgorithm::DoesPassCriteria(const TwoDSlidingFitResult
 
     // Reject if no significant endpoint deviation
     if (deltaZ < m_minZOffset)
+    {
+        std::cout << "DELTA Z IS TOO LOW" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return false;
+    }
 
     // Reject if cannot find a delta ray bend
-    return (this->IsDeltaRay(microSlidingFitResult, clusterMergeDirection, isEndUpstream, clusterMergePoint));
+
+    if (!this->IsDeltaRay(microSlidingFitResult, clusterMergeDirection, isEndUpstream, clusterMergePoint))
+    {
+        std::cout << "NOT A DELTA RAY" << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        return false;
+    }
+
+    return true;
+    //return (this->IsDeltaRay(microSlidingFitResult, clusterMergeDirection, isEndUpstream, clusterMergePoint));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -126,6 +153,9 @@ bool ExtensionPastDeltaRayAlgorithm::IsCurvePresent(const TwoDSlidingFitResult &
     unsigned int anomalousLayerCount(0);
     bool reachedFirstCurve(false);
     float previousOpeningAngle(0.f);
+
+    std::cout << "CURVE SEARCH START" << std::endl;
+    std::cout << "isClusterMergePointEnd: " << isClusterMergePointEnd << std::endl;
     
     for (int i = startLayer; i != loopTerminationLayer; i += step)
     {
@@ -160,14 +190,25 @@ bool ExtensionPastDeltaRayAlgorithm::IsCurvePresent(const TwoDSlidingFitResult &
 
         const float layerAngleDeviation(std::fabs(microOpeningAngle - previousOpeningAngle));
         const bool isBendConsistent((isClusterMergePointEnd && (std::fabs(microOpeningAngle) > std::fabs(previousOpeningAngle))) ||
-            (!isClusterMergePointEnd && (std::fabs(microOpeningAngle) < std::fabs(previousOpeningAngle))));        
+            (!isClusterMergePointEnd && (std::fabs(microOpeningAngle) < std::fabs(previousOpeningAngle))));
+
+        ///////////////////////////
+        CartesianVector microPosition(0.f, 0.f, 0.f);
+        subsetFit.GetGlobalPosition(microIter->second.GetL(), microIter->second.GetFitT(), microPosition);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &microPosition, std::to_string(microOpeningAngle), BLACK, 2);
+        std::cout << "Opening angle: " << microOpeningAngle << std::endl;
+        std::cout << "Layer angle deviation: " << layerAngleDeviation << std::endl;
+        ///////////////////////////
             
         if (!isBendConsistent || (microOpeningAngle * previousOpeningAngle < 0.f) || (layerAngleDeviation < m_thresholdAngleDeviationBetweenLayers))
         {
             ++anomalousLayerCount;
 
             if (anomalousLayerCount > m_maxAnomalousPoints)
+            {
+                std::cout << "TOO MANY WOBBLES" << std::endl;
                 break;
+            }
         }
         else
         {
@@ -176,6 +217,7 @@ bool ExtensionPastDeltaRayAlgorithm::IsCurvePresent(const TwoDSlidingFitResult &
                 if (std::fabs(microOpeningAngle) > m_thresholdMaxAngleDeviation)
                 {
                     clusterMergePoint = isEndUpstream ? subsetFit.GetGlobalMaxLayerPosition() : subsetFit.GetGlobalMinLayerPosition();
+                    std::cout << "merge point pass" << std::endl;
                     return true;
                 }
             }
@@ -184,6 +226,7 @@ bool ExtensionPastDeltaRayAlgorithm::IsCurvePresent(const TwoDSlidingFitResult &
                if (std::fabs(microOpeningAngle) < m_thresholdAngleDeviation)
                {
                    clusterMergePoint = isEndUpstream ? subsetFit.GetGlobalMaxLayerPosition() : subsetFit.GetGlobalMinLayerPosition();
+                   std::cout << "end point pass" << std::endl;
                    return true;
                }
             }
@@ -193,6 +236,8 @@ bool ExtensionPastDeltaRayAlgorithm::IsCurvePresent(const TwoDSlidingFitResult &
 
         previousOpeningAngle = microOpeningAngle;
     }
+
+    std::cout << "end point pass" << std::endl;
 
     return false;
 }

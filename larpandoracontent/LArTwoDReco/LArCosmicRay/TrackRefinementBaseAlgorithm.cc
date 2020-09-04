@@ -145,7 +145,8 @@ void TrackRefinementBaseAlgorithm::GetHitsInBoundingBox(const CartesianVector &f
                     LArHitWidthHelper::GetClosestPointToLine2D(firstCorner, connectingLineDirection, pCaloHit) :
                     pCaloHit->GetPositionVector());                
 
-                this->IsInBoundingBox(minX, maxX, minZ, maxZ, hitPosition);
+                if (!this->IsInBoundingBox(minX, maxX, minZ, maxZ, hitPosition))
+                    continue;
 
                 if (distanceToLine > 0.f)
                 {
@@ -192,6 +193,22 @@ bool TrackRefinementBaseAlgorithm::AreExtrapolatedHitsGood(const ClusterToCaloHi
     // ATTN: Extrapolated hit checks require extrapolatedHitVector to be ordered from upstream -> downstream merge point  
     std::sort(extrapolatedHitVector.begin(), extrapolatedHitVector.end(), SortByDistanceAlongLine(clusterAssociation.GetUpstreamMergePoint(),
         clusterAssociation.GetConnectingLineDirection(), m_hitWidthMode));
+
+    ////////////////////////////////////
+    unsigned int count(0);
+    for (const CaloHit *const pCaloHit : extrapolatedHitVector)
+    {
+        CartesianVector hitPosition(m_hitWidthMode ?
+            LArHitWidthHelper::GetClosestPointToLine2D(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetConnectingLineDirection(), pCaloHit) :
+            pCaloHit->GetPositionVector());
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, std::to_string(count), YELLOW, 2);
+        ++count;
+    }
+    const CartesianVector start(clusterAssociation.GetUpstreamMergePoint());
+    const CartesianVector end(start + (clusterAssociation.GetConnectingLineDirection() * 150));
+    PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &start, &end, "LINE", GREEN, 2, 2);
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    ////////////////////////////////////    
     
     if (!this->AreExtrapolatedHitsNearBoundaries(extrapolatedHitVector, clusterAssociation))
         return false;
@@ -200,7 +217,10 @@ bool TrackRefinementBaseAlgorithm::AreExtrapolatedHitsGood(const ClusterToCaloHi
         return true;
 
     if (!this->IsTrackContinuous(clusterAssociation, extrapolatedHitVector))
+    {
+        std::cout << "GAP IN HIT VECTOR" << std::endl;
         return false;
+    }
 
     return true;
 }
@@ -210,6 +230,10 @@ bool TrackRefinementBaseAlgorithm::AreExtrapolatedHitsGood(const ClusterToCaloHi
 bool TrackRefinementBaseAlgorithm::IsNearBoundary(const CaloHit *const pCaloHit, const CartesianVector &boundaryPosition2D, const float boundaryTolerance) const
 {
     const float distanceToBoundary(LArHitWidthHelper::GetClosestDistanceToPoint2D(pCaloHit, boundaryPosition2D));
+
+    ////////////////////
+    std::cout << "distanceFromBoundary: " << distanceToBoundary << std::endl;
+    ////////////////////   
 
     return (distanceToBoundary < boundaryTolerance);
 }
