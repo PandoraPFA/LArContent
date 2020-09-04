@@ -263,6 +263,14 @@ StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volume
     const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
     const unsigned int nLArTPCs(larTPCMap.size());
 
+    float detectorMinXEdge(std::numeric_limits<float>::max()), detectorMaxXEdge(-std::numeric_limits<float>::max());
+    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
+    {
+        const LArTPC *const pSubLArTPC(mapEntry.second);
+        detectorMinXEdge = std::min(detectorMinXEdge, pSubLArTPC->GetCenterX() - 0.5f * pSubLArTPC->GetWidthX());
+        detectorMaxXEdge = std::max(detectorMaxXEdge, pSubLArTPC->GetCenterX() + 0.5f * pSubLArTPC->GetWidthX());
+    }
+
     const CaloHitList *pCaloHitList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputHitListName, pCaloHitList));
 
@@ -275,12 +283,25 @@ StatusCode MasterAlgorithm::GetVolumeIdToHitListMap(VolumeIdToHitListMap &volume
 
         const unsigned int volumeId(pLArCaloHit ? pLArCaloHit->GetLArTPCVolumeId() : 0);
         const LArTPC *const pLArTPC(larTPCMap.at(volumeId));
+        const bool isMaxXCPA(!pLArTPC->IsDriftInPositiveX());
+        
+        float tpcMinXEdge = pLArTPC->GetCenterX() - (pLArTPC->GetWidthX() * 0.5f);
+        float tpcMaxXEdge = pLArTPC->GetCenterX() + (pLArTPC->GetWidthX() * 0.5f);
+
+        float &cpaXBoundary(isMaxXCPA ? tpcMaxXEdge : tpcMinXEdge);
+        if ((isMaxXCPA && (std::fabs(cpaXBoundary - detectorMaxXEdge) > std::numeric_limits<float>::epsilon())) ||
+            (!isMaxXCPA && (std::fabs(cpaXBoundary - detectorMinXEdge) > std::numeric_limits<float>::epsilon())))
+        {
+            const LArTPC *const pNeighboughTPC(&LArStitchingHelper::FindClosestTPC(this->GetPandora(), *pLArTPC, isMaxXCPA));
+            const float gapSizeX(std::fabs(pNeighboughTPC->GetCenterX() - pLArTPC->GetCenterX()) - (pNeighboughTPC->GetWidthX() * 0.5f) - (pLArTPC->GetWidthX() * 0.5f));
+            cpaXBoundary += gapSizeX * (pLArTPC->IsDriftInPositiveX() ? -0.5f : 0.5f);
+        }        
 
         LArTPCHitList &larTPCHitList(volumeIdToHitListMap[volumeId]);
         larTPCHitList.m_allHitList.push_back(pCaloHit);
-
-        if (((pCaloHit->GetPositionVector().GetX() >= (pLArTPC->GetCenterX() - 0.5f * pLArTPC->GetWidthX())) &&
-            (pCaloHit->GetPositionVector().GetX() <= (pLArTPC->GetCenterX() + 0.5f * pLArTPC->GetWidthX()))))
+       
+        if (((pCaloHit->GetPositionVector().GetX() >= tpcMinXEdge) &&
+             (pCaloHit->GetPositionVector().GetX() <= tpcMaxXEdge)))
         {
             larTPCHitList.m_truncatedHitList.push_back(pCaloHit);
         }
@@ -295,6 +316,8 @@ StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMa
 {
     unsigned int workerCounter(0);
 
+    int totalHitCount(0);
+
     for (const Pandora *const pCRWorker : m_crWorkerInstances)
     {
         const LArTPC &larTPC(pCRWorker->GetGeometry()->GetLArTPC());
@@ -302,6 +325,8 @@ StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMa
 
         if (volumeIdToHitListMap.end() == iter)
             continue;
+
+        totalHitCount += iter->second.m_allHitList.size();
 
         for (const CaloHit *const pCaloHit : iter->second.m_allHitList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Copy(pCRWorker, pCaloHit));
@@ -311,6 +336,8 @@ StatusCode MasterAlgorithm::RunCosmicRayReconstruction(const VolumeIdToHitListMa
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*pCRWorker));
     }
+
+    std::cout << "total hits in cr instances: " << totalHitCount << std::endl; 
 
     return STATUS_CODE_SUCCESS;
 }
@@ -525,6 +552,9 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
     }
 
     unsigned int sliceCounter(0);
+
+    std::cout << "slice vector size: " << selectedSliceVector.size() << std::endl;
+    std::cout << "hits in slice: " << selectedSliceVector.front().size() << std::endl;
 
     for (const CaloHitList &sliceHits : selectedSliceVector)
     {

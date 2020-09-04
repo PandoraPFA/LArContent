@@ -125,7 +125,8 @@ protected:
     float           m_growingFitInitialLength;    ///< The length of hits used to initialise the extrapolated hits running fit
     float           m_growingFitSegmentLength;    ///< The length of the extrapolated hits running fit segments
     float           m_distanceToLine;             ///< The threshold hit distance of an extrapolated hit from the segment connecting line   
-    float           m_boundaryTolerance;          ///< The maximum allowed distance of an extremal extrapolate hit to a reference point i.e. TPC boundary
+    float           m_tpcBoundaryTolerance;          ///< The maximum allowed distance of an extremal extrapolate hit to a reference point i.e. TPC boundary
+    float           m_mergePointBoundaryTolerance;          ///< 
     bool            m_isHigherXBoundary;          ///< Whether the algorithm is investigating the endpoints that are closer to TPC boundary with the higher x coordinate    
     float           m_detectorMinXEdge;           ///< The minimum x coordinate of the detector edge
     float           m_detectorMaxXEdge;           ///< The maximum x coordinate of the detector edge

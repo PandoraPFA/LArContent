@@ -27,7 +27,8 @@ TrackExtensionRefinementAlgorithm::TrackExtensionRefinementAlgorithm() :
     m_growingFitInitialLength(10.f),
     m_growingFitSegmentLength(5.0f),
     m_distanceToLine(1.0f),
-    m_boundaryTolerance(2.f)
+    m_tpcBoundaryTolerance(2.f),
+    m_mergePointBoundaryTolerance(2.f)
 {
 }
 
@@ -54,13 +55,15 @@ StatusCode TrackExtensionRefinementAlgorithm::Run()
     for (bool isHigherXBoundary : { false, true })
     {
         m_isHigherXBoundary = isHigherXBoundary;
-        
+
+        /*
         const float nearestTPCBoundaryX(m_isHigherXBoundary ? m_tpcMaxXEdge : m_tpcMinXEdge);
         if ((std::fabs(nearestTPCBoundaryX - m_detectorMinXEdge) < std::numeric_limits<float>::epsilon()) ||
             (std::fabs(nearestTPCBoundaryX - m_detectorMaxXEdge) < std::numeric_limits<float>::epsilon()))
         {
             continue;
         }
+        */
 
         // ATTN: Keep track of clusters removed from clusterVector so that they can be added back in when considering the other endpoint
         ClusterList consideredClusters;
@@ -335,17 +338,17 @@ bool TrackExtensionRefinementAlgorithm::AreExtrapolatedHitsNearBoundaries(const 
     if (extrapolatedHitVector.empty())
     {
         const float distanceFromTPCBoundary(std::fabs(clusterMergePoint.GetX() - nearestTPCBoundaryX));
-        return (distanceFromTPCBoundary > m_boundaryTolerance ? false : true);
+        return (distanceFromTPCBoundary > m_mergePointBoundaryTolerance ? false : true);
     }
 
     const CaloHit *const furthestCaloHit(isEndUpstream ? extrapolatedHitVector.front() : extrapolatedHitVector.back());
 
-    if (!this->IsNearBoundary(furthestCaloHit, CartesianVector(nearestTPCBoundaryX, 0.f, furthestCaloHit->GetPositionVector().GetZ()), m_boundaryTolerance))
+    if (!this->IsNearBoundary(furthestCaloHit, CartesianVector(nearestTPCBoundaryX, 0.f, furthestCaloHit->GetPositionVector().GetZ()), m_tpcBoundaryTolerance))
         return false;
 
     const CaloHit *const closestCaloHit(isEndUpstream ? extrapolatedHitVector.back() : extrapolatedHitVector.front());
 
-    if (!this->IsNearBoundary(closestCaloHit, clusterMergePoint, m_boundaryTolerance))
+    if (!this->IsNearBoundary(closestCaloHit, clusterMergePoint, m_mergePointBoundaryTolerance))
         return false;
 
     // Reset extrapolated cluster merge point to be the projection of the furthest extrapolated hit
@@ -438,8 +441,11 @@ StatusCode TrackExtensionRefinementAlgorithm::ReadSettings(const TiXmlHandle xml
         "DistanceToLine", m_distanceToLine));    
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BoundaryTolerance", m_boundaryTolerance));       
+        "TPCBoundaryTolerance", m_tpcBoundaryTolerance));       
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MergePointBoundaryTolerance", m_mergePointBoundaryTolerance));    
+    
     return TrackRefinementBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
