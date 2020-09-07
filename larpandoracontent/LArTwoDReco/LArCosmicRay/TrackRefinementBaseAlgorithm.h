@@ -205,6 +205,12 @@ protected:
      */
     void GetTrackSegmentBoundaries(const ClusterAssociation &clusterAssociation, pandora::CartesianPointVector &trackSegmentBoundaries) const;
 
+    void RepositionIfInGap(const pandora::CartesianVector &mergeDirection, pandora::CartesianVector &mergePoint) const;
+
+    float DistanceInGap(const pandora::CartesianVector &upstreamPoint, const pandora::CartesianVector &downstreamPoint,
+                        const pandora::CartesianVector &connectingLine, pandora::DetectorGapList &consideredGaps) const;
+
+    
     /**
      *  @brief  Whether a position falls within a specified segment of the cluster connecting line
      *

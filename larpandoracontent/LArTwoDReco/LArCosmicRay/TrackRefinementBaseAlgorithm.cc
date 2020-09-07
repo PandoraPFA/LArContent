@@ -194,22 +194,6 @@ bool TrackRefinementBaseAlgorithm::AreExtrapolatedHitsGood(const ClusterToCaloHi
     std::sort(extrapolatedHitVector.begin(), extrapolatedHitVector.end(), SortByDistanceAlongLine(clusterAssociation.GetUpstreamMergePoint(),
         clusterAssociation.GetConnectingLineDirection(), m_hitWidthMode));
 
-    ////////////////////////////////////
-    unsigned int count(0);
-    for (const CaloHit *const pCaloHit : extrapolatedHitVector)
-    {
-        CartesianVector hitPosition(m_hitWidthMode ?
-            LArHitWidthHelper::GetClosestPointToLine2D(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetConnectingLineDirection(), pCaloHit) :
-            pCaloHit->GetPositionVector());
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, std::to_string(count), YELLOW, 2);
-        ++count;
-    }
-    const CartesianVector start(clusterAssociation.GetUpstreamMergePoint());
-    const CartesianVector end(start + (clusterAssociation.GetConnectingLineDirection() * 150));
-    PandoraMonitoringApi::AddLineToVisualization(this->GetPandora(), &start, &end, "LINE", GREEN, 2, 2);
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    ////////////////////////////////////    
-    
     if (!this->AreExtrapolatedHitsNearBoundaries(extrapolatedHitVector, clusterAssociation))
         return false;
 
@@ -217,10 +201,7 @@ bool TrackRefinementBaseAlgorithm::AreExtrapolatedHitsGood(const ClusterToCaloHi
         return true;
 
     if (!this->IsTrackContinuous(clusterAssociation, extrapolatedHitVector))
-    {
-        std::cout << "GAP IN HIT VECTOR" << std::endl;
         return false;
-    }
 
     return true;
 }
@@ -230,10 +211,6 @@ bool TrackRefinementBaseAlgorithm::AreExtrapolatedHitsGood(const ClusterToCaloHi
 bool TrackRefinementBaseAlgorithm::IsNearBoundary(const CaloHit *const pCaloHit, const CartesianVector &boundaryPosition2D, const float boundaryTolerance) const
 {
     const float distanceToBoundary(LArHitWidthHelper::GetClosestDistanceToPoint2D(pCaloHit, boundaryPosition2D));
-
-    ////////////////////
-    std::cout << "distanceFromBoundary: " << distanceToBoundary << std::endl;
-    ////////////////////   
 
     return (distanceToBoundary < boundaryTolerance);
 }
@@ -302,43 +279,166 @@ void TrackRefinementBaseAlgorithm::GetTrackSegmentBoundaries(const ClusterAssoci
         throw STATUS_CODE_INVALID_PARAMETER;
     }
 
-    // ATTN: To handle final segment merge track remainder with preceding segment and if track remainder was more than half of the segment length split into two
     const CartesianVector &trackDirection(clusterAssociation.GetConnectingLineDirection());
-    const float trackLength((clusterAssociation.GetUpstreamMergePoint() - clusterAssociation.GetDownstreamMergePoint()).GetMagnitude());
+    float trackLength((clusterAssociation.GetUpstreamMergePoint() - clusterAssociation.GetDownstreamMergePoint()).GetMagnitude());
+
+    // ATTN: Remove track segments in gaps where no hits would be expected to be found
+    DetectorGapList consideredGaps;
+    trackLength -= this->DistanceInGap(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint(), trackDirection, consideredGaps);
+    consideredGaps.clear();
+    
     const int fullSegments(std::floor(trackLength / m_lineSegmentLength));
 
     if (fullSegments == 0)
+    {
         trackSegmentBoundaries = {clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint()};
-    
+        return;
+    }
+
+    // ATTN: To handle final segment merge track remainder with preceding segment and if track remainder was more than half of the segment length split into two    
     const float lengthOfTrackRemainder(trackLength - (fullSegments * m_lineSegmentLength));
     const bool splitFinalSegment(lengthOfTrackRemainder > m_lineSegmentLength * 0.5f);
     const int numberOfBoundaries(fullSegments + (splitFinalSegment ? 2 : 1));
 
-    for (int i = 0; i < numberOfBoundaries; ++i)
-    {
-        if (i == 0)
+    CartesianVector segmentUpstreamBoundary(clusterAssociation.GetUpstreamMergePoint()), segmentDownstreamBoundary(segmentUpstreamBoundary);
+    this->RepositionIfInGap(trackDirection, segmentUpstreamBoundary);
+    trackSegmentBoundaries.push_back(segmentUpstreamBoundary);
+    
+    for (int i = 1; i < numberOfBoundaries; ++i)
+    {   
+        if (i < fullSegments)
         {
-            trackSegmentBoundaries.push_back(clusterAssociation.GetUpstreamMergePoint());
-        }
-        else if (i < fullSegments)
-        {
-            trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * m_lineSegmentLength));
+            segmentDownstreamBoundary += trackDirection * m_lineSegmentLength;
         }
         else
         {
             if (splitFinalSegment)
             {
-                trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * (m_lineSegmentLength + lengthOfTrackRemainder) * 0.5f));
+                segmentDownstreamBoundary += trackDirection * (m_lineSegmentLength + lengthOfTrackRemainder) * 0.5f;
             }
             else
             {
-                trackSegmentBoundaries.push_back(trackSegmentBoundaries.back() + (trackDirection * (m_lineSegmentLength + lengthOfTrackRemainder)));
+                segmentDownstreamBoundary += trackDirection * (m_lineSegmentLength + lengthOfTrackRemainder);
+            }
+        }
+
+        float distanceInGap(this->DistanceInGap(segmentUpstreamBoundary, segmentDownstreamBoundary, trackDirection, consideredGaps));
+        while (distanceInGap > std::numeric_limits<float>::epsilon())
+        {
+            this->RepositionIfInGap(trackDirection, segmentDownstreamBoundary);
+            segmentDownstreamBoundary += trackDirection * distanceInGap;
+            distanceInGap = this->DistanceInGap(segmentUpstreamBoundary, segmentDownstreamBoundary, trackDirection, consideredGaps);
+        }
+
+        trackSegmentBoundaries.push_back(segmentDownstreamBoundary);
+    }                     
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrackRefinementBaseAlgorithm::RepositionIfInGap(const CartesianVector &mergeDirection, CartesianVector &mergePoint) const
+{
+    const float gradient(mergeDirection.GetZ() / mergeDirection.GetX());
+
+    DetectorGapList detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
+    for (const DetectorGap *const pDetectorGap : detectorGapList)
+    {
+        const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pDetectorGap));
+
+        if (pLineGap)
+        {
+            LineGapType lineGapType(pLineGap->GetLineGapType());
+            
+            if (lineGapType == TPC_DRIFT_GAP)
+            {
+                if ((pLineGap->GetLineStartX() < mergePoint.GetX()) && (pLineGap->GetLineEndX() > mergePoint.GetX()))
+                    mergePoint = CartesianVector(pLineGap->GetLineEndX(), 0.f, mergePoint.GetZ() + gradient * (pLineGap->GetLineEndX() - mergePoint.GetX()));
+            }
+
+            if ((lineGapType == TPC_WIRE_GAP_VIEW_U) || (lineGapType == TPC_WIRE_GAP_VIEW_V) || (lineGapType == TPC_WIRE_GAP_VIEW_W))
+            {
+                if ((pLineGap->GetLineStartZ() < mergePoint.GetZ()) && (pLineGap->GetLineEndZ() > mergePoint.GetZ()))
+                    mergePoint = CartesianVector((pLineGap->GetLineEndZ() - mergePoint.GetZ()) / gradient, 0.f, pLineGap->GetLineEndZ());
             }
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+float TrackRefinementBaseAlgorithm::DistanceInGap(const CartesianVector &upstreamPoint, const CartesianVector &downstreamPoint,
+    const CartesianVector &connectingLine, DetectorGapList &consideredGaps) const
+{
+    const CartesianVector &lowerXPoint(upstreamPoint.GetX() < downstreamPoint.GetX() ? upstreamPoint : downstreamPoint);
+    const CartesianVector &higherXPoint(upstreamPoint.GetX() < downstreamPoint.GetX() ? downstreamPoint : upstreamPoint);
+
+    const float cosAngleToX(std::fabs(connectingLine.GetDotProduct(CartesianVector(1.f, 0.f, 0.f))));
+    const float cosAngleToZ(std::fabs(connectingLine.GetDotProduct(CartesianVector(0.f, 0.f, 1.f))));
+
+    float distanceInGaps(0.f);
+    DetectorGapList detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
+    for (const DetectorGap *const pDetectorGap : detectorGapList)
+    {
+        if (std::find(consideredGaps.begin(), consideredGaps.end(), pDetectorGap) != consideredGaps.end())
+            continue;
+        
+        const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pDetectorGap));
+        
+        if (pLineGap)
+        {
+            LineGapType lineGapType(pLineGap->GetLineGapType());
+            
+            if (lineGapType == TPC_DRIFT_GAP)
+            {
+                if ((pLineGap->GetLineStartX() > lowerXPoint.GetX()) && (pLineGap->GetLineEndX() < higherXPoint.GetX()))
+                {
+                    distanceInGaps += (pLineGap->GetLineEndX() - pLineGap->GetLineStartX()) / cosAngleToX;
+                }
+                else if ((pLineGap->GetLineStartX() < lowerXPoint.GetX()) && (pLineGap->GetLineEndX() > lowerXPoint.GetX()))
+                {
+                    distanceInGaps += (pLineGap->GetLineEndX() - lowerXPoint.GetX()) / cosAngleToX;
+                }
+                else if ((pLineGap->GetLineStartX() < higherXPoint.GetX()) && (pLineGap->GetLineEndX() > higherXPoint.GetX()))
+                {
+                    distanceInGaps += (higherXPoint.GetX() - pLineGap->GetLineStartX()) / cosAngleToX;
+                }
+                else
+                {
+                    continue;
+                }
+                                    
+                consideredGaps.push_back(pDetectorGap);
+            }
+            
+            if ((lineGapType == TPC_WIRE_GAP_VIEW_U) || (lineGapType == TPC_WIRE_GAP_VIEW_V) || (lineGapType == TPC_WIRE_GAP_VIEW_W))
+            {
+                if ((pLineGap->GetLineStartZ() > upstreamPoint.GetZ()) && (pLineGap->GetLineEndZ() < downstreamPoint.GetZ()))
+                {
+                    distanceInGaps += (pLineGap->GetLineEndZ() - pLineGap->GetLineStartZ()) / cosAngleToZ;
+                }
+                else if ((pLineGap->GetLineStartZ() < upstreamPoint.GetZ()) && (pLineGap->GetLineEndZ() > upstreamPoint.GetZ()))
+                {
+                    distanceInGaps += (pLineGap->GetLineEndZ() - upstreamPoint.GetZ()) / cosAngleToZ;
+                }
+                else if ((pLineGap->GetLineStartZ() < downstreamPoint.GetZ()) && (pLineGap->GetLineEndZ() > downstreamPoint.GetZ()))
+                {
+                    distanceInGaps += (downstreamPoint.GetZ() - pLineGap->GetLineStartZ()) / cosAngleToZ;
+                }
+                else
+                {
+                    continue;
+                }
+                
+                consideredGaps.push_back(pDetectorGap);
+            }
+        }
+    }
+    
+    return distanceInGaps;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
 
 bool TrackRefinementBaseAlgorithm::IsInLineSegment(const CartesianVector &lowerBoundary, const CartesianVector &upperBoundary, const CartesianVector &point) const
 {

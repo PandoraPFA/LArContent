@@ -36,9 +36,6 @@ TrackExtensionRefinementAlgorithm::TrackExtensionRefinementAlgorithm() :
     
 StatusCode TrackExtensionRefinementAlgorithm::Run()
 {
-
-    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
-    
     const ClusterList *pClusterList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
 
@@ -59,16 +56,12 @@ StatusCode TrackExtensionRefinementAlgorithm::Run()
     {
         m_isHigherXBoundary = isHigherXBoundary;
 
-        std::cout << "\033[31m" << "TrackExtension: isHigherXBoundary: " << isHigherXBoundary << "\033[0m"  << std::endl;
-
-        /*
         const float nearestTPCBoundaryX(m_isHigherXBoundary ? m_tpcMaxXEdge : m_tpcMinXEdge);
         if ((std::fabs(nearestTPCBoundaryX - m_detectorMinXEdge) < std::numeric_limits<float>::epsilon()) ||
             (std::fabs(nearestTPCBoundaryX - m_detectorMaxXEdge) < std::numeric_limits<float>::epsilon()))
         {
             continue;
         }
-        */
 
         // ATTN: Keep track of clusters removed from clusterVector so that they can be added back in when considering the other endpoint
         ClusterList consideredClusters;
@@ -77,24 +70,19 @@ StatusCode TrackExtensionRefinementAlgorithm::Run()
         {
             ++loopIterations;
 
-            std::cout << "\033[31m" << "TrackExtension: Finding best cluster association..." << "\033[0m"  << std::endl;
             ClusterEndpointAssociation clusterAssociation;
             if (!this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, pClusterList, clusterAssociation))
                 break;
 
-            std::cout << "\033[31m" << "TrackExtension: Finding extrapolated hits..." << "\033[0m"  << std::endl;
             ClusterToCaloHitListMap clusterToCaloHitListMap;
             this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, createdMainTrackClusters, clusterToCaloHitListMap);
 
-            std::cout << "\033[31m" << "TrackExtension: Asking whether hits make sense..." << "\033[0m"  << std::endl;
             if(!this->AreExtrapolatedHitsGood(clusterToCaloHitListMap, clusterAssociation))
             {
-                std::cout << "\033[31m" << "TrackExtension: EXTRAPOLATED HITS ARE PANTS - ABORT" << "\033[0m"  << std::endl;
                 this->ConsiderClusterAssociation(clusterAssociation.GetMainTrackCluster(), clusterAssociation.GetMainTrackCluster(), clusterVector, consideredClusters, slidingFitResultMapPair);
                 continue;
             }
 
-            std::cout << "\033[31m" << "TrackExtension: Creating main track..." << "\033[0m"  << std::endl;
             const ClusterList::const_iterator iter(std::find(createdMainTrackClusters.begin(), createdMainTrackClusters.end(), clusterAssociation.GetMainTrackCluster()));
             if (iter != createdMainTrackClusters.end())
                 createdMainTrackClusters.erase(iter);
@@ -105,10 +93,6 @@ StatusCode TrackExtensionRefinementAlgorithm::Run()
 
         if (!m_isHigherXBoundary)
             this->InitialiseContainers(&consideredClusters, SortByDistanceToTPCBoundary(m_tpcMaxXEdge), clusterVector, slidingFitResultMapPair);
-
-        std::cout << "\033[31m" << "TrackExtension: Created main track clusters..." << "\033[0m"  << std::endl;
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &createdMainTrackClusters, "createdMainTrackClusters", GREEN);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());        
     }
 
     return STATUS_CODE_SUCCESS;
@@ -178,35 +162,17 @@ bool TrackExtensionRefinementAlgorithm::FindBestClusterAssociation(const Cluster
         const bool isEndUpstream = (std::fabs(microSlidingFitResult.GetGlobalMinLayerPosition().GetX() - nearestTPCBoundaryX) <
                                     std::fabs(microSlidingFitResult.GetGlobalMaxLayerPosition().GetX() - nearestTPCBoundaryX));
 
-        ////////////////
-        ClusterList theCluster({pCurrentCluster});
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CONSIDERED CLUSTER", BLACK);
-        std::cout << "isEndUpstream: " << isEndUpstream << std::endl;
-        ////////////////
-            
         CartesianVector clusterMergePoint(0.f, 0.f, 0.f), clusterMergeDirection(0.f, 0.f, 0.f);
         if (!GetClusterMergingCoordinates(microSlidingFitResult, macroSlidingFitResult, macroSlidingFitResult, isEndUpstream, clusterMergePoint, clusterMergeDirection))
-        {
-            std::cout << "CANNOT FIND MERGE POSITION" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());             
             continue;
-        }
 
         // Reject clusters that do not cross TPC boundary
         if (std::fabs(clusterMergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
-        {
-            std::cout << "MERGE DIRECTION HAS NO X COMPONENT" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());              
             continue;
-        }
         
         // If pCurrent cluster is contained within another close cluster it is likely to be part of a shower
         if (this->IsContained(pCurrentCluster, pClusterList))
-        {
-            std::cout << "CONTAINED" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());   
             continue;
-        }
 
         // Reject clusters that do not fit criteria
         if(!this->DoesPassCriteria(microSlidingFitResult, clusterMergeDirection, isEndUpstream, pClusterList,  clusterMergePoint))
@@ -218,25 +184,11 @@ bool TrackExtensionRefinementAlgorithm::FindBestClusterAssociation(const Cluster
         const CartesianVector extrapolatedHitsEndpoint(nearestTPCBoundaryX, 0.f, predictedIntercept + (predictedGradient * nearestTPCBoundaryX));
 
         if (isEndUpstream ? clusterMergePoint.GetZ() < extrapolatedHitsEndpoint.GetZ() : clusterMergePoint.GetZ() > extrapolatedHitsEndpoint.GetZ())
-        {
-            std::cout << "EXTRAPOLATED ENDPOINT IS NOT IN FORWARD DIRECTION" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());     
             continue;
-        }
-                
+
         clusterAssociation = isEndUpstream ?
             ClusterEndpointAssociation(extrapolatedHitsEndpoint, clusterMergeDirection, clusterMergePoint, clusterMergeDirection * (-1.f), pCurrentCluster, true) :
             ClusterEndpointAssociation(clusterMergePoint, clusterMergeDirection, extrapolatedHitsEndpoint, clusterMergeDirection * (-1.f), pCurrentCluster, false);
-
-        ////////////////////////////////
-        ClusterList mainCluster({clusterAssociation.GetMainTrackCluster()});
-        const CartesianVector &upstream(clusterAssociation.GetUpstreamMergePoint());
-        const CartesianVector &downstream(clusterAssociation.GetDownstreamMergePoint());
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &upstream, "UPSTREAM", VIOLET, 2);
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &downstream, "DOWNSTREAM", RED, 2);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &mainCluster, "CLUSTER", BLACK);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        ////////////////////////////////  
 
         return true;
     }
@@ -260,11 +212,7 @@ bool TrackExtensionRefinementAlgorithm::IsContained(const Cluster *const pCurren
         if ((currentInnerPseudoLayer > clusterInnerPseudoLayer) && (currentOuterPseudoLayer < clusterOuterPseudoLayer))
         {
             if (LArClusterHelper::GetClosestDistance(pCurrentCluster, pCluster) < m_maxTrackDistanceToShowerBranch)
-            {
-                ClusterList theCluster({pCluster});
-                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CONTAINER", VIOLET);
                 return true;
-            }
         }
     }
 
@@ -304,13 +252,6 @@ void TrackExtensionRefinementAlgorithm::GetExtrapolatedCaloHits(const ClusterEnd
     for (const CaloHit *const pCaloHit : subsetFitHits.begin()->second)
         runningFitPositionVector.push_back(pCaloHit->GetPositionVector());
 
-    ////////////////
-    for (const CartesianVector &initial : runningFitPositionVector)
-    {
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &initial, "initial", BLACK, 2);
-    }
-    ////////////////      
-
     // Collect extrapolated hits by performing a running fit
     unsigned int count(0);
     CartesianVector extrapolatedEndPosition(0.f, 0.f, 0.f);
@@ -330,11 +271,7 @@ void TrackExtensionRefinementAlgorithm::GetExtrapolatedCaloHits(const ClusterEnd
                 extrapolatedDirection = clusterAssociation.IsEndUpstream() ? extrapolatedFit.GetGlobalMinLayerDirection() * (-1.f) : extrapolatedFit.GetGlobalMaxLayerDirection();
             }
             
-            extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);
-
-            ////////////////
-            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedStartPosition, "start", RED, 2);
-            ////////////////              
+            extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);           
 
             for (const Cluster *const pCluster : clustersInRegion)
             {
@@ -362,10 +299,8 @@ void TrackExtensionRefinementAlgorithm::GetExtrapolatedCaloHits(const ClusterEnd
                     
                     runningFitPositionVector.push_back(hitPosition);
                     clusterToCaloHitListMap[pCluster].push_back(pCaloHit);
-                    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "COLLECTED", GREEN, 2);
                 }
             }
-            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extrapolatedEndPosition, "end", RED, 2);
         }
         catch (const StatusCodeException &)
         {
@@ -374,8 +309,6 @@ void TrackExtensionRefinementAlgorithm::GetExtrapolatedCaloHits(const ClusterEnd
 
         ++count;
     }
-
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -400,12 +333,6 @@ bool TrackExtensionRefinementAlgorithm::AreExtrapolatedHitsNearBoundaries(const 
     
     const CartesianVector &clusterMergePoint(isEndUpstream ? clusterAssociation.GetDownstreamMergePoint() : clusterAssociation.GetUpstreamMergePoint());
 
-    ////////////////////
-    //ClusterList theCluster({clusterAssociation.GetMainTrackCluster()});
-    //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "THE CLUSTER", BLACK);
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &clusterMergePoint, "MERGE POINT", BLACK, 2);
-    ////////////////////  
-
     if (extrapolatedHitVector.empty())
     {
         const float distanceFromTPCBoundary(std::fabs(clusterMergePoint.GetX() - nearestTPCBoundaryX));
@@ -415,20 +342,12 @@ bool TrackExtensionRefinementAlgorithm::AreExtrapolatedHitsNearBoundaries(const 
     const CaloHit *const furthestCaloHit(isEndUpstream ? extrapolatedHitVector.front() : extrapolatedHitVector.back()); 
 
     if (!this->IsNearBoundary(furthestCaloHit, CartesianVector(nearestTPCBoundaryX, 0.f, furthestCaloHit->GetPositionVector().GetZ()), m_tpcBoundaryTolerance))
-    {
-        std::cout << "failed merge point cuts" << std::endl;
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());    
         return false;
-    }
 
     const CaloHit *const closestCaloHit(isEndUpstream ? extrapolatedHitVector.back() : extrapolatedHitVector.front());
 
     if (!this->IsNearBoundary(closestCaloHit, clusterMergePoint, m_mergePointBoundaryTolerance))
-    {
-        std::cout << "failed merge point cuts" << std::endl;
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());            
         return false;
-    }
 
     // Reset extrapolated cluster merge point to be the projection of the furthest extrapolated hit
     const CartesianVector hitPosition(m_hitWidthMode ?
@@ -462,11 +381,6 @@ const Cluster *TrackExtensionRefinementAlgorithm::CreateMainTrack(const ClusterE
     const CartesianVector &clusterMergePoint(clusterAssociation.IsEndUpstream() ?
         clusterAssociation.GetDownstreamMergePoint() : clusterAssociation.GetUpstreamMergePoint());
 
-    ////////////////
-    ClusterList originalTrack({pMainTrackCluster});
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &originalTrack, "ORIGINAL TRACK", BLACK);
-    ///////////////    
-
     // Determine the shower clusters which contain hits that belong to the main track
     ClusterVector showerClustersToFragment;
     for (auto &entry : clusterToCaloHitListMap)
@@ -494,14 +408,7 @@ const Cluster *TrackExtensionRefinementAlgorithm::CreateMainTrack(const ClusterE
     }
 
     ClusterList createdClusters;
-    this->ProcessRemnantClusters(remnantClusterList, pMainTrackCluster, pClusterList, createdClusters);
-
-    ////////////////
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &createdClusters, "CREATED CLUSTERS", RED);
-    ClusterList extendedCluster({pMainTrackCluster});
-    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &extendedCluster, "REFINED MAIN TRACK", BLACK);
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());     
-    ////////////////       
+    this->ProcessRemnantClusters(remnantClusterList, pMainTrackCluster, pClusterList, createdClusters); 
 
     // ATTN: Cleanup containers - choose to not add created clusters back into containers
     ClusterList modifiedClusters(showerClustersToFragment.begin(), showerClustersToFragment.end());

@@ -142,12 +142,15 @@ bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVect
                 continue;
             }
 
+
             if (isCurrentUpstream)
             {
+                //this->RepositionIfInGap(currentMergeDirection, testMergeDirection, currentMergePoint, testMergePoint);
                 clusterAssociation = ClusterPairAssociation(currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection * (-1.f), pCurrentCluster, pTestCluster);
             }
             else
             {
+                //this->RepositionIfInGap(testMergeDirection, currentMergeDirection, testMergePoint, currentMergePoint);
                 clusterAssociation = ClusterPairAssociation(testMergePoint, testMergeDirection, currentMergePoint, currentMergeDirection * (-1.f), pTestCluster, pCurrentCluster);
             }
 
@@ -160,6 +163,50 @@ bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVect
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrackMergeRefinementAlgorithm::RepositionIfInGap(const CartesianVector &upstreamMergeDirection, const CartesianVector &downstreamMergeDirection,
+    CartesianVector &upstreamMergePoint, CartesianVector &downstreamMergePoint) const
+{
+    CartesianVector &lowerXMergePoint(upstreamMergePoint.GetX() < downstreamMergePoint.GetX() ? upstreamMergePoint : downstreamMergePoint);
+    const float lowerGradient(upstreamMergePoint.GetX() < downstreamMergePoint.GetX() ?
+        upstreamMergeDirection.GetZ() / upstreamMergeDirection.GetX() : downstreamMergeDirection.GetZ() / downstreamMergeDirection.GetX());                                      
+    CartesianVector &higherXMergePoint(upstreamMergePoint.GetX() < downstreamMergePoint.GetX() ? downstreamMergePoint : upstreamMergePoint);
+    const float higherGradient(upstreamMergePoint.GetX() < downstreamMergePoint.GetX() ?
+        downstreamMergeDirection.GetZ() / downstreamMergeDirection.GetX() : upstreamMergeDirection.GetZ() / upstreamMergeDirection.GetX());
+    const float upstreamGradient(upstreamMergeDirection.GetZ() / upstreamMergeDirection.GetX());
+    const float downstreamGradient(downstreamMergeDirection.GetZ() / downstreamMergeDirection.GetX());    
+
+    DetectorGapList detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
+    for (const DetectorGap *const pDetectorGap : detectorGapList)
+    {
+        const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pDetectorGap));
+
+        if (pLineGap)
+        {
+            LineGapType lineGapType(pLineGap->GetLineGapType());
+            
+            if (lineGapType == TPC_DRIFT_GAP)
+            {
+                if ((pLineGap->GetLineStartX() < lowerXMergePoint.GetX()) && (pLineGap->GetLineEndX() > lowerXMergePoint.GetX()))
+                    lowerXMergePoint = CartesianVector(pLineGap->GetLineEndX(), 0.f, lowerXMergePoint.GetZ() + lowerGradient * (pLineGap->GetLineEndX() - lowerXMergePoint.GetX()));
+
+                if ((pLineGap->GetLineStartX() < higherXMergePoint.GetX()) && (pLineGap->GetLineEndX() > higherXMergePoint.GetX()))
+                    higherXMergePoint = CartesianVector(pLineGap->GetLineStartX(), 0.f, higherXMergePoint.GetZ() + higherGradient * (pLineGap->GetLineStartX() - higherXMergePoint.GetX()));
+            }
+
+            if ((lineGapType == TPC_WIRE_GAP_VIEW_U) || (lineGapType == TPC_WIRE_GAP_VIEW_V) || (lineGapType == TPC_WIRE_GAP_VIEW_W))
+            {
+                if ((pLineGap->GetLineStartZ() < upstreamMergePoint.GetZ()) && (pLineGap->GetLineEndZ() > upstreamMergePoint.GetZ()))
+                    upstreamMergePoint = CartesianVector((pLineGap->GetLineEndZ() - upstreamMergePoint.GetZ()) / upstreamGradient, 0.f, pLineGap->GetLineEndZ());
+
+                if ((pLineGap->GetLineStartZ() < downstreamMergePoint.GetZ()) && (pLineGap->GetLineEndZ() > downstreamMergePoint.GetZ()))
+                    downstreamMergePoint = CartesianVector((pLineGap->GetLineStartZ() - downstreamMergePoint.GetZ()) / downstreamGradient, 0.f, pLineGap->GetLineStartZ());
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
 
 bool TrackMergeRefinementAlgorithm::AreClustersAssociated(const CartesianVector &upstreamPoint, const CartesianVector &upstreamDirection, const CartesianVector &downstreamPoint,
     const CartesianVector &downstreamDirection) const
