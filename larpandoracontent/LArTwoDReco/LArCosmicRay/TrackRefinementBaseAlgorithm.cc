@@ -145,7 +145,8 @@ void TrackRefinementBaseAlgorithm::GetHitsInBoundingBox(const CartesianVector &f
                     LArHitWidthHelper::GetClosestPointToLine2D(firstCorner, connectingLineDirection, pCaloHit) :
                     pCaloHit->GetPositionVector());                
 
-                this->IsInBoundingBox(minX, maxX, minZ, maxZ, hitPosition);
+                if(!this->IsInBoundingBox(minX, maxX, minZ, maxZ, hitPosition))
+                    continue;
 
                 if (distanceToLine > 0.f)
                 {
