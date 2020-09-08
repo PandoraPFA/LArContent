@@ -63,6 +63,8 @@ private:
      */
     void ProcessOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const;
 
+    void ProjectPositionToDetectorEdge(pandora::CartesianVector &position, const pandora::CartesianVector &direction) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<pandora::HitType> HitTypeVector;
