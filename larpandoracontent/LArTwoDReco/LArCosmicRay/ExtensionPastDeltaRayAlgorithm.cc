@@ -46,7 +46,7 @@ bool ExtensionPastDeltaRayAlgorithm::DoesPassCriteria(const TwoDSlidingFitResult
 
     if (!(isMergePointInAllowanceRegion || isEndpointInAllowanceRegion))
         return false;
-            
+
     const float predictedGradient(clusterMergeDirection.GetZ() / clusterMergeDirection.GetX());
     const float predictedIntercept(clusterMergePoint.GetZ() - (predictedGradient * clusterMergePoint.GetX()));
     const CartesianVector fitEndpointPosition(endpointPosition.GetX(), 0.f, predictedIntercept + (predictedGradient * endpointPosition.GetX()));

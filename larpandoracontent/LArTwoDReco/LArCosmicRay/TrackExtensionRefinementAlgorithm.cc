@@ -75,7 +75,7 @@ StatusCode TrackExtensionRefinementAlgorithm::Run()
 
             ClusterToCaloHitListMap clusterToCaloHitListMap;
             this->GetExtrapolatedCaloHits(clusterAssociation, pClusterList, createdMainTrackClusters, clusterToCaloHitListMap);
-            
+
             if(!this->AreExtrapolatedHitsGood(clusterToCaloHitListMap, clusterAssociation))
             {
                 this->ConsiderClusterAssociation(clusterAssociation.GetMainTrackCluster(), clusterAssociation.GetMainTrackCluster(), clusterVector, consideredClusters, slidingFitResultMapPair);
@@ -222,7 +222,7 @@ bool TrackExtensionRefinementAlgorithm::IsContained(const Cluster *const pCurren
 
 void TrackExtensionRefinementAlgorithm::GetExtrapolatedCaloHits(const ClusterEndpointAssociation &clusterAssociation, const ClusterList *const pClusterList,
     const ClusterList &createdMainTrackClusters, ClusterToCaloHitListMap &clusterToCaloHitListMap) const
-{    
+{
     // Identify hits in the ROI
     ClusterList unavailableProtectedClusters;
     this->GetUnavailableProtectedClusters(clusterAssociation, createdMainTrackClusters, unavailableProtectedClusters);
@@ -247,8 +247,11 @@ void TrackExtensionRefinementAlgorithm::GetExtrapolatedCaloHits(const ClusterEnd
     const ClusterList mainTrackClusterList({clusterAssociation.GetMainTrackCluster()});
     this->GetHitsInBoundingBox(extrapolatedStartPosition, clusterSubsetBoundary, &mainTrackClusterList, subsetFitHits);
 
+    if (subsetFitHits.empty())
+        return;
+    
     CartesianPointVector runningFitPositionVector;
-    for (const CaloHit *const pCaloHit : subsetFitHits.begin()->second)
+    for (const CaloHit *const pCaloHit : subsetFitHits.begin()->second) 
         runningFitPositionVector.push_back(pCaloHit->GetPositionVector());
 
     // Collect extrapolated hits by performing a running fit
