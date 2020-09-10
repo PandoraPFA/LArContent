@@ -25,12 +25,16 @@ CheatingBeamParticleIdTool::CheatingBeamParticleIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const /*pAlgorithm*/, const SliceHypotheses &testBeamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+  void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const /*pAlgorithm*/, const SliceHypotheses &testBeamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb, const SliceVector &sliceVector)
 {
-    if (testBeamSliceHypotheses.size() != crSliceHypotheses.size())
-        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+  if(1==2) {
+    std::cout << pfotoprobabilitymapb.size() << std::endl;
+    std::cout << sliceVector.size() << std::endl;
+  }
+  if (testBeamSliceHypotheses.size() != crSliceHypotheses.size())
+    throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    for (unsigned int sliceIndex = 0, nSlices = testBeamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+  for (unsigned int sliceIndex = 0, nSlices = testBeamSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
         float beamParticleWeight(0.f), totalWeight(0.f);
         const PfoList &testBeamPfoList(testBeamSliceHypotheses.at(sliceIndex));

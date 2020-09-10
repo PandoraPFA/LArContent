@@ -21,7 +21,7 @@ namespace lar_content
 class CheatingSliceIdBaseTool : public SliceIdBaseTool
 {
 public:
-    virtual void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos) = 0;
+  virtual void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos, const PfoToFloatMap &pfotoprobability, const SliceVector &sliceVector) = 0;
 
     /**
      *  @brief  Get the target particle weight in a list of pfos
