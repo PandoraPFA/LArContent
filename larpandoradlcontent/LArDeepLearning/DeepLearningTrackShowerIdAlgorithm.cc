@@ -21,9 +21,8 @@
 #include <chrono>
 
 using namespace pandora;
-using namespace lar_content;
 
-namespace lar_dl_content
+namespace lar_content
 {
 
 DeepLearningTrackShowerIdAlgorithm::DeepLearningTrackShowerIdAlgorithm() :
@@ -381,4 +380,4 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
     return STATUS_CODE_SUCCESS;
 }
 
-} // namespace lar_dl_content
+} // namespace lar_content

@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar_dl_content
+namespace lar_content
 {
 
 /**
@@ -39,6 +39,6 @@ private:
     std::string               m_trainingOutputFile;  ///< Output file name for training examples
 };
 
-} // namespace lar_dl_content
+} // namespace lar_content
 
 #endif // LAR_DEEP_LEARNING_TRACK_SHOWER_ID_ALGORITHM_H

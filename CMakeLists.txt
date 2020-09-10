@@ -113,7 +113,6 @@ else()
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
         include_directories(${TORCH_INCLUDE_DIRECTORIES})
         link_libraries(${TORCH_LIBRARIES})
-        add_definitions(-DDEEP_LEARNING=1)
     endif()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
