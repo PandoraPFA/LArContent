@@ -49,29 +49,6 @@ DeepLearningTrackShowerIdAlgorithm::~DeepLearningTrackShowerIdAlgorithm()
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool isNeutronDaughter(const MCParticle *const mcParticle)
-{
-    const MCParticle* particle = mcParticle;
-    while(!particle->GetParentList().empty())
-    {   
-        if(particle->GetParentList().size() > 1)
-            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-        const MCParticle* pParent = *(particle->GetParentList().begin());
-        const int pdg = std::abs(pParent->GetParticleId());
-        if (pdg == 2112)
-        {
-            return true;
-        }   
-        particle = pParent;
-    }
-
-    return false;
-}
-
-
 StatusCode DeepLearningTrackShowerIdAlgorithm::Run()
 {
     if (m_useTrainingMode)
@@ -81,34 +58,6 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Run()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DeepLearningTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseTrainingMode", m_useTrainingMode));
-
-    if (m_useTrainingMode)
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "TrainingOutputFileName", m_trainingOutputFile));
-    }
-    else
-    {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileName", m_modelFileName));
-        m_modelFileName = LArFileHelper::FindFileInPath(m_modelFileName, "FW_SEARCH_PATH");
-    }
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "CaloHitListNames", m_caloHitListNames));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "Visualize", m_visualize));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "Profile", m_profile));
-
-    return STATUS_CODE_SUCCESS;
-}
 
 StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
 {
@@ -127,7 +76,6 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
         if (!isU && !isV && !isW) return STATUS_CODE_NOT_ALLOWED;
 
         std::string trainingOutputFileName(m_trainingOutputFile);
-        LArMvaHelper::MvaFeatureVector featureVector;
 
         if (isU) trainingOutputFileName += "_CaloHitListU.csv";
         else if (isV) trainingOutputFileName += "_CaloHitListV.csv";
@@ -139,9 +87,10 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
         // Turn off max photo propagation for now, only care about killing off daughters of neutrons
         parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList,
-            parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters,
+            LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
 
+        LArMvaHelper::MvaFeatureVector featureVector;
         for (const CaloHit *pCaloHit : *pCaloHitList)
         {
             int tag{TRACK};
@@ -153,7 +102,7 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
                 // Throw away non-reconstructable hits
                 if (targetMCParticleToHitsMap.find(pMCParticle) == targetMCParticleToHitsMap.end())
                     continue;
-                if(isNeutronDaughter(pMCParticle))
+                if(LArMCParticleHelper::IsDescendentOf(pMCParticle, 2112))
                     continue;
                 inputEnergy = pCaloHit->GetInputEnergy();
                 if (inputEnergy < 0)
@@ -181,50 +130,11 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
 
         LArMvaHelper::ProduceTrainingExample(trainingOutputFileName, true, featureVector);
     }
+
     return STATUS_CODE_SUCCESS;
 }
 
-void GetHitRegion(const CaloHitList& caloHitList, float& xMin, float& xMax, float& zMin, float& zMax)
-{
-    xMin = std::numeric_limits<float>::max(); xMax = 0.f;
-    zMin = std::numeric_limits<float>::max(); zMax = 0.f;
-    for (const CaloHit *pCaloHit : caloHitList)
-    {
-        const float x(pCaloHit->GetPositionVector().GetX());
-        const float z(pCaloHit->GetPositionVector().GetZ());
-        if (x < xMin) xMin = x;
-        if (x > xMax) xMax = x;
-        if (z < zMin) zMin = z;
-        if (z > zMax) zMax = z;
-    }
-}
-
-void GetSparseTileMap(const CaloHitList& caloHitList, const float xMin,
-        const float zMin, const float tileSize, const int nTilesX, std::map<int, int>& sparseMap)
-{
-    // Identify the tiles that actually contain hits
-    std::map<int, bool> tilePopulationMap;
-    for (const CaloHit *pCaloHit : caloHitList)
-    {
-        const float x(pCaloHit->GetPositionVector().GetX());
-        const float z(pCaloHit->GetPositionVector().GetZ());
-        // Determine which tile the hit will be assigned to
-        const int tileX = static_cast<int>(std::floor((x - xMin) / tileSize));
-        const int tileZ = static_cast<int>(std::floor((z - zMin) / tileSize));
-        const int tile = tileZ * nTilesX + tileX;
-        tilePopulationMap.insert(std::make_pair(tile, true));
-    }
-
-    int nextTile = 0;
-    for(auto element : tilePopulationMap)
-    {
-        if (element.second)
-        {
-            sparseMap.insert(std::make_pair(element.first, nextTile));
-            ++nextTile;
-        }
-    }
-}
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
 {
@@ -252,7 +162,7 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
         const int imageHeight = 256;
         // Get bounds of hit region
         float xMin{}; float xMax{}; float zMin{}; float zMax{};
-        GetHitRegion(*pCaloHitList, xMin, xMax, zMin, zMax);
+        this->GetHitRegion(*pCaloHitList, xMin, xMax, zMin, zMax);
         const float xRange = xMax - xMin;
         const float zRange = zMax - zMin;
         int nTilesX = static_cast<int>(std::ceil(xRange / tileSize));
@@ -261,20 +171,18 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
         if (std::fmod(xRange, tileSize) == 0.f) ++nTilesX;
         if (std::fmod(zRange, tileSize) == 0.f) ++nTilesZ;
 
-        std::map<int, int> sparseMap;
-        GetSparseTileMap(*pCaloHitList, xMin, zMin, tileSize, nTilesX, sparseMap);
+        PixelToTileMap sparseMap;
+        this->GetSparseTileMap(*pCaloHitList, xMin, zMin, tileSize, nTilesX, sparseMap);
         const int nTiles = sparseMap.size();
 
         // Normalisation value from training set - should store and load this from file
         const float PIXEL_VALUE = (255.0 - 0.558497428894043) / 11.920382499694824;
         CaloHitList trackHits, showerHits, otherHits;
-        // Populate tensor - may need to split the batch into separate single image batches
-        //torch::Tensor input = torch::zeros({nTiles, 1, imageHeight, imageWidth});
+        // Process tile
         for (int i = 0; i < nTiles; ++i)
         {
             LArDLHelper::TorchInput input;
             LArDLHelper::InitialiseInput({1, 1, imageHeight, imageWidth}, input);
-            typedef std::map<const CaloHit*, std::tuple<int, int, int, int>> CaloHitToPixelMap;
             CaloHitToPixelMap caloHitToPixelMap;
             auto accessor = input.accessor<float, 4>();
             for (const CaloHit *pCaloHit : *pCaloHitList)
@@ -293,55 +201,49 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
                     // Determine hit pixel within the tile
                     const int pixelX = static_cast<int>(std::floor(localX * imageHeight / tileSize));
                     const int pixelZ = static_cast<int>(std::floor(localZ * imageWidth / tileSize));
-                    //accessor[tile][0][pixelX][pixelZ] = PIXEL_VALUE;
                     accessor[0][0][pixelX][pixelZ] = PIXEL_VALUE;
                     caloHitToPixelMap.insert(std::make_pair(pCaloHit, std::make_tuple(tileX, tileZ, pixelX, pixelZ)));
                 }
             }
 
-            // Pass as input the input Tensor containing the calo hit picture
+            // Run the input through the trained model and get the output accessor
             LArDLHelper::TorchInputVector inputs;
             inputs.push_back(input);
-
-            // Run the input through the trained model and get the output accessor
             LArDLHelper::TorchOutput output;
             LArDLHelper::Forward(model, inputs, output);
             auto outputAccessor = output.accessor<float, 4>();
 
             for (const CaloHit *pCaloHit : *pCaloHitList)
             {
-                auto found = caloHitToPixelMap.find(pCaloHit);
-                if (found == caloHitToPixelMap.end()) continue;
+                auto found{caloHitToPixelMap.find(pCaloHit)};
+                if (found == caloHitToPixelMap.end())
+                    continue;
                 auto pixelMap = found->second;
-                //auto pixelMap = caloHitToPixelMap.at(pCaloHit);
                 const int tileX(std::get<0>(pixelMap));
                 const int tileZ(std::get<1>(pixelMap));
                 const int tile = sparseMap.at(tileZ * nTilesX + tileX);
                 if (tile == i)
-                {
+                {   // Make sure we're looking at a hit in the correct tile
                     const int pixelX(std::get<2>(pixelMap));
                     const int pixelZ(std::get<3>(pixelMap));
 
                     object_creation::CaloHit::Metadata metadata;
                     // Apply softmax to loss to get actual probability
-                    //float probShower = exp(outputAccessor[tile][1][pixelX][pixelZ]);
-                    //float probTrack = exp(outputAccessor[tile][2][pixelX][pixelZ]);
-                    //float probNull = exp(outputAccessor[tile][0][pixelX][pixelZ]);
                     float probShower = exp(outputAccessor[0][1][pixelX][pixelZ]);
                     float probTrack = exp(outputAccessor[0][2][pixelX][pixelZ]);
                     float probNull = exp(outputAccessor[0][0][pixelX][pixelZ]);
-                    float recipSum = 1.f / (probShower + probTrack + probNull);
-                    probShower *= recipSum;
-                    probTrack *= recipSum;
-                    probNull *= recipSum;
-                    metadata.m_propertiesToAdd["Pshower"] = probShower;
-                    metadata.m_propertiesToAdd["Ptrack"] = probTrack;
                     if (probShower > probTrack && probShower > probNull)
                         showerHits.push_back(pCaloHit);
                     else if (probTrack > probShower && probTrack > probNull)
                         trackHits.push_back(pCaloHit);
                     else
                         otherHits.push_back(pCaloHit);
+                    float recipSum = 1.f / (probShower + probTrack);
+                    // Adjust probabilities to ignore null hits and update calo hit metadata
+                    probShower *= recipSum;
+                    probTrack *= recipSum;
+                    metadata.m_propertiesToAdd["Pshower"] = probShower;
+                    metadata.m_propertiesToAdd["Ptrack"] = probTrack;
                     const StatusCode &statusCode(PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
                     if (statusCode != STATUS_CODE_SUCCESS)
                         std::cout << "Cannot set calo hit meta data" << std::endl;
@@ -373,6 +275,78 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode DeepLearningTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseTrainingMode",
+        m_useTrainingMode));
+
+    if (m_useTrainingMode)
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+            "TrainingOutputFileName", m_trainingOutputFile));
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileName", m_modelFileName));
+        m_modelFileName = LArFileHelper::FindFileInPath(m_modelFileName, "FW_SEARCH_PATH");
+    }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "CaloHitListNames", m_caloHitListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Profile", m_profile));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void DeepLearningTrackShowerIdAlgorithm::GetHitRegion(const CaloHitList& caloHitList, float& xMin, float& xMax, float& zMin, float& zMax)
+{
+    xMin = std::numeric_limits<float>::max(); xMax = -std::numeric_limits<float>::max();
+    zMin = std::numeric_limits<float>::max(); zMax = -std::numeric_limits<float>::max();
+    for (const CaloHit *pCaloHit : caloHitList)
+    {
+        const float x(pCaloHit->GetPositionVector().GetX());
+        const float z(pCaloHit->GetPositionVector().GetZ());
+        if (x < xMin) xMin = x;
+        if (x > xMax) xMax = x;
+        if (z < zMin) zMin = z;
+        if (z > zMax) zMax = z;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void DeepLearningTrackShowerIdAlgorithm::GetSparseTileMap(const CaloHitList& caloHitList, const float xMin, const float zMin,
+    const float tileSize, const int nTilesX, PixelToTileMap& sparseMap)
+{
+    // Identify the tiles that actually contain hits
+    std::map<int, bool> tilePopulationMap;
+    for (const CaloHit *pCaloHit : caloHitList)
+    {
+        const float x(pCaloHit->GetPositionVector().GetX());
+        const float z(pCaloHit->GetPositionVector().GetZ());
+        // Determine which tile the hit will be assigned to
+        const int tileX = static_cast<int>(std::floor((x - xMin) / tileSize));
+        const int tileZ = static_cast<int>(std::floor((z - zMin) / tileSize));
+        const int tile = tileZ * nTilesX + tileX;
+        tilePopulationMap.insert(std::make_pair(tile, true));
+    }
+
+    int nextTile = 0;
+    for(auto element : tilePopulationMap)
+    {
+        if (element.second)
+        {
+            sparseMap.insert(std::make_pair(element.first, nextTile));
+            ++nextTile;
+        }
+    }
 }
 
 } // namespace lar_content
