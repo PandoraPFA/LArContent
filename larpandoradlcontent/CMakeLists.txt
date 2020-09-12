@@ -14,6 +14,7 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
 
 set( subdir_list LArDeepLearning
                  LArControlFlow
+                 LArHelpers
 )
 
 cet_make( LIBRARY_NAME LArPandoraDLContent
