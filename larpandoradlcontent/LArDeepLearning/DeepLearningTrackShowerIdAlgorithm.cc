@@ -12,6 +12,7 @@
 #include <torch/torch.h>
 
 #include "larpandoradlcontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
+#include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
@@ -228,16 +229,8 @@ void GetSparseTileMap(const CaloHitList& caloHitList, const float xMin,
 StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
 {
     auto start = std::chrono::steady_clock::now();
-    torch::jit::script::Module pModule;
-    try
-    {
-        pModule = torch::jit::load(m_modelFileName);
-    }
-    catch (...)
-    {
-        std::cout << "Error loading the PyTorch module" << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
+    LArDLHelper::TorchModel model;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_modelFileName, model));
 
     if (m_visualize)
         PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
@@ -279,7 +272,8 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
         //torch::Tensor input = torch::zeros({nTiles, 1, imageHeight, imageWidth});
         for (int i = 0; i < nTiles; ++i)
         {
-            torch::Tensor input = torch::zeros({1, 1, imageHeight, imageWidth});
+            LArDLHelper::TorchInput input;
+            LArDLHelper::InitialiseInput({1, 1, imageHeight, imageWidth}, input);
             typedef std::map<const CaloHit*, std::tuple<int, int, int, int>> CaloHitToPixelMap;
             CaloHitToPixelMap caloHitToPixelMap;
             auto accessor = input.accessor<float, 4>();
@@ -306,11 +300,12 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
             }
 
             // Pass as input the input Tensor containing the calo hit picture
-            std::vector<torch::jit::IValue> inputs;
+            LArDLHelper::TorchInputVector inputs;
             inputs.push_back(input);
 
             // Run the input through the trained model and get the output accessor
-            at::Tensor output = pModule.forward(inputs).toTensor();
+            LArDLHelper::TorchOutput output;
+            LArDLHelper::Forward(model, inputs, output);
             auto outputAccessor = output.accessor<float, 4>();
 
             for (const CaloHit *pCaloHit : *pCaloHitList)
