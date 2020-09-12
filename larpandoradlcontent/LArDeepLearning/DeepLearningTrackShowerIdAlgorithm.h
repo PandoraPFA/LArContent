@@ -26,10 +26,16 @@ public:
     virtual ~DeepLearningTrackShowerIdAlgorithm();
 
 private:
+    typedef std::map<const pandora::CaloHit*, std::tuple<int, int, int, int>> CaloHitToPixelMap;
+    typedef std::map<int, int> PixelToTileMap;
+
     pandora::StatusCode Run();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode Train();
     pandora::StatusCode Infer();
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    void GetHitRegion(const pandora::CaloHitList& caloHitList, float& xMin, float& xMax, float& zMin, float& zMax);
+    void GetSparseTileMap(const pandora::CaloHitList& caloHitList, const float xMin, const float zMin, const float tileSize,
+        const int nTilesX, PixelToTileMap& sparseMap);
 
     pandora::StringVector     m_caloHitListNames;    ///< Name of input calo hit list
     std::string               m_modelFileName;       ///< Model file name

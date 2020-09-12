@@ -381,6 +381,17 @@ public:
     static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToTargetMCMap,
         pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float maxPhotonPropagation);
 
+    /**
+     *  @brief  Determine if the MC particle is a descendent of a particle with the given PDG code.
+     *
+     *  @param  mcParticle the descendent particle 
+     *  @param  pdg the PDG code of the ancestor particle
+     *  @param  isChargeSensitive whether or not to consider the sign of the PDG code when looking for the ancestor (default: false)
+     *
+     *  @return true if the MC particle has an ancestor with the matching PDG code, false otherwise
+     */
+    static bool IsDescendentOf(const pandora::MCParticle *const mcParticle, const int pdg, const bool isChargeSensitive = false);
+
 private:
     /**
      *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
@@ -474,6 +485,7 @@ private:
      *  @return The hits that are found in both hitListA and hitListB
      */
     static pandora::CaloHitList GetSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
+
 };
 
 } // namespace lar_content
