@@ -1,4 +1,16 @@
-include_directories( $ENV{EIGEN_INC} )
+find_ups_product( libtorch )
+
+# Add torch to CMAKE_MODULE_PATH
+find_package(Torch REQUIRED)
+
+include_directories(SYSTEM ${TORCH_INCLUDE_DIRS})
+link_libraries(${TORCH_LIBRARIES})
+
+cet_set_compiler_flags(DIAGS CAUTIOUS
+      NO_UNDEFINED
+      EXTRA_FLAGS
+      -pedantic
+      ${TORCH_CXX_FLAGS})
 
 set( subdir_list LArDeepLearning
                  LArControlFlow

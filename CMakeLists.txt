@@ -39,10 +39,12 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
 
     cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
     cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
+    set(LAR_CONTENT_LIBRARY_NAME "LArPandoraContent")
     add_definitions("-DMONITORING")
 
     # ADD SOURCE CODE SUBDIRECTORIES HERE
     add_subdirectory(larpandoracontent)
+    add_subdirectory(larpandoradlcontent)
 
     # tests
     #add_subdirectory(test)
@@ -111,7 +113,7 @@ else()
         message(STATUS "Building against LibTorch")
         find_package(Torch REQUIRED)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
-        include_directories(${TORCH_INCLUDE_DIRECTORIES})
+        include_directories(${TORCH_INCLUDE_DIRS})
         link_libraries(${TORCH_LIBRARIES})
     endif()
 
