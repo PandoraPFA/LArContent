@@ -1,10 +1,7 @@
 find_ups_product( libtorch )
-
-# Add torch to CMAKE_MODULE_PATH
 find_package(Torch REQUIRED)
 
-include_directories(SYSTEM ${TORCH_INCLUDE_DIRS})
-link_libraries(${TORCH_LIBRARIES})
+include_directories(PRIVATE ${TORCH_INCLUDE_DIRS})
 
 cet_set_compiler_flags(DIAGS CAUTIOUS
       NO_UNDEFINED
@@ -18,10 +15,14 @@ set( subdir_list LArDeepLearning
 )
 
 cet_make( LIBRARY_NAME LArPandoraDLContent
-          SUBDIRS ${subdir_list}
-	  LIBRARIES ${PANDORASDK}
-	            ${PANDORAMONITORING}
-                ${LAR_CONTENT_LIBRARY_NAME}
+    SUBDIRS ${subdir_list}
+    LIBRARIES
+        ${PANDORASDK}
+        ${PANDORAMONITORING}
+        ${LAR_CONTENT_LIBRARY_NAME}
+        ${TORCH_INSTALL_PREFIX}/lib/libtorch.so
+        ${TORCH_INSTALL_PREFIX}/lib/libtorch_cpu.so
+        ${TORCH_INSTALL_PREFIX}/lib/libc10.so
 )
 
 install_source( SUBDIRS ${subdir_list} )
