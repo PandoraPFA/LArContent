@@ -44,7 +44,11 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
 
     # ADD SOURCE CODE SUBDIRECTORIES HERE
     add_subdirectory(larpandoracontent)
-    add_subdirectory(larpandoradlcontent)
+    if(${PANDORA_LIBTORCH})
+        message(STATUS "Building with LibTorch")
+        add_definitions("-DLIBTORCH_DL")
+        add_subdirectory(larpandoradlcontent)
+    endif()
 
     # tests
     #add_subdirectory(test)
