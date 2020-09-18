@@ -6,9 +6,9 @@
  *  $Log: $
  */
 
-#include <larpandoradlcontent/LArHelpers/LArDLHelper.h>
+#include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 
-namespace lar_content
+namespace lar_dl_content
 {
 
 using namespace pandora;
@@ -43,7 +43,5 @@ void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, Torc
     output = model.forward(input).toTensor();
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-} // namespace lar_content
+} // namespace lar_dl_content
 

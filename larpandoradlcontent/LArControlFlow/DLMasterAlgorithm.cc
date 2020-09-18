@@ -15,10 +15,8 @@
 
 using namespace pandora;
 
-namespace lar_content
+namespace lar_dl_content
 {
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode DLMasterAlgorithm::Run()
 {
@@ -41,4 +39,4 @@ StatusCode DLMasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     return MasterAlgorithm::ReadSettings(xmlHandle);
 }
 
-} // namespace lar_content
+} // namespace lar_dl_content

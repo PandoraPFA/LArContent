@@ -809,21 +809,19 @@ void LArMCParticleHelper::SelectCaloHits(const CaloHitList *const pCaloHitList, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::IsDescendentOf(const MCParticle *const mcParticle, const int pdg, const bool isChargeSensitive)
+bool LArMCParticleHelper::IsDescendentOf(const MCParticle *const pMCParticle, const int pdg, const bool isChargeSensitive)
 {
-    const MCParticle* particle = mcParticle;
-    while(!particle->GetParentList().empty())
+    const MCParticle *pCurrentParticle = pMCParticle;
+    while (!pCurrentParticle->GetParentList().empty())
     {   
-        if(particle->GetParentList().size() > 1)
+        if (pCurrentParticle->GetParentList().size() > 1)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        const MCParticle* pParent = *(particle->GetParentList().begin());
-        const bool found{isChargeSensitive ?
-            pParent->GetParticleId() == pdg :
-            std::abs(pParent->GetParticleId()) == std::abs(pdg)};
+        const MCParticle *pParent = *(pCurrentParticle->GetParentList().begin());
+        const bool found{isChargeSensitive ? pParent->GetParticleId() == pdg : std::abs(pParent->GetParticleId()) == std::abs(pdg)};
         if (found)
             return true;
-        particle = pParent;
+        pCurrentParticle = pParent;
     }
 
     return false;
@@ -991,7 +989,6 @@ CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, cons
 
     return sharedHits;
 }
-
 
 
 } // namespace lar_content

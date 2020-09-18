@@ -384,13 +384,13 @@ public:
     /**
      *  @brief  Determine if the MC particle is a descendent of a particle with the given PDG code.
      *
-     *  @param  mcParticle the descendent particle 
+     *  @param  pMCParticle the descendent particle 
      *  @param  pdg the PDG code of the ancestor particle
      *  @param  isChargeSensitive whether or not to consider the sign of the PDG code when looking for the ancestor (default: false)
      *
      *  @return true if the MC particle has an ancestor with the matching PDG code, false otherwise
      */
-    static bool IsDescendentOf(const pandora::MCParticle *const mcParticle, const int pdg, const bool isChargeSensitive = false);
+    static bool IsDescendentOf(const pandora::MCParticle *const pMCParticle, const int pdg, const bool isChargeSensitive = false);
 
 private:
     /**
@@ -485,7 +485,6 @@ private:
      *  @return The hits that are found in both hitListA and hitListB
      */
     static pandora::CaloHitList GetSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
-
 };
 
 } // namespace lar_content
