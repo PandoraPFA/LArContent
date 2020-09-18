@@ -28,7 +28,7 @@
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-namespace lar_content
+namespace lar_dl_content
 {
 
 #define LAR_DL_CONTENT_CREATE_ALGORITHM_FACTORY(a, b)                                                                              \
@@ -51,21 +51,21 @@ public:                                                                         
 
 LAR_DL_ALGORITHM_TOOL_LIST(LAR_DL_CONTENT_CREATE_ALGORITHM_TOOL_FACTORY)
 
-} // namespace lar_content
+} // namespace lar_dl_content
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 #define LAR_DL_CONTENT_REGISTER_ALGORITHM(a, b)                                                                                 \
 {                                                                                                                               \
-    const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmFactory(pandora, a, new lar_content::b##DL_FACTORY));  \
+    const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmFactory(pandora, a, new lar_dl_content::b##DL_FACTORY));  \
     if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                             \
         return statusCode;                                                                                                      \
 }
 
 #define LAR_DL_CONTENT_REGISTER_ALGORITHM_TOOL(a, b)                                                                                \
 {                                                                                                                                   \
-    const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmToolFactory(pandora, a, new lar_content::b##DL_FACTORY));  \
+    const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmToolFactory(pandora, a, new lar_dl_content::b##DL_FACTORY));  \
     if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                                 \
         return statusCode;                                                                                                          \
 }

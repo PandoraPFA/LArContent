@@ -10,7 +10,7 @@
 
 #include "Pandora/Algorithm.h"
 
-namespace lar_content
+namespace lar_dl_content
 {
 
 /**
@@ -23,6 +23,7 @@ public:
      *  @brief  Default constructor
      */
     DeepLearningTrackShowerIdAlgorithm();
+
     virtual ~DeepLearningTrackShowerIdAlgorithm();
 
 private:
@@ -30,21 +31,51 @@ private:
     typedef std::map<int, int> PixelToTileMap;
 
     pandora::StatusCode Run();
+
+    /**
+     *  @brief  Produce files that act as inputs to network training
+     */
     pandora::StatusCode Train();
+
+    /**
+     *  @brief  Run network inference
+     */
     pandora::StatusCode Infer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    void GetHitRegion(const pandora::CaloHitList& caloHitList, float& xMin, float& xMax, float& zMin, float& zMax);
-    void GetSparseTileMap(const pandora::CaloHitList& caloHitList, const float xMin, const float zMin, const float tileSize,
-        const int nTilesX, PixelToTileMap& sparseMap);
+
+    /**
+     *  @brief  Identify the XZ range containing the hits for an event
+     *
+     *  @param  caloHitList The list of CaloHits for which the range is to be found
+     *  @param  xMin The output minimum x-coordinate
+     *  @param  xMax The output maximum x-coordinate
+     *  @param  zMin The output minimum z-coordinate
+     *  @param  zMax The output maximum z-coordinate
+     */
+    void GetHitRegion(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax);
+
+    /**
+     *  @brief  Populate a map between pixels and tiles
+     *
+     *  @param  caloHitList The list of CaloHits for which the map is to be populated
+     *  @param  xMin The minimum x-coordinate
+     *  @param  zMin The minimum z-coordinate
+     *  @param  nTilesX The number of tiles in the x direction
+     *  @param  sparseMap The output map between pixels and tiles
+     */
+    void GetSparseTileMap(const pandora::CaloHitList &caloHitList, const float xMin, const float zMin, const int nTilesX, PixelToTileMap &sparseMap);
 
     pandora::StringVector     m_caloHitListNames;    ///< Name of input calo hit list
     std::string               m_modelFileName;       ///< Model file name
+    int                       m_imageHeight;         ///< Height of images in pixels
+    int                       m_imageWidth;          ///< Width of images in pixels
+    float                     m_tileSize;            ///< Size of tile in cm
+    float                     m_pixelNorm;           ///< Pixel normalisation determined from training set
     bool                      m_visualize;           ///< Whether to visualize the track shower ID scores
     bool                      m_useTrainingMode;     ///< Training mode
-    bool                      m_profile;
     std::string               m_trainingOutputFile;  ///< Output file name for training examples
 };
 
-} // namespace lar_content
+} // namespace lar_dl_content
 
 #endif // LAR_DEEP_LEARNING_TRACK_SHOWER_ID_ALGORITHM_H

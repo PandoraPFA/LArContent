@@ -10,13 +10,13 @@
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
-namespace lar_content
+namespace lar_dl_content
 {
 
 /**
  *  @brief  MasterAlgorithm class
  */
-class DLMasterAlgorithm : public MasterAlgorithm
+class DLMasterAlgorithm : public lar_content::MasterAlgorithm
 {
 public:
     /**
@@ -27,10 +27,9 @@ public:
 private:
     pandora::StatusCode Run();
     pandora::StatusCode RegisterCustomContent(const pandora::Pandora *const pPandora) const;
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
-} // namespace lar_content
+} // namespace lar_dl_content
 
 #endif // #ifndef LAR_DL_MASTER_ALGORITHM_H

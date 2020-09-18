@@ -13,7 +13,7 @@
 
 #include "Pandora/StatusCodes.h"
 
-namespace lar_content
+namespace lar_dl_content
 {
 
 /**
@@ -55,7 +55,7 @@ public:
     static void Forward(TorchModel &model, const TorchInputVector &input, TorchOutput &output);
 };
 
-} // namespace lar_content
+} // namespace lar_dl_content
 
 #endif // #ifndef LAR_DL_HELPER_H
 
