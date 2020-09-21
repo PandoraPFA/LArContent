@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoradlcontent/LArMonitoring/DeepLearningTrackShowerIdAlgorithm.h
+ *  @file   larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h
  *
  *  @brief  Header file for the deep learning track shower id algorithm.
  *
  *  $Log: $
  */
-#ifndef LAR_DEEP_LEARNING_TRACK_SHOWER_ID_ALGORITHM_H
-#define LAR_DEEP_LEARNING_TRACK_SHOWER_ID_ALGORITHM_H 1
+#ifndef LAR_DL_HIT_TRACK_SHOWER_ID_ALGORITHM_H
+#define LAR_DL_HIT_TRACK_SHOWER_ID_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 
@@ -14,17 +14,17 @@ namespace lar_dl_content
 {
 
 /**
- *  @brief  DeepLearningTrackShowerIdAlgorithm class
+ *  @brief  DlHitTrackShowerIdAlgorithm class
  */
-class DeepLearningTrackShowerIdAlgorithm: public pandora::Algorithm
+class DlHitTrackShowerIdAlgorithm: public pandora::Algorithm
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    DeepLearningTrackShowerIdAlgorithm();
+    DlHitTrackShowerIdAlgorithm();
 
-    virtual ~DeepLearningTrackShowerIdAlgorithm();
+    virtual ~DlHitTrackShowerIdAlgorithm();
 
 private:
     typedef std::map<const pandora::CaloHit*, std::tuple<int, int, int, int>> CaloHitToPixelMap;
@@ -78,4 +78,4 @@ private:
 
 } // namespace lar_dl_content
 
-#endif // LAR_DEEP_LEARNING_TRACK_SHOWER_ID_ALGORITHM_H
+#endif // LAR_DL_HIT_TRACK_SHOWER_ID_ALGORITHM_H
