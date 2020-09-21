@@ -9,9 +9,9 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
       -pedantic
       ${TORCH_CXX_FLAGS})
 
-set( subdir_list LArDeepLearning
-                 LArControlFlow
+set( subdir_list LArControlFlow
                  LArHelpers
+                 LArTrackShowerId
 )
 
 cet_make( LIBRARY_NAME LArPandoraDLContent

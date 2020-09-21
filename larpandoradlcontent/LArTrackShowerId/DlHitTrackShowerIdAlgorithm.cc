@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoradlcontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.cc
+ *  @file   larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.cc
  *
  *  @brief  Implementation of the deep learning track shower id algorithm.
  *
@@ -11,8 +11,8 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#include "larpandoradlcontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
 #include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
+#include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
@@ -30,7 +30,7 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-DeepLearningTrackShowerIdAlgorithm::DeepLearningTrackShowerIdAlgorithm() :
+DlHitTrackShowerIdAlgorithm::DlHitTrackShowerIdAlgorithm() :
     m_imageHeight(256),
     m_imageWidth(256),
     m_tileSize(128.f),
@@ -43,13 +43,13 @@ DeepLearningTrackShowerIdAlgorithm::DeepLearningTrackShowerIdAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-DeepLearningTrackShowerIdAlgorithm::~DeepLearningTrackShowerIdAlgorithm()
+DlHitTrackShowerIdAlgorithm::~DlHitTrackShowerIdAlgorithm()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DeepLearningTrackShowerIdAlgorithm::Run()
+StatusCode DlHitTrackShowerIdAlgorithm::Run()
 {
     if (m_useTrainingMode)
         return this->Train();
@@ -59,7 +59,7 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
+StatusCode DlHitTrackShowerIdAlgorithm::Train()
 {
     const int SHOWER{1}, TRACK{2};
     for (const std::string listName : m_caloHitListNames)
@@ -136,7 +136,7 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Train()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
+StatusCode DlHitTrackShowerIdAlgorithm::Infer()
 {
     LArDLHelper::TorchModel model;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_modelFileName, model));
@@ -259,7 +259,7 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeepLearningTrackShowerIdAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax)
+void DlHitTrackShowerIdAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax)
 {
     xMin = std::numeric_limits<float>::max(); xMax = -std::numeric_limits<float>::max();
     zMin = std::numeric_limits<float>::max(); zMax = -std::numeric_limits<float>::max();
@@ -276,7 +276,7 @@ void DeepLearningTrackShowerIdAlgorithm::GetHitRegion(const CaloHitList &caloHit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeepLearningTrackShowerIdAlgorithm::GetSparseTileMap(const CaloHitList &caloHitList, const float xMin, const float zMin,
+void DlHitTrackShowerIdAlgorithm::GetSparseTileMap(const CaloHitList &caloHitList, const float xMin, const float zMin,
     const int nTilesX, PixelToTileMap &sparseMap)
 {
     // Identify the tiles that actually contain hits
@@ -305,7 +305,7 @@ void DeepLearningTrackShowerIdAlgorithm::GetSparseTileMap(const CaloHitList &cal
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DeepLearningTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode DlHitTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseTrainingMode",
         m_useTrainingMode));

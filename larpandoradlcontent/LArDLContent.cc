@@ -13,13 +13,13 @@
 #include "Pandora/Pandora.h"
 
 #include "larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.h"
-#include "larpandoradlcontent/LArDeepLearning/DeepLearningTrackShowerIdAlgorithm.h"
+#include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 
 #include "larpandoradlcontent/LArDLContent.h"
 
 #define LAR_DL_ALGORITHM_LIST(d)                                                                                                   \
     d("LArDLMaster",                            DLMasterAlgorithm)                                                                 \
-    d("LArDeepLearningTrackShowerId",           DeepLearningTrackShowerIdAlgorithm)
+    d("LArDLHitTrackShowerId",                  DlHitTrackShowerIdAlgorithm)
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)
 
