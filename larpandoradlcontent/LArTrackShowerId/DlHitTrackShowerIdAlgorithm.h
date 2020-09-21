@@ -66,11 +66,12 @@ private:
     void GetSparseTileMap(const pandora::CaloHitList &caloHitList, const float xMin, const float zMin, const int nTilesX, PixelToTileMap &sparseMap);
 
     pandora::StringVector     m_caloHitListNames;    ///< Name of input calo hit list
-    std::string               m_modelFileName;       ///< Model file name
+    std::string               m_modelFileNameU;      ///< Model file name for U view
+    std::string               m_modelFileNameV;      ///< Model file name for V view
+    std::string               m_modelFileNameW;      ///< Model file name for W view
     int                       m_imageHeight;         ///< Height of images in pixels
     int                       m_imageWidth;          ///< Width of images in pixels
     float                     m_tileSize;            ///< Size of tile in cm
-    float                     m_pixelNorm;           ///< Pixel normalisation determined from training set
     bool                      m_visualize;           ///< Whether to visualize the track shower ID scores
     bool                      m_useTrainingMode;     ///< Training mode
     std::string               m_trainingOutputFile;  ///< Output file name for training examples

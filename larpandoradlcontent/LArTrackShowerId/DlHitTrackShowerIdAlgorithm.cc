@@ -34,7 +34,6 @@ DlHitTrackShowerIdAlgorithm::DlHitTrackShowerIdAlgorithm() :
     m_imageHeight(256),
     m_imageWidth(256),
     m_tileSize(128.f),
-    m_pixelNorm(255.f),
     m_visualize(false),
     m_useTrainingMode(false),
     m_trainingOutputFile("")
@@ -138,8 +137,7 @@ StatusCode DlHitTrackShowerIdAlgorithm::Train()
 
 StatusCode DlHitTrackShowerIdAlgorithm::Infer()
 {
-    LArDLHelper::TorchModel model;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_modelFileName, model));
+    const float eps{1.1920929e-7};  // Python float epsilon, used in image padding
 
     if (m_visualize)
         PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
@@ -154,16 +152,22 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
         if (!(view == TPC_VIEW_U || view == TPC_VIEW_V || view == TPC_VIEW_W))
             return STATUS_CODE_NOT_ALLOWED;
 
+        std::string modelFilename;
+        if (view == TPC_VIEW_U)
+            modelFilename = m_modelFileNameU;
+        else if (view == TPC_VIEW_V)
+            modelFilename = m_modelFileNameV;
+        else
+            modelFilename = m_modelFileNameW;
+
+        LArDLHelper::TorchModel model;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(modelFilename, model));
+
         // Get bounds of hit region
         float xMin{}; float xMax{}; float zMin{}; float zMax{};
         this->GetHitRegion(*pCaloHitList, xMin, xMax, zMin, zMax);
-        const float xRange = xMax - xMin;
-        const float zRange = zMax - zMin;
+        const float xRange = (xMax + eps) - (xMin - eps);
         int nTilesX = static_cast<int>(std::ceil(xRange / m_tileSize));
-        int nTilesZ = static_cast<int>(std::ceil(zRange / m_tileSize));
-        // Need to add 1 to number of tiles for ranges exactly matching tile size and for zero ranges
-        if (std::fmod(xRange, m_tileSize) == 0.f) ++nTilesX;
-        if (std::fmod(zRange, m_tileSize) == 0.f) ++nTilesZ;
 
         PixelToTileMap sparseMap;
         this->GetSparseTileMap(*pCaloHitList, xMin, zMin, nTilesX, sparseMap);
@@ -171,11 +175,52 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
 
         CaloHitList trackHits, showerHits, otherHits;
         // Process tile
+        // ATTN: Be sure to reset all values to zero after each tile has been processed
+        float **weights = new float*[m_imageHeight];
+        for (int r = 0; r < m_imageHeight; ++r)
+            weights[r] = new float[m_imageWidth] ();
         for (int i = 0; i < nTiles; ++i)
         {
+            for (const CaloHit *pCaloHit : *pCaloHitList)
+            {
+                const float x(pCaloHit->GetPositionVector().GetX());
+                const float z(pCaloHit->GetPositionVector().GetZ());
+                // Determine which tile the hit will be assigned to
+                const int tileX = static_cast<int>(std::floor((x - xMin) / m_tileSize));
+                const int tileZ = static_cast<int>(std::floor((z - zMin) / m_tileSize));
+                const int tile = sparseMap.at(tileZ * nTilesX + tileX);
+                if (tile == i)
+                {
+                    // Determine hit position within the tile
+                    const float localX = std::fmod(x - xMin, m_tileSize);
+                    const float localZ = std::fmod(z - zMin, m_tileSize);
+                    // Determine hit pixel within the tile
+                    const int pixelX = static_cast<int>(std::floor(localX * m_imageWidth / m_tileSize));
+                    const int pixelZ = (m_imageHeight - 1) - static_cast<int>(std::floor(localZ * m_imageHeight / m_tileSize));
+                    weights[pixelZ][pixelX] += pCaloHit->GetInputEnergy();
+                }
+            }
+
+            // Find min and max charge to allow normalisation
+            float chargeMin{std::numeric_limits<float>::max()}, chargeMax{-std::numeric_limits<float>::max()};
+            for (int r = 0; r < m_imageHeight; ++r)
+            {
+                for (int c = 0; c < m_imageWidth; ++c)
+                {
+                    if (weights[r][c] > chargeMax)
+                        chargeMax = weights[r][c];
+                    if (weights[r][c] < chargeMin)
+                        chargeMin = weights[r][c];
+                }
+            }
+            float chargeRange{chargeMax - chargeMin};
+            if (chargeRange <= 0.f)
+                chargeRange = 1.f;
+
+            // Populate accessor based on normalised weights
+            CaloHitToPixelMap caloHitToPixelMap;
             LArDLHelper::TorchInput input;
             LArDLHelper::InitialiseInput({1, 1, m_imageHeight, m_imageWidth}, input);
-            CaloHitToPixelMap caloHitToPixelMap;
             auto accessor = input.accessor<float, 4>();
             for (const CaloHit *pCaloHit : *pCaloHitList)
             {
@@ -191,12 +236,16 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
                     const float localX = std::fmod(x - xMin, m_tileSize);
                     const float localZ = std::fmod(z - zMin, m_tileSize);
                     // Determine hit pixel within the tile
-                    const int pixelX = static_cast<int>(std::floor(localX * m_imageHeight / m_tileSize));
-                    const int pixelZ = static_cast<int>(std::floor(localZ * m_imageWidth / m_tileSize));
-                    accessor[0][0][pixelX][pixelZ] = m_pixelNorm;
-                    caloHitToPixelMap.insert(std::make_pair(pCaloHit, std::make_tuple(tileX, tileZ, pixelX, pixelZ)));
+                    const int pixelX = static_cast<int>(std::floor(localX * m_imageWidth / m_tileSize));
+                    const int pixelZ = (m_imageHeight - 1) - static_cast<int>(std::floor(localZ * m_imageHeight / m_tileSize));
+                    accessor[0][0][pixelZ][pixelX] = (weights[pixelZ][pixelX] - chargeMin) / chargeRange;
+                    caloHitToPixelMap.insert(std::make_pair(pCaloHit, std::make_tuple(tileZ, tileX, pixelZ, pixelX)));
                 }
             }
+            // Reset weights
+            for (int r = 0; r < this->m_imageHeight; ++r)
+                for (int c = 0; c < this->m_imageWidth; ++c)
+                    weights[r][c] = 0.f;
 
             // Run the input through the trained model and get the output accessor
             LArDLHelper::TorchInputVector inputs;
@@ -211,18 +260,18 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
                 if (found == caloHitToPixelMap.end())
                     continue;
                 auto pixelMap = found->second;
-                const int tileX(std::get<0>(pixelMap));
-                const int tileZ(std::get<1>(pixelMap));
+                const int tileZ(std::get<0>(pixelMap));
+                const int tileX(std::get<1>(pixelMap));
                 const int tile = sparseMap.at(tileZ * nTilesX + tileX);
                 if (tile == i)
                 {   // Make sure we're looking at a hit in the correct tile
-                    const int pixelX(std::get<2>(pixelMap));
-                    const int pixelZ(std::get<3>(pixelMap));
+                    const int pixelZ(std::get<2>(pixelMap));
+                    const int pixelX(std::get<3>(pixelMap));
 
                     // Apply softmax to loss to get actual probability
-                    float probShower = exp(outputAccessor[0][1][pixelX][pixelZ]);
-                    float probTrack = exp(outputAccessor[0][2][pixelX][pixelZ]);
-                    float probNull = exp(outputAccessor[0][0][pixelX][pixelZ]);
+                    float probShower = exp(outputAccessor[0][1][pixelZ][pixelX]);
+                    float probTrack = exp(outputAccessor[0][2][pixelZ][pixelX]);
+                    float probNull = exp(outputAccessor[0][0][pixelZ][pixelX]);
                     if (probShower > probTrack && probShower > probNull)
                         showerHits.push_back(pCaloHit);
                     else if (probTrack > probShower && probTrack > probNull)
@@ -239,6 +288,9 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
                 }
             }
         }
+        for (int r = 0; r < this->m_imageHeight; ++r)
+            delete[] weights[r];
+        delete[] weights;
 
         if (m_visualize)
         {
@@ -317,8 +369,12 @@ StatusCode DlHitTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     }
     else
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileName", m_modelFileName));
-        m_modelFileName = LArFileHelper::FindFileInPath(m_modelFileName, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameU", m_modelFileNameU));
+        m_modelFileNameU = LArFileHelper::FindFileInPath(m_modelFileNameU, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameV", m_modelFileNameV));
+        m_modelFileNameV = LArFileHelper::FindFileInPath(m_modelFileNameV, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameW", m_modelFileNameW));
+        m_modelFileNameW = LArFileHelper::FindFileInPath(m_modelFileNameW, "FW_SEARCH_PATH");
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
@@ -331,7 +387,6 @@ StatusCode DlHitTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
         std::cout << "Error: Invalid image size specification" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PixelNorm", m_pixelNorm));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return STATUS_CODE_SUCCESS;
