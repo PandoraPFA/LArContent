@@ -20,6 +20,8 @@
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
+#include "larpandoracontent/LArObjects/LArCaloHit.h"
+
 #include <chrono>
 
 using namespace pandora;
@@ -217,7 +219,6 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
                     const int pixelX(std::get<2>(pixelMap));
                     const int pixelZ(std::get<3>(pixelMap));
 
-                    object_creation::CaloHit::Metadata metadata;
                     // Apply softmax to loss to get actual probability
                     float probShower = exp(outputAccessor[0][1][pixelX][pixelZ]);
                     float probTrack = exp(outputAccessor[0][2][pixelX][pixelZ]);
@@ -229,14 +230,12 @@ StatusCode DeepLearningTrackShowerIdAlgorithm::Infer()
                     else
                         otherHits.push_back(pCaloHit);
                     float recipSum = 1.f / (probShower + probTrack);
-                    // Adjust probabilities to ignore null hits and update calo hit metadata
+                    // Adjust probabilities to ignore null hits and update LArCaloHit
                     probShower *= recipSum;
                     probTrack *= recipSum;
-                    metadata.m_propertiesToAdd["Pshower"] = probShower;
-                    metadata.m_propertiesToAdd["Ptrack"] = probTrack;
-                    const StatusCode &statusCode(PandoraContentApi::CaloHit::AlterMetadata(*this, pCaloHit, metadata));
-                    if (statusCode != STATUS_CODE_SUCCESS)
-                        std::cout << "Cannot set calo hit meta data" << std::endl;
+                    LArCaloHit *pLArCaloHit{const_cast<LArCaloHit *>(dynamic_cast<const LArCaloHit *>(pCaloHit))};
+                    pLArCaloHit->SetShowerProbability(probShower);
+                    pLArCaloHit->SetTrackProbability(probTrack);
                 }
             }
         }
