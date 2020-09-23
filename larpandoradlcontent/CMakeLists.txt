@@ -11,6 +11,7 @@ cet_set_compiler_flags(DIAGS CAUTIOUS
 
 set( subdir_list LArControlFlow
                  LArHelpers
+                 LArMonitoring
                  LArTrackShowerId
 )
 

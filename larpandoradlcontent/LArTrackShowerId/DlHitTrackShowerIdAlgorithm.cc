@@ -11,7 +11,6 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#include "larpandoradlcontent/LArHelpers/LArDLHelper.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
@@ -152,16 +151,7 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
         if (!(view == TPC_VIEW_U || view == TPC_VIEW_V || view == TPC_VIEW_W))
             return STATUS_CODE_NOT_ALLOWED;
 
-        std::string modelFilename;
-        if (view == TPC_VIEW_U)
-            modelFilename = m_modelFileNameU;
-        else if (view == TPC_VIEW_V)
-            modelFilename = m_modelFileNameV;
-        else
-            modelFilename = m_modelFileNameW;
-
-        LArDLHelper::TorchModel model;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(modelFilename, model));
+        LArDLHelper::TorchModel &model{view == TPC_VIEW_U ? m_modelU : ( view == TPC_VIEW_V ? m_modelV : m_modelW )};
 
         // Get bounds of hit region
         float xMin{}; float xMax{}; float zMin{}; float zMax{};
@@ -371,10 +361,13 @@ StatusCode DlHitTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameU", m_modelFileNameU));
         m_modelFileNameU = LArFileHelper::FindFileInPath(m_modelFileNameU, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_modelFileNameU, m_modelU));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameV", m_modelFileNameV));
         m_modelFileNameV = LArFileHelper::FindFileInPath(m_modelFileNameV, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_modelFileNameV, m_modelV));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameW", m_modelFileNameW));
         m_modelFileNameW = LArFileHelper::FindFileInPath(m_modelFileNameW, "FW_SEARCH_PATH");
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_modelFileNameW, m_modelW));
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
