@@ -465,7 +465,15 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
     const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
+    int numInteractionVertex(0);    
+
+    for (const Vertex *pVertex : *pVertexList)
+    {
+        if ((pVertex->GetVertexLabel()) == VERTEX_INTERACTION)
+            ++numInteractionVertex;
+    }
+
+    if ((!pVertexList->empty()) && (numInteractionVertex == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
         try
         {
@@ -474,6 +482,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
         }
         catch (const StatusCodeException &) {}
     }
+
     if (error)
     {
         CaloHitList threeDCaloHitList;
@@ -555,7 +564,15 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
+    int numInteractionVertex(0);    
+
+    for (const Vertex *pVertex : *pVertexList)
+    {
+        if ((pVertex->GetVertexLabel()) == VERTEX_INTERACTION)
+            ++numInteractionVertex;
+    }
+
+    if ((!pVertexList->empty()) && (numInteractionVertex == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
         const CartesianVector nuVertex(pVertexList->front()->GetPosition());
         CaloHitVector threeDCaloHitVector(threeDCaloHitList.begin(), threeDCaloHitList.end());
@@ -781,7 +798,15 @@ void ThreeDChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *c
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
+    int numInteractionVertex(0);    
+
+    for (const Vertex *pVertex : *pVertexList)
+    {
+        if ((pVertex->GetVertexLabel()) == VERTEX_INTERACTION)
+            ++numInteractionVertex;
+    }
+
+    if ((!pVertexList->empty()) && (numInteractionVertex == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
         const Vertex *const pVertex(pVertexList->front());
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));

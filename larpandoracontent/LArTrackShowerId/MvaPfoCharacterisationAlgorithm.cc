@@ -215,7 +215,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     			++showerCount;
     		}
     	}
-	
+
     	float showerProbability = (static_cast<float>(showerCount))/(static_cast<float>(hitToMCMap.size()));
     	mischaracterisedPfo = ((((showerProbability < 0.5) && (trueTrackInt == 0)) || ((showerProbability > 0.5) && (trueTrackInt == 1))) ? 1 : 0);
 
