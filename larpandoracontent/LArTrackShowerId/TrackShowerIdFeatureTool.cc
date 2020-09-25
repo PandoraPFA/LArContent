@@ -8,26 +8,23 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
-
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
-
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
-
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
-
+#include <vector>
+#include <list>
 using namespace pandora;
 
 namespace lar_content
 {
-
-TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
+  TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
     m_slidingShowerFitWindow(3),
     m_slidingLinearFitWindow(10000)
 {
@@ -247,16 +244,69 @@ StatusCode TwoDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHand
     return STATUS_CODE_SUCCESS;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------------------------------------------------------
+PfoHierarchyFeatureTool::PfoHierarchyFeatureTool() 
+{
+}
 
+//-------------------------------------------------------------------------------------------------------------------------------
+void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+  	if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    	std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+
+    LArMvaHelper::MvaFeature nAllDaughter, nHits3DDaughterTotal, daughterParentNhitsRatio;
+    CaloHitList nHits3DParentList;    
+
+    size_t nHits3DDaughter(0);
+    PfoList newPfoList(1, pInputPfo);
+    size_t nHits3DParent(1.f);
+    PfoList allDaughtersPfoList;
+    float nHits3DDaughterTotalNumber(0);
+
+
+    LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, nHits3DParentList);
+    nHits3DParent = nHits3DParentList.size();
+    LArPfoHelper::GetAllDownstreamPfos(newPfoList, allDaughtersPfoList);
+    nAllDaughter = allDaughtersPfoList.size() - 1;
+    if (nAllDaughter.Get() > 0.0)
+    {
+    	allDaughtersPfoList.pop_front();
+		for(const ParticleFlowObject *const pDaughterPfo : allDaughtersPfoList)
+			{
+        		CaloHitList nHits3DDaughterList;
+               	LArPfoHelper::GetCaloHits(pDaughterPfo, TPC_3D, nHits3DDaughterList);
+                nHits3DDaughter = nHits3DDaughterList.size();
+                nHits3DDaughterTotalNumber += nHits3DDaughter;
+			}
+    }
+    else if (nAllDaughter.Get() == 0.0)
+	{
+     	nHits3DDaughter = 0.0;
+    }
+
+    nHits3DDaughterTotal = nHits3DDaughterTotalNumber;
+    daughterParentNhitsRatio = ((nHits3DDaughterTotal.Get()))/(static_cast<double>(nHits3DParent));
+
+	featureVector.push_back(nAllDaughter);
+	featureVector.push_back(nHits3DDaughterTotal);
+	featureVector.push_back(daughterParentNhitsRatio);
+}
+
+StatusCode PfoHierarchyFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+{
+
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
 ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
     m_slidingLinearFitWindow(3),
     m_slidingLinearFitWindowLarge(10000)
 {
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
 const pandora::ParticleFlowObject *const pInputPfo)
@@ -305,8 +355,7 @@ const pandora::ParticleFlowObject *const pInputPfo)
     featureVector.push_back(rms);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
+//------------------------------------------------------------------------------------------------------------------------------------------ 
 void ThreeDLinearFitFeatureTool::CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge,
     float &diffWithStraightLineMean, float &maxFitGapLength, float &rmsSlidingLinearFit) const
 {
@@ -412,16 +461,33 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     LArMvaHelper::MvaFeature vertexDistance;
+    bool error = true;
     const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
+    int numInteractionVertex(0);    
+
+    for (const Vertex *pVertex : *pVertexList)
+    {
+        if ((pVertex->GetVertexLabel()) == VERTEX_INTERACTION)
+            ++numInteractionVertex;
+    }
+
+    if ((!pVertexList->empty()) && (numInteractionVertex == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
         try
         {
             vertexDistance = (pVertexList->front()->GetPosition() - LArPfoHelper::GetVertex(pInputPfo)->GetPosition()).GetMagnitude();
+            error = false;
         }
         catch (const StatusCodeException &) {}
+    }
+
+    if (error)
+    {
+        CaloHitList threeDCaloHitList;
+        LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
+        vertexDistance = (pVertexList->front()->GetPosition() - (threeDCaloHitList.front())->GetPositionVector()).GetMagnitude(); // if n3dHits == 1, can't calculate vertex postion of input pfos hence ask for the position of the single 3D hit instead and set vertexDistance to be the magnitude of the difference between the interaction vertex and the hit's position.
     }
 
     featureVector.push_back(vertexDistance);
@@ -429,7 +495,7 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+  StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
 
     return STATUS_CODE_SUCCESS;
@@ -438,7 +504,8 @@ StatusCode ThreeDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle /*xml
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeDOpeningAngleFeatureTool::ThreeDOpeningAngleFeatureTool()
+ThreeDOpeningAngleFeatureTool::ThreeDOpeningAngleFeatureTool() :
+  m_hitFraction(0.5)
 {
 }
 
@@ -462,7 +529,6 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
     {
         CartesianPointVector pointVectorStart, pointVectorEnd;
         this->Divide3DCaloHitList(pAlgorithm, threeDCaloHitList, pointVectorStart, pointVectorEnd);
-
         //able to calculate angles only if > 1 point provided
         if ((pointVectorStart.size() > 1) && (pointVectorEnd.size() > 1))
         {
@@ -478,10 +544,14 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
 
                 const float openingAngle(this->OpeningAngle(eigenVecsStart.at(0), eigenVecsStart.at(1), eigenValuesStart));
                 const float closingAngle(this->OpeningAngle(eigenVecsEnd.at(0), eigenVecsEnd.at(1), eigenValuesEnd));
+
                 diffAngle = std::fabs(openingAngle-closingAngle);
             }
             catch (const StatusCodeException &){}
         }
+        else
+            diffAngle = 0.1; // if pointVectorStart/End.size() == 1 then default to 0.1 based on this variable's distribution to make it unbiased towards tracks or showers
+
     }
 
     featureVector.push_back(diffAngle);
@@ -494,7 +564,15 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
+    int numInteractionVertex(0);    
+
+    for (const Vertex *pVertex : *pVertexList)
+    {
+        if ((pVertex->GetVertexLabel()) == VERTEX_INTERACTION)
+            ++numInteractionVertex;
+    }
+
+    if ((!pVertexList->empty()) && (numInteractionVertex == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
         const CartesianVector nuVertex(pVertexList->front()->GetPosition());
         CaloHitVector threeDCaloHitVector(threeDCaloHitList.begin(), threeDCaloHitList.end());
@@ -503,12 +581,15 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
         std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), ThreeDChargeFeatureTool::VertexComparator(nuVertex));
         CaloHitList orderedCaloHitList(threeDCaloHitVector.begin(),threeDCaloHitVector.end());
         const unsigned int nhits(orderedCaloHitList.size());
-
-        for (const CaloHit *const pCaloHit : orderedCaloHitList)
-        {
-            CartesianPointVector &targetVector((pointVectorStart.size() < (nhits / 2)) ? pointVectorStart : pointVectorEnd);
-            targetVector.push_back(pCaloHit->GetPositionVector());
-        }
+		int iHit = 1;
+		for (const CaloHit *const pCaloHit : orderedCaloHitList)
+	  		{
+	    		if((float)iHit / nhits <= m_hitFraction)
+              		pointVectorStart.push_back(pCaloHit->GetPositionVector());
+	    		if((float)iHit / nhits >= 1.0 - m_hitFraction)
+              		pointVectorEnd.push_back(pCaloHit->GetPositionVector());
+	    		iHit++;
+	  		}
     }
 }
 
@@ -554,8 +635,11 @@ float ThreeDOpeningAngleFeatureTool::OpeningAngle(const CartesianVector &princip
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDOpeningAngleFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode ThreeDOpeningAngleFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+                                                                                                       "HitFraction", m_hitFraction));
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -582,7 +666,6 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
     CaloHitList threeDCaloHitList;
     LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
-
     if ((!threeDClusterList.empty()) && (!threeDCaloHitList.empty()))
     {
         // Run the PCA analysis
@@ -593,27 +676,31 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
         {
             LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
             const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
+
             if (principalEigenvalue > std::numeric_limits<float>::epsilon())
             {
                 pca1 = secondaryEigenvalue/principalEigenvalue;
                 pca2 = tertiaryEigenvalue/principalEigenvalue;
             }
+
+            else if(principalEigenvalue == 0)
+            {
+                pca1 = 0.0; // if n3dHits == 1 then principal, secondary, and tertiary eigenvalues are zero hence default to pca1 == 0
+                pca2 = 0.0; // if n3dHits == 1 then principal, secondary, and tertiary eigenvalues are zero hence default to pca2 == 0
+            }
         }
         catch (const StatusCodeException &){}
     }
-
     featureVector.push_back(pca1);
     featureVector.push_back(pca2);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode ThreeDPCAFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
-    return STATUS_CODE_SUCCESS;
+  return STATUS_CODE_SUCCESS;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :
@@ -711,7 +798,15 @@ void ThreeDChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *c
     const VertexList *pVertexList = nullptr;
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if ((!pVertexList->empty()) && (pVertexList->size() == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
+    int numInteractionVertex(0);    
+
+    for (const Vertex *pVertex : *pVertexList)
+    {
+        if ((pVertex->GetVertexLabel()) == VERTEX_INTERACTION)
+            ++numInteractionVertex;
+    }
+
+    if ((!pVertexList->empty()) && (numInteractionVertex == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
         const Vertex *const pVertex(pVertexList->front());
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));

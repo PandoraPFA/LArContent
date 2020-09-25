@@ -8,7 +8,9 @@
 #ifndef LAR_TRACK_SHOWER_ID_FEATURE_TOOLS_H
 #define LAR_TRACK_SHOWER_ID_FEATURE_TOOLS_H 1
 
-#include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
+//#include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
+#include "larpandoracontent/LArObjects/LArAdaBoostDecisionTree.h"
+#include <Eigen/Dense>
 
 namespace lar_content
 {
@@ -116,6 +118,33 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
+/**
+ *   @brief  class for the calculation of curvature/"wiggliness" of pfos
+ */
+class PfoHierarchyFeatureTool : public PfoCharacterisationFeatureTool
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    PfoHierarchyFeatureTool();
+
+    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+
+private:
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+ /**
+   *  @brief  Calculation of how much a pfo wiggles
+   *
+   *  @param  pAlgorithm                   address of the calling algorithm
+   *  @param  pInputPfo                    PFO that we are characterising      
+   */
+
+};
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 
 /**
  *   @brief  LinearFitFeatureTool class for the calculation of variables related to sliding linear fit
@@ -194,6 +223,8 @@ private:
         pandora::CartesianPointVector &pointVectorStart, pandora::CartesianPointVector &pointVectorEnd);
 
     float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary, const pandora::CartesianVector &eigenValues) const;
+
+    float m_hitFraction;           ///< fraction of hits in start and end of pfo
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
