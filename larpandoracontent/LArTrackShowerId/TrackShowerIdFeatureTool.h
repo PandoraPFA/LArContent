@@ -138,7 +138,7 @@ private:
    *  @brief  Calculation of how much a pfo wiggles
    *
    *  @param  pAlgorithm                   address of the calling algorithm
-   *  @param  pInputPfo                    PFO that we are characterising      
+   *  @param  pInputPfo                    PFO that we are characterising
    */
 
 };
