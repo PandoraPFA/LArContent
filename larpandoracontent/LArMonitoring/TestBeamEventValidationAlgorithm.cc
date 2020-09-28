@@ -12,10 +12,6 @@
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
-#include "larpandoracontent/LArObjects/LArPointingCluster.h"
-
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-
 #include "larpandoracontent/LArMonitoring/TestBeamEventValidationAlgorithm.h"
 
 #include <sstream>
@@ -89,7 +85,7 @@ void TestBeamEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const
-{    
+{
     if (printToScreen && useInterpretedMatching) std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
     else if (printToScreen) std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
 
@@ -128,7 +124,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
     IntVector bestMatchPfoId, bestMatchPfoPdg, bestMatchPfoIsTB;
     IntVector bestMatchPfoNHitsTotal, bestMatchPfoNHitsU, bestMatchPfoNHitsV, bestMatchPfoNHitsW;
     IntVector bestMatchPfoNSharedHitsTotal, bestMatchPfoNSharedHitsU, bestMatchPfoNSharedHitsV, bestMatchPfoNSharedHitsW;
-    FloatVector bestMatchPfoX0, bestMatchPfoTrackLength;
+    FloatVector bestMatchPfoX0;
 
     std::stringstream targetSS;
 
@@ -144,14 +140,9 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
         ++mcPrimaryIndex;
         const CaloHitList &mcPrimaryHitList(validationInfo.GetAllMCParticleToHitsMap().at(pMCPrimary));
 
-        /*
         const int mcNuanceCode(LArMCParticleHelper::GetNuanceCode(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)));
         const int isBeamParticle(LArMCParticleHelper::IsBeamParticle(pMCPrimary));
         const int isCosmicRay(LArMCParticleHelper::IsCosmicRay(pMCPrimary));
-        */
-        const int mcNuanceCode(3000);
-        const int isBeamParticle(0);
-        int isCosmicRay(1); 
 #ifdef MONITORING
         const int nTargetPrimaries(associatedMCPrimaries.size());
         const CartesianVector &targetVertex(LArMCParticleHelper::GetParentMCParticle(pMCPrimary)->GetVertex());
@@ -170,26 +161,18 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
                  << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList)
                  << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList) << ")" << std::endl;
 
-        
-
         mcPrimaryId.push_back(mcPrimaryIndex);
         mcPrimaryPdg.push_back(pMCPrimary->GetParticleId());
         mcPrimaryE.push_back(pMCPrimary->GetEnergy());
         mcPrimaryPX.push_back(pMCPrimary->GetMomentum().GetX());
         mcPrimaryPY.push_back(pMCPrimary->GetMomentum().GetY());
         mcPrimaryPZ.push_back(pMCPrimary->GetMomentum().GetZ());
-
-        CartesianVector vertex(pMCPrimary->GetVertex()), endpoint(pMCPrimary->GetEndpoint());
-        this->ProjectPositionToDetectorEdge(vertex, pMCPrimary->GetMomentum());
-        this->ProjectPositionToDetectorEdge(endpoint, pMCPrimary->GetMomentum());
-
-        mcPrimaryVtxX.push_back(vertex.GetX());
-        mcPrimaryVtxY.push_back(vertex.GetY());
-        mcPrimaryVtxZ.push_back(vertex.GetZ());
-        mcPrimaryEndX.push_back(endpoint.GetX());
-        mcPrimaryEndY.push_back(endpoint.GetY());
-        mcPrimaryEndZ.push_back(endpoint.GetZ());
-        
+        mcPrimaryVtxX.push_back(pMCPrimary->GetVertex().GetX());
+        mcPrimaryVtxY.push_back(pMCPrimary->GetVertex().GetY());
+        mcPrimaryVtxZ.push_back(pMCPrimary->GetVertex().GetZ());
+        mcPrimaryEndX.push_back(pMCPrimary->GetEndpoint().GetX());
+        mcPrimaryEndY.push_back(pMCPrimary->GetEndpoint().GetY());
+        mcPrimaryEndZ.push_back(pMCPrimary->GetEndpoint().GetZ());
         nMCHitsTotal.push_back(mcPrimaryHitList.size());
         nMCHitsU.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, mcPrimaryHitList));
         nMCHitsV.push_back(LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList));
@@ -211,24 +194,6 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
 
             if (0 == matchIndex++)
             {
-                try
-                {
-                    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-                    ClusterList clusterList;
-                    LArPfoHelper::GetThreeDClusterList(pfoToSharedHits.first, clusterList);
-
-                    if (1 != clusterList.size())
-                        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-
-                    const ThreeDSlidingFitResult slidingFitResult(clusterList.front(), 20, slidingFitPitch);
-                    LArPointingCluster pointingCluster(slidingFitResult);
-                    bestMatchPfoTrackLength.push_back(pointingCluster.GetLength());
-                }
-                catch (const StatusCodeException &)
-                {
-                    bestMatchPfoTrackLength.push_back(0.f);
-                }
-                
                 bestMatchPfoId.push_back(pfoId);
                 bestMatchPfoPdg.push_back(pfoToSharedHits.first->GetParticleId());
                 bestMatchPfoIsTB.push_back(isRecoTestBeam ? 1 : 0);
@@ -281,7 +246,6 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0); bestMatchPfoNSharedHitsTotal.push_back(0);
             bestMatchPfoNSharedHitsU.push_back(0); bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
             bestMatchPfoX0.push_back(std::numeric_limits<float>::max());
-            bestMatchPfoTrackLength.push_back(0.f);
         }
 
         nPrimaryMatchedPfos.push_back(nPrimaryMatches);
@@ -336,7 +300,6 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsV", &bestMatchPfoNSharedHitsV));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoNSharedHitsW", &bestMatchPfoNSharedHitsW));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoX0", &bestMatchPfoX0));
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "bestMatchPfoTrackLength", &bestMatchPfoTrackLength));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetMatches", nTargetMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetTBMatches", nTargetTBMatches));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "nTargetCRMatches", nTargetCRMatches));
@@ -345,8 +308,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
 
         if (isBeamParticle || isCosmicRay)
         {
-            //const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
-            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::InteractionType::COSMIC_RAY_MU);
+            const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(associatedMCPrimaries));
 #ifdef MONITORING
             const int interactionTypeInt(static_cast<int>(interactionType));
 #endif
@@ -406,7 +368,7 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             bestMatchPfoId.clear(); bestMatchPfoPdg.clear(); bestMatchPfoIsTB.clear();
             bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear();
             bestMatchPfoNSharedHitsTotal.clear(); bestMatchPfoNSharedHitsU.clear(); bestMatchPfoNSharedHitsV.clear(); bestMatchPfoNSharedHitsW.clear();
-            bestMatchPfoX0.clear(); bestMatchPfoTrackLength.clear();
+            bestMatchPfoX0.clear();
         }
     }
 
@@ -426,60 +388,6 @@ void TestBeamEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
     }
 
     if (printToScreen) std::cout << "------------------------------------------------------------------------------------------------" << std::endl << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TestBeamEventValidationAlgorithm::ProjectPositionToDetectorEdge(CartesianVector &position, const CartesianVector &direction) const
-{
-    const LArTPCMap &larTPCMap(this->GetPandora().GetGeometry()->GetLArTPCMap());
-
-    float detectorMinXEdge(std::numeric_limits<float>::max()), detectorMaxXEdge(-std::numeric_limits<float>::max());
-    for (const LArTPCMap::value_type &mapEntry : larTPCMap)
-    {
-        const LArTPC *const pSubLArTPC(mapEntry.second);
-        detectorMinXEdge = std::min(detectorMinXEdge, pSubLArTPC->GetCenterX() - 0.5f * pSubLArTPC->GetWidthX());
-        detectorMaxXEdge = std::max(detectorMaxXEdge, pSubLArTPC->GetCenterX() + 0.5f * pSubLArTPC->GetWidthX());
-    }
-
-    const pandora::LArTPC *pLArTPC = larTPCMap.begin()->second;
-    const float detectorMinYEdge(pLArTPC->GetCenterY() - (pLArTPC->GetWidthY() * 0.5f)), detectorMaxYEdge(pLArTPC->GetCenterY() + (pLArTPC->GetWidthY() * 0.5f));
-    const float detectorMinZEdge(pLArTPC->GetCenterZ() - (pLArTPC->GetWidthZ() * 0.5f)), detectorMaxZEdge(pLArTPC->GetCenterZ() + (pLArTPC->GetWidthZ() * 0.5f));
-
-    float xCoordinate(position.GetX()), yCoordinate(position.GetY()), zCoordinate(position.GetZ());
-    if ((xCoordinate < detectorMinXEdge) || (xCoordinate > detectorMaxXEdge))
-    {
-        xCoordinate = (xCoordinate < detectorMinXEdge ? detectorMinXEdge : detectorMaxXEdge);
-        yCoordinate = ((xCoordinate - position.GetX()) * direction.GetY() / direction.GetX()) + position.GetY();
-        zCoordinate = ((xCoordinate - position.GetX()) * direction.GetZ() / direction.GetX()) + position.GetZ();
-    }
-
-    if ((yCoordinate < detectorMinYEdge) || (yCoordinate > detectorMaxYEdge))
-    {
-        yCoordinate = (yCoordinate < detectorMinYEdge ? detectorMinYEdge : detectorMaxYEdge);
-        xCoordinate = ((yCoordinate - position.GetY()) * direction.GetX() / direction.GetY()) + position.GetX();
-        zCoordinate = ((yCoordinate - position.GetY()) * direction.GetZ() / direction.GetY()) + position.GetZ();
-    }
-
-    if ((zCoordinate < detectorMinZEdge) || (zCoordinate > detectorMaxZEdge))
-    {
-        zCoordinate = (zCoordinate < detectorMinZEdge ? detectorMinZEdge : detectorMaxZEdge);
-        xCoordinate = ((zCoordinate - position.GetZ()) * direction.GetX() / direction.GetZ()) + position.GetX();
-        yCoordinate = ((zCoordinate - position.GetZ()) * direction.GetY() / direction.GetZ()) + position.GetY();
-    }
-    
-    std::cout << "detectorMinXEdge: " << detectorMinXEdge << std::endl;
-    std::cout << "detectorMaxXEdge: " << detectorMaxXEdge << std::endl;
-    std::cout << "detectorMinYEdge: " << detectorMinYEdge << std::endl;
-    std::cout << "detectorMaxYEdge: " << detectorMaxYEdge << std::endl;
-    std::cout << "detectorMinZEdge: " << detectorMinZEdge << std::endl;
-    std::cout << "detectorMaxZEdge: " << detectorMaxZEdge << std::endl;
-
-    std::cout << "original position: " << position << std::endl;
-
-    position.SetValues(xCoordinate, yCoordinate, zCoordinate);
-
-    std::cout << "new position: " << position << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
