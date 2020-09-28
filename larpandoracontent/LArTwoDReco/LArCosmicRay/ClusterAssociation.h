@@ -101,53 +101,6 @@ protected:
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
-/**
- *  @brief  ClusterEndpointAssociation class
- */    
-class ClusterEndpointAssociation : public ClusterAssociation
-{
-public:
-    /**
-     *  @brief  Default constructor
-     */
-    ClusterEndpointAssociation();
-
-    /**
-     *  @brief  Constructor
-     *
-     *  @param  upstreamMergePoint the upstream merge point
-     *  @param  upstreamMergeDirection the cluster direction at the upstream merge point
-     *  @param  downstreamMergePoint the downstream merge point
-     *  @param  downstreamMergeDirection the cluster direction at the downstream merge point
-     *  @param  pMainTrackCluster the address of the main track cluster
-     *  @param  isEndUpstream whether the cluster endpoint is at the upstream end of the cluster (i.e. lower z component)
-     */
-    ClusterEndpointAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
-        const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pMainTrackCluster,
-        const bool isEndUpstream);
-
-    /**
-     *  @brief  Returns the address of the main track cluster
-     *
-     *  @return  the address of the main track cluster
-     */
-    const pandora::Cluster *GetMainTrackCluster() const;
-
-    /**
-     *  @brief  Returns whether the cluster endpoint is at the upstream end of the cluster
-     *
-     *  @return  Whether the cluster endpoint is at the upstream end of the cluster
-     */    
-    bool IsEndUpstream() const;        
-
-private:
-    const pandora::Cluster    *m_pMainTrackCluster;    ///< The address of the main track cluster
-    bool                       m_isEndUpstream;        ///< Whether the cluster endpoint is at the upstream end of the cluster (i.e. lower z component)
-};
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------     
 
 /**
  *  @brief  ClusterPairAssociation class
@@ -290,40 +243,6 @@ inline void ClusterAssociation::UpdateConnectingLine()
 {
     const pandora::CartesianVector connectingLineDirection(m_downstreamMergePoint.GetX() - m_upstreamMergePoint.GetX(), 0.f, m_downstreamMergePoint.GetZ() - m_upstreamMergePoint.GetZ());
     m_connectingLineDirection = connectingLineDirection.GetUnitVector();
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline ClusterEndpointAssociation::ClusterEndpointAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
-    const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pMainTrackCluster, const bool isEndUpstream) :
-        ClusterAssociation(upstreamMergePoint, upstreamMergeDirection, downstreamMergePoint, downstreamMergeDirection),
-        m_pMainTrackCluster(pMainTrackCluster),
-        m_isEndUpstream(isEndUpstream)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline ClusterEndpointAssociation::ClusterEndpointAssociation() :
-        ClusterAssociation(),
-        m_pMainTrackCluster(nullptr),
-        m_isEndUpstream(false)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::Cluster *ClusterEndpointAssociation::GetMainTrackCluster() const
-{
-    return m_pMainTrackCluster;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------    
-
-inline bool ClusterEndpointAssociation::IsEndUpstream() const
-{
-    return m_isEndUpstream;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
