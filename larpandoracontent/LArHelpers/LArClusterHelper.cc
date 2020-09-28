@@ -17,34 +17,6 @@ using namespace pandora;
 namespace lar_content
 {
 
-float LArClusterHelper::GetAverageHitSeparation(const Cluster *const pCluster)
-{
-    if (pCluster->GetNCaloHits() == 1)
-        return 0.f;
-
-    float separationSum(0.f);
-    unsigned int caloHitCount(0);
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-    const CaloHit *pPreviousCaloHit(orderedCaloHitList.begin()->second->front());
-    
-    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
-    {
-        caloHitCount += mapEntry.second->size();
-        for (const CaloHit *const pCaloHit : *mapEntry.second)
-        {
-            if (pCaloHit == pPreviousCaloHit)
-                continue;
-
-            separationSum += std::sqrt(pCaloHit->GetPositionVector().GetDistanceSquared(pPreviousCaloHit->GetPositionVector()));
-            pPreviousCaloHit = pCaloHit;
-        }
-    }
-
-    return (separationSum / caloHitCount);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------    
-
 HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
 {
     if (0 == pCluster->GetNCaloHits())
