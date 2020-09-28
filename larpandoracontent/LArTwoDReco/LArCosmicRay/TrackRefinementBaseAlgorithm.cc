@@ -164,10 +164,7 @@ void TrackRefinementBaseAlgorithm::GetHitsInBoundingBox(const CartesianVector &f
 
 bool TrackRefinementBaseAlgorithm::IsInBoundingBox(const float minX, const float maxX, const float minZ, const float maxZ, const CartesianVector &hitPosition) const
 {
-    if ((hitPosition.GetX() < minX) || (hitPosition.GetX() > maxX) || (hitPosition.GetZ() < minZ) || (hitPosition.GetZ() > maxZ))
-        return false;
-
-    return true;
+    return !((hitPosition.GetX() < minX) || (hitPosition.GetX() > maxX) || (hitPosition.GetZ() < minZ) || (hitPosition.GetZ() > maxZ));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -176,10 +173,7 @@ bool TrackRefinementBaseAlgorithm::IsCloseToLine(const CartesianVector &hitPosit
 {
     const float transverseDistanceFromLine(lineDirection.GetCrossProduct(hitPosition - lineStart).GetMagnitude());
     
-    if (transverseDistanceFromLine > distanceToLine)
-       return false;
-
-    return true;
+    return (transverseDistanceFromLine < distanceToLine);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -336,7 +330,7 @@ void TrackRefinementBaseAlgorithm::GetTrackSegmentBoundaries(const ClusterAssoci
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackRefinementBaseAlgorithm::RepositionIfInGap(const CartesianVector &mergeDirection, CartesianVector &mergePoint) const
+void TrackRefinementBaseAlgorithm::RepositionIfInGap(const CartesianVector &mergeDirection, CartesianVector &trackPoint) const
 {
     const DetectorGapList detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
     for (const DetectorGap *const pDetectorGap : detectorGapList)
@@ -349,27 +343,27 @@ void TrackRefinementBaseAlgorithm::RepositionIfInGap(const CartesianVector &merg
             
             if (lineGapType == TPC_DRIFT_GAP)
             {
-                if ((pLineGap->GetLineStartX() < mergePoint.GetX()) && (pLineGap->GetLineEndX() > mergePoint.GetX()))
+                if ((pLineGap->GetLineStartX() < trackPoint.GetX()) && (pLineGap->GetLineEndX() > trackPoint.GetX()))
                 {
                     if (std::fabs(mergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
                         throw StatusCodeException(STATUS_CODE_FAILURE);
                     
                     const float gradient(mergeDirection.GetZ() / mergeDirection.GetX());
                     
-                    mergePoint = CartesianVector(pLineGap->GetLineEndX(), 0.f, mergePoint.GetZ() + (gradient * (pLineGap->GetLineEndX() - mergePoint.GetX())));
+                    trackPoint = CartesianVector(pLineGap->GetLineEndX(), 0.f, trackPoint.GetZ() + (gradient * (pLineGap->GetLineEndX() - trackPoint.GetX())));
                 }
             }
 
             if ((lineGapType == TPC_WIRE_GAP_VIEW_U) || (lineGapType == TPC_WIRE_GAP_VIEW_V) || (lineGapType == TPC_WIRE_GAP_VIEW_W))
             {
-                if ((pLineGap->GetLineStartZ() < mergePoint.GetZ()) && (pLineGap->GetLineEndZ() > mergePoint.GetZ()))
+                if ((pLineGap->GetLineStartZ() < trackPoint.GetZ()) && (pLineGap->GetLineEndZ() > trackPoint.GetZ()))
                 {
                     if (std::fabs(mergeDirection.GetZ()) < std::numeric_limits<float>::epsilon())
                         throw StatusCodeException(STATUS_CODE_FAILURE);
 
                     const float gradient(mergeDirection.GetX() / mergeDirection.GetZ());
 
-                    mergePoint = CartesianVector(mergePoint.GetX() + (gradient * (pLineGap->GetLineEndZ() - mergePoint.GetZ())), 0.f, pLineGap->GetLineEndZ());
+                    trackPoint = CartesianVector(trackPoint.GetX() + (gradient * (pLineGap->GetLineEndZ() - trackPoint.GetZ())), 0.f, pLineGap->GetLineEndZ());
                 }
             }
         }
@@ -854,6 +848,7 @@ StatusCode TrackRefinementBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TrackRefinementBaseAlgorithm::SortByDistanceAlongLine::operator() (const pandora::CaloHit *const pLhs, const pandora::CaloHit *const pRhs) const
 {
@@ -878,31 +873,10 @@ bool TrackRefinementBaseAlgorithm::SortByDistanceAlongLine::operator() (const pa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
   
-bool TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary::operator() (const Cluster *const pLhs, const Cluster *const pRhs)
-{
-    const unsigned int lhsInnerPseudoLayer(pLhs->GetInnerPseudoLayer()), lhsOuterPseudoLayer(pLhs->GetOuterPseudoLayer());
-    const float lhsInnerX(pLhs->GetCentroid(lhsInnerPseudoLayer).GetX()), lhsOuterX(pLhs->GetCentroid(lhsOuterPseudoLayer).GetX());
-
-    const unsigned int rhsInnerPseudoLayer(pRhs->GetInnerPseudoLayer()), rhsOuterPseudoLayer(pRhs->GetOuterPseudoLayer());
-    const float rhsInnerX(pRhs->GetCentroid(rhsInnerPseudoLayer).GetX()), rhsOuterX(pRhs->GetCentroid(rhsOuterPseudoLayer).GetX());       
-
-    const float lhsFurthestDistance(std::max(std::fabs(lhsInnerX - m_tpcXBoundary), std::fabs(lhsOuterX - m_tpcXBoundary)));
-    const float rhsFurthestDistance(std::max(std::fabs(rhsInnerX - m_tpcXBoundary), std::fabs(rhsOuterX - m_tpcXBoundary)));
-
-    // ATTN: Order from furthest away to closest
-    return (lhsFurthestDistance > rhsFurthestDistance);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 typedef bool (*SortFunction)(const Cluster*, const Cluster*);
 
 template void TrackRefinementBaseAlgorithm::UpdateContainers<SortFunction>(const ClusterList&, const ClusterList&, const SortFunction, ClusterVector&, SlidingFitResultMapPair&) const;
-template void TrackRefinementBaseAlgorithm::UpdateContainers<TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary>(const ClusterList&, const ClusterList&, const TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary, ClusterVector&, SlidingFitResultMapPair&) const;
-
 template void TrackRefinementBaseAlgorithm::InitialiseContainers<SortFunction>(const ClusterList*, const SortFunction, ClusterVector&, SlidingFitResultMapPair&) const;
-template void TrackRefinementBaseAlgorithm::InitialiseContainers<TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary>(const ClusterList*, const TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary, ClusterVector&, SlidingFitResultMapPair&) const;
-
 
 } // namespace lar_content
 

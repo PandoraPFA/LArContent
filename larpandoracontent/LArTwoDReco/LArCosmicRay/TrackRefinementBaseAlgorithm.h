@@ -60,33 +60,6 @@ protected:
         pandora::CartesianVector    m_lineDirection;     ///< The line end point
         bool                        m_hitWidthMode;      ///< Wether to consider hit widths or not
     };
-
-    /**
-      *  @brief SortByDistanceToTPCBoundary class
-      */    
-    class SortByDistanceToTPCBoundary
-    {
-    public:
-        /**
-         *  @brief  Constructor
-         *
-         *  @param  tpcXBoundary the x coordinate of the TPC boundary
-         */
-        SortByDistanceToTPCBoundary(const float tpcXBoundary);
-
-        /**
-         *  @brief  Sort clusters by their furthest distance from a specified TPC boundary
-         *
-         *  @param  pLhs the address of the first cluster
-         *  @param  pRhs the address of the second cluster
-         *
-         *  @return  whether lhs cluster is further from the TPC boundary than rhs cluster
-         */        
-        bool operator() (const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
-
-    private:
-        float m_tpcXBoundary;    ///< The x coordinate of the TPC boundary
-    };
         
     virtual pandora::StatusCode Run() = 0;
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
@@ -205,10 +178,24 @@ protected:
      */
     void GetTrackSegmentBoundaries(const ClusterAssociation &clusterAssociation, pandora::CartesianPointVector &trackSegmentBoundaries) const;
 
-    void RepositionIfInGap(const pandora::CartesianVector &mergeDirection, pandora::CartesianVector &mergePoint) const;
+    /**
+     *  @brief  Move an input position to the higher line gap edge if it lies within a gap
+     *
+     *  @param  mergeDirection the direction of the track
+     *  @param  trackPoint the input position
+     */
+    void RepositionIfInGap(const pandora::CartesianVector &mergeDirection, pandora::CartesianVector &trackPoint) const;
 
+    /** 
+     *  @brief  Calculate the track length between two points that lies in gaps 
+     *
+     *  @param  upstreamPoint the upstream point
+     *  @param  downstreamPoint the downstream point
+     *  @param  connectingLine the track direction
+     *  @param  consideredGaps the list of gaps to ignore
+     */
     float DistanceInGap(const pandora::CartesianVector &upstreamPoint, const pandora::CartesianVector &downstreamPoint,
-                        const pandora::CartesianVector &connectingLine, pandora::DetectorGapList &consideredGaps) const;
+        const pandora::CartesianVector &connectingLine, pandora::DetectorGapList &consideredGaps) const;
 
     
     /**
@@ -336,13 +323,6 @@ inline TrackRefinementBaseAlgorithm::SortByDistanceAlongLine::SortByDistanceAlon
     m_hitWidthMode(hitWidthMode)
 {
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------    
-     
-inline TrackRefinementBaseAlgorithm::SortByDistanceToTPCBoundary::SortByDistanceToTPCBoundary(const float tpcXBoundary) :
-    m_tpcXBoundary(tpcXBoundary)
-{
-}    
     
 } // namespace lar_content
 

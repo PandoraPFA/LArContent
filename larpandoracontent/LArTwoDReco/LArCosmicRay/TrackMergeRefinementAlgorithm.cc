@@ -299,6 +299,4 @@ StatusCode TrackMergeRefinementAlgorithm::ReadSettings(const pandora::TiXmlHandl
     return TrackRefinementBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------     
-
 }// namespace lar_content
