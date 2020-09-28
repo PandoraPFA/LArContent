@@ -68,7 +68,7 @@ public:
              *  @param  lhs first constituent hit
              *  @param  rhs second constituent hit
              *
-             *  @return  bool
+             *  @return  whether lhs hit is closer to the referencePoint than the rhs hit
              */
             bool operator() (const ConstituentHit &lhs, const ConstituentHit &rhs);
 
@@ -174,7 +174,7 @@ public:
          *  @param  pLhs first cluster
          *  @param  pRhs second cluster
          *
-         *  @return  bool
+         *  @return  whether the pLhs cluster has a lower higherXExtrema than the pRhs cluster
          */
         bool operator() (const pandora::Cluster *const pLhs, const pandora::Cluster *const pRhs);
 
@@ -188,7 +188,7 @@ public:
      *  @param  pCluster the input cluster
      *  @param  clusterToParametersMap the map [cluster -> cluster parameter]
      *
-     *  @return  ClusterParameters the cluster parameters of the input cluster
+     *  @return  the cluster parameters of the input cluster
      */
     static const ClusterParameters& GetClusterParameters(const pandora::Cluster *const pCluster, const ClusterToParametersMap &clusterToParametersMap);
 
@@ -199,7 +199,7 @@ public:
      *  @param  maxConstituentHitWidth the maximum width of a constituent hit
      *  @param  hitWidthScalingFactor the constituent hit width scaling factor
      *
-     *  @return  unsigned int the number of constituent hits the cluster would be broken into
+     *  @return  the number of constituent hits the cluster would be broken into
      */
     static unsigned int GetNProposedConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor);
 
@@ -212,7 +212,7 @@ public:
      *  @param  isUniform whether to break up the hit into uniform constituent hits (and pad the hit) or not
      *          in the non-uniform case constituent hits from different hits may have different weights
      *
-     *  @return  ConstituentHitVector the vector of constituent hits
+     *  @return  the vector of constituent hits
      */
     static ConstituentHitVector GetConstituentHits(const pandora::Cluster *const pCluster, const float maxConstituentHitWidth, const float hitWidthScalingFactor,
         const bool isUniform);
@@ -235,7 +235,7 @@ public:
      *
      *  @param  constituentHitVector the input vector of contituent hits
      *
-     *  @return  CartesianPointVector a vector of constituent hit central positions
+     *  @return  a vector of constituent hit central positions
      */
     static pandora::CartesianPointVector GetConstituentHitPositionVector(const ConstituentHitVector &constituentHitVector);
 
@@ -244,7 +244,7 @@ public:
      *
      *  @param  constituentHitVector the input vector of contituent hits
      *
-     *  @return  float the total weight sum
+     *  @return  the total weight sum
      */
     static float GetTotalClusterWeight(const ConstituentHitVector &constituentHitVector);
 
@@ -253,7 +253,7 @@ public:
      *
      *  @param  pCluster the input cluster
      *
-     *  @return  float the total weight sum
+     *  @return  the total weight sum
      */
     static float GetOriginalTotalClusterWeight(const pandora::Cluster *const pCluster);
 
@@ -262,7 +262,7 @@ public:
      *
      *  @param  constituentHitVector the input vector of contituent hits
      *
-     *  @return  CartesianVector the lower x extremal point of the constituent hits
+     *  @return  the lower x extremal point of the constituent hits
      */
     static pandora::CartesianVector GetExtremalCoordinatesLowerX(const ConstituentHitVector &constituentHitVector);
 
@@ -271,7 +271,7 @@ public:
      *
      *  @param  constituentHitVector the input vector of contituent hits
      *
-     *  @return  CartesianVector the higher x extremal point of the constituent hits
+     *  @return  the higher x extremal point of the constituent hits
      */
     static pandora::CartesianVector GetExtremalCoordinatesHigherX(const ConstituentHitVector &constituentHitVector);
 
@@ -292,7 +292,7 @@ public:
      *  @param  lineDirection the direction of the line
      *  @param  pCaloHit the input calo hit
      *
-     *  @return  CartesianVector the closest position
+     *  @return  the closest position
      */
     static pandora::CartesianVector GetClosestPointToLine2D(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection,
         const pandora::CaloHit *const pCaloHit);
@@ -303,7 +303,7 @@ public:
      *  @param  pCaloHit the input calo hit
      *  @param  point2D the position
      *
-     *  @return  float the smallest distance
+     *  @return  the smallest distance
      */    
     static float GetClosestDistanceToPoint2D(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector &point2D);
 };

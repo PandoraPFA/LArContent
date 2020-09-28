@@ -288,7 +288,7 @@ CartesianVector LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector
     if (std::fabs(lineDirection.GetX()) > std::numeric_limits<float>::epsilon())
     {
         const float gradient(lineDirection.GetZ() / lineDirection.GetX());
-        xOnLine = ((hitPosition.GetZ() - lineStart.GetZ()) / gradient) + lineStart.GetX();
+        xOnLine += ((hitPosition.GetZ() - lineStart.GetZ()) / gradient);
     }
 
     const float &hitWidth(pCaloHit->GetCellSize1());    
