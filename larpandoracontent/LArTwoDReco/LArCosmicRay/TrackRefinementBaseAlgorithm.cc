@@ -282,7 +282,7 @@ void TrackRefinementBaseAlgorithm::GetTrackSegmentBoundaries(const ClusterAssoci
     const CartesianVector &trackDirection(clusterAssociation.GetConnectingLineDirection());
     float trackLength((clusterAssociation.GetUpstreamMergePoint() - clusterAssociation.GetDownstreamMergePoint()).GetMagnitude());
 
-    // ATTN: Remove track segments in gaps where no hits would be expected to be found
+    // ATTN: Consider the existence of gaps where no hits will be found
     DetectorGapList consideredGaps;
     trackLength -= this->DistanceInGap(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint(), trackDirection, consideredGaps);
     consideredGaps.clear();
@@ -338,27 +338,39 @@ void TrackRefinementBaseAlgorithm::GetTrackSegmentBoundaries(const ClusterAssoci
 
 void TrackRefinementBaseAlgorithm::RepositionIfInGap(const CartesianVector &mergeDirection, CartesianVector &mergePoint) const
 {
-    const float gradient(mergeDirection.GetZ() / mergeDirection.GetX());
-
-    DetectorGapList detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
+    const DetectorGapList detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
     for (const DetectorGap *const pDetectorGap : detectorGapList)
     {
         const LineGap *const pLineGap(dynamic_cast<const LineGap*>(pDetectorGap));
 
         if (pLineGap)
         {
-            LineGapType lineGapType(pLineGap->GetLineGapType());
+            const LineGapType lineGapType(pLineGap->GetLineGapType());
             
             if (lineGapType == TPC_DRIFT_GAP)
             {
                 if ((pLineGap->GetLineStartX() < mergePoint.GetX()) && (pLineGap->GetLineEndX() > mergePoint.GetX()))
-                    mergePoint = CartesianVector(pLineGap->GetLineEndX(), 0.f, mergePoint.GetZ() + gradient * (pLineGap->GetLineEndX() - mergePoint.GetX()));
+                {
+                    if (std::fabs(mergeDirection.GetX()) < std::numeric_limits<float>::epsilon())
+                        throw StatusCodeException(STATUS_CODE_FAILURE);
+                    
+                    const float gradient(mergeDirection.GetZ() / mergeDirection.GetX());
+                    
+                    mergePoint = CartesianVector(pLineGap->GetLineEndX(), 0.f, mergePoint.GetZ() + (gradient * (pLineGap->GetLineEndX() - mergePoint.GetX())));
+                }
             }
 
             if ((lineGapType == TPC_WIRE_GAP_VIEW_U) || (lineGapType == TPC_WIRE_GAP_VIEW_V) || (lineGapType == TPC_WIRE_GAP_VIEW_W))
             {
                 if ((pLineGap->GetLineStartZ() < mergePoint.GetZ()) && (pLineGap->GetLineEndZ() > mergePoint.GetZ()))
-                    mergePoint = CartesianVector((pLineGap->GetLineEndZ() - mergePoint.GetZ()) / gradient, 0.f, pLineGap->GetLineEndZ());
+                {
+                    if (std::fabs(mergeDirection.GetZ()) < std::numeric_limits<float>::epsilon())
+                        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+                    const float gradient(mergeDirection.GetX() / mergeDirection.GetZ());
+
+                    mergePoint = CartesianVector(mergePoint.GetX() + (gradient * (pLineGap->GetLineEndZ() - mergePoint.GetZ())), 0.f, pLineGap->GetLineEndZ());
+                }
             }
         }
     }
@@ -376,7 +388,7 @@ float TrackRefinementBaseAlgorithm::DistanceInGap(const CartesianVector &upstrea
     const float cosAngleToZ(std::fabs(connectingLine.GetDotProduct(CartesianVector(0.f, 0.f, 1.f))));
 
     float distanceInGaps(0.f);
-    DetectorGapList detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
+    const DetectorGapList detectorGapList(this->GetPandora().GetGeometry()->GetDetectorGapList());
     for (const DetectorGap *const pDetectorGap : detectorGapList)
     {
         if (std::find(consideredGaps.begin(), consideredGaps.end(), pDetectorGap) != consideredGaps.end())
@@ -386,48 +398,62 @@ float TrackRefinementBaseAlgorithm::DistanceInGap(const CartesianVector &upstrea
         
         if (pLineGap)
         {
-            LineGapType lineGapType(pLineGap->GetLineGapType());
+            const LineGapType lineGapType(pLineGap->GetLineGapType());
             
             if (lineGapType == TPC_DRIFT_GAP)
             {
+                float xDistanceInGap(0.f);
+                
                 if ((pLineGap->GetLineStartX() > lowerXPoint.GetX()) && (pLineGap->GetLineEndX() < higherXPoint.GetX()))
                 {
-                    distanceInGaps += (pLineGap->GetLineEndX() - pLineGap->GetLineStartX()) / cosAngleToX;
+                    xDistanceInGap = (pLineGap->GetLineEndX() - pLineGap->GetLineStartX());
                 }
                 else if ((pLineGap->GetLineStartX() < lowerXPoint.GetX()) && (pLineGap->GetLineEndX() > lowerXPoint.GetX()))
                 {
-                    distanceInGaps += (pLineGap->GetLineEndX() - lowerXPoint.GetX()) / cosAngleToX;
+                    xDistanceInGap = (pLineGap->GetLineEndX() - lowerXPoint.GetX());
                 }
                 else if ((pLineGap->GetLineStartX() < higherXPoint.GetX()) && (pLineGap->GetLineEndX() > higherXPoint.GetX()))
                 {
-                    distanceInGaps += (higherXPoint.GetX() - pLineGap->GetLineStartX()) / cosAngleToX;
+                    xDistanceInGap = (higherXPoint.GetX() - pLineGap->GetLineStartX());
                 }
                 else
                 {
                     continue;
                 }
-                                    
+
+                if (std::fabs(cosAngleToX) < std::numeric_limits<float>::epsilon())
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+                
+                distanceInGaps += (xDistanceInGap / cosAngleToX);
+                
                 consideredGaps.push_back(pDetectorGap);
             }
             
             if ((lineGapType == TPC_WIRE_GAP_VIEW_U) || (lineGapType == TPC_WIRE_GAP_VIEW_V) || (lineGapType == TPC_WIRE_GAP_VIEW_W))
             {
+                float zDistanceInGap(0.f);
+                 
                 if ((pLineGap->GetLineStartZ() > upstreamPoint.GetZ()) && (pLineGap->GetLineEndZ() < downstreamPoint.GetZ()))
                 {
-                    distanceInGaps += (pLineGap->GetLineEndZ() - pLineGap->GetLineStartZ()) / cosAngleToZ;
+                    zDistanceInGap = pLineGap->GetLineEndZ() - pLineGap->GetLineStartZ();
                 }
                 else if ((pLineGap->GetLineStartZ() < upstreamPoint.GetZ()) && (pLineGap->GetLineEndZ() > upstreamPoint.GetZ()))
                 {
-                    distanceInGaps += (pLineGap->GetLineEndZ() - upstreamPoint.GetZ()) / cosAngleToZ;
+                    zDistanceInGap = pLineGap->GetLineEndZ() - upstreamPoint.GetZ();
                 }
                 else if ((pLineGap->GetLineStartZ() < downstreamPoint.GetZ()) && (pLineGap->GetLineEndZ() > downstreamPoint.GetZ()))
                 {
-                    distanceInGaps += (downstreamPoint.GetZ() - pLineGap->GetLineStartZ()) / cosAngleToZ;
+                    zDistanceInGap = downstreamPoint.GetZ() - pLineGap->GetLineStartZ();
                 }
                 else
                 {
                     continue;
                 }
+
+                if (std::fabs(cosAngleToZ) < std::numeric_limits<float>::epsilon())
+                    throw StatusCodeException(STATUS_CODE_FAILURE);
+                
+                distanceInGaps += (zDistanceInGap / cosAngleToZ);
                 
                 consideredGaps.push_back(pDetectorGap);
             }

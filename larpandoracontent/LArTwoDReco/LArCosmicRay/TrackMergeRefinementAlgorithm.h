@@ -52,9 +52,6 @@ private:
     bool AreClustersAssociated(const pandora::CartesianVector &upstreamPoint, const pandora::CartesianVector &upstreamDirection,
         const pandora::CartesianVector &downstreamPoint, const pandora::CartesianVector &downstreamDirection) const;
 
-    void RepositionIfInGap(const pandora::CartesianVector &upstreamMergeDirection, const pandora::CartesianVector &downstreamMergeDirection,
-        pandora::CartesianVector &upstreamMergePoint, pandora::CartesianVector &downstreamMergePoint) const;
-
     /**
      *  @brief  Obtain a list of clusters whos hits are protected and cannot be reassigned
      *
