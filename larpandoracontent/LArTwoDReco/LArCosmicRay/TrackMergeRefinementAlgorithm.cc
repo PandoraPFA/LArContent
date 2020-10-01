@@ -19,18 +19,18 @@ namespace lar_content
 {
 
 TrackMergeRefinementAlgorithm::TrackMergeRefinementAlgorithm() :
-    m_maxLoopIterations(10),    
+    m_maxLoopIterations(10),
     m_minClusterLengthSum(75.f),
     m_minSeparationDistance(0.f),
     m_minDirectionDeviationCosAngle(0.99f),
     m_maxPredictedMergePointOffset(5.f),
-    m_distanceToLine(0.35f),    
+    m_distanceToLine(0.35f),
     m_boundaryTolerance(2.f)
 {
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------    
-    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode TrackMergeRefinementAlgorithm::Run()
 {
     const ClusterList *pClusterList(nullptr);
@@ -45,10 +45,10 @@ StatusCode TrackMergeRefinementAlgorithm::Run()
 
     this->InitialiseContainers(pClusterList, LArClusterHelper::SortByNHits, clusterVector, slidingFitResultMapPair);
 
-    // ATTN: Keep track of created main track clusters so their hits can be protected in future iterations    
+    // ATTN: Keep track of created main track clusters so their hits can be protected in future iterations
     unsigned int loopIterations(0);
-    ClusterList createdMainTrackClusters;    
-    while(loopIterations < m_maxLoopIterations) 
+    ClusterList createdMainTrackClusters;
+    while(loopIterations < m_maxLoopIterations)
     {
         ++loopIterations;
 
@@ -58,7 +58,7 @@ StatusCode TrackMergeRefinementAlgorithm::Run()
 
         ClusterList unavailableProtectedClusters;
         this->GetUnavailableProtectedClusters(clusterAssociation, createdMainTrackClusters, unavailableProtectedClusters);
-        
+
         ClusterToCaloHitListMap clusterToCaloHitListMap;
         this->GetHitsInBoundingBox(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint(), pClusterList, clusterToCaloHitListMap,
             unavailableProtectedClusters, m_distanceToLine);
@@ -79,19 +79,19 @@ StatusCode TrackMergeRefinementAlgorithm::Run()
 
         createdMainTrackClusters.push_back(this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, clusterVector, slidingFitResultMapPair));
     }
-    
+
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
     ClusterPairAssociation &clusterAssociation) const
 {
     bool foundAssociation(false);
     float maxLength(0.f);
 
-    // ATTN: Find the associated cluster pair with the longest length sum 
+    // ATTN: Find the associated cluster pair with the longest length sum
     for (ClusterVector::const_iterator currentIter = clusterVector.begin(); currentIter != clusterVector.end(); ++currentIter)
     {
         const Cluster *const pCurrentCluster(*currentIter);
@@ -128,7 +128,7 @@ bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVect
 
             if (((currentMinLayerZ > testMinLayerZ) && (currentMaxLayerZ < testMaxLayerZ)) || ((testMinLayerZ > currentMinLayerZ) && (testMaxLayerZ < currentMaxLayerZ)))
                 continue;
-            
+
             CartesianVector currentMergePoint(0.f, 0.f, 0.f), testMergePoint(0.f, 0.f, 0.f), currentMergeDirection(0.f, 0.f, 0.f), testMergeDirection(0.f, 0.f, 0.f);
             if (!this->GetClusterMergingCoordinates(currentMicroFitIter->second, currentMacroFitIter->second, testMacroFitIter->second, !isCurrentUpstream, currentMergePoint, currentMergeDirection) ||
                 !this->GetClusterMergingCoordinates(testMicroFitIter->second, testMacroFitIter->second, currentMacroFitIter->second, isCurrentUpstream, testMergePoint, testMergeDirection))
@@ -155,11 +155,11 @@ bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVect
             maxLength = lengthSum;
         }
     }
-    
+
     return foundAssociation;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------    
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TrackMergeRefinementAlgorithm::AreClustersAssociated(const CartesianVector &upstreamPoint, const CartesianVector &upstreamDirection, const CartesianVector &downstreamPoint,
     const CartesianVector &downstreamDirection) const
@@ -216,7 +216,7 @@ bool TrackMergeRefinementAlgorithm::AreExtrapolatedHitsNearBoundaries(const Calo
 
     if (!this->IsNearBoundary(extrapolatedHitVector.back(), clusterAssociation.GetDownstreamMergePoint(), m_boundaryTolerance))
         return false;
-    
+
     return true;
 }
 
@@ -251,13 +251,13 @@ const Cluster *TrackMergeRefinementAlgorithm::CreateMainTrack(const ClusterPairA
     const Cluster *const pClusterToDelete(this->RemoveOffAxisHitsFromTrack(clusterAssociation.GetDownstreamCluster(), clusterAssociation.GetDownstreamMergePoint(),
         true, clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second));
 
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pMainTrackCluster, pClusterToDelete));    
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pMainTrackCluster, pClusterToDelete));
 
     for (const Cluster *const pShowerCluster : showerClustersToFragment)
     {
         const CaloHitList &caloHitsToMerge(clusterToCaloHitListMap.at(pShowerCluster));
         this->AddHitsToMainTrack(pMainTrackCluster, pShowerCluster, caloHitsToMerge, clusterAssociation, remnantClusterList);
-    }  
+    }
 
     ClusterList createdClusters;
     this->ProcessRemnantClusters(remnantClusterList, pMainTrackCluster, pClusterList, createdClusters);
@@ -277,7 +277,7 @@ StatusCode TrackMergeRefinementAlgorithm::ReadSettings(const pandora::TiXmlHandl
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxLoopIterations", m_maxLoopIterations));
-    
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterLengthSum", m_minClusterLengthSum));
 
@@ -291,7 +291,7 @@ StatusCode TrackMergeRefinementAlgorithm::ReadSettings(const pandora::TiXmlHandl
         "MaxPredictedMergePointOffset", m_maxPredictedMergePointOffset));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DistanceToLine", m_distanceToLine));       
+        "DistanceToLine", m_distanceToLine));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "BoundaryTolerance", m_boundaryTolerance));

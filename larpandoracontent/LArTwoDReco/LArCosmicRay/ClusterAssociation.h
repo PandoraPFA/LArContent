@@ -45,7 +45,7 @@ public:
      *  @brief  Returns the cluster direction at the upstream merge point
      *
      *  @return  the cluster direction at the upstream merge point
-     */        
+     */
     const pandora::CartesianVector GetUpstreamMergeDirection() const;
 
     /**
@@ -59,39 +59,39 @@ public:
      *  @brief  Returns the cluster direction at the downstream merge point
      *
      *  @return  the cluster direction at the downstream merge point
-     */        
+     */
      const pandora::CartesianVector GetDownstreamMergeDirection() const;
 
     /**
      *  @brief  Returns the unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
      *
      *  @return  the unit displacement vector from the upstream merge point to the downstream merge point
-     */           
+     */
     const pandora::CartesianVector GetConnectingLineDirection() const;
 
     /**
      *  @brief  Set the upstream merge point
      *
      *  @param  upstreamMergePoint the new upstream merge point
-     */         
+     */
     void SetUpstreamMergePoint(const pandora::CartesianVector &upstreamMergePoint);
 
     /**
      *  @brief  Set the downstream merge point
      *
      *  @param  downstreamMergePoint the new downstream merge point
-     */        
+     */
     void SetDownstreamMergePoint(const pandora::CartesianVector &downstreamMergePoint);
 
     bool operator==(const ClusterAssociation &clusterAssociation) const;
     bool operator<(const ClusterAssociation &clusterAssociation) const;
-        
+
 protected:
     /**
      *  @brief  Update the connecting line
-     */        
+     */
     void UpdateConnectingLine();
-    
+
     pandora::CartesianVector    m_upstreamMergePoint;          ///< The upstream cluster point to be used in the merging process
     pandora::CartesianVector    m_upstreamMergeDirection;      ///< The upstream cluster direction at the upstream merge point (points in the direction of the downstream cluster)
     pandora::CartesianVector    m_downstreamMergePoint;        ///< The downstream cluster point to be used in the merging process
@@ -99,12 +99,12 @@ protected:
     pandora::CartesianVector    m_connectingLineDirection;     ///< The unit vector of the line connecting the upstream and downstream merge points (upstream -> downstream)
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------    
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  ClusterPairAssociation class
- */       
+ */
 class ClusterPairAssociation : public ClusterAssociation
 {
 public:
@@ -122,7 +122,7 @@ public:
      *  @param  downstreamMergeDirection the cluster direction at the downstream merge point
      *  @param  pUpstreamCluster the address of the upstream cluster
      *  @param  pDownstreamCluster the address of the downstream cluster
-     */    
+     */
     ClusterPairAssociation(const pandora::CartesianVector &upstreamMergePoint, const pandora::CartesianVector &upstreamMergeDirection,
         const pandora::CartesianVector &downstreamMergePoint, const pandora::CartesianVector &downstreamMergeDirection, const pandora::Cluster *pUpstreamCluster,
         const pandora::Cluster *pDownstreamCluster);
@@ -139,7 +139,7 @@ public:
      *
      *  @return  the address of the downstream cluster
      */
-    const pandora::Cluster *GetDownstreamCluster() const;    
+    const pandora::Cluster *GetDownstreamCluster() const;
 
 private:
     const pandora::Cluster    *m_pUpstreamCluster;      ///< The address of the upstream cluster
@@ -147,7 +147,7 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
+
 inline ClusterAssociation::ClusterAssociation() :
     m_upstreamMergePoint(pandora::CartesianVector(0.f, 0.f, 0.f)),
     m_upstreamMergeDirection(pandora::CartesianVector(0.f, 0.f, 0.f)),
@@ -253,7 +253,7 @@ inline ClusterPairAssociation::ClusterPairAssociation(const pandora::CartesianVe
     const pandora::Cluster *pDownstreamCluster) :
         ClusterAssociation(upstreamMergePoint, upstreamMergeDirection, downstreamMergePoint, downstreamMergeDirection),
         m_pUpstreamCluster(pUpstreamCluster),
-        m_pDownstreamCluster(pDownstreamCluster)      
+        m_pDownstreamCluster(pDownstreamCluster)
 {
 }
 
@@ -279,7 +279,7 @@ inline const pandora::Cluster *ClusterPairAssociation::GetDownstreamCluster() co
 {
     return m_pDownstreamCluster;
 }
-    
+
 } // namespace lar_content
 
 #endif // #ifndef LAR_CLUSTER_ASSOCIATION_H

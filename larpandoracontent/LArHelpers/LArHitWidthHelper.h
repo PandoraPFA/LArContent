@@ -288,7 +288,7 @@ public:
     /**
      *  @brief  Consider the hit width to find the closest position of a calo hit to a specified line
      *
-     *  @param  lineStart the start position of the line 
+     *  @param  lineStart the start position of the line
      *  @param  lineDirection the direction of the line
      *  @param  pCaloHit the input calo hit
      *
@@ -304,7 +304,7 @@ public:
      *  @param  point2D the position
      *
      *  @return  the smallest distance
-     */    
+     */
     static float GetClosestDistanceToPoint2D(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector &point2D);
 };
 

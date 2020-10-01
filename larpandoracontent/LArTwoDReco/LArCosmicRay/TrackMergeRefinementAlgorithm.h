@@ -20,9 +20,9 @@ class TrackMergeRefinementAlgorithm :  public TrackRefinementBaseAlgorithm
 public:
    /**
      *  @brief  Default constructor
-     */        
+     */
     TrackMergeRefinementAlgorithm();
-    
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -31,11 +31,11 @@ private:
      *  @brief  Find the best cluster association
      *
      *  @param  clusterVector the vector of clusters to consider
-     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps 
+     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps
      *  @param  clusterAssociation the cluster pair association
      *
      *  @return  whether a cluster pair association was found
-     */    
+     */
     bool FindBestClusterAssociation(const pandora::ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
         ClusterPairAssociation &clusterAssociation) const;
 
@@ -69,7 +69,7 @@ private:
      *  @param  clusterAssociation the cluster association
      *
      *  @return  whether the checks pass
-     */          
+     */
     bool AreExtrapolatedHitsNearBoundaries(const pandora::CaloHitVector &extrapolatedHitVector, ClusterAssociation &clusterAssociation) const;
 
     /**
@@ -77,8 +77,8 @@ private:
      *
      *  @param  clusterAssociation the cluster pair association
      *  @param  clusterVector the vector of clusters considered in future iterations of the algorithm
-     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps 
-     */           
+     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps
+     */
     void ConsiderClusterAssociation(const ClusterPairAssociation &clusterAssociation, pandora::ClusterVector &clusterVector,
         SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
@@ -89,10 +89,10 @@ private:
      *  @param  clusterToCaloHitListMap the map [parent cluster -> list of hits which belong to the main track]
      *  @param  pClusterList the list of all clusters
      *  @param  clusterVector the vector of clusters considered in future iterations of the algorithm
-     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps 
+     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps
      *
      *  @return  the address of the created main track cluster
-     */    
+     */
     const pandora::Cluster *CreateMainTrack(const ClusterPairAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
         const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
@@ -101,10 +101,10 @@ private:
     float m_minSeparationDistance;            ///< The threshold separation distance between associated clusters
     float m_minDirectionDeviationCosAngle;    ///< The threshold cos opening angle of the associated cluster directions
     float m_maxPredictedMergePointOffset;     ///< The threshold separation distance between the predicted and true cluster merge points
-    float m_distanceToLine;                   ///< The threshold hit distance of an extrapolated hit from the segment connecting line   
+    float m_distanceToLine;                   ///< The threshold hit distance of an extrapolated hit from the segment connecting line
     float m_boundaryTolerance;                ///< The maximum allowed distance of an extremal extrapolate hit to a cluster merge point
 };
-    
+
 } // namespace lar_content
 
 #endif // #ifndef LAR_TRACK_MERGE_REFINEMENT_ALGORITHM_H

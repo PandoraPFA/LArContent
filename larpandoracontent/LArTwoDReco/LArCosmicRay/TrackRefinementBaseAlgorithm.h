@@ -60,18 +60,18 @@ protected:
         pandora::CartesianVector    m_lineDirection;     ///< The line end point
         bool                        m_hitWidthMode;      ///< Wether to consider hit widths or not
     };
-        
+
     virtual pandora::StatusCode Run() = 0;
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) = 0;
 
     /**
-     *  @brief  Fill the cluster vector and sliding fit maps with clusters that are determined to be track-like 
+     *  @brief  Fill the cluster vector and sliding fit maps with clusters that are determined to be track-like
      *
      *  @param  pClusterList the list of input clusters
      *  @param  sortFunction the sort class or function used to sort the clusterVector
      *  @param  clusterVector the input vector to store clusters considered within the algorithm
-     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps 
-     */    
+     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps
+     */
     template<typename T>
     void InitialiseContainers(const pandora::ClusterList *pClusterList, const T sortFunction, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
@@ -136,7 +136,7 @@ protected:
      *  @param  clusterAssociation the clusterAssociation
      *
      *  @return  whether the checks pass
-     */      
+     */
     bool AreExtrapolatedHitsGood(const ClusterToCaloHitListMap &clusterToCaloHitListMap, ClusterAssociation &clusterAssociation) const;
 
     /**
@@ -146,7 +146,7 @@ protected:
      *  @param  clusterAssociation the clusterAssociation
      *
      *  @return  whether the check passes
-     */      
+     */
     virtual bool AreExtrapolatedHitsNearBoundaries(const pandora::CaloHitVector &extrapolatedHitVector, ClusterAssociation &clusterAssociation) const = 0;
 
     /**
@@ -157,9 +157,9 @@ protected:
      *  @param  boundaryTolerance the definition of close
      *
      *  @return  whether the check passes
-     */   
+     */
     bool IsNearBoundary(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector &boundaryPosition2D, const float boundaryTolerance) const;
-    
+
     /**
      *  @brief  Check whether the extrapolatedCaloHitVector contains a continuous line of hits between the cluster merge points
      *
@@ -186,8 +186,8 @@ protected:
      */
     void RepositionIfInGap(const pandora::CartesianVector &mergeDirection, pandora::CartesianVector &trackPoint) const;
 
-    /** 
-     *  @brief  Calculate the track length between two points that lies in gaps 
+    /**
+     *  @brief  Calculate the track length between two points that lies in gaps
      *
      *  @param  upstreamPoint the upstream point
      *  @param  downstreamPoint the downstream point
@@ -197,7 +197,7 @@ protected:
     float DistanceInGap(const pandora::CartesianVector &upstreamPoint, const pandora::CartesianVector &downstreamPoint,
         const pandora::CartesianVector &connectingLine, pandora::DetectorGapList &consideredGaps) const;
 
-    
+
     /**
      *  @brief  Whether a position falls within a specified segment of the cluster connecting line
      *
@@ -208,7 +208,7 @@ protected:
      *  @return  whether the position falls within segment
      */
     bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;
-    
+
     /**
      *  @brief  Remove any hits in the upstream/downstream cluster that lie off of the main track axis (i.e. clustering errors)
      *
@@ -225,7 +225,7 @@ protected:
     const pandora::Cluster *RemoveOffAxisHitsFromTrack(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition, const bool isEndUpstream,
         const ClusterToCaloHitListMap &clusterToCaloHitListMap, pandora::ClusterList &remnantClusterList, TwoDSlidingFitResultMap &microSlidingFitResultMap,
         TwoDSlidingFitResultMap &macroSlidingFitResultMap) const;
-    
+
     /**
      *  @brief  Remove the hits from a shower cluster that belong to the main track and add them into the main track cluster
      *
@@ -237,7 +237,7 @@ protected:
      */
     void AddHitsToMainTrack(const pandora::Cluster *const pMainTrackCluster, const pandora::Cluster *const pShowerTrackCluster, const pandora::CaloHitList &caloHitsToMerge,
         const ClusterAssociation &clusterAssociation, pandora::ClusterList &remnantClusterList) const;
-    
+
     /**
      *  @brief  Process the remnant clusters separating those that stradle the main track
      *
@@ -248,7 +248,7 @@ protected:
      */
     void ProcessRemnantClusters(const pandora::ClusterList &remnantClusterList, const pandora::Cluster *const pMainTrackCluster, const pandora::ClusterList *const pClusterList,
         pandora::ClusterList &createdClusters) const;
-    
+
     /**
      *  @brief  Add a cluster to the nearest cluster satisfying separation distance thresholds
      *
@@ -259,7 +259,7 @@ protected:
      *  @return  whether cluster was added to a nearby cluster
      */
     bool AddToNearestCluster(const pandora::Cluster *const pClusterToMerge, const pandora::Cluster *const pMainTrackCluster, const pandora::ClusterList *const pClusterList) const;
-    
+
     /**
      *  @brief  Whether a remnant cluster is considered to be disconnected and therefore should undergo further fragmentation
      *
@@ -268,25 +268,25 @@ protected:
      *  @return  whether the remnant cluster is disconnected
      */
     bool IsClusterRemnantDisconnected(const pandora::Cluster *const pRemnantCluster) const;
-    
+
     /**
      *  @brief  Fragment a cluster using simple hit separation logic
      *
      *  @param  pRemnantCluster the input remnant cluster to fragment
      *  @param  fragmentedClusterList the input list to store the final remnant clusters
      */
-    void FragmentRemnantCluster(const pandora::Cluster *const pRemnantCluster, pandora::ClusterList &fragmentedClusterList) const;    
-    
+    void FragmentRemnantCluster(const pandora::Cluster *const pRemnantCluster, pandora::ClusterList &fragmentedClusterList) const;
+
     /**
-     *  @brief  Remove deleted clusters from the cluster vector and sliding fit maps and add in created clusters that are determined to be track-like 
+     *  @brief  Remove deleted clusters from the cluster vector and sliding fit maps and add in created clusters that are determined to be track-like
      *
      *  @param  clustersToAdd the list of clusters to add to the containers
      *  @param  clustersToDelete the list of clusters to remove from the containers
      *  @param  sortFunction the sort class or function used to sort the clusterVector
      *  @param  clusterVector the vector to store clusters considered within the algorithm
-     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps 
-     */    
-    template<typename T>  
+     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps
+     */
+    template<typename T>
     void UpdateContainers(const pandora::ClusterList &clustersToAdd, const pandora::ClusterList &clustersToDelete, const T sortFunction, pandora::ClusterVector &clusterVector,
         SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
@@ -295,10 +295,10 @@ protected:
      *
      *  @param  pClustertoRemove the clusters to remove from the containers
      *  @param  clusterVector the vector to store clusters considered within the algorithm
-     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps 
-     */    
+     *  @param  slidingFitResultMapPair the {micro, macro} pair of [cluster -> TwoDSlidingFitResult] maps
+     */
     void RemoveClusterFromContainers(const pandora::Cluster *const pClustertoRemove, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
-    
+
     float            m_minClusterLength;                      ///< The minimum length of a considered cluster
     unsigned int     m_microSlidingFitWindow;                 ///< The sliding fit window used in the fits contained within the microSlidingFitResultMap
     unsigned int     m_macroSlidingFitWindow;                 ///< The sliding fit window used in the fits contained within the macroSlidingFitResultMap
@@ -315,7 +315,7 @@ protected:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
- 
+
 inline TrackRefinementBaseAlgorithm::SortByDistanceAlongLine::SortByDistanceAlongLine(const pandora::CartesianVector &startPoint, const pandora::CartesianVector &lineDirection,
         const bool hitWidthMode) :
     m_startPoint(startPoint),
@@ -323,7 +323,7 @@ inline TrackRefinementBaseAlgorithm::SortByDistanceAlongLine::SortByDistanceAlon
     m_hitWidthMode(hitWidthMode)
 {
 }
-    
+
 } // namespace lar_content
 
 #endif // #ifndef TRACK_REFINEMENT_BASE_ALGORITHM_H
