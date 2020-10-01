@@ -19,7 +19,7 @@ namespace lar_content
 {
 
 TrackRefinementBaseAlgorithm::TrackRefinementBaseAlgorithm() :
-    m_minClusterLength(50.f),
+    m_minClusterLength(15.f),
     m_microSlidingFitWindow(20),
     m_macroSlidingFitWindow(1000),
     m_stableRegionClusterFraction(0.05f),
@@ -30,7 +30,7 @@ TrackRefinementBaseAlgorithm::TrackRefinementBaseAlgorithm() :
     m_maxHitSeparationForConnectedCluster(4.f),
     m_maxTrackGaps(3),
     m_lineSegmentLength(3.f),
-    m_hitWidthMode(true)
+    m_hitWidthMode(false)
 { 
 }
 

@@ -25,7 +25,7 @@ TrackMergeRefinementAlgorithm::TrackMergeRefinementAlgorithm() :
     m_minDirectionDeviationCosAngle(0.99f),
     m_maxPredictedMergePointOffset(5.f),
     m_distanceToLine(0.35f),    
-    m_boundaryTolerance(2.f)  
+    m_boundaryTolerance(2.f)
 {
 }
 
