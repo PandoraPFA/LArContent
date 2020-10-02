@@ -46,7 +46,16 @@ template<typename T>
 MvaPfoCharacterisationAlgorithm<T>::~MvaPfoCharacterisationAlgorithm()
 {
     if (m_writeToTree)
-        PandoraMonitoringApi::SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE");
+    {
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
+        }
+        catch (const StatusCodeException &)
+        {
+            std::cout << "MvaPfoCharacterisationAlgorithm: Unable to write tree " << m_treeName << " to file " << m_fileName << std::endl;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -317,10 +326,10 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
 
     if (m_writeToTree)
     {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputTree", m_treeName)); // added by Mousam
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputFile", m_fileName)); //added by Mousam
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+            "OutputTree", m_treeName)); // added by Mousam
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+            "OutputFile", m_fileName)); //added by Mousam
     }
 
     if (m_useThreeDInformation)
