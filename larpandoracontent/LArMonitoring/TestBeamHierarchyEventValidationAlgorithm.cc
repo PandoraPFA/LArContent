@@ -39,15 +39,11 @@ void TestBeamHierarchyEventValidationAlgorithm::FillValidationInfo(const MCParti
 {
     if (pMCParticleList && pCaloHitList)
     {
-        LArMCParticleHelper::PrimaryParameters parameters;
-
-        parameters.m_selectInputHits = m_selectInputHits;
-        parameters.m_minHitSharingFraction = m_minHitSharingFraction;
-        parameters.m_maxPhotonPropagation = m_maxPhotonPropagation;
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsLeadingBeamParticle, targetMCParticleToHitsMap);
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
+        LArMCParticleHelper::SelectReconstructableTestBeamHierarchyMCParticles(pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsLeadingBeamParticle, targetMCParticleToHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
 
+        LArMCParticleHelper::PrimaryParameters parameters(m_primaryParameters);
         parameters.m_minPrimaryGoodHits = 0;
         parameters.m_minHitsForGoodView = 0;
         parameters.m_minHitSharingFraction = 0.f;
@@ -81,7 +77,7 @@ void TestBeamHierarchyEventValidationAlgorithm::FillValidationInfo(const MCParti
         }
 
         LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-        LArMCParticleHelper::GetTestBeamHierarchyPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
+        LArMCParticleHelper::GetTestBeamHierarchyPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, m_primaryParameters.m_foldBackHierarchy);
         validationInfo.SetPfoToHitsMap(pfoToHitsMap);
     }
 
@@ -112,7 +108,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
     for (const Pfo *const pPrimaryPfo : primaryPfoVector)
     {
         pfoToIdMap.insert(PfoToIdMap::value_type(pPrimaryPfo, ++pfoIndex));
-        const Pfo *const pRecoTestBeam(LArPfoHelper::IsTestBeamFinalState(pPrimaryPfo) ? LArPfoHelper::GetParentPfo(pPrimaryPfo) : nullptr); 
+        const Pfo *const pRecoTestBeam(LArPfoHelper::IsTestBeamFinalState(pPrimaryPfo) ? LArPfoHelper::GetParentPfo(pPrimaryPfo) : nullptr);
 
         if (pRecoTestBeam && !testBeamPfoToIdMap.count(pRecoTestBeam))
             testBeamPfoToIdMap.insert(PfoToIdMap::value_type(pRecoTestBeam, ++testBeamPfoIndex));
@@ -490,7 +486,7 @@ void TestBeamHierarchyEventValidationAlgorithm::ProcessOutput(const ValidationIn
             mcPrimaryE.clear(); mcPrimaryPX.clear(); mcPrimaryPY.clear(); mcPrimaryPZ.clear();
             mcPrimaryVtxX.clear(); mcPrimaryVtxY.clear(); mcPrimaryVtxZ.clear(); mcPrimaryEndX.clear(); mcPrimaryEndY.clear(); mcPrimaryEndZ.clear();
             nPrimaryMatchedPfos.clear(); nPrimaryMatchedTBHierarchyPfos.clear(); nPrimaryMatchedCRPfos.clear();
-            bestMatchPfoId.clear(); bestMatchPfoPdg.clear(); bestMatchPfoTier.clear(); bestMatchPfoIsTestBeam.clear(); bestMatchPfoIsTestBeamHierarchy.clear(); 
+            bestMatchPfoId.clear(); bestMatchPfoPdg.clear(); bestMatchPfoTier.clear(); bestMatchPfoIsTestBeam.clear(); bestMatchPfoIsTestBeamHierarchy.clear();
             bestMatchPfoRecoTBId.clear(); bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear();
             bestMatchPfoNSharedHitsTotal.clear(); bestMatchPfoNSharedHitsU.clear(); bestMatchPfoNSharedHitsV.clear(); bestMatchPfoNSharedHitsW.clear();
             bestMatchPfoX0.clear();

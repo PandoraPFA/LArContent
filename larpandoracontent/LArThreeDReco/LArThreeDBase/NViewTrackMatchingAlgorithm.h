@@ -1,18 +1,16 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h
  *
- *  @brief  Header file for the three dimensional tracks algorithm base class.
+ *  @brief  Header file for the n view track matching algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_TRACKS_BASE_ALGORITHM_H
-#define LAR_THREE_D_TRACKS_BASE_ALGORITHM_H 1
+#ifndef LAR_N_VIEW_TRACK_MATCHING_ALGORITHM_H
+#define LAR_N_VIEW_TRACK_MATCHING_ALGORITHM_H 1
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
-
-#include <unordered_map>
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
 
 namespace lar_content
 {
@@ -22,21 +20,21 @@ typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointVecto
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDTransverseTracksAlgorithm class
+ *  @brief  NViewTrackMatchingAlgorithm class
  */
 template<typename T>
-class ThreeDTracksBaseAlgorithm : public ThreeDBaseAlgorithm<T>
+class NViewTrackMatchingAlgorithm : public NViewMatchingAlgorithm<T>
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ThreeDTracksBaseAlgorithm();
+    NViewTrackMatchingAlgorithm();
 
     /**
      *  @brief  Destructor
      */
-    virtual ~ThreeDTracksBaseAlgorithm();
+    virtual ~NViewTrackMatchingAlgorithm();
 
     /**
      *  @brief  Get a sliding fit result from the algorithm cache
@@ -57,7 +55,7 @@ public:
      *
      *  @param  splitPositionMap the split position map
      *
-     *  @return whether changes to the tensor have been made
+     *  @return whether changes to the overlap container have been made
      */
     virtual bool MakeClusterSplits(const SplitPositionMap &splitPositionMap);
 
@@ -85,20 +83,10 @@ public:
     virtual void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     virtual void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     virtual void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
-    virtual void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
+    virtual void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
+    virtual void SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 protected:
-    virtual void PreparationStep();
-
-    /**
-     *  @brief  Preparation step for a specific cluster list
-     *
-     *  @param  clusterList the cluster list
-     */
-    virtual void PreparationStep(pandora::ClusterList &clusterList);
-
-    virtual void TidyUp();
-
     /**
      *  @brief  Add a new sliding fit result, for the specified cluster, to the algorithm cache
      *
@@ -113,8 +101,10 @@ protected:
      */
     void RemoveFromSlidingFitCache(const pandora::Cluster *const pCluster);
 
+    virtual void TidyUp();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+private:
     unsigned int                m_slidingFitWindow;             ///< The layer window for the sliding linear fits
     TwoDSlidingFitResultMap     m_slidingFitResultMap;          ///< The sliding fit result map
 
@@ -125,11 +115,11 @@ protected:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-inline unsigned int ThreeDTracksBaseAlgorithm<T>::GetSlidingFitWindow() const
+inline unsigned int NViewTrackMatchingAlgorithm<T>::GetSlidingFitWindow() const
 {
     return m_slidingFitWindow;
 }
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_D_TRACKS_BASE_ALGORITHM_H
+#endif // #ifndef LAR_N_VIEW_TRACK_MATCHING_ALGORITHM_H

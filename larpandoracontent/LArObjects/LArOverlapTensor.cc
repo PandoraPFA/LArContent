@@ -36,7 +36,7 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
         ClusterList clusterListU, clusterListV, clusterListW;
         this->GetConnectedElements(iterU->first, ignoreUnavailable, tempElementList, clusterListU, clusterListV, clusterListW);
 
-        const Cluster *pClusterU(NULL), *pClusterV(NULL), *pClusterW(NULL);
+        const Cluster *pClusterU(nullptr), *pClusterV(nullptr), *pClusterW(nullptr);
         if (!this->DefaultAmbiguityFunction(clusterListU, clusterListV, clusterListW, pClusterU, pClusterV, pClusterW))
             continue;
 
@@ -44,7 +44,7 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
         if (iterU->first != pClusterU)
             continue;
 
-        if ((NULL == pClusterU) || (NULL == pClusterV) || (NULL == pClusterW))
+        if (!pClusterU || !pClusterV || !pClusterW)
             continue;
 
         typename OverlapMatrix::const_iterator iterV = iterU->second.find(pClusterV);

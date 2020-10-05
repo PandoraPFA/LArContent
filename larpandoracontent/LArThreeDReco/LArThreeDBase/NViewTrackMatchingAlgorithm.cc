@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional tracks tracks algorithm base class.
+ *  @brief  Implementation of the n view track matching algorithm class.
  *
  *  $Log: $
  */
@@ -13,8 +13,11 @@
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDTracksBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 using namespace pandora;
 
@@ -22,7 +25,7 @@ namespace lar_content
 {
 
 template<typename T>
-ThreeDTracksBaseAlgorithm<T>::ThreeDTracksBaseAlgorithm() :
+NViewTrackMatchingAlgorithm<T>::NViewTrackMatchingAlgorithm() :
     m_slidingFitWindow(20),
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f)
@@ -32,14 +35,14 @@ ThreeDTracksBaseAlgorithm<T>::ThreeDTracksBaseAlgorithm() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-ThreeDTracksBaseAlgorithm<T>::~ThreeDTracksBaseAlgorithm()
+NViewTrackMatchingAlgorithm<T>::~NViewTrackMatchingAlgorithm()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitResult(const Cluster *const pCluster) const
+const TwoDSlidingFitResult &NViewTrackMatchingAlgorithm<T>::GetCachedSlidingFitResult(const Cluster *const pCluster) const
 {
     TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
 
@@ -49,10 +52,11 @@ const TwoDSlidingFitResult &ThreeDTracksBaseAlgorithm<T>::GetCachedSlidingFitRes
     return iter->second;
 }
 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPositionMap)
+template<typename T>
+bool NViewTrackMatchingAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPositionMap)
 {
     bool changesMade(false);
 
@@ -63,22 +67,22 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
     for (const Cluster *pCurrentCluster : splitClusters)
     {
         CartesianPointVector splitPositions(splitPositionMap.at(pCurrentCluster));
-        std::sort(splitPositions.begin(), splitPositions.end(), ThreeDTracksBaseAlgorithm::SortSplitPositions);
+        std::sort(splitPositions.begin(), splitPositions.end(), NViewTrackMatchingAlgorithm<T>::SortSplitPositions);
 
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCurrentCluster));
-        const std::string clusterListName((TPC_VIEW_U == hitType) ? this->GetClusterListNameU() : (TPC_VIEW_V == hitType) ? this->GetClusterListNameV() : this->GetClusterListNameW());
+        const std::string &clusterListName(this->GetClusterListName(hitType));
 
         if (!((TPC_VIEW_U == hitType) || (TPC_VIEW_V == hitType) || (TPC_VIEW_W == hitType)))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
 
-        for (CartesianPointVector::const_iterator sIter = splitPositions.begin(), sIterEnd = splitPositions.end(); sIter != sIterEnd; ++sIter)
+        for (const CartesianVector &splitPosition : splitPositions)
         {
-            const Cluster *pLowXCluster(NULL), *pHighXCluster(NULL);
+            const Cluster *pLowXCluster(nullptr), *pHighXCluster(nullptr);
             this->UpdateUponDeletion(pCurrentCluster);
 
-            if (this->MakeClusterSplit(*sIter, pCurrentCluster, pLowXCluster, pHighXCluster))
+            if (this->MakeClusterSplit(splitPosition, pCurrentCluster, pLowXCluster, pHighXCluster))
             {
                 changesMade = true;
                 this->UpdateForNewCluster(pLowXCluster);
@@ -97,8 +101,8 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &spl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster,
+template<typename T>
+bool NViewTrackMatchingAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster,
     const Cluster *&pHighXCluster) const
 {
     CartesianVector lowXEnd(0.f, 0.f, 0.f), highXEnd(0.f, 0.f, 0.f);
@@ -122,19 +126,18 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
     const ClusterList clusterList(1, pCurrentCluster);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, originalListName, fragmentListName));
 
-    pLowXCluster = NULL;
-    pHighXCluster = NULL;
+    pLowXCluster = nullptr;
+    pHighXCluster = nullptr;
 
-    for (CaloHitList::const_iterator hIter = caloHitList.begin(), hIterEnd = caloHitList.end(); hIter != hIterEnd; ++hIter)
+    for (const CaloHit *const pCaloHit : caloHitList)
     {
-        const CaloHit *const pCaloHit = *hIter;
         const CartesianVector unitVector((pCaloHit->GetPositionVector() - splitPosition).GetUnitVector());
-
         const float dotProductLowX(unitVector.GetDotProduct(lowXUnitVector));
         const float dotProductHighX(unitVector.GetDotProduct(highXUnitVector));
+
         const Cluster *&pClusterToModify((dotProductLowX > dotProductHighX) ? pLowXCluster : pHighXCluster);
 
-        if (NULL == pClusterToModify)
+        if (!pClusterToModify)
         {
             PandoraContentApi::Cluster::Parameters parameters;
             parameters.m_caloHitList.push_back(pCaloHit);
@@ -146,7 +149,7 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
         }
     }
 
-    if ((NULL == pLowXCluster) || (NULL == pHighXCluster))
+    if (!pLowXCluster || !pHighXCluster)
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*this, originalListName, fragmentListName));
         return false;
@@ -158,8 +161,8 @@ bool ThreeDTracksBaseAlgorithm<T>::MakeClusterSplit(const CartesianVector &split
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
-bool ThreeDTracksBaseAlgorithm<T>::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
+template<typename T>
+bool NViewTrackMatchingAlgorithm<T>::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
 {
     return (lhs.GetX() < rhs.GetX());
 }
@@ -167,13 +170,13 @@ bool ThreeDTracksBaseAlgorithm<T>::SortSplitPositions(const pandora::CartesianVe
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
+void NViewTrackMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     try
     {
         this->AddToSlidingFitCache(pNewCluster);
     }
-    catch (StatusCodeException &statusCodeException)
+    catch (const StatusCodeException &statusCodeException)
     {
         if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
             throw statusCodeException;
@@ -181,27 +184,25 @@ void ThreeDTracksBaseAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNew
         return;
     }
 
-    ThreeDBaseAlgorithm<T>::UpdateForNewCluster(pNewCluster);
+    NViewMatchingAlgorithm<T>::UpdateForNewCluster(pNewCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
+void NViewTrackMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     this->RemoveFromSlidingFitCache(pDeletedCluster);
-    ThreeDBaseAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
+    NViewMatchingAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void ThreeDTracksBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
+void NViewTrackMatchingAlgorithm<T>::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
-    for (ClusterList::const_iterator iter = pInputClusterList->begin(), iterEnd = pInputClusterList->end(); iter != iterEnd; ++iter)
+    for (const Cluster *const pCluster : *pInputClusterList)
     {
-        const Cluster *const pCluster = *iter;
-
         if (!pCluster->IsAvailable())
             continue;
 
@@ -218,46 +219,18 @@ void ThreeDTracksBaseAlgorithm<T>::SelectInputClusters(const ClusterList *const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
+void NViewTrackMatchingAlgorithm<T>::PrepareInputClusters(ClusterList &preparedClusterList)
 {
-    // TODO Correct these placeholder parameters
-    pfoParameters.m_particleId = MU_MINUS; // Track
-    pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-    pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-    pfoParameters.m_energy = 0.f;
-    pfoParameters.m_momentum = CartesianVector(0.f, 0.f, 0.f);
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListU.begin(), protoParticle.m_clusterListU.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListV.begin(), protoParticle.m_clusterListV.end());
-    pfoParameters.m_clusterList.insert(pfoParameters.m_clusterList.end(), protoParticle.m_clusterListW.begin(), protoParticle.m_clusterListW.end());
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::PreparationStep()
-{
-    this->PreparationStep(this->m_clusterListU);
-    this->PreparationStep(this->m_clusterListV);
-    this->PreparationStep(this->m_clusterListW);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::PreparationStep(ClusterList &clusterList)
-{
-    for (ClusterList::iterator iter = clusterList.begin(), iterEnd = clusterList.end(); iter != iterEnd; )
+    for (ClusterList::iterator iter = preparedClusterList.begin(), iterEnd = preparedClusterList.end(); iter != iterEnd; )
     {
-        const Cluster *const pCluster(*iter);
-
         try
         {
-            this->AddToSlidingFitCache(pCluster);
+            this->AddToSlidingFitCache(*iter);
             ++iter;
         }
-        catch (StatusCodeException &statusCodeException)
+        catch (const StatusCodeException &statusCodeException)
         {
-            clusterList.erase(iter++);
+            preparedClusterList.erase(iter++);
 
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
@@ -268,16 +241,15 @@ void ThreeDTracksBaseAlgorithm<T>::PreparationStep(ClusterList &clusterList)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::TidyUp()
+void NViewTrackMatchingAlgorithm<T>::SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
-    m_slidingFitResultMap.clear();
-    return ThreeDBaseAlgorithm<T>::TidyUp();
+    pfoParameters.m_particleId = MU_MINUS; // Track
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCluster)
+void NViewTrackMatchingAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCluster)
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const TwoDSlidingFitResult slidingFitResult(pCluster, m_slidingFitWindow, slidingFitPitch);
@@ -289,7 +261,7 @@ void ThreeDTracksBaseAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void ThreeDTracksBaseAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *const pCluster)
+void NViewTrackMatchingAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *const pCluster)
 {
     TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pCluster);
 
@@ -300,7 +272,16 @@ void ThreeDTracksBaseAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *cons
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-StatusCode ThreeDTracksBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
+void NViewTrackMatchingAlgorithm<T>::TidyUp()
+{
+    m_slidingFitResultMap.clear();
+    return NViewMatchingAlgorithm<T>::TidyUp();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+StatusCode NViewTrackMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
@@ -313,11 +294,16 @@ StatusCode ThreeDTracksBaseAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandl
         "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
-    return ThreeDBaseAlgorithm<T>::ReadSettings(xmlHandle);
+    return NViewMatchingAlgorithm<T>::ReadSettings(xmlHandle);
 }
 
-template class ThreeDTracksBaseAlgorithm<TransverseOverlapResult>;
-template class ThreeDTracksBaseAlgorithm<LongitudinalOverlapResult>;
-template class ThreeDTracksBaseAlgorithm<FragmentOverlapResult>;
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> >;
+template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> >;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<float> >;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> >;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult> >;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult> >;
 
 } // namespace lar_content

@@ -39,15 +39,11 @@ void NeutrinoEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
 {
     if (pMCParticleList && pCaloHitList)
     {
-        LArMCParticleHelper::PrimaryParameters parameters;
-
-        parameters.m_selectInputHits = m_selectInputHits;
-        parameters.m_minHitSharingFraction = m_minHitSharingFraction;
-        parameters.m_maxPhotonPropagation = m_maxPhotonPropagation;
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
-        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
 
+        LArMCParticleHelper::PrimaryParameters parameters(m_primaryParameters);
         parameters.m_minPrimaryGoodHits = 0;
         parameters.m_minHitsForGoodView = 0;
         parameters.m_minHitSharingFraction = 0.f;
@@ -72,7 +68,7 @@ void NeutrinoEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
         }
 
         LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap);
+        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, m_primaryParameters.m_foldBackHierarchy);
 
         validationInfo.SetPfoToHitsMap(pfoToHitsMap);
     }

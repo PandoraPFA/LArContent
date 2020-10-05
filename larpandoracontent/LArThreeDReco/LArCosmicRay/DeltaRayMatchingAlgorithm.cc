@@ -437,7 +437,7 @@ void DeltaRayMatchingAlgorithm::CreateParticles(const ParticleList &particleList
 bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster1, const Cluster *const pCluster2,
     const Cluster *const pCluster3) const
 {
-    if (NULL == pCluster1 && NULL == pCluster2 && NULL == pCluster3)
+    if (nullptr == pCluster1 && nullptr == pCluster2 && nullptr == pCluster3)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     // First step: Check X overlap
@@ -445,14 +445,14 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
     float xMin2(-std::numeric_limits<float>::max()), xMax2(+std::numeric_limits<float>::max());
     float xMin3(-std::numeric_limits<float>::max()), xMax3(+std::numeric_limits<float>::max());
 
-    if (NULL != pCluster1)
-        LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
+    if (nullptr != pCluster1)
+        pCluster1->GetClusterSpanX(xMin1, xMax1);
 
-    if (NULL != pCluster2)
-        LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
+    if (nullptr != pCluster2)
+        pCluster2->GetClusterSpanX(xMin2, xMax2);
 
-    if (NULL != pCluster3)
-        LArClusterHelper::GetClusterSpanX(pCluster3, xMin3, xMax3);
+    if (nullptr != pCluster3)
+        pCluster3->GetClusterSpanX(xMin3, xMax3);
 
     const float xPitch(0.5 * m_xOverlapWindow);
     const float xMin(std::max(xMin1, std::max(xMin2, xMin3)) - xPitch);
@@ -462,7 +462,7 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
     if (xOverlap < std::numeric_limits<float>::epsilon())
         return false;
 
-    if (NULL == pCluster1 || NULL == pCluster2 || NULL == pCluster3)
+    if (nullptr == pCluster1 || nullptr == pCluster2 || nullptr == pCluster3)
         return true;
 
     // Second step: Check 3D matching
@@ -484,9 +484,9 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
         try
         {
             float zMin1(0.f), zMin2(0.f), zMin3(0.f), zMax1(0.f), zMax2(0.f), zMax3(0.f);
-            LArClusterHelper::GetClusterSpanZ(pCluster1, xmin, xmax, zMin1, zMax1);
-            LArClusterHelper::GetClusterSpanZ(pCluster2, xmin, xmax, zMin2, zMax2);
-            LArClusterHelper::GetClusterSpanZ(pCluster3, xmin, xmax, zMin3, zMax3);
+            pCluster1->GetClusterSpanZ(xmin, xmax, zMin1, zMax1);
+            pCluster2->GetClusterSpanZ(xmin, xmax, zMin2, zMax2);
+            pCluster3->GetClusterSpanZ(xmin, xmax, zMin3, zMax3);
 
             const float z1(0.5f * (zMin1 + zMax1));
             const float z2(0.5f * (zMin2 + zMax2));

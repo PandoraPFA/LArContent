@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.cc
  *
- *  @brief  Implementation of the three dimensional transverse tracks algorithm class.
+ *  @brief  Implementation of the three view transverse tracks algorithm class.
  *
  *  $Log: $
  */
@@ -11,14 +11,14 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
-#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-ThreeDTransverseTracksAlgorithm::ThreeDTransverseTracksAlgorithm() :
+ThreeViewTransverseTracksAlgorithm::ThreeViewTransverseTracksAlgorithm() :
     m_nMaxTensorToolRepeats(1000),
     m_maxFitSegmentIndex(50),
     m_pseudoChi2Cut(3.f),
@@ -32,18 +32,18 @@ ThreeDTransverseTracksAlgorithm::ThreeDTransverseTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
+void ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     TransverseOverlapResult overlapResult;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
     if (overlapResult.IsInitialized())
-        m_overlapTensor.SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+        this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
+StatusCode ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
     TransverseOverlapResult &overlapResult)
 {
     const TwoDSlidingFitResult &slidingFitResultU(this->GetCachedSlidingFitResult(pClusterU));
@@ -81,7 +81,7 @@ StatusCode ThreeDTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
+void ThreeViewTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
     const TwoDSlidingFitResult &slidingFitResultW, FitSegmentTensor &fitSegmentTensor) const
 {
     FitSegmentList fitSegmentListU(slidingFitResultU.GetFitSegmentList());
@@ -115,7 +115,7 @@ void ThreeDTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitRe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
+StatusCode ThreeViewTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
     const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW,
     TransverseOverlapResult &transverseOverlapResult) const
 {
@@ -185,7 +185,7 @@ StatusCode ThreeDTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegment &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor, TransverseOverlapResult &bestTransverseOverlapResult) const
+void ThreeViewTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor, TransverseOverlapResult &bestTransverseOverlapResult) const
 {
     if (fitSegmentTensor.empty())
     {
@@ -257,7 +257,7 @@ void ThreeDTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTenso
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
+void ThreeViewTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
     FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const
 {
     for (unsigned int iPermutation = 1; iPermutation < 8; ++iPermutation)
@@ -285,13 +285,13 @@ void ThreeDTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned i
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDTransverseTracksAlgorithm::ExamineTensor()
+void ThreeViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 
     for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
     {
-        if ((*iter)->Run(this, m_overlapTensor))
+        if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
             iter = m_algorithmToolVector.begin();
 
@@ -308,7 +308,7 @@ void ThreeDTransverseTracksAlgorithm::ExamineTensor()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ThreeViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
@@ -318,7 +318,7 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     {
         TransverseTensorTool *const pTransverseTensorTool(dynamic_cast<TransverseTensorTool*>(*iter));
 
-        if (NULL == pTransverseTensorTool)
+        if (!pTransverseTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
 
         m_algorithmToolVector.push_back(pTransverseTensorTool);
@@ -348,7 +348,7 @@ StatusCode ThreeDTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinSamplingPointsPerLayer", m_minSamplingPointsPerLayer));
 
-    return ThreeDTracksBaseAlgorithm<TransverseOverlapResult>::ReadSettings(xmlHandle);
+    return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

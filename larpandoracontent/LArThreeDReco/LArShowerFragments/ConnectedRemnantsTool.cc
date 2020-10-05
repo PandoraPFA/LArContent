@@ -24,7 +24,7 @@ ConnectedRemnantsTool::ConnectedRemnantsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ConnectedRemnantsTool::Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool ConnectedRemnantsTool::Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -73,9 +73,9 @@ void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor
         const Cluster *const pClusterW = clusterVectorW.front();
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.push_back(pClusterU);
-        protoParticle.m_clusterListV.push_back(pClusterV);
-        protoParticle.m_clusterListW.push_back(pClusterW);
+        protoParticle.m_clusterList.push_back(pClusterU);
+        protoParticle.m_clusterList.push_back(pClusterV);
+        protoParticle.m_clusterList.push_back(pClusterW);
         protoParticleVector.push_back(protoParticle);
 
         this->FillMergeMap(pClusterU, clusterVectorU, clusterMergeMap);

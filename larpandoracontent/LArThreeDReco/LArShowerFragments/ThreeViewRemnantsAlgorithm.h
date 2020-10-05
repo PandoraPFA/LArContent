@@ -1,19 +1,18 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeDRemnantsAlgorithm.h
+ *  @file   larpandoracontent/LArThreeDReco/LArShowerFragments/ThreeViewRemnantsAlgorithm.h
  *
- *  @brief  Header file for the three dimensional remnants algorithm class.
+ *  @brief  Header file for the three view remnants algorithm class.
  *
  *  $Log: $
  */
-#ifndef LAR_THREE_D_REMNANTS_ALGORITHM_H
-#define LAR_THREE_D_REMNANTS_ALGORITHM_H 1
+#ifndef LAR_THREE_VIEW_REMNANTS_ALGORITHM_H
+#define LAR_THREE_VIEW_REMNANTS_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
-#include "larpandoracontent/LArObjects/LArOverlapTensor.h"
-
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeDBaseAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
 namespace lar_content
 {
@@ -23,22 +22,23 @@ class RemnantTensorTool;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *  @brief  ThreeDRemnantsAlgorithm class
+ *  @brief  ThreeViewRemnantsAlgorithm class
  */
-class ThreeDRemnantsAlgorithm : public ThreeDBaseAlgorithm<float>
+class ThreeViewRemnantsAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<float> >
 {
 public:
+    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<float> > BaseAlgorithm;
+
     /**
      *  @brief  Default constructor
      */
-    ThreeDRemnantsAlgorithm();
+    ThreeViewRemnantsAlgorithm();
 
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
-    void SetPfoParameters(const ProtoParticle &protoParticle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const;
 
 private:
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
-    void ExamineTensor();
+    void ExamineOverlapContainer();
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -59,7 +59,7 @@ private:
 class RemnantTensorTool : public pandora::AlgorithmTool
 {
 public:
-    typedef ThreeDRemnantsAlgorithm::TensorType TensorType;
+    typedef ThreeViewRemnantsAlgorithm::MatchingType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
 
     /**
@@ -70,9 +70,9 @@ public:
      *
      *  @return whether changes have been made by the tool
      */
-    virtual bool Run(ThreeDRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
+    virtual bool Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_D_REMNANTS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_VIEW_REMNANTS_ALGORITHM_H

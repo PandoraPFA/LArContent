@@ -55,7 +55,7 @@ void CosmicRayTaggingMonitoringTool::FindAmbiguousPfos(const PfoList &parentCosm
     LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps({nuMCParticlesToGoodHitsMap, beamMCParticlesToGoodHitsMap, crMCParticlesToGoodHitsMap});
 
     LArMCParticleHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(parentCosmicRayPfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap);
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(parentCosmicRayPfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_parameters.m_foldBackHierarchy);
 
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
     LArMCParticleHelper::MCParticleToPfoHitSharingMap mcParticleToPfoHitSharingMap;

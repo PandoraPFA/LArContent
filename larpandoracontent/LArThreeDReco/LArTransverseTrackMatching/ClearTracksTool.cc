@@ -22,7 +22,7 @@ ClearTracksTool::ClearTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool ClearTracksTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -38,7 +38,7 @@ bool ClearTracksTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, Ten
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
+void ClearTracksTool::CreateThreeDParticles(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
     bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
@@ -60,9 +60,9 @@ void ClearTracksTool::CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *con
             continue;
 
         ProtoParticle protoParticle;
-        protoParticle.m_clusterListU.push_back(iter->GetClusterU());
-        protoParticle.m_clusterListV.push_back(iter->GetClusterV());
-        protoParticle.m_clusterListW.push_back(iter->GetClusterW());
+        protoParticle.m_clusterList.push_back(iter->GetClusterU());
+        protoParticle.m_clusterList.push_back(iter->GetClusterV());
+        protoParticle.m_clusterList.push_back(iter->GetClusterW());
         protoParticleVector.push_back(protoParticle);
     }
 

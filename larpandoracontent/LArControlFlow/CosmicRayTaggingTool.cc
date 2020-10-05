@@ -352,7 +352,7 @@ void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoT
             for (const Cluster *const pCluster : candidate.m_pPfo->GetClusterList())
             {
                 float clusterMinX(std::numeric_limits<float>::max()), clusterMaxX(-std::numeric_limits<float>::max());
-                LArClusterHelper::GetClusterSpanX(pCluster, clusterMinX, clusterMaxX);
+                pCluster->GetClusterSpanX(clusterMinX, clusterMaxX);
                 minX = std::min(clusterMinX, minX);
                 maxX = std::max(clusterMaxX, maxX);
             }
