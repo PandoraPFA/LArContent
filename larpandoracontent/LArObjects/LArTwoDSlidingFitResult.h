@@ -29,9 +29,11 @@ public:
      *  @param  pT describing the positions to be fitted
      *  @param  layerFitHalfWindow the layer fit half window
      *  @param  layerPitch the layer pitch, units cm
+     *  @param  axisDeviationLimitForHitDivision the value of the cosine of the opening angle between the principal axis and xAxis,
+     *          above which cluster hits are broken into their constituent hits - only used with cluster input
      */
     template <typename T>
-    TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch);
+    TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch, const float axisDeviationLimitForHitDivision = 0.95f);
 
     /**
      *  @brief  Constructor using specified primary axis. The orthogonal axis must be perpendicular to the primary axis.
@@ -42,10 +44,12 @@ public:
      *  @param  axisIntercept the axis intercept position
      *  @param  axisDirection the axis direction vector
      *  @param  orthoDirection the orthogonal direction vector
+     *  @param  axisDeviationLimitForHitDivision the value of the cosine of the opening angle between the principal axis and xAxis,
+     *          above which cluster hits are broken into their constituent hits - only used with cluster input
      */
     template <typename T>
     TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch, const pandora::CartesianVector &axisIntercept,
-        const pandora::CartesianVector &axisDirection, const pandora::CartesianVector &orthoDirection);
+        const pandora::CartesianVector &axisDirection, const pandora::CartesianVector &orthoDirection, const float axisDeviationLimitForHitDivision = 0.95f);
 
     /**
      *  @brief  Constructor using specified primary axis and layer fit contribution map. User is responsible for ensuring that

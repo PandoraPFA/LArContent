@@ -272,7 +272,7 @@ inline void KDTreeLinkerAlgo<DATA, DIM>::recSearch(const KDTreeNodeT<DATA, DIM> 
         for (unsigned i = 0; i < DIM; ++i)
         {
             const auto thedim = current->info.dims[i];
-            isInside *= thedim >= trackBox.dimmin[i] && thedim <= trackBox.dimmax[i];
+            isInside = isInside && thedim >= trackBox.dimmin[i] && thedim <= trackBox.dimmax[i];
         }
 
         if (isInside)
@@ -289,8 +289,8 @@ inline void KDTreeLinkerAlgo<DATA, DIM>::recSearch(const KDTreeNodeT<DATA, DIM> 
         {
             const auto regionmin = current->left->region.dimmin[i];
             const auto regionmax = current->left->region.dimmax[i];
-            isFullyContained *= (regionmin >= trackBox.dimmin[i] && regionmax <= trackBox.dimmax[i]);
-            hasIntersection *= (regionmin < trackBox.dimmax[i] && regionmax > trackBox.dimmin[i]);
+            isFullyContained = isFullyContained && (regionmin >= trackBox.dimmin[i] && regionmax <= trackBox.dimmax[i]);
+            hasIntersection  = hasIntersection  && (regionmin <  trackBox.dimmax[i] && regionmax >  trackBox.dimmin[i]);
         }
 
         if (isFullyContained)
@@ -310,8 +310,8 @@ inline void KDTreeLinkerAlgo<DATA, DIM>::recSearch(const KDTreeNodeT<DATA, DIM> 
         {
             const auto regionmin = current->right->region.dimmin[i];
             const auto regionmax = current->right->region.dimmax[i];
-            isFullyContained *= (regionmin >= trackBox.dimmin[i] && regionmax <= trackBox.dimmax[i]);
-            hasIntersection *= (regionmin < trackBox.dimmax[i] && regionmax > trackBox.dimmin[i]);
+            isFullyContained = isFullyContained && (regionmin >= trackBox.dimmin[i] && regionmax <= trackBox.dimmax[i]);
+            hasIntersection  = hasIntersection  && (regionmin <  trackBox.dimmax[i] && regionmax >  trackBox.dimmin[i]);
         }
 
         if (isFullyContained)

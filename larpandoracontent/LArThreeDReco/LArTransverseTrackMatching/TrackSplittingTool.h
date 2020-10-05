@@ -8,7 +8,7 @@
 #ifndef TRACK_SPLITTING_TOOL_H
 #define TRACK_SPLITTING_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {
@@ -24,7 +24,7 @@ public:
      */
     TrackSplittingTool();
 
-    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     /**
@@ -60,7 +60,7 @@ private:
      *  @param  overlapTensor the overlap tensor
      *  @param  splitPositionMap to receive the split position map
      */
-    void FindTracks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
+    void FindTracks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, SplitPositionMap &splitPositionMap) const;
 
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
@@ -80,7 +80,7 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  splitPositionMap to receive the split position map
      */
-    bool PassesChecks(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const bool isMinX, pandora::ClusterSet &usedClusters,
+    bool PassesChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const bool isMinX, pandora::ClusterSet &usedClusters,
         SplitPositionMap &splitPositionMap) const;
 
     /**

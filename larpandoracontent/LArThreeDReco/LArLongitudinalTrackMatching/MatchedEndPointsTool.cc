@@ -23,7 +23,7 @@ MatchedEndPointsTool::MatchedEndPointsTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool MatchedEndPointsTool::Run(ThreeDLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool MatchedEndPointsTool::Run(ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -69,9 +69,9 @@ void MatchedEndPointsTool::FindMatchedTracks(const TensorType &overlapTensor, Pr
                 continue;
 
             ProtoParticle protoParticle;
-            protoParticle.m_clusterListU.push_back(iter->GetClusterU());
-            protoParticle.m_clusterListV.push_back(iter->GetClusterV());
-            protoParticle.m_clusterListW.push_back(iter->GetClusterW());
+            protoParticle.m_clusterList.push_back(iter->GetClusterU());
+            protoParticle.m_clusterList.push_back(iter->GetClusterV());
+            protoParticle.m_clusterList.push_back(iter->GetClusterW());
             protoParticleVector.push_back(protoParticle);
 
             usedClusters.insert(iter->GetClusterU());

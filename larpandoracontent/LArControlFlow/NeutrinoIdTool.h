@@ -10,6 +10,7 @@
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
+#include "larpandoracontent/LArObjects/LArAdaBoostDecisionTree.h"
 #include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
 
 #include <functional>
@@ -20,13 +21,14 @@ namespace lar_content
 /**
  *  @brief  NeutrinoIdTool class
  *
- *          Compares the neutrino and cosmic hypotheses of all of the slices in the event. Uses an SVM to calculate the probability of each slice
+ *          Compares the neutrino and cosmic hypotheses of all of the slices in the event. Uses an MVA to calculate the probability of each slice
  *          containing a neutrino interaction. The N slices with the highest probabilities are identified as a neutrino (if sufficiently probable)
  *          all other slices are deemed cosmogenic.
  *
- *          If training mode is switched on, then the tool will write SVM training exmples to the specified output file. The events selected for
+ *          If training mode is switched on, then the tool will write MVA training exmples to the specified output file. The events selected for
  *          training must pass (user configurable) slicing quality cuts. Users may also select events based on their interaction type (nuance code).
  */
+template<typename T>
 class NeutrinoIdTool : public SliceIdBaseTool
 {
 public:
@@ -61,7 +63,7 @@ private:
         bool IsFeatureVectorAvailable() const;
 
         /**
-         *  @brief  Get the feature vector for the SVM
+         *  @brief  Get the feature vector for the MVA
          *
          *  @param  featuresVector empty feature vector to populate
          */
@@ -70,11 +72,11 @@ private:
         /**
          *  @brief  Get the probability that this slice contains a neutrino interaction
          *
-         *  @param  supportVectorMachine the SVM used to calculate the probability
+         *  @param  t the MVA used to calculate the probability
          *
          *  @return the probability that the slice contains a neutrino interaction
          */
-        float GetNeutrinoProbability(const SupportVectorMachine &supportVectorMachine) const;
+        float GetNeutrinoProbability(const T &t) const;
 
     private:
         /**
@@ -141,7 +143,7 @@ private:
         void GetPointsInSphere(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex, const float radius, pandora::CartesianPointVector &spacePointsInSphere) const;
 
         bool                               m_isAvailable;    ///< Is the feature vector available
-        LArMvaHelper::MvaFeatureVector     m_featureVector;  ///< The SVM feature vector
+        LArMvaHelper::MvaFeatureVector     m_featureVector;  ///< The MVA feature vector
         const NeutrinoIdTool *const        m_pTool;          ///< The tool that owns this
     };
 
@@ -250,9 +252,12 @@ private:
     float                 m_minProbability;               ///< Minimum probability required to classify a slice as the neutrino
     unsigned int          m_maxNeutrinos;                 ///< The maximum number of neutrinos to select in any one event
 
-    SupportVectorMachine  m_supportVectorMachine;         ///< The support vector machine
-    std::string           m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to svm files
+    T                     m_mva;                          ///< The mva
+    std::string           m_filePathEnvironmentVariable;  ///< The environment variable providing a list of paths to mva files
 };
+
+typedef NeutrinoIdTool<AdaBoostDecisionTree> BdtNeutrinoIdTool;
+typedef NeutrinoIdTool<SupportVectorMachine> SvmNeutrinoIdTool;
 
 } // namespace lar_content
 

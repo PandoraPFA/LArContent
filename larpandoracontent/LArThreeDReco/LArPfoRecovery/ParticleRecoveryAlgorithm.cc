@@ -125,7 +125,7 @@ void ParticleRecoveryAlgorithm::StandardClusterSelection(const ClusterList &inpu
             continue;
 
         float xMin(0.f), xMax(0.f);
-        LArClusterHelper::GetClusterSpanX(pCluster, xMin, xMax);
+        pCluster->GetClusterSpanX(xMin, xMax);
 
         if ((xMax - xMin) < m_minClusterXSpan)
             continue;
@@ -204,8 +204,8 @@ bool ParticleRecoveryAlgorithm::IsOverlap(const Cluster *const pCluster1, const 
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
-    LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
-    LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
+    pCluster1->GetClusterSpanX(xMin1, xMax1);
+    pCluster2->GetClusterSpanX(xMin2, xMax2);
 
     const float xSpan1(xMax1 - xMin1), xSpan2(xMax2 - xMin2);
 
@@ -335,9 +335,9 @@ bool ParticleRecoveryAlgorithm::CheckConsistency(const Cluster *const pClusterU,
 {
     // Requirements on X matching
     float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
-    LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
-    LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
-    LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
+    pClusterU->GetClusterSpanX(xMinU, xMaxU);
+    pClusterV->GetClusterSpanX(xMinV, xMaxV);
+    pClusterW->GetClusterSpanX(xMinW, xMaxW);
 
     const float xMin(std::max(xMinU, std::max(xMinV, xMinW)));
     const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)));

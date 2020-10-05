@@ -8,7 +8,7 @@
 #ifndef SHOWER_TENSOR_VISUALIZATION_TOOL_H
 #define SHOWER_TENSOR_VISUALIZATION_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeDShowersAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArShowerMatching/ThreeViewShowersAlgorithm.h"
 
 namespace lar_content
 {
@@ -24,7 +24,7 @@ public:
      */
     ShowerTensorVisualizationTool();
 
-    bool Run(ThreeDShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

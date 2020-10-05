@@ -123,7 +123,7 @@ bool ThreeDKinkBaseTool::IsALowestInX(const LArPointingCluster &pointingClusterA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDKinkBaseTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool ThreeDKinkBaseTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -137,7 +137,7 @@ bool ThreeDKinkBaseTool::Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDKinkBaseTool::GetModifications(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ModificationList &modificationList) const
+void ThreeDKinkBaseTool::GetModifications(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ModificationList &modificationList) const
 {
     ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
@@ -184,7 +184,7 @@ void ThreeDKinkBaseTool::GetModifications(ThreeDTransverseTracksAlgorithm *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeDKinkBaseTool::ApplyChanges(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const ModificationList &modificationList) const
+bool ThreeDKinkBaseTool::ApplyChanges(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const ModificationList &modificationList) const
 {
     ClusterMergeMap consolidatedMergeMap;
     SplitPositionMap consolidatedSplitMap;

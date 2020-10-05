@@ -94,8 +94,8 @@ bool CosmicRayTrackMatchingAlgorithm::MatchClusters(const Cluster *const pCluste
 
     // use X overlap
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
-    LArClusterHelper::GetClusterSpanX(pCluster1, xMin1, xMax1);
-    LArClusterHelper::GetClusterSpanX(pCluster2, xMin2, xMax2);
+    pCluster1->GetClusterSpanX(xMin1, xMax1);
+    pCluster2->GetClusterSpanX(xMin2, xMax2);
 
     const float xOverlap(std::min(xMax1,xMax2) - std::max(xMin1,xMin2));
     const float xSpan(std::max(xMax1,xMax2) - std::min(xMin1,xMin2));

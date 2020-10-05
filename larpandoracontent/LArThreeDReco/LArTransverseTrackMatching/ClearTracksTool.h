@@ -8,7 +8,7 @@
 #ifndef CLEAR_TRACKS_TOOL_H
 #define CLEAR_TRACKS_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeDTransverseTracksAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h"
 
 namespace lar_content
 {
@@ -24,7 +24,7 @@ public:
      */
     ClearTracksTool();
 
-    bool Run(ThreeDTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -36,7 +36,7 @@ private:
      *  @param  elementList the tensor element list
      *  @param  particlesMade receive boolean indicating whether particles have been made
      */
-    void CreateThreeDParticles(ThreeDTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
+    void CreateThreeDParticles(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 
     float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
     float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation

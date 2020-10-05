@@ -509,9 +509,24 @@ StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHit
 
 StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, SliceHypotheses &nuSliceHypotheses, SliceHypotheses &crSliceHypotheses) const
 {
+    SliceVector selectedSliceVector;
+    if (m_shouldRunSlicing && !m_sliceSelectionToolVector.empty())
+    {
+        SliceVector inputSliceVector(sliceVector);
+        for (SliceSelectionBaseTool *const pSliceSelectionTool : m_sliceSelectionToolVector)
+        {
+            pSliceSelectionTool->SelectSlices(this, inputSliceVector, selectedSliceVector);
+            inputSliceVector = selectedSliceVector;
+        }
+    }
+    else
+    {
+        selectedSliceVector = std::move(sliceVector);
+    }
+
     unsigned int sliceCounter(0);
 
-    for (const CaloHitList &sliceHits : sliceVector)
+    for (const CaloHitList &sliceHits : selectedSliceVector)
     {
         for (const CaloHit *const pSliceCaloHit : sliceHits)
         {
@@ -528,7 +543,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
         if (m_shouldRunNeutrinoRecoOption)
         {
             if (m_printOverallRecoStatus)
-                std::cout << "Running nu worker instance for slice " << (sliceCounter + 1) << " of " << sliceVector.size() << std::endl;
+                std::cout << "Running nu worker instance for slice " << (sliceCounter + 1) << " of " << selectedSliceVector.size() << std::endl;
 
             const PfoList *pSliceNuPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceNuWorkerInstance));
@@ -546,7 +561,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
         if (m_shouldRunCosmicRecoOption)
         {
             if (m_printOverallRecoStatus)
-                std::cout << "Running cr worker instance for slice " << (sliceCounter + 1) << " of " << sliceVector.size() << std::endl;
+                std::cout << "Running cr worker instance for slice " << (sliceCounter + 1) << " of " << selectedSliceVector.size() << std::endl;
 
             const PfoList *pSliceCRPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
@@ -563,6 +578,11 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
 
         ++sliceCounter;
     }
+
+    // ATTN: If we swapped these objects at the start, be sure to swap them back in case we ever want to use sliceVector
+    // after this function
+    if (!(m_shouldRunSlicing && !m_sliceSelectionToolVector.empty()))
+        sliceVector = std::move(selectedSliceVector);
 
     if (m_shouldRunNeutrinoRecoOption && m_shouldRunCosmicRecoOption && (nuSliceHypotheses.size() != crSliceHypotheses.size()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -621,9 +641,13 @@ StatusCode MasterAlgorithm::Reset()
 
 StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *const pCaloHit) const
 {
-    // TODO Protection to ensure that only calo hits owned by the master instance are copied?
-    // TODO Might ultimately want to create LArCaloHits in worker instances, rather than CaloHits, just as we create LArMCParticles, below
-    PandoraApi::CaloHit::Parameters parameters;
+    const LArCaloHit *const pLArCaloHit{dynamic_cast<const LArCaloHit*>(pCaloHit)};
+    if (pLArCaloHit == nullptr)
+    {
+        std::cout << "MasterAlgorithm: Could not cast CaloHit to LArCaloHit" << std::endl;
+        return STATUS_CODE_INVALID_PARAMETER;
+    }
+    LArCaloHitParameters parameters;
     parameters.m_positionVector = pCaloHit->GetPositionVector();
     parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
     parameters.m_cellNormalVector = pCaloHit->GetCellNormalVector();
@@ -645,18 +669,21 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
     // ATTN Parent of calo hit in worker is corresponding calo hit in master
     parameters.m_pParentAddress = static_cast<const void*>(pCaloHit);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters));
+    parameters.m_larTPCVolumeId = pLArCaloHit->GetLArTPCVolumeId();
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
     if (m_passMCParticlesToWorkerInstances)
     {
         MCParticleVector mcParticleVector;
-        for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(weightMapEntry.first);
+        for (const auto &weightMapEntry : pLArCaloHit->GetMCParticleWeightMap())
+            mcParticleVector.push_back(weightMapEntry.first);
         std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
         for (const MCParticle *const pMCParticle : mcParticleVector)
         {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(*pPandora, pCaloHit,
-                pMCParticle, pCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::SetCaloHitToMCParticleRelationship(
+                *pPandora, pLArCaloHit, pMCParticle, pLArCaloHit->GetMCParticleWeightMap().at(pMCParticle)));
         }
     }
 
@@ -1061,6 +1088,19 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         pExternalParameters = dynamic_cast<ExternalSteeringParameters*>(this->GetExternalParameters());
         if (!pExternalParameters) return STATUS_CODE_FAILURE;
+    }
+
+    {
+        AlgorithmToolVector algorithmToolVector;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "SliceSelectionTools",
+            algorithmToolVector));
+
+        for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
+        {
+            SliceSelectionBaseTool *const pSliceSelectionTool(dynamic_cast<SliceSelectionBaseTool*>(pAlgorithmTool));
+            if (!pSliceSelectionTool) return STATUS_CODE_INVALID_PARAMETER;
+            m_sliceSelectionToolVector.push_back(pSliceSelectionTool);
+        }
     }
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
