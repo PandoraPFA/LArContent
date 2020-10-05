@@ -173,12 +173,12 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
                 maxDirection = pointingCluster.GetOuterVertex().GetDirection();
             }
             else
-            {
-                LArClusterHelper::GetExtremalCoordinates(pCluster, minPosition, maxPosition);
+	    {
+	        LArClusterHelper::GetExtremalCoordinates(pCluster, minPosition, maxPosition);
                 minDirection = (maxPosition - minPosition).GetUnitVector();
                 maxDirection = (minPosition - maxPosition).GetUnitVector();
-            }
-
+	    }
+	    
             if ((maxPosition - minPosition).GetMagnitudeSquared() < std::numeric_limits<float>::epsilon())
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
@@ -219,14 +219,14 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
         catch(StatusCodeException &statusCodeException)
         {
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
-                throw statusCodeException;
-
+	      throw statusCodeException;
+	    
             continue;
         }
     }
 
     if (!(foundVtx && foundEnd))
-        return;
+      return;
 
     this->SetParticleParameters(vtxPosition, vtxDirection, pPfo);
 }

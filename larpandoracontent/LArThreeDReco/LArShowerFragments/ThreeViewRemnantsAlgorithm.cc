@@ -50,9 +50,9 @@ void ThreeViewRemnantsAlgorithm::CalculateOverlapResult(const Cluster *const pCl
 {
     // Requirements on X matching
     float xMinU(0.f), xMinV(0.f), xMinW(0.f), xMaxU(0.f), xMaxV(0.f), xMaxW(0.f);
-    LArClusterHelper::GetClusterSpanX(pClusterU, xMinU, xMaxU);
-    LArClusterHelper::GetClusterSpanX(pClusterV, xMinV, xMaxV);
-    LArClusterHelper::GetClusterSpanX(pClusterW, xMinW, xMaxW);
+    pClusterU->GetClusterSpanX(xMinU, xMaxU);
+    pClusterV->GetClusterSpanX(xMinV, xMaxV);
+    pClusterW->GetClusterSpanX(xMinW, xMaxW);
 
     const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - m_xOverlapWindow);
     const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + m_xOverlapWindow);
