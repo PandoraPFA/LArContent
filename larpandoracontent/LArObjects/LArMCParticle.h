@@ -28,7 +28,7 @@ class LArMCParticleParameters : public object_creation::MCParticle::Parameters
 {
 public:
     pandora::InputInt                          m_nuanceCode;        ///< The nuance code
-    std::vector<pandora::InputCartesianVector> m_mcStepPositions;    ///< The positions of the geant4 steps
+    std::vector<pandora::InputCartesianVector> m_mcStepPositions;   ///< The positions of the geant4 steps
     std::vector<pandora::InputCartesianVector> m_mcStepMomentas;    ///< The momenta of the geant4 steps
 };
 
@@ -56,14 +56,14 @@ public:
 
     /**
      *  @brief  Get the position of the geant4 steps
-     * 
+     *
      *  @return vector of the positions
      */
     std::vector<pandora::CartesianVector> GetMCStepPositions() const;
 
     /**
      *  @brief  Get the momenta of the geant4 steps
-     * 
+     *
      *  @return vector of the momenta
      */
     std::vector<pandora::CartesianVector> GetMCStepMomentas() const;
@@ -191,7 +191,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nMCStepPositions));
         for (int i = 0; i < nMCStepPositions; ++i)
-        {   
+        {
             pandora::CartesianVector mcStepPosition(0.0,0.0,0.0);
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(mcStepPosition));
             mcStepPositions.push_back(pandora::InputCartesianVector(mcStepPosition));
@@ -223,7 +223,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NumberOfMCStepMomentas", nMCStepMomentas));
         for (int i = 0; i < nMCStepMomentas; ++i)
         {
-            pandora::CartesianVector mcStepMomenta(0.0,0.0,0.0); 
+            pandora::CartesianVector mcStepMomenta(0.0,0.0,0.0);
             std::stringstream mcStepMomentaName;
             mcStepMomentaName << "MCStepMomenta" << i;
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable(mcStepMomentaName.str(), mcStepMomenta));
@@ -266,7 +266,7 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
         pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter&>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArMCParticle->GetNuanceCode()));
 
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nMCStepPositions)); 
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nMCStepPositions));
         for (auto const &mcStepPosition : mcStepPositions)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(mcStepPosition));
