@@ -196,7 +196,9 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster* const pSeedCl
     {
         const Cluster *const pTargetCluster = *tIter;
 
-        const std::set daughterVolumeIntersection(LArGeometryHelper::GetCommonDaughterVolumes(pSeedCluster, pTargetCluster));
+        UIntSet daughterVolumeIntersection;
+        LArGeometryHelper::GetCommonDaughterVolumes(pSeedCluster, pTargetCluster, daughterVolumeIntersection);
+
         if (daughterVolumeIntersection.empty())
             continue;
 
