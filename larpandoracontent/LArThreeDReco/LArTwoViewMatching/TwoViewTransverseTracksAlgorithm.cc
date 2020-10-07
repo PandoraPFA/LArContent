@@ -52,8 +52,9 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1,
     const Cluster *const pCluster2, TwoViewTransverseOverlapResult &overlapResult)
 {
-    const std::set daughterVolumeIntersection(LArGeometryHelper::GetCommonDaughterVolumes(pCluster1, pCluster2));
-    
+    UIntSet daughterVolumeIntersection;
+    LArGeometryHelper::GetCommonDaughterVolumes(pCluster1, pCluster2, daughterVolumeIntersection);
+
     if (daughterVolumeIntersection.empty())
         return STATUS_CODE_NOT_FOUND;
     

@@ -588,9 +588,8 @@ void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-std::set<unsigned int> LArClusterHelper::GetDaughterVolumeIDs(const Cluster *const pCluster)
+void LArClusterHelper::GetDaughterVolumeIDs(const Cluster *const pCluster, UIntSet &daughterVolumeIds)
 {
-    std::set<unsigned int> daughterVolumeIds;
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
     for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
@@ -604,8 +603,6 @@ std::set<unsigned int> LArClusterHelper::GetDaughterVolumeIDs(const Cluster *con
                 daughterVolumeIds.insert(pLArCaloHit->GetDaughterVolumeId());
         }
     }
-    
-    return daughterVolumeIds;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
