@@ -28,6 +28,9 @@ class TwoDSlidingFitResult;
 class LArGeometryHelper
 {
 public:
+
+    typedef std::set<unsigned int> UIntSet;
+
     /**
      *  @brief  Merge two views (U,V) to give a third view (Z).
      *
@@ -200,10 +203,11 @@ public:
     /**
      *  @brief  Return the set of common daughter volumes between two 2D clusters
      *
-     *  @param  Cluster 1
-     *  @param  Cluster 2
+     *  @param  intersect the set of shared daughter volumes
+     *  @param  pCluster1 the first cluster
+     *  @param  pCluster2 the second cluster
      */
-    static std::set<unsigned int> GetCommonDaughterVolumes (const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
+    static void GetCommonDaughterVolumes (const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, UIntSet &intersect);
  
     /**
      *  @brief  Whether a 2D test point lies in a registered gap with the associated hit type

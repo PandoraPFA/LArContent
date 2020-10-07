@@ -97,7 +97,8 @@ void CosmicRayBaseMatchingAlgorithm::MatchClusters(const ClusterVector &clusterV
         {
             if (this->MatchClusters(pCluster1, pCluster2))
             {
-                const std::set daughterVolumeIntersection(LArGeometryHelper::GetCommonDaughterVolumes(pCluster1, pCluster2));
+                UIntSet daughterVolumeIntersection;
+                LArGeometryHelper::GetCommonDaughterVolumes(pCluster1, pCluster2, daughterVolumeIntersection);
 
                 if (!daughterVolumeIntersection.empty())
                     matchedClusters12[pCluster1].push_back(pCluster2);

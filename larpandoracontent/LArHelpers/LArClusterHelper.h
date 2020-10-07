@@ -19,6 +19,9 @@ namespace lar_content
 class LArClusterHelper
 {
 public:
+
+    typedef std::set<unsigned int> UIntSet;
+
     /**
      *  @brief  Get the hit type associated with a two dimensional cluster
      *
@@ -257,11 +260,12 @@ public:
     /**
      *  @brief  Get the set of the daughter volumes that contains the cluster
      *
+     *  @param  daughterVolumeIds set of daughter volume Ids pCluster lives in
      *  @param  pCluster1 address of the cluster
      *
      *  @return the set of daughter volumes
      */
-    static std::set<unsigned int> GetDaughterVolumeIDs(const pandora::Cluster *const pCluster);
+    static void GetDaughterVolumeIDs(const pandora::Cluster *const pCluster, UIntSet &daughterVolumeIds);
 
     /**
      *  @brief  Get average Z positions of the calo hits in a cluster in range xmin to xmax
