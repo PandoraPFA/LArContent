@@ -74,6 +74,12 @@ public:
     {
     public:
         /**
+         *  @brief  Constructor to init ProtoHit.
+         *
+         */
+        ProtoHit();
+
+        /**
          *  @brief  Constructor
          *
          *  @param  pParentCaloHit2D the address of the parent 2D calo hit
@@ -88,11 +94,25 @@ public:
         const pandora::CaloHit *GetParentCaloHit2D() const;
 
         /**
+         *  @brief  Whether the proto hit has been initialised
+         *
+         *  @return boolean
+         */
+        bool IsInitialised() const;
+
+        /**
          *  @brief  Whether the proto hit position is set
          *
          *  @return boolean
          */
         bool IsPositionSet() const;
+
+        /**
+         *  @brief  Whether the proto hit was generated using interpolation.
+         *
+         *  @return boolean
+         */
+        bool IsInterpolated() const;
 
         /**
          *  @brief  Get the output 3D position
@@ -146,15 +166,29 @@ public:
         void SetPosition3D(const pandora::CartesianVector &position3D, const double chi2);
 
         /**
+         *  @brief  Set the protohit as an interpolated hit or not.
+         *
+         *  @param  if the hit is interpolated
+         */
+        void SetInterpolated(const bool interpolated);
+
+        /**
          *  @brief  Add a trajectory sample
          *
          *  @param  the trajectory sample
          */
         void AddTrajectorySample(const TrajectorySample &trajectorySample);
 
+        /**
+         * @brief  Equality operator for a ProtoHit, compares position and parent hit.
+         */
+        bool operator==(const ProtoHit &other) const;
+
     private:
         const pandora::CaloHit     *m_pParentCaloHit2D;         ///< The address of the parent 2D calo hit
+        bool                        m_isInitialised;            ///< Whether the ProtoHit has been initialised
         bool                        m_isPositionSet;            ///< Whether the output 3D position has been set
+        bool                        m_isInterpolated;           ///< Whether the 3D position was built with interpolation.
         pandora::CartesianVector    m_position3D;               ///< The output 3D position
         double                      m_chi2;                     ///< The output chi squared value
         TrajectorySampleVector      m_trajectorySampleVector;   ///< The trajectory sample vector
@@ -281,6 +315,7 @@ private:
     unsigned int            m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
     double                  m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
     double                  m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
+    double                  m_interpolationCutOff;      ///< Max distance for a point to be interpolated from.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -316,9 +351,23 @@ inline double ThreeDHitCreationAlgorithm::TrajectorySample::GetSigma() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit() :
+    m_pParentCaloHit2D(nullptr),
+    m_isInitialised(false),
+    m_isPositionSet(false),
+    m_isInterpolated(false),
+    m_position3D(0.f, 0.f, 0.f),
+    m_chi2(std::numeric_limits<double>::max())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *const pParentCaloHit2D) :
     m_pParentCaloHit2D(pParentCaloHit2D),
+    m_isInitialised(true),
     m_isPositionSet(false),
+    m_isInterpolated(false),
     m_position3D(0.f, 0.f, 0.f),
     m_chi2(std::numeric_limits<double>::max())
 {
@@ -328,7 +377,7 @@ inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *co
 
 inline const pandora::CaloHit *ThreeDHitCreationAlgorithm::ProtoHit::GetParentCaloHit2D() const
 {
-    return m_pParentCaloHit2D;
+    return m_pParentCaloHit2D; // TODO: I've now basically changed this by allowing nullptr. Should check its usage.
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -336,6 +385,20 @@ inline const pandora::CaloHit *ThreeDHitCreationAlgorithm::ProtoHit::GetParentCa
 inline bool ThreeDHitCreationAlgorithm::ProtoHit::IsPositionSet() const
 {
     return m_isPositionSet;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool ThreeDHitCreationAlgorithm::ProtoHit::IsInitialised() const
+{
+    return m_isInitialised;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool ThreeDHitCreationAlgorithm::ProtoHit::IsInterpolated() const
+{
+    return IsPositionSet() && m_isInterpolated;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -356,9 +419,23 @@ inline void ThreeDHitCreationAlgorithm::ProtoHit::SetPosition3D(const pandora::C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline void ThreeDHitCreationAlgorithm::ProtoHit::SetInterpolated(const bool interpolated)
+{
+    m_isInterpolated = interpolated;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline void ThreeDHitCreationAlgorithm::ProtoHit::AddTrajectorySample(const TrajectorySample &trajectorySample)
 {
     m_trajectorySampleVector.push_back(trajectorySample);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool ThreeDHitCreationAlgorithm::ProtoHit::operator==(const ProtoHit &other) const
+{
+    return this->m_pParentCaloHit2D == other.GetParentCaloHit2D() && this->m_position3D == other.GetPosition3D();
 }
 
 } // namespace lar_content

@@ -30,7 +30,8 @@ ThreeDHitCreationAlgorithm::ThreeDHitCreationAlgorithm() :
     m_slidingFitHalfWindow(10),
     m_nHitRefinementIterations(10),
     m_sigma3DFitMultiplier(0.2),
-    m_iterationMaxChi2Ratio(1.)
+    m_iterationMaxChi2Ratio(1.),
+    m_interpolationCutOff(10.)
 {
 }
 
@@ -175,6 +176,93 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::InterpolationMethod(const ParticleFlowObject *const pfo, ProtoHitVector &protoHitVector) const
+{
+    if (protoHitVector.empty())
+        return;
+
+    CaloHitVector remainingTwoDHits;
+    this->SeparateTwoDHits(pfo, protoHitVector, remainingTwoDHits);
+
+    if (remainingTwoDHits.empty())
+        return;
+
+    const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const unsigned int layerWindow(100); // TODO: Check if this should be the same or different.
+
+    double originalChi2(0.);
+    CartesianPointVector currentPoints3D;
+    this->ExtractResults(protoHitVector, originalChi2, currentPoints3D);
+
+    if (currentPoints3D.size() <= 1)
+        return;
+
+    const ThreeDSlidingFitResult slidingFitResult(&currentPoints3D, layerWindow, layerPitch);
+    // CartesianVector fitDirection = slidingFitResult.GetGlobalMaxLayerDirection();
+
+    const float sizeBefore = protoHitVector.size();
+
+    for (const pandora::CaloHit* currentCaloHit : remainingTwoDHits)
+    {
+        const CartesianVector pointPosition = LArObjectHelper::TypeAdaptor::GetPosition(currentCaloHit);
+
+        const float rL(slidingFitResult.GetLongitudinalDisplacement(pointPosition));
+
+        CartesianVector projectedPosition(0.f, 0.f, 0.f);
+        CartesianVector projectedDirection(0.f, 0.f, 0.f);
+        const StatusCode positionStatusCode(slidingFitResult.GetGlobalFitPosition(rL, projectedPosition));
+        const StatusCode directionStatusCode(slidingFitResult.GetGlobalFitDirection(rL, projectedDirection));
+
+        if (positionStatusCode != STATUS_CODE_SUCCESS || directionStatusCode != STATUS_CODE_SUCCESS)
+            continue;
+
+        // TODO: Tune cut off.
+        // Now we have a position for the interpolated hit, we need to make a
+        // protoHit out of it.  This includes the calculation of a chi2 value,
+        // for how good the interpolation is.
+        // const float displacement = projectedPosition.GetCrossProduct(fitDirection).GetMagnitude();
+        // const float otherDisp = projectedPosition.GetCrossProduct(projectedDirection).GetMagnitude();
+
+        // if (otherDisp > 150)
+        //     continue;
+
+        ProtoHit interpolatedHit(currentCaloHit);
+
+        const CartesianVector projectedHit = LArGeometryHelper::ProjectPosition(
+                this->GetPandora(),
+                projectedPosition,
+                currentCaloHit->GetHitType()
+        );
+        const double distanceBetweenHitsSqrd = (
+                (currentCaloHit->GetPositionVector() - projectedHit).GetMagnitudeSquared()
+        );
+
+        const double sigmaUVW(LArGeometryHelper::GetSigmaUVW(this->GetPandora()));
+        const double sigma3DFit(sigmaUVW * m_sigma3DFitMultiplier);
+        const double interpolatedChi2 = (distanceBetweenHitsSqrd) / (sigma3DFit * sigma3DFit);
+
+        interpolatedHit.SetPosition3D(projectedPosition, interpolatedChi2);
+        interpolatedHit.SetInterpolated(true);
+        interpolatedHit.AddTrajectorySample(
+                TrajectorySample(projectedPosition, currentCaloHit->GetHitType(), sigmaUVW)
+        );
+
+        protoHitVector.push_back(interpolatedHit);
+    }
+
+    // ATTN: If we've interpolated at least 80% of this particle, don't use it.
+    //
+    // TODO: Swap to option?
+    // TODO: This ideally would be earlier on, and wouldn't clear, but just drop the interpolated.
+    const float numberOfInterpolatedHits = protoHitVector.size() - sizeBefore;
+    if (numberOfInterpolatedHits >= (0.8 * protoHitVector.size()))
+        protoHitVector.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeDHitCreationAlgorithm::ExtractResults(const ProtoHitVector &protoHitVector, double &chi2, CartesianPointVector &pointVector) const
 {
     chi2 = 0.;
@@ -292,7 +380,7 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
 
         double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
         PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, uFit, vFit, wFit, sigma3DFit, bestY, bestZ, chi2);
-        position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
+        position3D.SetValues(protoHit.GetPosition3D().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
 
         protoHit.SetPosition3D(position3D, chi2);
     }
@@ -438,7 +526,6 @@ const ThreeDHitCreationAlgorithm::TrajectorySample &ThreeDHitCreationAlgorithm::
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
@@ -467,6 +554,9 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "IterateShowerHits", m_iterateShowerHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "InterpolationCut", m_interpolationCutOff));
         "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
