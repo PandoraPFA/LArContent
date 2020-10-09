@@ -154,13 +154,16 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
     for (const MCParticle *pMCParticle : *pMCParticleList)
     {
         const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pMCParticle));
-        std::vector<pandora::CartesianVector> steps(pLArMCParticle->GetMCStepPositions());
-        for (unsigned int step = 0; step < steps.size() - 1; step++)
+        const std::vector<pandora::CartesianVector> steps(pLArMCParticle->GetMCStepPositions());
+
+        for (unsigned int step = 0; step < steps.size() - 1; ++step)
         {
-            pandora::CartesianVector start(steps.at(step));
-            pandora::CartesianVector end(steps.at(step + 1));
+            const pandora::CartesianVector &start(steps.at(step));
+            const pandora::CartesianVector &end(steps.at(step + 1));
+
             std::stringstream mcStepPositionName;
             mcStepPositionName << "MCStepPosition" << step;
+
             PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &start, &end, mcStepPositionName.str(), AUTO, 1, 2));
         }
     }
