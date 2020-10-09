@@ -11,6 +11,9 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArUtility/RANSAC/AbstractModel.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 #include <vector>
 
 namespace lar_content
@@ -18,6 +21,7 @@ namespace lar_content
 
 class HitCreationBaseTool;
 class ThreeDSlidingFitResult;
+class RANSACHit;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -27,6 +31,9 @@ class ThreeDSlidingFitResult;
 class ThreeDHitCreationAlgorithm : public pandora::Algorithm
 {
 public:
+
+    typedef std::vector<RANSACHit> RANSACHitVector;
+
     /**
      *  @brief  Trajectory samples record the results of sampling a particles in a particular view
      */
@@ -195,6 +202,7 @@ public:
     };
 
     typedef std::vector<ProtoHit> ProtoHitVector;
+    typedef std::map<std::string, ProtoHitVector> ProtoHitVectorMap;
 
     /**
      *  @brief  Default constructor
@@ -230,6 +238,43 @@ private:
      *  @param  protoHitVector the vector of proto hits, describing current state of 3D hit construction
      */
     void IterativeTreatment(ProtoHitVector &protoHitVector) const;
+
+    /**
+     *  @brief  Choose between the map of all protoHitVectors, to get the best
+     *  and most appropriate set of hits for the current event. Uses RANSAC under the hood.
+     *
+     *  @param  pPfo The current PFO, so we can interpolate using it later.
+     *  @param  protoHitVectorMap The map of all protoHitVectors, mapped from the algorithm that created them.
+     *  @param  protoHitVector An empty protoHitVector, to be filled with the current state of the 3D hit construction.
+     */
+    void ConsolidatedMethod(const pandora::ParticleFlowObject *const pPfo, ProtoHitVectorMap &protoHitVectorMap,
+            ProtoHitVector &protoHitVector);
+
+    /**
+     *  @brief  Project a ProtoHit into the given view.
+     *
+     *  @param  hit The ProtoHit to project.
+     *  @param  view The view to project the hit into.
+     */
+    void Project3DHit(const ProtoHit &hit, const pandora::HitType view, ProtoHit &projectedHit);
+
+    /**
+     *  @brief  Take the set intersection of two vectors.
+     *
+     *  @param  first The first ProtoHitVector, to take into the set intersection.
+     *  @param  second The second ProtoHitVector, to take into the set intersection.
+     *  @param  result The result ProtoHitVector, to store the result of the intersection.
+     */
+    void GetSetIntersection(RANSACHitVector &first, RANSACHitVector &second, RANSACHitVector &result);
+
+    /**
+     *  @brief  Interpolate over the given hits to get a more complete image of
+     *          the 3D reconstruction for the given algorithm.
+     *
+     *  @param  pfo the address of the pfo
+     *  @param  protoHitVector The protoHitVector for the current algorithm, to be interpolated over.
+     */
+    void InterpolationMethod(const pandora::ParticleFlowObject *const pfo, ProtoHitVector &protoHitVector) const;
 
     /**
      *  @brief  Extract key results from a provided proto hit vector
@@ -311,6 +356,7 @@ private:
 
     bool                    m_iterateTrackHits;         ///< Whether to enable iterative improvement of 3D hits for track trajectories
     bool                    m_iterateShowerHits;        ///< Whether to enable iterative improvement of 3D hits for showers
+    bool                    m_useRANSACMethod;          ///< Whether to use the RANSAC based consolidated method.
     unsigned int            m_slidingFitHalfWindow;     ///< The sliding linear fit half window
     unsigned int            m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
     double                  m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit

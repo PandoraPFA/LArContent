@@ -29,6 +29,7 @@ set( subdir_list LArCheating
 		 LArTwoDReco/LArClusterSplitting
 		 LArTwoDReco/LArCosmicRay
 		 LArUtility
+		 LArUtility/RANSAC
 		 LArVertex
 )
 

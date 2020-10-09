@@ -8,14 +8,20 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+// TODO: Check over includes once metric stuff is deleted.
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArObjectHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
 
+#include "larpandoracontent/LArCustomParticles/CustomParticleCreationAlgorithm.h"
+
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArHitCreation/RANSACMethod.h"
 
 #include <algorithm>
 
@@ -27,6 +33,7 @@ namespace lar_content
 ThreeDHitCreationAlgorithm::ThreeDHitCreationAlgorithm() :
     m_iterateTrackHits(true),
     m_iterateShowerHits(false),
+    m_useRANSACMethod(false),
     m_slidingFitHalfWindow(10),
     m_nHitRefinementIterations(10),
     m_sigma3DFitMultiplier(0.2),
@@ -62,6 +69,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
     }
 
     CaloHitList allNewThreeDHits;
+    ProtoHitVectorMap allProtoHitVectors;
 
     PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
     std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
@@ -69,6 +77,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
     for (const ParticleFlowObject *const pPfo : pfoVector)
     {
         ProtoHitVector protoHitVector;
+        unsigned int numberOfFailedAlgorithms = 0;
 
         for (HitCreationBaseTool *const pHitCreationTool : m_algorithmToolVector)
         {
@@ -79,10 +88,43 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
                 break;
 
             pHitCreationTool->Run(this, pPfo, remainingTwoDHits, protoHitVector);
+
+            if (m_useRANSACMethod && LArPfoHelper::IsTrack(pPfo))
+            {
+                // TODO: Replace 10 with a configuration controlled number.
+                for (unsigned int i = 0; i < 10; ++i)
+                {
+                    int sizeBefore = protoHitVector.size();
+                    this->InterpolationMethod(pPfo, protoHitVector);
+                    int sizeAfter = protoHitVector.size();
+
+                    if (sizeBefore == sizeAfter)
+                        break;
+                }
+
+                this->IterativeTreatment(protoHitVector);
+                allProtoHitVectors.insert(ProtoHitVectorMap::value_type(pHitCreationTool->GetInstanceName(), protoHitVector));
+                protoHitVector.clear();
+            }
         }
 
-        if ((m_iterateTrackHits && LArPfoHelper::IsTrack(pPfo)) || (m_iterateShowerHits && LArPfoHelper::IsShower(pPfo)))
+        if (numberOfFailedAlgorithms == m_algorithmToolVector.size())
+            continue;
+
+        bool shouldUseIterativeTreatment = (
+                (m_iterateTrackHits && LArPfoHelper::IsTrack(pPfo)) ||
+                (m_iterateShowerHits && LArPfoHelper::IsShower(pPfo))
+        );
+
+        // ATTN: Skip for RANSAC, since it will be done later.
+        if (shouldUseIterativeTreatment && !m_useRANSACMethod)
             this->IterativeTreatment(protoHitVector);
+
+        if (m_useRANSACMethod && LArPfoHelper::IsTrack(pPfo))
+        {
+            this->ConsolidatedMethod(pPfo, allProtoHitVectors, protoHitVector);
+            allProtoHitVectors.clear();
+        }
 
         if (protoHitVector.empty())
             continue;
@@ -175,6 +217,97 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::Project3DHit(const ProtoHit &hit, const HitType view, ProtoHit &projectedHit)
+{
+    projectedHit.SetPosition3D(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), hit.GetPosition3D(), view),
+        hit.GetChi2()
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::GetSetIntersection(RANSACHitVector &first, RANSACHitVector &second, RANSACHitVector &result)
+{
+    auto compareFunction = [] (const RANSACHit &a, const RANSACHit &b) -> bool {
+        return a.GetProtoHit().GetPosition3D().GetX() < b.GetProtoHit().GetPosition3D().GetX();
+    };
+
+    std::sort(first.begin(), first.end(), compareFunction);
+    std::sort(second.begin(), second.end(), compareFunction);
+
+    std::set_intersection(
+        first.begin(), first.end(),
+        second.begin(), second.end(),
+        std::inserter(result, result.begin()),
+        compareFunction
+    );
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *const pPfo, ProtoHitVectorMap &allProtoHitVectors,
+        ProtoHitVector &protoHitVector)
+{
+    if (allProtoHitVectors.size() == 0)
+        return;
+
+    const float DISTANCE_THRESHOLD = 0.05; // TODO: Move to config option.
+    const std::vector<HitType> views = {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
+
+    std::map<HitType, RANSACHitVector> goodHits;
+
+    const std::vector<std::string> toolsToAvoid = {"Tool0039", "Tool0043"}; // TODO: Config option?
+
+    for (auto toolVectorPair : allProtoHitVectors)
+    {
+        if (toolVectorPair.second.size() == 0)
+            continue;
+
+        const auto avoidedIt = std::find(toolsToAvoid.begin(), toolsToAvoid.end(), toolVectorPair.first);
+        const bool goodTool = avoidedIt == toolsToAvoid.end();
+
+        // INFO: Project every 3D hit into all 2D views, so how well they match
+        // can be compared. This is only really a concern for the tools which
+        // can explode, however, they do provide useful inputs so need to
+        // still be considered.
+        for (const auto &hit : toolVectorPair.second)
+        {
+            const CaloHit* twoDHit = hit.GetParentCaloHit2D();
+
+            for (HitType view : views)
+            {
+                ProtoHit hitForView(twoDHit);
+                this->Project3DHit(hit, view, hitForView);
+
+                if (goodTool) {
+                    goodHits[view].push_back(RANSACHit(hit, goodTool));
+                    continue;
+                }
+
+                const float disp = std::fabs(hitForView.GetPosition3D().GetX() - twoDHit->GetPositionVector().GetX());
+
+                if (disp <= DISTANCE_THRESHOLD)
+                {
+                    goodHits[view].push_back(RANSACHit(hit, goodTool));
+                }
+            }
+        }
+    }
+
+    RANSACHitVector UVconsistentHits;
+    this->GetSetIntersection(goodHits[TPC_VIEW_V], goodHits[TPC_VIEW_U], UVconsistentHits);
+
+    RANSACHitVector consistentHits;
+    this->GetSetIntersection(goodHits[TPC_VIEW_W], UVconsistentHits, consistentHits);
+
+    LArRANSACMethod ransacMethod;
+    ransacMethod.Run(consistentHits, protoHitVector);
+
+    this->InterpolationMethod(pPfo, protoHitVector);
+    this->IterativeTreatment(protoHitVector);
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -374,8 +507,9 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         }
         else
         {
-            std::cout << "ThreeDHitCreationAlgorithm::IterativeTreatment - Unexpected number of trajectory samples" << std::endl;
-            throw StatusCodeException(STATUS_CODE_FAILURE);
+            // std::cout << "ThreeDHitCreationAlgorithm::IterativeTreatment - Unexpected number of trajectory samples" << std::endl;
+            // throw StatusCodeException(STATUS_CODE_FAILURE);
+            continue; // TODO: Fix this, check why it happens and if it is specific to the changes I've made.
         }
 
         double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
@@ -554,9 +688,12 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "IterateShowerHits", m_iterateShowerHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "UseRANSAC", m_useRANSACMethod));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InterpolationCut", m_interpolationCutOff));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

@@ -86,7 +86,7 @@ void LArRANSACMethod::GetCandidatePoints(RANSACHitVector &allHits, ParameterVect
     }
 
     std::mt19937 eng(allHits.size());
-    int hitsToUse = (allHits.size() - 1) * 0.40;
+    unsigned int hitsToUse = (allHits.size() - 1) * 0.40;
 
     // INFO: Fisher-Yates shuffle to get N unique random elements.
     for (unsigned int i = 0; i <= hitsToUse; ++i)
@@ -487,4 +487,4 @@ StatusCode LArRANSACMethod::ReadSettings(const pandora::TiXmlHandle /* xmlHandle
 {
     return STATUS_CODE_SUCCESS;
 }
-}
+} // namespace lar_content
