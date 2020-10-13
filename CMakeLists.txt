@@ -39,10 +39,17 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
 
     cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
     cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
+    set(LAR_CONTENT_LIBRARY_NAME "LArPandoraContent")
     add_definitions("-DMONITORING")
 
     # ADD SOURCE CODE SUBDIRECTORIES HERE
     add_subdirectory(larpandoracontent)
+    option(PANDORA_LIBTORCH "Flag for building against LibTorch" ON)
+    if(${PANDORA_LIBTORCH})
+        message(STATUS "Building with LibTorch")
+        add_definitions("-DLIBTORCH_DL")
+        add_subdirectory(larpandoradlcontent)
+    endif()
 
     # tests
     #add_subdirectory(test)
@@ -64,13 +71,28 @@ else()
         set(LAR_CONTENT_LIBRARY_NAME "LArContent")
     endif()
     project(${LAR_CONTENT_LIBRARY_NAME})
+    
+    # DL Content
+    option(PANDORA_LIBTORCH "Flag for building against LibTorch" OFF)
+    if(PANDORA_LIBTORCH)
+        set(DL_PROJECT_NAME "LArDLContent")
+        set(LAR_DL_CONTENT_LIBRARY_NAME "${DL_PROJECT_NAME}")
+    endif()
 
     # project version
     # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
-    set(${PROJECT_NAME}_VERSION_MAJOR 03)
-    set(${PROJECT_NAME}_VERSION_MINOR 21)
-    set(${PROJECT_NAME}_VERSION_PATCH 00)
-    set(${PROJECT_NAME}_VERSION "${${PROJECT_NAME}_VERSION_MAJOR}.${${PROJECT_NAME}_VERSION_MINOR}.${${PROJECT_NAME}_VERSION_PATCH}")
+    foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
+        set(${PROJ}_VERSION_MAJOR 03)
+        set(${PROJ}_VERSION_MINOR 22)
+        set(${PROJ}_VERSION_PATCH 00)
+        set(${PROJ}_VERSION "${${PROJ}_VERSION_MAJOR}.${${PROJ}_VERSION_MINOR}.${${PROJ}_VERSION_PATCH}")
+    endforeach()
+
+    set(${PROJECT_NAME}_TOP_LEVEL_DIR "./larpandoracontent")
+    if(PANDORA_LIBTORCH)
+        set(${DL_PROJECT_NAME}_SOVERSION "${${DL_PROJECT_NAME}_VERSION_MAJOR}.${${DL_PROJECT_NAME}_VERSION_MINOR}")
+        set(${DL_PROJECT_NAME}_TOP_LEVEL_DIR "./larpandoradlcontent")
+    endif()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Dependencies
@@ -95,6 +117,14 @@ else()
     find_package(Eigen3 3.3 REQUIRED NO_MODULE)
     include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
 
+    if(PANDORA_LIBTORCH)
+        message(STATUS "Building against LibTorch")
+        find_package(Torch REQUIRED)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
+        include_directories(${TORCH_INCLUDE_DIRS})
+        link_libraries(${TORCH_LIBRARIES})
+    endif()
+
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc
     set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing -std=c++17 ${CMAKE_CXX_FLAGS}")
@@ -110,12 +140,14 @@ else()
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Build products
 
-    # - Collect sources - not ideal because you have to keep running CMake to pick up changes
-    file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "larpandoracontent/*.cc")
+    foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
+        # - Collect sources - not ideal because you have to keep running CMake to pick up changes
+        file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "${${PROJ}_TOP_LEVEL_DIR}/*.cc")
 
-    # - Add library and properties
-    add_library(${PROJECT_NAME} SHARED ${LAR_CONTENT_SRCS})
-    set_target_properties(${PROJECT_NAME} PROPERTIES VERSION ${${PROJECT_NAME}_VERSION} SOVERSION ${${PROJECT_NAME}_SOVERSION})
+        # - Add library and properties
+        add_library(${PROJ} SHARED ${LAR_CONTENT_SRCS})
+        set_target_properties(${PROJ} PROPERTIES VERSION ${${PROJ}_VERSION} SOVERSION ${${PROJ}_SOVERSION})
+    endforeach()
 
     # - Optional documents
     option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
@@ -123,17 +155,18 @@ else()
         add_subdirectory(doc)
     endif()
 
-    #-------------------------------------------------------------------------------------------------------------------------------------------
+ #-------------------------------------------------------------------------------------------------------------------------------------------
     # Install products
+    foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
+        # - library
+        install(TARGETS ${PROJ} DESTINATION lib COMPONENT Runtime)
 
-    # - library
-    install(TARGETS ${PROJECT_NAME} DESTINATION lib COMPONENT Runtime)
+        # - headers
+        install(DIRECTORY ${${PROJ}_TOP_LEVEL_DIR} DESTINATION include COMPONENT Development FILES_MATCHING PATTERN "*.h")
 
-    # - headers
-    install(DIRECTORY ./larpandoracontent DESTINATION include COMPONENT Development FILES_MATCHING PATTERN "*.h")
-
-    # - support files
-    PANDORA_GENERATE_PACKAGE_CONFIGURATION_FILES(${PROJECT_NAME}Config.cmake ${PROJECT_NAME}ConfigVersion.cmake ${PROJECT_NAME}LibDeps.cmake)
+        # - support files
+        PANDORA_GENERATE_PACKAGE_CONFIGURATION_FILES(${PROJ}Config.cmake ${PROJ}ConfigVersion.cmake ${PROJ}LibDeps.cmake)
+    endforeach()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # display some variables and write them to cache
