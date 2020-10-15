@@ -311,7 +311,6 @@ protected:
     unsigned int     m_maxTrackGaps;                          ///< The maximum number of graps allowed in the extrapolated hit vector
     float            m_lineSegmentLength;                     ///< The length of a track gap
     bool             m_hitWidthMode;                          ///< Whether to consider the width of hits
-    float            m_distanceToLine;                        ///< The threshold hit distance of an extrapolated hit from the segment connecting line
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
