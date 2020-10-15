@@ -90,18 +90,25 @@ public:
 
     typedef ThreeDHitCreationAlgorithm::ProtoHit ProtoHit;
     typedef ThreeDHitCreationAlgorithm::ProtoHitVector ProtoHitVector;
+    typedef std::vector<RANSACHit> RANSACHitVector;
 
+    /**
+     *  @brief  Describe the direction the RANSAC seeded fit should go.
+     *          Forward and backward don't have actual meanings here,
+     *          just "one way and the opposite direction".
+     */
     enum ExtendDirection {
         Forward,
         Backward
     };
 
+    /**
+     *  @brief  Describe which RANSAC output to use.
+     */
     enum RANSACResult {
         Best,
         Second
     };
-
-    typedef std::vector<RANSACHit> RANSACHitVector;
 
     /**
      *  @brief  Default constructor
@@ -257,10 +264,10 @@ inline Eigen::Vector3f RANSACHit::GetVector() const
 
 inline float& RANSACHit::operator[](int i)
 {
-    if(i < 3)
-        return this->GetVector()(i);
+    if(i >= 3)
+        throw std::runtime_error("Index exceeded bounds.");
 
-    throw std::runtime_error("Index exceeded bounds.");
+    return this->GetVector()(i);
 }
 
 } // namespace lar_content

@@ -42,10 +42,12 @@ void LArRANSACMethod::Run(RANSACHitVector &consistentHits, ProtoHitVector &proto
     estimator.Estimate(candidatePoints);
 
     RANSACHitVector primaryResult;
-    int primaryModelCount = this->RunOverRANSACOutput(estimator, RANSACResult::Best, consistentHits, primaryResult);
+    const int primaryModelCount = this->RunOverRANSACOutput(estimator, RANSACResult::Best,
+            consistentHits, primaryResult);
 
     RANSACHitVector secondaryResult;
-    int secondModelCount = this->RunOverRANSACOutput(estimator, RANSACResult::Second, consistentHits, secondaryResult);
+    const int secondModelCount = this->RunOverRANSACOutput(estimator, RANSACResult::Second,
+            consistentHits, secondaryResult);
 
     float primaryFavoured = 0;
     float secondaryFavoured = 0;
@@ -67,7 +69,7 @@ void LArRANSACMethod::Run(RANSACHitVector &consistentHits, ProtoHitVector &proto
     const int primaryTotal = estimator.GetBestInliers().size() + primaryModelCount + primaryFavoured;
     const int secondaryTotal = estimator.GetSecondBestInliers().size() + secondModelCount + secondaryFavoured;
 
-    RANSACHitVector bestResult = primaryTotal > secondaryTotal ? primaryResult : secondaryResult;
+    const RANSACHitVector bestResult = primaryTotal > secondaryTotal ? primaryResult : secondaryResult;
 
     for (auto hit : bestResult)
         protoHitVector.push_back(hit.GetProtoHit());
@@ -86,7 +88,7 @@ void LArRANSACMethod::GetCandidatePoints(RANSACHitVector &allHits, ParameterVect
     }
 
     std::mt19937 eng(allHits.size());
-    unsigned int hitsToUse = (allHits.size() - 1) * 0.40;
+    const unsigned int hitsToUse = (allHits.size() - 1) * 0.40;
 
     // INFO: Fisher-Yates shuffle to get N unique random elements.
     for (unsigned int i = 0; i <= hitsToUse; ++i)
@@ -112,8 +114,13 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
 
     const ParameterVector currentInliers = run == RANSACResult::Best ? ransac.GetBestInliers() : ransac.GetSecondBestInliers();
 
-    if (currentInliers.size() == 0)
+    if (currentInliers.size() == 0 || hitsToUse.size() == 0)
+    {
+        for (auto const& caloProtoPair : inlyingHitMap)
+            finalHits.push_back(caloProtoPair.second);
+
         return 0;
+    }
 
     const auto bestModel = ransac.GetBestModel();
     auto secondModel = ransac.GetSecondBestModel();
@@ -124,53 +131,23 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
         secondModel = bestModel;
 
     const PlaneModel currentModel = run == RANSACResult::Best ? *bestModel : *secondModel;
-    PlaneModel otherModel = run == RANSACResult::Best ? *secondModel : *bestModel;
+    const PlaneModel otherModel = run == RANSACResult::Best ? *secondModel : *bestModel;
+
+    RANSACHitVector sortedHits;
+    std::list<RANSACHit> nextHits;
 
     for (auto inlier : currentInliers)
     {
-        auto hit = std::dynamic_pointer_cast<RANSACHit>(inlier);
+        const auto hit = std::dynamic_pointer_cast<RANSACHit>(inlier);
 
         if (hit == nullptr)
             throw std::runtime_error("Inlying hit was not of type RANSACHit");
 
-        LArRANSACMethod::AddToHitMap(*hit, inlyingHitMap);
+        const bool addedHit = LArRANSACMethod::AddToHitMap(*hit, inlyingHitMap);
+
+        if (addedHit)
+            sortedHits.push_back(*hit);
     }
-
-    if (currentInliers.size() < 1 || hitsToUse.size() < 1)
-    {
-        for (auto const& caloProtoPair : inlyingHitMap)
-            finalHits.push_back(caloProtoPair.second);
-
-        return 0;
-    }
-
-    std::list<RANSACHit> nextHits;
-    for (auto hit : hitsToUse)
-    {
-        if ((inlyingHitMap.count(hit.GetProtoHit().GetParentCaloHit2D()) == 0))
-        {
-            float modelDisp = otherModel.ComputeDistanceMeasure(std::make_shared<RANSACHit>(hit));
-
-            // ATTN: A hit is unfavourable if its from a bad tool, or is in the
-            //       other model. Unfavourable means it will attempt to not be
-            //       used, but can be used if needed.
-            bool isNotInOtherModel = modelDisp > RANSAC_THRESHOLD;
-            bool isAlreadyFavourable = hit.IsFavourable();
-            nextHits.push_back(RANSACHit(hit.GetProtoHit(), isNotInOtherModel && isAlreadyFavourable));
-        }
-    }
-
-    const CartesianVector fitOrigin = currentModel.GetOrigin();
-    const CartesianVector fitDirection = currentModel.GetDirection();
-    auto sortByModelDisplacement = [&fitOrigin, &fitDirection] (RANSACHit a, RANSACHit b) {
-        float displacementA = (a.GetProtoHit().GetPosition3D() - fitOrigin).GetDotProduct(fitDirection);
-        float displacementB = (b.GetProtoHit().GetPosition3D() - fitOrigin).GetDotProduct(fitDirection);
-        return displacementA < displacementB;
-    };
-
-    RANSACHitVector sortedHits;
-    for (auto const& caloProtoPair : inlyingHitMap)
-        sortedHits.push_back(caloProtoPair.second);
 
     if (sortedHits.size() < 3)
     {
@@ -179,6 +156,29 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
 
         return 0;
     }
+
+    for (auto hit : hitsToUse)
+    {
+        if ((inlyingHitMap.count(hit.GetProtoHit().GetParentCaloHit2D()) == 0))
+        {
+            const float modelDisp = otherModel.ComputeDistanceMeasure(std::make_shared<RANSACHit>(hit));
+
+            // ATTN: A hit is unfavourable if its from a bad tool, or is in the
+            //       other model. Unfavourable means it will attempt to not be
+            //       used, but can be used if needed.
+            const bool isNotInOtherModel = modelDisp > RANSAC_THRESHOLD;
+            const bool isAlreadyFavourable = hit.IsFavourable();
+            nextHits.emplace_back(hit.GetProtoHit(), isNotInOtherModel && isAlreadyFavourable);
+        }
+    }
+
+    const CartesianVector fitOrigin = currentModel.GetOrigin();
+    const CartesianVector fitDirection = currentModel.GetDirection();
+    const auto sortByModelDisplacement = [&fitOrigin, &fitDirection] (RANSACHit a, RANSACHit b) {
+        float displacementA = (a.GetProtoHit().GetPosition3D() - fitOrigin).GetDotProduct(fitDirection);
+        float displacementB = (b.GetProtoHit().GetPosition3D() - fitOrigin).GetDotProduct(fitDirection);
+        return displacementA < displacementB;
+    };
 
     std::sort(sortedHits.begin(), sortedHits.end(), sortByModelDisplacement);
 
@@ -224,7 +224,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
 
         for (auto hit : hitsToAdd)
         {
-            bool hitAdded = LArRANSACMethod::AddToHitMap(hit, inlyingHitMap);
+            const bool hitAdded = LArRANSACMethod::AddToHitMap(hit, inlyingHitMap);
 
             if (hitAdded)
                 hitsToUseForFit.push_back(hit);

@@ -8,16 +8,12 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-// TODO: Check over includes once metric stuff is deleted.
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArObjectHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
-
-#include "larpandoracontent/LArCustomParticles/CustomParticleCreationAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/HitCreationBaseTool.h"
 #include "larpandoracontent/LArThreeDReco/LArHitCreation/ThreeDHitCreationAlgorithm.h"
@@ -94,9 +90,9 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
                 // TODO: Replace 10 with a configuration controlled number.
                 for (unsigned int i = 0; i < 10; ++i)
                 {
-                    int sizeBefore = protoHitVector.size();
+                    const unsigned int sizeBefore = protoHitVector.size();
                     this->InterpolationMethod(pPfo, protoHitVector);
-                    int sizeAfter = protoHitVector.size();
+                    const unsigned int sizeAfter = protoHitVector.size();
 
                     if (sizeBefore == sizeAfter)
                         break;
@@ -111,7 +107,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
         if (numberOfFailedAlgorithms == m_algorithmToolVector.size())
             continue;
 
-        bool shouldUseIterativeTreatment = (
+        const bool shouldUseIterativeTreatment = (
                 (m_iterateTrackHits && LArPfoHelper::IsTrack(pPfo)) ||
                 (m_iterateShowerHits && LArPfoHelper::IsShower(pPfo))
         );
@@ -230,7 +226,7 @@ void ThreeDHitCreationAlgorithm::Project3DHit(const ProtoHit &hit, const HitType
 
 void ThreeDHitCreationAlgorithm::GetSetIntersection(RANSACHitVector &first, RANSACHitVector &second, RANSACHitVector &result)
 {
-    auto compareFunction = [] (const RANSACHit &a, const RANSACHit &b) -> bool {
+    const auto compareFunction = [] (const RANSACHit &a, const RANSACHit &b) -> bool {
         return a.GetProtoHit().GetPosition3D().GetX() < b.GetProtoHit().GetPosition3D().GetX();
     };
 
@@ -281,7 +277,8 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
                 ProtoHit hitForView(twoDHit);
                 this->Project3DHit(hit, view, hitForView);
 
-                if (goodTool) {
+                if (goodTool)
+                {
                     goodHits[view].push_back(RANSACHit(hit, goodTool));
                     continue;
                 }
@@ -289,9 +286,7 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
                 const float disp = std::fabs(hitForView.GetPosition3D().GetX() - twoDHit->GetPositionVector().GetX());
 
                 if (disp <= DISTANCE_THRESHOLD)
-                {
                     goodHits[view].push_back(RANSACHit(hit, goodTool));
-                }
             }
         }
     }

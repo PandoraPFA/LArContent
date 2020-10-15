@@ -33,7 +33,7 @@ namespace lar_content
     public:
         virtual void Initialize(const ParameterVector &inputParams) = 0;
         virtual std::pair<double, ParameterVector> Evaluate(const ParameterVector &evaluateParams, double threshold) = 0;
-        virtual double ComputeDistanceMeasure(SharedParameter param) = 0;
+        virtual double ComputeDistanceMeasure(const SharedParameter param) const = 0;
 
         virtual std::array<SharedParameter, t_NumParams> GetModelParams(void) { return m_MinModelParams; };
     };

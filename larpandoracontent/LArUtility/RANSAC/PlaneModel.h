@@ -38,7 +38,7 @@ public:
      *
      *  @param param  The parameter to compare to the current line.
      */
-    virtual double ComputeDistanceMeasure(SharedParameter param) override;
+    virtual double ComputeDistanceMeasure(const SharedParameter param) const override;
 
     PlaneModel(ParameterVector inputParams) { Initialize(inputParams); };
     virtual ~PlaneModel() {};

@@ -19,9 +19,9 @@ namespace lar_content
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-double PlaneModel::ComputeDistanceMeasure(SharedParameter param)
+double PlaneModel::ComputeDistanceMeasure(const SharedParameter param) const
 {
-    auto currentPoint = std::dynamic_pointer_cast<RANSACHit>(param);
+    const auto currentPoint = std::dynamic_pointer_cast<RANSACHit>(param);
     if(currentPoint == nullptr)
         throw std::runtime_error("PlaneModel::ComputeDistanceMeasure() - Passed parameter are not of type RANSACHit.");
 
