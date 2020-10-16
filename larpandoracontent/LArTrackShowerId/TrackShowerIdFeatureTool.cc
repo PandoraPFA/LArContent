@@ -460,8 +460,6 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    LArMvaHelper::MvaFeature vertexDistance;
-    bool error = true;
     const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
@@ -477,20 +475,24 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
     {
         try
         {
-            vertexDistance = (pVertexList->front()->GetPosition() - LArPfoHelper::GetVertex(pInputPfo)->GetPosition()).GetMagnitude();
-            error = false;
+            featureVector.push_back((pVertexList->front()->GetPosition() - LArPfoHelper::GetVertex(pInputPfo)->GetPosition()).GetMagnitude());
+            return;
         }
         catch (const StatusCodeException &) {}
     }
 
-    if (error)
+    else if (!pVertexList->empty())
     {
         CaloHitList threeDCaloHitList;
         LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
-        vertexDistance = (pVertexList->front()->GetPosition() - (threeDCaloHitList.front())->GetPositionVector()).GetMagnitude(); // if n3dHits == 1, can't calculate vertex postion of input pfos hence ask for the position of the single 3D hit instead and set vertexDistance to be the magnitude of the difference between the interaction vertex and the hit's position.
+        if (!threeDCaloHitList.empty())
+        {
+            featureVector.push_back((pVertexList->front()->GetPosition() - (threeDCaloHitList.front())->GetPositionVector()).GetMagnitude()); // if n3dHits == 1, can't calculate vertex postion of input pfos hence ask for the position of the single 3D hit instead and set vertexDistance to be the magnitude of the difference between the interaction vertex and the hit's position.
+            return;
+        }
     }
 
-    featureVector.push_back(vertexDistance);
+    featureVector.push_back(std::numeric_limits<LArMvaHelper::MvaFeature>::lowest());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
