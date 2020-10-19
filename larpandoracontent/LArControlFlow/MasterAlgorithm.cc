@@ -34,6 +34,7 @@ namespace lar_content
 
 MasterAlgorithm::MasterAlgorithm() :
     m_workerInstancesInitialized(false),
+    m_larCaloHitVersion(1),
     m_shouldRunAllHitsCosmicReco(true),
     m_shouldRunStitching(true),
     m_shouldRunCosmicHitRemoval(true),
@@ -669,7 +670,8 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     // ATTN Parent of calo hit in worker is corresponding calo hit in master
     parameters.m_pParentAddress = static_cast<const void*>(pCaloHit);
     parameters.m_larTPCVolumeId = pLArCaloHit->GetLArTPCVolumeId();
-    parameters.m_daughterVolumeId = pLArCaloHit->GetDaughterVolumeId();
+    if(m_larCaloHitVersion>1) parameters.m_daughterVolumeId = pLArCaloHit->GetDaughterVolumeId();
+    else parameters.m_daughterVolumeId=0;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
@@ -1082,6 +1084,8 @@ StatusCode MasterAlgorithm::RegisterCustomContent(const Pandora *const /*pPandor
 
 StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
+
     ExternalSteeringParameters *pExternalParameters(nullptr);
 
     if (this->ExternalParametersPresent())
