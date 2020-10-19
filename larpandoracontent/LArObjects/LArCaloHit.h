@@ -105,6 +105,19 @@ class LArCaloHitFactory : public pandora::ObjectFactory<object_creation::CaloHit
 {
 public:
     /**
+     *  @brief  Default constructor
+     *
+     */
+    LArCaloHitFactory();
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  version the LArCaloHit version
+     */
+    LArCaloHitFactory(const unsigned int version);
+
+    /**
      *  @brief  Create new parameters instance on the heap (memory-management to be controlled by user)
      *
      *  @return the address of the new parameters instance
@@ -134,6 +147,9 @@ public:
      *  @param  pObject to receive the address of the object created
      */
     pandora::StatusCode Create(const Parameters &parameters, const Object *&pObject) const;
+
+private:
+     unsigned int	m_version;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -142,8 +158,9 @@ public:
 inline LArCaloHit::LArCaloHit(const LArCaloHitParameters &parameters) :
     object_creation::CaloHit::Object(parameters),
     m_larTPCVolumeId(parameters.m_larTPCVolumeId.Get()),
-    m_daughterVolumeId(parameters.m_daughterVolumeId.Get())
+    m_daughterVolumeId(0)
 {
+    if(parameters.m_daughterVolumeId.IsInitialized()) m_daughterVolumeId = parameters.m_daughterVolumeId.Get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -197,6 +214,20 @@ inline void LArCaloHit::SetShowerProbability(const float probability)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline LArCaloHitFactory::LArCaloHitFactory()
+{
+    m_version = 1;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArCaloHitFactory::LArCaloHitFactory(const unsigned int version)
+{
+    m_version = version;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline LArCaloHitFactory::Parameters *LArCaloHitFactory::NewParameters() const
 {
     return (new LArCaloHitParameters);
@@ -224,13 +255,15 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
     {
         pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader&>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(larTPCVolumeId));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(daughterVolumeId));
+        if(m_version>1) {PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(daughterVolumeId));}
+	else daughterVolumeId=0;
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
         pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader&>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("LArTPCVolumeId", larTPCVolumeId));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("DaughterVolumeId", daughterVolumeId));
+        if(m_version>1) {PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("DaughterVolumeId", daughterVolumeId));}
+	else daughterVolumeId=0;
     }
     else
     {
@@ -258,13 +291,13 @@ inline pandora::StatusCode LArCaloHitFactory::Write(const Object *const pObject,
     {
         pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter&>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetLArTPCVolumeId()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetDaughterVolumeId()));
+        if(m_version>1)PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArCaloHit->GetDaughterVolumeId()));
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
         pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter&>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("LArTPCVolumeId", pLArCaloHit->GetLArTPCVolumeId()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("DaughterVolumeId", pLArCaloHit->GetDaughterVolumeId()));
+        if(m_version>1)PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("DaughterVolumeId", pLArCaloHit->GetDaughterVolumeId()));
     }
     else
     {
