@@ -31,11 +31,6 @@ public:
      */
     MvaPfoCharacterisationAlgorithm();
 
-    /**
-     *  @brief  Default destructor
-     */
-    ~MvaPfoCharacterisationAlgorithm();
-
 protected:
     virtual bool IsClearTrack(const pandora::ParticleFlowObject *const pPfo) const;
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
