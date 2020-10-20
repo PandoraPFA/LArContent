@@ -8,6 +8,8 @@
 #ifndef LAR_MVA_PFO_CHARACTERISATION_ALGORITHM_H
 #define LAR_MVA_PFO_CHARACTERISATION_ALGORITHM_H 1
 
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+
 #include "larpandoracontent/LArObjects/LArAdaBoostDecisionTree.h"
 #include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
 
@@ -39,9 +41,9 @@ protected:
     virtual bool IsClearTrack(const pandora::Cluster *const pCluster) const;
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    ClusterCharacterisationFeatureTool::FeatureToolVector   m_featureToolVector;         ///< The feature tool map
-    PfoCharacterisationFeatureTool::FeatureToolVector       m_featureToolVectorThreeD;   ///< The feature tool map for 3D info
-    PfoCharacterisationFeatureTool::FeatureToolVector       m_featureToolVectorNoChargeInfo; ///< The feature tool map for missing W view
+    ClusterCharacterisationFeatureTool::FeatureToolVector   m_featureToolVector;                ///< The feature tool map
+    PfoCharacterisationFeatureTool::FeatureToolVector       m_featureToolVectorThreeD;          ///< The feature tool map for 3D info
+    PfoCharacterisationFeatureTool::FeatureToolVector       m_featureToolVectorNoChargeInfo;    ///< The feature tool map for missing W view
 
     T                       m_mva;                          ///< The mva
     T                       m_mvaNoChargeInfo;              ///< The mva for missing W view
@@ -65,7 +67,7 @@ protected:
     std::string             m_treeName;
     std::string             m_fileName;
 
-    LArMCParticleHelper::PrimaryParameters  m_primaryParameters;        ///< The mc particle primary selection parameters
+    LArMCParticleHelper::PrimaryParameters  m_primaryParameters;    ///< The mc particle primary selection parameters
 };
 
 typedef MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree> BdtPfoCharacterisationAlgorithm;
