@@ -7,6 +7,7 @@
  */
 #ifndef LAR_PFO_CHARACTERISATION_BASE_ALGORITHM_H
 #define LAR_PFO_CHARACTERISATION_BASE_ALGORITHM_H 1
+
 #include "Pandora/Algorithm.h"
 
 namespace lar_content
