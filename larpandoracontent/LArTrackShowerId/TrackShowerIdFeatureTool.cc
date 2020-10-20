@@ -461,9 +461,14 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     LArMvaHelper::MvaFeature vertexDistance;
-    bool error = true;
     const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
+
+    if (!pVertexList || pVertexList->empty())
+    {
+        featureVector.push_back(vertexDistance);
+        return;
+    }
 
     int numInteractionVertex(0);
 
@@ -473,21 +478,21 @@ void ThreeDVertexDistanceFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featur
             ++numInteractionVertex;
     }
 
-    if ((!pVertexList->empty()) && (numInteractionVertex == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
+    if ((numInteractionVertex == 1) && (VERTEX_3D == pVertexList->front()->GetVertexType()))
     {
         try
         {
             vertexDistance = (pVertexList->front()->GetPosition() - LArPfoHelper::GetVertex(pInputPfo)->GetPosition()).GetMagnitude();
-            error = false;
         }
         catch (const StatusCodeException &) {}
     }
 
-    if (error)
+    if (!vertexDistance.IsInitialized())
     {
         CaloHitList threeDCaloHitList;
         LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
-        vertexDistance = (pVertexList->front()->GetPosition() - (threeDCaloHitList.front())->GetPositionVector()).GetMagnitude(); // if n3dHits == 1, can't calculate vertex postion of input pfos hence ask for the position of the single 3D hit instead and set vertexDistance to be the magnitude of the difference between the interaction vertex and the hit's position.
+        if (!threeDCaloHitList.empty())
+            vertexDistance = (pVertexList->front()->GetPosition() - (threeDCaloHitList.front())->GetPositionVector()).GetMagnitude();
     }
 
     featureVector.push_back(vertexDistance);
