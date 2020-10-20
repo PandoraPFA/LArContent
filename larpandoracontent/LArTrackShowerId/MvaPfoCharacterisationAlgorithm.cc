@@ -5,24 +5,15 @@
  *
  *  $Log: $
  */
+
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
-#include <vector>
-#include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
-#include "Helpers/MCParticleHelper.h"
-#include "larpandoracontent/LArTrackShowerId/MvaPfoCharacterisationAlgorithm.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include <iostream>
-#include <fstream>
-#include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
-#include "larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.h"
+
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
+
+#include "larpandoracontent/LArTrackShowerId/MvaPfoCharacterisationAlgorithm.h"
 
 using namespace pandora;
 

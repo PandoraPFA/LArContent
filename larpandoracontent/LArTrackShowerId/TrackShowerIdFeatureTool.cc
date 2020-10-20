@@ -7,23 +7,22 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-#include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
+
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
-#include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
-#include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
+
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
-#include <vector>
-#include <list>
+#include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
+
 using namespace pandora;
 
 namespace lar_content
 {
+
 TwoDShowerFitFeatureTool::TwoDShowerFitFeatureTool() :
     m_slidingShowerFitWindow(3),
     m_slidingLinearFitWindow(10000)
