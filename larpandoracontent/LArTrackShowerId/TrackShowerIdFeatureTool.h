@@ -16,8 +16,10 @@ namespace lar_content
 typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::Cluster *const>  ClusterCharacterisationFeatureTool;
 typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::ParticleFlowObject *const>  PfoCharacterisationFeatureTool;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
- *   @brief  ShowerFitFeatureTool to calculate variables related to sliding shower fit
+ *   @brief  TwoDShowerFitFeatureTool to calculate variables related to sliding shower fit
  */
 class TwoDShowerFitFeatureTool : public ClusterCharacterisationFeatureTool
 {
@@ -47,10 +49,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  LinearFitFeatureTool class for the calculation of variables related to sliding linear fit
+ *   @brief  TwoDLinearFitFeatureTool class for the calculation of variables related to 2d sliding linear fit
  */
 class TwoDLinearFitFeatureTool : public ClusterCharacterisationFeatureTool
 {
@@ -84,10 +85,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  VertexDistanceFeatureTool class for the calculation of distance to neutrino vertex
+ *   @brief  TwoDVertexDistanceFeatureTool class for the calculation of 2d distance to neutrino vertex
  */
 class TwoDVertexDistanceFeatureTool : public ClusterCharacterisationFeatureTool
 {
@@ -115,7 +115,6 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *   @brief  PfoHierarchyFeatureTool for calculation of features relating to reconstructed particle hierarchy
@@ -135,10 +134,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  LinearFitFeatureTool class for the calculation of variables related to sliding linear fit
+ *   @brief  ThreeDLinearFitFeatureTool class for the calculation of variables related to 3d sliding linear fit
  */
 class ThreeDLinearFitFeatureTool : public PfoCharacterisationFeatureTool
 {
@@ -172,10 +170,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  VertexDistanceFeatureTool class for the calculation of distance to neutrino vertex
+ *   @brief  ThreeDVertexDistanceFeatureTool class for the calculation of 3d distance to neutrino vertex
  */
 class ThreeDVertexDistanceFeatureTool : public PfoCharacterisationFeatureTool
 {
@@ -191,7 +188,6 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -235,10 +231,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  PCA class for the calculation of PCA-related variables
+ *   @brief  ThreeDPCAFeatureTool class for the calculation of PCA-related variables
  */
 class ThreeDPCAFeatureTool : public PfoCharacterisationFeatureTool
 {
@@ -255,10 +250,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  ChargeFeatureTool class for the calculation of concentration
+ *   @brief  ThreeDChargeFeatureTool class for the calculation of charge-related features
  */
 class ThreeDChargeFeatureTool : public PfoCharacterisationFeatureTool
 {
