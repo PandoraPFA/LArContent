@@ -39,6 +39,7 @@ PfoCharacterisationBaseAlgorithm::~PfoCharacterisationBaseAlgorithm()
 StatusCode PfoCharacterisationBaseAlgorithm::Run()
 {
     PfoList tracksToShowers, showersToTracks;
+
     for (const std::string &pfoListName : m_inputPfoListNames)
     {
         const PfoList *pPfoList(nullptr);
@@ -56,6 +57,7 @@ StatusCode PfoCharacterisationBaseAlgorithm::Run()
         {
             PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
             const bool isTrackLike(m_useThreeDInformation ? this->IsClearTrack(pPfo) : this->IsClearTrack3x2D(pPfo));
+
             if (isTrackLike)
             {
                 pfoMetadata.m_particleId = MU_MINUS;
