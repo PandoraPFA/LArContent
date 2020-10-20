@@ -27,26 +27,15 @@ MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
     m_useThreeDInformation(true),
     m_minProbabilityCut(0.5f),
     m_minCaloHitsCut(5),
-    m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
-    m_writeToTree(false)
+    m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
 template<typename T>
 MvaPfoCharacterisationAlgorithm<T>::~MvaPfoCharacterisationAlgorithm()
 {
-    if (m_writeToTree)
-    {
-        try
-        {
-            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_fileName.c_str(), "UPDATE"));
-        }
-        catch (const StatusCodeException &)
-        {
-            std::cout << "MvaPfoCharacterisationAlgorithm: Unable to write tree " << m_treeName << " to file " << m_fileName << std::endl;
-        }
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -312,16 +301,6 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BdtName", m_mvaName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SvmName", m_mvaName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MvaName", m_mvaName));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "WriteToTree", m_writeToTree)); // added by Mousam
-
-    if (m_writeToTree)
-    {
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-            "OutputTree", m_treeName)); // added by Mousam
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-            "OutputFile", m_fileName)); //added by Mousam
-    }
 
     if (m_useThreeDInformation)
     {
