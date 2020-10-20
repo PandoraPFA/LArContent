@@ -227,7 +227,8 @@ private:
      */
     float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary, const pandora::CartesianVector &eigenValues) const;
 
-    float m_hitFraction;           ///< fraction of hits in start and end of pfo
+    float   m_hitFraction;          ///< Fraction of hits in start and end of pfo
+    float   m_defaultValue;         ///< Default value to return, in case calculation not feasible
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
