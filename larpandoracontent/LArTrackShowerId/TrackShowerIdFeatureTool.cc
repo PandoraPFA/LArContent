@@ -241,13 +241,14 @@ StatusCode TwoDVertexDistanceFeatureTool::ReadSettings(const TiXmlHandle xmlHand
     return STATUS_CODE_SUCCESS;
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 PfoHierarchyFeatureTool::PfoHierarchyFeatureTool()
 {
 }
 
-//-------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
@@ -291,12 +292,15 @@ void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
     featureVector.push_back(daughterParentNhitsRatio);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode PfoHierarchyFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
     m_slidingLinearFitWindow(3),
@@ -304,7 +308,7 @@ ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() :
 {
 }
 
-//-----------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeDLinearFitFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm,
     const pandora::ParticleFlowObject *const pInputPfo)
@@ -706,6 +710,7 @@ StatusCode ThreeDPCAFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
   return STATUS_CODE_SUCCESS;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 ThreeDChargeFeatureTool::ThreeDChargeFeatureTool() :

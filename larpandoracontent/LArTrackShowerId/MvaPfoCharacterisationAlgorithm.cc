@@ -34,13 +34,6 @@ MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-MvaPfoCharacterisationAlgorithm<T>::~MvaPfoCharacterisationAlgorithm()
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
 bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const Cluster *const pCluster) const
 {
     if (pCluster->GetNCaloHits() < m_minCaloHitsCut)
@@ -58,6 +51,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const Cluster *const pClus
             isTrueTrack = ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())));
         }
         catch (const StatusCodeException &) {}
+
         LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, isTrueTrack, featureVector);
         return isTrueTrack;
     }
@@ -88,15 +82,12 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         return (pPfo->GetParticleId() == MU_MINUS);
     }
 
+    // Charge related features are only calculated using hits in W view
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
 
-    //charge related features are only calculated using hits in W view
-    // This won't work unless use 3D info is set to true - dev purposes only
+    // TODO Investigate what to do here if use 3D info is set to false
     const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
-    // Purity, completeness
-    // ATTN Assume your Pfos of interest are in a PfoList called myPfoList
-
     const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
 
     if (m_trainingSetMode)
@@ -137,11 +128,14 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             const CaloHitList &allMCHits(targetMCParticleToHitsMap.at(pAssociatedMCParticle));
             const CaloHitList &associatedMCHits(mcParticleCaloHitListPair.second);
 
-            if ((abs(pAssociatedMCParticle->GetParticleId()) == 11) || (pAssociatedMCParticle->GetParticleId()) == 22)
+            if ((std::abs(pAssociatedMCParticle->GetParticleId()) == 11) || (pAssociatedMCParticle->GetParticleId()) == 22)
+            {
                 hitsShower = hitsShower + associatedMCHits.size();
-
+            }
             else
+            {
                 hitsTrack = hitsTrack + associatedMCHits.size();
+            }
 
             if (static_cast<int>(associatedMCHits.size()) > nHitsSharedWithBestMCParticleTotal)
             {
@@ -205,26 +199,26 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         }
 
         float showerProbability = (static_cast<float>(showerCount))/(static_cast<float>(hitToMCMap.size()));
-        mischaracterisedPfo = ((((showerProbability < 0.5) && (trueTrackInt == 0)) || ((showerProbability > 0.5) && (trueTrackInt == 1))) ? 1 : 0);
+        mischaracterisedPfo = ((((showerProbability < 0.5f) && (trueTrackInt == 0)) || ((showerProbability > 0.5) && (trueTrackInt == 1))) ? 1 : 0);
 
         const bool isTrueTrack(1 == trueTrackInt);
         const bool isMainMCParticleSet(0 != pdgCode);
 
         if (isMainMCParticleSet)
         {
-            if (completeness >= 0.0 && purity >= 0.0 && mischaracterisedPfo == 0 && (abs(xVertexPos) <= 340) && (abs(yVertexPos) <= 584) && (zVertexPos >= 200 && zVertexPos <= 1194))
+            // TODO Remove hard-coded fiducial volume details
+            if (completeness >= 0.f && purity >= 0.f && mischaracterisedPfo == 0 && (std::fabs(xVertexPos) <= 340) && (std::fabs(yVertexPos) <= 584) && (zVertexPos >= 200 && zVertexPos <= 1194))
             {
                 std::string outputFile;
                 outputFile.append(m_trainingOutputFile);
                 const std::string end=((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
                 outputFile.append(end);
-                LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector); // TODO Need this for sklearn training
+                LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
             }
         }
 
         return isTrueTrack;
     }
-
 
     for (const LArMvaHelper::MvaFeature &featureValue : featureVector)
     {
@@ -240,7 +234,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         }
     }
 
-    //if no failures, proceed with MvaPfoCharacterisationAlgorithm classification
+    // If no failures, proceed with MvaPfoCharacterisationAlgorithm classification
     if (!m_enableProbability)
     {
         return LArMvaHelper::Classify((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureVector);
@@ -355,8 +349,10 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
     {
         AlgorithmToolVector algorithmToolVectorNoChargeInfo;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolVectorNoChargeInfo));
+
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorThreeD));
+
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVectorNoChargeInfo)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorNoChargeInfo));
     }
