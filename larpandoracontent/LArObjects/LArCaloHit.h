@@ -158,9 +158,8 @@ private:
 inline LArCaloHit::LArCaloHit(const LArCaloHitParameters &parameters) :
     object_creation::CaloHit::Object(parameters),
     m_larTPCVolumeId(parameters.m_larTPCVolumeId.Get()),
-    m_daughterVolumeId(0)
+    m_daughterVolumeId(parameters.m_daughterVolumeId.IsInitialized()? parameters.m_daughterVolumeId.Get() : 0)
 {
-    if(parameters.m_daughterVolumeId.IsInitialized()) m_daughterVolumeId = parameters.m_daughterVolumeId.Get();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -214,16 +213,16 @@ inline void LArCaloHit::SetShowerProbability(const float probability)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArCaloHitFactory::LArCaloHitFactory()
+inline LArCaloHitFactory::LArCaloHitFactory() :
+    m_version(1)
 {
-    m_version = 1;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArCaloHitFactory::LArCaloHitFactory(const unsigned int version)
+inline LArCaloHitFactory::LArCaloHitFactory(const unsigned int version) :
+    m_version(version)
 {
-    m_version = version;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -255,8 +254,14 @@ inline pandora::StatusCode LArCaloHitFactory::Read(Parameters &parameters, pando
     {
         pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader&>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(larTPCVolumeId));
-        if(m_version>1) {PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(daughterVolumeId));}
-	else daughterVolumeId=0;
+        if(m_version>1)
+        {
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(daughterVolumeId));
+        }
+	else
+        {
+            daughterVolumeId=0;
+        }
     }
     else if (pandora::XML == fileReader.GetFileType())
     {

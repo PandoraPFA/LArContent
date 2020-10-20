@@ -670,8 +670,7 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     // ATTN Parent of calo hit in worker is corresponding calo hit in master
     parameters.m_pParentAddress = static_cast<const void*>(pCaloHit);
     parameters.m_larTPCVolumeId = pLArCaloHit->GetLArTPCVolumeId();
-    if(m_larCaloHitVersion>1) parameters.m_daughterVolumeId = pLArCaloHit->GetDaughterVolumeId();
-    else parameters.m_daughterVolumeId=0;
+    parameters.m_daughterVolumeId = (m_larCaloHitVersion>1) ? pLArCaloHit->GetDaughterVolumeId() : 0;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
