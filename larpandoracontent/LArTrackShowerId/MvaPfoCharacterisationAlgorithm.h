@@ -44,10 +44,18 @@ protected:
     T                       m_mvaNoChargeInfo;              ///< The mva for missing W view
 
     bool                    m_trainingSetMode;              ///< Whether to train
+    bool                    m_testBeamMode;                 ///< Whether the training set is from a test beam experiment
     bool                    m_enableProbability;            ///< Whether to use probabilities instead of binary classification
     bool                    m_useThreeDInformation;         ///< Whether to use 3D information
     float                   m_minProbabilityCut;            ///< The minimum probability to label a cluster as track-like
     unsigned int            m_minCaloHitsCut;               ///< The minimum number of calo hits to qualify as a track
+    bool                    m_applyFiducialCut;             ///< Whether or not to apply a fiducial volume cut
+    float                   m_fiducialMinX;                 ///< Fiducial volume minimum x
+    float                   m_fiducialMaxX;                 ///< Fiducial volume maximum x
+    float                   m_fiducialMinY;                 ///< Fiducial volume minimum y
+    float                   m_fiducialMaxY;                 ///< Fiducial volume maximum y
+    float                   m_fiducialMinZ;                 ///< Fiducial volume minimum z
+    float                   m_fiducialMaxZ;                 ///< Fiducial volume maximum z
 
     std::string             m_caloHitListName;              ///< Name of input calo hit list
     std::string             m_mcParticleListName;           ///< Name of input MC particle list
@@ -60,6 +68,14 @@ protected:
     std::string             m_mvaNameNoChargeInfo;          ///< The name of the mva to find for PFOs missing the W view, and thus charge info
 
     LArMCParticleHelper::PrimaryParameters  m_primaryParameters;    ///< The mc particle primary selection parameters
+
+private:
+    /**
+     *  @brief  Checks if the interaction vertex is within the fiducial volume
+     *
+     *  @param  vertex The coordinates of the vertex
+     */
+    bool PassesFiducialCut(const pandora::CartesianVector &vertex) const;
 };
 
 typedef MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree> BdtPfoCharacterisationAlgorithm;
