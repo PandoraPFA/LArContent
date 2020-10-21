@@ -687,12 +687,12 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
 
     if (!threeDCaloHitList.empty())
     {
-        // Run the PCA analysis
-        CartesianVector centroid(0.f, 0.f, 0.f);
-        LArPcaHelper::EigenVectors eigenVecs;
-        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
         try
         {
+            CartesianVector centroid(0.f, 0.f, 0.f);
+            LArPcaHelper::EigenVectors eigenVecs;
+            LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+
             LArPcaHelper::RunPca(threeDCaloHitList, centroid, eigenValues, eigenVecs);
             const float principalEigenvalue(eigenValues.GetX()), secondaryEigenvalue(eigenValues.GetY()), tertiaryEigenvalue(eigenValues.GetZ());
 
