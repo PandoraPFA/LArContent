@@ -762,45 +762,36 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
 void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge,
     float &chargeSigma, float &chargeMean, float &endCharge)
 {
+    totalCharge = 0.f;
+    chargeSigma = 0.f;
+    chargeMean = 0.f;
+    endCharge = 0.f;
+
     CaloHitList orderedCaloHitList;
     this->OrderCaloHitsByDistanceToVertex(pAlgorithm, pCluster, orderedCaloHitList);
 
-    const int totalHits(pCluster->GetNCaloHits());
     FloatVector chargeVector;
     unsigned int hitCounter(0);
-    totalCharge = 0.f;
-    endCharge = 0.f;
+    const unsigned int nTotalHits(orderedCaloHitList.size());
 
     for (const CaloHit *const pCaloHit : orderedCaloHitList)
     {
         ++hitCounter;
         const float pCaloHitCharge(pCaloHit->GetInputEnergy());
 
-        if (pCaloHitCharge < 0)
-        {
-            std::cout << "Found a hit with negative charge! " << std::endl;
-        }
-        else
+        if (pCaloHitCharge >= 0.f)
         {
             totalCharge += pCaloHitCharge;
             chargeVector.push_back(pCaloHitCharge);
 
-            if (hitCounter >= std::floor(totalHits * (1.f - m_endChargeFraction)))
-            {
+            if (hitCounter >= std::floor(static_cast<float>(nTotalHits) * (1.f - m_endChargeFraction)))
                 endCharge += pCaloHitCharge;
-            }
         }
     }
 
     if (!chargeVector.empty())
     {
-        chargeMean = 0.f;
-        chargeSigma = 0.f;
-
-        for (const float charge : chargeVector)
-            chargeMean += charge;
-
-        chargeMean /= static_cast<float>(chargeVector.size());
+        chargeMean = totalCharge / static_cast<float>(chargeVector.size());
 
         for (const float charge : chargeVector)
             chargeSigma += (charge - chargeMean) * (charge - chargeMean);
