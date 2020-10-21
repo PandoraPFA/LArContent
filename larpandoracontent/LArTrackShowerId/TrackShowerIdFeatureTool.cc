@@ -524,10 +524,7 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    // Need the 3D clusters and hits to calculate PCA components
-    ClusterList threeDClusterList;
-    LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
-
+    // Need the 3D hits to calculate PCA components
     CaloHitList threeDCaloHitList;
     LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
@@ -537,7 +534,7 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
         CartesianPointVector pointVectorStart, pointVectorEnd;
         this->Divide3DCaloHitList(pAlgorithm, threeDCaloHitList, pointVectorStart, pointVectorEnd);
 
-        //able to calculate angles only if > 1 point provided
+        // Able to calculate angles only if > 1 point provided
         if ((pointVectorStart.size() > 1) && (pointVectorEnd.size() > 1))
         {
             try
@@ -558,7 +555,6 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
         }
         else
         {
-            // ATTN Default value only applied if there are 3D hits
             diffAngle = m_defaultValue;
         }
     }
@@ -568,7 +564,7 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const pAlgorithm, CaloHitList &threeDCaloHitList,
+void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const pAlgorithm, const CaloHitList &threeDCaloHitList,
     CartesianPointVector &pointVectorStart, CartesianPointVector &pointVectorEnd)
 {
     const VertexList *pVertexList(nullptr);
@@ -624,7 +620,7 @@ float ThreeDOpeningAngleFeatureTool::OpeningAngle(const CartesianVector &princip
 
     if (std::fabs(principalMagnitude) < std::numeric_limits<float>::epsilon())
     {
-        std::cout << "PcaShowerParticleBuildingAlgorithm::OpeningAngle - The principal eigenvector is 0." << std::endl;
+        std::cout << "ThreeDOpeningAngleFeatureTool::OpeningAngle - The principal eigenvector is 0." << std::endl;
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
     else if (std::fabs(secondaryMagnitude) < std::numeric_limits<float>::epsilon())
@@ -642,12 +638,12 @@ float ThreeDOpeningAngleFeatureTool::OpeningAngle(const CartesianVector &princip
 
     const float sinTheta(std::sqrt(1.f - cosTheta * cosTheta));
 
-    if (std::fabs(eigenValues.GetX()) < std::numeric_limits<float>::epsilon())
+    if (eigenValues.GetX() < std::numeric_limits<float>::epsilon())
     {
         std::cout << "PcaShowerParticleBuildingAlgorithm::OpeningAngle - principal eigenvalue less than or equal to 0." << std::endl;
         throw StatusCodeException( STATUS_CODE_INVALID_PARAMETER );
     }
-    else if (std::fabs(eigenValues.GetY()) < std::numeric_limits<float>::epsilon())
+    else if (eigenValues.GetY() < std::numeric_limits<float>::epsilon())
     {
         return 0.f;
     }
@@ -684,14 +680,12 @@ void ThreeDPCAFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, co
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     LArMvaHelper::MvaFeature pca1, pca2;
-    // Need the 3D cluster and hits to calculate PCA components
-    ClusterList threeDClusterList;
-    LArPfoHelper::GetThreeDClusterList(pInputPfo, threeDClusterList);
 
+    // Need the 3D hits to calculate PCA components
     CaloHitList threeDCaloHitList;
     LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, threeDCaloHitList);
 
-    if ((!threeDClusterList.empty()) && (!threeDCaloHitList.empty()))
+    if (!threeDCaloHitList.empty())
     {
         // Run the PCA analysis
         CartesianVector centroid(0.f, 0.f, 0.f);
@@ -747,13 +741,11 @@ void ThreeDChargeFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
     float totalCharge(-1.f), chargeSigma(-1.f), chargeMean(-1.f), endCharge(-1.f);
     LArMvaHelper::MvaFeature charge1, charge2;
 
-    ClusterList pClusterList;
-    LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, pClusterList);
-    if ((!pClusterList.empty()) && (pClusterList.size() == 1))
-    {
-        const Cluster *const pCluster(pClusterList.front());
-        this->CalculateChargeVariables(pAlgorithm, pCluster, totalCharge, chargeSigma, chargeMean, endCharge);
-    }
+    ClusterList clusterListW;
+    LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
+
+    if (!clusterListW.empty())
+        this->CalculateChargeVariables(pAlgorithm, clusterListW.front(), totalCharge, chargeSigma, chargeMean, endCharge);
 
     if (chargeMean > std::numeric_limits<float>::epsilon())
         charge1 = chargeSigma / chargeMean;
@@ -775,13 +767,13 @@ void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pA
 
     const int totalHits(pCluster->GetNCaloHits());
     FloatVector chargeVector;
-    int hitCounter(0);
+    unsigned int hitCounter(0);
     totalCharge = 0.f;
     endCharge = 0.f;
 
     for (const CaloHit *const pCaloHit : orderedCaloHitList)
     {
-        hitCounter++;
+        ++hitCounter;
         const float pCaloHitCharge(pCaloHit->GetInputEnergy());
 
         if (pCaloHitCharge < 0)
@@ -790,10 +782,10 @@ void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pA
         }
         else
         {
-            totalCharge    += pCaloHitCharge;
+            totalCharge += pCaloHitCharge;
             chargeVector.push_back(pCaloHitCharge);
 
-            if (hitCounter >= std::floor(totalHits*(1.f-m_endChargeFraction)))
+            if (hitCounter >= std::floor(totalHits * (1.f - m_endChargeFraction)))
             {
                 endCharge += pCaloHitCharge;
             }
@@ -821,7 +813,6 @@ void ThreeDChargeFeatureTool::CalculateChargeVariables(const Algorithm *const pA
 
 void ThreeDChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, CaloHitList &caloHitList)
 {
-    //find the neutrino vertex and sort hits by distance to vertex
     const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
@@ -847,11 +838,9 @@ void ThreeDChargeFeatureTool::OrderCaloHitsByDistanceToVertex(const Algorithm *c
 
         CaloHitList clusterCaloHitList;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
-        CaloHitVector clusterCaloHitVector(clusterCaloHitList.begin(), clusterCaloHitList.end());
 
-        //TODO: might give problems if vertex in the middle of the cluster ?
-        std::sort(clusterCaloHitVector.begin(), clusterCaloHitVector.end(), VertexComparator(vertexPosition2D));
-        caloHitList.insert(caloHitList.end(), clusterCaloHitVector.begin(), clusterCaloHitVector.end());
+        clusterCaloHitList.sort(ThreeDChargeFeatureTool::VertexComparator(vertexPosition2D));
+        caloHitList.insert(caloHitList.end(), clusterCaloHitList.begin(), clusterCaloHitList.end());
     }
 }
 
@@ -877,8 +866,8 @@ ThreeDChargeFeatureTool::VertexComparator::VertexComparator(const CartesianVecto
 
 bool ThreeDChargeFeatureTool::VertexComparator::operator()(const CaloHit *const left, const CaloHit *const right) const
 {
-    float distanceL((left->GetPositionVector()-m_neutrinoVertex).GetMagnitudeSquared());
-    float distanceR((right->GetPositionVector()-m_neutrinoVertex).GetMagnitudeSquared());
+    const float distanceL((left->GetPositionVector()-m_neutrinoVertex).GetMagnitudeSquared());
+    const float distanceR((right->GetPositionVector()-m_neutrinoVertex).GetMagnitudeSquared());
     return distanceL < distanceR;
 }
 

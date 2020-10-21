@@ -213,7 +213,7 @@ private:
      *  @param  pointVectorStart to receive the positions at the start/vertex region
      *  @param  pointVectorEnd to receive the positions at the end region (opposite end to vertex)
      */
-    void Divide3DCaloHitList(const pandora::Algorithm *const pAlgorithm, pandora::CaloHitList &threeDCaloHitList,
+    void Divide3DCaloHitList(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &threeDCaloHitList,
         pandora::CartesianPointVector &pointVectorStart, pandora::CartesianPointVector &pointVectorEnd);
 
     /**
