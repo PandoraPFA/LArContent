@@ -255,9 +255,9 @@ void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    CaloHitList nHits3DParentList;
-    LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, nHits3DParentList);
-    const unsigned int nHits3DParent(nHits3DParentList.size());
+    CaloHitList parent3DHitList;
+    LArPfoHelper::GetCaloHits(pInputPfo, TPC_3D, parent3DHitList);
+    const unsigned int nParentHits3D(parent3DHitList.size());
 
     PfoList allDaughtersPfoList;
     LArPfoHelper::GetAllDownstreamPfos(pInputPfo, allDaughtersPfoList);
@@ -280,7 +280,7 @@ void PfoHierarchyFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector,
 
     const LArMvaHelper::MvaFeature nDaughters(static_cast<double>(nDaughterPfos));
     const LArMvaHelper::MvaFeature nDaughterHits3D(static_cast<double>(nDaughterHits3DTotal));
-    const LArMvaHelper::MvaFeature daughterParentNHitsRatio((nHits3DParent > 0) ? static_cast<double>(nDaughterHits3DTotal) / static_cast<double>(nHits3DParent) : 0.);
+    const LArMvaHelper::MvaFeature daughterParentNHitsRatio((nParentHits3D > 0) ? static_cast<double>(nDaughterHits3DTotal) / static_cast<double>(nParentHits3D) : 0.);
 
     featureVector.push_back(nDaughters);
     featureVector.push_back(nDaughterHits3D);
@@ -558,6 +558,7 @@ void ThreeDOpeningAngleFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureV
         }
         else
         {
+            // ATTN Default value only applied if there are 3D hits
             diffAngle = m_defaultValue;
         }
     }
@@ -590,22 +591,22 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
 
     if (pInteractionVertex && (1 == nInteractionVertices))
     {
-        const CartesianVector &nuVertex(pInteractionVertex->GetPosition());
-        CaloHitVector threeDCaloHitVector(threeDCaloHitList.begin(), threeDCaloHitList.end());
-
         // Order by distance to vertex, so first ones are closer to nuvertex
-        std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), ThreeDChargeFeatureTool::VertexComparator(nuVertex));
-        CaloHitList orderedCaloHitList(threeDCaloHitVector.begin(),threeDCaloHitVector.end());
+        CaloHitVector threeDCaloHitVector(threeDCaloHitList.begin(), threeDCaloHitList.end());
+        std::sort(threeDCaloHitVector.begin(), threeDCaloHitVector.end(), ThreeDChargeFeatureTool::VertexComparator(pInteractionVertex->GetPosition()));
 
         unsigned int iHit(1);
-        const unsigned int nhits(orderedCaloHitList.size());
+        const unsigned int nHits(threeDCaloHitVector.size());
 
-        for (const CaloHit *const pCaloHit : orderedCaloHitList)
+        if (0 == nHits)
+            return;
+
+        for (const CaloHit *const pCaloHit : threeDCaloHitVector)
         {
-            if (static_cast<float>(iHit) / nhits <= m_hitFraction)
+            if (static_cast<float>(iHit) / static_cast<float>(nHits) <= m_hitFraction)
                 pointVectorStart.push_back(pCaloHit->GetPositionVector());
 
-            if (static_cast<float>(iHit) / nhits >= 1.f - m_hitFraction)
+            if (static_cast<float>(iHit) / static_cast<float>(nHits) >= 1.f - m_hitFraction)
                 pointVectorEnd.push_back(pCaloHit->GetPositionVector());
 
             ++iHit;
