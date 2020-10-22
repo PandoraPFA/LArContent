@@ -35,6 +35,7 @@ MvaPfoCharacterisationAlgorithm<T>::MvaPfoCharacterisationAlgorithm() :
     m_fiducialMaxY(std::numeric_limits<float>::max()),
     m_fiducialMinZ(-std::numeric_limits<float>::max()),
     m_fiducialMaxZ(std::numeric_limits<float>::max()),
+    m_applyReconstructabilityChecks(false),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
@@ -98,7 +99,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
     const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
 
-    if (m_trainingSetMode)
+    if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
         const PfoList myPfoList(1, pPfo);
 
@@ -125,7 +126,6 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
         LArMCParticleHelper::MCParticleToPfoHitSharingMap mcParticleToPfoHitSharingMap;
         LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(pfoToReconstructable2DHitsMap, mcParticlesToGoodHitsMaps, pfoToMCParticleHitSharingMap, mcParticleToPfoHitSharingMap);
-
         if (pfoToMCParticleHitSharingMap.empty())
             return false;
 
@@ -222,6 +222,30 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             }
         }
 
+        return isTrueTrack;
+    }
+    else if (m_trainingSetMode)
+    {
+        bool isTrueTrack(false);
+        bool isMainMCParticleSet(false);
+
+        try
+        {
+            const MCParticle *const pMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
+            isTrueTrack = ((PHOTON != pMCParticle->GetParticleId()) && (E_MINUS != std::abs(pMCParticle->GetParticleId())));
+            isMainMCParticleSet = (pMCParticle->GetParticleId() != 0);
+        }
+        catch (const StatusCodeException &) {}
+
+        if (isMainMCParticleSet)
+        {
+            std::string outputFile;
+            outputFile.append(m_trainingOutputFile);
+            const std::string end=((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
+            outputFile.append(end);
+            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
+        }
+ 
         return isTrueTrack;
     }
 
@@ -334,6 +358,7 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutMinZ", m_fiducialMinZ));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FiducialCutMaxZ", m_fiducialMaxZ));
         }
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ApplyReconstructabilityChecks", m_applyReconstructabilityChecks));
     }
     else
     {
