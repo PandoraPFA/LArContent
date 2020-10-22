@@ -139,14 +139,10 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             const CaloHitList &allMCHits(targetMCParticleToHitsMap.at(pAssociatedMCParticle));
             const CaloHitList &associatedMCHits(mcParticleCaloHitListPair.second);
 
-            if ((std::abs(pAssociatedMCParticle->GetParticleId()) == E_MINUS) || (pAssociatedMCParticle->GetParticleId() == PHOTON))
-            {
+            if ((PHOTON == pAssociatedMCParticle->GetParticleId()) || (E_MINUS == std::abs(pAssociatedMCParticle->GetParticleId())))
                 hitsShower += associatedMCHits.size();
-            }
             else
-            {
                 hitsTrack += associatedMCHits.size();
-            }
 
             if (associatedMCHits.size() > nHitsSharedWithBestMCParticleTotal)
             {
@@ -158,12 +154,11 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         }
 
         const float trackShowerHitsRatio((hitsTrack + hitsShower) > 0 ? hitsTrack / (hitsTrack + hitsShower) : 0.f);
-        const bool isTrueTrack = trackShowerHitsRatio >= 0.5;
+        const bool isTrueTrack(trackShowerHitsRatio >= 0.5);
 
         const int nHitsInPfoTotal(pfoToReconstructable2DHitsMap.at(pPfo).size());
         const float purity((nHitsInPfoTotal > 0) ? nHitsSharedWithBestMCParticleTotal / static_cast<float>(nHitsInPfoTotal) : 0.f);
         const float completeness((nHitsInBestMCParticleTotal > 0) ? nHitsSharedWithBestMCParticleTotal / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
-        const int pdgCode(bestMCParticlePdgCode);
 
         CaloHitList checkHitListW;
         LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, checkHitListW);
@@ -183,22 +178,23 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         LArMCParticleHelper::CaloHitToMCMap hitToMCMap;        
         LArMCParticleHelper::GetMCParticleToCaloHitMatches(&checkHitListAll, mcPrimaryMap, hitToMCMap, mcToTrueHitListMap);
 
-        unsigned int showerCount(0);
+        unsigned int showerCount(0), allCount(0);
         for (const CaloHit *pHit : checkHitListAll)
         {
             if (hitToMCMap.find(pHit) != hitToMCMap.end())
             {
                 const MCParticle *pHitMCParticle(hitToMCMap.at(pHit));
                 if ((PHOTON == pHitMCParticle->GetParticleId()) || (E_MINUS == std::abs(pHitMCParticle->GetParticleId())))
-                {
                     ++showerCount;
-                }
+                ++allCount;
             }
         }
 
-        const float showerProbability(hitToMCMap.size() > 0 ? showerCount / static_cast<float>(hitToMCMap.size()) : 1.f);
+        if (allCount == 0)
+            return false;
+        const float showerProbability(showerCount / static_cast<float>(allCount));
         const bool mischaracterisedPfo((showerProbability < 0.5f && !isTrueTrack) || (showerProbability > 0.5 && isTrueTrack) ? true : false);
-        const bool isMainMCParticleSet(0 != pdgCode);
+        const bool isMainMCParticleSet(bestMCParticlePdgCode != 0);
 
         if (isMainMCParticleSet)
         {
