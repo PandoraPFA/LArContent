@@ -95,14 +95,11 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
 
-    // TODO Investigate what to do here if use 3D info is set to false
     const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
     const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
-        const PfoList myPfoList(1, pPfo);
-
         const MCParticleList *pMCParticleList(nullptr);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
 
@@ -119,7 +116,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps({targetMCParticleToHitsMap});
 
         LArMCParticleHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
-        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(myPfoList, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_primaryParameters.m_foldBackHierarchy);
+        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(PfoList(1, pPfo), mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_primaryParameters.m_foldBackHierarchy);
         if (pfoToReconstructable2DHitsMap.empty())
             return false;
 
@@ -129,14 +126,11 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         if (pfoToMCParticleHitSharingMap.empty())
             return false;
 
-        const CaloHitList &allHitsInPfo(pfoToReconstructable2DHitsMap.at(pPfo));
-        const int nHitsInPfoTotal(allHitsInPfo.size());
         unsigned int nHitsInBestMCParticleTotal(0);
         unsigned int nHitsSharedWithBestMCParticleTotal(0);
         int bestMCParticlePdgCode(0);
         CartesianVector threeDVertexPosition(0.f, 0.f, 0.f);
-        float hitsShower(0);
-        float hitsTrack(0);
+        float hitsShower(0), hitsTrack(0);
         const LArMCParticleHelper::MCParticleToSharedHitsVector &mcParticleToSharedHitsVector(pfoToMCParticleHitSharingMap.at(pPfo));
 
         for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitListPair : mcParticleToSharedHitsVector)
@@ -145,7 +139,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             const CaloHitList &allMCHits(targetMCParticleToHitsMap.at(pAssociatedMCParticle));
             const CaloHitList &associatedMCHits(mcParticleCaloHitListPair.second);
 
-            if ((std::abs(pAssociatedMCParticle->GetParticleId()) == 11) || (pAssociatedMCParticle->GetParticleId() == 22))
+            if ((std::abs(pAssociatedMCParticle->GetParticleId()) == E_MINUS) || (pAssociatedMCParticle->GetParticleId() == PHOTON))
             {
                 hitsShower += associatedMCHits.size();
             }
@@ -166,8 +160,9 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         const float trackShowerHitsRatio((hitsTrack + hitsShower) > 0 ? hitsTrack / (hitsTrack + hitsShower) : 0.f);
         const bool isTrueTrack = trackShowerHitsRatio >= 0.5;
 
-        const float completeness((nHitsInBestMCParticleTotal > 0) ? nHitsSharedWithBestMCParticleTotal / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
+        const int nHitsInPfoTotal(pfoToReconstructable2DHitsMap.at(pPfo).size());
         const float purity((nHitsInPfoTotal > 0) ? nHitsSharedWithBestMCParticleTotal / static_cast<float>(nHitsInPfoTotal) : 0.f);
+        const float completeness((nHitsInBestMCParticleTotal > 0) ? nHitsSharedWithBestMCParticleTotal / static_cast<float>(nHitsInBestMCParticleTotal) : 0.f);
         const int pdgCode(bestMCParticlePdgCode);
 
         CaloHitList checkHitListW;
@@ -191,17 +186,13 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         unsigned int showerCount(0);
         for (const CaloHit *pHit : checkHitListAll)
         {
-            const MCParticle *pHitMCParticle(nullptr);
-
-            try
+            if (hitToMCMap.find(pHit) != hitToMCMap.end())
             {
-                pHitMCParticle = hitToMCMap.at(pHit);
-            }
-            catch (...) {continue;}
-
-            if ((PHOTON == pHitMCParticle->GetParticleId()) || (E_MINUS == std::abs(pHitMCParticle->GetParticleId())))
-            {
-                ++showerCount;
+                const MCParticle *pHitMCParticle(hitToMCMap.at(pHit));
+                if ((PHOTON == pHitMCParticle->GetParticleId()) || (E_MINUS == std::abs(pHitMCParticle->GetParticleId())))
+                {
+                    ++showerCount;
+                }
             }
         }
 
