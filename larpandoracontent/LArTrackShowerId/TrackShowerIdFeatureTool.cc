@@ -570,7 +570,7 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
     const VertexList *pVertexList(nullptr);
     (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
-    if (!pVertexList || pVertexList->empty())
+    if (threeDCaloHitList.empty() || !pVertexList || pVertexList->empty())
         return;
 
     unsigned int nInteractionVertices(0);
@@ -593,9 +593,6 @@ void ThreeDOpeningAngleFeatureTool::Divide3DCaloHitList(const Algorithm *const p
 
         unsigned int iHit(1);
         const unsigned int nHits(threeDCaloHitVector.size());
-
-        if (0 == nHits)
-            return;
 
         for (const CaloHit *const pCaloHit : threeDCaloHitVector)
         {
