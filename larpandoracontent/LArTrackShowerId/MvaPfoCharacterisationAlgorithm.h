@@ -49,13 +49,14 @@ protected:
     bool                    m_useThreeDInformation;         ///< Whether to use 3D information
     float                   m_minProbabilityCut;            ///< The minimum probability to label a cluster as track-like
     unsigned int            m_minCaloHitsCut;               ///< The minimum number of calo hits to qualify as a track
-    bool                    m_applyFiducialCut;             ///< Whether or not to apply a fiducial volume cut
+    bool                    m_applyFiducialCut;             ///< Whether to apply a fiducial volume cut during training
     float                   m_fiducialMinX;                 ///< Fiducial volume minimum x
     float                   m_fiducialMaxX;                 ///< Fiducial volume maximum x
     float                   m_fiducialMinY;                 ///< Fiducial volume minimum y
     float                   m_fiducialMaxY;                 ///< Fiducial volume maximum y
     float                   m_fiducialMinZ;                 ///< Fiducial volume minimum z
     float                   m_fiducialMaxZ;                 ///< Fiducial volume maximum z
+    bool                    m_applyReconstructabilityChecks;///< Whether to apply reconstructability checks during training
 
     std::string             m_caloHitListName;              ///< Name of input calo hit list
     std::string             m_mcParticleListName;           ///< Name of input MC particle list
