@@ -175,7 +175,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         LArMCParticleHelper::GetMCPrimaryMap(pMCParticleList, mcPrimaryMap);
 
         LArMCParticleHelper::MCContributionMap mcToTrueHitListMap;
-        LArMCParticleHelper::CaloHitToMCMap hitToMCMap;        
+        LArMCParticleHelper::CaloHitToMCMap hitToMCMap;
         LArMCParticleHelper::GetMCParticleToCaloHitMatches(&checkHitListAll, mcPrimaryMap, hitToMCMap, mcToTrueHitListMap);
 
         unsigned int showerCount(0), allCount(0);
@@ -229,7 +229,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
             outputFile.append(wClusterList.empty() ? "noChargeInfo.txt" : ".txt");
             LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
         }
- 
+
         return isTrueTrack;
     }
 

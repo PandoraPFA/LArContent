@@ -75,7 +75,7 @@ else()
         set(LAR_CONTENT_LIBRARY_NAME "LArContent")
     endif()
     project(${LAR_CONTENT_LIBRARY_NAME})
-    
+
     # DL Content
     option(PANDORA_LIBTORCH "Flag for building against LibTorch" OFF)
     if(PANDORA_LIBTORCH)
@@ -88,7 +88,7 @@ else()
     foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
         set(${PROJ}_VERSION_MAJOR 03)
         set(${PROJ}_VERSION_MINOR 22)
-        set(${PROJ}_VERSION_PATCH 00)
+        set(${PROJ}_VERSION_PATCH 01)
         set(${PROJ}_VERSION "${${PROJ}_VERSION_MAJOR}.${${PROJ}_VERSION_MINOR}.${${PROJ}_VERSION_PATCH}")
     endforeach()
 

@@ -1,4 +1,9 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_22_01
+--------------------------------------------------------------------------------------------------------------------------------------------
+Overhaul of TrackShowerIdFeatureTool and MvaPfoCharacterisation algorithm following on from v03_21_01 bug fix
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_22_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Added a deep learning library providing support LibTorch neural networks
@@ -18,7 +23,7 @@ Modifications to the TrackInEMShower algorithm (refactored class structure) chec
 TAG v03_20_00
 --------------------------------------------------------------------------------------------------------------------------------------------
 Added BDT PFO track/shower characterisation functionality
-Minor changes to TrackShowerIdFeatureTool to make the variables compatible with DUNE FD and ProtoDUNE 
+Minor changes to TrackShowerIdFeatureTool to make the variables compatible with DUNE FD and ProtoDUNE
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_19_03
