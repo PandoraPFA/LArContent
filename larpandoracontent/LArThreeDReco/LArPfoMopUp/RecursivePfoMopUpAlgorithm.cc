@@ -50,16 +50,19 @@ std::vector<RecursivePfoMopUpAlgorithm::pfoMergeStats> RecursivePfoMopUpAlgorith
     for (PfoList::const_iterator pIter = pPfoList->begin(), pIterEnd = pPfoList->end(); pIter != pIterEnd; ++pIter) {
       const ParticleFlowObject* const pPfo = *pIter;
 
-      unsigned int pfoHits(0);
+      std::vector<unsigned int> pfoHits;
       ClusterList clusterList;
       LArPfoHelper::GetTwoDClusterList(pPfo, clusterList);
       for (auto const& cluster : clusterList) {
-        pfoHits += cluster->GetNCaloHits();
+        pfoHits.push_back(cluster->GetNCaloHits());
       }
-      // TODO get TrackScore Metadata
-      float trackScore(-1.f);
 
-      pfoMergeStatsVec.push_back(RecursivePfoMopUpAlgorithm::pfoMergeStats{ pfoHits, clusterList.size(), trackScore });
+      const PropertiesMap pfoMeta(pPfo->GetPropertiesMap());
+
+      const auto& trackScoreIter = pfoMeta.find("TrackScore");
+      const float trackScore(trackScoreIter != pfoMeta.end() ? trackScoreIter->second : -1.f);
+
+      pfoMergeStatsVec.push_back(RecursivePfoMopUpAlgorithm::pfoMergeStats{ pfoHits, trackScore });
     }
   }
   return pfoMergeStatsVec;

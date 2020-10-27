@@ -19,14 +19,13 @@ class RecursivePfoMopUpAlgorithm : public pandora::Algorithm {
   private:
   // Struct to determine if a pfo has been merged
   struct pfoMergeStats {
-    const unsigned int mNumHits;
-    const long unsigned int mNumClusters;
+    const std::vector<unsigned int> mNumHits;
     const float mTrackScore;
   };
 
   static bool pfoMergeStatsComp(const pfoMergeStats& lhs, const pfoMergeStats& rhs)
   {
-    return ((lhs.mNumClusters == rhs.mNumClusters) && (lhs.mNumHits == rhs.mNumHits) && ((lhs.mTrackScore - rhs.mTrackScore) < std::numeric_limits<float>::epsilon()));
+    return ((lhs.mNumHits == rhs.mNumHits) && ((lhs.mTrackScore - rhs.mTrackScore) < std::numeric_limits<float>::epsilon()));
   };
 
   pandora::StatusCode Run();
