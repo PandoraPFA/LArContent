@@ -1,7 +1,8 @@
 /**
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/RecursivePfoMopUpAlgorithm.h
  *
- *  @brief  Header file for the mega cluster mop up algorithm that runs other algs.
+ *  @brief  Header file for the recursive pfo mop up algorithm that runs other algs:
+ *          Recusively loop over a series of algortihms until no more changes are made
  *
  *  $Log: $
  */
@@ -17,19 +18,18 @@ namespace lar_content {
  */
 class RecursivePfoMopUpAlgorithm : public pandora::Algorithm {
   private:
-  // Struct to determine if a pfo has been merged
-  struct pfoMergeStats {
-    const std::vector<unsigned int> mNumHits;
-    const float mTrackScore;
+  struct pfoMergeStats {                      ///< Object to compare PFO before/after merging algs have run to see if anything changed
+    const std::vector<unsigned int> mNumHits; ///< Vector filled with number of hits in each of the PFO's clusters
+    const float mTrackScore;                  ///< MVA "Track Score" for the PFO
   };
 
-  static bool pfoMergeStatsComp(const pfoMergeStats& lhs, const pfoMergeStats& rhs)
+  static bool pfoMergeStatsComp(const pfoMergeStats& lhs, const pfoMergeStats& rhs) ///< Comparitor  for pfoMergeStats
   {
-    return ((lhs.mNumHits == rhs.mNumHits) && ((lhs.mTrackScore - rhs.mTrackScore) < std::numeric_limits<float>::epsilon()));
+    return ((lhs.mNumHits == rhs.mNumHits) && (std::abs(lhs.mTrackScore - rhs.mTrackScore) < std::numeric_limits<float>::epsilon()));
   };
 
   pandora::StatusCode Run();
-  std::vector<pfoMergeStats> GetPfoMergeStats();
+  std::vector<pfoMergeStats> GetPfoMergeStats() const; ///< Vector filled with pfoMergeStats for each PFP in m_pfoListNames
   pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
   pandora::StringVector m_pfoListNames;    ///< The list of pfo list names
