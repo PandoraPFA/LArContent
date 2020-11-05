@@ -173,6 +173,13 @@ public:
      */
     TransverseOverlapResult &operator=(const TransverseOverlapResult &rhs);
 
+    /**
+     *  @brief Move assignment operator
+     *
+     *  @param  rhs the object to be moved
+     */
+    TransverseOverlapResult &operator=(TransverseOverlapResult &&rhs);
+
 private:
     XOverlap        m_xOverlap;                     ///< The x overlap object
 };
@@ -335,6 +342,13 @@ public:
      *  @param  rhs the track overlap result to assign
      */
     FragmentOverlapResult &operator=(const FragmentOverlapResult &rhs);
+
+    /**
+     *  @brief Move assignment operator
+     *
+     *  @param  rhs the object to be moved
+     */
+    FragmentOverlapResult &operator=(FragmentOverlapResult &&rhs);
 
 private:
     pandora::CaloHitList    m_caloHitList;      ///< The list of fragment-associated hits

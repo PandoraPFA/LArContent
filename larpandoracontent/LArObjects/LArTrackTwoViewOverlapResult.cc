@@ -198,4 +198,17 @@ TwoViewTransverseOverlapResult &TwoViewTransverseOverlapResult::operator=(const 
     return *this;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoViewTransverseOverlapResult &TwoViewTransverseOverlapResult::operator=(TwoViewTransverseOverlapResult &&rhs)
+{
+    m_downsamplingFactor = rhs.m_downsamplingFactor;
+    m_nSamplingPoints = rhs.m_nSamplingPoints;
+    m_nMatchedSamplingPoints = rhs.m_nMatchedSamplingPoints;
+    m_correlationCoefficient = rhs.m_correlationCoefficient;
+    m_twoViewXOverlap = std::move(rhs.m_twoViewXOverlap);
+
+    return *this;
+}
+
 } // namespace lar_content
