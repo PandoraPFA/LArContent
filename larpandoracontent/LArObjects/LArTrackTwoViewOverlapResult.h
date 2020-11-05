@@ -188,6 +188,13 @@ public:
      */
     TwoViewTransverseOverlapResult &operator=(const TwoViewTransverseOverlapResult &rhs);
 
+    /**
+     *  @brief Move assignment operator
+     *
+     *  @param  rhs the object to be moved
+     */
+    TwoViewTransverseOverlapResult &operator=(TwoViewTransverseOverlapResult &&rhs);
+
 private:
     float                  m_downsamplingFactor;                  ///< The downsampling factor
     unsigned int           m_nSamplingPoints;                     ///< The number of sampling points
