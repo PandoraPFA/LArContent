@@ -1,30 +1,30 @@
 /**
- *  @file   larpandoracontent/LArMonitoring/DeltaRayTensorVisualizationTool.h
+ *  @file   larpandoracontent/LArMonitoring/DeltaRayMatrixVisualizationTool.h
  *
  *  @brief  Header file for the transverse tensor visualization tool class.
  *
  *  $Log: $
  */
-#ifndef DELTA_RAY_TENSOR_VISUALIZATION_TOOL_H
-#define DELTA_RAY_TENSOR_VISUALIZATION_TOOL_H 1
+#ifndef DELTA_RAY_MATRIX_VISUALIZATION_TOOL_H
+#define DELTA_RAY_MATRIX_VISUALIZATION_TOOL_H 1
 
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMatchingAlgorithm.h"
 
 namespace lar_content
 {
 
 /**
- *  @brief  DeltaRayTensorVisualizationTool class
+ *  @brief  DeltaRayMatrixVisualizationTool class
  */
-class DeltaRayTensorVisualizationTool : public DeltaRayTensorTool
+class DeltaRayMatrixVisualizationTool : public DeltaRayMatrixTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    DeltaRayTensorVisualizationTool();
+    DeltaRayMatrixVisualizationTool();
 
-    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
+    bool Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix);
 
     typedef std::map<const pandora::MCParticle*, unsigned int> MCParticleToIDMap;
     typedef std::map<unsigned int, pandora::CaloHitList> IDToHitMap;
@@ -44,4 +44,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef DELTA_RAY_TENSOR_VISUALIZATION_TOOL_H
+#endif // #ifndef DELTA_RAY_MATRIX_VISUALIZATION_TOOL_H

@@ -13,6 +13,59 @@ using namespace pandora;
 namespace lar_content
 {
 
+TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult() :
+    TrackOverlapResult(),
+    m_xOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f)),
+    m_projectedCaloHits()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult(const unsigned int nMatchedSamplingPoints,
+    const unsigned int nSamplingPoints, const float chi2, const TwoViewXOverlap &xOverlap, const CaloHitList &projectedCaloHits) :
+    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
+    m_xOverlap(xOverlap),
+    m_projectedCaloHits(projectedCaloHits)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult(const TrackTwoViewTopologyOverlapResult &rhs) :
+    TrackOverlapResult(rhs),
+    m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f)),
+    m_projectedCaloHits(rhs.IsInitialized() ? rhs.GetProjectedCaloHits() : CaloHitList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackTwoViewTopologyOverlapResult::~TrackTwoViewTopologyOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackTwoViewTopologyOverlapResult &TrackTwoViewTopologyOverlapResult::operator=(const TrackTwoViewTopologyOverlapResult &rhs)
+{
+    this->TrackOverlapResult::operator=(rhs);
+
+    if (rhs.IsInitialized())
+    {
+        m_xOverlap = rhs.GetXOverlap();
+    }
+    else
+    {
+        m_xOverlap = TwoViewXOverlap(0.f, 0.f, 0.f, 0.f);
+    }
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() : m_isInitialized(false), m_matchingScore(0)
 {
 }

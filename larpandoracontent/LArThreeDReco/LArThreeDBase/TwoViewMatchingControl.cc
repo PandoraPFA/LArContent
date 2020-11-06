@@ -225,6 +225,7 @@ StatusCode TwoViewMatchingControl<T>::ReadSettings(const TiXmlHandle xmlHandle)
 }
 
 template class TwoViewMatchingControl<float>;
+template class TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult>;
 template class TwoViewMatchingControl<TwoViewTransverseOverlapResult>;
 
 } // namespace lar_content

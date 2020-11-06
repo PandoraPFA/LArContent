@@ -47,6 +47,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
+#include "larpandoracontent/LArMonitoring/DeltaRayMatrixVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/DeltaRayTensorVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/NeutrinoEventValidationAlgorithm.h"
@@ -64,6 +65,7 @@
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/ClearDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayTrackRecoveryAlgorithm.h"
@@ -71,6 +73,7 @@
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/UnattachedDeltaRaysAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArEventBuilding/BranchAssociatedPfosTool.h"
@@ -234,6 +237,7 @@
     d("LArDeltaRayIdentification",              DeltaRayIdentificationAlgorithm)                                                \
     d("LArDeltaRayMatching",                    DeltaRayMatchingAlgorithm)                                                      \
     d("LArThreeViewDeltaRayMatching",           ThreeViewDeltaRayMatchingAlgorithm)                                             \
+    d("LArTwoViewDeltaRayMatching",             TwoViewDeltaRayMatchingAlgorithm)                                               \
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
     d("LArThreeDHitCreation",                   ThreeDHitCreationAlgorithm)                                                     \
     d("LArThreeDLongitudinalTracks",            ThreeViewLongitudinalTracksAlgorithm)                                           \
@@ -307,7 +311,9 @@
     d("LArShowerTensorVisualization",           ShowerTensorVisualizationTool)                                                  \
     d("LArTransverseMatrixVisualization",       TransverseMatrixVisualizationTool)                                              \
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
+    d("LArClearDeltaRay",                       ClearDeltaRayTool)                                                              \
     d("LArDeltaRayTensorVisualization",         DeltaRayTensorVisualizationTool)                                                \
+    d("LArDeltaRayMatrixVisualization",         DeltaRayMatrixVisualizationTool)                                                \
     d("LArCheatingBeamParticleId",              CheatingBeamParticleIdTool)                                                     \
     d("LArCheatingBeamParticleSliceSelection",  CheatingBeamParticleSliceSelectionTool)                                         \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \
