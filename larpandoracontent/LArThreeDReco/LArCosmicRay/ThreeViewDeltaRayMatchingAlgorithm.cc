@@ -19,7 +19,7 @@ namespace lar_content
 
 ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm()  :
     m_nMaxTensorToolRepeats(1000),
-    m_minClusterCaloHits(5),
+    m_minClusterCaloHits(3),
     m_pseudoChi2Cut(3.f),
     m_xOverlapWindow(1.f),
     m_minMatchedFraction(0.5),

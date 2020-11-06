@@ -8,6 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+
 #include "larpandoracontent/LArMonitoring/DeltaRayTensorVisualizationTool.h"
 
 using namespace pandora;
@@ -72,12 +74,30 @@ bool DeltaRayTensorVisualizationTool::Run(ThreeViewDeltaRayMatchingAlgorithm *co
 
             if (m_showEachIndividualElement)
             {
+
+                if (std::fabs(this->GetPandora().GetGeometry()->GetLArTPC().GetCenterX() - (-367.62)) > 0.1)
+                {
                 const ClusterList clusterListU(1, eIter->GetClusterU()), clusterListV(1, eIter->GetClusterV()), clusterListW(1, eIter->GetClusterW());
                 PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListU, "UCluster", RED));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListV, "VCluster", GREEN));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListW, "WCluster", BLUE));
+
+                MCParticleToIDMap mcParticleToIDMap;
+                IDToHitMap idToUHitMap, idToVHitMap, idToWHitMap;
+                this->FillMCParticleIDMap(clusterListU.front(), mcParticleToIDMap, idToUHitMap);
+                this->FillMCParticleIDMap(clusterListV.front(), mcParticleToIDMap, idToVHitMap);
+                this->FillMCParticleIDMap(clusterListW.front(), mcParticleToIDMap, idToWHitMap);                
+
+                std::cout << "UCluster: " << std::endl;
+                this->PrintClusterHitOwnershipMap(idToUHitMap);
+                std::cout << "VCluster: " << std::endl;
+                this->PrintClusterHitOwnershipMap(idToVHitMap);
+                std::cout << "WCluster: " << std::endl;
+                this->PrintClusterHitOwnershipMap(idToWHitMap);
+                
                 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+                }
             }
         }
 
@@ -101,7 +121,120 @@ bool DeltaRayTensorVisualizationTool::Run(ThreeViewDeltaRayMatchingAlgorithm *co
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+   
+void DeltaRayTensorVisualizationTool::FillMCParticleIDMap(const Cluster *const pCluster, MCParticleToIDMap &mcParticleToIDMap, IDToHitMap &idToHitMap)
+{
+    unsigned int particleIDCounter(0);
+    for (auto &entry : mcParticleToIDMap)
+    {
+        if (entry.second > particleIDCounter)
+            particleIDCounter = entry.second;
+    }
 
+    ++particleIDCounter;
+
+    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+    if (orderedCaloHitList.empty())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+    
+    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+    {
+        for (const CaloHit *const pCaloHit : *mapEntry.second)
+        {
+            try
+            {
+                const MCParticle *const pHitParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+                const MCParticle *const pLeadingParticle(this->GetLeadingParticle(pHitParticle));
+
+                unsigned int particleID(0);
+                MCParticleToIDMap::iterator iter(mcParticleToIDMap.find(pLeadingParticle));
+
+                if (iter == mcParticleToIDMap.end())
+                {
+                    mcParticleToIDMap[pLeadingParticle] = particleIDCounter;
+                    particleID = particleIDCounter;
+                    ++particleIDCounter;
+                }
+                else
+                {
+                    particleID = mcParticleToIDMap.at(pLeadingParticle);
+                }
+
+                idToHitMap[particleID].push_back(pCaloHit);
+            }
+            catch (StatusCodeException &)
+            {
+                continue;
+            }
+        }
+    }    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void DeltaRayTensorVisualizationTool::PrintClusterHitOwnershipMap(IDToHitMap &idToHitMap)
+{
+    std::vector<unsigned int> particleIDVector;
+    unsigned int maxHits(0), maxID(0);
+
+    while(particleIDVector.size() != idToHitMap.size())
+    {
+        for (auto &entry : idToHitMap)
+        {
+            if (std::find(particleIDVector.begin(), particleIDVector.end(), entry.first) != particleIDVector.end())
+                continue;
+
+            if (entry.second.size() > maxHits)
+            {
+                maxHits = entry.second.size();
+                maxID = entry.first;
+            }
+        }
+
+        particleIDVector.push_back(maxID);
+        maxHits = 0;
+        maxID = 0;
+    }
+
+    unsigned int totalHits(0);
+    for (const auto &entry : idToHitMap)
+        totalHits += entry.second.size();
+
+    for (const unsigned int id : particleIDVector)
+    {
+        std::cout << "(" << std::to_string(id) << ", " << static_cast<float>(idToHitMap.size())/static_cast<float>(totalHits) << "%) ";
+    }
+    std::cout << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+const MCParticle *DeltaRayTensorVisualizationTool::GetLeadingParticle(const MCParticle *const pMCParticle)
+{
+    if (pMCParticle == LArMCParticleHelper::GetParentMCParticle(pMCParticle))
+        return pMCParticle;
+
+    // Navigate upward through MC daughter/parent links - collect this particle and all its parents
+    MCParticleVector mcParticleVector;
+
+    const MCParticle *pParentMCParticle = pMCParticle;
+    mcParticleVector.push_back(pParentMCParticle);
+
+    while (!pParentMCParticle->GetParentList().empty())
+    {
+        if (1 != pParentMCParticle->GetParentList().size())
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
+        mcParticleVector.push_back(pParentMCParticle);
+    }
+
+    return *(mcParticleVector.end() - 2);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+    
 StatusCode DeltaRayTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,

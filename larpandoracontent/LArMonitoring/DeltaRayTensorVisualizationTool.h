@@ -26,6 +26,13 @@ public:
 
     bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
+    typedef std::map<const pandora::MCParticle*, unsigned int> MCParticleToIDMap;
+    typedef std::map<unsigned int, pandora::CaloHitList> IDToHitMap;
+
+    void FillMCParticleIDMap(const pandora::Cluster *const pCluster, MCParticleToIDMap &mcParticleToIDMap, IDToHitMap &idToHitMap);
+    void PrintClusterHitOwnershipMap(IDToHitMap &idToHitMap);
+    const pandora::MCParticle *GetLeadingParticle(const pandora::MCParticle *const pMCParticle);
+
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
