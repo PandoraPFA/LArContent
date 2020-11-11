@@ -46,7 +46,7 @@ namespace lar_content
   if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
     std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << " with probability map size " << pfotoprobabilitymapb.size() <<std::endl;
 
-  //std::cout << "SlicePfo Info: "  << nuSliceHypotheses.size() << "  " << crSliceHypotheses.size() << "  " << selectedPfos.size() << "  " << pfotoprobabilitymapb.size() << "  " << sliceVector.size() << std::endl;
+  std::cout << "SlicePfo Info: "  << nuSliceHypotheses.size() << "  " << crSliceHypotheses.size() << "  " << selectedPfos.size() << "  " << pfotoprobabilitymapb.size() << "  " << sliceVector.size() << std::endl;
 
   const CaloHitList *pAllReconstructedCaloHitList(nullptr);
   PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pAllReconstructedCaloHitList));
@@ -65,7 +65,7 @@ namespace lar_content
   LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
 
   const CaloHitList nuNHitsTotal(this->CountNeutrinoInducedHits(reconstructableCaloHitList));
-  //std::cout << "nu hits in mc " << nuNHitsTotal.size() << std::endl;
+  std::cout << "nu hits in mc " << nuNHitsTotal.size() << std::endl;
   
 
   std::list<float> complist;
@@ -73,48 +73,24 @@ namespace lar_content
   std::vector<bool> isselectedbestlist;
   float completenesstotal = 0.0;
   float totalslicessize = 0;
-  float isa0nan = 0;
 
 
 
   const unsigned int nSlices(sliceVector.size());
-  // std::cout << "nSlices " << nSlices << std::endl;
+  std::cout << "nSlices " << nSlices << std::endl;
   for (unsigned int sliceIndex = 0; sliceIndex < nSlices; ++sliceIndex)
     {
       const auto nuHypothesis = nuSliceHypotheses.at(sliceIndex);
       const auto crHypothesis = crSliceHypotheses.at(sliceIndex);    // Check that something was reconstructed
-      // std::cout << "nuHypothesis " << nuHypothesis.size() << std::endl;
-      //  std::cout << "crHypothesis " << crHypothesis.size() << std::endl;
+
       totalslicessize = nuHypothesis.size() + crHypothesis.size();
-      // std::cout << "totalslicessize " << totalslicessize << std::endl;
 
       if (nuHypothesis.empty() && crHypothesis.empty()) {
-	//	std::cout << "empty.continue" << std::endl;
-	/*
-	int isbestselected = 0;
-	std::cout << "true = " << isbestselected  << std::endl;
-
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttreed", "wasright", isbestselected));
-	PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttreed"));
-	std::cout << "after tree" << std::endl;
-	*/
         continue;  
       }
 
       // Work out if the slice was identified as neutrino or CR    
       const auto isSelectedAsNu = !nuHypothesis.empty() && std::find(selectedPfos.begin(), selectedPfos.end(), nuHypothesis.front()) == selectedPfos.begin();
-      // std::cout << "Selected? " << isSelectedAsNu << std::endl;
-      /*
-      const auto isSelectedAsCR = !crHypothesis.empty() && std::find(selectedPfos.begin(), selectedPfos.end(), crHypothesis.front()) != selectedPfos.begin();  
-      std::cout << isSelectedAsCR << std::endl;
-      // The slice isn't selected as neutrino or CR
-      if (!isSelectedAsNu && !isSelectedAsCR)
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);   
-      // The slice is selected as both neutrino and CR
-      if (isSelectedAsNu && isSelectedAsCR)
-        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);  
-      // To get here: (isSelectedAsNu == !isSelectedAsCR), so you can use either
-      */
       
       //get all the hits from one slice
       const CaloHitList caloHitList = sliceVector[sliceIndex];
@@ -128,8 +104,8 @@ namespace lar_content
 	}
 
       const CaloHitList nuNHitsHere(this->CountNeutrinoInducedHits(parentCaloHitList));
-      //std::cout << "total hits in slice " << parentCaloHitList.size() << std::endl;
-      // std::cout << "nu hits in slice " << nuNHitsHere.size() << std::endl;
+      std::cout << "total hits in slice " << parentCaloHitList.size() << std::endl;
+      std::cout << "nu hits in slice " << nuNHitsHere.size() << std::endl;
      
       
       int sharedHits = 0;
@@ -139,7 +115,7 @@ namespace lar_content
 	  if (std::find(nuNHitsTotal.begin(), nuNHitsTotal.end(), pCaloHit) != nuNHitsTotal.end())
             sharedHits = sharedHits + 1;
 	}
-      //std::cout << "shared hits: " << sharedHits << std::endl;
+      std::cout << "shared hits: " << sharedHits << std::endl;
       
       float completeness = (float)sharedHits/(float)nuNHitsTotal.size();
       float purity = (float)sharedHits/(float)nuNHitsHere.size();
@@ -158,6 +134,7 @@ namespace lar_content
 
   //find max completeness
   int isbestselected = 0;
+  int isa0nan = 0;
   if (totalslicessize != 0) {
     std::list<float>::iterator maxcomp = std::max_element(complist.begin(), complist.end());
     auto index = std::distance(complist.begin(), maxcomp);   

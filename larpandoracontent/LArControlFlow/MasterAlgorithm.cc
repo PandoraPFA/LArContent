@@ -57,21 +57,21 @@ MasterAlgorithm::MasterAlgorithm() :
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_inTimeMaxX0(1.f)
 {
+
 }
 
   MasterAlgorithm::~MasterAlgorithm() {
-        try
-        {
-            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree", "output.root", "UPDATE"));
-	    //  PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree2", "output2.root", "UPDATE"));
-	    //   PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree3", "output3.root", "UPDATE"));
-	    // PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree4", "output4.root", "UPDATE"));
-	    // PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree5", "output5.root", "UPDATE"));
-        }
-        catch (const StatusCodeException &)
-        {
-            std::cout << " Unable to write tree  to file " << std::endl;
-        }
+    try
+      {            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree", "output.root", "UPDATE"));
+	//  PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree2", "output2.root", "UPDATE"));
+	//   PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree3", "output3.root", "UPDATE"));
+	// PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree4", "output4.root", "UPDATE"));
+	// PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree5", "output5.root", "UPDATE"));
+      }
+    catch (const StatusCodeException &)
+      {
+	std::cout << " Unable to write tree  to file " << std::endl;
+      }
   }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -85,6 +85,7 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
 
     if (pfoToLArTPCMap.end() == larTPCIter)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
 
     PfoList pfoList;
     LArPfoHelper::GetAllDownstreamPfos(pParentPfo, pfoList);
@@ -171,27 +172,34 @@ void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, 
 
 StatusCode MasterAlgorithm::Run()
 {
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
 
     if (!m_workerInstancesInitialized)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitializeWorkerInstances());
+    
 
     if (m_passMCParticlesToWorkerInstances)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
+
 
     PfoToFloatMap stitchedPfosToX0Map;
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
 
+
     if (m_shouldRunAllHitsCosmicReco)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap));
 
+
         PfoToLArTPCMap pfoToLArTPCMap;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
 
+
         if (m_shouldRunStitching)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->StitchCosmicRayPfos(pfoToLArTPCMap, stitchedPfosToX0Map));
+
     }
 
     if (m_shouldRunCosmicHitRemoval)
@@ -205,7 +213,9 @@ StatusCode MasterAlgorithm::Run()
 	//	bool incomplete;
 	// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos, directioncosmic, downprobability, deltachi2, deltachi2alone, minchi2perhit, incomplete));
 	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos, directioncosmic, downprobability));
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
+
     }
 
     SliceVector sliceVector;
@@ -397,7 +407,7 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
     //UNDO FOR TDT
     //-------------------------------------------------------down
     //METRIC
-    int Size = 0;
+    //int Size = 0; //mc stuff
     std::list<std::pair<const pandora::MCParticle*, int>> mchitslist;
     std::list<std::pair<const pandora::MCParticle*, int>> mcpairslist;
     MCParticleList mcparticlelist;
@@ -405,14 +415,15 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
     std::list<std::pair<const pandora::MCParticle*, int>>::iterator it2;
     CaloHitList totalcalohits;
     //PfoList totalpfolist;
-    int clearcosmiccount = 0;
-    int clearneutrinocount = 0;
-    int correctcr = 0;
-    int incorrectcr = 0;
-    int correctneutrino = 0;
-    int incorrectneutrino = 0;
+    // int clearcosmiccount = 0; //mc stuff
+    // int clearneutrinocount = 0;
+    // int correctcr = 0;
+    // int incorrectcr = 0;
+    //int correctneutrino = 0;
+    //int incorrectneutrino = 0;
     //bool isClearCosmic = false;
     std::vector<float> viewsizelist;
+ 
     //------------------------------------------------------------------up
     //---------------------------------------------------------------------------------------------------------
     const PfoList *pRecreatedCRPfos(nullptr);
@@ -432,6 +443,8 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 
     for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
       pCosmicRayTaggingTool->FindAmbiguousPfos(nonStitchedParentCosmicRayPfos, ambiguousPfos, this);
+
+    
 
     //UNDO
     //-------------------------------------------------------------down
@@ -555,21 +568,31 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 	//	ambiguousPfos.remove(pPPPfo);    // could do this later, if it's already been found as a pfo it won't be again
       }
     }
+
     //}
   //----------------------------------------------------------------------------------------------------up
 
   //  if (incomplete == false) {
       //UNDO
       //-------------------------------------------------------------------------------------------------down
+    /*  Top of MC things
+    std::cout << "  " << std::endl;
+    std::cout << "*pRecreatedCRPfos.size " << pRecreatedCRPfos->size() << std::endl;
       for (const Pfo *const pPPPPfo : *pRecreatedCRPfos ) {
-	const MCParticle *pMCParticle = LArMCParticleHelper::GetMainMCParticle(pPPPPfo);
-	mcparticlelist.push_back(pMCParticle);
-	//totalpfolist.push_back(pPPPfo);
-	LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_U, totalcalohits);
-	LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_V, totalcalohits);
-	LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_W, totalcalohits);
+	try{
+	  const MCParticle *pMCParticle = LArMCParticleHelper::GetMainMCParticle(pPPPPfo);
+	  mcparticlelist.push_back(pMCParticle);
+	  //totalpfolist.push_back(pPPPfo);
+	  LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_U, totalcalohits);
+	  LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_V, totalcalohits);
+	  LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_W, totalcalohits);
+	  std::cout << "MC particle found" << std::endl;
+	}
+	catch(...){
+	}
 
       }
+
 
    
       //get the MC particles to hits map
@@ -582,23 +605,35 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
       parameters.m_selectInputHits = true;
       LArMCParticleHelper::SelectReconstructableMCParticles(&mcparticlelist, &totalcalohits, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcMCParticlesToGoodHitsMap); 
 
+      std::cout << "mcMCParticlesToGoodHitsMap,size() " << mcMCParticlesToGoodHitsMap.size() << std::endl;
+
+
   
       //get the pfos to hits map
       LArMCParticleHelper::PfoContributionMap PfosToGoodHitsMap;
       LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(*pRecreatedCRPfos, {mcMCParticlesToGoodHitsMap}, PfosToGoodHitsMap);  //changed
 
+ 
+
       //find hits shared between Pfos and MCParticles
       LArMCParticleHelper::PfoToMCParticleHitSharingMap PfotoMCParticleMap;
       LArMCParticleHelper::MCParticleToPfoHitSharingMap ParticletoPfoMap;
       LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(PfosToGoodHitsMap, {mcMCParticlesToGoodHitsMap}, PfotoMCParticleMap, ParticletoPfoMap);
+
+
     
       MCParticleVector mcParticleVector;
       LArMonitoringHelper::GetOrderedMCParticleVector({mcMCParticlesToGoodHitsMap}, mcParticleVector);
       PfoVector pfoVector;
       LArMonitoringHelper::GetOrderedPfoVector({PfosToGoodHitsMap}, pfoVector);
+      
+
 
       unsigned int nMatches = std::numeric_limits<unsigned int>::max();
+      std::cout << "nMatches = " << nMatches << std::endl;
       LArMonitoringHelper::PrintMatchingTable(pfoVector, mcParticleVector, ParticletoPfoMap, nMatches);
+      std::cout << "nMatches = " << nMatches << std::endl;
+
 
     
       for (const auto &pMCParticle : mcParticleVector)
@@ -614,8 +649,6 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
       
 	}
 
-
-    
     
       for (const auto &ppfo : pfoVector)
 	{
@@ -628,18 +661,18 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 	  //  std::cout << "  - is final state?: " << LArPfoHelper::IsFinalState(ppfo)  << std::endl;
 	
 	  const auto iter = PfotoMCParticleMap.find(ppfo);
-	  if (iter == PfotoMCParticleMap.end()) {
-	    std::cout << "Pfo not found." << std::endl;
-	  }
-	  else if ( (iter->second.size()) != 0) {
+	  // if (iter == PfotoMCParticleMap.end()) {
+	  //   std::cout << "Pfo not found." << std::endl;
+	  // }
+	  if ( (iter->second.size()) != 0) {
 	    const auto hitsvector = iter->second;
 	    for (int i = 0; i < hitsvector.size(); i++){
 	      mcpairslist.push_back(std::make_pair(hitsvector[i].first, hitsvector[i].second.size()));
 	    }
 	  }
+
      
       
-
 	  for (const Pfo *const pPPfo : *pRecreatedCRPfos) {
 	    if(LArPfoHelper::IsFinalState(pPPfo)) {
 	      //bool isNotClearCosmic2(clearCosmicRayPfos.end() == std::find(clearCosmicRayPfos.begin(), clearCosmicRayPfos.end(), pPPfo));
@@ -662,6 +695,7 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 		LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_W, caloHitListW);
       
 	        float hitsinpfo = caloHitList.size();
+    */ //Bottom of MC 1
 		/*
 		ClusterList clusterList = ppfo->GetClusterList();
 		
@@ -675,7 +709,7 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 		}
 		*/
 		//	float length = LArClusterHelper::GetLength(pCluster);
-
+    /* MC stuff 2
 		if (caloHitListU.size() >= 5) {
 		  viewsizelist.push_back(caloHitListU.size());
 		}
@@ -747,56 +781,7 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 		  if (PurityTot < 0.05 && SigTot < 0.1){
 		    //std::cout << "Clear Cosmic" << std::endl;
 		    clearcosmiccount = clearcosmiccount + 1;
-
-		    // std::cout << "hits in pfo = " << hitsinpfo << std::endl;
-		    // std::cout << "hits in pfo W = " << caloHitListW.size() << std::endl;
-		    // std::cout << "length in W = " << length << std::endl;
-		    /*
-		    float WL = caloHitListW.size();
-		    
-		    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree5", "total", hitsinpfo));
-		    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree5", "totalW", WL));
-		    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree5", "length", length));
-      
-      
-		    PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree5"));
-		    */
-		    /*
-		      auto search = pfotoprobabilitymap.find(ppfo);
-		      if (search !=  pfotoprobabilitymap.end()) {
-		      std::cout << "Found  prob " << search->first << " " << search->second << '\n';
-		      truecosmicpfotoprobabilitymap.insert({search->first,search->second});
-		      } else {
-		      std::cout << "Not found in prob map\n";
-		      }
-
-		      auto searcha = pfotodeltachi2map.find(ppfo);
-		      if (searcha !=  pfotodeltachi2map.end()) {
-		      std::cout << "Found deltachiperhit " << searcha->first << " " << searcha->second << '\n';
-		      truecosmicpfotodeltachi2map.insert({searcha->first,searcha->second});
-		      truecosmicpfotoisdownmap.insert({ppfo,isDownward});                          //here to ensure correct numbers
-		      } else {
-		      std::cout << "Not found in delta map\n";
-		      }
-
-		      auto searchb = pfotodeltachi2alonemap.find(ppfo);
-		      if (searchb !=  pfotodeltachi2alonemap.end()) {
-		      std::cout << "Found deltachi" << searchb->first << " " << searchb->second << '\n';
-		      truecosmicpfotodeltachi2alonemap.insert({searchb->first,searchb->second});
-		      } else {
-		      std::cout << "Not found in deltachi2alone map\n";
-		      }
-
-		      auto searchc = pfotominchi2perhitmap.find(ppfo);
-		      if (searchc !=  pfotominchi2perhitmap.end()) {
-		      std::cout << "Found mindeltachi " << searchc->first << " " << searchc->second << '\n';
-		      truecosmicpfotominchi2perhitmap.insert({searchc->first,searchc->second});
-		      } else {
-		      std::cout << "Not found in minchi2perhit map\n";
-		      }
-		    */
-
-
+	        
 		    if (isClearCosmic2 == 1) {
 		      //  std::cout << "Tagged as a CR" << std::endl;
 		      correctcr = correctcr + 1;
@@ -808,98 +793,6 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 		  }
 		  else if (PurityTot > 0.95 && SigTot > 0.1) {
 		    // std::cout << "Clear Neutrino" << std::endl;
-
-		    /*
-		    //-------------------------------------------
-		    CaloHitList totalcalohitsn;
-		    CaloHitList totalcalohitsnW;
-		    LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_U, totalcalohitsn);
-		    LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_V, totalcalohitsn);
-		    LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_W, totalcalohitsn);
-
-		    LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_W, totalcalohitsnW);
-
-		    std::cout << "here 2 = " << totalcalohitsnW.size()  << std::endl;
-		    std::cout << "total = " << totalcalohitsn.size() << std::endl;
-
-
-		    ClusterList clusterList = pPPfo->GetClusterList();
-		    std::cout << "cluster size = " << clusterList.size() << std::endl;
-		    const Cluster* pCluster = clusterList.back();
-
-		    int w = 0;
-		    for (auto c :clusterList) {
-		    if (w == 2) {
-		    pCluster = c;
-		    }
-		    w++;
-		    }
-		    
-
-		    float length = LArClusterHelper::GetLength(pCluster);
-		    float total = totalcalohitsn.size();
-		    float totalW = totalcalohitsnW.size();
-		    std::cout << "LArClusterHelper::GetLength(pTargetClusterW) " << LArClusterHelper::GetLength(pCluster) << std::endl;
-
-		    */
-		    
-		    //  std::cout << "hits in pfo = " << hitsinpfo << std::endl;
-		    // std::cout << "hits in pfo W = " << caloHitListW.size() << std::endl;
-		    // std::cout << "length in W = " << length << std::endl;
-		    /*
-		    float WL = caloHitListW.size();
-		    
-		  
-		    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree4", "total", hitsinpfo));
-		    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree4", "totalW", WL));
-		    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree4", "length", length));
-      
-      
-		    PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree4"));
-		    //  PANDORA_MONITORING_API(ScanTree(this->GetPandora(), "ttree4"));
-		    */
-
-
-		    //-------------------------------------------
-		    /*
-		    auto search2 = pfotoprobabilitymap.find(ppfo);
-		    if (search2 !=  pfotoprobabilitymap.end()) {
-		    std::cout << "Found prob " << search2->first << " " << search2->second << '\n';
-		    trueneutrinopfotoprobabilitymap.insert({search2->first,search2->second});
-		    } else {
-		    std::cout << "Not found\n";
-		    }
-
-
-		    auto search2a = pfotodeltachi2map.find(ppfo);
-		    if (search2a !=  pfotodeltachi2map.end()) {
-		    std::cout << "Found deltachiperhit " << search2a->first << " " << search2a->second << '\n';
-		    trueneutrinopfotodeltachi2map.insert({search2a->first,search2a->second});
-		    trueneutrinopfotoisdownmap.insert({ppfo,isDownward});                               //here to ensure correct numbers
-		    } else {
-		    std::cout << "Not found in delta map\n";
-		    }
-
-		
-		    auto search2b = pfotodeltachi2alonemap.find(ppfo);
-		    if (search2b !=  pfotodeltachi2alonemap.end()) {
-		    std::cout << "Found deltachi " << search2b->first << " " << search2b->second << '\n';
-		    trueneutrinopfotodeltachi2alonemap.insert({search2b->first,search2b->second});
-		    } else {
-		    std::cout << "Not found\n";
-		    }
-
-
-		    auto searchc = pfotominchi2perhitmap.find(ppfo);
-		    if (searchc !=  pfotominchi2perhitmap.end()) {
-		    std::cout << "Found mindeltachi " << searchc->first << " " << searchc->second << '\n';
-		    trueneutrinopfotominchi2perhitmap.insert({searchc->first,searchc->second});
-		    } else {
-		    std::cout << "Not found in minchi2perhit map\n";
-		    }
-		    
-		    */
-
 
 		    clearneutrinocount = clearneutrinocount + 1;
 		    if (isClearCosmic2 == 1) {
@@ -943,323 +836,14 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
     float neutrinomis = (float)incorrectneutrino/(float)clearneutrinocount;
     std::cout << "clear neutrino identified as cosmic = " << neutrinomis*100 << "%" << std::endl;
     
-    /*
-      int p05bin = 0;
-      int p510bin = 0;
-      int p1015bin = 0;
-      int p1520bin = 0;
-      int p2025bin = 0;
-      int p2530bin = 0;
-      int p3035bin = 0;
-      int p3540bin = 0;
-      int p4045bin = 0;
-      int p4550bin = 0;
-      int p5055bin = 0;
-      int p5560bin = 0;
-      int p6065bin = 0;
-      int p6570bin = 0;
-      int p7075bin = 0;
-      int p7580bin = 0;
-      int p8085bin = 0;
-      int p8590bin = 0;
-      int p9095bin = 0;
-      int p95100bin = 0;
-    */
 
-    /*
-    std::vector<int> isCosmicv;
-    std::vector<double> probabilityv;
-    std::vector<double> deltachi2v;
-    std::vector<double> isdownv;
-    std::vector<double> deltachi2alonev;
-    std::vector<double> minchiv;
-
-    for (const auto &map : truecosmicpfotoprobabilitymap) {
-      double prob = map.second*100;
-      std::cout << "probability: true cosmic " << prob << std::endl;
-    */
-      
-      /*
-	if (prob >= 0.0 && prob <= 5.0) {p05bin = p05bin + 1;}
-	if (prob > 5.0  && prob <= 10.0) {p510bin = p510bin + 1;}
-	if (prob > 10.0 && prob <= 15.0) {p1015bin = p1015bin + 1;}
-	if (prob > 15 && prob <= 20) {p1520bin = p1520bin + 1;}
-	if (prob > 20 && prob <= 25) {p2025bin = p2025bin + 1;}
-	if (prob > 25 && prob <= 30) {p2530bin = p2530bin + 1;}
-	if (prob > 30 && prob <= 35) {p3035bin = p3035bin + 1;}
-	if (prob > 35 && prob <= 40) {p3540bin = p3540bin + 1;}
-	if (prob > 40 && prob <= 45) {p4045bin = p4045bin + 1;}
-	if (prob > 45 && prob <= 50) {p4550bin = p4550bin + 1;}
-	if (prob > 50 && prob <= 55) {p5055bin = p5055bin + 1;}
-	if (prob > 55 && prob <= 60) {p5560bin = p5560bin + 1;}
-	if (prob > 60 && prob <= 65) {p6065bin = p6065bin + 1;}
-	if (prob > 65 && prob <= 70) {p6570bin = p6570bin + 1;}
-	if (prob > 70 && prob <= 75) {p7075bin = p7075bin + 1;}
-	if (prob > 75 && prob <= 80) {p7580bin = p7580bin + 1;}
-	if (prob > 80 && prob <= 85) {p8085bin = p8085bin + 1;}
-	if (prob > 85 && prob <= 90) {p8590bin = p8590bin + 1;}
-	if (prob > 90 && prob <= 95) {p9095bin = p9095bin + 1;}
-	if (prob > 95 && prob <= 100) {p95100bin = p95100bin + 1;}  
-      */
-
-      // PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "isCosmic", 1));
-      // PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "probability", prob));
-      //PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-    /*
-      isCosmicv.push_back(1);
-      probabilityv.push_back(prob);
-    }
-
-
-    for (const auto &map : truecosmicpfotodeltachi2map) {
-      double delta = map.second;
-
-      // PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "deltachi2", delta));
-      // PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-      deltachi2v.push_back(delta);
-
-    }
-
-    for (const auto &map : truecosmicpfotoisdownmap) {
-      double down = map.second;
-
-      // PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "isDown", down));
-      // PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-      isdownv.push_back(down);
-
-    }
-
-    for (const auto &map : truecosmicpfotodeltachi2alonemap) {
-      double deltaalone = map.second;
-      
-      // PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "deltachi2alone", deltaalone));
-      // PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-      deltachi2alonev.push_back(deltaalone);
-
-    }
-
-    for (const auto &map : truecosmicpfotominchi2perhitmap) {
-      double minchi = map.second;
-      
-      // PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "minchi2perhit", minchi));
-      // PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-      minchiv.push_back(minchi);
-
-    }
-
-    std::cout <<  isCosmicv.size() << std::endl;
-    // std::vector<double> probability;
-    // std::vector<double> deltachi2;
-    //  std::vector<double> isdown;
-    std::cout <<  deltachi2alonev.size() << std::endl;
-    // std::vector<double> minchi;
-
-    if( isCosmicv.size() > 0 ) {
-      for (int i = 0; i < isCosmicv.size(); i++ ) {
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree2", "isCosmic", isCosmicv[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree2", "probability", probabilityv[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree2", "deltachi2", deltachi2v[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree2", "isDown", isdownv[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree2", "deltachi2alone", deltachi2alonev[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree2", "minchi2perhit", minchiv[i]));
-      
-      
-	PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree2"));
-      }
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "cosmiceff", cosmiceff));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "cosmicmis", cosmicmis));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "neutrinoeff", neutrinoeff));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "neutrinomis", neutrinomis));
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
     
-      //   PANDORA_MONITORING_API(ScanTree(this->GetPandora(), "ttree2"));
-    }
-    */
-
-    /*
-      int pn05bin = 0;
-      int pn510bin = 0;
-      int pn1015bin = 0;
-      int pn1520bin = 0;
-      int pn2025bin = 0;
-      int pn2530bin = 0;
-      int pn3035bin = 0;
-      int pn3540bin = 0;
-      int pn4045bin = 0;
-      int pn4550bin = 0;
-      int pn5055bin = 0;
-      int pn5560bin = 0;
-      int pn6065bin = 0;
-      int pn6570bin = 0;
-      int pn7075bin = 0;
-      int pn7580bin = 0;
-      int pn8085bin = 0;
-      int pn8590bin = 0;
-      int pn9095bin = 0;
-      int pn95100bin = 0;
-    */
-
-    /*
-    std::vector<int> isCosmicv2;
-    std::vector<double> probabilityv2;
-    std::vector<double> deltachi2v2;
-    std::vector<double> isdownv2;
-    std::vector<double> deltachi2alonev2;
-    std::vector<double> minchiv2;
-
-    
-    if (trueneutrinopfotoprobabilitymap.size() != 0 ) {
-      for (const auto &map : trueneutrinopfotoprobabilitymap) {
-	double prob = map.second*100;
-	std::cout << "probability: true neutrino " << prob << std::endl;
-    */
-	/*
-      
-	  if (prob >= 0.0 && prob <= 5.0) {pn05bin = pn05bin + 1;}
-	  if (prob > 5.0  && prob <= 10.0) {pn510bin = pn510bin + 1;}
-	  if (prob > 10.0 && prob <= 15.0) {pn1015bin = pn1015bin + 1;}
-	  if (prob > 15 && prob <= 20) {pn1520bin = pn1520bin + 1;}
-	  if (prob > 20 && prob <= 25) {pn2025bin = pn2025bin + 1;}
-	  if (prob > 25 && prob <= 30) {pn2530bin = pn2530bin + 1;}
-	  if (prob > 30 && prob <= 35) {pn3035bin = pn3035bin + 1;}
-	  if (prob > 35 && prob <= 40) {pn3540bin = pn3540bin + 1;}
-	  if (prob > 40 && prob <= 45) {pn4045bin = pn4045bin + 1;}
-	  if (prob > 45 && prob <= 50) {pn4550bin = pn4550bin + 1;}
-	  if (prob > 50 && prob <= 55) {pn5055bin = pn5055bin + 1;}
-	  if (prob > 55 && prob <= 60) {pn5560bin = pn5560bin + 1;}
-	  if (prob > 60 && prob <= 65) {pn6065bin = pn6065bin + 1;}
-	  if (prob > 65 && prob <= 70) {pn6570bin = pn6570bin + 1;}
-	  if (prob > 70 && prob <= 75) {pn7075bin = pn7075bin + 1;}
-	  if (prob > 75 && prob <= 80) {pn7580bin = pn7580bin + 1;}
-	  if (prob > 80 && prob <= 85) {pn8085bin = pn8085bin + 1;}
-	  if (prob > 85 && prob <= 90) {pn8590bin = pn8590bin + 1;}
-	  if (prob > 90 && prob <= 95) {pn9095bin = pn9095bin + 1;}
-	  if (prob > 95 && prob <= 100) {pn95100bin = pn95100bin + 1;}
-	*/
-
-	// PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "isCosmic", 0));
-	// PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "probability", prob));
-	// PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-    /*
-	isCosmicv2.push_back(0);
-	probabilityv2.push_back(prob);
-      }
-    }
-
-    if (trueneutrinopfotodeltachi2map.size() !=0) {
-      for (const auto &map : trueneutrinopfotodeltachi2map) {
-	double delta = map.second;
-
-	// PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "deltachi2", delta));
-	// PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-
-	deltachi2v2.push_back(delta);
-
-      }
-    }
-
-    if (trueneutrinopfotoisdownmap.size() != 0) {
-      for (const auto &map : trueneutrinopfotoisdownmap) {
-	double down = map.second;
-
-	// PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "isDown", down));
-	// PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-
-	isdownv2.push_back(down);
-      }
-    }
-
-    if (trueneutrinopfotodeltachi2alonemap.size() != 0) {
-      for (const auto &map : trueneutrinopfotodeltachi2alonemap) {
-	double deltaalone = map.second;
-
-	// PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "deltachi2alone", deltaalone));
-	// PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-	deltachi2alonev2.push_back(deltaalone);
-      }
-    }
-
-
-    if (trueneutrinopfotominchi2perhitmap.size() != 0) {
-      for (const auto &map : trueneutrinopfotominchi2perhitmap) {
-	double minchi = map.second;
-      
-	// PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "minchi2perhit", minchi));
-	// PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-	minchiv2.push_back(minchi);
-
-      }
-    }
-
-    std::cout <<  isCosmicv2.size() << std::endl;
-    std::cout <<  deltachi2alonev2.size() << std::endl;
-
-    if (isCosmicv2.size() > 0 ) {
-      for (int i = 0; i < isCosmicv2.size(); i++ ) {
-	std::cout << " isCosmicv2[i] " << isCosmicv2[i] << std::endl;
-	std::cout << " i " << i << std::endl;
-
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree3", "isCosmic", isCosmicv2[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree3", "probability", probabilityv2[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree3", "deltachi2", deltachi2v2[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree3", "isDown", isdownv2[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree3", "deltachi2alone", deltachi2alonev2[i]));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree3", "minchi2perhit", minchiv2[i]));
-      
-      
-	PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree3"));
-      }
-    
-      // PANDORA_MONITORING_API(ScanTree(this->GetPandora(), "ttree3"));
-
-    }
-    */
-
-
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "cosmiceff", cosmiceff));
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "cosmicmis", cosmicmis));
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "neutrinoeff", neutrinoeff));
-      PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "neutrinomis", neutrinomis));
-      /*
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p05bin", p05bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p510bin", p510bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p1015bin", p1015bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p1520bin", p1520bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p2025bin", p2025bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p2530bin", p2530bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p3035bin", p3035bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p3540bin", p3540bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p4045bin", p4045bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p4550bin", p4550bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p5055bin", p5055bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p5560bin", p5560bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p6065bin", p6065bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p6570bin", p6570bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p7075bin", p7075bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p7580bin", p7580bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p8085bin", p8085bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p8590bin", p8590bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p9095bin", p9095bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "p95100bin", p95100bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn05bin", pn05bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn510bin", pn510bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn1015bin", pn1015bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn1520bin", pn1520bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn2025bin", pn2025bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn2530bin", pn2530bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn3035bin", pn3035bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn3540bin", pn3540bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn4045bin", pn4045bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn4550bin", pn4550bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn5055bin", pn5055bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn5560bin", pn5560bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn6065bin", pn6065bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn6570bin", pn6570bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn7075bin", pn7075bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn7580bin", pn7580bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn8085bin", pn8085bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn8590bin", pn8590bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn9095bin", pn9095bin));
-	PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "pn95100bin", pn95100bin));
-      */
-      PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-    
-
+    */ //Mc stuff 2
     
     // PANDORA_MONITORING_API(ScanTree(this->GetPandora(), "ttree"))
 
@@ -2147,6 +1731,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
         pExternalParameters->m_printOverallRecoStatus, xmlHandle, "PrintOverallRecoStatus", m_printOverallRecoStatus));
 
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VisualizeOverallRecoStatus", m_visualizeOverallRecoStatus));
 
@@ -2164,6 +1749,7 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
+ 
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CRSettingsFile", m_crSettingsFile));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NuSettingsFile", m_nuSettingsFile));
@@ -2183,10 +1769,13 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedVertexListName", m_recreatedVertexListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMaxX0", m_inTimeMaxX0));
 
+
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterListName", m_clusterListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PfoListName", m_pfoListName));
+ 
 
 
     AlgorithmToolVector algorithmToolVector;
@@ -2198,7 +1787,6 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 	if (!pTrackDirectionTool) return STATUS_CODE_INVALID_PARAMETER;
 	m_trackDirectionToolVector.push_back(pTrackDirectionTool);
       }
-
 
     return STATUS_CODE_SUCCESS;
 }
@@ -2214,7 +1802,9 @@ StatusCode MasterAlgorithm::ReadExternalSettings(const ExternalSteeringParameter
     }
     else
     {
+  
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, xmlTag, outputBool));
+	
     }
 
     return STATUS_CODE_SUCCESS;
