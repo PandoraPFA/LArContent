@@ -32,6 +32,7 @@ class RecursivePfoMopUpAlgorithm : public pandora::Algorithm {
   std::vector<pfoMergeStats> GetPfoMergeStats() const; ///< Vector filled with pfoMergeStats for each PFP in m_pfoListNames
   pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+  unsigned int m_maxIterations;            ///< Maximum number of iterations
   pandora::StringVector m_pfoListNames;    ///< The list of pfo list names
   pandora::StringVector m_mopUpAlgorithms; ///< Ordered list of mop up algorithms to run
 };

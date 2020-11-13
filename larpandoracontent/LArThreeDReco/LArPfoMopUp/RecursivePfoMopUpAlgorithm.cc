@@ -17,10 +17,9 @@ namespace lar_content {
 
 StatusCode RecursivePfoMopUpAlgorithm::Run()
 {
-  bool unchanged(false);
   std::vector<RecursivePfoMopUpAlgorithm::pfoMergeStats> mergeStatsVecBefore(GetPfoMergeStats());
 
-  while (!unchanged) {
+  for (unsigned int iter = 0; iter < m_maxIterations; ++iter) {
 
     for (auto const& mopUpAlg : m_mopUpAlgorithms) {
       PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, mopUpAlg));
@@ -28,8 +27,9 @@ StatusCode RecursivePfoMopUpAlgorithm::Run()
 
     std::vector<RecursivePfoMopUpAlgorithm::pfoMergeStats> mergeStatsVecAfter(GetPfoMergeStats());
 
-    unchanged = std::equal(mergeStatsVecBefore.cbegin(), mergeStatsVecBefore.cend(), mergeStatsVecAfter.cbegin(),
-        mergeStatsVecAfter.cend(), RecursivePfoMopUpAlgorithm::pfoMergeStatsComp);
+    if (std::equal(mergeStatsVecBefore.cbegin(), mergeStatsVecBefore.cend(), mergeStatsVecAfter.cbegin(), mergeStatsVecAfter.cend(),
+            RecursivePfoMopUpAlgorithm::pfoMergeStatsComp))
+      break;
 
     mergeStatsVecBefore = std::move(mergeStatsVecAfter);
   } // while !unchanged
@@ -58,11 +58,11 @@ std::vector<RecursivePfoMopUpAlgorithm::pfoMergeStats> RecursivePfoMopUpAlgorith
         pfoHits.push_back(cluster->GetNCaloHits());
       }
 
-      const PropertiesMap pfoMeta(pPfo->GetPropertiesMap());
-      const auto& trackScoreIter = pfoMeta.find("TrackScore");
+      const PropertiesMap& pfoMeta(pPfo->GetPropertiesMap());
+      const auto& trackScoreIter(pfoMeta.find("TrackScore"));
       const float trackScore(trackScoreIter != pfoMeta.end() ? trackScoreIter->second : -1.f);
 
-      pfoMergeStatsVec.push_back(RecursivePfoMopUpAlgorithm::pfoMergeStats{ pfoHits, trackScore });
+      pfoMergeStatsVec.emplace_back(RecursivePfoMopUpAlgorithm::pfoMergeStats{ pfoHits, trackScore });
     } // pPfo : pPfoList
   }   // pfoListName : m_pfoListNames
   return pfoMergeStatsVec;
@@ -77,6 +77,9 @@ StatusCode RecursivePfoMopUpAlgorithm::ReadSettings(const pandora::TiXmlHandle x
 
   PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
       XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
+
+  PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+      XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
 
   return STATUS_CODE_SUCCESS;
 } // ReadSettings
