@@ -168,6 +168,7 @@ TransverseOverlapResult &TransverseOverlapResult::operator=(const TransverseOver
 
 TransverseOverlapResult &TransverseOverlapResult::operator=(TransverseOverlapResult &&rhs)
 {
+    this->TrackOverlapResult::operator=(rhs);
     m_xOverlap = std::move(rhs.m_xOverlap);
 
     return *this;
@@ -306,6 +307,7 @@ FragmentOverlapResult &FragmentOverlapResult::operator=(const FragmentOverlapRes
 
 FragmentOverlapResult &FragmentOverlapResult::operator=(FragmentOverlapResult &&rhs)
 {
+    this->TrackOverlapResult::operator=(rhs);
     m_caloHitList = std::move(rhs.m_caloHitList);
     m_clusterList = std::move(rhs.m_clusterList);
 
