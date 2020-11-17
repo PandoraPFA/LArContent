@@ -2,7 +2,7 @@
  *  @file   larpandoracontent/LArTwoDReco/LArClusterMopUp/RecursivePfoMopUpAlgorithm.h
  *
  *  @brief  Header file for the recursive pfo mop up algorithm that runs other algs:
- *          Recusively loop over a series of algortihms until no more changes are made
+ *          Recusively loop over a series of algorithms until no more changes are made
  *
  *  $Log: $
  */
@@ -19,26 +19,35 @@ namespace lar_content
  */
 class RecursivePfoMopUpAlgorithm : public pandora::Algorithm
 {
-private:
-    struct pfoMergeStats
-    {                                             ///< Object to compare PFO before/after merging algs have run to see if anything changed
-        const std::vector<unsigned int> mNumHits; ///< Vector filled with number of hits in each of the PFO's clusters
-        const float mTrackScore;                  ///< MVA "Track Score" for the PFO
-    };
+public:
+    RecursivePfoMopUpAlgorithm() : m_maxIterations(10){};
 
-    static bool pfoMergeStatsComp(const pfoMergeStats &lhs, const pfoMergeStats &rhs) ///< Comparitor  for pfoMergeStats
+private:
+    typedef std::vector<unsigned int> ClusterNumHitsList;
+    struct PfoMergeStats ///< Object to compare PFO before/after merging algs have run to see if anything changed
     {
-        return ((lhs.mNumHits == rhs.mNumHits) && (std::abs(lhs.mTrackScore - rhs.mTrackScore) < std::numeric_limits<float>::epsilon()));
+        const ClusterNumHitsList m_numClusterHits; ///< Vector filled with number of hits in each of the PFO's clusters
+        const float m_trackScore;                  ///< MVA "Track Score" for the PFO
     };
+    typedef std::vector<PfoMergeStats> PfoMergeStatsList;
+
+    static bool PfoMergeStatsComp(const PfoMergeStats &lhs, const PfoMergeStats &rhs); ///< Comparator  for PfoMergeStats
+
+    PfoMergeStatsList GetPfoMergeStats() const; ///< Vector filled with PfoMergeStats for each PFP in m_pfoListNames
 
     pandora::StatusCode Run();
-    std::vector<pfoMergeStats> GetPfoMergeStats() const; ///< Vector filled with pfoMergeStats for each PFP in m_pfoListNames
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     unsigned int m_maxIterations;            ///< Maximum number of iterations
     pandora::StringVector m_pfoListNames;    ///< The list of pfo list names
     pandora::StringVector m_mopUpAlgorithms; ///< Ordered list of mop up algorithms to run
 };
+
+inline bool RecursivePfoMopUpAlgorithm::PfoMergeStatsComp(
+    const RecursivePfoMopUpAlgorithm::PfoMergeStats &lhs, const RecursivePfoMopUpAlgorithm::PfoMergeStats &rhs)
+{
+    return ((lhs.m_numClusterHits == rhs.m_numClusterHits) && (std::abs(lhs.m_trackScore - rhs.m_trackScore) < std::numeric_limits<float>::epsilon()));
+}
 
 } // namespace lar_content
 
