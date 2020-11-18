@@ -24,16 +24,43 @@ public:
 
 private:
     typedef std::vector<unsigned int> ClusterNumHitsList;
-    struct PfoMergeStats ///< Object to compare PFO before/after merging algs have run to see if anything changed
+
+    /**
+     *  @brief  PfoMergeStats class: Object to compare PFO before/after merging algs have run to see if anything changed
+     */
+    struct PfoMergeStats
     {
+    public:
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  Vector filled with number of hits in each of the PFO's clusters
+         *  @param  MVA "Track Score" for the PFO
+         */
+        PfoMergeStats(const ClusterNumHitsList numClusterHits, const float trackScore);
+
         const ClusterNumHitsList m_numClusterHits; ///< Vector filled with number of hits in each of the PFO's clusters
         const float m_trackScore;                  ///< MVA "Track Score" for the PFO
     };
+
     typedef std::vector<PfoMergeStats> PfoMergeStatsList;
 
-    static bool PfoMergeStatsComp(const PfoMergeStats &lhs, const PfoMergeStats &rhs); ///< Comparator  for PfoMergeStats
+    /**
+     *  @brief  Equality comparator for two lists of PfoMergeStats
+     *
+     *  @param  lhs PFOMergeStats for comparison
+     *  @param  rhs PFOMergeStats for comparison
+     *
+     *  @return boolian if the lhs and rhs are the same
+     */
+    static bool PfoMergeStatsComp(const PfoMergeStats &lhs, const PfoMergeStats &rhs);
 
-    PfoMergeStatsList GetPfoMergeStats() const; ///< Vector filled with PfoMergeStats for each PFP in m_pfoListNames
+    /**
+     *  @brief  Get the PfoMergeStats for all of the particles in the event from m_pfoListNames
+     *
+     *  @return List of PfoMergeStats for each Pfo
+     */
+    PfoMergeStatsList GetPfoMergeStats() const;
 
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -42,6 +69,12 @@ private:
     pandora::StringVector m_pfoListNames;    ///< The list of pfo list names
     pandora::StringVector m_mopUpAlgorithms; ///< Ordered list of mop up algorithms to run
 };
+
+inline RecursivePfoMopUpAlgorithm::PfoMergeStats::PfoMergeStats(const ClusterNumHitsList numClusterHits, const float trackScore) :
+    m_numClusterHits(numClusterHits),
+    m_trackScore(trackScore)
+{
+}
 
 inline bool RecursivePfoMopUpAlgorithm::PfoMergeStatsComp(
     const RecursivePfoMopUpAlgorithm::PfoMergeStats &lhs, const RecursivePfoMopUpAlgorithm::PfoMergeStats &rhs)
