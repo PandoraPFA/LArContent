@@ -10,6 +10,7 @@
 
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTwoViewXOverlap.h"
 
 #include <vector>
@@ -17,6 +18,75 @@
 namespace lar_content
 {
 
+/**
+ *  @brief  TrackTwoViewTopologyOverlapResult class
+ */
+class TrackTwoViewTopologyOverlapResult : public TrackOverlapResult
+{
+public:
+    /**
+     *  @brief Default constructor
+     */
+    TrackTwoViewTopologyOverlapResult();
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  nMatchedSamplingPoints
+     *  @param  nSamplingPoints
+     *  @param  chi2
+     *  @param  xOverlap
+     */
+    TrackTwoViewTopologyOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
+        const TwoViewXOverlap &xOverlap, const pandora::CaloHitList &projectedCaloHits);
+
+    /**
+     *  @brief  Copy constructor
+     *
+     *  @param  rhs
+     */
+    TrackTwoViewTopologyOverlapResult(const TrackTwoViewTopologyOverlapResult &rhs);
+
+    /**
+     *  @brief  Destructor
+     */
+    ~TrackTwoViewTopologyOverlapResult();
+
+    /**
+     *  @brief  Get the x overlap object
+     *
+     *  @return the x overlap object
+     */
+    const TwoViewXOverlap &GetXOverlap() const;
+
+    /**
+     *  @brief  Get the projected calo hits
+     *
+     *  @return the projected calo hits
+     */
+    const pandora::CaloHitList &GetProjectedCaloHits() const;
+
+    /**
+     *  @brief  Get the projected calo hits
+     *
+     *  @return the projected calo hits
+     */
+   void SetProjectedCaloHits(const pandora::CaloHitList &projectedCaloHits);        
+
+    /**
+     *  @brief  Track overlap result assigment operator
+     *
+     *  @param  rhs the track overlap result to assign
+     */
+     TrackTwoViewTopologyOverlapResult&operator=(const TrackTwoViewTopologyOverlapResult &rhs);
+
+private:
+    TwoViewXOverlap        m_xOverlap;                     ///< The x overlap object
+    pandora::CaloHitList            m_projectedCaloHits;
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
 /**
  *  @brief  TrackTwoViewOverlapResult class
  */
@@ -197,6 +267,35 @@ private:
 };
 
 typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResultVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const TwoViewXOverlap &TrackTwoViewTopologyOverlapResult::GetXOverlap() const
+{
+    if (m_isInitialized)
+        return m_xOverlap;
+
+    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &TrackTwoViewTopologyOverlapResult::GetProjectedCaloHits() const
+{
+    return m_projectedCaloHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void TrackTwoViewTopologyOverlapResult::SetProjectedCaloHits(const pandora::CaloHitList &projectedCaloHits)
+{
+    std::cout << projectedCaloHits.size() << std::endl;
+    for (const pandora::CaloHit *const pCaloHit : projectedCaloHits)
+    {
+        m_projectedCaloHits.push_back(pCaloHit);
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------

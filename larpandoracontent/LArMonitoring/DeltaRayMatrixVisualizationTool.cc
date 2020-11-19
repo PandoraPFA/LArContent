@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArMonitoring/DeltaRayTensorVisualizationTool.cc
+ *  @file   larpandoracontent/LArMonitoring/DeltaRayMatrixVisualizationTool.cc
  *
  *  @brief  Implementation of the delta ray tensor visualization tool class
  *
@@ -10,14 +10,14 @@
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
-#include "larpandoracontent/LArMonitoring/DeltaRayTensorVisualizationTool.h"
+#include "larpandoracontent/LArMonitoring/DeltaRayMatrixVisualizationTool.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-DeltaRayTensorVisualizationTool::DeltaRayTensorVisualizationTool() :
+DeltaRayMatrixVisualizationTool::DeltaRayMatrixVisualizationTool() :
     m_minClusterConnections(1),
     m_ignoreUnavailableClusters(true),
     m_showEachIndividualElement(false),
@@ -27,14 +27,14 @@ DeltaRayTensorVisualizationTool::DeltaRayTensorVisualizationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayTensorVisualizationTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool DeltaRayMatrixVisualizationTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ClusterSet usedKeyClusters;
     ClusterVector sortedKeyClusters;
-    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
+    overlapMatrix.GetSortedKeyClusters(sortedKeyClusters);
 
     for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
@@ -44,57 +44,60 @@ bool DeltaRayTensorVisualizationTool::Run(ThreeViewDeltaRayMatchingAlgorithm *co
         if (usedKeyClusters.count(pKeyCluster))
             continue;
 
-        unsigned int nU(0), nV(0), nW(0);
-        TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(pKeyCluster, m_ignoreUnavailableClusters, elementList, nU, nV, nW);
+        unsigned int n1(0), n2(0);
+        MatrixType::ElementList elementList;
+        overlapMatrix.GetConnectedElements(pKeyCluster, m_ignoreUnavailableClusters, elementList, n1, n2);
 
-        if ((nU < m_minClusterConnections) && (nV < m_minClusterConnections) && (nW < m_minClusterConnections))
+        if ((n1 < m_minClusterConnections) && (n1 < m_minClusterConnections))
             continue;
 
-        if (nU * nV * nW == 0)
+        if (n1 * n2 == 0)
             continue;
 
         int counter(0);
-        ClusterList allClusterListU, allClusterListV, allClusterListW;
-        std::cout << " Connections: nU " << nU << ", nV " << nV << ", nW " << nW << ", nElements " << elementList.size() << std::endl;
+        ClusterList allClusterList1, allClusterList2;
+        std::cout << " Connections: n1 " << n1 << ", n2 " << n2 << ", nElements " << elementList.size() << std::endl;
 
-        for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
+        for (MatrixType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
         {
-            if (allClusterListU.end() == std::find(allClusterListU.begin(), allClusterListU.end(), eIter->GetClusterU())) allClusterListU.push_back(eIter->GetClusterU());
-            if (allClusterListV.end() == std::find(allClusterListV.begin(), allClusterListV.end(), eIter->GetClusterV())) allClusterListV.push_back(eIter->GetClusterV());
-            if (allClusterListW.end() == std::find(allClusterListW.begin(), allClusterListW.end(), eIter->GetClusterW())) allClusterListW.push_back(eIter->GetClusterW());
-            usedKeyClusters.insert(eIter->GetClusterU());
+            if (allClusterList1.end() == std::find(allClusterList1.begin(), allClusterList1.end(), eIter->GetCluster1())) allClusterList1.push_back(eIter->GetCluster1());
+            if (allClusterList2.end() == std::find(allClusterList2.begin(), allClusterList2.end(), eIter->GetCluster2())) allClusterList2.push_back(eIter->GetCluster2());
+            usedKeyClusters.insert(eIter->GetCluster1());
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
                       << ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints()
-                      << ", xSpanU " << eIter->GetOverlapResult().GetXOverlap().GetXSpanU()
-                      << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
-                      << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW()
-                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan()
+                      << ", xSpan1 " << eIter->GetOverlapResult().GetXOverlap().GetXSpan0()
+                      << ", xSpan2 " << eIter->GetOverlapResult().GetXOverlap().GetXSpan1()
+                      << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetTwoViewXOverlapSpan()
+                      << ", xOverlapFraction1 " << eIter->GetOverlapResult().GetXOverlap().GetTwoViewXOverlapSpan() / eIter->GetOverlapResult().GetXOverlap().GetXSpan0()
+                      << ", xOverlapFraction2 " << eIter->GetOverlapResult().GetXOverlap().GetTwoViewXOverlapSpan() / eIter->GetOverlapResult().GetXOverlap().GetXSpan1()
                       << ", chiSquared: " << eIter->GetOverlapResult().GetReducedChi2() << std::endl;
 
             if (m_showEachIndividualElement)
             {
                 if (this->GetPandora().GetGeometry()->GetLArTPC().GetCenterX() > (-370.))
                 {
-                const ClusterList clusterListU(1, eIter->GetClusterU()), clusterListV(1, eIter->GetClusterV()), clusterListW(1, eIter->GetClusterW());
+                    const ClusterList clusterList1(1, eIter->GetCluster1()), clusterList2(1, eIter->GetCluster2());
                 PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
-                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListU, "UCluster", RED));
-                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListV, "VCluster", VIOLET));
-                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterListW, "WCluster", BLUE));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList1, "1Cluster", VIOLET));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList2, "2Cluster", BLUE));
+
+                std::cout << "HIT COLLECTION VECTOR SIZE: " << eIter->GetOverlapResult().GetProjectedCaloHits().size() << std::endl;
+                for (const CaloHit *const pCaloHit : eIter->GetOverlapResult().GetProjectedCaloHits())
+                {
+                    const CartesianVector &position(pCaloHit->GetPositionVector());
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "PROJECTED HIT", RED, 2));
+                }
 
                 MCParticleToIDMap mcParticleToIDMap;
-                IDToHitMap idToUHitMap, idToVHitMap, idToWHitMap;
-                this->FillMCParticleIDMap(clusterListU.front(), mcParticleToIDMap, idToUHitMap);
-                this->FillMCParticleIDMap(clusterListV.front(), mcParticleToIDMap, idToVHitMap);
-                this->FillMCParticleIDMap(clusterListW.front(), mcParticleToIDMap, idToWHitMap);                
+                IDToHitMap idTo1HitMap, idTo2HitMap;
+                this->FillMCParticleIDMap(clusterList1.front(), mcParticleToIDMap, idTo1HitMap);
+                this->FillMCParticleIDMap(clusterList2.front(), mcParticleToIDMap, idTo2HitMap);
 
-                std::cout << "UCluster: " << std::endl;
-                this->PrintClusterHitOwnershipMap(idToUHitMap);
-                std::cout << "VCluster: " << std::endl;
-                this->PrintClusterHitOwnershipMap(idToVHitMap);
-                std::cout << "WCluster: " << std::endl;
-                this->PrintClusterHitOwnershipMap(idToWHitMap);
+                std::cout << "1Cluster: " << std::endl;
+                this->PrintClusterHitOwnershipMap(idTo1HitMap);
+                std::cout << "2Cluster: " << std::endl;
+                this->PrintClusterHitOwnershipMap(idTo2HitMap);
                 
                 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
                 }
@@ -103,15 +106,14 @@ bool DeltaRayTensorVisualizationTool::Run(ThreeViewDeltaRayMatchingAlgorithm *co
 
         std::cout << " All Connected Clusters " << std::endl;
         PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
-        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListU, "AllUClusters", RED));
-        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListV, "AllVClusters", GREEN));
-        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListW, "AllWClusters", BLUE));
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterList1, "All1Clusters", VIOLET));
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterList2, "All2Clusters", BLUE));
 
         if (m_showContext)
         {
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_U)), "InputClusterListU", GRAY));
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_V)), "InputClusterListV", GRAY));
-            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_W)), "InputClusterListW", GRAY));
+            std::cout << "ISOBEL: I COULDN'T BE BOTHERED TO DO THIS - SORRY FUTURE SELF" << std::endl; 
+            //PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_U)), "InputClusterList1", GRAY));
+            //PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &(pAlgorithm->GetInputClusterList(TPC_VIEW_V)), "InputClusterList2", GRAY));
         }
 
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
@@ -122,7 +124,7 @@ bool DeltaRayTensorVisualizationTool::Run(ThreeViewDeltaRayMatchingAlgorithm *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
    
-void DeltaRayTensorVisualizationTool::FillMCParticleIDMap(const Cluster *const pCluster, MCParticleToIDMap &mcParticleToIDMap, IDToHitMap &idToHitMap)
+void DeltaRayMatrixVisualizationTool::FillMCParticleIDMap(const Cluster *const pCluster, MCParticleToIDMap &mcParticleToIDMap, IDToHitMap &idToHitMap)
 {
     unsigned int particleIDCounter(0);
     for (auto &entry : mcParticleToIDMap)
@@ -173,7 +175,7 @@ void DeltaRayTensorVisualizationTool::FillMCParticleIDMap(const Cluster *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayTensorVisualizationTool::PrintClusterHitOwnershipMap(IDToHitMap &idToHitMap)
+void DeltaRayMatrixVisualizationTool::PrintClusterHitOwnershipMap(IDToHitMap &idToHitMap)
 {
     std::vector<unsigned int> particleIDVector;
     unsigned int maxHits(0), maxID(0);
@@ -210,7 +212,7 @@ void DeltaRayTensorVisualizationTool::PrintClusterHitOwnershipMap(IDToHitMap &id
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-const MCParticle *DeltaRayTensorVisualizationTool::GetLeadingParticle(const MCParticle *const pMCParticle)
+const MCParticle *DeltaRayMatrixVisualizationTool::GetLeadingParticle(const MCParticle *const pMCParticle)
 {
     if (pMCParticle == LArMCParticleHelper::GetParentMCParticle(pMCParticle))
         return pMCParticle;
@@ -235,7 +237,7 @@ const MCParticle *DeltaRayTensorVisualizationTool::GetLeadingParticle(const MCPa
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
     
-StatusCode DeltaRayTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode DeltaRayMatrixVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterConnections", m_minClusterConnections));

@@ -28,6 +28,8 @@ class LArMCParticleParameters : public object_creation::MCParticle::Parameters
 {
 public:
     pandora::InputInt m_nuanceCode; ///< The nuance code
+    pandora::InputBool  m_isDR;
+    pandora::InputBool  m_isDecay;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -52,8 +54,14 @@ public:
      */
     int GetNuanceCode() const;
 
+    bool GetIsDR() const;
+
+    bool GetIsDecay() const;
+    
 private:
     int m_nuanceCode; ///< The nuance code
+    bool                m_isDR;
+    bool                m_isDecay;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -101,7 +109,9 @@ public:
 
 inline LArMCParticle::LArMCParticle(const LArMCParticleParameters &parameters) :
     object_creation::MCParticle::Object(parameters),
-    m_nuanceCode(parameters.m_nuanceCode.Get())
+    m_nuanceCode(parameters.m_nuanceCode.Get()),
+    m_isDR(parameters.m_isDR.Get()),
+    m_isDecay(parameters.m_isDecay.Get())
 {
 }
 
@@ -111,6 +121,20 @@ inline int LArMCParticle::GetNuanceCode() const
 {
     return m_nuanceCode;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArMCParticle::GetIsDR() const
+{
+    return m_isDR;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArMCParticle::GetIsDecay() const
+{
+    return m_isDecay;
+}        
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -136,16 +160,22 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 {
     // ATTN: To receive this call-back must have already set file reader mc particle factory to this factory
     int nuanceCode(0);
-
+    bool isDR(false);
+    bool isDecay(false);
+    
     if (pandora::BINARY == fileReader.GetFileType())
     {
         pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nuanceCode));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(isDR));        
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(isDecay));
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
         pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NuanceCode", nuanceCode));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("IsDR", isDR));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("IsDecay", isDecay));
     }
     else
     {
@@ -154,7 +184,9 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 
     LArMCParticleParameters &larMCParticleParameters(dynamic_cast<LArMCParticleParameters &>(parameters));
     larMCParticleParameters.m_nuanceCode = nuanceCode;
-
+    larMCParticleParameters.m_isDR = isDR;
+    larMCParticleParameters.m_isDecay = isDecay;
+    
     return pandora::STATUS_CODE_SUCCESS;
 }
 
@@ -172,11 +204,15 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
     {
         pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter &>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArMCParticle->GetNuanceCode()));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArMCParticle->GetIsDR()));        
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArMCParticle->GetIsDecay()));
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
         pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter &>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NuanceCode", pLArMCParticle->GetNuanceCode()));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("IsDR", pLArMCParticle->GetIsDR()));        
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("IsDecay", pLArMCParticle->GetIsDecay()));        
     }
     else
     {

@@ -35,7 +35,7 @@ void ThreeViewDeltaRayMatchingAlgorithm::SelectInputClusters(const ClusterList *
     {
         if (!pCluster->IsAvailable())
             continue;
-
+        
         if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
             continue;
 
