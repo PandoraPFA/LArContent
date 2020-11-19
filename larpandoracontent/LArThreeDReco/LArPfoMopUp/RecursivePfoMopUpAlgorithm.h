@@ -20,7 +20,10 @@ namespace lar_content
 class RecursivePfoMopUpAlgorithm : public pandora::Algorithm
 {
 public:
-    RecursivePfoMopUpAlgorithm() : m_maxIterations(10){};
+    /**
+     *  @brief  Default constructor
+     */
+    RecursivePfoMopUpAlgorithm();
 
 private:
     typedef std::vector<unsigned int> ClusterNumHitsList;
@@ -37,7 +40,7 @@ private:
          *  @param  Vector filled with number of hits in each of the PFO's clusters
          *  @param  MVA "Track Score" for the PFO
          */
-        PfoMergeStats(const ClusterNumHitsList numClusterHits, const float trackScore);
+        PfoMergeStats(const ClusterNumHitsList &numClusterHits, const float trackScore);
 
         const ClusterNumHitsList m_numClusterHits; ///< Vector filled with number of hits in each of the PFO's clusters
         const float m_trackScore;                  ///< MVA "Track Score" for the PFO
@@ -46,12 +49,12 @@ private:
     typedef std::vector<PfoMergeStats> PfoMergeStatsList;
 
     /**
-     *  @brief  Equality comparator for two lists of PfoMergeStats
+     *  @brief  Equality comparator for two PfoMergeStats
      *
-     *  @param  lhs PFOMergeStats for comparison
-     *  @param  rhs PFOMergeStats for comparison
+     *  @param  lhs PfoMergeStats for comparison
+     *  @param  rhs PfoMergeStats for comparison
      *
-     *  @return boolian if the lhs and rhs are the same
+     *  @return boolean if the lhs and rhs are the same
      */
     static bool PfoMergeStatsComp(const PfoMergeStats &lhs, const PfoMergeStats &rhs);
 
@@ -70,11 +73,21 @@ private:
     pandora::StringVector m_mopUpAlgorithms; ///< Ordered list of mop up algorithms to run
 };
 
-inline RecursivePfoMopUpAlgorithm::PfoMergeStats::PfoMergeStats(const ClusterNumHitsList numClusterHits, const float trackScore) :
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline RecursivePfoMopUpAlgorithm::RecursivePfoMopUpAlgorithm() : m_maxIterations(10)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline RecursivePfoMopUpAlgorithm::PfoMergeStats::PfoMergeStats(const ClusterNumHitsList &numClusterHits, const float trackScore) :
     m_numClusterHits(numClusterHits),
     m_trackScore(trackScore)
 {
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool RecursivePfoMopUpAlgorithm::PfoMergeStatsComp(
     const RecursivePfoMopUpAlgorithm::PfoMergeStats &lhs, const RecursivePfoMopUpAlgorithm::PfoMergeStats &rhs)

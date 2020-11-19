@@ -23,7 +23,6 @@ StatusCode RecursivePfoMopUpAlgorithm::Run()
 
     for (unsigned int iter = 0; iter < m_maxIterations; ++iter)
     {
-
         for (auto const &mopUpAlg : m_mopUpAlgorithms)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunDaughterAlgorithm(*this, mopUpAlg));
 
