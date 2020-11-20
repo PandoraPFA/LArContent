@@ -1,9 +1,10 @@
 find_ups_product( libtorch )
 find_package(Torch REQUIRED)
 
-include_directories(PRIVATE ${TORCH_INCLUDE_DIRS})
+include_directories(SYSTEM ${TORCH_INCLUDE_DIRS})
 
 cet_set_compiler_flags(DIAGS CAUTIOUS
+      WERROR
       NO_UNDEFINED
       EXTRA_FLAGS
       -pedantic
