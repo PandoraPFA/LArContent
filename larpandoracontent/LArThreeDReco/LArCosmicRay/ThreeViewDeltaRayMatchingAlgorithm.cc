@@ -140,6 +140,7 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
         }
     }
 
+    // Apply tensor threshold cuts
     if (nSamplingPoints == 0)
         return STATUS_CODE_NOT_FOUND;
 
@@ -147,8 +148,6 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
 
     if ((matchedFraction < m_minMatchedFraction) || (nMatchedSamplingPoints < m_minMatchedPoints))
         return STATUS_CODE_NOT_FOUND;
-
-
 
     const XOverlap xOverlapObject(xMinU, xMaxU, xMinV, xMaxV, xMinW, xMaxW, xCentreOverlap);
     overlapResult = TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject);

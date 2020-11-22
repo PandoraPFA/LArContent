@@ -75,7 +75,7 @@ bool DeltaRayMatrixVisualizationTool::Run(TwoViewDeltaRayMatchingAlgorithm *cons
 
             if (m_showEachIndividualElement)
             {
-                if (this->GetPandora().GetGeometry()->GetLArTPC().GetCenterX() > (-370.))
+                if (this->GetPandora().GetGeometry()->GetLArTPC().GetCenterX() > -170)//(-370.))
                 {
                     const ClusterList clusterList1(1, eIter->GetCluster1()), clusterList2(1, eIter->GetCluster2());
                 PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));

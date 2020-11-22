@@ -72,7 +72,9 @@
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayParentAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewClearDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/UnattachedDeltaRaysAlgorithm.h"
 
@@ -235,6 +237,7 @@
     d("LArCosmicRayVertexBuilding",             CosmicRayVertexBuildingAlgorithm)                                               \
     d("LArDeltaRayIdentification",              DeltaRayIdentificationAlgorithm)                                                \
     d("LArDeltaRayMatching",                    DeltaRayMatchingAlgorithm)                                                      \
+    d("LArDeltaRayParent",                      DeltaRayParentAlgorithm)                                                        \
     d("LArThreeViewDeltaRayMatching",           ThreeViewDeltaRayMatchingAlgorithm)                                             \
     d("LArTwoViewDeltaRayMatching",             TwoViewDeltaRayMatchingAlgorithm)                                               \
     d("LArUnattachedDeltaRays",                 UnattachedDeltaRaysAlgorithm)                                                   \
@@ -310,6 +313,7 @@
     d("LArTransverseMatrixVisualization",       TransverseMatrixVisualizationTool)                                              \
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArClearDeltaRay",                       ClearDeltaRayTool)                                                              \
+    d("LArTwoViewClearDeltaRay",                TwoViewClearDeltaRayTool)                                                       \
     d("LArDeltaRayTensorVisualization",         DeltaRayTensorVisualizationTool)                                                \
     d("LArDeltaRayMatrixVisualization",         DeltaRayMatrixVisualizationTool)                                                \
     d("LArCheatingBeamParticleId",              CheatingBeamParticleIdTool)                                                     \
