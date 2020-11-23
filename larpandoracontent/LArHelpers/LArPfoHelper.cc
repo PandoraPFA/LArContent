@@ -294,7 +294,7 @@ float LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, con
     if (numViews < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    return std::sqrt(distanceSquared / numViews);
+    return distanceSquared / numViews;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
