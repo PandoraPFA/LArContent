@@ -10,7 +10,10 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
+
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 using namespace pandora;
 
@@ -20,6 +23,7 @@ namespace lar_content
 ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm()  :
     m_nMaxTensorToolRepeats(1000),
     m_minClusterCaloHits(3),
+    m_searchRegion1D(3.f),    
     m_pseudoChi2Cut(3.f),
     m_xOverlapWindow(1.f),
     m_minMatchedFraction(0.5),
@@ -43,6 +47,20 @@ void ThreeViewDeltaRayMatchingAlgorithm::SelectInputClusters(const ClusterList *
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewDeltaRayMatchingAlgorithm::PrepareInputClusters(ClusterList &preparedClusterList)
+{
+    if (preparedClusterList.empty())
+        return;
+
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(preparedClusterList.front()));
+    
+    this->FillHitToClusterMap(hitType);
+    this->FillClusterProximityMap(hitType);
+    this->FillClusterToPfoMap(hitType);
+}
+        
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
@@ -74,6 +92,9 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
 
     if (xCentreOverlap < std::numeric_limits<float>::epsilon())
          return STATUS_CODE_NOT_FOUND;
+
+    if (!this->AreClustersCompatible(pClusterU, pClusterV, pClusterW))
+        return STATUS_CODE_NOT_FOUND;
     
     // what is the m_xOverlapWindow? - seems to be like a hit width? (an uncertainty in x)
     const float xPitch(0.5 * m_xOverlapWindow);
@@ -157,6 +178,84 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) const
+{
+    ClusterList consideredClustersU, consideredClustersV, consideredClustersW;
+    PfoList nearbyMuonPfosU, nearbyMuonPfosV, nearbyMuonPfosW;
+    this->GetNearbyMuonPfos(pClusterU, consideredClustersU, nearbyMuonPfosU);
+    this->GetNearbyMuonPfos(pClusterV, consideredClustersV, nearbyMuonPfosV);
+    this->GetNearbyMuonPfos(pClusterW, consideredClustersW, nearbyMuonPfosW);
+
+    /////////////////////////
+    /*
+    ClusterList uList({pClusterU}), vList({pClusterV}), wList({pClusterW});
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &uList, "pClusterU", RED);
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &vList, "pClusterV", DARKGREEN);
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &wList, "pClusterW", BLACK);
+    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &nearbyMuonPfosU, "nearbyMuonU", BLUE);
+    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &nearbyMuonPfosV, "nearbyMuonV", ORANGE);
+    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &nearbyMuonPfosW, "nearbyMuonW", VIOLET);
+    */
+    /////////////////////////
+    
+    for (const ParticleFlowObject *const pNearbyMuonU : nearbyMuonPfosU)
+    {
+        for (const ParticleFlowObject *const pNearbyMuonV : nearbyMuonPfosV)
+        {
+            for (const ParticleFlowObject *const pNearbyMuonW : nearbyMuonPfosW)
+            {
+                if ((pNearbyMuonU == pNearbyMuonV) && (pNearbyMuonV == pNearbyMuonW))
+                {
+                    //std::cout << "FOUND COMMON MUON!" << std::endl;
+                    //PandoraMonitoringApi::ViewEvent(this->GetPandora());                    
+                    return true;
+                }
+            }
+        }
+    }
+
+    //std::cout << "HAVE NOT FOUND COMMON MUON!" << std::endl;
+    //PandoraMonitoringApi::ViewEvent(this->GetPandora());    
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewDeltaRayMatchingAlgorithm::GetNearbyMuonPfos(const Cluster *const pCluster, ClusterList &consideredClusters, PfoList &nearbyMuonPfos) const 
+{
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    
+    const ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
+    const ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+
+    consideredClusters.push_back(pCluster);
+    
+    const ClusterProximityMap::const_iterator clusterProximityIter(clusterProximityMap.find(pCluster));
+
+    if (clusterProximityIter == clusterProximityMap.end())
+        return;
+    
+    for (const Cluster *const pNearbyCluster : clusterProximityIter->second)
+    {
+        if (std::find(consideredClusters.begin(), consideredClusters.end(), pNearbyCluster) != consideredClusters.end())
+            continue;
+        
+        const ClusterToPfoMap::const_iterator pfoIter(clusterToPfoMap.find(pNearbyCluster));
+
+        if (pfoIter != clusterToPfoMap.end())
+        {
+            if (std::find(nearbyMuonPfos.begin(), nearbyMuonPfos.end(), pfoIter->second) == nearbyMuonPfos.end())
+                nearbyMuonPfos.push_back(pfoIter->second);
+            
+            continue;
+        }
+        
+        this->GetNearbyMuonPfos(pNearbyCluster, consideredClusters, nearbyMuonPfos);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeViewDeltaRayMatchingAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
@@ -179,8 +278,33 @@ void ThreeViewDeltaRayMatchingAlgorithm::ExamineOverlapContainer()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeViewDeltaRayMatchingAlgorithm::TidyUp()
+{
+    m_hitToClusterMapU.clear();
+    m_hitToClusterMapV.clear();
+    m_hitToClusterMapW.clear();    
+
+    m_kdTreeU.clear();
+    m_kdTreeV.clear();
+    m_kdTreeW.clear();    
+
+    m_clusterProximityMapU.clear();
+    m_clusterProximityMapV.clear();
+    m_clusterProximityMapW.clear();
+    
+    m_clusterToPfoMapU.clear();
+    m_clusterToPfoMapV.clear();
+    m_clusterToPfoMapW.clear();
+    
+    return BaseAlgorithm::TidyUp();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MuonPfoListName", m_muonPfoListName));
+    
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
         "DeltaRayTools", algorithmToolVector));
@@ -199,7 +323,10 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xm
         "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));    
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterCaloHits", m_minClusterCaloHits));    
+        "MinClusterCaloHits", m_minClusterCaloHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "SearchRegion1D", m_searchRegion1D));        
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));
@@ -216,4 +343,218 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xm
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewDeltaRayMatchingAlgorithm::FillHitToClusterMap(const HitType &hitType)
+{
+    const ClusterList &inputClusterList(this->GetInputClusterList(hitType));
+    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+
+    for (const Cluster *const pCluster : inputClusterList)
+    {
+        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+        {
+            for (const CaloHit *const pCaloHit : *mapEntry.second)
+                hitToClusterMap[pCaloHit] = pCluster;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewDeltaRayMatchingAlgorithm::FillClusterProximityMap(const HitType &hitType)
+{
+    const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+
+    CaloHitList allCaloHits;
+    for (auto &entry : hitToClusterMap)
+        allCaloHits.push_back(entry.first);
+    
+    HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
+    HitKDNode2DList hitKDNode2DList;
+
+    KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
+    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
+
+    const ClusterList &inputClusterList(this->GetInputClusterList(hitType));    
+    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);    
+    
+    for (const Cluster *const pCluster : inputClusterList)
+    {
+        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+
+        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+        {
+            for (const CaloHit *const pCaloHit : *mapEntry.second)
+            {
+                KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
+
+                HitKDNode2DList found;
+                kdTree.search(searchRegionHits, found);
+
+                for (const auto &hit : found)
+                {
+                    ClusterList  &nearbyClusterList(clusterProximityMap[pCluster]);
+                    const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
+
+                    if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
+                        nearbyClusterList.push_back(pNearbyCluster);
+                }
+            }
+        }
+    }
+}
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewDeltaRayMatchingAlgorithm::FillClusterToPfoMap(const HitType &hitType)
+{
+    ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);        
+    
+    const PfoList *pMuonPfoList(nullptr);
+    
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+        m_muonPfoListName, pMuonPfoList));
+
+    if ((!pMuonPfoList) || pMuonPfoList->empty())
+        return;
+
+    for (const ParticleFlowObject *const pPfo : *pMuonPfoList)
+    {
+        ClusterList pfoClusters;
+        LArPfoHelper::GetClusters(pPfo, hitType, pfoClusters);
+        for (const Cluster *const pCluster : pfoClusters)
+            clusterToPfoMap[pCluster] = pPfo;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluster)
+{    
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
+
+    HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
+    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);    
+    
+    const OrderedCaloHitList &orderedCaloHitList(pNewCluster->GetOrderedCaloHitList());
+    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+    {
+        for (const CaloHit *const pCaloHit : *mapEntry.second)
+        {
+            hitToClusterMap[pCaloHit] = pNewCluster;
+
+            HitKDNode2DList found;            
+            KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
+
+            kdTree.search(searchRegionHits, found);
+
+            for (const auto &hit : found)
+            {
+                ClusterList  &nearbyClusterList(clusterProximityMap[pNewCluster]);
+                const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
+
+                if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
+                    nearbyClusterList.push_back(pNearbyCluster);
+            }
+        }
+    }
+
+    if (clusterProximityMap.find(pNewCluster) != clusterProximityMap.end())
+    {
+        for (const Cluster *const pNearbyCluster : clusterProximityMap.at(pNewCluster))
+            clusterProximityMap[pNearbyCluster].push_back(pNewCluster);
+    }
+
+    BaseAlgorithm::UpdateForNewCluster(pNewCluster);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewDeltaRayMatchingAlgorithm::UpdateUponDeletion(const Cluster *const pDeletedCluster)
+{
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
+
+    // Remove from hitToCluster map    
+    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+
+    const OrderedCaloHitList &orderedCaloHitList(pDeletedCluster->GetOrderedCaloHitList());
+    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+    {
+        for (const CaloHit *const pCaloHit : *mapEntry.second)
+        {
+            auto iter(hitToClusterMap.find(pCaloHit));
+            hitToClusterMap.erase(iter);
+        }
+    }
+
+    // Remove from clusterProximity map
+    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+
+    const ClusterProximityMap::const_iterator clusterProximityIter(clusterProximityMap.find(pDeletedCluster));
+
+    if (clusterProximityIter != clusterProximityMap.end())
+    {
+        for (const Cluster *const pCloseCluster : clusterProximityIter->second)
+        {
+            const ClusterProximityMap::iterator iter(clusterProximityMap.find(pCloseCluster));
+
+            if (iter == clusterProximityMap.end())
+            {
+                std::cout << "ISOBEL - INVERTED LINK IS NOT SET" << std::endl;
+                throw StatusCodeException(STATUS_CODE_FAILURE);
+            }
+        
+            ClusterList &invertedCloseClusters(iter->second);
+            invertedCloseClusters.remove(pDeletedCluster);
+        }
+
+        clusterProximityMap.erase(clusterProximityIter);
+    }
+
+    BaseAlgorithm::UpdateUponDeletion(pDeletedCluster);
+}
+
+
 } // namespace lar_content
+
+
+/*
+
+void ThreeViewDeltaRayMatchingAlgorithm::UpdateUponPfoCreation()
+{
+    for (const std::string &pfoListName : m_pfoListNames)
+    {
+        const PfoList *pPfoList(nullptr);
+
+        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+            pfoListName, pPfoList));
+
+        if ((!pPfoList) || pPfoList->empty())
+            continue;
+
+        for (const ParticleFlowObject *const pPfo : *pPfoList)
+        {
+            ClusterList pfoClusterList(pPfo->GetClusterList());
+
+            for (const Cluster *const pCluster : pfoClusterList)
+            {
+                const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+
+                if ((hitType != TPC_VIEW_U) || (hitType != TPC_VIEW_V) || (hitType != TPC_VIEW_W))
+                    continue;
+                
+                ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
+
+                if (clusterToPfoMap.find(pCluster) != clusterToPfoMap.end())
+                    break;
+                
+                clusterToPfoMap[pCluster] = pPfo;
+            }
+        }
+    }
+}
+
+*/

@@ -73,6 +73,7 @@ private:
 
     template <typename U>
     friend class NViewMatchingAlgorithm;
+    friend class TwoViewDeltaRayMatchingAlgorithm;    
 };
 
 } // namespace lar_content
