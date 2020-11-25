@@ -16,6 +16,8 @@
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
+#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
+
 namespace lar_content
 {
     
@@ -30,6 +32,13 @@ class ThreeViewDeltaRayMatchingAlgorithm : public NViewMatchingAlgorithm<ThreeVi
 {
 public:
     typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> > BaseAlgorithm;
+    typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+    typedef std::map<const pandora::Cluster*, const pandora::ParticleFlowObject*> ClusterToPfoMap;
+    typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterProximityMap;
+
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
     /**
      *  @brief  Default constructor
@@ -38,7 +47,13 @@ public:
 
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
 
+    void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
+
 private:
+    void FillHitToClusterMap(const pandora::HitType &hitType);
+    void FillClusterProximityMap(const pandora::HitType &hitType);
+    void FillClusterToPfoMap(const pandora::HitType &hitType);
+    
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 
     /**
@@ -52,14 +67,42 @@ private:
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
         TransverseOverlapResult &overlapResult) const;
 
+    bool AreClustersCompatible(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW) const;
+
+    void GetNearbyMuonPfos(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::PfoList &nearbyMuonPfos) const;
+    
     void ExamineOverlapContainer();
+
+    void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);    
+    void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
+    
+    void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    std::string   m_muonPfoListName;
+    
+    HitToClusterMap       m_hitToClusterMapU;
+    HitToClusterMap       m_hitToClusterMapV;
+    HitToClusterMap       m_hitToClusterMapW;
+
+    HitKDTree2D m_kdTreeU;    
+    HitKDTree2D m_kdTreeV;
+    HitKDTree2D m_kdTreeW;
+
+    ClusterProximityMap   m_clusterProximityMapU;
+    ClusterProximityMap   m_clusterProximityMapV;
+    ClusterProximityMap   m_clusterProximityMapW;
+    
+    ClusterToPfoMap       m_clusterToPfoMapU;
+    ClusterToPfoMap       m_clusterToPfoMapV;
+    ClusterToPfoMap       m_clusterToPfoMapW;
+    
     typedef std::vector<DeltaRayTensorTool*> TensorToolVector;
     TensorToolVector                  m_algorithmToolVector;          ///< The algorithm tool vector
     
     unsigned int                      m_nMaxTensorToolRepeats;
     unsigned int                      m_minClusterCaloHits;
+    float                             m_searchRegion1D;             ///< Search region, applied to each dimension, for look-up from kd-tree    
     float                             m_pseudoChi2Cut;              ///< Pseudo chi2 cut for three view matching 
     float                             m_xOverlapWindow;             ///< The maximum allowed displacement in x position
     float                             m_minMatchedFraction;
