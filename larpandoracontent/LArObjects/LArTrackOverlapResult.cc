@@ -293,4 +293,129 @@ pandora::HitType FragmentOverlapResult::GetFragmentHitType() const
     return (*(m_caloHitList.begin()))->GetHitType();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult() :
+    TransverseOverlapResult(),
+    m_uSpan(0.f),
+    m_vSpan(0.f),
+    m_wSpan(0.f),
+    m_uSpanPass(false),
+    m_vSpanPass(false),
+    m_wSpanPass(false),
+    m_commonMuonPfoList(PfoList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
+    const float chi2, const XOverlap &xOverlap, const PfoList &commonMuonPfoList) :
+    TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2, xOverlap),
+    m_uSpan(0.f),
+    m_vSpan(0.f),
+    m_wSpan(0.f),
+    m_uSpanPass(false),
+    m_vSpanPass(false),
+    m_wSpanPass(false),
+    m_commonMuonPfoList(commonMuonPfoList)
+{
+    m_uSpan = m_xOverlap.GetUMaxX() - m_xOverlap.GetUMinX();
+    m_vSpan = m_xOverlap.GetVMaxX() - m_xOverlap.GetVMinX();
+    m_wSpan = m_xOverlap.GetWMaxX() - m_xOverlap.GetWMinX();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult(const DeltaRayOverlapResult &rhs) :
+    TransverseOverlapResult(rhs),
+    m_uSpan(rhs.GetViewXSpan(TPC_VIEW_U)),
+    m_vSpan(rhs.GetViewXSpan(TPC_VIEW_V)),
+    m_wSpan(rhs.GetViewXSpan(TPC_VIEW_W)),
+    m_uSpanPass(rhs.GetViewStatus(TPC_VIEW_U)),
+    m_vSpanPass(rhs.GetViewStatus(TPC_VIEW_V)),
+    m_wSpanPass(rhs.GetViewStatus(TPC_VIEW_W)),
+    m_commonMuonPfoList(rhs.GetCommonMuonPfoList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::~DeltaRayOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult &DeltaRayOverlapResult::operator=(const DeltaRayOverlapResult &rhs)
+{
+    this->TransverseOverlapResult::operator=(rhs);
+
+    m_uSpan = rhs.GetViewXSpan(TPC_VIEW_U);
+    m_vSpan = rhs.GetViewXSpan(TPC_VIEW_V);
+    m_wSpan = rhs.GetViewXSpan(TPC_VIEW_W);
+    m_uSpanPass = rhs.GetViewStatus(TPC_VIEW_U);
+    m_vSpanPass = rhs.GetViewStatus(TPC_VIEW_V);
+    m_wSpanPass = rhs.GetViewStatus(TPC_VIEW_W);
+
+    m_commonMuonPfoList = rhs.GetCommonMuonPfoList();
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float DeltaRayOverlapResult::GetViewXSpan(const HitType &hitType) const
+{
+    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
+        throw STATUS_CODE_NOT_ALLOWED;
+
+    return (hitType == TPC_VIEW_U) ? m_uSpan : (hitType == TPC_VIEW_V) ? m_vSpan : m_wSpan;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float DeltaRayOverlapResult::GetViewMinX(const HitType &hitType) const
+{
+    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
+        throw STATUS_CODE_NOT_ALLOWED;
+
+    return (hitType == TPC_VIEW_U) ? m_xOverlap.GetUMinX() : (hitType == TPC_VIEW_V) ? m_xOverlap.GetVMinX() : m_xOverlap.GetWMinX();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float DeltaRayOverlapResult::GetViewMaxX(const HitType &hitType) const
+{
+    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
+        throw STATUS_CODE_NOT_ALLOWED;
+
+    return (hitType == TPC_VIEW_U) ? m_xOverlap.GetUMaxX() : (hitType == TPC_VIEW_V) ? m_xOverlap.GetVMaxX() : m_xOverlap.GetWMaxX();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool DeltaRayOverlapResult::GetViewStatus(const HitType &hitType) const
+{
+    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
+        throw STATUS_CODE_NOT_ALLOWED;
+
+    return (hitType == TPC_VIEW_U) ? m_uSpanPass : (hitType == TPC_VIEW_V) ? m_vSpanPass : m_wSpanPass;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void DeltaRayOverlapResult::SetViewStatus(const HitType &hitType, bool newSpanStatus)
+{
+    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
+        throw STATUS_CODE_NOT_ALLOWED;
+
+    bool &spanPass((hitType == TPC_VIEW_U) ? m_uSpanPass : (hitType == TPC_VIEW_V) ? m_vSpanPass : m_wSpanPass);
+    spanPass = newSpanStatus;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 } // namespace lar_content

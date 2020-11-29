@@ -22,12 +22,12 @@ namespace lar_content
 
 ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm()  :
     m_nMaxTensorToolRepeats(1000),
-    m_minClusterCaloHits(3),
-    m_searchRegion1D(3.f),    
-    m_pseudoChi2Cut(3.f),
+    m_minClusterCaloHits(5),//5),
+    m_searchRegion1D(5.f),    
+    m_pseudoChi2Cut(1.5f), //normally three
     m_xOverlapWindow(1.f),
     m_minMatchedFraction(0.5),
-    m_minMatchedPoints(3)
+    m_minMatchedPoints(3)//3)
 {
 }
 
@@ -37,15 +37,20 @@ void ThreeViewDeltaRayMatchingAlgorithm::SelectInputClusters(const ClusterList *
 {
     for (const Cluster *const pCluster : *pInputClusterList)
     {
-        if (!pCluster->IsAvailable())
-            continue;
-        
-        if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
-            continue;
-
-        selectedClusterList.push_back(pCluster);
+        if ((pCluster->IsAvailable()) && (this->DoesClusterPassTesorThreshold(pCluster)))
+            selectedClusterList.push_back(pCluster);
     }
 }
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ThreeViewDeltaRayMatchingAlgorithm::DoesClusterPassTesorThreshold(const Cluster *const pCluster) const
+{
+    if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+        return false;
+
+    return true;
+}    
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -65,17 +70,20 @@ void ThreeViewDeltaRayMatchingAlgorithm::PrepareInputClusters(ClusterList &prepa
 
 void ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
-    TransverseOverlapResult overlapResult;
+    DeltaRayOverlapResult overlapResult;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
     if (overlapResult.IsInitialized())
+    {
         this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+        std::cout << "IN ALG SIZE: " << overlapResult.GetCommonMuonPfoList().size() << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
-    TransverseOverlapResult &overlapResult) const
+    DeltaRayOverlapResult &overlapResult) const
 {
     float xMinU(-std::numeric_limits<float>::max()), xMaxU(+std::numeric_limits<float>::max());
     float xMinV(-std::numeric_limits<float>::max()), xMaxV(+std::numeric_limits<float>::max());
@@ -92,8 +100,11 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
 
     if (xCentreOverlap < std::numeric_limits<float>::epsilon())
          return STATUS_CODE_NOT_FOUND;
-
-    if (!this->AreClustersCompatible(pClusterU, pClusterV, pClusterW))
+    
+    PfoList commonMuonPfoList;
+    this->AreClustersCompatible(pClusterU, pClusterV, pClusterW, commonMuonPfoList);
+    
+    if (commonMuonPfoList.empty())
         return STATUS_CODE_NOT_FOUND;
     
     // what is the m_xOverlapWindow? - seems to be like a hit width? (an uncertainty in x)
@@ -160,7 +171,7 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
             continue;
         }
     }
-
+    
     // Apply tensor threshold cuts
     if (nSamplingPoints == 0)
         return STATUS_CODE_NOT_FOUND;
@@ -171,14 +182,19 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
         return STATUS_CODE_NOT_FOUND;
 
     const XOverlap xOverlapObject(xMinU, xMaxU, xMinV, xMaxV, xMinW, xMaxW, xCentreOverlap);
-    overlapResult = TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject);
+
+    overlapResult = DeltaRayOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject, commonMuonPfoList);
+    
+    std::cout << "IN FUNCTION LIST: " << commonMuonPfoList.size() << std::endl;
+    std::cout << "IN FUNCTION MEMBER VARIABLE SIZE: " << overlapResult.GetCommonMuonPfoList().size() << std::endl;
     
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) const
+    void ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
+    PfoList &commonMuonPfoList) const
 {
     ClusterList consideredClustersU, consideredClustersV, consideredClustersW;
     PfoList nearbyMuonPfosU, nearbyMuonPfosV, nearbyMuonPfosW;
@@ -208,7 +224,7 @@ bool ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *co
                 {
                     //std::cout << "FOUND COMMON MUON!" << std::endl;
                     //PandoraMonitoringApi::ViewEvent(this->GetPandora());                    
-                    return true;
+                    commonMuonPfoList.push_back(pNearbyMuonU);
                 }
             }
         }
@@ -216,7 +232,6 @@ bool ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *co
 
     //std::cout << "HAVE NOT FOUND COMMON MUON!" << std::endl;
     //PandoraMonitoringApi::ViewEvent(this->GetPandora());    
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -432,42 +447,51 @@ void ThreeViewDeltaRayMatchingAlgorithm::FillClusterToPfoMap(const HitType &hitT
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluster)
-{    
+{
     const HitType &hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
 
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);    
+
+    CaloHitList caloHitList;
+    pNewCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
     
-    const OrderedCaloHitList &orderedCaloHitList(pNewCluster->GetOrderedCaloHitList());
-    for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+    for (const CaloHit *const pCaloHit : caloHitList)
     {
-        for (const CaloHit *const pCaloHit : *mapEntry.second)
+        hitToClusterMap[pCaloHit] = pNewCluster;
+            
+        HitKDNode2DList found;  
+        KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
+
+        kdTree.search(searchRegionHits, found);
+            
+        for (const auto &hit : found)
         {
-            hitToClusterMap[pCaloHit] = pNewCluster;
+            if (std::find(caloHitList.begin(), caloHitList.end(), hit.data) != caloHitList.end())
+                continue;
+                
+            ClusterList  &nearbyClusterList(clusterProximityMap[pNewCluster]);
+            const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
 
-            HitKDNode2DList found;            
-            KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
-
-            kdTree.search(searchRegionHits, found);
-
-            for (const auto &hit : found)
-            {
-                ClusterList  &nearbyClusterList(clusterProximityMap[pNewCluster]);
-                const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
-
-                if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
-                    nearbyClusterList.push_back(pNearbyCluster);
-            }
+            if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
+                nearbyClusterList.push_back(pNearbyCluster);
         }
     }
-
+    
     if (clusterProximityMap.find(pNewCluster) != clusterProximityMap.end())
     {
-        for (const Cluster *const pNearbyCluster : clusterProximityMap.at(pNewCluster))
-            clusterProximityMap[pNearbyCluster].push_back(pNewCluster);
-    }
+        const ClusterList &nearbyClusterList(clusterProximityMap.at(pNewCluster));
 
+        for (const Cluster *const pNearbyCluster : nearbyClusterList)
+        {
+            ClusterList &invertedCloseClusters(clusterProximityMap.at(pNearbyCluster));
+            
+            if (std::find(invertedCloseClusters.begin(), invertedCloseClusters.end(), pNewCluster) == invertedCloseClusters.end())
+                    invertedCloseClusters.push_back(pNewCluster);
+        }
+    }
+    
     BaseAlgorithm::UpdateForNewCluster(pNewCluster);
 }
 
@@ -480,6 +504,8 @@ void ThreeViewDeltaRayMatchingAlgorithm::UpdateUponDeletion(const Cluster *const
     // Remove from hitToCluster map    
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
 
+    std::cout << "Begin deleting hits.. " << std::endl;
+    
     const OrderedCaloHitList &orderedCaloHitList(pDeletedCluster->GetOrderedCaloHitList());
     for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
     {
@@ -490,22 +516,32 @@ void ThreeViewDeltaRayMatchingAlgorithm::UpdateUponDeletion(const Cluster *const
         }
     }
 
+    std::cout << "Finished deleting hits.. " << std::endl;    
+
     // Remove from clusterProximity map
     ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
 
     const ClusterProximityMap::const_iterator clusterProximityIter(clusterProximityMap.find(pDeletedCluster));
 
+    std::cout << "enter proximity... " << std::endl;    
     if (clusterProximityIter != clusterProximityMap.end())
     {
+        ClusterVector closeClusterVector;
+
         for (const Cluster *const pCloseCluster : clusterProximityIter->second)
+            closeClusterVector.push_back(pCloseCluster);
+
+        std::sort(closeClusterVector.begin(), closeClusterVector.end(), LArClusterHelper::SortByNHits);
+
+        std::cout << "closeClusterVector size: " << closeClusterVector.size() << std::endl;
+        for (const Cluster *const pCloseCluster : closeClusterVector)
         {
+            std::cout << "here" << std::endl;
             const ClusterProximityMap::iterator iter(clusterProximityMap.find(pCloseCluster));
 
+            // May have also been deleted
             if (iter == clusterProximityMap.end())
-            {
-                std::cout << "ISOBEL - INVERTED LINK IS NOT SET" << std::endl;
-                throw StatusCodeException(STATUS_CODE_FAILURE);
-            }
+                continue;
         
             ClusterList &invertedCloseClusters(iter->second);
             invertedCloseClusters.remove(pDeletedCluster);
@@ -514,6 +550,7 @@ void ThreeViewDeltaRayMatchingAlgorithm::UpdateUponDeletion(const Cluster *const
         clusterProximityMap.erase(clusterProximityIter);
     }
 
+    std::cout << "finish proximity... " << std::endl;
     BaseAlgorithm::UpdateUponDeletion(pDeletedCluster);
 }
 

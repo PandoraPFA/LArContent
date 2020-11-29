@@ -95,6 +95,8 @@ bool DeltaRayTensorVisualizationTool::Run(ThreeViewDeltaRayMatchingAlgorithm *co
                 this->PrintClusterHitOwnershipMap(idToVHitMap);
                 std::cout << "WCluster: " << std::endl;
                 this->PrintClusterHitOwnershipMap(idToWHitMap);
+
+                std::cout << "COMMON MUON SIZE: " <<  eIter->GetOverlapResult().GetCommonMuonPfoList().size() << std::endl;
                 
                 PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
                 }
@@ -104,7 +106,7 @@ bool DeltaRayTensorVisualizationTool::Run(ThreeViewDeltaRayMatchingAlgorithm *co
         std::cout << " All Connected Clusters " << std::endl;
         PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
         PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListU, "AllUClusters", RED));
-        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListV, "AllVClusters", GREEN));
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListV, "AllVClusters", VIOLET));
         PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &allClusterListW, "AllWClusters", BLUE));
 
         if (m_showContext)

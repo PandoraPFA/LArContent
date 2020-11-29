@@ -174,6 +174,8 @@ public:
 
 private:
     XOverlap m_xOverlap; ///< The x overlap object
+
+    friend class DeltaRayOverlapResult;
 };
 
 typedef std::vector<TransverseOverlapResult> TransverseOverlapResultVector;
@@ -342,6 +344,74 @@ private:
 typedef std::vector<FragmentOverlapResult> FragmentOverlapResultVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  DeltaRayOverlapResult class
+ */
+class DeltaRayOverlapResult : public TransverseOverlapResult
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    DeltaRayOverlapResult();
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  nMatchedSamplingPoints
+     *  @param  nSamplingPoints
+     *  @param  chi2
+     *  @param  xOverlap
+     */
+    DeltaRayOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
+        const XOverlap &xOverlap, const pandora::PfoList &commonMuonPfoList);
+
+    /**
+     *  @brief  Copy constructor
+     *
+     *  @param  rhs
+     */
+    DeltaRayOverlapResult(const DeltaRayOverlapResult &rhs);
+
+    /**
+     *  @brief  Destructor
+     */
+    ~DeltaRayOverlapResult();
+
+    const pandora::PfoList &GetCommonMuonPfoList() const;
+
+    float GetViewXSpan(const pandora::HitType &hitType) const;
+
+    float GetViewMinX(const pandora::HitType &hitType) const;
+
+    float GetViewMaxX(const pandora::HitType &hitType) const;
+
+    bool GetViewStatus(const pandora::HitType &hitType) const;
+
+    void SetViewStatus(const pandora::HitType &hitType, bool newSpanStatus);
+
+    /**
+     *  @brief  Track overlap result assigment operator
+     *
+     *  @param  rhs the track overlap result to assign
+     */
+    DeltaRayOverlapResult &operator=(const DeltaRayOverlapResult &rhs);
+
+private:
+    float m_uSpan;
+    float m_vSpan;
+    float m_wSpan;
+    bool m_uSpanPass;
+    bool m_vSpanPass;
+    bool m_wSpanPass;
+
+    pandora::PfoList m_commonMuonPfoList;
+};
+
+typedef std::vector<DeltaRayOverlapResult> DeltaRayOverlapResultVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool TrackOverlapResult::IsInitialized() const
@@ -438,6 +508,14 @@ inline const pandora::CaloHitList &FragmentOverlapResult::GetFragmentCaloHitList
 inline const pandora::ClusterList &FragmentOverlapResult::GetFragmentClusterList() const
 {
     return m_clusterList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::PfoList &DeltaRayOverlapResult::GetCommonMuonPfoList() const
+{
+    return m_commonMuonPfoList;
 }
 
 } // namespace lar_content

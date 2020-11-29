@@ -75,20 +75,20 @@ bool DeltaRayMatrixVisualizationTool::Run(TwoViewDeltaRayMatchingAlgorithm *cons
 
             if (m_showEachIndividualElement)
             {
-                if (this->GetPandora().GetGeometry()->GetLArTPC().GetCenterX() > -170)//(-370.))
+                if (this->GetPandora().GetGeometry()->GetLArTPC().GetCenterX() > -370)//(-370.))
                 {
                     const ClusterList clusterList1(1, eIter->GetCluster1()), clusterList2(1, eIter->GetCluster2());
                 PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList1, "1Cluster", VIOLET));
                 PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList2, "2Cluster", BLUE));
-
+                /*
                 std::cout << "HIT COLLECTION VECTOR SIZE: " << eIter->GetOverlapResult().GetProjectedCaloHits().size() << std::endl;
                 for (const CaloHit *const pCaloHit : eIter->GetOverlapResult().GetProjectedCaloHits())
                 {
                     const CartesianVector &position(pCaloHit->GetPositionVector());
                     PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &position, "PROJECTED HIT", RED, 2));
                 }
-
+                */
                 MCParticleToIDMap mcParticleToIDMap;
                 IDToHitMap idTo1HitMap, idTo2HitMap;
                 this->FillMCParticleIDMap(clusterList1.front(), mcParticleToIDMap, idTo1HitMap);

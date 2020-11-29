@@ -28,6 +28,17 @@ namespace lar_content
 {
 
 template <typename T>
+const Cluster *OverlapTensor<T>::Element::GetCluster(const HitType &hitType) const
+{
+    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+    return (hitType == TPC_VIEW_U) ? m_pClusterU : (hitType == TPC_VIEW_V) ? m_pClusterV : m_pClusterW;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
 void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, ElementList &elementList) const
 {
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
@@ -316,5 +327,6 @@ template class OverlapTensor<TransverseOverlapResult>;
 template class OverlapTensor<LongitudinalOverlapResult>;
 template class OverlapTensor<FragmentOverlapResult>;
 template class OverlapTensor<ShowerOverlapResult>;
+template class OverlapTensor<DeltaRayOverlapResult>;
 
 } // namespace lar_content

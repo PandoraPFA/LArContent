@@ -20,12 +20,12 @@ namespace lar_content
 
 TwoViewDeltaRayMatchingAlgorithm::TwoViewDeltaRayMatchingAlgorithm()  :
     m_nMaxMatrixToolRepeats(1000),
-    m_minClusterCaloHits(5),
+    m_minClusterCaloHits(3),
     m_searchRegion1D(3.f),       
     m_xOverlapWindow(1.f),
     m_maxDisplacementSquared(1.0f),
     m_minMatchedFraction(0.5),
-    m_minMatchedPoints(3),
+    m_minMatchedPoints(2),
     m_pseudoChi2Cut(3.f)    
 {
 }
@@ -332,7 +332,7 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::GetProjectedPositions(const Cluster
     }
     
     const float xSpan(std::max(xMax1, xMax2) - std::min(xMin1, xMin2));
-    if ((xOverlap / xSpan < 0.1) || (projectedPositions.size() < 5))
+    if ((xOverlap / xSpan < 0.1) || (projectedPositions.size() < 3))
         return STATUS_CODE_NOT_FOUND;
     
     return STATUS_CODE_SUCCESS;
