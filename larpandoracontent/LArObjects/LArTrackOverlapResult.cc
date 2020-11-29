@@ -117,16 +117,20 @@ TrackOverlapResult &TrackOverlapResult::operator=(const TrackOverlapResult &rhs)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TransverseOverlapResult::TransverseOverlapResult() : TrackOverlapResult(), m_xOverlap(XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
+TransverseOverlapResult::TransverseOverlapResult() :
+    TrackOverlapResult(),
+    m_xOverlap(XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f)),
+    m_commonMuonPfoList(PfoList())
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TransverseOverlapResult::TransverseOverlapResult(
-    const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2, const XOverlap &xOverlap) :
+TransverseOverlapResult::TransverseOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
+        const float chi2, const XOverlap &xOverlap, const PfoList &commonMuonPfoList) :
     TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
-    m_xOverlap(xOverlap)
+    m_xOverlap(xOverlap),
+    m_commonMuonPfoList(commonMuonPfoList)
 {
 }
 
@@ -134,7 +138,8 @@ TransverseOverlapResult::TransverseOverlapResult(
 
 TransverseOverlapResult::TransverseOverlapResult(const TransverseOverlapResult &rhs) :
     TrackOverlapResult(rhs),
-    m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
+    m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f)),
+    m_commonMuonPfoList(rhs.GetCommonMuonPfoList())
 {
 }
 
@@ -158,6 +163,8 @@ TransverseOverlapResult &TransverseOverlapResult::operator=(const TransverseOver
     {
         m_xOverlap = XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
     }
+
+    m_commonMuonPfoList = rhs.GetCommonMuonPfoList();
 
     return *this;
 }
@@ -292,5 +299,81 @@ pandora::HitType FragmentOverlapResult::GetFragmentHitType() const
 
     return (*(m_caloHitList.begin()))->GetHitType();
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult() :
+    TransverseOverlapResult(),
+    m_uSpan(0.f),
+    m_vSpan(0.f),
+    m_wSpan(0.f),    
+    m_uSpanPass(false),
+    m_vSpanPass(false),
+    m_wSpanPass(false),    
+    m_commonMuonPfoList(PfoList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
+        const float chi2, const XOverlap &xOverlap, const PfoList &commonMuonPfoList) :
+    TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2, xOverlap),
+    m_uSpanPass(false),
+    m_vSpanPass(false),
+    m_wSpanPass(false),    
+    m_commonMuonPfoList(commonMuonPfoList)
+{
+    m_uSpan = m_xOverlap.GetUMaxX() - m_xOverlap.GetUMinX();
+    m_vSpan = m_xOverlap.GetVMaxX() - m_xOverlap.GetVMinX();
+    m_wSpan = m_xOverlap.GetWMaxX() - m_xOverlap.GetWMinX();    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult(const DeltaRayOverlapResult &rhs) :
+    TrackOverlapResult(rhs),
+    m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f)),
+    m_uSpan(rhs.GetViewXSpan(TPC_VIEW_U)),
+    m_vSpan(rhs.GetViewXSpan(TPC_VIEW_V)),
+    m_wSpan(rhs.GetViewXSpan(TPC_VIEW_W)),    
+    m_uSpanPass(false), 
+    m_vSpanPass(false),
+    m_wSpanPass(false),
+    m_commonMuonPfoList(rhs.GetCommonMuonPfoList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::~DeltaRayOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult &DeltaRayOverlapResult::operator=(const DeltaRayOverlapResult &rhs)
+{
+    this->TrackOverlapResult::operator=(rhs);
+
+    if (rhs.IsInitialized())
+    {
+        m_xOverlap = rhs.GetXOverlap();
+    }
+    else
+    {
+        m_xOverlap = XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+    }
+
+    m_commonMuonPfoList = rhs.GetCommonMuonPfoList();
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+
 
 } // namespace lar_content

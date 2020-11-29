@@ -24,10 +24,10 @@ ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm()  :
     m_nMaxTensorToolRepeats(1000),
     m_minClusterCaloHits(3),
     m_searchRegion1D(3.f),    
-    m_pseudoChi2Cut(3.f),
+    m_pseudoChi2Cut(1.0f), //normally three
     m_xOverlapWindow(1.f),
     m_minMatchedFraction(0.5),
-    m_minMatchedPoints(3)
+    m_minMatchedPoints(2)
 {
 }
 
@@ -69,7 +69,10 @@ void ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *c
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
     if (overlapResult.IsInitialized())
+    {
         this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
+        std::cout << "IN ALG SIZE: " << overlapResult.GetCommonMuonPfoList().size() << std::endl;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +96,10 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
     if (xCentreOverlap < std::numeric_limits<float>::epsilon())
          return STATUS_CODE_NOT_FOUND;
 
-    if (!this->AreClustersCompatible(pClusterU, pClusterV, pClusterW))
+    PfoList commonMuonPfoList;
+    this->AreClustersCompatible(pClusterU, pClusterV, pClusterW, commonMuonPfoList);
+
+    if (commonMuonPfoList.empty())
         return STATUS_CODE_NOT_FOUND;
     
     // what is the m_xOverlapWindow? - seems to be like a hit width? (an uncertainty in x)
@@ -161,6 +167,8 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
         }
     }
 
+    // should be a cut on the normalised chi squared? (that is what the matched fraction essentially is)
+
     // Apply tensor threshold cuts
     if (nSamplingPoints == 0)
         return STATUS_CODE_NOT_FOUND;
@@ -171,14 +179,18 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
         return STATUS_CODE_NOT_FOUND;
 
     const XOverlap xOverlapObject(xMinU, xMaxU, xMinV, xMaxV, xMinW, xMaxW, xCentreOverlap);
-    overlapResult = TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject);
+    overlapResult = TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject, commonMuonPfoList);
+
+    std::cout << "IN FUNCTION LIST: " << commonMuonPfoList.size() << std::endl;
+    std::cout << "IN FUNCTION MEMBER VARIABLE SIZE: " << overlapResult.GetCommonMuonPfoList().size() << std::endl;
     
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW) const
+    void ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
+    PfoList &commonMuonPfoList) const
 {
     ClusterList consideredClustersU, consideredClustersV, consideredClustersW;
     PfoList nearbyMuonPfosU, nearbyMuonPfosV, nearbyMuonPfosW;
@@ -208,7 +220,7 @@ bool ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *co
                 {
                     //std::cout << "FOUND COMMON MUON!" << std::endl;
                     //PandoraMonitoringApi::ViewEvent(this->GetPandora());                    
-                    return true;
+                    commonMuonPfoList.push_back(pNearbyMuonU);
                 }
             }
         }
@@ -216,7 +228,6 @@ bool ThreeViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *co
 
     //std::cout << "HAVE NOT FOUND COMMON MUON!" << std::endl;
     //PandoraMonitoringApi::ViewEvent(this->GetPandora());    
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
