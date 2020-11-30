@@ -47,7 +47,6 @@ protected:
 
     typedef std::vector<Particle> ParticleList;
     typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterAssociationMap;
-    typedef std::set<unsigned int> UIntSet;
 
     /**
      *  @brief Select a set of clusters judged to be clean

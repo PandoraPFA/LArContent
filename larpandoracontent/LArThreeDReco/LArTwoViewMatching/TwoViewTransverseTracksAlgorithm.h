@@ -33,7 +33,6 @@ class TwoViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<TwoV
 {
 public:
     typedef NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> > BaseAlgorithm;
-    typedef std::set<unsigned int> UIntSet;
 
     /**
      *  @brief  Default constructor

@@ -7,7 +7,6 @@
  */
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArObjects/LArCaloHit.h"
 
 #include <algorithm>
 #include <cmath>
@@ -586,24 +585,6 @@ void LArClusterHelper::GetCaloHitListInBoundingBox(const pandora::Cluster *const
     caloHitList.sort(LArClusterHelper::SortHitsByPosition);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArClusterHelper::GetDaughterVolumeIDs(const Cluster *const pCluster, UIntSet &daughterVolumeIds)
-{
-    const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-
-    for (OrderedCaloHitList::const_iterator ochIter = orderedCaloHitList.begin(), ochIterEnd = orderedCaloHitList.end(); ochIter != ochIterEnd; ++ochIter)
-    {
-        for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
-        {
-            const CaloHit *const pCaloHit = *hIter;
-            const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit*>(pCaloHit));
-
-            if (pLArCaloHit) 
-                daughterVolumeIds.insert(pLArCaloHit->GetDaughterVolumeId());
-        }
-    }
-}
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool LArClusterHelper::SortByNOccupiedLayers(const Cluster *const pLhs, const Cluster *const pRhs)

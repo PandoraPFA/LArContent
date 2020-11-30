@@ -400,19 +400,6 @@ CartesianVector LArGeometryHelper::GetWireAxis(const Pandora &pandora, const Hit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArGeometryHelper::GetCommonDaughterVolumes(const Cluster *const pCluster1, const Cluster *const pCluster2, UIntSet &intersect)
-{
-    UIntSet daughterVolumeIds1, daughterVolumeIds2;
-
-    LArClusterHelper::GetDaughterVolumeIDs(pCluster1, daughterVolumeIds1);
-    LArClusterHelper::GetDaughterVolumeIDs(pCluster2, daughterVolumeIds2);
-
-    std::set_intersection(daughterVolumeIds1.begin(), daughterVolumeIds1.end(), daughterVolumeIds2.begin(), daughterVolumeIds2.end(), 
-                          std::inserter(intersect, intersect.begin())); 
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 bool LArGeometryHelper::IsInGap(const Pandora &pandora, const CartesianVector &testPoint2D, const HitType hitType, const float gapTolerance)
 {
     // ATTN: input test point MUST be a 2D position vector

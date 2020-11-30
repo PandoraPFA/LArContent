@@ -196,13 +196,6 @@ void CosmicRayTrackRecoveryAlgorithm::MatchClusters(const Cluster* const pSeedCl
     {
         const Cluster *const pTargetCluster = *tIter;
 
-        UIntSet daughterVolumeIntersection;
-        LArGeometryHelper::GetCommonDaughterVolumes(pSeedCluster, pTargetCluster, daughterVolumeIntersection);
-
-        if (daughterVolumeIntersection.empty())
-            continue;
-
-
         if (LArClusterHelper::GetClusterHitType(pSeedCluster) == LArClusterHelper::GetClusterHitType(pTargetCluster))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 

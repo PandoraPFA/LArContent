@@ -42,7 +42,6 @@ private:
 
     typedef std::vector<Particle> ParticleList;
     typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterAssociationMap;
-    typedef std::set<unsigned int> UIntSet;
 
     /**
      *  @brief Get a vector of available clusters
