@@ -670,7 +670,7 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
     // ATTN Parent of calo hit in worker is corresponding calo hit in master
     parameters.m_pParentAddress = static_cast<const void*>(pCaloHit);
     parameters.m_larTPCVolumeId = pLArCaloHit->GetLArTPCVolumeId();
-    parameters.m_daughterVolumeId = (m_larCaloHitVersion>1) ? pLArCaloHit->GetDaughterVolumeId() : 0;
+    parameters.m_daughterVolumeId = (m_larCaloHitVersion > 1) ? pLArCaloHit->GetDaughterVolumeId() : 0;
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
@@ -1083,7 +1083,6 @@ StatusCode MasterAlgorithm::RegisterCustomContent(const Pandora *const /*pPandor
 
 StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
 
     ExternalSteeringParameters *pExternalParameters(nullptr);
 
@@ -1189,6 +1188,8 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VisualizeOverallRecoStatus", m_visualizeOverallRecoStatus));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldRemoveOutOfTimeHits", m_shouldRemoveOutOfTimeHits));
