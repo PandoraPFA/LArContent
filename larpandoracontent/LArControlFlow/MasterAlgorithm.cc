@@ -1083,7 +1083,6 @@ StatusCode MasterAlgorithm::RegisterCustomContent(const Pandora *const /*pPandor
 
 StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-
     ExternalSteeringParameters *pExternalParameters(nullptr);
 
     if (this->ExternalParametersPresent())
@@ -1189,7 +1188,8 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VisualizeOverallRecoStatus", m_visualizeOverallRecoStatus));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
+        "LArCaloHitVersion", m_larCaloHitVersion));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ShouldRemoveOutOfTimeHits", m_shouldRemoveOutOfTimeHits));
