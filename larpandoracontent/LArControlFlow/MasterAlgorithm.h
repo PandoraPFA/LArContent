@@ -307,7 +307,7 @@ protected:
 
     bool                        m_workerInstancesInitialized;       ///< Whether all worker instances have been initialized
 
-    unsigned int                m_larCaloHitVersion;                ///< The LarCaloHit version for LArCaloHitFactory
+    unsigned int                m_larCaloHitVersion;                ///< The LArCaloHit version for LArCaloHitFactory
 
     bool                        m_shouldRunAllHitsCosmicReco;       ///< Whether to run all hits cosmic-ray reconstruction
     bool                        m_shouldRunStitching;               ///< Whether to stitch cosmic-ray muons crossing between volumes
