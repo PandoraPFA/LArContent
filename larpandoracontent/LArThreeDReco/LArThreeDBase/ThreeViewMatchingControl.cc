@@ -252,5 +252,6 @@ template class ThreeViewMatchingControl<TransverseOverlapResult>;
 template class ThreeViewMatchingControl<LongitudinalOverlapResult>;
 template class ThreeViewMatchingControl<FragmentOverlapResult>;
 template class ThreeViewMatchingControl<ShowerOverlapResult>;
+template class ThreeViewMatchingControl<DeltaRayOverlapResult>;
 
 } // namespace lar_content

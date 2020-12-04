@@ -28,10 +28,10 @@ class DeltaRayTensorTool;
 /**
  *  @brief  ThreeViewDeltaRayMatchingAlgorithm class
  */
-class ThreeViewDeltaRayMatchingAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> >
+class ThreeViewDeltaRayMatchingAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<DeltaRayOverlapResult> >
 {
 public:
-    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> > BaseAlgorithm;
+    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<DeltaRayOverlapResult> > BaseAlgorithm;
     typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
     typedef std::map<const pandora::Cluster*, const pandora::ParticleFlowObject*> ClusterToPfoMap;
     typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterProximityMap;
@@ -49,7 +49,10 @@ public:
 
     void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
+    bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
+
 private:
+
     void FillHitToClusterMap(const pandora::HitType &hitType);
     void FillClusterProximityMap(const pandora::HitType &hitType);
     void FillClusterToPfoMap(const pandora::HitType &hitType);
@@ -65,7 +68,7 @@ private:
      *  @param  overlapResult to receive the overlap result
      */
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
-        TransverseOverlapResult &overlapResult) const;
+        DeltaRayOverlapResult &overlapResult) const;
 
     void AreClustersCompatible(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW, pandora::PfoList &commonMuonPfoList) const;
 
@@ -107,6 +110,8 @@ private:
     float                             m_xOverlapWindow;             ///< The maximum allowed displacement in x position
     float                             m_minMatchedFraction;
     unsigned int                      m_minMatchedPoints;
+
+    friend class ShortSpanTool;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

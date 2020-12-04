@@ -127,5 +127,6 @@ template class NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResu
 template class NViewMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult>>;
 template class NViewMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult>>;
 template class NViewMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult>>;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<DeltaRayOverlapResult>>;    
 
 } // namespace lar_content

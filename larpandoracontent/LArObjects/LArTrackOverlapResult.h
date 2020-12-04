@@ -174,6 +174,8 @@ public:
 
 private:
     XOverlap m_xOverlap; ///< The x overlap object
+
+    friend class DeltaRayOverlapResult;
 };
 
 typedef std::vector<TransverseOverlapResult> TransverseOverlapResultVector;
@@ -381,7 +383,13 @@ public:
 
     float GetViewXSpan(const pandora::HitType &hitType) const;
 
+    float GetViewMinX(const pandora::HitType &hitType) const;
+
+    float GetViewMaxX(const pandora::HitType &hitType) const;
+    
     bool GetViewStatus(const pandora::HitType &hitType) const;
+
+    void SetViewStatus(const pandora::HitType &hitType, bool newSpanStatus);
     
     /**
      *  @brief  Track overlap result assigment operator
@@ -505,31 +513,10 @@ inline const pandora::ClusterList &FragmentOverlapResult::GetFragmentClusterList
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const PfoList &DeltaRayOverlapResult::GetCommonMuonPfoList() const
+inline const pandora::PfoList &DeltaRayOverlapResult::GetCommonMuonPfoList() const
 {
     return m_commonMuonPfoList;
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float DeltaRayOverlapResult::GetViewXSpan(const pandora::HitType &hitType) const
-{
-    if ((hitType != TPV_VIEW_U) || (hitType != TPV_VIEW_V) || (hitType != TPV_VIEW_W))
-        throw STATUS_CODE_NOT_ALLOWED;
-
-    return (hitType == TPV_VIEW_U) ? m_uSpan : (hitType == TPV_VIEW_V) ? m_vSpan : m_wSpan;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float DeltaRayOverlapResult::GetViewStatus(const pandora::HitType &hitType) const
-{
-    if ((hitType != TPV_VIEW_U) || (hitType != TPV_VIEW_V) || (hitType != TPV_VIEW_W))
-        throw STATUS_CODE_NOT_ALLOWED;
-
-    return (hitType == TPV_VIEW_U) ? m_uStatus : (hitType == TPV_VIEW_V) ? m_vStatus : m_wStatus;
-}
-
 
 } // namespace lar_content
 

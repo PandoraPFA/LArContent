@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ClearDeltaRayTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/ShortSpan.h
  *
- *  @brief  Header file for the clear delta ray tool class
+ *  @brief  Header file for the short span tool class
  *
  *  $Log: $
  */
-#ifndef CLEAR_DELTA_RAY_TOOL_H
-#define CLEAR_DELTA_RAY_TOOL_H 1
+#ifndef SHORT_SPAN_TOOL_H
+#define SHORT_SPAN_TOOL_H 1
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
 
@@ -14,34 +14,47 @@ namespace lar_content
 {
 
 /**
- *  @brief  ClearDeltaRayTool class
+ *  @brief  ShortSpanTool class
  */
-class ClearDeltaRayTool : public DeltaRayTensorTool
+class ShortSpanTool : public DeltaRayTensorTool
 {
 public:
+    typedef std::vector<pandora::HitType> HitTypeVector;
     /**
      *  @brief  Default constructor
      */
-    ClearDeltaRayTool();
+    ShortSpanTool();
 
     bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    /**
-     *  @brief  Create three dimensional particles for a given tensor element list
-     *
-     *  @param  pAlgorithm address of the calling algorithm (ultimately responsible for the particles)
-     *  @param  elementList the tensor element list
-     *  @param  particlesMade receive boolean indicating whether particles have been made
-     */
-    void CreateThreeDParticles(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
+    void InitialiseStrayClusterList(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const pandora::HitType &hitType);
 
-    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
-    float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
+    bool IsStrayClusterListInitialised(const pandora::HitType &hitType) const;
+    
+    void InvestigateShortSpans(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType::ElementList &elementList, bool &changesMade);
+
+    bool GetShortCluster(const TensorType::Element &element, const pandora::Cluster *&pShortCluster) const;
+
+    void ClearStrayClusterLists();
+
+    void GetGoodXOverlapExtrema(const TensorType::Element &element, const pandora::HitType &badHitType, float &minX, float &maxX) const;
+
+    void CollectStrayHits(const TensorType::Element &element, const pandora::Cluster *const pShortCluster, const pandora::ClusterList &strayClusterList, pandora::ClusterList &collectedClusters) const;
+
+    float m_minXOverlapFraction;
+    
+    bool m_isStrayListUInitialised;
+    bool m_isStrayListVInitialised;
+    bool m_isStrayListWInitialised;
+
+    pandora::ClusterList m_strayClusterListU;
+    pandora::ClusterList m_strayClusterListV;
+    pandora::ClusterList m_strayClusterListW;    
 };
 
 } // namespace lar_content
 
-#endif // #ifndef CLEAR_TRACKS_TOOL_H
+#endif // #ifndef SHORT_SPAN_TOOL_H
