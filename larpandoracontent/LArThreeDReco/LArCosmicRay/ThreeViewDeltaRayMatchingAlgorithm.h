@@ -51,6 +51,16 @@ public:
 
     bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
 
+    void UpdateForNewCluster(const pandora::ClusterVector &newClusterList, const pandora::PfoVector &pfoList);
+    void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
+
+    const pandora::ClusterList &GetStrayClusterList(const pandora::HitType &hitType) const;
+
+    void RemoveFromStrayClusterList(const pandora::Cluster *const pClusterToRemove);
+
+    void CollectStrayHits(const pandora::Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, pandora::ClusterList &collectedClusters);
+
+    void AddInStrayClusters(const pandora::Cluster *const pClusterToEnlarge, const pandora::ClusterList &collectedClusters);
 private:
 
     void FillHitToClusterMap(const pandora::HitType &hitType);
@@ -75,12 +85,13 @@ private:
     void GetNearbyMuonPfos(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::PfoList &nearbyMuonPfos) const;
     
     void ExamineOverlapContainer();
-
-    void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);    
-    void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+    void InitialiseStrayClusterList(const pandora::HitType &hitType);
+    bool IsStrayClusterListInitialised(const pandora::HitType &hitType) const;
+    void ClearStrayClusterLists();
 
     std::string   m_muonPfoListName;
     
@@ -99,6 +110,14 @@ private:
     ClusterToPfoMap       m_clusterToPfoMapU;
     ClusterToPfoMap       m_clusterToPfoMapV;
     ClusterToPfoMap       m_clusterToPfoMapW;
+
+    bool m_isStrayListUInitialised;
+    bool m_isStrayListVInitialised;
+    bool m_isStrayListWInitialised;
+
+    pandora::ClusterList m_strayClusterListU;
+    pandora::ClusterList m_strayClusterListV;
+    pandora::ClusterList m_strayClusterListW;    
     
     typedef std::vector<DeltaRayTensorTool*> TensorToolVector;
     TensorToolVector                  m_algorithmToolVector;          ///< The algorithm tool vector

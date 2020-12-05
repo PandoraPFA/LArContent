@@ -18,19 +18,13 @@ namespace lar_content
 {
 
 ShortSpanTool::ShortSpanTool() :
-    m_minXOverlapFraction(0.7f),
-    m_isStrayListUInitialised(false),
-    m_isStrayListVInitialised(false),
-    m_isStrayListWInitialised(false),
-    m_strayClusterListU(ClusterList()),
-    m_strayClusterListV(ClusterList()),
-    m_strayClusterListW(ClusterList())
+    m_minXOverlapFraction(0.7f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-    bool ShortSpanTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool ShortSpanTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -41,8 +35,6 @@ ShortSpanTool::ShortSpanTool() :
     overlapTensor.GetUnambiguousElements(true, elementList);
     this->InvestigateShortSpans(pAlgorithm, elementList, changesMade);
 
-    this->ClearStrayClusterLists();
-    
     return changesMade;
 }
 
@@ -54,12 +46,8 @@ void ShortSpanTool::InvestigateShortSpans(ThreeViewDeltaRayMatchingAlgorithm *co
     {
         const Cluster *pShortCluster(nullptr);
 
-        // Check if short span creates ambiguities
-        if(!this->GetShortCluster(element, pShortCluster))
-            return;
-
         //////////////////////////
-        /*
+	/*        
         std::cout << "uSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_U) << std::endl;
         std::cout << "vSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_V) << std::endl;
         std::cout << "wSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_W) << std::endl;
@@ -69,43 +57,36 @@ void ShortSpanTool::InvestigateShortSpans(ThreeViewDeltaRayMatchingAlgorithm *co
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &uCluster, "uCluster_1", RED);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &vCluster, "vCluster_1", BLUE);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &wCluster, "wCluster_1", VIOLET);
-        */
+	PandoraMonitoringApi::ViewEvent(this->GetPandora());
+	*/
         ////////////////////////// 
 
-        // Create list of stray clusters - those that do not pass tensor thresholds
-        this->InitialiseStrayClusterList(pAlgorithm, LArClusterHelper::GetClusterHitType(pShortCluster));
+        // Check if short span creates ambiguities
+        if(!this->GetShortCluster(element, pShortCluster))
+            continue;
 
-        HitType hitType(LArClusterHelper::GetClusterHitType(pShortCluster));
-        ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
+        HitType badHitType(LArClusterHelper::GetClusterHitType(pShortCluster));
+
+        // Create list of stray clusters - those that do not pass tensor thresholds
+        pAlgorithm->InitialiseStrayClusterList(badHitType);
 
         //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &strayClusterList, "STRAY CLUSTERS", BLACK);
         
         // Collect any clusters to add into the short cluster 
-        ClusterList collectedClusters;
-        this->CollectStrayHits(element, pShortCluster, strayClusterList, collectedClusters);
+	float spanMinX(0.f), spanMaxX(0.f);
+	this->GetGoodXOverlapExtrema(element, badHitType, spanMinX, spanMaxX);
+
+	ClusterList collectedClusters;
+	pAlgorithm->CollectStrayHits(pShortCluster, spanMinX, spanMaxX, collectedClusters);
         
         //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &collectedClusters, "COLLECTED CLUSTERS", DARKGREEN);
 
         // Add stray clusters in
         if (!collectedClusters.empty())
         {
-            pAlgorithm->UpdateUponDeletion(pShortCluster);
-
-            for(const Cluster *const pCollectedCluster : collectedClusters)
-            {
-                const ClusterList::const_iterator deleteIter(std::find(strayClusterList.begin(), strayClusterList.end(), pCollectedCluster));
-                strayClusterList.erase(deleteIter);
-                
-                pAlgorithm->UpdateUponDeletion(pCollectedCluster);
-
-                std::string clusterListName(pAlgorithm->GetClusterListName(LArClusterHelper::GetClusterHitType(pShortCluster)));
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pShortCluster, pCollectedCluster, clusterListName, clusterListName));
-            }
-
-            pAlgorithm->UpdateForNewCluster(pShortCluster);
-
-            changesMade = true;
-        }
+	  pAlgorithm->AddInStrayClusters(pShortCluster, collectedClusters);
+	  changesMade = true;
+	}
 
         //////////////////////////
         /*        
@@ -118,25 +99,6 @@ void ShortSpanTool::InvestigateShortSpans(ThreeViewDeltaRayMatchingAlgorithm *co
         //////////////////////////
     }
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShortSpanTool::InitialiseStrayClusterList(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const HitType &hitType)
-{
-    if (this->IsStrayClusterListInitialised(hitType))
-        return;
-    
-    ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
-    
-    for (const Cluster *const pCluster : pAlgorithm->GetInputClusterList(hitType))
-    {
-        if (!pAlgorithm->DoesClusterPassTesorThreshold(pCluster))
-            strayClusterList.push_back(pCluster);
-    }
-
-    bool &isStrayClusterListInitialised((hitType == TPC_VIEW_U) ? m_isStrayListUInitialised : (hitType == TPC_VIEW_V) ? m_isStrayListVInitialised : m_isStrayListWInitialised);
-    isStrayClusterListInitialised = true;
-}    
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
 
@@ -183,58 +145,6 @@ bool ShortSpanTool::GetShortCluster(const TensorType::Element &element, const Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShortSpanTool::CollectStrayHits(const TensorType::Element &element, const Cluster *const pShortCluster, const ClusterList &strayClusterList, ClusterList &collectedClusters) const
-{
-    HitType badHitType(LArClusterHelper::GetClusterHitType(pShortCluster));
-    
-    float spanMinX(0.f), spanMaxX(0.f);
-    this->GetGoodXOverlapExtrema(element, badHitType, spanMinX, spanMaxX);
-    
-    for (const Cluster *const pCluster : strayClusterList)
-    {
-        float xMin(-std::numeric_limits<float>::max()), xMax(+std::numeric_limits<float>::max());
-        pCluster->GetClusterSpanX(xMin, xMax);
-
-        if (!(((xMin > spanMinX) && (xMin < spanMaxX)) || ((xMax > spanMinX) && (xMax < spanMaxX))))
-            continue;
-        
-        if (LArClusterHelper::GetClosestDistance(pShortCluster, pCluster) > 2.f)
-            continue;
-
-        collectedClusters.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShortSpanTool::ClearStrayClusterLists()
-{
-    if (m_isStrayListUInitialised)
-        m_strayClusterListU.clear();
-
-    if (m_isStrayListVInitialised)
-        m_strayClusterListV.clear();
-
-    if (m_isStrayListWInitialised)
-        m_strayClusterListW.clear();
-    
-    m_isStrayListUInitialised = false;
-    m_isStrayListVInitialised = false;
-    m_isStrayListWInitialised = false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ShortSpanTool::IsStrayClusterListInitialised(const HitType &hitType) const
-{
-    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
-        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
-
-    return (hitType == TPC_VIEW_U) ? m_isStrayListUInitialised : (hitType == TPC_VIEW_V) ? m_isStrayListVInitialised : m_isStrayListWInitialised;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void ShortSpanTool::GetGoodXOverlapExtrema(const TensorType::Element &element, const HitType &badHitType, float &minX, float &maxX) const
 {
     if (badHitType == TPC_VIEW_U)
@@ -256,7 +166,6 @@ void ShortSpanTool::GetGoodXOverlapExtrema(const TensorType::Element &element, c
     }
 }
     
-
 //------------------------------------------------------------------------------------------------------------------------------------------
     
 StatusCode ShortSpanTool::ReadSettings(const TiXmlHandle xmlHandle)
@@ -276,46 +185,3 @@ StatusCode ShortSpanTool::ReadSettings(const TiXmlHandle xmlHandle)
 
 
 
-
-
-
-
-
-
-
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-/*
-void ShortSpanTool::CollectMuonHits(const TensorType::Element &element, const Cluster *const pShortCluster, const ClusterList &strayClusterList, ClusterList &collectedClusters) const
-{
-    HitType badHitType(LArClusterHelper::GetClusterHitType(pShortCluster));
-    
-    float spanMinX(0.f), spanMaxX(0.f);
-    this->GetGoodXOverlapExtrema(element, badHitType, spanMinX, spanMaxX);
-
-    const PfoList &commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
-
-    if (commonMuonPfoList.size() != 1)
-    {
-        std::cout << "ISOBEL: MORE THAN ONE COMMON MUON IN COMMON MUON LIST" << std::endl;
-        return;
-    }
-
-    ClusterList muonCluster;
-    LArPfoHelper::GetClusters(commonMuonPfoList.front(), badHitType, muonCluster);
-
-    for (const Cluster *const pCluster : strayClusterList)
-    {
-        float xMin(-std::numeric_limits<float>::max()), xMax(+std::numeric_limits<float>::max());
-        pCluster->GetClusterSpanX(xMin, xMax);
-
-        if (!(((xMin > spanMinX) && (xMin < spanMaxX)) || ((xMax > spanMinX) && (xMax < spanMaxX))))
-            continue;
-        
-        if (LArClusterHelper::GetClosestDistance(pShortCluster, pCluster) > 2.f)
-            continue;
-
-        collectedClusters.push_back(pCluster);
-    }
-}
-*/

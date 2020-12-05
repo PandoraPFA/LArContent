@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/LongSpan.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayRemoval.h
  *
  *  @brief  Header file for the long span tool class
  *
  *  $Log: $
  */
-#ifndef LONG_SPAN_TOOL_H
-#define LONG_SPAN_TOOL_H 1
+#ifndef DELTA_RAY_REMOVAL_TOOL_H
+#define DELTA_RAY_REMOVAL_TOOL_H 1
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
@@ -15,37 +15,31 @@ namespace lar_content
 {
 
 /**
- *  @brief  LongSpanTool class
+ *  @brief  DeltaRayRemovalTool class
  */
-class LongSpanTool : public DeltaRayTensorTool
+class DeltaRayRemovalTool : public DeltaRayTensorTool
 {
 public:
     typedef std::vector<pandora::HitType> HitTypeVector;
     /**
      *  @brief  Default constructor
      */
-    LongSpanTool();
+    DeltaRayRemovalTool();
 
     bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void InvestigateLongSpans(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType::ElementList &elementList, bool &changesMade);
+    void SearchForDeltaRayContamination(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType::ElementList &elementList, bool &changesMade);
 
-    bool GetLongCluster(const TensorType::Element &element, const pandora::Cluster *&pLongCluster) const;
+    bool PassElementChecks(TensorType::Element &element, const pandora::HitType &hitType);
 
-    bool IsConnected(const TensorType::Element &element) const;
-    
-    void GetGoodXOverlapExtrema(const TensorType::Element &element, const pandora::HitType &badHitType, float &minX, float &maxX) const;
-
-    bool IsMuonEndpoint(const TensorType::Element &element, const pandora::HitType &badHitType) const;
-
-    bool ShouldSplitDeltaRay(const pandora::Cluster *const pMuonCluster, const pandora::Cluster *const pDeltaRayCluster, const pandora::CartesianVector &muonPosition,
+    bool ShouldSplitCosmicRay(const pandora::Cluster *const pMuonCluster, const pandora::Cluster *const pDeltaRayCluster, const pandora::CartesianVector &muonPosition,
         const TwoDSlidingFitResult &slidingFitResult) const;
 
     void FindExtrapolatedHits(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary,
-			      pandora::CaloHitList &collectedHits) const;
+                              pandora::CaloHitList &collectedHits) const;
 
     bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;
 
@@ -53,7 +47,6 @@ private:
 
     void CreateSeed(const TensorType::Element &element, const pandora::HitType &badHitType, pandora::CaloHitList &collectedHits) const;
 
-    void GrowSeed(const TensorType::Element &element, const pandora::HitType &badHitType, pandora::CaloHitList &collectedHits) const;
     
     float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
 
@@ -62,10 +55,10 @@ private:
 
     void SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &badHitType, pandora::CaloHitList &collectedHits) const;
 
+    float m_minSeparation;
     float m_xOverlapWindow;
-    float m_minXOverlapFraction;
 };
 
 } // namespace lar_content
 
-#endif // #ifndef LONG_SPAN_TOOL_H
+#endif // #ifndef DELTA_RAY_REMOVAL_TOOL_H
