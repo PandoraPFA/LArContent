@@ -29,30 +29,14 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    void InitialiseStrayClusterList(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const pandora::HitType &hitType);
-
-    bool IsStrayClusterListInitialised(const pandora::HitType &hitType) const;
     
     void InvestigateShortSpans(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType::ElementList &elementList, bool &changesMade);
 
     bool GetShortCluster(const TensorType::Element &element, const pandora::Cluster *&pShortCluster) const;
 
-    void ClearStrayClusterLists();
-
     void GetGoodXOverlapExtrema(const TensorType::Element &element, const pandora::HitType &badHitType, float &minX, float &maxX) const;
 
-    void CollectStrayHits(const TensorType::Element &element, const pandora::Cluster *const pShortCluster, const pandora::ClusterList &strayClusterList, pandora::ClusterList &collectedClusters) const;
-
     float m_minXOverlapFraction;
-    
-    bool m_isStrayListUInitialised;
-    bool m_isStrayListVInitialised;
-    bool m_isStrayListWInitialised;
-
-    pandora::ClusterList m_strayClusterListU;
-    pandora::ClusterList m_strayClusterListV;
-    pandora::ClusterList m_strayClusterListW;    
 };
 
 } // namespace lar_content
