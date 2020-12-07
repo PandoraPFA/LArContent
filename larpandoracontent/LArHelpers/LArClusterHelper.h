@@ -260,10 +260,8 @@ public:
     /**
      *  @brief  Get the set of the daughter volumes that contains the cluster
      *
-     *  @param  daughterVolumeIds set of daughter volume Ids pCluster lives in
-     *  @param  pCluster1 address of the cluster
-     *
-     *  @return the set of daughter volumes
+     *  @param  pCluster address of the cluster
+     *  @param  daughterVolumeIds output variable
      */
     static void GetDaughterVolumeIDs(const pandora::Cluster *const pCluster, UIntSet &daughterVolumeIds);
 
