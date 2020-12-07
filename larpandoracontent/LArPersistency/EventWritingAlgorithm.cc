@@ -37,6 +37,7 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldOverwriteEventFile(false),
     m_shouldOverwriteGeometryFile(false),
     m_useLArCaloHits(true),
+    m_larCaloHitVersion(1),
     m_useLArMCParticles(true),
     m_shouldFilterByNuanceCode(false),
     m_filterNuanceCode(0),
@@ -110,7 +111,7 @@ StatusCode EventWritingAlgorithm::Initialize()
         }
 
         if (m_useLArCaloHits)
-            m_pEventFileWriter->SetFactory(new LArCaloHitFactory);
+            m_pEventFileWriter->SetFactory(new LArCaloHitFactory(m_larCaloHitVersion));
 
         if (m_useLArMCParticles)
             m_pEventFileWriter->SetFactory(new LArMCParticleFactory);
@@ -315,6 +316,9 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseLArCaloHits", m_useLArCaloHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "LArCaloHitVersion", m_larCaloHitVersion));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "UseLArMCParticles", m_useLArMCParticles));
