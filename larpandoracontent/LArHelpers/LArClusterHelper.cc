@@ -596,7 +596,7 @@ void LArClusterHelper::GetDaughterVolumeIDs(const Cluster *const pCluster, UIntS
     {
         for (CaloHitList::const_iterator hIter = ochIter->second->begin(), hIterEnd = ochIter->second->end(); hIter != hIterEnd; ++hIter)
         {
-            const CaloHit *const pCaloHit = *hIter;
+            const CaloHit *const pCaloHit(*hIter);
             const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit*>(pCaloHit));
 
             if (pLArCaloHit) 
