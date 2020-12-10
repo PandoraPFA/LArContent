@@ -75,6 +75,9 @@
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayParentAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ShortSpanTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/LongSpanTool.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayRemovalTool.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/SpanAcceptanceTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewClearDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMatchingAlgorithm.h"
@@ -316,7 +319,10 @@
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArClearDeltaRay",                       ClearDeltaRayTool)                                                              \
     d("LArShortSpan",                           ShortSpanTool)                                                                  \
+    d("LArCosmicRayRemoval",                    CosmicRayRemovalTool)                                                           \
+    d("LArDeltaRayRemoval",                     DeltaRayRemovalTool)                                                            \
     d("LArLongSpan",                            LongSpanTool)                                                                   \
+    d("LArSpanAcceptance",                      SpanAcceptanceTool)                                                             \
     d("LArTwoViewClearDeltaRay",                TwoViewClearDeltaRayTool)                                                       \
     d("LArDeltaRayTensorVisualization",         DeltaRayTensorVisualizationTool)                                                \
     d("LArDeltaRayMatrixVisualization",         DeltaRayMatrixVisualizationTool)                                                \

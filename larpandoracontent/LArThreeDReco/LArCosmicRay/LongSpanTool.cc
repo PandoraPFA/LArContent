@@ -22,7 +22,7 @@ namespace lar_content
 {
 
 LongSpanTool::LongSpanTool() :
-    m_xOverlapWindow(1.f),
+    m_xOverlapWindow(0.1f),
     m_minXOverlapFraction(0.7f)
 {
 }
@@ -53,7 +53,7 @@ void LongSpanTool::InvestigateLongSpans(ThreeViewDeltaRayMatchingAlgorithm *cons
 
         // Check if long span creates ambiguities
         if(!this->GetLongCluster(element, pLongCluster))
-            return;
+            continue;
 
 	const HitType &badHitType(LArClusterHelper::GetClusterHitType(pLongCluster));
 
@@ -87,23 +87,40 @@ void LongSpanTool::InvestigateLongSpans(ThreeViewDeltaRayMatchingAlgorithm *cons
 	// Check if ambiguity is caused by muon issues
 	if (this->IsMuonEndpoint(element, badHitType))
 	{
+            //////////////////////// 
+
+        std::cout << "uSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_U) << std::endl;
+        std::cout << "vSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_V) << std::endl;
+        std::cout << "wSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_W) << std::endl;
+        std::cout << "overlap: " << element.GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
+                
+        ClusterList uCluster({element.GetCluster(TPC_VIEW_U)}), vCluster({element.GetCluster(TPC_VIEW_V)}), wCluster({element.GetCluster(TPC_VIEW_W)});
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &uCluster, "uCluster_1", RED);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &vCluster, "vCluster_1", BLUE);
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &wCluster, "wCluster_1", VIOLET);
+
+        ClusterList longCluster({pLongCluster});
+        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &longCluster, "longCluster", BLACK);
+	PandoraMonitoringApi::ViewEvent(this->GetPandora());
+	    ////////////////////////// 
+
 	    // Attempt to pull delta ray hits out of cluster
             CaloHitList collectedHits;
 	    this->CreateSeed(element, badHitType, collectedHits);
 
             ////////////////////////// 
-	    /*
+
+
+            ////////////////////////// 
+	    this->GrowSeed(element, badHitType, collectedHits);
+
             for (const CaloHit *const pCaloHit : collectedHits)
             {
 	      const CartesianVector &position(pCaloHit->GetPositionVector());
                 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "collected", VIOLET, 2);
             }
-	    */
-            ////////////////////////// 
 
-	    this->GrowSeed(element, badHitType, collectedHits);
-
-	    if (!collectedHits.empty())
+	    if ((!collectedHits.empty()) && (collectedHits.size() != element.GetCluster(badHitType)->GetNCaloHits()))
 	    {
 	      this->SplitCluster(pAlgorithm, element, badHitType, collectedHits);
 	      changesMade = true;
@@ -123,10 +140,11 @@ void LongSpanTool::InvestigateLongSpans(ThreeViewDeltaRayMatchingAlgorithm *cons
 
 		ClusterList collectedClusters;
 		pAlgorithm->CollectStrayHits(element.GetCluster(hitType), spanMinX, spanMaxX, collectedClusters);
-        
+
                 // Add stray clusters in
 		if (!collectedClusters.empty())
                 {
+		  std::cout << "HERE" << std::endl;
 		    pAlgorithm->AddInStrayClusters(element.GetCluster(hitType), collectedClusters);
 		    changesMade = true;
 		}
@@ -256,6 +274,25 @@ void LongSpanTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgor
   LArPfoHelper::GetClusters(element.GetOverlapResult().GetCommonMuonPfoList().front(), badHitType, muonCluster);
   pAlgorithm->UpdateUponDeletion(muonCluster.front());
 
+  ClusterList oldDR({element.GetCluster(badHitType)});
+  PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &oldDR, "old delta ray", BLUE);
+
+  CaloHitList longClusterCaloHitList;
+  element.GetCluster(badHitType)->GetOrderedCaloHitList().FillCaloHitList(longClusterCaloHitList);
+  for (const CaloHit *const pCaloHit : longClusterCaloHitList)
+  {
+    if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) == collectedHits.end())
+    {
+      PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*pAlgorithm, element.GetCluster(badHitType), pCaloHit));
+      PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*pAlgorithm, muonCluster.front(), pCaloHit));
+    }
+  }
+
+  ClusterList newDR({element.GetCluster(badHitType)});
+  PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &newDR, "old delta ray", RED);
+  PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+  /*
   std::string originalListName, fragmentListName;
   ClusterList originalClusterList(1, element.GetCluster(badHitType));
 
@@ -267,21 +304,18 @@ void LongSpanTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgor
   parameters.m_caloHitList = collectedHits;
   PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, parameters, pDeltaRay));
 
-  CaloHitList longClusterCaloHitList;
-  element.GetCluster(badHitType)->GetOrderedCaloHitList().FillCaloHitList(longClusterCaloHitList);
-  for (const CaloHit *const pCaloHit : longClusterCaloHitList)
-  {
-    if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) == collectedHits.end())
-      PandoraContentApi::AddToCluster(*pAlgorithm, muonCluster.front(), pCaloHit);
-  }
-
-  PandoraContentApi::EndFragmentation(*pAlgorithm, fragmentListName, originalListName);
-
-  pAlgorithm->UpdateForNewCluster(pDeltaRay);
+  PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*pAlgorithm, fragmentListName, originalListName));
+  */
 
   ClusterList newMuonCluster;
   LArPfoHelper::GetClusters(element.GetOverlapResult().GetCommonMuonPfoList().front(), badHitType, newMuonCluster);   
-  pAlgorithm->UpdateForNewCluster(newMuonCluster.front(), element.GetOverlapResult().GetCommonMuonPfoList().front());
+
+  ClusterVector clusterVector;
+  clusterVector.push_back(newMuonCluster.front()); clusterVector.push_back(element.GetCluster(badHitType));//clusterVector.push_back(pDeltaRay);
+  PfoVector pfoVector;
+  pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front()); pfoVector.push_back(nullptr);
+
+  pAlgorithm->UpdateForNewCluster(clusterVector, pfoVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -319,6 +353,11 @@ void LongSpanTool::GrowSeed(const TensorType::Element &element, const HitType &b
             
     CartesianPointVector muonProjectedPositions;
     this->ProjectPositions(muonClusterList1.front(), muonClusterList2.front(), muonProjectedPositions);
+
+    for (const CartesianVector &position : muonProjectedPositions)
+      PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "POSITION", BLACK, 2);
+
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     CaloHitList longClusterCaloHitList;
     element.GetCluster(badHitType)->GetOrderedCaloHitList().FillCaloHitList(longClusterCaloHitList);
@@ -418,7 +457,10 @@ void LongSpanTool::CreateSeed(const TensorType::Element &element, const HitType 
             const float distanceSquared((position - projectedPosition).GetMagnitude());
 
             if (distanceSquared < 4.f)
+	    {
                 collectedHits.push_back(pCaloHit);
+		break;
+	    }
         }
     }
 }
@@ -496,8 +538,8 @@ bool LongSpanTool::ShouldSplitDeltaRay(const Cluster *const pMuonCluster, const 
     CartesianVector minusPosition(muonPosition - (direction * 5.f));    
     CartesianVector plusPosition(muonPosition + (direction * 5.f));
 
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &plusPosition, "plus", BLACK, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &minusPosition, "minus", BLACK, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &plusPosition, "plus", BLACK, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &minusPosition, "minus", BLACK, 2);
 
     CaloHitList minusMuonHits, minusDeltaRayHits;    
     CaloHitList plusMuonHits, plusDeltaRayHits;
@@ -507,6 +549,7 @@ bool LongSpanTool::ShouldSplitDeltaRay(const Cluster *const pMuonCluster, const 
     this->FindExtrapolatedHits(pDeltaRayCluster, muonPosition, minusPosition, minusDeltaRayHits);
     this->FindExtrapolatedHits(pDeltaRayCluster, muonPosition, plusPosition, plusDeltaRayHits);
 
+    /*
     for (const CaloHit *const pCaloHit : minusMuonHits)
     {
         const CartesianVector &position(pCaloHit->GetPositionVector());
@@ -530,6 +573,7 @@ bool LongSpanTool::ShouldSplitDeltaRay(const Cluster *const pMuonCluster, const 
         const CartesianVector &position(pCaloHit->GetPositionVector());
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "Dr", RED, 2);
     }
+    */
 
     if (minusMuonHits.empty() && plusMuonHits.empty())
         return false;

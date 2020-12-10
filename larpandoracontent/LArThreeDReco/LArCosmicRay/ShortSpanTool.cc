@@ -46,12 +46,8 @@ void ShortSpanTool::InvestigateShortSpans(ThreeViewDeltaRayMatchingAlgorithm *co
     {
         const Cluster *pShortCluster(nullptr);
 
-        // Check if short span creates ambiguities
-        if(!this->GetShortCluster(element, pShortCluster))
-            return;
-
         //////////////////////////
-        /*
+	/*        
         std::cout << "uSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_U) << std::endl;
         std::cout << "vSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_V) << std::endl;
         std::cout << "wSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_W) << std::endl;
@@ -61,8 +57,13 @@ void ShortSpanTool::InvestigateShortSpans(ThreeViewDeltaRayMatchingAlgorithm *co
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &uCluster, "uCluster_1", RED);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &vCluster, "vCluster_1", BLUE);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &wCluster, "wCluster_1", VIOLET);
-        */
+	PandoraMonitoringApi::ViewEvent(this->GetPandora());
+	*/
         ////////////////////////// 
+
+        // Check if short span creates ambiguities
+        if(!this->GetShortCluster(element, pShortCluster))
+            continue;
 
         HitType badHitType(LArClusterHelper::GetClusterHitType(pShortCluster));
 

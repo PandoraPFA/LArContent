@@ -51,14 +51,14 @@ public:
 
     bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
 
-    void UpdateForNewCluster(const pandora::Cluster *const pNewCluster, const pandora::ParticleFlowObject *const pMuonPfo = nullptr);    
+    void UpdateForNewCluster(const pandora::ClusterVector &newClusterList, const pandora::PfoVector &pfoList);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
 
     const pandora::ClusterList &GetStrayClusterList(const pandora::HitType &hitType) const;
 
     void RemoveFromStrayClusterList(const pandora::Cluster *const pClusterToRemove);
 
-    void CollectStrayHits(const pandora::Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, pandora::ClusterList &collectedClusters) const;
+    void CollectStrayHits(const pandora::Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, pandora::ClusterList &collectedClusters);
 
     void AddInStrayClusters(const pandora::Cluster *const pClusterToEnlarge, const pandora::ClusterList &collectedClusters);
 private:

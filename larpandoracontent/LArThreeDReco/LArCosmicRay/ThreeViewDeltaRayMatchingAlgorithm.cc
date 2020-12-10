@@ -29,7 +29,7 @@ ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm()  :
     m_strayClusterListW(ClusterList()),
     m_nMaxTensorToolRepeats(1000),
     m_minClusterCaloHits(5),//5),
-    m_searchRegion1D(5.f),    
+    m_searchRegion1D(3.f),    
     m_pseudoChi2Cut(1.5f), //normally three
     m_xOverlapWindow(1.f),
     m_minMatchedFraction(0.5),
@@ -437,60 +437,76 @@ void ThreeViewDeltaRayMatchingAlgorithm::FillClusterToPfoMap(const HitType &hitT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewCluster(const Cluster *const pNewCluster, const ParticleFlowObject *const pMuonPfo)
+void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewCluster(const ClusterVector &newClusterVector, const PfoVector &pfoVector)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(newClusterVector.front()));
 
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);    
     ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
 
-    CaloHitList caloHitList;
-    pNewCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-    
-    for (const CaloHit *const pCaloHit : caloHitList)
+    for (const Cluster *const pNewCluster : newClusterVector)
     {
-        hitToClusterMap[pCaloHit] = pNewCluster;
-            
-        HitKDNode2DList found;  
-        KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
+        CaloHitList caloHitList;
+	pNewCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
-        kdTree.search(searchRegionHits, found);
+        for (const CaloHit *const pCaloHit : caloHitList)
+        { 
+            hitToClusterMap[pCaloHit] = pNewCluster;
+	}
+    }
+
+    for (unsigned int i = 0; i < newClusterVector.size(); ++i)
+    {
+        const Cluster *const pNewCluster(newClusterVector.at(i));
+  
+        CaloHitList caloHitList;
+	pNewCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+        for (const CaloHit *const pCaloHit : caloHitList)
+        {             
+            HitKDNode2DList found;  
+	    KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
+
+	    kdTree.search(searchRegionHits, found);
             
-        for (const auto &hit : found)
-        {
-            if (std::find(caloHitList.begin(), caloHitList.end(), hit.data) != caloHitList.end())
-                continue;
+	    for (const auto &hit : found)
+            {
+	        if (std::find(caloHitList.begin(), caloHitList.end(), hit.data) != caloHitList.end())
+		  continue;
                 
-            ClusterList  &nearbyClusterList(clusterProximityMap[pNewCluster]);
-            const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
+		ClusterList  &nearbyClusterList(clusterProximityMap[pNewCluster]);
+		const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
 
-            if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
-                nearbyClusterList.push_back(pNearbyCluster);
-        }
-    }
-    
-    if (clusterProximityMap.find(pNewCluster) != clusterProximityMap.end())
-    {
-        const ClusterList &nearbyClusterList(clusterProximityMap.at(pNewCluster));
+		if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
+		  nearbyClusterList.push_back(pNearbyCluster);
+	    }
+	}
 
-        for (const Cluster *const pNearbyCluster : nearbyClusterList)
+	if (clusterProximityMap.find(pNewCluster) != clusterProximityMap.end())
         {
-            ClusterList &invertedCloseClusters(clusterProximityMap.at(pNearbyCluster));
-            
-            if (std::find(invertedCloseClusters.begin(), invertedCloseClusters.end(), pNewCluster) == invertedCloseClusters.end())
-                    invertedCloseClusters.push_back(pNewCluster);
-        }
-    }
+	    const ClusterList &nearbyClusterList(clusterProximityMap.at(pNewCluster));
 
-    if (pMuonPfo)
-    {
-      clusterToPfoMap[pNewCluster] = pMuonPfo;
-    }
-    else
-    {
-      BaseAlgorithm::UpdateForNewCluster(pNewCluster);
+	    for (const Cluster *const pNearbyCluster : nearbyClusterList)
+            {
+	        ClusterList &invertedCloseClusters(clusterProximityMap[pNearbyCluster]);
+            
+		if (std::find(invertedCloseClusters.begin(), invertedCloseClusters.end(), pNewCluster) == invertedCloseClusters.end())
+		    invertedCloseClusters.push_back(pNewCluster);
+	    }
+	}
+
+	const ParticleFlowObject *const pMuonPfo(pfoVector.at(i));
+
+        if (pMuonPfo)
+        {
+            clusterToPfoMap[pNewCluster] = pMuonPfo;
+	}
+        else
+        {
+	    BaseAlgorithm::UpdateForNewCluster(pNewCluster);
+	}
     }
 }
 
@@ -631,9 +647,10 @@ void ThreeViewDeltaRayMatchingAlgorithm::RemoveFromStrayClusterList(const Cluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewDeltaRayMatchingAlgorithm::CollectStrayHits(const Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, ClusterList &collectedClusters) const
+void ThreeViewDeltaRayMatchingAlgorithm::CollectStrayHits(const Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, ClusterList &collectedClusters)
 {
     const HitType badHitType(LArClusterHelper::GetClusterHitType(pBadCluster));
+    this->InitialiseStrayClusterList(badHitType);
     const ClusterList &strayClusterList(this->GetStrayClusterList(badHitType));
 
     for (const Cluster *const pCluster : strayClusterList)
@@ -666,7 +683,7 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
 	PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pCollectedCluster, clusterListName, clusterListName));
     }
 
-    this->UpdateForNewCluster(pClusterToEnlarge);
+    this->UpdateForNewCluster({pClusterToEnlarge}, {nullptr});
 }
 
 
