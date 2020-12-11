@@ -63,10 +63,6 @@ MasterAlgorithm::MasterAlgorithm() :
   MasterAlgorithm::~MasterAlgorithm() {
     try
       {            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree", "output.root", "UPDATE"));
-	//  PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree2", "output2.root", "UPDATE"));
-	//   PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree3", "output3.root", "UPDATE"));
-	// PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree4", "output4.root", "UPDATE"));
-	// PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree5", "output5.root", "UPDATE"));
       }
     catch (const StatusCodeException &)
       {

@@ -193,7 +193,7 @@ private:
      *  @param  reconstructedCaloHitList output list of all 2d hits in the input pfos
      *  @param  reconstructableCaloHitSet set of reconstructable calo hits
      */
-    void Collect2DHits(const pandora::PfoList &pfos, pandora::CaloHitList &reconstructedCaloHitList, const pandora::CaloHitSet &reconstructableCaloHitSet, pandora::CaloHitList &matchCaloHitList) const;
+    void Collect2DHits(const pandora::PfoList &pfos, pandora::CaloHitList &reconstructedCaloHitList, const pandora::CaloHitSet &reconstructableCaloHitSet) const;
 
     /**
      *  @brief  Count the number of neutrino induced hits in a given list using MC information

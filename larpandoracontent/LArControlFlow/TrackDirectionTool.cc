@@ -94,7 +94,7 @@ StatusCode TrackDirectionTool::Initialize()
 	   // minchi2perhit = fitResult.GetMinChiSquaredPerHit();
 	   std::cout << "Vertex position: (" << fitResult.GetBeginpoint().GetX() << ", " << fitResult.GetBeginpoint().GetY() << ", " << fitResult.GetBeginpoint().GetZ() << ")" << std::endl;
 	   std::cout << "Endpoint position: (" << fitResult.GetEndpoint().GetX() << ", " << fitResult.GetEndpoint().GetY() << ", " << fitResult.GetEndpoint().GetZ() << ")" << std::endl;
-	   std::cout << "Hypothosis: " << fitResult.GetHypothesis() << std::endl;
+	   //std::cout << "Hypothosis: " << fitResult.GetHypothesis() << std::endl;
 
 	   /*
 	   float ymax = 0.0;
@@ -625,7 +625,7 @@ void TrackDirectionTool::TrackEndFilter(HitChargeVector &hitChargeVector, Direct
     this->FitHitChargeVector(filteredHitChargeVector, afterDirectionFitObject);
 
     float tefBeforeChiSquaredPerHit(beforeDirectionFitObject.GetMinChiSquaredPerHit()), tefAfterChiSquaredPerHit(afterDirectionFitObject.GetMinChiSquaredPerHit());
-    //std::cout << "tefBeforeChiSquaredPerHit  " << tefBeforeChiSquaredPerHit << "     tefAfterChiSquaredPerHit " <<   tefAfterChiSquaredPerHit << std::endl;
+  
     float chiSquaredPerHitChange(beforeDirectionFitObject.GetMinChiSquaredPerHit() - afterDirectionFitObject.GetMinChiSquaredPerHit());
     float N(beforeNumberHits);
     bool shouldApply(true);
@@ -642,7 +642,6 @@ void TrackDirectionTool::TrackEndFilter(HitChargeVector &hitChargeVector, Direct
     tefObject.SetMinChiSquaredPerHitChange(tefBeforeChiSquaredPerHit - tefAfterChiSquaredPerHit);
     tefObject.SetBeforeNHits(hitChargeVector.size());
     tefObject.SetAfterNHits(filteredHitChargeVector.size());
-    //std::cout << "SetBeforeNHits  " << hitChargeVector.size() << "   SetAfterNHits  " <<  filteredHitChargeVector.size()  << std::endl;
     tefObject.SetSplitApplied(shouldApply);
     tefObject.SetBeforeDeltaChiSquaredPerHit(beforeDirectionFitObject.GetDeltaChiSquaredPerHit());
 
@@ -1684,17 +1683,17 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
     //while (lastchisquared >= chisquared) {
 
     // auto t_start = std::chrono::high_resolution_clock::now();
-    
+    double M = 105.7;  //mass
     for (double p0=vstart[0]; p0 < highphysbound[0];p0 = p0 + step[0]){
+      double Ee(p0);
+      double Le(GetLengthfromEnergy(lookupTable, Ee));  //length
       for (double p1=vstart[1]; p1 < highphysbound[1];p1 = p1 + step[1]){
+	double L(p1 * trackLength); //energy, length
+	double Ls(Le - L);
+	double Es(GetEnergyfromLength(lookupTable, Ls));    //energy
+	double alpha((Es - Ee)/TotalCharge), beta(L/TotalHitWidth);
 	for (double p2=vstart[2]; p2 < highphysbound[2];p2 = p2 + step[2]){
-	  double Ee(p0), L(p1 * trackLength); //energy, length
-	  double M = 105.7;  //mass
-	  double Le(GetLengthfromEnergy(lookupTable, Ee));  //length
-	  double Ls(Le - L);
-	  double Es(GetEnergyfromLength(lookupTable, Ls));    //energy
-	  double alpha((Es - Ee)/TotalCharge), beta(L/TotalHitWidth);
-    
+
 	  double chisquared(0.0);
 
 	  //minimise this bit-----
@@ -1777,15 +1776,14 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
     //minimise starts here
     //while (lastchisquared >= chisquared) {
     for (double p02=vstart2[0];  p02 < highphysbound2[0];p02 = p02 + step2[0]){
+      double Ee(p02);
+      double Le(GetLengthfromEnergy(lookupTable, Ee));  //length
       for (double p12=vstart2[1]; p12 < highphysbound2[1];p12 = p12 + step2[1]){
+	double L(p12 * trackLength); //energy, length
+	double Ls(Le - L);
+	double Es(GetEnergyfromLength(lookupTable, Ls));    //energy
+	double alpha((Es - Ee)/TotalCharge), beta(L/TotalHitWidth);
 	for (double p22=vstart2[2];  p22 < highphysbound2[2];p22 = p22 + step2[2]){
-	  double Ee(p02), L(p12 * trackLength); //energy, length
-	  double M = 105.7;  //mass
-	  double Le(GetLengthfromEnergy(lookupTable, Ee));  //length
-	  double Ls(Le - L);
-	  double Es(GetEnergyfromLength(lookupTable, Ls));    //energy
-
-	  double alpha((Es - Ee)/TotalCharge), beta(L/TotalHitWidth);
 	     
 	  double chisquared2(0.0);
 	  //minimise this bit-----
@@ -1872,7 +1870,7 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
     
     int nHitsConsidered(0);
 
-    for (HitCharge &hitCharge : hitChargeVector)                              //calculate a chisqaured for each hit
+    for (HitCharge &hitCharge : hitChargeVector)                              //calculate a chisquared for each hit
     {
       double f_L_i = f_Ls + (outpar[1] * hitCharge.GetLongitudinalPosition());         //sum these?  
         double f_E_i = GetEnergyfromLength(lookupTable, f_L_i);
@@ -1898,12 +1896,7 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
         backwardsFitPoints.push_back(backwardsRecoHitCharge);
 
         float forwardsHitChisquared((forwardsDelta * forwardsDelta)/(f_sigma * f_sigma));
-	//	std::cout << "forwardsHitChisquared " << forwardsHitChisquared << std::endl;
-        float backwardsHitChisquared((backwardsDelta * backwardsDelta)/(b_sigma * b_sigma));
-	//	std::cout << " backwardsHitChisquared  " << backwardsHitChisquared << std::endl;
-	//	std::cout << " DELTA = " << forwardsHitChisquared - backwardsHitChisquared << std::endl;
-
-	//std::cout << "f_sigma " << f_sigma << "    forwardsDelta  " << forwardsDelta << "  forwardsHitChisquared  " << forwardsHitChisquared << std::endl;  
+        float backwardsHitChisquared((backwardsDelta * backwardsDelta)/(b_sigma * b_sigma)); 
 
         float Q_fit_forwards(Q_fit_f), Q_fit_backwards(Q_fit_b); 
 
@@ -1941,8 +1934,8 @@ void TrackDirectionTool::GetCalorimetricDirection(const Cluster* pTargetClusterW
 
     HitChargeVector filteredHitChargeVector;
     this->TrackInnerFilter(hitChargeVector, filteredHitChargeVector);   //hit + Bragg?
-    // this->SimpleTrackEndFilter(filteredHitChargeVector);
-    this->TrackEndFilter(filteredHitChargeVector, directionFitObject);
+    this->SimpleTrackEndFilter(filteredHitChargeVector);
+    //this->TrackEndFilter(filteredHitChargeVector, directionFitObject); //TEST COMMENT
 
     if (pTargetClusterW->GetNCaloHits() < 1.5 * m_minClusterCaloHits || LArClusterHelper::GetLength(pTargetClusterW) < m_minClusterLength)
     {
@@ -1953,8 +1946,8 @@ void TrackDirectionTool::GetCalorimetricDirection(const Cluster* pTargetClusterW
 
     this->FitHitChargeVector(filteredHitChargeVector, directionFitObject);
 
-    this->TestHypothesisOne(directionFitObject);           //where were these being used?
-    this->TestHypothesisTwo(directionFitObject);
+    //this->TestHypothesisOne(directionFitObject);           //where were these being used?
+    //this->TestHypothesisTwo(directionFitObject);
     //this->TestHypothesisThree(directionFitObject);
 }
 

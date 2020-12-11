@@ -53,8 +53,8 @@ NeutrinoIdTool::~NeutrinoIdTool() {
   */
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-  void NeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb, const SliceVector &sliceVector)
+template<typename T>
+void NeutrinoIdTool<T>::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb, const SliceVector &sliceVector)
 {
   if (1==2) {
     std::cout << "slice size neutrino Id " << sliceVector.size() << std::endl;
@@ -99,8 +99,8 @@ NeutrinoIdTool::~NeutrinoIdTool() {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-  void NeutrinoIdTool::GetSliceFeatures(const NeutrinoIdTool *const pTool, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector, const PfoToFloatMap &pfotoprobabilitymapb) const
+template<typename T>
+void NeutrinoIdTool<T>::GetSliceFeatures(const NeutrinoIdTool *const pTool, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector, const PfoToFloatMap &pfotoprobabilitymapb) const
 {
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
       sliceFeaturesVector.push_back(SliceFeatures(nuSliceHypotheses.at(sliceIndex), crSliceHypotheses.at(sliceIndex), pTool, pfotoprobabilitymapb));
@@ -151,12 +151,12 @@ bool NeutrinoIdTool<T>::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, c
     {
 
         CaloHitList reconstructedCaloHitList;
-        this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedCaloHitList, reconstructableCaloHitSet, reconstructableCaloHitList);
+        this->Collect2DHits(crSliceHypotheses.at(sliceIndex), reconstructedCaloHitList, reconstructableCaloHitSet);
 	
         for (const ParticleFlowObject *const pNeutrino : nuSliceHypotheses.at(sliceIndex))
         {
             const PfoList &nuFinalStates(pNeutrino->GetDaughterPfoList());
-            this->Collect2DHits(nuFinalStates, reconstructedCaloHitList, reconstructableCaloHitSet, reconstructableCaloHitList);
+            this->Collect2DHits(nuFinalStates, reconstructedCaloHitList, reconstructableCaloHitSet);
         }
 	
         const unsigned int nNuHits(this->CountNeutrinoInducedHits(reconstructedCaloHitList));
@@ -285,8 +285,8 @@ void NeutrinoIdTool<T>::SelectAllPfos(const pandora::Algorithm *const pAlgorithm
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-  void NeutrinoIdTool::SelectPfosByProbability(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb) const
+template<typename T>
+void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb) const
   {
     if (1 == 2) {
       std::cout <<pfotoprobabilitymapb.size() << std::endl; 
@@ -379,7 +379,7 @@ void NeutrinoIdTool<T>::SelectAllPfos(const pandora::Algorithm *const pAlgorithm
 	if (!features.IsFeatureVectorAvailable()){
 	  std::cout << "not available...." << std::endl;
 	}
-	const float nuProbability(sliceFeaturesVector.at(sliceIndex).GetNeutrinoProbability(m_supportVectorMachine));
+	const float nuProbability(sliceFeaturesVector.at(sliceIndex).GetNeutrinoProbability(m_mva));
 	std::cout << "nuProbability : " <<  nuProbability << std::endl;
 	std::cout << "SVM Ran Correctly!" << std::endl;
 

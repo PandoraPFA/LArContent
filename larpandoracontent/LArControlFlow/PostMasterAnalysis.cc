@@ -96,7 +96,7 @@ namespace lar_content
 
     //get the pfos to hits map
     LArMCParticleHelper::PfoContributionMap PfosToGoodHitsMap;
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(*pPfoList, {mcMCParticlesToGoodHitsMap}, PfosToGoodHitsMap);  //changed
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(*pPfoList, {mcMCParticlesToGoodHitsMap}, PfosToGoodHitsMap, 1);  //changed
 
     //find hits shared between Pfos and MCParticles
     LArMCParticleHelper::PfoToMCParticleHitSharingMap PfotoMCParticleMap;
