@@ -44,11 +44,12 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
         if (usedKeyClusters.count(pKeyCluster))
 	  continue;
 
-	usedKeyClusters.insert(pKeyCluster);
-
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
         overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
+
+	for (const TensorType::Element &element : elementList)
+	  usedKeyClusters.insert(element.GetCluster(TPC_VIEW_U));
 
 	this->SearchForDeltaRayContamination(pAlgorithm, elementList, changesMade);
     }
@@ -140,6 +141,8 @@ void DeltaRayRemovalTool::SearchForDeltaRayContamination(ThreeViewDeltaRayMatchi
 {
     ClusterSet modifiedClusters;
     HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
+
+    std::cout << "trying to remove DR hits from CRs" << std::endl;
 
     for (TensorType::Element &element : elementList)
     {
