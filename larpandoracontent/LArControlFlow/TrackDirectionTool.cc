@@ -522,24 +522,42 @@ void TrackDirectionTool::FragmentRemoval(HitChargeVector &hitChargeVector, HitCh
 
 void TrackDirectionTool::SimpleTrackEndFilter(HitChargeVector &hitChargeVector)
 {
-  // std::cout << "simple track end filter" << std::endl;
+
     float lowerBound(0.9), upperBound(2.2);
 
-    while ((*(hitChargeVector.begin())).GetChargeOverWidth()/(*(std::next(hitChargeVector.begin(), 1))).GetChargeOverWidth() <= lowerBound || (*(hitChargeVector.begin())).GetChargeOverWidth()/(*(std::next(hitChargeVector.begin(), 1))).GetChargeOverWidth() >= upperBound)
+    while (((*(hitChargeVector.begin())).GetChargeOverWidth()/(*(std::next(hitChargeVector.begin(), 1))).GetChargeOverWidth() <= lowerBound || (*(hitChargeVector.begin())).GetChargeOverWidth()/(*(std::next(hitChargeVector.begin(), 1))).GetChargeOverWidth() >= upperBound)&& (hitChargeVector.size() > 1))
         hitChargeVector.erase(hitChargeVector.begin());
 
-    while ((*(std::prev(hitChargeVector.end(), 1))).GetChargeOverWidth()/(*(std::prev(hitChargeVector.end(), 2))).GetChargeOverWidth() <= lowerBound || (*(std::prev(hitChargeVector.end(), 1))).GetChargeOverWidth()/(*(std::prev(hitChargeVector.end(), 2))).GetChargeOverWidth() >= upperBound)
+
+    while (((*(std::prev(hitChargeVector.end(), 1))).GetChargeOverWidth()/(*(std::prev(hitChargeVector.end(), 2))).GetChargeOverWidth() <= lowerBound || (*(std::prev(hitChargeVector.end(), 1))).GetChargeOverWidth()/(*(std::prev(hitChargeVector.end(), 2))).GetChargeOverWidth() >= upperBound)&& (hitChargeVector.size() > 1))
         hitChargeVector.pop_back();
 
+
     //This piece of logic removes hits that have uncharacteristically high or low Q/w values (in tails of Q/w distribution)
-    hitChargeVector.erase(
-    std::remove_if(hitChargeVector.begin(), hitChargeVector.end(),
-        [](HitCharge & hitCharge) { return hitCharge.m_intails; }),
-    hitChargeVector.end());
+    /*
+    while (hitChargeVector.size() > 1) {
+      hitChargeVector.erase(
+			    std::remove_if(hitChargeVector.begin(), hitChargeVector.end(),
+					   [](HitCharge & hitCharge) { return hitCharge.m_intails; }),
+			    hitChargeVector.end());
+    }
+    */
+
+    for (HitChargeVector::const_iterator iter = hitChargeVector.begin(); iter != hitChargeVector.end(); )
+      {
+        if ((*iter).m_intails==true && hitChargeVector.size() > 1) {
+	  iter = hitChargeVector.erase(iter);
+	}
+        else {
+	  ++iter;
+	}
+      }
+    
 
     //Get track length and Q over W span for last step
     float trackLength(0.f), minQoverW(1e6), maxQoverW(0.f);
     this->GetTrackLength(hitChargeVector, trackLength);
+
 
     for (HitCharge &hitCharge : hitChargeVector)
     {
@@ -567,10 +585,12 @@ void TrackDirectionTool::SimpleTrackEndFilter(HitChargeVector &hitChargeVector)
             }
         }
 
-        if (!nearbyCharge) 
+        if (!nearbyCharge && hitChargeVector.size() > 1) {
             iter = hitChargeVector.erase(iter);
-        else
+	}
+        else {
             ++iter;
+	}
     }
 }
 
@@ -578,7 +598,6 @@ void TrackDirectionTool::SimpleTrackEndFilter(HitChargeVector &hitChargeVector)
 
 void TrackDirectionTool::TrackEndFilter(HitChargeVector &hitChargeVector, DirectionFitObject &directionFitObject)
 {
-  //std::cout << "USING TRACK END FILTER" << std::endl;
     float trackLength(0.f);
     this->GetTrackLength(hitChargeVector, trackLength);
 
