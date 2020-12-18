@@ -80,8 +80,9 @@ endif
 	DL_LIBS = $(LIBS) -lLArContent ${TORCH_DIR}/lib/libtorch.so ${TORCH_DIR}/lib/libtorch_cpu.so ${TORCH_DIR}/lib/libc10.so
 	DL_SOURCES = $(wildcard $(PROJECT_DIR)/larpandoradlcontent/*.cc)
 	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArControlFlow/*.cc)
-	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArDeepLearning/*.cc)
 	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArHelpers/*.cc)
+	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArMonitoring/*.cc)
+	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArTrackShowerId/*.cc)
 	DL_OBJECTS = $(DL_SOURCES:.cc=.o)
 	DL_DEPENDS = $(DL_OBJECTS:.o=.d)
 	INCLUDES += -isystem $(TORCH_DIR)/include/ -isystem $(TORCH_DIR)/include/torch/csrc/api/include/
