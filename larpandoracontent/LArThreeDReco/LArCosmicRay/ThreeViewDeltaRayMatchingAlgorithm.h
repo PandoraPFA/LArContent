@@ -61,6 +61,15 @@ public:
     void CollectStrayHits(const pandora::Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, pandora::ClusterList &collectedClusters);
 
     void AddInStrayClusters(const pandora::Cluster *const pClusterToEnlarge, const pandora::ClusterList &collectedClusters);
+
+    float CalculateChiSquared(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV, const pandora::CaloHitList &clusterW) const;
+    void GetClusterSpanX(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax) const;
+    pandora::StatusCode GetClusterSpanZ(const pandora::CaloHitList &caloHitList, const float xMin, const float xMax, float &zMin, float &zMax) const;
+
+    bool CreatePfos(ProtoParticleVector &protoParticleVector);
+
+    std::string GetClusteringAlgName() const;
+    
 private:
 
     void FillHitToClusterMap(const pandora::HitType &hitType);
@@ -92,7 +101,7 @@ private:
     void InitialiseStrayClusterList(const pandora::HitType &hitType);
     bool IsStrayClusterListInitialised(const pandora::HitType &hitType) const;
     void ClearStrayClusterLists();
-
+    
     std::string   m_muonPfoListName;
     
     HitToClusterMap       m_hitToClusterMapU;
@@ -130,9 +139,19 @@ private:
     float                             m_minMatchedFraction;
     unsigned int                      m_minMatchedPoints;
 
+    std::string  m_reclusteringAlgorithmName;
+
     friend class ShortSpanTool;
 };
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+
+    inline std::string ThreeViewDeltaRayMatchingAlgorithm::GetClusteringAlgName() const
+{
+    return m_reclusteringAlgorithmName;
+}
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
     
 /**

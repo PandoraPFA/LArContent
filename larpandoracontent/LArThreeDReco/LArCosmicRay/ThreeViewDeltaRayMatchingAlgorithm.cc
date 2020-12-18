@@ -309,6 +309,9 @@ void ThreeViewDeltaRayMatchingAlgorithm::TidyUp()
 
 StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "ClusterRebuilding", m_reclusteringAlgorithmName));
+    
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MuonPfoListName", m_muonPfoListName));
     
     AlgorithmToolVector algorithmToolVector;
@@ -686,6 +689,214 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
     this->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ThreeViewDeltaRayMatchingAlgorithm::CalculateChiSquared(const CaloHitList &clusterU, const CaloHitList &clusterV, const CaloHitList &clusterW) const
+{
+    float xMinU(-std::numeric_limits<float>::max()), xMaxU(+std::numeric_limits<float>::max());
+    float xMinV(-std::numeric_limits<float>::max()), xMaxV(+std::numeric_limits<float>::max());
+    float xMinW(-std::numeric_limits<float>::max()), xMaxW(+std::numeric_limits<float>::max());
+
+    this->GetClusterSpanX(clusterU, xMinU, xMaxU);
+    this->GetClusterSpanX(clusterV, xMinV, xMaxV);
+    this->GetClusterSpanX(clusterW, xMinW, xMaxW);
+
+    // Need to remove the xPitch from calculations to be consistent with view xSpan calculated in the xOverlapObject
+    const float xMinCentre(std::max(xMinU, std::max(xMinV, xMinW)));
+    const float xMaxCentre(std::min(xMaxU, std::min(xMaxV, xMaxW)));
+    const float xCentreOverlap(xMaxCentre - xMinCentre);
+
+    if (xCentreOverlap < std::numeric_limits<float>::epsilon())
+        return -1.f;//std::numeric_limits<float>::max();
+    
+    const float xPitch(0.5 * m_xOverlapWindow);
+    const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - xPitch);
+    const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + xPitch);
+    const float xOverlap(xMax - xMin);
+
+    const HitType hitTypeU(clusterU.front()->GetHitType());
+    const HitType hitTypeV(clusterV.front()->GetHitType());
+    const HitType hitTypeW(clusterW.front()->GetHitType());
+
+    //if (hitTypeU != TPC_VIEW_U ||  hitTypeV != TPC_VIEW_V || hitTypeW != TPC_VIEW_W)
+    //return -2.f;//STATUS_CODE_FAILURE;
+
+    const unsigned int nPoints(1 + static_cast<unsigned int>(xOverlap / xPitch));
+
+    // Chi2 calculations
+    float pseudoChi2Sum(0.f);
+    unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+    
+    for (unsigned int n = 0; n < nPoints; ++n)
+    {
+        const float x(xMin + (xMax - xMin) * (static_cast<float>(n) + 0.5f) / static_cast<float>(nPoints));
+        const float xmin(x - xPitch);
+        const float xmax(x + xPitch);
+
+        try
+        {
+            float zMinU(0.f), zMinV(0.f), zMinW(0.f), zMaxU(0.f), zMaxV(0.f), zMaxW(0.f);
+            this->GetClusterSpanZ(clusterU, xmin, xmax, zMinU, zMaxU);
+            this->GetClusterSpanZ(clusterV, xmin, xmax, zMinV, zMaxV);
+            this->GetClusterSpanZ(clusterW, xmin, xmax, zMinW, zMaxW);
+
+            const float zU(0.5f * (zMinU + zMaxU));
+            const float zV(0.5f * (zMinV + zMaxV));
+            const float zW(0.5f * (zMinW + zMaxW));
+
+            const float dzU(zMaxU - zMinU);
+            const float dzV(zMaxV - zMinV);
+            const float dzW(zMaxW - zMinW);
+            const float dzPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
+            const float zprojU(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeV, hitTypeW, zV, zW));
+            const float zprojV(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeW, hitTypeU, zW, zU));
+            const float zprojW(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeU, hitTypeV, zU, zV));
+
+            ++nSamplingPoints;
+
+            const float deltaSquared(((zU - zprojU) * (zU - zprojU) + (zV - zprojV) * (zV - zprojV) + (zW - zprojW) * (zW - zprojW)) / 3.f);
+            const float sigmaSquared(dzU * dzU + dzV * dzV + dzW * dzW + dzPitch * dzPitch);
+            const float pseudoChi2(deltaSquared / sigmaSquared);
+
+            pseudoChi2Sum += pseudoChi2;
+            
+            if (pseudoChi2 < m_pseudoChi2Cut)
+                ++nMatchedSamplingPoints;
+        }
+        catch(StatusCodeException &statusCodeException)
+        {
+            if (statusCodeException.GetStatusCode() != STATUS_CODE_NOT_FOUND)
+                return statusCodeException.GetStatusCode();
+
+            continue;
+        }
+    }
+
+    if (nMatchedSamplingPoints < 3)
+        return -3.f;//std::numeric_limits<float>::max();
+
+    return (pseudoChi2Sum / static_cast<float>(nSamplingPoints));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewDeltaRayMatchingAlgorithm::GetClusterSpanX(const CaloHitList &caloHitList, float &xMin, float &xMax) const
+{
+    xMin = std::numeric_limits<float>::max();
+    xMax = -std::numeric_limits<float>::max();
+    
+    for(const CaloHit *const pCaloHit : caloHitList)
+    {
+        const float xCoordinate(pCaloHit->GetPositionVector().GetX());
+
+        if (xCoordinate < xMin)
+            xMin = xCoordinate;
+
+        if (xCoordinate > xMax)
+            xMax = xCoordinate;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ThreeViewDeltaRayMatchingAlgorithm::GetClusterSpanZ(const CaloHitList &caloHitList, const float xMin, const float xMax, float &zMin, float &zMax) const
+{
+    zMin = std::numeric_limits<float>::max();
+    zMax = -std::numeric_limits<float>::max();
+
+    bool found(false);
+    for(const CaloHit *const pCaloHit : caloHitList)
+    {
+        const float xCoordinate(pCaloHit->GetPositionVector().GetX());
+        const float zCoordinate(pCaloHit->GetPositionVector().GetZ());
+        
+        if ((xCoordinate < xMin) || (xCoordinate > xMax))
+            continue;
+
+        found = true;
+
+        if (zCoordinate < zMin)
+            zMin = zCoordinate;
+
+        if (zCoordinate > zMax)
+            zMax = zCoordinate;
+    }
+
+    if (!found)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    return STATUS_CODE_SUCCESS;
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoParticleVector)
+{
+    std::sort(protoParticleVector.begin(), protoParticleVector.end(), [] (const ProtoParticle &a, const ProtoParticle &b) -> bool
+    {
+        unsigned int aHitTotal(0);
+        for (const Cluster *const pCluster : a.m_clusterList)
+            aHitTotal += pCluster->GetNCaloHits();
+
+        unsigned int bHitTotal(0);
+        for (const Cluster *const pCluster : b.m_clusterList)
+            bHitTotal += pCluster->GetNCaloHits();
+
+        return (aHitTotal > bHitTotal);
+    });
+
+    for (ProtoParticle protoParticle : protoParticleVector)
+    {
+        const Cluster *pLongCluster(nullptr);        
+        float longestSpan(-std::numeric_limits<float>::max()), spanMinX(0.f), spanMaxX(0.f);
+    
+        for (const Cluster *const pCluster : protoParticle.m_clusterList)
+        {
+            float minX(0.f), maxX(0.f);
+            pCluster->GetClusterSpanX(minX, maxX);
+
+            const float span(maxX - minX);
+            if (span > longestSpan)
+            {
+                longestSpan = span; spanMinX = minX; spanMaxX = maxX; pLongCluster = pCluster;
+            }
+        }
+
+	    for (const Cluster *const pCluster : protoParticle.m_clusterList)
+	    {
+	        //if (pCluster == pLongCluster)
+            //continue;
+
+            ClusterList collectedClusters;
+            this->CollectStrayHits(pCluster, spanMinX, spanMaxX, collectedClusters);
+
+            ClusterList original({pCluster}), longC({pLongCluster});
+            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &original, "original", RED);
+            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &longC, "long", BLACK);
+            
+		    if (!collectedClusters.empty())
+            {
+                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &collectedClusters, "collectedClusters", BLUE);
+                
+                std::cout << "HERE" << std::endl;
+                this->AddInStrayClusters(pCluster, collectedClusters);
+
+                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &original, "after", VIOLET);
+                
+            }
+            else
+            {
+                std::cout << "no stray clusters found" << std::endl;
+            }
+
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+	    }
+	}
+
+    return this->CreateThreeDParticles(protoParticleVector);
+}
 
 
 } // namespace lar_content
