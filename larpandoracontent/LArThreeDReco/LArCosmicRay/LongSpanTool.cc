@@ -315,7 +315,7 @@ void LongSpanTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgor
   PfoVector pfoVector;
   pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front()); pfoVector.push_back(nullptr);
 
-  pAlgorithm->UpdateForNewCluster(clusterVector, pfoVector);
+  pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

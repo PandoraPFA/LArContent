@@ -437,7 +437,7 @@ void ThreeViewDeltaRayMatchingAlgorithm::FillClusterToPfoMap(const HitType &hitT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewCluster(const ClusterVector &newClusterVector, const PfoVector &pfoVector)
+void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewClusters(const ClusterVector &newClusterVector, const PfoVector &pfoVector)
 {
     const HitType &hitType(LArClusterHelper::GetClusterHitType(newClusterVector.front()));
 
@@ -683,7 +683,7 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
 	PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pCollectedCluster, clusterListName, clusterListName));
     }
 
-    this->UpdateForNewCluster({pClusterToEnlarge}, {nullptr});
+    this->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
 }
 
 

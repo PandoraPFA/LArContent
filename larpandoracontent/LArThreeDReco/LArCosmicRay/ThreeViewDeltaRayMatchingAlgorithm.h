@@ -51,7 +51,7 @@ public:
 
     bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
 
-    void UpdateForNewCluster(const pandora::ClusterVector &newClusterList, const pandora::PfoVector &pfoList);
+    void UpdateForNewClusters(const pandora::ClusterVector &newClusterList, const pandora::PfoVector &pfoList);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
 
     const pandora::ClusterList &GetStrayClusterList(const pandora::HitType &hitType) const;

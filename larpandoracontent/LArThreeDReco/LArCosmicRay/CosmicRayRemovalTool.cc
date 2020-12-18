@@ -472,7 +472,7 @@ bool CosmicRayRemovalTool::IsCloseToLine(const CartesianVector &hitPosition, con
   PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &newMuonCluster, "new muon ray", BLUE);
   PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
-  pAlgorithm->UpdateForNewCluster(clusterVector, pfoVector);
+  pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
