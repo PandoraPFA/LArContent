@@ -39,7 +39,7 @@ private:
         const TwoDSlidingFitResult &slidingFitResult) const;
 
     void FindExtrapolatedHits(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary,
-                              pandora::CaloHitList &collectedHits) const;
+			      pandora::CaloHitList &collectedHits) const;
 
     pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector, const pandora::Cluster *const pCluster) const;
 

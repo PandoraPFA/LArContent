@@ -66,7 +66,7 @@ void ClearDeltaRayTool::CreateThreeDParticles(ThreeViewDeltaRayMatchingAlgorithm
         protoParticleVector.push_back(protoParticle);
     }
 
-    particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);
+    particlesMade |= pAlgorithm->CreatePfos(protoParticleVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

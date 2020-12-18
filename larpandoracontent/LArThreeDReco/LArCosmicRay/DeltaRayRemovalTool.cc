@@ -42,16 +42,16 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
     for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
         if (usedKeyClusters.count(pKeyCluster))
-	  continue;
+            continue;
 
         unsigned int nU(0), nV(0), nW(0);
         TensorType::ElementList elementList;
         overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
 
-	for (const TensorType::Element &element : elementList)
-	  usedKeyClusters.insert(element.GetCluster(TPC_VIEW_U));
+        for (const TensorType::Element &element : elementList)
+            usedKeyClusters.insert(element.GetCluster(TPC_VIEW_U));
 
-	this->SearchForDeltaRayContamination(pAlgorithm, elementList, changesMade);
+        this->SearchForDeltaRayContamination(pAlgorithm, elementList, changesMade);
     }
     
     return changesMade;
@@ -79,32 +79,32 @@ bool DeltaRayRemovalTool::PassElementChecks(TensorType::Element &element, const 
     for (const HitType &jam : hitTypeVector)
     {
         ClusterList hitMuonClusterList;
-	LArPfoHelper::GetClusters(commonMuonPfoList.front(), jam, hitMuonClusterList);
+        LArPfoHelper::GetClusters(commonMuonPfoList.front(), jam, hitMuonClusterList);
             
-	if (hitMuonClusterList.size() != 1)
+        if (hitMuonClusterList.size() != 1)
             return false;
 
         float xMinDR(+std::numeric_limits<float>::max()), xMaxDR(-std::numeric_limits<float>::max());
-	float xMinCR(-std::numeric_limits<float>::max()), xMaxCR(+std::numeric_limits<float>::max());
-	element.GetCluster(jam)->GetClusterSpanX(xMinDR, xMaxDR);
-	hitMuonClusterList.front()->GetClusterSpanX(xMinCR, xMaxCR);
+        float xMinCR(-std::numeric_limits<float>::max()), xMaxCR(+std::numeric_limits<float>::max());
+        element.GetCluster(jam)->GetClusterSpanX(xMinDR, xMaxDR);
+        hitMuonClusterList.front()->GetClusterSpanX(xMinCR, xMaxCR);
 
         if ((xMinDR < xMinCR) || (xMaxDR > xMaxCR))
         {
-	  std::cout << "DR lies outside CR" << std::endl;
-	  return false;
-	}
+            std::cout << "DR lies outside CR" << std::endl;
+            return false;
+        }
 	
         float zMinDR(+std::numeric_limits<float>::max()), zMaxDR(-std::numeric_limits<float>::max());
-	float zMinCR(-std::numeric_limits<float>::max()), zMaxCR(+std::numeric_limits<float>::max());
-	element.GetCluster(jam)->GetClusterSpanZ(xMinDR, xMaxDR, zMinDR, zMaxDR);
-	hitMuonClusterList.front()->GetClusterSpanZ(xMinCR, xMaxCR, zMinCR, zMaxCR);
+        float zMinCR(-std::numeric_limits<float>::max()), zMaxCR(+std::numeric_limits<float>::max());
+        element.GetCluster(jam)->GetClusterSpanZ(xMinDR, xMaxDR, zMinDR, zMaxDR);
+        hitMuonClusterList.front()->GetClusterSpanZ(xMinCR, xMaxCR, zMinCR, zMaxCR);
 
         if ((zMinDR < zMinCR) || (zMaxDR > zMaxCR))
         {
-	  std::cout << "DR lies outside CR" << std::endl;
-	  return false;
-	}
+            std::cout << "DR lies outside CR" << std::endl;
+            return false;
+        }
     }
 
     const float separation(LArClusterHelper::GetClosestDistance(element.GetCluster(hitType), muonClusterList.front()));
@@ -142,83 +142,80 @@ void DeltaRayRemovalTool::SearchForDeltaRayContamination(ThreeViewDeltaRayMatchi
     ClusterSet modifiedClusters;
     HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
 
-    std::cout << "trying to remove DR hits from CRs" << std::endl;
-
     for (TensorType::Element &element : elementList)
     {
         for (const HitType &hitType : hitTypeVector)
-	{
-	    if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
-	        break;
-
-	    if (!this->PassElementChecks(element, hitType))
-	        continue;
-
-	    // Is another element better?
-	    bool isBestElement(true);
-	    float bestChiSquared(element.GetOverlapResult().GetReducedChi2());
-	    unsigned int highestHitNumber(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits()); 
-	    for (TensorType::Element &otherElement : elementList)
 	    {
-	        if (otherElement.GetCluster(hitType) != element.GetCluster(hitType))
-		    continue;
+            if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
+                break;
 
-		if ((otherElement.GetClusterU() == element.GetClusterU()) && (otherElement.GetClusterV() == element.GetClusterV()) && (otherElement.GetClusterW() == element.GetClusterW()))
-		    continue;
+            if (!this->PassElementChecks(element, hitType))
+                continue;
 
-		unsigned int hitSum(otherElement.GetClusterU()->GetNCaloHits() + otherElement.GetClusterV()->GetNCaloHits() + otherElement.GetClusterW()->GetNCaloHits());
-		if (hitSum < highestHitNumber)
-		   continue;
+	        // Is another element better?
+            bool isBestElement(true);
+            float bestChiSquared(element.GetOverlapResult().GetReducedChi2());
+            unsigned int highestHitNumber(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
+            for (TensorType::Element &otherElement : elementList)
+	        {
+                if (otherElement.GetCluster(hitType) != element.GetCluster(hitType))
+                    continue;
 
-		if (hitSum == highestHitNumber)
-		{
-		    if (otherElement.GetOverlapResult().GetReducedChi2() < bestChiSquared)
-		        continue;
-		}
+		        if ((otherElement.GetClusterU() == element.GetClusterU()) && (otherElement.GetClusterV() == element.GetClusterV()) && (otherElement.GetClusterW() == element.GetClusterW()))
+                    continue;
 
-		isBestElement = false;
-	    }
+                unsigned int hitSum(otherElement.GetClusterU()->GetNCaloHits() + otherElement.GetClusterV()->GetNCaloHits() + otherElement.GetClusterW()->GetNCaloHits());
+                if (hitSum < highestHitNumber)
+                    continue;
 
-	    if (!isBestElement)
-	    {
-	        std::cout << "not the best elemet - search again" << std::endl;
-	        continue;
-	    }
+                if (hitSum == highestHitNumber)
+		        {
+                    if (otherElement.GetOverlapResult().GetReducedChi2() < bestChiSquared)
+                        continue;
+                }
 
-	    PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
+                isBestElement = false;
+            }
+
+            if (!isBestElement)
+	        {
+                std::cout << "not the best elemet - search again" << std::endl;
+                continue;
+            }
+
+            PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
 	    
-	    ClusterList muonClusterList;
-	    LArPfoHelper::GetClusters(commonMuonPfoList.front(), hitType, muonClusterList);
+            ClusterList muonClusterList;
+            LArPfoHelper::GetClusters(commonMuonPfoList.front(), hitType, muonClusterList);
 
-	    ClusterList theCluster({element.GetCluster(hitType)});
-	    ClusterList muonCluster({muonClusterList.front()});
-	    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CLUSTER", RED);
-	    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &muonCluster, "CLUSTER", BLUE);
-	    PandoraMonitoringApi::ViewEvent(this->GetPandora()); 
+            ClusterList theCluster({element.GetCluster(hitType)});
+            ClusterList muonCluster({muonClusterList.front()});
+            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CLUSTER", RED);
+            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &muonCluster, "CLUSTER", BLUE);
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());;
 	    
-
-	    // Attempt to pull delta ray hits out of muon cluster
+	        // Attempt to pull delta ray hits out of muon cluster
             CaloHitList collectedHits;
-	    this->CreateSeed(element, hitType, collectedHits);
+            this->CreateSeed(element, hitType, collectedHits);
 
-	    if (collectedHits.empty())
-	    {
-	        std::cout << "collected hits are empty" << std::endl;
-	        continue;
-	    }
+            if (collectedHits.empty())
+	        {
+                std::cout << "collected hits are empty" << std::endl;
+                continue;
+            }
 
             for (const CaloHit *const pCaloHit : collectedHits)
             {
-	        const CartesianVector &position(pCaloHit->GetPositionVector());
+	            const CartesianVector &position(pCaloHit->GetPositionVector());
                 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "collected", VIOLET, 2);
             }
-	    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
-	    modifiedClusters.insert(element.GetCluster(hitType));
+            modifiedClusters.insert(element.GetCluster(hitType));
 
-	    this->SplitCluster(pAlgorithm, element, hitType, collectedHits);
-	    changesMade = true;
-	}
+            this->SplitCluster(pAlgorithm, element, hitType, collectedHits);
+            changesMade = true;
+        }
     }
 }
 
@@ -486,7 +483,6 @@ void DeltaRayRemovalTool::CreateSeed(const TensorType::Element &element, const H
 
 void DeltaRayRemovalTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const HitType &badHitType, CaloHitList &collectedHits) const
 {
-  //delete the DR cluster and add in the new one (need to also delete and in the CR muon)
   pAlgorithm->UpdateUponDeletion(element.GetCluster(badHitType));
 
   ClusterList muonCluster;
@@ -516,14 +512,12 @@ void DeltaRayRemovalTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const
   PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &newMuonCluster, "NEW MUON ray", VIOLET);
   PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
-
-
   ClusterVector clusterVector;
   clusterVector.push_back(newMuonCluster.front()); clusterVector.push_back(element.GetCluster(badHitType));
   PfoVector pfoVector;
   pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front()); pfoVector.push_back(nullptr);
 
-  pAlgorithm->UpdateForNewCluster(clusterVector, pfoVector);
+  pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

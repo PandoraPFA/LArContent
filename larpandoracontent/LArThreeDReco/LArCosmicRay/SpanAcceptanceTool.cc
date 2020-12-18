@@ -84,7 +84,7 @@ void SpanAcceptanceTool::InvestigateSpanAcceptances(ThreeViewDeltaRayMatchingAlg
         protoParticleVector.push_back(protoParticle);
     }
 
-    changesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);
+    changesMade |= pAlgorithm->CreatePfos(protoParticleVector);
 
 }
 
