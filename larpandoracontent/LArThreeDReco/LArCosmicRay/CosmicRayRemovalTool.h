@@ -31,12 +31,18 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void SearchForMuonContamination(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType::ElementList &elementList, bool &changesMade);
+    void RemoveMuonHits(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &changesMade) const;
 
-    bool PassElementChecks(TensorType::Element &element, const pandora::HitType &hitType);
+    bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const;    
 
-    bool ShouldSplitDeltaRay(const pandora::Cluster *const pMuonCluster, const pandora::Cluster *const pDeltaRayCluster, const pandora::CartesianVector &muonPosition,
-        const TwoDSlidingFitResult &slidingFitResult) const;
+    bool IsContaminated(const TensorType::Element &element, const pandora::HitType &hitType) const;
+
+    bool IsBestElement(const TensorType::Element &currentElement, const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
+
+    bool ShouldSplitDeltaRay(const pandora::Cluster *const pMuonCluster, const pandora::Cluster *const pDeltaRayCluster, const pandora::CartesianVector &muonDirection,
+        const pandora::CartesianVector &muonPosition) const;
+
+    
 
     void FindExtrapolatedHits(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary,
 			      pandora::CaloHitList &collectedHits) const;
@@ -47,7 +53,7 @@ private:
 
     void CreateSeed(const TensorType::Element &element, const pandora::HitType &badHitType, pandora::CaloHitList &collectedHits) const;
 
-    bool GrowSeed(const TensorType::Element &element, const pandora::HitType &badHitType, pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemantHits) const;
+    pandora::StatusCode GrowSeed(const TensorType::Element &element, const pandora::HitType &badHitType, pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemantHits) const;
     
     float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
 
@@ -58,7 +64,14 @@ private:
 
     pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector, const pandora::Cluster *const pCluster) const;
 
-    float m_minViewXSpan;
+    void FragmentRemnant(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const pandora::HitType &badHitType, const pandora::Cluster *const pMuonCluster,
+        const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
+
+    void ProjectDeltaRayPositions(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CartesianPointVector &projectedPositions) const;
+    void ProjectMuonPositions(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CartesianPointVector &projectedPositions) const;
+    
+    pandora::StatusCode GetMuonCluster(const TensorType::Element &element, const pandora::HitType &hitType, const pandora::Cluster *&pMuonCluster) const;
+
     float m_minSeparation;
     float m_xOverlapWindow;
 };

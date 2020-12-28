@@ -591,7 +591,7 @@ bool ThreeViewDeltaRayMatchingAlgorithm::IsStrayClusterListInitialised(const Hit
     if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 
-    return (hitType == TPC_VIEW_U) ? m_isStrayListUInitialised : (hitType == TPC_VIEW_V) ? m_isStrayListVInitialised : m_isStrayListWInitialised;
+    return ((hitType == TPC_VIEW_U) ? m_isStrayListUInitialised : (hitType == TPC_VIEW_V) ? m_isStrayListVInitialised : m_isStrayListWInitialised);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -619,7 +619,7 @@ const ClusterList &ThreeViewDeltaRayMatchingAlgorithm::GetStrayClusterList(const
     if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
         throw STATUS_CODE_NOT_ALLOWED;
 
-    return (hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW;
+    return ((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -631,7 +631,8 @@ void ThreeViewDeltaRayMatchingAlgorithm::RemoveFromStrayClusterList(const Cluste
   if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
     throw STATUS_CODE_NOT_ALLOWED;
 
-  ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW); 
+  ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
+  
   const ClusterList::const_iterator iter(std::find(strayClusterList.begin(), strayClusterList.end(), pClusterToRemove));
 
   if (iter == strayClusterList.end())
@@ -648,23 +649,39 @@ void ThreeViewDeltaRayMatchingAlgorithm::RemoveFromStrayClusterList(const Cluste
 
 void ThreeViewDeltaRayMatchingAlgorithm::CollectStrayHits(const Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, ClusterList &collectedClusters)
 {
+    //std::cout << "AAAAAA" << std::endl;
     const HitType badHitType(LArClusterHelper::GetClusterHitType(pBadCluster));
+
+    //std::cout << "BBBBBBB" << std::endl;
+    
     this->InitialiseStrayClusterList(badHitType);
+
+    //std::cout << "CCCCCCCC" << std::endl;
+    
     const ClusterList &strayClusterList(this->GetStrayClusterList(badHitType));
+
+    //std::cout << "DDDDDDD" << std::endl;    
 
     for (const Cluster *const pCluster : strayClusterList)
     {
         float xMin(-std::numeric_limits<float>::max()), xMax(+std::numeric_limits<float>::max());
+        //std::cout << "1111111" << std::endl;
         pCluster->GetClusterSpanX(xMin, xMax);
+        //std::cout << "22222222" << std::endl;        
 
         if (!(((xMin > spanMinX) && (xMin < spanMaxX)) || ((xMax > spanMinX) && (xMax < spanMaxX))))
             continue;
+
+        //std::cout << "3333333" << std::endl;      
         
         if (LArClusterHelper::GetClosestDistance(pBadCluster, pCluster) > 2.f)
             continue;
 
+        //std::cout << "4444444" << std::endl;    
+
         collectedClusters.push_back(pCluster);
     }
+    //std::cout << "EEEEEEEE" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
@@ -675,14 +692,21 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
 
     for(const Cluster *const pCollectedCluster : collectedClusters)
     {
+        //const ClusterList &strayClusterList1(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
+        //std::cout << "strayClusterList1 size: " << strayClusterList1.size() << std::endl;
+        
         this->RemoveFromStrayClusterList(pCollectedCluster);
+
+        //const ClusterList &strayClusterList2(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
+        //std::cout << "strayClusterList2 size: " << strayClusterList2.size() << std::endl;
+        
         this->UpdateUponDeletion(pCollectedCluster);
 
-	std::string clusterListName(this->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
-	PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pCollectedCluster, clusterListName, clusterListName));
+        std::string clusterListName(this->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pCollectedCluster, clusterListName, clusterListName));
     }
 
-    this->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
+    //this->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -889,7 +913,7 @@ bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoPa
 	    }
 	}
 
-    return this->CreateThreeDParticles(protoParticleVector);
+    return (this->CreateThreeDParticles(protoParticleVector));
 }
 
 } // namespace lar_content
