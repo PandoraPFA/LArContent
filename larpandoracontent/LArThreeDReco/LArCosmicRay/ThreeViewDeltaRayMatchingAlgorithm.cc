@@ -82,7 +82,6 @@ void ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *c
     if (overlapResult.IsInitialized())
     {
         this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
-        std::cout << "IN ALG SIZE: " << overlapResult.GetCommonMuonPfoList().size() << std::endl;
     }
 }
 
@@ -190,9 +189,6 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
     const XOverlap xOverlapObject(xMinU, xMaxU, xMinV, xMaxV, xMinW, xMaxW, xCentreOverlap);
 
     overlapResult = DeltaRayOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject, commonMuonPfoList);
-    
-    std::cout << "IN FUNCTION LIST: " << commonMuonPfoList.size() << std::endl;
-    std::cout << "IN FUNCTION MEMBER VARIABLE SIZE: " << overlapResult.GetCommonMuonPfoList().size() << std::endl;
     
     return STATUS_CODE_SUCCESS;
 }
@@ -866,38 +862,35 @@ bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoPa
 
 	    for (const Cluster *const pCluster : protoParticle.m_clusterList)
 	    {
-	        //if (pCluster == pLongCluster)
-            //continue;
-
             ClusterList collectedClusters;
             this->CollectStrayHits(pCluster, spanMinX, spanMaxX, collectedClusters);
 
-            ClusterList original({pCluster}), longC({pLongCluster});
-            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &original, "original", RED);
-            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &longC, "long", BLACK);
+            //ClusterList original({pCluster}), longC({pLongCluster});
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &original, "original", RED);
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &longC, "long", BLACK);
             
 		    if (!collectedClusters.empty())
             {
-                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &collectedClusters, "collectedClusters", BLUE);
+                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &collectedClusters, "collectedClusters", BLUE);
                 
-                std::cout << "HERE" << std::endl;
+                //std::cout << "HERE" << std::endl;
                 this->AddInStrayClusters(pCluster, collectedClusters);
 
-                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &original, "after", VIOLET);
-                
+                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &original, "after", VIOLET);
             }
+            /*
             else
             {
                 std::cout << "no stray clusters found" << std::endl;
             }
+            */
 
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 	    }
 	}
 
     return this->CreateThreeDParticles(protoParticleVector);
 }
-
 
 } // namespace lar_content
 

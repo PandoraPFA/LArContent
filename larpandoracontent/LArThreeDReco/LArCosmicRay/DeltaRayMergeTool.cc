@@ -78,9 +78,11 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
                 modifiedClusters.insert(pClusterToEnlarge), modifiedClusters.insert(pClusterToDelete);
 
                 ////////////////////////////
+                /*
                 ClusterList enlarge1({pClusterToEnlarge}), destroy({pClusterToDelete});
                 PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &enlarge1, "pClusterToEnlarge", RED);
                 PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &destroy, "pClusterToDelete", BLUE);
+                */
                 ////////////////////////////
                 
                 pAlgorithm->UpdateUponDeletion(pClusterToEnlarge); pAlgorithm->UpdateUponDeletion(pClusterToDelete);
@@ -89,10 +91,12 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pClusterToEnlarge, pClusterToDelete));
                 pAlgorithm->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
 
-                ////////////////////////////                
+                ////////////////////////////
+                /*
                 ClusterList enlarge({pClusterToEnlarge});
                 PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &enlarge, "pClusterToEnlargeAFTER", VIOLET);
                 PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                */
                 ////////////////////////////                
             }
             
@@ -272,8 +276,8 @@ bool DeltaRayMergeTool::Jam(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm
                         element1.GetCluster(hitType)->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
 
                         float reducedChiSquared(pAlgorithm->CalculateChiSquared(caloHitList1, caloHitList2, caloHitList3));
-                        
-                        std::cout << "INSIDE 1 COMMON" << std::endl;
+
+                        /*
                         ////////////////////////////
                         ClusterList enlarge({pClusterToEnlarge1, pClusterToEnlarge2}), destroy({pClusterToDelete1, pClusterToDelete2});
                         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &enlarge, "pClusterToEnlarge", RED);
@@ -283,7 +287,7 @@ bool DeltaRayMergeTool::Jam(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm
                         std::cout << "overall chi: " << reducedChiSquared << std::endl;
                         PandoraMonitoringApi::ViewEvent(this->GetPandora());
                         ////////////////////////////
-                    
+                        */
                         //float reducedChiSquared(pAlgorithm->CalculateChiSquared(caloHitList1, caloHitList2, caloHitList3));
 
                         if (reducedChiSquared < 1.f)
@@ -293,7 +297,6 @@ bool DeltaRayMergeTool::Jam(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm
                             modifiedClusters.insert(pClusterToEnlarge1); modifiedClusters.insert(pClusterToEnlarge2);
                             modifiedClusters.insert(pClusterToDelete1); modifiedClusters.insert(pClusterToDelete2);
 
-                            std::cout << "INSIDE 1 COMMON" << std::endl;
                             ////////////////////////////
                             //ClusterList enlarge({pClusterToEnlarge1, pClusterToEnlarge2}), destroy({pClusterToDelete1, pClusterToDelete2});
                             //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &enlarge, "pClusterToEnlarge", RED);
@@ -314,9 +317,11 @@ bool DeltaRayMergeTool::Jam(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm
                             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pClusterToEnlarge2, pClusterToDelete2));
 
                             ////////////////////////////
+                            /*
                             ClusterList enlarge1({pClusterToEnlarge1, pClusterToEnlarge2});
                             PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &enlarge1, "pClusterToEnlarge", BLACK);
                             PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                            */
                             ////////////////////////////
 
                             pAlgorithm->UpdateForNewClusters({pClusterToEnlarge1}, {nullptr}); pAlgorithm->UpdateForNewClusters({pClusterToEnlarge2}, {nullptr});
@@ -348,37 +353,39 @@ void DeltaRayMergeTool::CombineCommonMuonPfoLists(const PfoList &commonMuonPfoLi
 
 bool DeltaRayMergeTool::AreAssociated(const PfoList &commonMuonPfoList, const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete) const
 {
+    /*
     ClusterList enlarge({pClusterToEnlarge}), destroy({pClusterToDelete});
     PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &enlarge, "pClusterToEnlarge", RED);
     PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &destroy, "pClusterToDelete", BLUE);
+    */
     
     bool areAttached(false);
     if (this->IsHiddenTrack(commonMuonPfoList, pClusterToEnlarge, pClusterToDelete, areAttached))
     {
-        std::cout << "vertices close enough" << std::endl;
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        //std::cout << "vertices close enough" << std::endl;
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
         return true;
     } 
-
+    /*
     if (areAttached)
     {
         std::cout << "vertices not close enough" << std::endl;
     }
-    
+    */
     if (!areAttached)
     {
-        std::cout << "not attached" << std::endl;
+        //std::cout << "not attached" << std::endl;
         if (this->IsBrokenCluster(pClusterToEnlarge, pClusterToDelete))
         {
-            std::cout << "is broken cluster" << std::endl;
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());            
+            //std::cout << "is broken cluster" << std::endl;
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());            
             return true;
         }
 
-        std::cout << "clusters not close enough" << std::endl;
+        //std::cout << "clusters not close enough" << std::endl;
     }
 
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
     
     return false;
 }
@@ -391,7 +398,7 @@ bool DeltaRayMergeTool::IsHiddenTrack(const PfoList &commonMuonPfoList, const Cl
     {
         if (this->IsConnected(pCommonMuonPfo, pClusterToEnlarge) && this->IsConnected(pCommonMuonPfo, pClusterToDelete))
         {
-            std::cout << "are connected to track" << std::endl;
+            //std::cout << "are connected to track" << std::endl;
 
             CaloHitList enlargeVertices, deleteVertices;
             this->FindVertices(pCommonMuonPfo, pClusterToEnlarge, enlargeVertices);
@@ -405,7 +412,7 @@ bool DeltaRayMergeTool::IsHiddenTrack(const PfoList &commonMuonPfoList, const Cl
                     closestDistance = separation;
             }
 
-            std::cout << "vertex separation: " << closestDistance  << std::endl;
+            //std::cout << "vertex separation: " << closestDistance  << std::endl;
             
             areAttached = true;
             
@@ -531,6 +538,7 @@ void DeltaRayMergeTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *c
             found = true;
             usedClusters.insert(pBestClusterU); usedClusters.insert(pBestClusterV); usedClusters.insert(pBestClusterW);
 
+            /*
             std::cout << "WILL CREATE THIS PARTICLE" << std::endl;
             std::cout << "MATCH CHI SQUARED: " << bestChi << std::endl;
             ClusterList u({pBestClusterU}), v({pBestClusterV}), w({pBestClusterW});
@@ -538,6 +546,7 @@ void DeltaRayMergeTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *c
             PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &v, "v", BLUE);
             PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &w, "w", BLUE);
             PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            */
             
             ProtoParticle protoParticle;
             protoParticle.m_clusterList.push_back(pBestClusterU);

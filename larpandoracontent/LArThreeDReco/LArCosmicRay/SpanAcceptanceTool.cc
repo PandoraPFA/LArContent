@@ -45,7 +45,7 @@ void SpanAcceptanceTool::InvestigateSpanAcceptances(ThreeViewDeltaRayMatchingAlg
     for (TensorType::Element &element : elementList)
     {
         //////////////////////////
-      
+        /*
         std::cout << "uSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_U) << std::endl;
         std::cout << "vSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_V) << std::endl;
         std::cout << "wSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_W) << std::endl;
@@ -55,26 +55,26 @@ void SpanAcceptanceTool::InvestigateSpanAcceptances(ThreeViewDeltaRayMatchingAlg
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &uCluster, "uCluster_1", RED);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &vCluster, "vCluster_1", BLUE);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &wCluster, "wCluster_1", VIOLET);
-
+        */
         ////////////////////////// 
 
 	// Is there one common muon?
 	PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
 
 	if (commonMuonPfoList.size() != 1)
-        {
-	  std::cout << "too many common muons" << std::endl;
-	  PandoraMonitoringApi::ViewEvent(this->GetPandora());
-	  continue;
+    {
+        //std::cout << "too many common muons" << std::endl;
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        continue;
 	}
 
 	if (!this->IsConnected(element))
-        {
-	  std::cout << "not enougth connection points" << std::endl;
-	  PandoraMonitoringApi::ViewEvent(this->GetPandora());
-	  continue;
+    {
+        //std::cout << "not enougth connection points" << std::endl;
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        continue;
 	}
-	PandoraMonitoringApi::ViewEvent(this->GetPandora());
+	//PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
 
         ProtoParticle protoParticle;
@@ -85,7 +85,6 @@ void SpanAcceptanceTool::InvestigateSpanAcceptances(ThreeViewDeltaRayMatchingAlg
     }
 
     changesMade |= pAlgorithm->CreatePfos(protoParticleVector);
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
