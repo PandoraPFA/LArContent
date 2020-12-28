@@ -65,7 +65,7 @@ bool DeltaRayRemovalTool::PassElementChecks(TensorType::Element &element, const 
 
     if (commonMuonPfoList.size() != 1)
     {
-      std::cout << "common muon issue" << std::endl;
+        //std::cout << "common muon issue" << std::endl;
         return false;
     }
 
@@ -91,7 +91,7 @@ bool DeltaRayRemovalTool::PassElementChecks(TensorType::Element &element, const 
 
         if ((xMinDR < xMinCR) || (xMaxDR > xMaxCR))
         {
-            std::cout << "DR lies outside CR" << std::endl;
+            //std::cout << "DR lies outside CR" << std::endl;
             return false;
         }
 	
@@ -102,7 +102,7 @@ bool DeltaRayRemovalTool::PassElementChecks(TensorType::Element &element, const 
 
         if ((zMinDR < zMinCR) || (zMaxDR > zMaxCR))
         {
-            std::cout << "DR lies outside CR" << std::endl;
+            //std::cout << "DR lies outside CR" << std::endl;
             return false;
         }
     }
@@ -111,7 +111,7 @@ bool DeltaRayRemovalTool::PassElementChecks(TensorType::Element &element, const 
 
     if (separation > m_minSeparation)
     {
-      std::cout << "separation issue" << std::endl;
+        //std::cout << "separation issue" << std::endl;
         return false;
     }
 
@@ -125,8 +125,8 @@ bool DeltaRayRemovalTool::PassElementChecks(TensorType::Element &element, const 
 
     if (((clusterAverageDirection.GetOpeningAngle(xAxis) * 180.f / 3.14) < 20.f) || (((180 - clusterAverageDirection.GetOpeningAngle(xAxis)) * 180.f / 3.14) < 20.f))
     {
-      std::cout << "too transverse" << std::endl; 
-      return false;
+        //std::cout << "too transverse" << std::endl; 
+        return false;
     }
 
     CartesianVector deltaRayPoint(0.f,0.f,0.f), muonPoint(0.f,0.f,0.f);
@@ -179,7 +179,7 @@ void DeltaRayRemovalTool::SearchForDeltaRayContamination(ThreeViewDeltaRayMatchi
 
             if (!isBestElement)
 	        {
-                std::cout << "not the best elemet - search again" << std::endl;
+                //std::cout << "not the best elemet - search again" << std::endl;
                 continue;
             }
 
@@ -188,11 +188,11 @@ void DeltaRayRemovalTool::SearchForDeltaRayContamination(ThreeViewDeltaRayMatchi
             ClusterList muonClusterList;
             LArPfoHelper::GetClusters(commonMuonPfoList.front(), hitType, muonClusterList);
 
-            ClusterList theCluster({element.GetCluster(hitType)});
-            ClusterList muonCluster({muonClusterList.front()});
-            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CLUSTER", RED);
-            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &muonCluster, "CLUSTER", BLUE);
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());;
+            //ClusterList theCluster({element.GetCluster(hitType)});
+            //ClusterList muonCluster({muonClusterList.front()});
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &theCluster, "CLUSTER", RED);
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &muonCluster, "CLUSTER", BLUE);
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());;
 	    
 	        // Attempt to pull delta ray hits out of muon cluster
             CaloHitList collectedHits;
@@ -200,17 +200,18 @@ void DeltaRayRemovalTool::SearchForDeltaRayContamination(ThreeViewDeltaRayMatchi
 
             if (collectedHits.empty())
 	        {
-                std::cout << "collected hits are empty" << std::endl;
+                //std::cout << "collected hits are empty" << std::endl;
                 continue;
             }
 
+            /*
             for (const CaloHit *const pCaloHit : collectedHits)
             {
 	            const CartesianVector &position(pCaloHit->GetPositionVector());
                 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "collected", VIOLET, 2);
             }
             PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
+            */
             modifiedClusters.insert(element.GetCluster(hitType));
 
             this->SplitCluster(pAlgorithm, element, hitType, collectedHits);
@@ -264,12 +265,13 @@ bool DeltaRayRemovalTool::ShouldSplitCosmicRay(const Cluster *const pMuonCluster
         const CartesianVector &position(pCaloHit->GetPositionVector());
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "Dr", RED, 2);
     }
-    */
+    
     std::cout << "minusMuonHits.size(): " << minusMuonHits.size() << std::endl;
     std::cout << "plusMuonHits.size(): " << plusMuonHits.size() << std::endl;
     std::cout << "minusDeltaRayHits.size(): " << minusDeltaRayHits.size() << std::endl;
     std::cout << "plusDeltaRayHits.size(): " << plusDeltaRayHits.size() << std::endl;
-
+    */
+    
     // Are there no muon hits either side?
     if ((minusMuonHits.size() < 3) && (plusMuonHits.size() < 3))
         return true;
@@ -280,8 +282,6 @@ bool DeltaRayRemovalTool::ShouldSplitCosmicRay(const Cluster *const pMuonCluster
 
     if ((plusMuonHits.size() < 3) && (minusDeltaRayHits.size() < 3) && (plusDeltaRayHits.size() > 2) && (minusMuonHits.size() > 2))
         return true;  
-
-
 
     return false;    
 }
@@ -368,7 +368,7 @@ void DeltaRayRemovalTool::CreateSeed(const TensorType::Element &element, const H
 
             if ((muonClusterList1.size() != 1) || (muonClusterList2.size() != 1))
             {
-                std::cout << "ISOBEL SIZE DOES NOT EQUAL ONE" << std::endl;
+                //std::cout << "ISOBEL SIZE DOES NOT EQUAL ONE" << std::endl;
 		return;
 	    }
 
@@ -389,16 +389,16 @@ void DeltaRayRemovalTool::CreateSeed(const TensorType::Element &element, const H
 	return;
     }
 
+    /*
     for (const CartesianVector &position : deltaRayProjectedPositions)
       PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "DR", RED, 2);
 
     for (const CartesianVector &position : muonProjectedPositions)
       PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "CR", BLUE, 2);
-
+    */
     float projectedHitsFraction(static_cast<float>(muonProjectedPositions.size())  / muonClusterList.front()->GetNCaloHits());
-    std::cout << "fraction of projected hits: " << static_cast<float>(muonProjectedPositions.size()) / muonClusterList.front()->GetNCaloHits() << std::endl;
-
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    //std::cout << "fraction of projected hits: " << static_cast<float>(muonProjectedPositions.size()) / muonClusterList.front()->GetNCaloHits() << std::endl;
+    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     CaloHitList muonCaloHitList;
     muonClusterList.front()->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);
@@ -474,8 +474,8 @@ void DeltaRayRemovalTool::CreateSeed(const TensorType::Element &element, const H
     }
 
     // Catch if delta ray has travelled along muon
-    std::cout << "collected hit fraction: " << (static_cast<float>(collectedHits.size()) / muonCaloHitList.size()) << std::endl;
-    if ((static_cast<float>(collectedHits.size()) / muonCaloHitList.size()) > 0.2)
+    //std::cout << "collected hit fraction: " << (static_cast<float>(collectedHits.size()) / muonCaloHitList.size()) << std::endl;
+    if ((static_cast<float>(collectedHits.size()) / muonCaloHitList.size()) > 0.1)
       collectedHits.clear();
 }
 
@@ -489,10 +489,12 @@ void DeltaRayRemovalTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const
   LArPfoHelper::GetClusters(element.GetOverlapResult().GetCommonMuonPfoList().front(), badHitType, muonCluster);
   pAlgorithm->UpdateUponDeletion(muonCluster.front());
 
+  /*
   ClusterList oldDR({element.GetCluster(badHitType)});
   PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &oldDR, "old delta ray", BLUE);
   PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &muonCluster, "old MUON ray", BLACK);
-
+  */
+  
   CaloHitList muonCaloHitList;
   muonCluster.front()->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);
   for (const CaloHit *const pCaloHit : muonCaloHitList)
@@ -507,11 +509,13 @@ void DeltaRayRemovalTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const
   ClusterList newMuonCluster;
   LArPfoHelper::GetClusters(element.GetOverlapResult().GetCommonMuonPfoList().front(), badHitType, newMuonCluster);   
 
+  /*
   ClusterList newDR({element.GetCluster(badHitType)});
   PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &newDR, "new delta ray", RED);
   PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &newMuonCluster, "NEW MUON ray", VIOLET);
   PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
+  */
+  
   ClusterVector clusterVector;
   clusterVector.push_back(newMuonCluster.front()); clusterVector.push_back(element.GetCluster(badHitType));
   PfoVector pfoVector;
