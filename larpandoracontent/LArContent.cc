@@ -50,6 +50,7 @@
 #include "larpandoracontent/LArMonitoring/DeltaRayMatrixVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/DeltaRayTensorVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
+#include "larpandoracontent/LArMonitoring/MuonLeadingEventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/NeutrinoEventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/PfoValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/ShowerTensorVisualizationTool.h"
@@ -207,6 +208,7 @@
 
 // clang-format off
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
+    d("LArMuonLeadingEventValidation",          MuonLeadingEventValidationAlgorithm)                                            \
     d("LArNeutrinoEventValidation",             NeutrinoEventValidationAlgorithm)                                               \
     d("LArTestBeamEventValidation",             TestBeamEventValidationAlgorithm)                                               \
     d("LArTestBeamHierarchyEventValidation",    TestBeamHierarchyEventValidationAlgorithm)                                      \
