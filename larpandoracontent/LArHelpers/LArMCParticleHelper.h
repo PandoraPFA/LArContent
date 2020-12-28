@@ -403,6 +403,18 @@ public:
      */
     static void GetBreadthFirstHierarchyRepresentation(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &mcParticleList);
 
+    /**
+     *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable
+     *
+     *  @param  candidateTargets candidate reconstructable MCParticles
+     *  @param  mcToTrueHitListMap mapping from candidates reconstructable MCParticles to their true hits
+     *  @param  mcToTargetMCMap the mc particle to target (primary or self) mc particle map
+     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
+     *  @param  selectedMCParticlesToHitsMap the output mapping from selected mcparticles to their hits
+     */
+    static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const MCContributionMap &mcToTrueHitListMap,
+        const MCRelationMap &mcToTargetMCMap, const PrimaryParameters &parameters, MCContributionMap &selectedMCParticlesToHitsMap);    
+
 private:
     /**
      *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
@@ -462,18 +474,6 @@ private:
     static void SelectParticlesMatchingCriteria(const pandora::MCParticleVector &inputMCParticles,
         std::function<bool(const pandora::MCParticle *const)> fCriteria, pandora::MCParticleVector &selectedParticles,
         const PrimaryParameters &parameters, const bool isTestBeam);
-
-    /**
-     *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable
-     *
-     *  @param  candidateTargets candidate reconstructable MCParticles
-     *  @param  mcToTrueHitListMap mapping from candidates reconstructable MCParticles to their true hits
-     *  @param  mcToTargetMCMap the mc particle to target (primary or self) mc particle map
-     *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
-     *  @param  selectedMCParticlesToHitsMap the output mapping from selected mcparticles to their hits
-     */
-    static void SelectParticlesByHitCount(const pandora::MCParticleVector &candidateTargets, const MCContributionMap &mcToTrueHitListMap,
-        const MCRelationMap &mcToTargetMCMap, const PrimaryParameters &parameters, MCContributionMap &selectedMCParticlesToHitsMap);
 
     /**
      *  @brief  Whether it is possible to navigate from a primary mc particle to a downstream mc particle without "passing through" a neutron

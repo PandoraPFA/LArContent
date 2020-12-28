@@ -269,6 +269,62 @@ CartesianVector LArClusterHelper::GetClosestPosition(const CartesianVector &posi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArClusterHelper::GetClosestDistance(const CartesianVector &position, const CaloHitList &caloHitList)
+{
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+
+    for (CaloHitList::const_iterator hitIter = caloHitList.begin(), hitIterEnd = caloHitList.end(); hitIter != hitIterEnd; ++hitIter)
+    {
+        const CaloHit *const pCaloHit = *hitIter;
+        const float distanceSquared((pCaloHit->GetPositionVector() - position).GetMagnitudeSquared());
+
+        if (distanceSquared < closestDistanceSquared)
+            closestDistanceSquared = distanceSquared;
+    }
+
+    return std::sqrt(closestDistanceSquared);
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetClosestDistanceWithShiftedHits(const CaloHit *const pCaloHit, const CaloHitList &caloHitList)
+{
+    const CartesianVector shiftedPosition(pCaloHit->GetPositionVector().GetX() - pCaloHit->GetX0(), pCaloHit->GetPositionVector().GetY(), pCaloHit->GetPositionVector().GetZ());
+    
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+    for (const CaloHit *const pQueriedCaloHit : caloHitList)
+    {
+        const CartesianVector queriedShiftedPosition(pQueriedCaloHit->GetPositionVector().GetX() - pQueriedCaloHit->GetX0(), pQueriedCaloHit->GetPositionVector().GetY(),
+            pQueriedCaloHit->GetPositionVector().GetZ());
+        
+        const float distanceSquared((shiftedPosition - queriedShiftedPosition).GetMagnitudeSquared());
+
+        if (distanceSquared < closestDistanceSquared)
+            closestDistanceSquared = distanceSquared;
+    }
+
+    return std::sqrt(closestDistanceSquared);
+}        
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArClusterHelper::GetClosestDistanceWithShiftedHits(const CaloHitList &caloHitList1, const CaloHitList &caloHitList2)
+{
+    float closestDistance(std::numeric_limits<float>::max());
+
+    for (const CaloHit *const pCaloHit : caloHitList1)
+    {
+        const float hitClosestDistance(LArClusterHelper::GetClosestDistanceWithShiftedHits(pCaloHit, caloHitList2));
+        if(hitClosestDistance < closestDistance)
+            closestDistance = hitClosestDistance;
+    }
+
+    return closestDistance;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArClusterHelper::GetClosestPositions(
     const Cluster *const pCluster1, const Cluster *const pCluster2, CartesianVector &outputPosition1, CartesianVector &outputPosition2)
 {

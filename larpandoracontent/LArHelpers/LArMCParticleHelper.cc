@@ -114,7 +114,7 @@ bool LArMCParticleHelper::IsCosmicRay(const MCParticle *const pMCParticle)
             ((nuance == 3000) || ((nuance == 0) && !LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle))));
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------    
 
 unsigned int LArMCParticleHelper::GetNuanceCode(const MCParticle *const pMCParticle)
 {
