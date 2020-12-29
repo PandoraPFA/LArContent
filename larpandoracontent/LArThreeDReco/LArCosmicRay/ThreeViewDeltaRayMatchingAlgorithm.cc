@@ -511,6 +511,56 @@ void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewClusters(const ClusterVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ThreeViewDeltaRayMatchingAlgorithm::UpdateForCreation(const Cluster *const pNewCluster)
+{
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
+
+    HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
+    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);    
+
+    CaloHitList caloHitList;
+    pNewCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+        hitToClusterMap[pCaloHit] = pNewCluster;
+  
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {             
+        HitKDNode2DList found;
+        KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
+
+        kdTree.search(searchRegionHits, found);
+            
+        for (const auto &hit : found)
+        {
+            if (std::find(caloHitList.begin(), caloHitList.end(), hit.data) != caloHitList.end())
+                continue;
+                
+            ClusterList  &nearbyClusterList(clusterProximityMap[pNewCluster]);
+            const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
+
+            if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
+                nearbyClusterList.push_back(pNearbyCluster);
+        }
+    }
+    
+    if (clusterProximityMap.find(pNewCluster) != clusterProximityMap.end())
+    {
+        const ClusterList &nearbyClusterList(clusterProximityMap.at(pNewCluster));
+
+        for (const Cluster *const pNearbyCluster : nearbyClusterList)
+        {
+            ClusterList &invertedCloseClusters(clusterProximityMap[pNearbyCluster]);
+            
+            if (std::find(invertedCloseClusters.begin(), invertedCloseClusters.end(), pNewCluster) == invertedCloseClusters.end())
+                invertedCloseClusters.push_back(pNewCluster);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ThreeViewDeltaRayMatchingAlgorithm::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     const HitType &hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
@@ -692,21 +742,14 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
 
     for(const Cluster *const pCollectedCluster : collectedClusters)
     {
-        //const ClusterList &strayClusterList1(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
-        //std::cout << "strayClusterList1 size: " << strayClusterList1.size() << std::endl;
-        
         this->RemoveFromStrayClusterList(pCollectedCluster);
-
-        //const ClusterList &strayClusterList2(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
-        //std::cout << "strayClusterList2 size: " << strayClusterList2.size() << std::endl;
-        
         this->UpdateUponDeletion(pCollectedCluster);
 
         std::string clusterListName(this->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pCollectedCluster, clusterListName, clusterListName));
     }
 
-    //this->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
+    this->UpdateForCreation(pClusterToEnlarge);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -885,31 +928,14 @@ bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoPa
         }
 
 	    for (const Cluster *const pCluster : protoParticle.m_clusterList)
-	    {
+	    {            
             ClusterList collectedClusters;
             this->CollectStrayHits(pCluster, spanMinX, spanMaxX, collectedClusters);
 
-            //ClusterList original({pCluster}), longC({pLongCluster});
-            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &original, "original", RED);
-            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &longC, "long", BLACK);
-            
 		    if (!collectedClusters.empty())
             {
-                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &collectedClusters, "collectedClusters", BLUE);
-                
-                //std::cout << "HERE" << std::endl;
                 this->AddInStrayClusters(pCluster, collectedClusters);
-
-                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &original, "after", VIOLET);
             }
-            /*
-            else
-            {
-                std::cout << "no stray clusters found" << std::endl;
-            }
-            */
-
-            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 	    }
 	}
 
