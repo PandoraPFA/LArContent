@@ -47,6 +47,8 @@ public:
 
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
 
+    void UpdateForCreation(const pandora::Cluster *const pNewCluster);
+
     void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
     bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
