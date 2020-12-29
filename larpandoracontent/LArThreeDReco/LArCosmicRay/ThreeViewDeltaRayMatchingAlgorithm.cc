@@ -723,12 +723,12 @@ void ThreeViewDeltaRayMatchingAlgorithm::CollectStrayHits(const Cluster *const p
         if (!(((xMin > spanMinX) && (xMin < spanMaxX)) || ((xMax > spanMinX) && (xMax < spanMaxX))))
             continue;
 
-        std::cout << "3333333" << std::endl;      
+        //std::cout << "3333333" << std::endl;      
         
         if (LArClusterHelper::GetClosestDistance(pBadCluster, pCluster) > 2.f)
             continue;
 
-        std::cout << "4444444" << std::endl;    
+        //std::cout << "4444444" << std::endl;    
 
         collectedClusters.push_back(pCluster);
     }
@@ -743,13 +743,7 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
 
     for(const Cluster *const pCollectedCluster : collectedClusters)
     {
-        const ClusterList &strayClusterList1(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
-        std::cout << "strayClusterList1.size(): " << strayClusterList1.size() << std::endl;
-        
         this->RemoveFromStrayClusterList(pCollectedCluster);
-        
-        const ClusterList &strayClusterList2(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
-        std::cout << "strayClusterList2.size(): " << strayClusterList2.size() << std::endl;        
         this->UpdateUponDeletion(pCollectedCluster);
 
         std::string clusterListName(this->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));

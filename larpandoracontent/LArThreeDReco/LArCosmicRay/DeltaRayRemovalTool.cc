@@ -147,7 +147,7 @@ void DeltaRayRemovalTool::SearchForDeltaRayContamination(ThreeViewDeltaRayMatchi
         for (const HitType &hitType : hitTypeVector)
 	    {
             if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
-                break;
+                continue;
 
             if (!this->PassElementChecks(element, hitType))
                 continue;

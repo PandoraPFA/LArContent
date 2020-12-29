@@ -230,14 +230,11 @@ void RemovalBaseTool::ProjectPositions(const Cluster *const pCluster1, const Clu
     float xMin1(-std::numeric_limits<float>::max()), xMax1(+std::numeric_limits<float>::max());
     float xMin2(-std::numeric_limits<float>::max()), xMax2(+std::numeric_limits<float>::max());
 
-    std::cout << "AAAAA" << std::endl;
     pCluster1->GetClusterSpanX(xMin1, xMax1);
     pCluster2->GetClusterSpanX(xMin2, xMax2);
-    std::cout << "BBBBBBB" << std::endl;    
 
     const float xPitch(0.5 * m_xOverlapWindow);
 
-    std::cout << "CCCCCCC" << std::endl;
     const float xMin(std::max(xMin1, xMin2) - xPitch);
     const float xMax(std::min(xMax1, xMax2) + xPitch);
     const float xOverlap(xMax - xMin);

@@ -44,38 +44,13 @@ void SpanAcceptanceTool::InvestigateSpanAcceptances(ThreeViewDeltaRayMatchingAlg
   ProtoParticleVector protoParticleVector;
     for (TensorType::Element &element : elementList)
     {
-        //////////////////////////
-        /*
-        std::cout << "uSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_U) << std::endl;
-        std::cout << "vSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_V) << std::endl;
-        std::cout << "wSpan: " << element.GetOverlapResult().GetViewXSpan(TPC_VIEW_W) << std::endl;
-        std::cout << "overlap: " << element.GetOverlapResult().GetXOverlap().GetXOverlapSpan() << std::endl;
-                
-        ClusterList uCluster({element.GetCluster(TPC_VIEW_U)}), vCluster({element.GetCluster(TPC_VIEW_V)}), wCluster({element.GetCluster(TPC_VIEW_W)});
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &uCluster, "uCluster_1", RED);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &vCluster, "vCluster_1", BLUE);
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &wCluster, "wCluster_1", VIOLET);
-        */
-        ////////////////////////// 
+        PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
 
-	// Is there one common muon?
-	PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
+	    if (commonMuonPfoList.size() != 1)
+            continue;
 
-	if (commonMuonPfoList.size() != 1)
-    {
-        //std::cout << "too many common muons" << std::endl;
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        continue;
-	}
-
-	if (!this->IsConnected(element))
-    {
-        //std::cout << "not enougth connection points" << std::endl;
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        continue;
-	}
-	//PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
+        if (!this->IsConnected(element))
+            continue;
 
         ProtoParticle protoParticle;
         protoParticle.m_clusterList.push_back(element.GetClusterU());
