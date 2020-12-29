@@ -40,6 +40,9 @@ bool CosmicRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgori
     ClusterSet usedKeyClusters;
     for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
+        if (!pKeyCluster->IsAvailable())
+            continue;
+        
         if (usedKeyClusters.count(pKeyCluster))
             continue;
 
@@ -64,12 +67,12 @@ void CosmicRayRemovalTool::RemoveMuonHits(ThreeViewDeltaRayMatchingAlgorithm *co
     const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
     
     for (const TensorType::Element &element : elementList)
-    {
-        if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
-            continue;
-        
+    {        
         for (const HitType &hitType : hitTypeVector)
 	    {
+            if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
+                continue;
+            
             if (checkedClusters.count(element.GetCluster(hitType)))
                 continue;
             
@@ -408,6 +411,7 @@ void CosmicRayRemovalTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *cons
     ClusterVector clusterVector; PfoVector pfoVector;
     if (pDeltaRayRemnant)
         this->FragmentRemnant(pAlgorithm, hitType, pMuonCluster, pDeltaRayRemnant, clusterVector, pfoVector);
+
     
     clusterVector.push_back(pMuonCluster); pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front());
     clusterVector.push_back(pDeltaRay); pfoVector.push_back(nullptr);
