@@ -512,7 +512,7 @@ void DeltaRayMergeTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *c
     {
         found = false;
 
-        float highestHitCount(-std::numeric_limits<float>::max()), bestChi(0);
+        float highestHitCount(-std::numeric_limits<float>::max());//, bestChi(0);
         const Cluster *pBestClusterU(nullptr), *pBestClusterV(nullptr), *pBestClusterW(nullptr);
 
         for (const TensorType::Element &element : elementList)
@@ -527,7 +527,7 @@ void DeltaRayMergeTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *c
             
             if ((pClusterU->GetNCaloHits() + pClusterV->GetNCaloHits() + pClusterW->GetNCaloHits()) > highestHitCount)
             {
-                bestChi = element.GetOverlapResult().GetReducedChi2();
+                //bestChi = element.GetOverlapResult().GetReducedChi2();
                 highestHitCount = pClusterU->GetNCaloHits() + pClusterV->GetNCaloHits() + pClusterW->GetNCaloHits();
                 pBestClusterU = pClusterU; pBestClusterV = pClusterV; pBestClusterW = pClusterW;
             }
