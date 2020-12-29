@@ -624,7 +624,9 @@ void ThreeViewDeltaRayMatchingAlgorithm::InitialiseStrayClusterList(const HitTyp
     
     ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
     
-    for (const Cluster *const pCluster : this->GetInputClusterList(hitType))
+    const ClusterList &inputClusterList(this->GetInputClusterList(hitType));
+
+    for (const Cluster *const pCluster : inputClusterList)
     {
         if ((!this->DoesClusterPassTesorThreshold(pCluster)) && ((pCluster->IsAvailable())))
             strayClusterList.push_back(pCluster);
@@ -706,6 +708,8 @@ void ThreeViewDeltaRayMatchingAlgorithm::CollectStrayHits(const Cluster *const p
     
     this->InitialiseStrayClusterList(badHitType);
 
+    std::cout << "IS INITIALISED? " << this->IsStrayClusterListInitialised(badHitType) << std::endl;
+
     //std::cout << "CCCCCCCC" << std::endl;
     
     const ClusterList &strayClusterList(this->GetStrayClusterList(badHitType));
@@ -743,7 +747,14 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
 
     for(const Cluster *const pCollectedCluster : collectedClusters)
     {
+        const ClusterList &strayClusterList1(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
+        std::cout << "clusterList1 size: " << strayClusterList1.size() << std::endl;
+        
         this->RemoveFromStrayClusterList(pCollectedCluster);
+
+        const ClusterList &strayClusterList2(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
+        std::cout << "clusterList2 size: " << strayClusterList2.size() << std::endl;
+                
         this->UpdateUponDeletion(pCollectedCluster);
 
         std::string clusterListName(this->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
@@ -931,6 +942,9 @@ bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoPa
 	    {            
             ClusterList collectedClusters;
             this->CollectStrayHits(pCluster, spanMinX, spanMaxX, collectedClusters);
+
+            for (const Cluster *const pStray : collectedClusters)
+                std::cout << "stray hits: " << pStray->GetNCaloHits() << std::endl;
 
 		    if (!collectedClusters.empty())
                 this->AddInStrayClusters(pCluster, collectedClusters);
