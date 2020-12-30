@@ -58,17 +58,6 @@ private:
     bool IsContaminated(const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
-     *  @brief  Determine whether the input element is the best to use to modify the contaminated cluster (best is defined by the total hit count)
-     *
-     *  @param  element the tensor element
-     *  @param  hitType the hit type of the cluster under investigation
-     *  @param  elementList the tensor element list
-     *
-     *  @return  whether the input element is the best element
-     */
-    bool IsBestElement(const TensorType::Element &element, const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
-
-    /**
      *  @brief  Collect hits in the delta ray cluster that lie close to calculated projected positions forming a seed to later grow
      *
      *  @param  element the tensor element

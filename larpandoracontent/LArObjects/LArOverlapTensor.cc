@@ -116,6 +116,45 @@ void OverlapTensor<T>::GetSortedKeyClusters(ClusterVector &sortedKeyClusters) co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
+void OverlapTensor<T>::GetClustersInTensor(ClusterSet &clusterSetU, ClusterSet &clusterSetV, ClusterSet &clusterSetW) const
+{
+    for (auto &element : *this)
+    {
+        clusterSetU.insert(element.first);
+        const OverlapMatrix &overlapMatrix(element.second);
+
+        for (auto &pair : overlapMatrix)
+        {
+            clusterSetV.insert(pair.first);
+            const OverlapList &overlapList(pair.second);
+
+            for (auto &entry : overlapList)
+                clusterSetW.insert(entry.first);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+bool OverlapTensor<T>::IsInTensor(
+    const Cluster *const pCluster, const ClusterSet &clusterSetU, const ClusterSet &clusterSetV, const ClusterSet &clusterSetW) const
+{
+    if (clusterSetU.count(pCluster))
+        return true;
+
+    if (clusterSetV.count(pCluster))
+        return true;
+
+    if (clusterSetW.count(pCluster))
+        return true;
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
 void OverlapTensor<T>::SetOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV,
     const pandora::Cluster *const pClusterW, const OverlapResult &overlapResult)
 {

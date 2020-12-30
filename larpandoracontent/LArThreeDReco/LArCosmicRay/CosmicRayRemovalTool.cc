@@ -12,7 +12,6 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
-#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
 using namespace pandora;
 
@@ -63,17 +62,18 @@ bool CosmicRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgori
 
 void CosmicRayRemovalTool::RemoveMuonHits(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &changesMade) const
 {
-    ClusterSet modifiedClusters, checkedClusters;
     const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
+    
+    ClusterSet modifiedClusters, checkedClusters;
     
     for (const TensorType::Element &element : elementList)
     {        
         for (const HitType &hitType : hitTypeVector)
 	    {
-            if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
+            if (checkedClusters.count(element.GetCluster(hitType)))
                 continue;
             
-            if (checkedClusters.count(element.GetCluster(hitType)))
+            if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
                 continue;
             
             if (!this->PassElementChecks(element, hitType))
@@ -132,13 +132,13 @@ bool CosmicRayRemovalTool::PassElementChecks(const TensorType::Element &element,
 
 bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, const HitType &hitType) const
 {
-    const Cluster *pMuonCluster(nullptr);
+    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
     
     if (this->GetMuonCluster(element, hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         return false;
 
-    CartesianVector deltaRayVertex(0.f,0.f,0.f), muonVertex(0.f,0.f,0.f);
-    LArClusterHelper::GetClosestPositions(element.GetCluster(hitType), pMuonCluster, deltaRayVertex, muonVertex);    
+    CartesianVector deltaRayVertex(0.f, 0.f, 0.f), muonVertex(0.f, 0.f, 0.f);
+    LArClusterHelper::GetClosestPositions(pDeltaRayCluster, pMuonCluster, deltaRayVertex, muonVertex);    
 
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const TwoDSlidingFitResult slidingFitResult(pMuonCluster, 10000, slidingFitPitch);
@@ -154,7 +154,7 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
     if (!isTransverse)
     {
         CaloHitList deltaRayHitList;
-        element.GetCluster(hitType)->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
+        pDeltaRayCluster->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
 
         float furthestSeparation(0.f); CartesianVector extendedPoint(0.f,0.f,0.f);
         
@@ -189,11 +189,9 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
         }
     }
 
+    CaloHitList minusMuonHits, minusDeltaRayHits, plusMuonHits, plusDeltaRayHits;    
     const CartesianVector minusPosition(muonVertex - (muonDirection * 5.f)), plusPosition(muonVertex + (muonDirection * 5.f));
 
-
-    CaloHitList minusMuonHits, minusDeltaRayHits, plusMuonHits, plusDeltaRayHits;
-    const Cluster *const pDeltaRayCluster(element.GetCluster(hitType));
     this->FindExtrapolatedHits(pMuonCluster, muonVertex, minusPosition, minusMuonHits);
     this->FindExtrapolatedHits(pMuonCluster, muonVertex, plusPosition, plusMuonHits);
     this->FindExtrapolatedHits(pDeltaRayCluster, muonVertex, minusPosition, minusDeltaRayHits);
@@ -213,33 +211,6 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
         return true;   
 
     return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool CosmicRayRemovalTool::IsBestElement(const TensorType::Element &element, const HitType &hitType, const TensorType::ElementList &elementList) const
-{
-    float chiSquared(element.GetOverlapResult().GetReducedChi2());
-    unsigned int hitNumber(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
-            
-    for (const TensorType::Element &testElement : elementList)
-    {
-        if (testElement.GetCluster(hitType) != element.GetCluster(hitType))
-            continue;
-
-        if ((testElement.GetClusterU() == element.GetClusterU()) && (testElement.GetClusterV() == element.GetClusterV()) && (testElement.GetClusterW() == element.GetClusterW()))
-            continue;
-
-        const unsigned int hitSum(testElement.GetClusterU()->GetNCaloHits() + testElement.GetClusterV()->GetNCaloHits() + testElement.GetClusterW()->GetNCaloHits());
-
-        if ((hitSum == hitNumber) && (testElement.GetOverlapResult().GetReducedChi2() < chiSquared))
-            return false;
-        
-        if (hitSum > hitNumber)
-            return false;
-    }
-
-    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

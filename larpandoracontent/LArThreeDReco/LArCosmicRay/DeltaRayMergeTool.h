@@ -19,26 +19,19 @@ namespace lar_content
 class DeltaRayMergeTool : public DeltaRayTensorTool
 {
 public:
-
     typedef std::vector<pandora::HitType> HitTypeVector;
     /**
      *  @brief  Default constructor
      */
     DeltaRayMergeTool();
 
-    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
-
 private:
+    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     void MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor, bool &mergesMade) const;
-
-    void MakeClearMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
-
-    void MakeClearMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const pandora::ClusterVector &clusterVector, pandora::ClusterSet &modifiedClusters) const;
-
-    bool SearchForMerge(const TensorType::ElementList &elementList, const pandora::ClusterSet &modifiedClusters, const pandora::Cluster *&pClusterToEnlarge,
-        const pandora::Cluster *&pClusterToDelete) const;
+    
+    bool MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
 
     void CombineCommonMuonPfoLists(const pandora::PfoList &commonMuonPfoList1, const pandora::PfoList &commonMuonPfoList2, pandora::PfoList &commonMuonPfoList) const;
     
@@ -49,15 +42,14 @@ private:
     bool IsConnected(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster) const;
 
     void FindVertices(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster, pandora::CaloHitList &vertexList) const;
+    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
 
     bool IsBrokenCluster(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete) const;
 
-    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
+    bool MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
 
-    void PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesCreated) const;
+    void PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
 
-    bool Jam(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
-    
     float m_maxUnambiguousClusterSeparation;
     float m_maxDRSeparationFromTrack;
     float m_maxVertexSeparation;

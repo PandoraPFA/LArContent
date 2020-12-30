@@ -26,7 +26,7 @@ RemovalBaseTool::RemovalBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode RemovalBaseTool::GetMuonCluster(const TensorType::Element &element, const HitType &hitType, const Cluster *&pMuonCluster) const
+ StatusCode RemovalBaseTool::GetMuonCluster(const TensorType::Element &element, const HitType &hitType, const Cluster *&pMuonCluster) const
 {
     const PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
 
@@ -42,6 +42,33 @@ StatusCode RemovalBaseTool::GetMuonCluster(const TensorType::Element &element, c
     pMuonCluster = muonClusterList.front();
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType &hitType, const TensorType::ElementList &elementList) const
+{
+    float chiSquared(element.GetOverlapResult().GetReducedChi2());
+    unsigned int hitNumber(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
+            
+    for (const TensorType::Element &testElement : elementList)
+    {
+        if (testElement.GetCluster(hitType) != element.GetCluster(hitType))
+            continue;
+
+        if ((testElement.GetClusterU() == element.GetClusterU()) && (testElement.GetClusterV() == element.GetClusterV()) && (testElement.GetClusterW() == element.GetClusterW()))
+            continue;
+
+        const unsigned int hitSum(testElement.GetClusterU()->GetNCaloHits() + testElement.GetClusterV()->GetNCaloHits() + testElement.GetClusterW()->GetNCaloHits());
+
+        if ((hitSum == hitNumber) && (testElement.GetOverlapResult().GetReducedChi2() < chiSquared))
+            return false;
+        
+        if (hitSum > hitNumber)
+            return false;
+    }
+
+    return true;
 }    
 
 //------------------------------------------------------------------------------------------------------------------------------------------

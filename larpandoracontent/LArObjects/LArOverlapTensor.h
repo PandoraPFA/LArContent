@@ -176,6 +176,11 @@ public:
      */
     void GetSortedKeyClusters(pandora::ClusterVector &sortedKeyClusters) const;
 
+    void GetClustersInTensor(pandora::ClusterSet &clusterSetU, pandora::ClusterSet &clusterSetV, pandora::ClusterSet &clusterSetW) const;
+
+    bool IsInTensor(const pandora::Cluster *const pCluster, const pandora::ClusterSet &clusterSetU, const pandora::ClusterSet &clusterSetV,
+        const pandora::ClusterSet &clusterSetW) const;
+
     /**
      *  @brief  Get the overlap result for a specified trio of clusters
      *

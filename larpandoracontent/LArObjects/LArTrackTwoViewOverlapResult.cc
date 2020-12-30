@@ -14,28 +14,36 @@ namespace lar_content
 {
 
 TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult() :
-    TrackOverlapResult(),
+    m_isInitialized(false),
     m_xOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f)),
-    m_projectedCaloHits()
+    m_commonMuonPfoList(),
+    m_pBestMatchedCluster(nullptr),
+    m_matchedClusterList()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult(const unsigned int nMatchedSamplingPoints,
-    const unsigned int nSamplingPoints, const float chi2, const TwoViewXOverlap &xOverlap, const CaloHitList &projectedCaloHits) :
-    TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
+TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult(const TwoViewXOverlap &xOverlap, const PfoList &commonMuonPfoList,
+    const Cluster *const pBestMatchedCluster, const ClusterList &matchedClusterList, const float reducedChiSquared) :
+    m_isInitialized(true),
     m_xOverlap(xOverlap),
-    m_projectedCaloHits(projectedCaloHits)
+    m_commonMuonPfoList(commonMuonPfoList),
+    m_pBestMatchedCluster(pBestMatchedCluster),
+    m_matchedClusterList(matchedClusterList),
+    m_reducedChiSquared(reducedChiSquared)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult(const TrackTwoViewTopologyOverlapResult &rhs) :
-    TrackOverlapResult(rhs),
-    m_xOverlap(rhs.IsInitialized() ? rhs.GetXOverlap() : TwoViewXOverlap(0.f, 0.f, 0.f, 0.f)),
-    m_projectedCaloHits(rhs.IsInitialized() ? rhs.GetProjectedCaloHits() : CaloHitList())
+    m_isInitialized(rhs.m_isInitialized),
+    m_xOverlap(rhs.GetXOverlap()),
+    m_commonMuonPfoList(rhs.GetCommonMuonPfoList()),
+    m_pBestMatchedCluster(rhs.GetBestMatchedCluster()),
+    m_matchedClusterList(rhs.GetMatchedClusterList()),
+    m_reducedChiSquared(std::numeric_limits<float>::max())
 {
 }
 
@@ -49,18 +57,33 @@ TrackTwoViewTopologyOverlapResult::~TrackTwoViewTopologyOverlapResult()
 
 TrackTwoViewTopologyOverlapResult &TrackTwoViewTopologyOverlapResult::operator=(const TrackTwoViewTopologyOverlapResult &rhs)
 {
-    this->TrackOverlapResult::operator=(rhs);
-
-    if (rhs.IsInitialized())
-    {
-        m_xOverlap = rhs.GetXOverlap();
-    }
-    else
-    {
-        m_xOverlap = TwoViewXOverlap(0.f, 0.f, 0.f, 0.f);
-    }
+    m_isInitialized = rhs.m_isInitialized;
+    m_xOverlap = rhs.GetXOverlap();
+    m_commonMuonPfoList = rhs.GetCommonMuonPfoList();
+    m_pBestMatchedCluster = rhs.GetBestMatchedCluster();
+    m_matchedClusterList = rhs.GetMatchedClusterList();
+    m_reducedChiSquared = rhs.GetReducedChiSquared();
 
     return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrackTwoViewTopologyOverlapResult::operator<(const TrackTwoViewTopologyOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    if (!m_isInitialized && !rhs.m_isInitialized)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (!m_isInitialized)
+        return true;
+
+    if (!rhs.m_isInitialized)
+        return false;
+
+    return (m_xOverlap.GetTwoViewXOverlapSpan() < rhs.m_xOverlap.GetTwoViewXOverlapSpan());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

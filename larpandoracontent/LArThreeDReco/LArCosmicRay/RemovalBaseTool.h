@@ -37,6 +37,18 @@ protected:
      */    
     pandora::StatusCode GetMuonCluster(const TensorType::Element &element, const pandora::HitType &hitType, const pandora::Cluster *&pMuonCluster) const;    
 
+    /**
+     *  @brief  Determine whether the input element is the best to use to modify the contaminated cluster (best is defined by the total hit count)
+     *
+     *  @param  element the tensor element
+     *  @param  hitType the hit type of the cluster under investigation
+     *  @param  elementList the tensor element list
+     *
+     *  @return  whether the input element is the best element
+     */
+    bool IsBestElement(const TensorType::Element &element, const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
+
+    
     bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineEnd, const float distanceToLine) const;     
 
     void FindExtrapolatedHits(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary,
