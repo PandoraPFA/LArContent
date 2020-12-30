@@ -266,6 +266,8 @@ void ThreeViewDeltaRayMatchingAlgorithm::ExamineOverlapContainer()
         {
             toolIter = m_algorithmToolVector.begin();
 
+	    //std::cout << "tool counter: " << repeatCounter << std::endl;
+
             if (++repeatCounter > m_nMaxTensorToolRepeats)
                 break;
         }
@@ -615,21 +617,31 @@ void ThreeViewDeltaRayMatchingAlgorithm::UpdateUponDeletion(const Cluster *const
     }
 }
 
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeViewDeltaRayMatchingAlgorithm::InitialiseStrayClusterList(const HitType &hitType)
 {
     if (this->IsStrayClusterListInitialised(hitType))
         return;
+
+    auto &theTensor(this->GetMatchingControl().GetOverlapTensor());
     
+    ClusterSet clusterSetU, clusterSetV, clusterSetW;
+    theTensor.GetClustersInTensor(clusterSetU, clusterSetV, clusterSetW);
+
     ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
     
     const ClusterList &inputClusterList(this->GetInputClusterList(hitType));
 
+    unsigned int i(0);
     for (const Cluster *const pCluster : inputClusterList)
     {
-        if ((!this->DoesClusterPassTesorThreshold(pCluster)) && ((pCluster->IsAvailable())))
+      if ((!this->DoesClusterPassTesorThreshold(pCluster)) && (pCluster->IsAvailable()) && (!theTensor.IsInTensor(pCluster, clusterSetU, clusterSetV, clusterSetW)))
+      {
+	++i;
             strayClusterList.push_back(pCluster);
+      }
     }
 
     bool &isStrayClusterListInitialised((hitType == TPC_VIEW_U) ? m_isStrayListUInitialised : (hitType == TPC_VIEW_V) ? m_isStrayListVInitialised : m_isStrayListWInitialised);
@@ -708,18 +720,18 @@ void ThreeViewDeltaRayMatchingAlgorithm::CollectStrayHits(const Cluster *const p
     
     this->InitialiseStrayClusterList(badHitType);
 
-    std::cout << "IS INITIALISED? " << this->IsStrayClusterListInitialised(badHitType) << std::endl;
-
     //std::cout << "CCCCCCCC" << std::endl;
-    
+    //std::cout << "IS INITIALISED? " << this->IsStrayClusterListInitialised(badHitType) << std::endl;
     const ClusterList &strayClusterList(this->GetStrayClusterList(badHitType));
-
     //std::cout << "DDDDDDD" << std::endl;    
+    //std::cout << "size: " << strayClusterList.size() << std::endl;
 
     for (const Cluster *const pCluster : strayClusterList)
     {
         float xMin(-std::numeric_limits<float>::max()), xMax(+std::numeric_limits<float>::max());
         //std::cout << "1111111" << std::endl;
+	//std::cout << "cluster hit number: " << pCluster->GetNCaloHits() << std::endl;
+        //std::cout << "JAM" << std::endl;
         pCluster->GetClusterSpanX(xMin, xMax);
         
         //std::cout << "22222222" << std::endl;        
@@ -747,13 +759,13 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
 
     for(const Cluster *const pCollectedCluster : collectedClusters)
     {
-        const ClusterList &strayClusterList1(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
-        std::cout << "clusterList1 size: " << strayClusterList1.size() << std::endl;
+      //const ClusterList &strayClusterList1(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
+      //std::cout << "clusterList1 size: " << strayClusterList1.size() << std::endl;
         
         this->RemoveFromStrayClusterList(pCollectedCluster);
 
-        const ClusterList &strayClusterList2(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
-        std::cout << "clusterList2 size: " << strayClusterList2.size() << std::endl;
+        //const ClusterList &strayClusterList2(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
+        //std::cout << "clusterList2 size: " << strayClusterList2.size() << std::endl;
                 
         this->UpdateUponDeletion(pCollectedCluster);
 
@@ -909,6 +921,7 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::GetClusterSpanZ(const CaloHitList
 
 bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoParticleVector)
 {
+  
     std::sort(protoParticleVector.begin(), protoParticleVector.end(), [] (const ProtoParticle &a, const ProtoParticle &b) -> bool
     {
         unsigned int aHitTotal(0);
@@ -943,14 +956,14 @@ bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoPa
             ClusterList collectedClusters;
             this->CollectStrayHits(pCluster, spanMinX, spanMaxX, collectedClusters);
 
-            for (const Cluster *const pStray : collectedClusters)
-                std::cout << "stray hits: " << pStray->GetNCaloHits() << std::endl;
+            //for (const Cluster *const pStray : collectedClusters)
+	    //std::cout << "stray hits: " << pStray->GetNCaloHits() << std::endl;
 
-		    if (!collectedClusters.empty())
-                this->AddInStrayClusters(pCluster, collectedClusters);
+	    if (!collectedClusters.empty())
+	      this->AddInStrayClusters(pCluster, collectedClusters);
 	    }
 	}
-
+  
     return (this->CreateThreeDParticles(protoParticleVector));
 }
 
