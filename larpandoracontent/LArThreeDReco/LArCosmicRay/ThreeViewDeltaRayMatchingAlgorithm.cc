@@ -27,7 +27,7 @@ ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm()  :
     m_strayClusterListU(ClusterList()),
     m_strayClusterListV(ClusterList()),
     m_strayClusterListW(ClusterList()),
-    m_nMaxTensorToolRepeats(1000),
+    m_nMaxTensorToolRepeats(10),
     m_minClusterCaloHits(5),//5),
     m_searchRegion1D(3.f),    
     m_pseudoChi2Cut(1.5f), //normally three
@@ -70,6 +70,7 @@ void ThreeViewDeltaRayMatchingAlgorithm::PrepareInputClusters(ClusterList &prepa
     this->FillHitToClusterMap(hitType);
     this->FillClusterProximityMap(hitType);
     this->FillClusterToPfoMap(hitType);
+    this->InitialiseStrayClusterList(hitType);
 }
         
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -440,15 +441,11 @@ void ThreeViewDeltaRayMatchingAlgorithm::FillClusterToPfoMap(const HitType &hitT
 
 void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewClusters(const ClusterVector &newClusterVector, const PfoVector &pfoVector)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(newClusterVector.front()));
-
-    HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
-    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
-    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);    
-    ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
-
     for (const Cluster *const pNewCluster : newClusterVector)
     {
+        const HitType &hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
+	HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+
         CaloHitList caloHitList;
 	pNewCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
@@ -457,10 +454,17 @@ void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewClusters(const ClusterVecto
             hitToClusterMap[pCaloHit] = pNewCluster;
 	}
     }
-
-    for (unsigned int i = 0; i < newClusterVector.size(); ++i)
+ 
+   for (unsigned int i = 0; i < newClusterVector.size(); i++)
     {
         const Cluster *const pNewCluster(newClusterVector.at(i));
+
+        const HitType &hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
+
+	HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
+	HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
+	ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+	ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
   
         CaloHitList caloHitList;
 	pNewCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
@@ -504,10 +508,15 @@ void ThreeViewDeltaRayMatchingAlgorithm::UpdateForNewClusters(const ClusterVecto
         {
             clusterToPfoMap[pNewCluster] = pMuonPfo;
 	}
-        else
-        {
-	    BaseAlgorithm::UpdateForNewCluster(pNewCluster);
-	}
+    }
+
+    for (unsigned int i = 0; i < newClusterVector.size(); i++)
+    {
+        const Cluster *const pNewCluster(newClusterVector.at(i));
+	const ParticleFlowObject *const pMuonPfo(pfoVector.at(i));
+
+	if (!pMuonPfo)
+	  BaseAlgorithm::UpdateForNewCluster(pNewCluster);
     }
 }
 
@@ -609,10 +618,12 @@ void ThreeViewDeltaRayMatchingAlgorithm::UpdateUponDeletion(const Cluster *const
 
     if (clusterToPfoIter != clusterToPfoMap.end())
     {
+      //std::cout << "MUON" << std::endl;
       clusterToPfoMap.erase(clusterToPfoIter);
     }
     else
     {
+      //std::cout << "DELTA RAY" << std::endl;
       BaseAlgorithm::UpdateUponDeletion(pDeletedCluster);
     }
 }
@@ -634,12 +645,14 @@ void ThreeViewDeltaRayMatchingAlgorithm::InitialiseStrayClusterList(const HitTyp
     
     const ClusterList &inputClusterList(this->GetInputClusterList(hitType));
 
-    unsigned int i(0);
     for (const Cluster *const pCluster : inputClusterList)
     {
       if ((!this->DoesClusterPassTesorThreshold(pCluster)) && (pCluster->IsAvailable()) && (!theTensor.IsInTensor(pCluster, clusterSetU, clusterSetV, clusterSetW)))
       {
-	++i;
+	if (pCluster->GetNCaloHits() > 5)
+	{
+	  std::cout << "TOO MANY HITS" << std::endl;
+	}
             strayClusterList.push_back(pCluster);
       }
     }
@@ -745,8 +758,8 @@ void ThreeViewDeltaRayMatchingAlgorithm::CollectStrayHits(const Cluster *const p
             continue;
 
         //std::cout << "4444444" << std::endl;    
-
-        collectedClusters.push_back(pCluster);
+	if (std::find(collectedClusters.begin(), collectedClusters.end(), pCluster) == collectedClusters.end())
+	  collectedClusters.push_back(pCluster);
     }
     //std::cout << "EEEEEEEE" << std::endl;
 }
@@ -766,7 +779,6 @@ void ThreeViewDeltaRayMatchingAlgorithm::AddInStrayClusters(const Cluster *const
 
         //const ClusterList &strayClusterList2(this->GetStrayClusterList(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
         //std::cout << "clusterList2 size: " << strayClusterList2.size() << std::endl;
-                
         this->UpdateUponDeletion(pCollectedCluster);
 
         std::string clusterListName(this->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
@@ -921,7 +933,6 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::GetClusterSpanZ(const CaloHitList
 
 bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoParticleVector)
 {
-  
     std::sort(protoParticleVector.begin(), protoParticleVector.end(), [] (const ProtoParticle &a, const ProtoParticle &b) -> bool
     {
         unsigned int aHitTotal(0);
@@ -956,14 +967,11 @@ bool ThreeViewDeltaRayMatchingAlgorithm::CreatePfos(ProtoParticleVector &protoPa
             ClusterList collectedClusters;
             this->CollectStrayHits(pCluster, spanMinX, spanMaxX, collectedClusters);
 
-            //for (const Cluster *const pStray : collectedClusters)
-	    //std::cout << "stray hits: " << pStray->GetNCaloHits() << std::endl;
-
 	    if (!collectedClusters.empty())
 	      this->AddInStrayClusters(pCluster, collectedClusters);
 	    }
 	}
-  
+
     return (this->CreateThreeDParticles(protoParticleVector));
 }
 

@@ -31,19 +31,22 @@ private:
 
     void MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor, bool &mergesMade) const;
     
-    void MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
+    bool MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
 
     void CombineCommonMuonPfoLists(const pandora::PfoList &commonMuonPfoList1, const pandora::PfoList &commonMuonPfoList2, pandora::PfoList &commonMuonPfoList) const;
     
     bool AreAssociated(const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const ClusterToEnlarge, const pandora::Cluster *const pClusterToDelete) const;
 
-    bool IsHiddenTrack(const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete) const;
+    bool IsHiddenTrack(const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, bool &areAttached) const;
 
     bool IsConnected(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster) const;
 
+    void FindVertices(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster, pandora::CaloHitList &vertexList) const;
+    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
+
     bool IsBrokenCluster(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete) const;
 
-    void MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
+    bool MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
 
     void PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
 
