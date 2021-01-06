@@ -132,7 +132,7 @@ bool TwoViewDeltaRayMergeTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorit
     
 bool TwoViewDeltaRayMergeTool::CreatePfo(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element) const
 {
-    std::cout << "CREATING PFO" << std::endl;
+    //std::cout << "CREATING PFO" << std::endl;
     
     ProtoParticle protoParticle;
     protoParticle.m_clusterList.push_back(element.GetCluster1());
@@ -147,11 +147,12 @@ bool TwoViewDeltaRayMergeTool::CreatePfo(TwoViewDeltaRayMatchingAlgorithm *const
     else
     {
         std::cout << "TwoViewCreation" << std::endl;
-
+        /*
         ClusterList c1({element.GetCluster1()}), c2({element.GetCluster2()});
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &c1, "ClusterList1", BLUE);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &c2, "ClusterList2", RED);
         PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        */
     }
 
     ProtoParticleVector protoParticleVector({protoParticle});
@@ -176,7 +177,8 @@ void TwoViewDeltaRayMergeTool::GrowThirdView(TwoViewDeltaRayMatchingAlgorithm *c
         if (std::find(muonClusterList.begin(), muonClusterList.end(), pBestMatchedCluster) != muonClusterList.end())
             pMatchedMuonPfo = pMuonPfo;
     }
-
+    
+    /*
     ClusterList c1({element.GetCluster1()}), c2({element.GetCluster2()}), c3({pBestMatchedCluster}), bestMatchedClusterList(element.GetOverlapResult().GetMatchedClusterList());
     PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &c1, "ClusterList1", BLUE);
     PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &c2, "ClusterList2", RED);
@@ -186,17 +188,19 @@ void TwoViewDeltaRayMergeTool::GrowThirdView(TwoViewDeltaRayMatchingAlgorithm *c
     std::cout << "bestMatchedClusterList size: " << bestMatchedClusterList.size() << std::endl;
     
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    */
     
     if (pMatchedMuonPfo)
     {
-        std::cout << "BEST MATCHED IS A MUON" << std::endl;
+        //std::cout << "BEST MATCHED IS A MUON" << std::endl;
         
         CartesianPointVector deltaRayProjectedPositions;
         this->ProjectPositions(element.GetCluster1(), element.GetCluster2(), deltaRayProjectedPositions);
 
+        /*
         for (const CartesianVector &deltaRayPosition : deltaRayProjectedPositions)
             PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &deltaRayPosition, "Projected Position", BLACK, 2);
-
+        */
         CaloHitList deltaRayHits;
         if ((this->CollectDeltaRayHits(element, deltaRayProjectedPositions, pMatchedMuonPfo, deltaRayHits) != STATUS_CODE_SUCCESS) || (deltaRayHits.empty()))
         {
@@ -205,58 +209,62 @@ void TwoViewDeltaRayMergeTool::GrowThirdView(TwoViewDeltaRayMatchingAlgorithm *c
             
             if (pSeedCluster)
             {
-                ClusterList seedBefore({pSeedCluster});
-                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedBefore, "seedBefore", BLUE);
+                //ClusterList seedBefore({pSeedCluster});
+                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedBefore, "seedBefore", BLUE);
                 
                 this->MergeThirdView(pAlgorithm, element, pSeedCluster);
 
-                ClusterList seedAfter({pSeedCluster});
-                PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedAfter, "seedAfter", RED);
+                //ClusterList seedAfter({pSeedCluster});
+                //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedAfter, "seedAfter", RED);
 
-                PandoraMonitoringApi::ViewEvent(this->GetPandora());                
+                //PandoraMonitoringApi::ViewEvent(this->GetPandora());                
                 
                 protoParticle.m_clusterList.push_back(pSeedCluster);
             }
+            /*
             else
             {
                 std::cout << "no seed cluster found" << std::endl;
                 PandoraMonitoringApi::ViewEvent(this->GetPandora());
             }
+            */
         }
         else
         {
+            /*
             for (const CaloHit *const pCaloHit : deltaRayHits)
             {
                 const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
                 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "CollectedHits", GREEN, 2);
             }
+            */
 
             const Cluster *const pSeedCluster(this->SplitCluster(pAlgorithm, pBestMatchedCluster, deltaRayHits));
             
-            ClusterList seedBefore({pSeedCluster});
-            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedBefore, "seedBefore", BLUE);
+            //ClusterList seedBefore({pSeedCluster});
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedBefore, "seedBefore", BLUE);
             
             this->MergeThirdView(pAlgorithm, element, pSeedCluster);
 
-            ClusterList seedAfter({pSeedCluster});
-            PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedAfter, "seedAfter", RED);
-            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //ClusterList seedAfter({pSeedCluster});
+            //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedAfter, "seedAfter", RED);
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
             
             protoParticle.m_clusterList.push_back(pSeedCluster);
         }   
     }
     else
     {
-        std::cout << "BEST MATCHED IS AN AVAILBALE DELTA RAY" << std::endl;
+        //std::cout << "BEST MATCHED IS AN AVAILBALE DELTA RAY" << std::endl;
 
-        ClusterList seedBefore({pBestMatchedCluster});
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedBefore, "seedBefore", BLUE);
+        //ClusterList seedBefore({pBestMatchedCluster});
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedBefore, "seedBefore", BLUE);
         
         this->MergeThirdView(pAlgorithm, element, pBestMatchedCluster);
 
-        ClusterList seedAfter({pBestMatchedCluster});
-        PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedAfter, "seedAfter", RED);
-        PandoraMonitoringApi::ViewEvent(this->GetPandora());        
+        //ClusterList seedAfter({pBestMatchedCluster});
+        //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedAfter, "seedAfter", RED);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());        
         
         protoParticle.m_clusterList.push_back(pBestMatchedCluster);
     }
