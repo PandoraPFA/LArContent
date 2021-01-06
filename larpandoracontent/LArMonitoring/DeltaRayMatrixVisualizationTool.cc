@@ -64,14 +64,14 @@ bool DeltaRayMatrixVisualizationTool::Run(TwoViewDeltaRayMatchingAlgorithm *cons
             if (allClusterList2.end() == std::find(allClusterList2.begin(), allClusterList2.end(), eIter->GetCluster2())) allClusterList2.push_back(eIter->GetCluster2());
             usedKeyClusters.insert(eIter->GetCluster1());
 
-            std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
-                      << ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints()
+            std::cout << " Element " << counter++ //<< ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
+                //<< ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints()
                       << ", xSpan1 " << eIter->GetOverlapResult().GetXOverlap().GetXSpan0()
                       << ", xSpan2 " << eIter->GetOverlapResult().GetXOverlap().GetXSpan1()
                       << ", xOverlapSpan " << eIter->GetOverlapResult().GetXOverlap().GetTwoViewXOverlapSpan()
                       << ", xOverlapFraction1 " << eIter->GetOverlapResult().GetXOverlap().GetTwoViewXOverlapSpan() / eIter->GetOverlapResult().GetXOverlap().GetXSpan0()
-                      << ", xOverlapFraction2 " << eIter->GetOverlapResult().GetXOverlap().GetTwoViewXOverlapSpan() / eIter->GetOverlapResult().GetXOverlap().GetXSpan1()
-                      << ", chiSquared: " << eIter->GetOverlapResult().GetReducedChi2() << std::endl;
+                      << ", xOverlapFraction2 " << eIter->GetOverlapResult().GetXOverlap().GetTwoViewXOverlapSpan() / eIter->GetOverlapResult().GetXOverlap().GetXSpan1() << std::endl;
+                //<< ", chiSquared: " << eIter->GetOverlapResult().GetReducedChi2() << std::endl;
 
             if (m_showEachIndividualElement)
             {

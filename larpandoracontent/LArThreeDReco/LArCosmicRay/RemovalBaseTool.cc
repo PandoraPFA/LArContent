@@ -26,7 +26,7 @@ RemovalBaseTool::RemovalBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode RemovalBaseTool::GetMuonCluster(const TensorType::Element &element, const HitType &hitType, const Cluster *&pMuonCluster) const
+ StatusCode RemovalBaseTool::GetMuonCluster(const TensorType::Element &element, const HitType &hitType, const Cluster *&pMuonCluster) const
 {
     const PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
 

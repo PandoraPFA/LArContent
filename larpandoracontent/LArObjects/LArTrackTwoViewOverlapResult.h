@@ -21,7 +21,7 @@ namespace lar_content
 /**
  *  @brief  TrackTwoViewTopologyOverlapResult class
  */
-class TrackTwoViewTopologyOverlapResult : public TrackOverlapResult
+class TrackTwoViewTopologyOverlapResult
 {
 public:
     /**
@@ -37,8 +37,8 @@ public:
      *  @param  chi2
      *  @param  xOverlap
      */
-    TrackTwoViewTopologyOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
-        const TwoViewXOverlap &xOverlap, const pandora::CaloHitList &projectedCaloHits);
+    TrackTwoViewTopologyOverlapResult(const TwoViewXOverlap &xOverlap, const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const pBestMatchedCluster,
+        const pandora::ClusterList &matchedClusterList, const float reducedChiSquared);
 
     /**
      *  @brief  Copy constructor
@@ -53,6 +53,13 @@ public:
     ~TrackTwoViewTopologyOverlapResult();
 
     /**
+     *  @brief  Whether the track overlap result has been initialized
+     *
+     *  @return boolean
+     */
+    bool IsInitialized() const;
+
+    /**
      *  @brief  Get the x overlap object
      *
      *  @return the x overlap object
@@ -60,18 +67,46 @@ public:
     const TwoViewXOverlap &GetXOverlap() const;
 
     /**
-     *  @brief  Get the projected calo hits
+     *  @brief  Get the best matched cluster
      *
-     *  @return the projected calo hits
+     *  @return the best matched cluster
      */
-    const pandora::CaloHitList &GetProjectedCaloHits() const;
+    const pandora::Cluster *GetBestMatchedCluster() const;
 
     /**
-     *  @brief  Get the projected calo hits
+     *  @brief  Get the best matched cluster
      *
-     *  @return the projected calo hits
+     *  @return the best matched cluster
      */
-   void SetProjectedCaloHits(const pandora::CaloHitList &projectedCaloHits);        
+    void SetBestMatchedCluster(const pandora::Cluster *const pCluster);    
+
+    /**
+     *  @brief  Get the best matched cluster
+     *
+     *  @return the best matched cluster
+     */
+    const pandora::PfoList &GetCommonMuonPfoList() const;
+
+    /**
+     *  @brief  Get the best matched cluster
+     *
+     *  @return the best matched cluster
+     */
+    const pandora::ClusterList &GetMatchedClusterList() const;
+
+    /**
+     *  @brief  Get the best matched cluster
+     *
+     *  @return the best matched cluster
+     */
+    void SetMatchedClusterList(const pandora::ClusterList &matchedClusterList);     
+
+    /**
+     *  @brief  Get the best matched cluster
+     *
+     *  @return the best matched cluster
+     */
+    float GetReducedChiSquared() const;     
 
     /**
      *  @brief  Track overlap result assigment operator
@@ -80,9 +115,20 @@ public:
      */
      TrackTwoViewTopologyOverlapResult&operator=(const TrackTwoViewTopologyOverlapResult &rhs);
 
+    /**
+     *  @brief  Track two view overlap result less than operator
+     *
+     *  @param  rhs the track two view overlap result for comparison
+     */
+    bool operator<(const TrackTwoViewTopologyOverlapResult &rhs) const;
+
 private:
-    TwoViewXOverlap        m_xOverlap;                     ///< The x overlap object
-    pandora::CaloHitList            m_projectedCaloHits;
+    bool                            m_isInitialized;
+    TwoViewXOverlap                 m_xOverlap;                     ///< The x overlap object
+    pandora::PfoList                m_commonMuonPfoList;
+    const pandora::Cluster         *m_pBestMatchedCluster;
+    pandora::ClusterList            m_matchedClusterList;
+    float                           m_reducedChiSquared;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -271,30 +317,58 @@ typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResu
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline bool TrackTwoViewTopologyOverlapResult::IsInitialized() const
+{
+    return m_isInitialized;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline const TwoViewXOverlap &TrackTwoViewTopologyOverlapResult::GetXOverlap() const
 {
-    if (m_isInitialized)
-        return m_xOverlap;
-
-    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_INITIALIZED);
+    return m_xOverlap;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::CaloHitList &TrackTwoViewTopologyOverlapResult::GetProjectedCaloHits() const
+inline const pandora::Cluster *TrackTwoViewTopologyOverlapResult::GetBestMatchedCluster() const
 {
-    return m_projectedCaloHits;
+    return m_pBestMatchedCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void TrackTwoViewTopologyOverlapResult::SetProjectedCaloHits(const pandora::CaloHitList &projectedCaloHits)
+inline void TrackTwoViewTopologyOverlapResult::SetBestMatchedCluster(const pandora::Cluster *const pBestMatchedCluster)
 {
-    std::cout << projectedCaloHits.size() << std::endl;
-    for (const pandora::CaloHit *const pCaloHit : projectedCaloHits)
-    {
-        m_projectedCaloHits.push_back(pCaloHit);
-    }
+    m_pBestMatchedCluster = pBestMatchedCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::PfoList &TrackTwoViewTopologyOverlapResult::GetCommonMuonPfoList() const
+{
+    return m_commonMuonPfoList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ClusterList &TrackTwoViewTopologyOverlapResult::GetMatchedClusterList() const
+{
+    return m_matchedClusterList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void TrackTwoViewTopologyOverlapResult::SetMatchedClusterList(const pandora::ClusterList &matchedClusterList)
+{
+    m_matchedClusterList = matchedClusterList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TrackTwoViewTopologyOverlapResult::GetReducedChiSquared() const
+{
+    return m_reducedChiSquared;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

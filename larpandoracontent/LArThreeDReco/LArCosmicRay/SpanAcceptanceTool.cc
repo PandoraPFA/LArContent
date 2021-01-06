@@ -44,11 +44,6 @@ void SpanAcceptanceTool::InvestigateSpanAcceptances(ThreeViewDeltaRayMatchingAlg
   ProtoParticleVector protoParticleVector;
     for (TensorType::Element &element : elementList)
     {
-        PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
-
-	    if (commonMuonPfoList.size() != 1)
-            continue;
-
         if (!this->IsConnected(element))
             continue;
 
@@ -69,25 +64,31 @@ bool SpanAcceptanceTool::IsConnected(const TensorType::Element &element) const
     HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
     PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
 
-     unsigned int connectedClusterCount(0);
-    for (const HitType &hitType : hitTypeVector)
+    for (const ParticleFlowObject *const pMuonPfo : commonMuonPfoList)
     {
-        ClusterList muonClusterList;
-        LArPfoHelper::GetClusters(commonMuonPfoList.front(), hitType, muonClusterList);
-
-        if (muonClusterList.size() != 1)
+        unsigned int connectedClusterCount(0);
+        for (const HitType &hitType : hitTypeVector)
         {
-            std::cout << "ISOBEL SIZE DOES NOT EQUAL ONE" << std::endl;
-            continue;
+            ClusterList muonClusterList;
+            LArPfoHelper::GetClusters(pMuonPfo, hitType, muonClusterList);
+
+            if (muonClusterList.size() != 1)
+            {
+                std::cout << "ISOBEL SIZE DOES NOT EQUAL ONE" << std::endl;
+                continue;
+            }
+
+            const float separation(LArClusterHelper::GetClosestDistance(element.GetCluster(hitType), muonClusterList));
+
+            if (separation < 2.f)
+                ++connectedClusterCount;
         }
 
-        const float separation(LArClusterHelper::GetClosestDistance(element.GetCluster(hitType), muonClusterList));
-
-        if (separation < 2.f)
-            ++connectedClusterCount;
+        if (connectedClusterCount > 1)
+            return true;
     }
 
-    return (connectedClusterCount > 1);
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    

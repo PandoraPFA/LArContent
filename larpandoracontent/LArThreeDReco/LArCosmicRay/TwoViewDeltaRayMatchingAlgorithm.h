@@ -49,6 +49,15 @@ public:
 
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
 
+    void RemoveThirdViewCluster(const pandora::Cluster *const pCluster);
+
+    const ClusterToPfoMap &GetClusterToPfoMap(const pandora::HitType &hitType);
+
+    const std::string &GetThirdViewClusterListName() const;
+
+    pandora::StatusCode PerformMatching(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV, const pandora::CaloHitList &clusterW,
+        float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints, XOverlap &XOverlap) const;
+    
 private:
     void PrepareInputClusters(pandora::ClusterList &selectedClusters);
 
@@ -60,27 +69,40 @@ private:
     void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3);
     
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        const HitAssociationMap &hitAssociationMap, TrackTwoViewTopologyOverlapResult &overlapResult) const;
+        TrackTwoViewTopologyOverlapResult &overlapResult) const;
 
     void GetNearbyMuonPfos(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::PfoList &nearbyMuonPfos) const;
     
-    bool AreClustersCompatible(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
+    void AreClustersCompatible(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, pandora::PfoList &commonMuonPfoList) const;
 
     pandora::StatusCode GetProjectedPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         pandora::CartesianPointVector &projectedPositions) const;
 
-    void CollectHits(const pandora::CartesianPointVector &projectedPositions, const HitAssociationMap &hitAssociationMap,
-        const float xMin, const float xMax, pandora::CaloHitList &collectedHits, HitOwnershipMap &hitOwnershipMap) const;
+    void CollectHits(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::CartesianPointVector &projectedPositions,
+        pandora::ClusterList &matchedClusters) const;
+
+    void GetBestMatchedCluster(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::PfoList &commonMuonPfoList,
+        const pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster, float &reducedChiSquared) const;
     
     void CollectAssociatedHits(const pandora::CaloHit *const pSeedCaloHit, const pandora::CaloHit *const pCurrentCaloHit,
         const HitAssociationMap &hitAssociationMap, const float xMin, const float xMax, pandora::CaloHitList &associatedHitList) const;
 
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,
-        const pandora::CaloHitList &projectedHits, TrackTwoViewTopologyOverlapResult &overlapResult) const;  
+        const pandora::CaloHitList &projectedHits, TrackTwoViewTopologyOverlapResult &overlapResult) const;
 
+    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector) const;
+
+    void GetBestMatchedAvailableCluster(const pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster) const;
+    
     void ExamineOverlapContainer();
     void TidyUp();    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+
+
+
+    
+    void GetClusterSpanX(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax) const;
+    pandora::StatusCode GetClusterSpanZ(const pandora::CaloHitList &caloHitList, const float xMin, const float xMax, float &zMin, float &zMax) const;
 
     //WILL NEED AN UPDATE AND DELETE CLUSTER FUNCTION
 
@@ -116,6 +138,21 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const std::string &TwoViewDeltaRayMatchingAlgorithm::GetThirdViewClusterListName() const
+{
+    return m_inputClusterListName;
+}
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const TwoViewDeltaRayMatchingAlgorithm::ClusterToPfoMap &TwoViewDeltaRayMatchingAlgorithm::GetClusterToPfoMap(const pandora::HitType &hitType)
+{
+    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));      
+
+    return (hitTypeIndex == 1) ? m_clusterToPfoMap1 : m_clusterToPfoMap2;
+}
+
     
 /**
  *  @brief  DeltaRayTensorTool class

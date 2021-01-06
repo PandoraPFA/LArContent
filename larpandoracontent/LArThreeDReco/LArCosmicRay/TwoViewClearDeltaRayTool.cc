@@ -45,8 +45,8 @@ void TwoViewClearDeltaRayTool::CreateThreeDParticles(TwoViewDeltaRayMatchingAlgo
 
     for (MatrixType::ElementList::const_iterator iter = elementList.begin(), iterEnd = elementList.end(); iter != iterEnd; ++iter)
     {
-        if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
-            continue;
+        //if (iter->GetOverlapResult().GetMatchedFraction() < m_minMatchedFraction)
+        //continue;
         
         const TwoViewXOverlap &xOverlap(iter->GetOverlapResult().GetXOverlap());
 

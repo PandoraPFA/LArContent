@@ -47,65 +47,56 @@ public:
 
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
 
-    void UpdateForCreation(const pandora::Cluster *const pNewCluster);
+    bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;    
 
     void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
-    bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
-
+    pandora::StatusCode PerformMatching(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV, const pandora::CaloHitList &clusterW,
+        float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints, XOverlap &XOverlap) const;
+    
     void UpdateForNewClusters(const pandora::ClusterVector &newClusterList, const pandora::PfoVector &pfoList);
+    
+    void UpdateContainers(const pandora::ClusterVector &newClusterVector, const pandora::PfoVector &pfoVector);
+    
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
-
-    const pandora::ClusterList &GetStrayClusterList(const pandora::HitType &hitType) const;
-
-    void RemoveFromStrayClusterList(const pandora::Cluster *const pClusterToRemove);
-
-    void CollectStrayHits(const pandora::Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, pandora::ClusterList &collectedClusters);
-
-    void AddInStrayClusters(const pandora::Cluster *const pClusterToEnlarge, const pandora::ClusterList &collectedClusters);
-
-    float CalculateChiSquared(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV, const pandora::CaloHitList &clusterW) const;
-    void GetClusterSpanX(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax) const;
-    pandora::StatusCode GetClusterSpanZ(const pandora::CaloHitList &caloHitList, const float xMin, const float xMax, float &zMin, float &zMax) const;
 
     bool CreatePfos(ProtoParticleVector &protoParticleVector);
 
     std::string GetClusteringAlgName() const;
-
-
     
 private:
 
     void FillHitToClusterMap(const pandora::HitType &hitType);
+    void AddToClusterMap(const pandora::Cluster *const pCluster); 
     void FillClusterProximityMap(const pandora::HitType &hitType);
+    void BuildKDTree(const pandora::HitType &hitType);
+    void AddToClusterProximityMap(const pandora::Cluster *const pCluster);    
     void FillClusterToPfoMap(const pandora::HitType &hitType);
+    void FillStrayClusterList(const pandora::HitType &hitType);
     
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 
-    /**
-     *  @brief  Calculate the overlap result for given group of clusters
-     *
-     *  @param  pClusterU the cluster from the U view
-     *  @param  pClusterV the cluster from the V view
-     *  @param  pClusterW the cluster from the W view
-     *  @param  overlapResult to receive the overlap result
-     */
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
         DeltaRayOverlapResult &overlapResult) const;
 
-    void AreClustersCompatible(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW, pandora::PfoList &commonMuonPfoList) const;
+    void FindCommonMuonParents(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW, pandora::PfoList &commonMuonPfoList) const;
 
     void GetNearbyMuonPfos(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::PfoList &nearbyMuonPfos) const;
-    
+
+    void GetClusterSpanX(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax) const;
+    pandora::StatusCode GetClusterSpanZ(const pandora::CaloHitList &caloHitList, const float xMin, const float xMax, float &zMin, float &zMax) const;
+
+    void CollectStrayHits(const pandora::Cluster *const pBadCluster, const float spanMinX, const float spanMaxX, pandora::ClusterList &collectedClusters);
+
+    const pandora::ClusterList &GetStrayClusterList(const pandora::HitType &hitType) const;
+
+    void AddInStrayClusters(const pandora::Cluster *const pClusterToEnlarge, const pandora::ClusterList &collectedClusters);
+
     void ExamineOverlapContainer();
     
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void InitialiseStrayClusterList(const pandora::HitType &hitType);
-    bool IsStrayClusterListInitialised(const pandora::HitType &hitType) const;
-    void ClearStrayClusterLists();
-    
     std::string   m_muonPfoListName;
     
     HitToClusterMap       m_hitToClusterMapU;
@@ -124,10 +115,6 @@ private:
     ClusterToPfoMap       m_clusterToPfoMapV;
     ClusterToPfoMap       m_clusterToPfoMapW;
 
-    bool m_isStrayListUInitialised;
-    bool m_isStrayListVInitialised;
-    bool m_isStrayListWInitialised;
-
     pandora::ClusterList m_strayClusterListU;
     pandora::ClusterList m_strayClusterListV;
     pandora::ClusterList m_strayClusterListW;    
@@ -144,14 +131,11 @@ private:
     unsigned int                      m_minMatchedPoints;
 
     std::string  m_reclusteringAlgorithmName;
-
-    friend class ShortSpanTool;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-
-    inline std::string ThreeViewDeltaRayMatchingAlgorithm::GetClusteringAlgName() const
+inline std::string ThreeViewDeltaRayMatchingAlgorithm::GetClusteringAlgName() const
 {
     return m_reclusteringAlgorithmName;
 }
@@ -180,4 +164,4 @@ public:
     
 } // namespace lar_content
 
-#endif // #ifndef LAR_THREE_VIEW_SHOWERS_ALGORITHM_H
+#endif // #ifndef LAR_THREE_VIEW_DELTA_RAY_MATCHING_ALGORITHM_H

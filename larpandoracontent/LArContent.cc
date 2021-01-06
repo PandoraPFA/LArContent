@@ -76,9 +76,8 @@
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayIdentificationAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayParentAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/ShortSpanTool.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/LongSpanTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMergeTool.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMergeTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayRemovalTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/SpanAcceptanceTool.h"
@@ -323,11 +322,10 @@
     d("LArTransverseMatrixVisualization",       TransverseMatrixVisualizationTool)                                              \
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArClearDeltaRay",                       ClearDeltaRayTool)                                                              \
-    d("LArShortSpan",                           ShortSpanTool)                                                                  \
     d("LArCosmicRayRemoval",                    CosmicRayRemovalTool)                                                           \
     d("LArDeltaRayRemoval",                     DeltaRayRemovalTool)                                                            \
-    d("LArLongSpan",                            LongSpanTool)                                                                   \
     d("LArDeltaRayMerge",                       DeltaRayMergeTool)                                                              \
+    d("LArTwoViewDeltaRayMerge",                TwoViewDeltaRayMergeTool)                                                       \
     d("LArSpanAcceptance",                      SpanAcceptanceTool)                                                             \
     d("LArTwoViewClearDeltaRay",                TwoViewClearDeltaRayTool)                                                       \
     d("LArDeltaRayTensorVisualization",         DeltaRayTensorVisualizationTool)                                                \
