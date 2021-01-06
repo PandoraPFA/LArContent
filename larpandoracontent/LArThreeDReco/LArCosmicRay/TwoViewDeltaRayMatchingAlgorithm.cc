@@ -412,7 +412,7 @@ void TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedCluster(const Cluster *cons
     
     if (!pBestMatchedCluster)
     {
-        std::cout << "left funciton: null ptr" << std::endl;
+        //std::cout << "left funciton: null ptr" << std::endl;
         return;
     }
     
