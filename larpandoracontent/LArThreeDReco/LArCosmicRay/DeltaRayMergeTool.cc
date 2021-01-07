@@ -85,6 +85,7 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
 
     while (mergeMade)
     {
+        std::cout << "IN LOOP" << std::endl;
         mergeMade = false;
 
         ClusterVector sortedKeyClusters;
@@ -113,9 +114,11 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
 
 	        if (this->MakeOneCommonViewMerges(pAlgorithm, elementList))
 	        {
+                std::cout << "HERE" << std::endl;
                 mergeMade = true; mergesMade = true;
                 break;
             }
+            std::cout << "IN FUNCTION" << std::endl;
         }
     }
 
@@ -123,6 +126,7 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
     
     while (mergeMade)
     {
+        std::cout << "IN LOOP" << std::endl;
         mergeMade = false;
 
         ClusterVector sortedKeyClusters;
@@ -143,13 +147,19 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
                 if (usedKeyClusters.count(element.GetClusterU()))
                     continue;
 
-                usedKeyClusters.insert(element.GetClusterU());
+                    usedKeyClusters.insert(element.GetClusterU());
             }
 
             if (elementList.size() < 2)
                 continue;
 
-            this->PickOutGoodMatches(pAlgorithm, elementList);
+            if (this->PickOutGoodMatches(pAlgorithm, elementList))
+            {
+                std::cout << "HERE" << std::endl;
+                mergeMade = true; mergesMade = true;
+                break;
+            }
+            std::cout << "HERE" << std::endl;
         }
     }
 }
