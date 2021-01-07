@@ -132,6 +132,36 @@ bool CosmicRayRemovalTool::PassElementChecks(const TensorType::Element &element,
 
 bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, const HitType &hitType) const
 {
+    const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
+    for (const HitType &otherHitType : hitTypeVector)
+    {
+        if (otherHitType == hitType)
+	  continue;
+
+        const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
+    
+        if (this->GetMuonCluster(element, hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+            return false;
+
+        float xMinDR(+std::numeric_limits<float>::max()), xMaxDR(-std::numeric_limits<float>::max());
+        float xMinCR(-std::numeric_limits<float>::max()), xMaxCR(+std::numeric_limits<float>::max());
+        
+        pDeltaRayCluster->GetClusterSpanX(xMinDR, xMaxDR);
+        pMuonCluster->GetClusterSpanX(xMinCR, xMaxCR);
+
+        if ((xMinDR < xMinCR) || (xMaxDR > xMaxCR))
+            return false;
+	
+        float zMinDR(+std::numeric_limits<float>::max()), zMaxDR(-std::numeric_limits<float>::max());
+        float zMinCR(-std::numeric_limits<float>::max()), zMaxCR(+std::numeric_limits<float>::max());
+        pDeltaRayCluster->GetClusterSpanZ(xMinDR, xMaxDR, zMinDR, zMaxDR);
+        pMuonCluster->GetClusterSpanZ(xMinCR, xMaxCR, zMinCR, zMaxCR);
+
+        if ((zMinDR < zMinCR) || (zMaxDR > zMaxCR))
+            return false;
+    }
+
+
     const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
     
     if (this->GetMuonCluster(element, hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
@@ -147,7 +177,7 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
     slidingFitResult.GetGlobalDirection(slidingFitResult.GetLayerFitResultMap().begin()->second.GetGradient(), muonDirection);
 
     const CartesianVector xAxis(1.f, 0.f, 0.f);
-    const bool isTransverse(((muonDirection.GetOpeningAngle(xAxis) * 180.f / 3.14) < 20.f) || (((180 - muonDirection.GetOpeningAngle(xAxis)) * 180.f / 3.14) < 20.f));
+    const bool isTransverse(((muonDirection.GetOpeningAngle(xAxis) * 180.f / 3.14) < 0.f) || (((180 - muonDirection.GetOpeningAngle(xAxis)) * 180.f / 3.14) < 0.f));
     
     // If not transverse, check for significant muon contamination
     // TO DO - PERMORMACE SET THIS (COULD DO IF AND ELSE?) OR JUST USE THIS?
@@ -178,6 +208,8 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
         if (furthestSeparation < 5.f)
             return false;
 
+        
+
         // Rule out cases where muon follows DR
         CaloHitList muonHitList;
         pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(muonHitList);
@@ -187,7 +219,16 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
             if (this->IsInLineSegment(deltaRayVertex, extendedPoint, pCaloHit->GetPositionVector()))
                 return false;
         }
-    }
+	/*	
+      ClusterList mu({pMuonCluster}), dr({pDeltaRayCluster});
+      PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &mu, "mu", BLUE, 2);
+      PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &dr, "dr", RED, 2);
+
+	PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &deltaRayVertex, "deltaRayVertex", BLACK, 2);
+	PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extendedPoint, "extendedPoint", BLACK, 2);
+	PandoraMonitoringApi::ViewEvent(this->GetPandora());
+	*/
+    } 
 
     CaloHitList minusMuonHits, minusDeltaRayHits, plusMuonHits, plusDeltaRayHits;    
     const CartesianVector minusPosition(muonVertex - (muonDirection * 5.f)), plusPosition(muonVertex + (muonDirection * 5.f));

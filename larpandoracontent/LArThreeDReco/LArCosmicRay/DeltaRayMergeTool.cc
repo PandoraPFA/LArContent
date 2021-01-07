@@ -19,9 +19,9 @@ namespace lar_content
 
 DeltaRayMergeTool::DeltaRayMergeTool() :
     m_maxUnambiguousClusterSeparation(1.f),
-    m_maxDRSeparationFromTrack(1.f),
-    m_maxVertexSeparation(3.f),
-    m_maxClusterSeparation(4.f)
+    m_maxDRSeparationFromTrack(1.5f),
+    m_maxVertexSeparation(10.f),
+    m_maxClusterSeparation(3.f)
 {
 }
 
@@ -47,15 +47,11 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
 
     while (mergeMade)
     {
-        //std::cout << "LOOP BEGINS" << std::endl;
+        std::cout << "LOOP BEGINS" << std::endl;
         mergeMade = false;
 
         ClusterVector sortedKeyClusters;
         overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
-	    /*
-        for (const Cluster *const pKeyCluster : sortedKeyClusters)
-	    std::cout << "INITIAL key cluster: " << pKeyCluster->GetNCaloHits() << std::endl;
-	    */
 
         ClusterSet usedKeyClusters, modifiedClusters;
         for (const Cluster *const pKeyCluster : sortedKeyClusters)
@@ -63,13 +59,8 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
             if (usedKeyClusters.count(pKeyCluster))
                 continue;
 
-
             if (modifiedClusters.count(pKeyCluster))
                 continue;
-
-
-	    //if (LArClusterHelper::GetClusterHitType(pKeyCluster) == TPC_VIEW_U)
-	    //std::cout << "YES IT DOES ISOBEL" << std::endl;
 
             unsigned int nU(0), nV(0), nW(0);
             TensorType::ElementList elementList;
@@ -77,48 +68,33 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
 
             for (const TensorType::Element &element : elementList)
 	    {
-
-	      //std::cout << "uCluster: " << element.GetClusterU() << std::endl;
-
 		if (usedKeyClusters.count(element.GetClusterU()))
 		    continue;
 
-		//std::cout << "HERE" << std::endl;
-		//std::cout << "inserted cluster: " << element.GetClusterU()->GetNCaloHits() << ", " << element.GetClusterU() << std::endl;
-	      usedKeyClusters.insert(element.GetClusterU());
+		usedKeyClusters.insert(element.GetClusterU());
 	    }
 
-	    /*
-	    bool jam (false);
-	    if (pKeyCluster->GetNCaloHits() == 19)
-	    {
-	      std::cout << "nU: " << nU << std::endl;
-	      std::cout << "nV: " << nV << std::endl;
-	      std::cout << "nW: " << nW << std::endl;
-	      jam = true;
-	    }
-	    */
             if (elementList.size() < 2)
                 continue;
 
             if (this->MakeTwoCommonViewMerges(pAlgorithm, elementList, modifiedClusters))
 	    {
+	        std::cout << "MADE COMMON TWO VIEW MERGES REPEATING" << std::endl;
                 mergeMade = true; mergesMade = true;
 		break;
 	    }
 
 	    if (this->MakeOneCommonViewMerges(pAlgorithm, elementList, modifiedClusters))
 	    {
+	        std::cout << "MADE COMMON ONE VIEW MERGES REPEATING" << std::endl;
                 mergeMade = true; mergesMade = true;
 		break;
 	    }
 
+	    this->PickOutGoodMatches(pAlgorithm, elementList, modifiedClusters);
 
-	    if (modifiedClusters.empty())
-	        this->PickOutGoodMatches(pAlgorithm, elementList, modifiedClusters);
-
-        if (modifiedClusters.size())
-            break;
+	    if (modifiedClusters.size())
+	      break;
 	}
 
 	modifiedClusters.clear();
@@ -129,6 +105,7 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
 
 bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, ClusterSet &modifiedClusters) const
 {
+    std::cout << "making two view common merges..." << std::endl;
     const HitTypeVector hitTypeVector1({TPC_VIEW_U, TPC_VIEW_V});
     const HitTypeVector hitTypeVector2({TPC_VIEW_V, TPC_VIEW_W});
 
@@ -171,16 +148,17 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
 
                                 if (modifiedClusters.count(pClusterToEnlarge) || modifiedClusters.count(pClusterToDelete))
                                     continue;
+				
+				ClusterList e({pClusterToEnlarge}), d({pClusterToDelete});
+				PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &e, "enlarge", RED);
+				PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &d, "delete", BLUE);
+				
 
-                                PfoList commonMuonPfoList;
-                                this->CombineCommonMuonPfoLists(element1.GetOverlapResult().GetCommonMuonPfoList(), element2.GetOverlapResult().GetCommonMuonPfoList(), commonMuonPfoList);
-
-                                if (commonMuonPfoList.empty())
-                                    continue;
-
-                                if (this->AreAssociated(commonMuonPfoList, pClusterToEnlarge, pClusterToDelete))
+                                if (this->AreAssociated(element1, element2, mergeHitType))
                                 {
-				  //mergeMade = true;
+				  std::cout << "making merge" << std::endl;
+				  PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
 				    mergesMade = true;
                                     
                                     modifiedClusters.insert(pClusterToEnlarge), modifiedClusters.insert(pClusterToDelete);
@@ -192,6 +170,11 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                                     
                                     pAlgorithm->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
                                 }
+				else
+				{
+				 std::cout << "not associated" << std::endl;
+				  PandoraMonitoringApi::ViewEvent(this->GetPandora());
+				  }
                             }
                         }
                     }
@@ -219,51 +202,81 @@ void DeltaRayMergeTool::CombineCommonMuonPfoLists(const PfoList &commonMuonPfoLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayMergeTool::AreAssociated(const PfoList &commonMuonPfoList, const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete) const
+bool DeltaRayMergeTool::AreAssociated(const TensorType::Element &element1, const TensorType::Element &element2, const HitType &mergeHitType) const
 {
-    bool areAttached(false);
-    if (this->IsHiddenTrack(commonMuonPfoList, pClusterToEnlarge, pClusterToDelete, areAttached))
-        return true;
+  // Demand the elements to have a shared common muon
+  PfoList commonMuonPfoList;
+  this->CombineCommonMuonPfoLists(element1.GetOverlapResult().GetCommonMuonPfoList(), element2.GetOverlapResult().GetCommonMuonPfoList(), commonMuonPfoList);
 
-    if (!areAttached)
-    {
-        if (this->IsBrokenCluster(pClusterToEnlarge, pClusterToDelete))
-	    return true;
-    }
-
+  if (commonMuonPfoList.empty())
+  {
+    std::cout << "no common muons" << std::endl;
     return false;
+  }
+
+  const Cluster *const pCluster1(element1.GetCluster(mergeHitType)), *const pCluster2(element2.GetCluster(mergeHitType));
+
+  PfoList connectedMuonPfoList1, connectedMuonPfoList2;
+  this->GetConnectedMuons(element1.GetOverlapResult().GetCommonMuonPfoList(), pCluster1, connectedMuonPfoList1);
+  this->GetConnectedMuons(element2.GetOverlapResult().GetCommonMuonPfoList(), pCluster2, connectedMuonPfoList2);
+
+  if (connectedMuonPfoList1.empty() || connectedMuonPfoList2.empty())
+  {
+    if (this->IsBrokenCluster(pCluster1, pCluster2))                                                                                                                                   
+    {
+      std::cout << "broken cluster"<< std::endl;
+      return true;       
+    }
+  }
+
+  for (const ParticleFlowObject *const pConnectedMuon1 : connectedMuonPfoList1)
+  {
+    for (const ParticleFlowObject *const pConnectedMuon2 : connectedMuonPfoList2)
+    {
+      if (pConnectedMuon1 == pConnectedMuon2)
+      {
+	if (this->IsHiddenTrack(pConnectedMuon1, pCluster1, pCluster2))
+	{
+	  std::cout << "is hidden track" << std::endl;
+	  return true;
+	}
+      }
+    }
+  }
+
+  std::cout << "connected to different muons" << std::endl;
+
+  return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+// of the element not the combined one!
+void DeltaRayMergeTool::GetConnectedMuons(const PfoList &commonMuonPfoList, const Cluster *const pClusterToEnlarge, PfoList &connectedMuonPfoList) const 
+{
+  for (const ParticleFlowObject *const pCommonMuonPfo : commonMuonPfoList)
+  {
+    if (this->IsConnected(pCommonMuonPfo, pClusterToEnlarge))
+      connectedMuonPfoList.push_back(pCommonMuonPfo);
+  }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayMergeTool::IsHiddenTrack(const PfoList &commonMuonPfoList, const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete, bool &/*areAttached*/) const
+bool DeltaRayMergeTool::IsHiddenTrack(const ParticleFlowObject *const pMuonPfo, const Cluster *const pCluster1, const Cluster *const pCluster2) const 
 {
-    for (const ParticleFlowObject *const pCommonMuonPfo : commonMuonPfoList)
-    {
-        if (this->IsConnected(pCommonMuonPfo, pClusterToEnlarge) && this->IsConnected(pCommonMuonPfo, pClusterToDelete))
-        {
-            /*
-	    CaloHitList enlargeVertices, deleteVertices;
-	    this->FindVertices(pCommonMuonPfo, pClusterToEnlarge, enlargeVertices);
-	    this->FindVertices(pCommonMuonPfo, pClusterToDelete, deleteVertices);   
+  CaloHitList vertices1, vertices2;
+  this->FindVertices(pMuonPfo, pCluster1, vertices1);
+  this->FindVertices(pMuonPfo, pCluster2, vertices2);   
 
-            float closestDistance(std::numeric_limits<float>::max());
-            for (const CaloHit *const pCaloHit : enlargeVertices)
-	    {
-                const float separation(this->GetClosestDistance(pCaloHit, deleteVertices));
-                if (separation < closestDistance)
-		  closestDistance = separation;
-	    }
+  float closestDistance(std::numeric_limits<float>::max());
+  for (const CaloHit *const pCaloHit : vertices1)
+  {
+    const float separation(this->GetClosestDistance(pCaloHit, vertices2));
+    if (separation < closestDistance)
+      closestDistance = separation;
+  }
 
-            areAttached = true;
-            
-            if (closestDistance < m_maxVertexSeparation)
-            */
-	      return true;
-	}
-    }
-
-    return false;
+  return (closestDistance < m_maxVertexSeparation);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -346,6 +359,7 @@ bool DeltaRayMergeTool::IsBrokenCluster(const Cluster *const pClusterToEnlarge, 
 
 bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, ClusterSet &modifiedClusters) const
 {
+    std::cout << "making one view common merges..." << std::endl;
     const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
     
     bool mergeMade(true), mergesMade(false);
@@ -371,21 +385,47 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                         if (modifiedClusters.count(element1.GetCluster(hitType)))
                             continue;
 
+
                         const HitType mergeHitType1(hitType == TPC_VIEW_U ? TPC_VIEW_V : hitType == TPC_VIEW_V ? TPC_VIEW_W : TPC_VIEW_U);
                         const HitType mergeHitType2(mergeHitType1 == TPC_VIEW_U ? TPC_VIEW_V : mergeHitType1 == TPC_VIEW_V ? TPC_VIEW_W : TPC_VIEW_U);
                         
                         const Cluster *pClusterToEnlarge1 = element1.GetCluster(mergeHitType1),  *pClusterToEnlarge2 = element1.GetCluster(mergeHitType2);
                         const Cluster *pClusterToDelete1 = element2.GetCluster(mergeHitType1),  *pClusterToDelete2 = element2.GetCluster(mergeHitType2);
 
+			ClusterList e1({pClusterToEnlarge1}), d1({pClusterToDelete1}), e2({pClusterToEnlarge2}), d2({pClusterToDelete2});
+			PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &e1, "enlarge1", RED);
+			PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &d1, "delete1", BLUE);
+			PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &e2, "enlarge2", RED);
+			PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &d2, "delete2", BLUE);
+
+
                         if ((pClusterToEnlarge1 == pClusterToDelete1) || (pClusterToEnlarge2 == pClusterToDelete2))
                         {
+			  std::cout << "one of the clusters is the same " << std::endl;
+			  PandoraMonitoringApi::ViewEvent(this->GetPandora());
                             continue;
                         }
                         
                         if (modifiedClusters.count(pClusterToEnlarge1) || modifiedClusters.count(pClusterToEnlarge2) || modifiedClusters.count(pClusterToDelete1) || modifiedClusters.count(pClusterToDelete2))
                         {
+			  std::cout << "in modified clusters" << std::endl;
+			  PandoraMonitoringApi::ViewEvent(this->GetPandora());
                             continue;
                         }
+
+                        if (!this->AreAssociated(element1, element2, mergeHitType1))
+			{
+			  std::cout << "first clusters are not associated" << std::endl;
+			  PandoraMonitoringApi::ViewEvent(this->GetPandora());
+			  continue;
+			}
+
+                        if (!this->AreAssociated(element1, element2, mergeHitType2))
+			{
+			  std::cout << "second clusters are not associated" << std::endl;
+			  PandoraMonitoringApi::ViewEvent(this->GetPandora());
+			  continue;
+			}
                         
                         CaloHitList caloHitList1, caloHitList2, caloHitList3;
                         pClusterToEnlarge1->GetOrderedCaloHitList().FillCaloHitList(caloHitList1);
@@ -401,7 +441,11 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                         StatusCode status(pAlgorithm->PerformMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xOverlapObject));
                         
                         if (status == STATUS_CODE_NOT_FOUND)
+			{
+			  std::cout << "matching didn't work" << std::endl;
+			  PandoraMonitoringApi::ViewEvent(this->GetPandora());
                             continue;
+			}
 
                         if (status != STATUS_CODE_SUCCESS)
                         {
@@ -413,6 +457,8 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                         
                         if (reducedChiSquared < 1.f)
                         {
+			  std::cout << "will merge" << std::endl;
+			  PandoraMonitoringApi::ViewEvent(this->GetPandora());
 			  //std::cout << "NOW" << std::endl;
 			  //std::cout << "pClusterToEnlarge1: " << pClusterToEnlarge1->GetNCaloHits() << std::endl;
 			  //std::cout << "pClusterToEnlarge2: " << pClusterToEnlarge2->GetNCaloHits() << std::endl;
@@ -439,19 +485,24 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                                 pAlgorithm->GetClusterListName(mergeHitType2)));
                         
                             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pClusterToEnlarge2, pClusterToDelete2));
-			    /*
-			    ClusterVector clusterVector; PfoVector pfoVector;
-			    clusterVector.push_back(pClusterToEnlarge1); clusterVector.push_back(pClusterToEnlarge2);
-			    pfoVector.push_back(nullptr); pfoVector.push_back(nullptr);
+			   
+			    //ClusterVector clusterVector; PfoVector pfoVector;
+			    //clusterVector.push_back(pClusterToEnlarge1); clusterVector.push_back(pClusterToEnlarge2);
+			    //pfoVector.push_back(nullptr); pfoVector.push_back(nullptr);
 
-                            pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
-			    */
+                            //pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
+			    
 
 			    pAlgorithm->UpdateForNewClusters({pClusterToEnlarge2}, {nullptr});
 
 			    //std::cout << "pClusterToEnlarge1AFTER: " << pClusterToEnlarge1->GetNCaloHits() << std::endl;
 			    //std::cout << "pClusterToEnlarge2AFTER: " << pClusterToEnlarge2->GetNCaloHits() << std::endl;
                         }
+			else
+			{
+			  std::cout << "chi squared not good enough" << std::endl;
+			  PandoraMonitoringApi::ViewEvent(this->GetPandora());
+			}
                     }
                 }
             }
