@@ -34,11 +34,13 @@ private:
     bool MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, pandora::ClusterSet &modifiedClusters) const;
 
     void CombineCommonMuonPfoLists(const pandora::PfoList &commonMuonPfoList1, const pandora::PfoList &commonMuonPfoList2, pandora::PfoList &commonMuonPfoList) const;
+
+    bool AreAssociated(const TensorType::Element &element1, const TensorType::Element &element2, const pandora::HitType &mergeHitType) const;
+
+    void GetConnectedMuons(const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const pClusterToEnlarge, pandora::PfoList &connectedMuonPfoList) const;
+
+    bool IsHiddenTrack(const pandora::ParticleFlowObject *const pMuonPfo, const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
     
-    bool AreAssociated(const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const ClusterToEnlarge, const pandora::Cluster *const pClusterToDelete) const;
-
-    bool IsHiddenTrack(const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete, bool &areAttached) const;
-
     bool IsConnected(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster) const;
 
     void FindVertices(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster, pandora::CaloHitList &vertexList) const;

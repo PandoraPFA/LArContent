@@ -77,9 +77,9 @@ void TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *con
     
 void TwoViewDeltaRayMatchingAlgorithm::RemoveThirdViewCluster(const Cluster *const pCluster)
 {
-    //std::cout << "REMOVING CLUSTER..." << std::endl;
+    std::cout << "REMOVING CLUSTER..." << std::endl;
 
-    //std::cout << "REMOVED CLUSTER: " << pCluster << std::endl;
+    std::cout << "REMOVED CLUSTER: " << pCluster << std::endl;
     
     auto &theMatrix(this->GetMatchingControl().GetOverlapMatrix());
 
@@ -100,8 +100,8 @@ void TwoViewDeltaRayMatchingAlgorithm::RemoveThirdViewCluster(const Cluster *con
             
             matchedClusters.erase(matchedClustersIter);
 
-            //std::cout << "pCluster1: " << (iter1->first) << std::endl;
-            //std::cout << "pCluster2: " << (entry.first) << std::endl;            
+            std::cout << "pCluster1: " << (iter1->first) << std::endl;
+            std::cout << "pCluster2: " << (entry.first) << std::endl;            
 
             //std::cout << "OVERLAP LIST SIZE BEFORE: " << overlapResult.GetMatchedClusterList().size() << std::endl;
             //overlapResult.SetMatchedClusterList(matchedClusters);
@@ -111,6 +111,7 @@ void TwoViewDeltaRayMatchingAlgorithm::RemoveThirdViewCluster(const Cluster *con
             this->GetBestMatchedCluster(iter1->first, entry.first, overlapResult.GetCommonMuonPfoList(), matchedClusters, pBestMatchedCluster, reducedChiSquared);
 
             overlapResult = TrackTwoViewTopologyOverlapResult(overlapResult.GetXOverlap(), overlapResult.GetCommonMuonPfoList(), pBestMatchedCluster, matchedClusters, reducedChiSquared);
+	    theMatrix.ReplaceOverlapResult(iter1->first, entry.first, overlapResult);
             //overlapResult.SetBestMatchedCluster(pBestMatchedCluster);
         }
     }
@@ -394,7 +395,7 @@ void TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedCluster(const Cluster *cons
     unsigned int highestNHits(0);
     for (const Cluster *const pMatchedCluster : matchedClusters)
     {
-        //std::cout << "pMatchedCluster: " << pMatchedCluster << std::endl;
+        std::cout << "pMatchedCluster: " << pMatchedCluster << std::endl;
         if (!pMatchedCluster->IsAvailable())
         {
             if (std::find(muonClusterList.begin(), muonClusterList.end(), pMatchedCluster) == muonClusterList.end())
@@ -408,7 +409,7 @@ void TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedCluster(const Cluster *cons
         }
     }
 
-    //std::cout << "left loop" << std::endl;
+    std::cout << "left loop" << std::endl;
     
     if (!pBestMatchedCluster)
     {
