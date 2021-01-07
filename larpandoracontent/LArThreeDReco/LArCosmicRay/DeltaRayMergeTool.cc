@@ -85,7 +85,6 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
 
     while (mergeMade)
     {
-        std::cout << "IN LOOP" << std::endl;
         mergeMade = false;
 
         ClusterVector sortedKeyClusters;
@@ -114,11 +113,9 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
 
 	        if (this->MakeOneCommonViewMerges(pAlgorithm, elementList))
 	        {
-                std::cout << "HERE" << std::endl;
                 mergeMade = true; mergesMade = true;
                 break;
             }
-            std::cout << "IN FUNCTION" << std::endl;
         }
     }
 
@@ -126,7 +123,6 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
     
     while (mergeMade)
     {
-        std::cout << "IN LOOP" << std::endl;
         mergeMade = false;
 
         ClusterVector sortedKeyClusters;
@@ -155,11 +151,9 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
 
             if (this->PickOutGoodMatches(pAlgorithm, elementList))
             {
-                std::cout << "HERE" << std::endl;
                 mergeMade = true; mergesMade = true;
                 break;
             }
-            std::cout << "HERE" << std::endl;
         }
     }
 }
@@ -171,8 +165,6 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
     const HitTypeVector hitTypeVector1({TPC_VIEW_U, TPC_VIEW_V});
     const HitTypeVector hitTypeVector2({TPC_VIEW_V, TPC_VIEW_W});
 
-    bool mergeMade(true);
-    
     for (const TensorType::Element &element1 : elementList)
     {
         for (const TensorType::Element &element2 : elementList)
@@ -198,7 +190,7 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                             const Cluster *pClusterToEnlarge(element1.GetCluster(mergeHitType)), *pClusterToDelete(element2.GetCluster(mergeHitType));
 
                             if (this->AreAssociated(element1, element2, mergeHitType))
-                            {                                    
+                            {
                                 pAlgorithm->UpdateUponDeletion(pClusterToEnlarge); pAlgorithm->UpdateUponDeletion(pClusterToDelete);
                                     
                                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm,
@@ -207,7 +199,7 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                                     
                                 pAlgorithm->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
 
-                                mergeMade = true;
+                                return true;
                             }
                         }
                     }
@@ -216,7 +208,7 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
         }
     }
 
-    return mergeMade;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -380,8 +372,6 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
 {
     const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
     
-    bool mergesMade(false);
-    
     for (const TensorType::Element &element1 : elementList)
     {
         for (const TensorType::Element &element2 : elementList)
@@ -437,8 +427,6 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                         
                     if (reducedChiSquared < 1.f)
                     {
-                        mergesMade = true;
-                            
                         pAlgorithm->UpdateUponDeletion(pClusterToEnlarge1); pAlgorithm->UpdateUponDeletion(pClusterToDelete1);
 
                         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm,
@@ -456,13 +444,15 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pClusterToEnlarge2, pClusterToDelete2));
 			   
                         pAlgorithm->UpdateForNewClusters({pClusterToEnlarge2}, {nullptr});
+
+                        return true;
                     }
                 }
             }
         }
     }
     
-    return mergesMade;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
