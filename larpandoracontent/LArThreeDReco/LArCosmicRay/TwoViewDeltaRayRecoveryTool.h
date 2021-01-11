@@ -1,12 +1,12 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMergeTool.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayRecoveryTool.h
  *
  *  @brief  Header file for the two view delta ray merge tool class
  *
  *  $Log: $
  */
-#ifndef TWO_VIEW_DELTA_RAY_MERGE_TOOL_H
-#define TWO_VIEW_DELTA_RAY_MERGE_TOOL_H 1
+#ifndef TWO_VIEW_DELTA_RAY_RECOVERY_TOOL_H
+#define TWO_VIEW_DELTA_RAY_RECOVERY_TOOL_H 1
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMatchingAlgorithm.h"
 
@@ -14,16 +14,15 @@ namespace lar_content
 {
 
 /**
- *  @brief  DeltaRayMergeTool class
+ *  @brief  DeltaRayRecoveryTool class
  */
-class TwoViewDeltaRayMergeTool : public DeltaRayMatrixTool
+class TwoViewDeltaRayRecoveryTool : public DeltaRayMatrixTool
 {
 public:
-    typedef std::vector<pandora::HitType> HitTypeVector;
     /**
      *  @brief  Default constructor
      */
-    TwoViewDeltaRayMergeTool();
+    TwoViewDeltaRayRecoveryTool();
 
 private:
     bool Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix);    
@@ -37,4 +36,4 @@ private:
 
 } // namespace lar_content
 
-#endif // #ifndef TWO_VIEW_DELTA_RAY_MERGE_TOOL_H
+#endif // #ifndef TWO_VIEW_DELTA_RAY_RECOVERY_TOOL_H

@@ -121,12 +121,19 @@ void DeltaRayParentAlgorithm::FindParentPfo(const PfoLengthMap &pfoLengthMap, co
         if (lengthSquared > testIter->second)
             continue;
 
-        const float distance(LArPfoHelper::GetTwoDSeparation(pPfo, pTestParent));
-
-        if (distance < bestDistance)
+        try
         {
-            pParentPfo = pTestParent;
-            bestDistance = distance;
+            const float distance(LArPfoHelper::GetTwoDSeparation(pPfo, pTestParent));
+
+            if (distance < bestDistance)
+            {
+                pParentPfo = pTestParent;
+                bestDistance = distance;
+            }
+        }
+        catch (StatusCodeException &)
+        {
+            continue;
         }
     }
 }

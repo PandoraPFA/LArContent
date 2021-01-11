@@ -35,19 +35,27 @@ public:
     typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
     typedef std::map<const pandora::Cluster*, const pandora::ParticleFlowObject*> ClusterToPfoMap;
     typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterProximityMap;    
-    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitAssociationMap;
     typedef std::map<const pandora::Cluster*, pandora::CaloHitList> HitOwnershipMap;
 
     typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
+
+    typedef TwoViewDeltaRayMatchingAlgorithm::MatchingType::MatrixType MatrixType;
+    typedef std::vector<pandora::HitType> HitTypeVector;
     
     /**
      *  @brief  Default constructor
      */
     TwoViewDeltaRayMatchingAlgorithm();
 
+    void GetConnectedElements(const pandora::Cluster *const pClusterA, const bool hasAssociatedMuon, MatrixType::ElementList &elementList, pandora::ClusterSet &checkedClusters);
+
+    void GetUnambiguousElements(const bool hasAssociatedMuon, MatrixType::ElementList &elementList);
+
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
+
+    bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
 
     void RemoveThirdViewCluster(const pandora::Cluster *const pCluster);
 
@@ -57,48 +65,68 @@ public:
 
     pandora::StatusCode PerformMatching(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV, const pandora::CaloHitList &clusterW,
         float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints, XOverlap &XOverlap) const;
+
+    bool CreatePfo(const MatrixType::Element &element);
     
 private:
     void PrepareInputClusters(pandora::ClusterList &selectedClusters);
 
     void FillHitToClusterMap(const pandora::HitType &hitType);
+    void AddToClusterMap(const pandora::Cluster *const pCluster);
     void FillClusterProximityMap(const pandora::HitType &hitType);
+    void BuildKDTree(const pandora::HitType &hitType);
+    void AddToClusterProximityMap(const pandora::Cluster *const pCluster);
     void FillClusterToPfoMap(const pandora::HitType &hitType);
-    void FillHitAssociationMap();    
-    
+    void FillStrayClusterList(const pandora::HitType &hitType);
+
     void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3);
     
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         TrackTwoViewTopologyOverlapResult &overlapResult) const;
 
-    void GetNearbyMuonPfos(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::PfoList &nearbyMuonPfos) const;
-    
-    void AreClustersCompatible(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, pandora::PfoList &commonMuonPfoList) const;
+    void FindCommonMuonParents(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, pandora::PfoList &commonMuonPfoList) const;
+
+    void GetNearbyMuonPfos(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::PfoList &nearbyMuonPfos) const;    
 
     pandora::StatusCode GetProjectedPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         pandora::CartesianPointVector &projectedPositions) const;
-
+    
     void CollectHits(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::CartesianPointVector &projectedPositions,
         pandora::ClusterList &matchedClusters) const;
 
     void GetBestMatchedCluster(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::PfoList &commonMuonPfoList,
         const pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster, float &reducedChiSquared) const;
     
-    void CollectAssociatedHits(const pandora::CaloHit *const pSeedCaloHit, const pandora::CaloHit *const pCurrentCaloHit,
-        const HitAssociationMap &hitAssociationMap, const float xMin, const float xMax, pandora::CaloHitList &associatedHitList) const;
-
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,
         const pandora::CaloHitList &projectedHits, TrackTwoViewTopologyOverlapResult &overlapResult) const;
 
-    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector) const;
-
-    void GetBestMatchedAvailableCluster(const pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster) const;
-    
     void ExamineOverlapContainer();
     void TidyUp();    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    void MergeThirdView(const MatrixType::Element &element, const pandora::Cluster *const pSeedCluster);
 
+    pandora::StatusCode CollectDeltaRayHits(const MatrixType::Element &element,
+        const pandora::ParticleFlowObject *const pParentMuon, pandora::CaloHitList &collectedHits) const;
+
+    pandora::StatusCode ProjectMuonPositions(const pandora::HitType &thirdViewHitType, const pandora::ParticleFlowObject *const pParentMuon,
+        pandora::CartesianPointVector &projectedPositions) const;
+
+    pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector,
+        const pandora::Cluster *const pCluster) const;
+
+    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector) const;
+
+    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
+
+    void GetClosestPositions(const pandora::CartesianPointVector &pCluster1, const pandora::Cluster *const pCluster2, pandora::CartesianVector &outputPosition1,
+        pandora::CartesianVector &outputPosition2) const;
+
+    const pandora::Cluster *SplitCluster(const pandora::Cluster *const pMuonCluster, pandora::CaloHitList &collectedHits) const;
+
+    void GetBestMatchedAvailableCluster(const pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster) const;
+
+    void GrowThirdView(const MatrixType::Element &element, ProtoParticle &protoParticle);
 
     
     void GetClusterSpanX(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax) const;
@@ -106,7 +134,6 @@ private:
 
     //WILL NEED AN UPDATE AND DELETE CLUSTER FUNCTION
 
-    
     HitToClusterMap       m_hitToClusterMap1;
     HitToClusterMap       m_hitToClusterMap2;
 
@@ -118,6 +145,9 @@ private:
     
     ClusterToPfoMap       m_clusterToPfoMap1;
     ClusterToPfoMap       m_clusterToPfoMap2;
+
+    pandora::ClusterList m_strayClusterList1;
+    pandora::ClusterList m_strayClusterList2;
     
     typedef std::vector<DeltaRayMatrixTool*> MatrixToolVector;
     MatrixToolVector                  m_algorithmToolVector;          ///< The algorithm tool vector
@@ -133,7 +163,6 @@ private:
     std::string m_inputClusterListName;
     std::string m_muonPfoListName;
     std::string m_deltaRayPfoListName;
-    HitAssociationMap m_hitAssociationMap;
 
 };
 

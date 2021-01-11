@@ -12,6 +12,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMatchingAlgorithm.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 using namespace pandora;
 
@@ -19,7 +20,7 @@ namespace lar_content
 {
 
 TwoViewDeltaRayMatchingAlgorithm::TwoViewDeltaRayMatchingAlgorithm()  :
-    m_nMaxMatrixToolRepeats(1000),
+    m_nMaxMatrixToolRepeats(10),
     m_minClusterCaloHits(3),
     m_searchRegion1D(3.f),       
     m_xOverlapWindow(1.f),
@@ -30,21 +31,139 @@ TwoViewDeltaRayMatchingAlgorithm::TwoViewDeltaRayMatchingAlgorithm()  :
 {
 }
 
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::GetConnectedElements(const Cluster *const pClusterA, const bool hasAssociatedMuon, MatrixType::ElementList &elementList, ClusterSet &checkedClusters)
+{
+    if (checkedClusters.count(pClusterA))
+        return;
+
+    if (!pClusterA->IsAvailable())
+        return;
+
+    auto &theMatrix(this->GetMatchingControl().GetOverlapMatrix());
+    
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pClusterA));
+    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));
+    
+    if (hitTypeIndex == 1)
+        checkedClusters.insert(pClusterA);
+    
+    auto &navigationMap((hitTypeIndex == 1) ? theMatrix.GetClusterNavigationMap12() : theMatrix.GetClusterNavigationMap21());
+
+    auto iter = navigationMap.find(pClusterA);
+
+    if (iter == navigationMap.end())
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+    
+    for (const Cluster *const pClusterB : iter->second)
+    {
+        if (checkedClusters.count(pClusterB))
+            continue;
+
+        if (!pClusterB->IsAvailable())
+            continue; 
+
+        const Cluster *const pCluster1((hitTypeIndex == 1) ? pClusterA : pClusterB);
+        const Cluster *const pCluster2((hitTypeIndex == 1) ? pClusterB : pClusterA);
+
+        if (pCluster1 == pCluster2)
+            throw StatusCodeException(STATUS_CODE_FAILURE);      
+            
+        // now find in the tensor
+        try
+        {
+            auto &overlapResult(theMatrix.GetOverlapResult(pCluster1, pCluster2));
+            
+            const PfoList &commonMuonPfoList(overlapResult.GetCommonMuonPfoList());
+
+            if (!hasAssociatedMuon && commonMuonPfoList.size())
+                continue;
+
+            if (hasAssociatedMuon && commonMuonPfoList.empty())
+                continue;
+                
+            bool found = false;
+            for (const MatrixType::Element &t : elementList)
+            {
+                if ((t.GetCluster1() == pCluster1) && (t.GetCluster2() == pCluster2))
+                    found = true;
+            }
+
+            if (!found)
+            {
+                MatrixType::Element element(pCluster1, pCluster2, overlapResult);
+                elementList.push_back(element);
+            }
+            
+            this->GetConnectedElements(pClusterB, hasAssociatedMuon, elementList, checkedClusters);
+        }
+        catch (StatusCodeException &)
+        {
+            continue;
+        }
+    }
+
+    std::sort(elementList.begin(), elementList.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+
+void TwoViewDeltaRayMatchingAlgorithm::GetUnambiguousElements(const bool hasAssociatedMuon, MatrixType::ElementList &elementList)
+{
+    auto &theMatrix(this->GetMatchingControl().GetOverlapMatrix());
+
+    for (auto iter1 = theMatrix.begin(); iter1 != theMatrix.end(); ++iter1)
+    {
+        ClusterSet checkedClusters;
+        MatrixType::ElementList tempElementList;
+        this->GetConnectedElements(iter1->first, hasAssociatedMuon, tempElementList, checkedClusters);
+
+        if (tempElementList.size() != 1)
+            continue;
+
+        MatrixType::Element &unambiguousElement(tempElementList.front());
+        const Cluster *const pCluster1(unambiguousElement.GetCluster1()), *const pCluster2(unambiguousElement.GetCluster2());
+        
+        // ATTN With HIT_CUSTOM definitions, it is possible to navigate from different U clusters to same combination
+        if (iter1->first != pCluster1)
+            continue;
+
+        if (!pCluster1 || !pCluster2)
+            continue;
+
+        auto iter2 = iter1->second.find(pCluster2);
+        if (iter1->second.end() == iter2)
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+
+        MatrixType::Element element(pCluster1, pCluster2, iter2->second);
+        elementList.push_back(element);
+    }
+
+    std::sort(elementList.begin(), elementList.end());
+}
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TwoViewDeltaRayMatchingAlgorithm::SelectInputClusters(const ClusterList *const pInputClusterList, ClusterList &selectedClusterList) const
 {
     for (const Cluster *const pCluster : *pInputClusterList)
     {
-        if (!pCluster->IsAvailable())
-            continue;
-        
-        if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
-            continue;
-
-        selectedClusterList.push_back(pCluster);
+        if ((pCluster->IsAvailable()) && (this->DoesClusterPassTesorThreshold(pCluster)))
+            selectedClusterList.push_back(pCluster);
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TwoViewDeltaRayMatchingAlgorithm::DoesClusterPassTesorThreshold(const Cluster *const pCluster) const
+{
+    if (pCluster->GetNCaloHits() < m_minClusterCaloHits)
+        return false;
+
+    return true;
+}    
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -54,15 +173,150 @@ void TwoViewDeltaRayMatchingAlgorithm::PrepareInputClusters(ClusterList &prepare
         return;
 
     const HitType &hitType(LArClusterHelper::GetClusterHitType(preparedClusterList.front()));
-    
+
     this->FillHitToClusterMap(hitType);
     this->FillClusterProximityMap(hitType);
     this->FillClusterToPfoMap(hitType);
-    this->FillHitAssociationMap();
+}
+    
+//------------------------------------------------------------------------------------------------------------------------------------------     
+
+void TwoViewDeltaRayMatchingAlgorithm::FillHitToClusterMap(const HitType &hitType)
+{
+    const ClusterList &inputClusterList(this->GetInputClusterList(hitType));    
+    for (const Cluster *const pCluster : inputClusterList)
+        this->AddToClusterMap(pCluster);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::AddToClusterMap(const Cluster *const pCluster)
+{
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));
+    HitToClusterMap &hitToClusterMap((hitTypeIndex == 1) ? m_hitToClusterMap1 : m_hitToClusterMap2);
+
+    CaloHitList caloHitList;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+        hitToClusterMap[pCaloHit] = pCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::BuildKDTree(const HitType &hitType)
+{
+    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));    
+    const HitToClusterMap &hitToClusterMap((hitTypeIndex == 1) ? m_hitToClusterMap1 : m_hitToClusterMap2);
+    HitKDTree2D &kdTree((hitTypeIndex == 1) ? m_kdTree1 : m_kdTree2);
+    
+    CaloHitList allCaloHits;
+    for (auto &entry : hitToClusterMap)
+        allCaloHits.push_back(entry.first);
+    
+    HitKDNode2DList hitKDNode2DList;
+    KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
+
+    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+
+void TwoViewDeltaRayMatchingAlgorithm::FillClusterProximityMap(const HitType &hitType)
+{
+    this->BuildKDTree(hitType);
+    
+    const ClusterList &inputClusterList(this->GetInputClusterList(hitType));    
+    
+    for (const Cluster *const pCluster : inputClusterList)
+        this->AddToClusterProximityMap(pCluster);
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------     
+
+void TwoViewDeltaRayMatchingAlgorithm::AddToClusterProximityMap(const Cluster *const pCluster)
+{
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));   
+    const HitToClusterMap &hitToClusterMap((hitTypeIndex == 1) ? m_hitToClusterMap1 : m_hitToClusterMap2);
+    HitKDTree2D &kdTree((hitTypeIndex == 1) ? m_kdTree1 : m_kdTree2);
+    ClusterProximityMap &clusterProximityMap((hitTypeIndex == 1) ? m_clusterProximityMap1 : m_clusterProximityMap2);
+
+    CaloHitList caloHitList;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {             
+        KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
+
+        HitKDNode2DList found;
+        kdTree.search(searchRegionHits, found);
+            
+        for (const auto &hit : found)
+        {
+            const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
+            
+            if (pNearbyCluster == pCluster)
+                continue;
+                
+            if (std::find(caloHitList.begin(), caloHitList.end(), hit.data) != caloHitList.end())
+                continue;
+                
+            ClusterList  &nearbyClusterList(clusterProximityMap[pCluster]);
+
+            if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
+                nearbyClusterList.push_back(pNearbyCluster);
+            
+            ClusterList &invertedNearbyClusterList(clusterProximityMap[pNearbyCluster]);
+            
+            if (std::find(invertedNearbyClusterList.begin(), invertedNearbyClusterList.end(), pCluster) == invertedNearbyClusterList.end())
+                invertedNearbyClusterList.push_back(pCluster);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::FillClusterToPfoMap(const HitType &hitType)
+{
+    const PfoList *pMuonPfoList(nullptr);
+    
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
+        m_muonPfoListName, pMuonPfoList));
+
+    if ((!pMuonPfoList) || pMuonPfoList->empty())
+        return;
+
+    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));      
+    ClusterToPfoMap &clusterToPfoMap((hitTypeIndex == 1) ? m_clusterToPfoMap1 : m_clusterToPfoMap2);
+    
+    for (const ParticleFlowObject *const pPfo : *pMuonPfoList)
+    {
+        ClusterList pfoClusters;
+        LArPfoHelper::GetClusters(pPfo, hitType, pfoClusters);
+        for (const Cluster *const pCluster : pfoClusters)
+            clusterToPfoMap[pCluster] = pPfo;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::FillStrayClusterList(const HitType &hitType)
+{
+    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));   
+    ClusterList &strayClusterList((hitTypeIndex == 1) ? m_strayClusterList1 : m_strayClusterList2);
+
+    const ClusterList &inputClusterList(this->GetInputClusterList(hitType));
+    
+    for (const Cluster *const pCluster : inputClusterList)
+    {
+        if ((!this->DoesClusterPassTesorThreshold(pCluster)) && (pCluster->IsAvailable()))
+            strayClusterList.push_back(pCluster);
+    }
+}    
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
     
 void TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
@@ -74,56 +328,9 @@ void TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *con
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------     
-    
-void TwoViewDeltaRayMatchingAlgorithm::RemoveThirdViewCluster(const Cluster *const pCluster)
-{
-    std::cout << "REMOVING CLUSTER..." << std::endl;
-
-    std::cout << "REMOVED CLUSTER: " << pCluster << std::endl;
-    
-    auto &theMatrix(this->GetMatchingControl().GetOverlapMatrix());
-
-    for (auto iter1 = theMatrix.begin(); iter1 != theMatrix.end(); ++iter1)
-    {
-        auto iter2(iter1->second);
-        
-        for (auto &entry : iter2)
-        {
-            TrackTwoViewTopologyOverlapResult &overlapResult(entry.second);
-
-            ClusterList matchedClusters(overlapResult.GetMatchedClusterList());
-
-            auto matchedClustersIter(std::find(matchedClusters.begin(), matchedClusters.end(), pCluster));
-
-            if (matchedClustersIter == matchedClusters.end())
-                continue;
-            
-            matchedClusters.erase(matchedClustersIter);
-
-            std::cout << "pCluster1: " << (iter1->first) << std::endl;
-            std::cout << "pCluster2: " << (entry.first) << std::endl;            
-
-            //std::cout << "OVERLAP LIST SIZE BEFORE: " << overlapResult.GetMatchedClusterList().size() << std::endl;
-            //overlapResult.SetMatchedClusterList(matchedClusters);
-            //std::cout << "OVERLAP LIST SIZE AFTER: " << overlapResult.GetMatchedClusterList().size() << std::endl;            
-
-            const Cluster *pBestMatchedCluster(nullptr); float reducedChiSquared(1.5f);
-            this->GetBestMatchedCluster(iter1->first, entry.first, overlapResult.GetCommonMuonPfoList(), matchedClusters, pBestMatchedCluster, reducedChiSquared);
-
-            overlapResult = TrackTwoViewTopologyOverlapResult(overlapResult.GetXOverlap(), overlapResult.GetCommonMuonPfoList(), pBestMatchedCluster, matchedClusters, reducedChiSquared);
-	    theMatrix.ReplaceOverlapResult(iter1->first, entry.first, overlapResult);
-            //overlapResult.SetBestMatchedCluster(pBestMatchedCluster);
-        }
-    }
-
-    //std::cout << "ET FIN" << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------     
 
 StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, TrackTwoViewTopologyOverlapResult &overlapResult) const
 {
-    // Check the overlap of the two clusters
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     pCluster1->GetClusterSpanX(xMin1, xMax1); 
     pCluster2->GetClusterSpanX(xMin2, xMax2); 
@@ -136,15 +343,17 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluste
         return STATUS_CODE_NOT_FOUND;
 
     PfoList commonMuonPfoList;
-    this->AreClustersCompatible(pCluster1, pCluster2, commonMuonPfoList);
+    this->FindCommonMuonParents(pCluster1, pCluster2, commonMuonPfoList);
     
-    if (commonMuonPfoList.empty())
-        return STATUS_CODE_NOT_FOUND;
+    //if (commonMuonPfoList.size())
+    //return STATUS_CODE_NOT_FOUND;
 
     // GetProjectedPositions
     CartesianPointVector projectedPositions;
-    if (this->GetProjectedPositions(pCluster1, pCluster2, projectedPositions) == STATUS_CODE_NOT_FOUND)
-        return STATUS_CODE_NOT_FOUND;
+    StatusCode status(this->GetProjectedPositions(pCluster1, pCluster2, projectedPositions));
+    
+    if (status != STATUS_CODE_SUCCESS)
+        return status;
 
     // ATTN: Find all matched clusters, including unavailable
     ClusterList matchedClusterList;
@@ -156,13 +365,6 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluste
     float reducedChiSquared(1.5f);    
     const Cluster *pBestMatchedCluster(nullptr);
     this->GetBestMatchedCluster(pCluster1, pCluster2, commonMuonPfoList, matchedClusterList, pBestMatchedCluster, reducedChiSquared);
-
-    /*
-    if (!pBestMatchedCluster)
-    {
-        return STATUS_CODE_NOT_FOUND;
-    }
-    */
 
     //ATTN: Ignore if other clusters matches have more hits
     if (pBestMatchedCluster && (pBestMatchedCluster->IsAvailable()))
@@ -187,7 +389,7 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewDeltaRayMatchingAlgorithm::AreClustersCompatible(const Cluster *const pCluster1, const Cluster *const pCluster2, PfoList &commonMuonPfoList) const
+void TwoViewDeltaRayMatchingAlgorithm::FindCommonMuonParents(const Cluster *const pCluster1, const Cluster *const pCluster2, PfoList &commonMuonPfoList) const
 {
     ClusterList consideredClusters1, consideredClusters2;
     PfoList nearbyMuonPfos1, nearbyMuonPfos2;
@@ -241,24 +443,50 @@ void TwoViewDeltaRayMatchingAlgorithm::GetNearbyMuonPfos(const Cluster *const pC
         this->GetNearbyMuonPfos(pNearbyCluster, consideredClusters, nearbyMuonPfos);
     }
 }
+//------------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode TwoViewDeltaRayMatchingAlgorithm::ProjectMuonPositions(const HitType &thirdViewHitType, const ParticleFlowObject *const pParentMuon,
+    CartesianPointVector &projectedPositions) const
+{
+    const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
+
+    for (const HitType &hitType1 : hitTypeVector)
+    {
+        if (hitType1 == thirdViewHitType)
+            continue;
+        
+        for (const HitType &hitType2 : hitTypeVector)
+        {
+            if ((hitType2 == thirdViewHitType) || (hitType1 == hitType2))
+                continue;
+
+            ClusterList muonClusterList1, muonClusterList2;
+            LArPfoHelper::GetClusters(pParentMuon, hitType1, muonClusterList1);
+            LArPfoHelper::GetClusters(pParentMuon, hitType2, muonClusterList2);
+            
+            if ((muonClusterList1.size() != 1) || (muonClusterList1.size() != 1))
+                return STATUS_CODE_NOT_FOUND;
+
+            return this->GetProjectedPositions(muonClusterList1.front(), muonClusterList2.front(), projectedPositions);
+        }
+    }
+
+    return STATUS_CODE_NOT_FOUND;
+}
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TwoViewDeltaRayMatchingAlgorithm::GetProjectedPositions(const Cluster *const pCluster1, const Cluster *const pCluster2,
     CartesianPointVector &projectedPositions) const
 {
-    float xMin1(-std::numeric_limits<float>::max()), xMax1(+std::numeric_limits<float>::max());
-    float xMin2(-std::numeric_limits<float>::max()), xMax2(+std::numeric_limits<float>::max());
-
-    pCluster1->GetClusterSpanX(xMin1, xMax1);
-    pCluster2->GetClusterSpanX(xMin2, xMax2);
+    float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
+    pCluster1->GetClusterSpanX(xMin1, xMax1); 
+    pCluster2->GetClusterSpanX(xMin2, xMax2); 
 
     const float xPitch(0.5 * m_xOverlapWindow);
     const float xMin(std::max(xMin1, xMin2) - xPitch);
     const float xMax(std::min(xMax1, xMax2) + xPitch);
     const float xOverlap(xMax - xMin);
 
-    // this has already been done...
     if (xOverlap < std::numeric_limits<float>::epsilon())
          return STATUS_CODE_NOT_FOUND;
     
@@ -266,7 +494,7 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::GetProjectedPositions(const Cluster
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
 
     if (hitType1 == hitType2)
-        return STATUS_CODE_FAILURE;
+        throw STATUS_CODE_FAILURE;
 
     const unsigned int nPoints(1 + static_cast<unsigned int>(xOverlap / xPitch));
 
@@ -286,7 +514,6 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::GetProjectedPositions(const Cluster
             const float z1(0.5f * (zMin1 + zMax1));
             const float z2(0.5f * (zMin2 + zMax2));
 
-            // could make use of the chi-squared?
             float chi2;
             CartesianVector projection(0.f, 0.f, 0.f);
             LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, CartesianVector(x, 0.f, z1), CartesianVector(x, 0.f, z2), projection, chi2);
@@ -296,7 +523,7 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::GetProjectedPositions(const Cluster
         catch(StatusCodeException &statusCodeException)
         {
             if (statusCodeException.GetStatusCode() != STATUS_CODE_NOT_FOUND)
-                return statusCodeException.GetStatusCode();
+                throw statusCodeException.GetStatusCode();
 
             continue;
         }
@@ -308,25 +535,6 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::GetProjectedPositions(const Cluster
     
     return STATUS_CODE_SUCCESS;
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float TwoViewDeltaRayMatchingAlgorithm::GetClosestDistance(const CaloHit *const pCaloHit, const CartesianPointVector &cartesianPointVector) const
-{
-    float shortestDistanceSquared(std::numeric_limits<float>::max());
-    const CartesianVector referencePoint(pCaloHit->GetPositionVector());
-
-    for (const CartesianVector &testPosition : cartesianPointVector)
-    {
-        const float separationSquared((testPosition - referencePoint).GetMagnitudeSquared());
-
-        if (separationSquared < shortestDistanceSquared)
-            shortestDistanceSquared = separationSquared;
-    }
-
-    return std::sqrt(shortestDistanceSquared);
-}
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
@@ -391,86 +599,71 @@ void TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedCluster(const Cluster *cons
     
     for (const ParticleFlowObject *const pMuonPfo : commonMuonPfoList)
         LArPfoHelper::GetClusters(pMuonPfo, LArClusterHelper::GetClusterHitType(pInputClusterList->front()), muonClusterList);
-    
-    unsigned int highestNHits(0);
-    for (const Cluster *const pMatchedCluster : matchedClusters)
-    {
-        std::cout << "pMatchedCluster: " << pMatchedCluster << std::endl;
-        if (!pMatchedCluster->IsAvailable())
+
+    ClusterSet checkedClusters;
+    while (true)
+    {    
+        pBestMatchedCluster = nullptr;
+
+        unsigned int highestNHits(0);
+        for (const Cluster *const pMatchedCluster : matchedClusters)
         {
-            if (std::find(muonClusterList.begin(), muonClusterList.end(), pMatchedCluster) == muonClusterList.end())
-                continue;
-        }
+            //std::cout << "pMatchedCluster: " << pMatchedCluster << std::endl;
+
+	    if (checkedClusters.count(pMatchedCluster))
+	        continue;
+
+            if (!pMatchedCluster->IsAvailable())
+            {
+                if (std::find(muonClusterList.begin(), muonClusterList.end(), pMatchedCluster) == muonClusterList.end())
+                    continue;
+	    }
                 
-        if (pMatchedCluster->GetNCaloHits() > highestNHits)
+            if (pMatchedCluster->GetNCaloHits() > highestNHits)
+            {
+                highestNHits = pMatchedCluster->GetNCaloHits();
+                pBestMatchedCluster = pMatchedCluster;
+	    }
+	}
+
+        if (!pBestMatchedCluster)
         {
-            highestNHits = pMatchedCluster->GetNCaloHits();
-            pBestMatchedCluster = pMatchedCluster;
-        }
-    }
+            return;
+	}
 
-    std::cout << "left loop" << std::endl;
+	checkedClusters.insert(pBestMatchedCluster);
     
-    if (!pBestMatchedCluster)
-    {
-        //std::cout << "left funciton: null ptr" << std::endl;
-        return;
-    }
+	XOverlap xThreeViewOverlapObject(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+	float chiSquaredSum(0.f);
+	unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+
+	CaloHitList caloHitList1, caloHitList2, caloHitList3;
+	pCluster1->GetOrderedCaloHitList().FillCaloHitList(caloHitList1);
+	pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
+	pBestMatchedCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
     
-    XOverlap xThreeViewOverlapObject(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
-    float chiSquaredSum(0.f);
-    unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+	StatusCode status(this->PerformMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xThreeViewOverlapObject));
 
-    CaloHitList caloHitList1, caloHitList2, caloHitList3;
-    pCluster1->GetOrderedCaloHitList().FillCaloHitList(caloHitList1);
-    pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
-    pBestMatchedCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
-    
-    StatusCode status(this->PerformMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xThreeViewOverlapObject));
+	if (status == STATUS_CODE_NOT_FOUND)
+        {
+	    if (std::find(muonClusterList.begin(), muonClusterList.end(), pBestMatchedCluster) != muonClusterList.end())
+	    {
+	        continue;
+	    }
+            else
+            {
+	        std::cout << "THIS SHOULD NEVER HAPPEN" << std::endl;
+		throw StatusCodeException(status);
+	    }
+	}
 
-    if (status == STATUS_CODE_NOT_FOUND)
-    {
-        std::cout << "ISOBEL: THIS SHOULD NEVER HAPPEN" << std::endl;
-        throw StatusCodeException(status);
-    }
+        if (status != STATUS_CODE_SUCCESS)
+        { 
+            throw StatusCodeException(status);
+	}
 
-    if (status != STATUS_CODE_SUCCESS)
-    {
-        std::cout << "here" << std::endl;
-        throw StatusCodeException(status);
-    }
-
-    reducedChiSquared = (chiSquaredSum / nSamplingPoints);
-
-    //std::cout << "left function: at end" << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------       
-
-void TwoViewDeltaRayMatchingAlgorithm::CollectAssociatedHits(const CaloHit *const pSeedCaloHit, const CaloHit *const pCurrentCaloHit,
-    const HitAssociationMap &hitAssociationMap, const float xMin, const float xMax, CaloHitList &associatedHitList) const
-{
-    HitAssociationMap::const_iterator iter1 = hitAssociationMap.find(pCurrentCaloHit);
-    if (iter1 == hitAssociationMap.end())
-        return;
-
-    CaloHitVector caloHitVector(iter1->second.begin(), iter1->second.end());
-    std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
-
-    for (const CaloHit *const pAssociatedCaloHit : caloHitVector)
-    {
-        if (pAssociatedCaloHit == pSeedCaloHit)
-            continue;
-
-        if ((pAssociatedCaloHit->GetPositionVector().GetX() < xMin) || (pAssociatedCaloHit->GetPositionVector().GetX() > xMax))
-            continue;
-        
-        if (associatedHitList.end() != std::find(associatedHitList.begin(), associatedHitList.end(), pAssociatedCaloHit))
-            continue;
-
-        associatedHitList.push_back(pAssociatedCaloHit);
-
-        this->CollectAssociatedHits(pSeedCaloHit, pAssociatedCaloHit, hitAssociationMap, xMin, xMax, associatedHitList);
+	reducedChiSquared = (chiSquaredSum / nSamplingPoints);
+	return;
     }
 }
 
@@ -713,150 +906,439 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlH
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------     
-
-void TwoViewDeltaRayMatchingAlgorithm::FillHitToClusterMap(const HitType &hitType)
+    
+void TwoViewDeltaRayMatchingAlgorithm::RemoveThirdViewCluster(const Cluster *const pCluster)
 {
-    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));
-    HitToClusterMap &hitToClusterMap((hitTypeIndex == 1) ? m_hitToClusterMap1 : m_hitToClusterMap2);
+  //std::cout << "REMOVING CLUSTER..." << std::endl;
 
-    const ClusterList &inputClusterList(this->GetInputClusterList(hitType));    
-    for (const Cluster *const pCluster : inputClusterList)
+  //std::cout << "REMOVED CLUSTER: " << pCluster << std::endl;
+    
+    auto &theMatrix(this->GetMatchingControl().GetOverlapMatrix());
+
+    for (auto iter1 = theMatrix.begin(); iter1 != theMatrix.end(); ++iter1)
     {
-        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+        auto iter2(iter1->second);
+        
+        for (auto &entry : iter2)
         {
-            for (const CaloHit *const pCaloHit : *mapEntry.second)
-                hitToClusterMap[pCaloHit] = pCluster;
+            TrackTwoViewTopologyOverlapResult &overlapResult(entry.second);
+
+            ClusterList matchedClusters(overlapResult.GetMatchedClusterList());
+
+            auto matchedClustersIter(std::find(matchedClusters.begin(), matchedClusters.end(), pCluster));
+
+            if (matchedClustersIter == matchedClusters.end())
+                continue;
+            
+            matchedClusters.erase(matchedClustersIter);
+
+            //std::cout << "pCluster1: " << (iter1->first) << std::endl;
+            //std::cout << "pCluster2: " << (entry.first) << std::endl;            
+
+            //std::cout << "OVERLAP LIST SIZE BEFORE: " << overlapResult.GetMatchedClusterList().size() << std::endl;
+            //overlapResult.SetMatchedClusterList(matchedClusters);
+            //std::cout << "OVERLAP LIST SIZE AFTER: " << overlapResult.GetMatchedClusterList().size() << std::endl;            
+
+            const Cluster *pBestMatchedCluster(nullptr); float reducedChiSquared(1.5f);
+            this->GetBestMatchedCluster(iter1->first, entry.first, overlapResult.GetCommonMuonPfoList(), matchedClusters, pBestMatchedCluster, reducedChiSquared);
+
+            overlapResult = TrackTwoViewTopologyOverlapResult(overlapResult.GetXOverlap(), overlapResult.GetCommonMuonPfoList(), pBestMatchedCluster, matchedClusters, reducedChiSquared);
+	    theMatrix.ReplaceOverlapResult(iter1->first, entry.first, overlapResult);
+            //overlapResult.SetBestMatchedCluster(pBestMatchedCluster);
         }
     }
+
+    //std::cout << "ET FIN" << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewDeltaRayMatchingAlgorithm::FillClusterProximityMap(const HitType &hitType)
+bool TwoViewDeltaRayMatchingAlgorithm::CreatePfo(const MatrixType::Element &element)
 {
-    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));    
-    const HitToClusterMap &hitToClusterMap((hitTypeIndex == 1) ? m_hitToClusterMap1 : m_hitToClusterMap2);
+    ProtoParticle protoParticle;
+    protoParticle.m_clusterList.push_back(element.GetCluster1());
+    protoParticle.m_clusterList.push_back(element.GetCluster2());
 
-    CaloHitList allCaloHits;
-    for (auto &entry : hitToClusterMap)
-        allCaloHits.push_back(entry.first);
-    
-    HitKDTree2D &kdTree((hitTypeIndex == 1) ? m_kdTree1 : m_kdTree2);
-    HitKDNode2DList hitKDNode2DList;
+    const Cluster *const pBestMatchedCluster(element.GetOverlapResult().GetBestMatchedCluster());
 
-    KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
-    kdTree.build(hitKDNode2DList, hitsBoundingRegion2D);
-
-    const ClusterList &inputClusterList(this->GetInputClusterList(hitType));    
-    ClusterProximityMap &clusterProximityMap((hitTypeIndex == 1) ? m_clusterProximityMap1 : m_clusterProximityMap2);
-    
-    for (const Cluster *const pCluster : inputClusterList)
+    if (pBestMatchedCluster)
     {
-        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
+        this->GrowThirdView(element, protoParticle);
+    }
+    else
+    {
+        std::cout << "TwoViewCreation" << std::endl;
+    }
 
-        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+    ProtoParticleVector protoParticleVector({protoParticle});
+
+    return (this->CreateThreeDParticles(protoParticleVector));
+}
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::GrowThirdView(const MatrixType::Element &element, ProtoParticle &protoParticle)
+{
+    const PfoList &commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
+    const Cluster *const pBestMatchedCluster(element.GetOverlapResult().GetBestMatchedCluster());
+    const HitType &thirdViewHitType(LArClusterHelper::GetClusterHitType(pBestMatchedCluster));
+    const ParticleFlowObject *pMatchedMuonPfo(nullptr);
+    
+    for (const ParticleFlowObject *const pMuonPfo : commonMuonPfoList)
+    {
+        ClusterList muonClusterList;
+        LArPfoHelper::GetClusters(pMuonPfo, thirdViewHitType, muonClusterList);
+
+        if (std::find(muonClusterList.begin(), muonClusterList.end(), pBestMatchedCluster) != muonClusterList.end())
+            pMatchedMuonPfo = pMuonPfo;
+    }
+    
+    if (pMatchedMuonPfo)
+    {
+        CaloHitList deltaRayHits;
+        if ((this->CollectDeltaRayHits(element, pMatchedMuonPfo, deltaRayHits) != STATUS_CODE_SUCCESS) || (deltaRayHits.empty()))
         {
-            for (const CaloHit *const pCaloHit : *mapEntry.second)
+            const Cluster *pSeedCluster(nullptr);
+            this->GetBestMatchedAvailableCluster(element.GetOverlapResult().GetMatchedClusterList(), pSeedCluster);
+            
+            if (pSeedCluster)
             {
-                KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
+                this->MergeThirdView(element, pSeedCluster);
 
-                HitKDNode2DList found;
-                kdTree.search(searchRegionHits, found);
-
-                for (const auto &hit : found)
-                {
-                    ClusterList  &nearbyClusterList(clusterProximityMap[pCluster]);
-                    const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
-
-                    if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
-                        nearbyClusterList.push_back(pNearbyCluster);
-                }
+                this->RemoveThirdViewCluster(pSeedCluster);
+                protoParticle.m_clusterList.push_back(pSeedCluster);
             }
         }
+        else
+        {
+            const Cluster *const pSeedCluster(this->SplitCluster(pBestMatchedCluster, deltaRayHits));
+
+            this->MergeThirdView(element, pSeedCluster);
+            
+            this->RemoveThirdViewCluster(pSeedCluster);
+            protoParticle.m_clusterList.push_back(pSeedCluster);
+        }   
     }
+    else
+    {
+        this->MergeThirdView(element, pBestMatchedCluster);
+
+        this->RemoveThirdViewCluster(pBestMatchedCluster);
+        protoParticle.m_clusterList.push_back(pBestMatchedCluster);
+    }
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewDeltaRayMatchingAlgorithm::FillClusterToPfoMap(const HitType &hitType)
+StatusCode TwoViewDeltaRayMatchingAlgorithm::CollectDeltaRayHits(const MatrixType::Element &element, const ParticleFlowObject *const pParentMuon, CaloHitList &collectedHits) const
 {
-    const unsigned int hitTypeIndex(m_matchingControl.m_hitTypeToIndexMap.at(hitType));      
-    ClusterToPfoMap &clusterToPfoMap((hitTypeIndex == 1) ? m_clusterToPfoMap1 : m_clusterToPfoMap2);
+    CartesianPointVector deltaRayProjectedPositions;
+    StatusCode statusDR(this->GetProjectedPositions(element.GetCluster1(), element.GetCluster2(), deltaRayProjectedPositions));
     
-    const PfoList *pMuonPfoList(nullptr);
+    if (statusDR != STATUS_CODE_SUCCESS)
+        return statusDR;
     
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        m_muonPfoListName, pMuonPfoList));
+    const HitType &thirdViewHitType(LArClusterHelper::GetClusterHitType(element.GetOverlapResult().GetBestMatchedCluster()));
+    
+    CartesianPointVector muonProjectedPositions;
+    StatusCode statusCR(this->ProjectMuonPositions(thirdViewHitType, pParentMuon, muonProjectedPositions));
 
-    if ((!pMuonPfoList) || pMuonPfoList->empty())
-        return;
+    if (statusCR != STATUS_CODE_SUCCESS)
+        return statusCR;
 
-    for (const ParticleFlowObject *const pPfo : *pMuonPfoList)
+    ClusterList muonClusterList;
+    LArPfoHelper::GetClusters(pParentMuon, thirdViewHitType, muonClusterList);
+            
+    if (muonClusterList.size() != 1)
+        return STATUS_CODE_NOT_FOUND;
+    
+    const Cluster *const pMuonCluster(muonClusterList.front());
+
+    const float projectedHitsFraction(static_cast<float>(muonProjectedPositions.size()) / pMuonCluster->GetNCaloHits());    
+
+    CartesianVector muonDirection(0.f, 0.f, 0.f), positionOnMuon(0.f, 0.f, 0.f);
+    if (projectedHitsFraction < 0.8f)
     {
-        ClusterList pfoClusters;
-        LArPfoHelper::GetClusters(pPfo, hitType, pfoClusters);
-        for (const Cluster *const pCluster : pfoClusters)
-            clusterToPfoMap[pCluster] = pPfo;
+        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+        const TwoDSlidingFitResult slidingFitResult(pMuonCluster, 40, slidingFitPitch);
+
+        CartesianVector deltaRayVertex(0.f,0.f,0.f), muonVertex(0.f,0.f,0.f);
+        this->GetClosestPositions(deltaRayProjectedPositions, pMuonCluster, deltaRayVertex, muonVertex);
+
+        positionOnMuon = this->GetClosestPosition(muonVertex, muonProjectedPositions, pMuonCluster);
+
+	    if (positionOnMuon.GetMagnitude() < std::numeric_limits<float>::epsilon())
+            return STATUS_CODE_NOT_FOUND;
+
+        float rL(0.f), rT(0.f);
+        slidingFitResult.GetLocalPosition(positionOnMuon, rL, rT);
+        slidingFitResult.GetGlobalFitDirection(rL, muonDirection);
     }
-}
 
-//------------------------------------------------------------------------------------------------------------------------------------------
+    CaloHitList muonCaloHitList;
+    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);
 
-void TwoViewDeltaRayMatchingAlgorithm::FillHitAssociationMap()
-{
-    // Third view clusters
-    const ClusterList *pInputClusterList;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pInputClusterList));
-
-    const PfoList *pDeltaRayList(nullptr);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_deltaRayPfoListName, pDeltaRayList));
-
-    ClusterList deltaRayClusters;
-    if(pDeltaRayList)
+    bool hitsAdded(true);
+    while (hitsAdded)
     {
-        //can make better by considering hit type... but you can make this better anyway        
-        for (const ParticleFlowObject *const pPfo : *pDeltaRayList)
-            deltaRayClusters.insert(deltaRayClusters.begin(), pPfo->GetClusterList().begin(), pPfo->GetClusterList().end()); 
-    }    
-    
-    CaloHitList availableCaloHitList;
-    for (const Cluster *const pCluster : *pInputClusterList)
-    {
-        // Protect hits in delta rays
-        if (std::find(deltaRayClusters.begin(), deltaRayClusters.end(), pCluster) != deltaRayClusters.end())
-            continue;
-        
-        const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
-        for (const OrderedCaloHitList::value_type &mapEntry : orderedCaloHitList)
+        hitsAdded = false;
+
+        for (const CaloHit *const pCaloHit : muonCaloHitList)
         {
-            for (const CaloHit *const pCaloHit : *mapEntry.second)
-                availableCaloHitList.push_back(pCaloHit);
-        }
-    }
-    
-    for (const CaloHit *const pCaloHitI : availableCaloHitList)
-    {
-        for (const CaloHit *const pCaloHitJ : availableCaloHitList)
-        {
-            if (pCaloHitI == pCaloHitJ)
+            if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
                 continue;
 
-            if ((pCaloHitI->GetPositionVector() - pCaloHitJ->GetPositionVector()).GetMagnitudeSquared() < m_maxDisplacementSquared)
-            {
-                CaloHitList &caloHitListI(m_hitAssociationMap[pCaloHitI]);
+            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+            
+            const float distanceToDeltaRayHits(std::min(this->GetClosestDistance(pCaloHit, deltaRayProjectedPositions), this->GetClosestDistance(pCaloHit, collectedHits)));
+            const float distanceToMuonHits((projectedHitsFraction < 0.8f) ? muonDirection.GetCrossProduct(hitPosition - positionOnMuon).GetMagnitude() :
+                this->GetClosestDistance(pCaloHit, muonProjectedPositions));
 
-                if (caloHitListI.end() == std::find(caloHitListI.begin(), caloHitListI.end(), pCaloHitJ))
-                    caloHitListI.push_back(pCaloHitJ);
-
-                CaloHitList &caloHitListJ(m_hitAssociationMap[pCaloHitI]);
-
-                if (caloHitListJ.end() == std::find(caloHitListJ.begin(), caloHitListJ.end(), pCaloHitI))
-                    caloHitListJ.push_back(pCaloHitI);
-
+	        if ((std::fabs(distanceToMuonHits - distanceToDeltaRayHits) > std::numeric_limits<float>::epsilon()) && (distanceToDeltaRayHits < distanceToMuonHits)
+                    && (distanceToMuonHits > 1.f) && (distanceToDeltaRayHits < 1.f))
+	        {
+                collectedHits.push_back(pCaloHit);
+                hitsAdded = true;
             }
         }
     }
+
+    // Catch if delta ray has travelled along muon
+    if ((static_cast<float>(collectedHits.size()) / muonCaloHitList.size()) > 0.05)
+        return STATUS_CODE_NOT_FOUND;
+
+    return STATUS_CODE_SUCCESS;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::MergeThirdView(const MatrixType::Element &element, const Cluster *const pSeedCluster)
+{
+    const Cluster *const pCluster1(element.GetCluster1()), *const pCluster2(element.GetCluster2());
+
+    // the original copy of this will change throughout function... 
+    ClusterList matchedClusters(element.GetOverlapResult().GetMatchedClusterList());
+        
+    ClusterSet checkedClusters;
+    checkedClusters.insert(pSeedCluster);
+        
+    while (checkedClusters.size() != matchedClusters.size())
+    {
+        const Cluster *pClusterToDelete(nullptr);
+            
+        unsigned int highestHit(0);
+        for (const Cluster *const pMatchedCluster : matchedClusters)
+        {
+            if (checkedClusters.count(pMatchedCluster))
+                continue;
+
+            if (pMatchedCluster->GetNCaloHits() > highestHit)
+            {
+                pClusterToDelete = pMatchedCluster;
+                highestHit = pMatchedCluster->GetNCaloHits();
+            }
+        }
+
+        checkedClusters.insert(pClusterToDelete);
+
+        if (!pClusterToDelete->IsAvailable())
+            continue;
+
+        CaloHitList caloHitList1, caloHitList2, caloHitList3;
+        pCluster1->GetOrderedCaloHitList().FillCaloHitList(caloHitList1);
+        pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
+        pSeedCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
+        pClusterToDelete->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
+
+        XOverlap xOverlapObject(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+        float chiSquaredSum(0.f);
+        unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+                        
+        StatusCode status(this->PerformMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xOverlapObject));
+                        
+        if (status == STATUS_CODE_NOT_FOUND)
+            continue;
+
+        if (status != STATUS_CODE_SUCCESS)
+            throw StatusCodeException(status);
+
+        const float reducedChiSquared(chiSquaredSum / nSamplingPoints);
+                        
+        if (reducedChiSquared < 1.f)
+        {
+            this->RemoveThirdViewCluster(pClusterToDelete);
+
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this,
+               this->GetThirdViewClusterListName()));
+                        
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pClusterToDelete));
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const Cluster *TwoViewDeltaRayMatchingAlgorithm::SplitCluster(const Cluster *const pMuonCluster, CaloHitList &collectedHits) const
+{
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, this->GetThirdViewClusterListName()));
+
+    const Cluster *pDeltaRayCluster(nullptr);
+
+    CaloHitList muonCaloHitList;
+    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);
+    
+    for (const CaloHit *const pCaloHit : muonCaloHitList)
+    {
+        if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, pMuonCluster, pCaloHit));
+
+            if (!pDeltaRayCluster)
+            {
+                const ClusterList *pTemporaryList(nullptr);
+                std::string temporaryListName, currentListName;
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, currentListName));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent<ClusterList>(*this, pTemporaryList, temporaryListName));
+
+                PandoraContentApi::Cluster::Parameters parameters;
+                parameters.m_caloHitList.push_back(pCaloHit);
+                
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, parameters, pDeltaRayCluster));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, temporaryListName, currentListName));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentListName));
+            }
+            else
+            {
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pDeltaRayCluster, pCaloHit));
+            }
+        }
+    }
+
+    return pDeltaRayCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedAvailableCluster(const ClusterList &matchedClusters, const Cluster *&pBestMatchedCluster) const
+{
+    unsigned int highestNHits(0);
+    for (const Cluster *const pMatchedCluster : matchedClusters)
+    {
+        if (!pMatchedCluster->IsAvailable())
+            continue;
+        
+        if (pMatchedCluster->GetNCaloHits() > highestNHits)
+        {
+            highestNHits = pMatchedCluster->GetNCaloHits();
+            pBestMatchedCluster = pMatchedCluster;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float TwoViewDeltaRayMatchingAlgorithm::GetClosestDistance(const CaloHit *const pCaloHit, const CartesianPointVector &cartesianPointVector) const
+{
+    float shortestDistanceSquared(std::numeric_limits<float>::max());
+    const CartesianVector referencePoint(pCaloHit->GetPositionVector());
+
+    for (const CartesianVector &testPosition : cartesianPointVector)
+    {
+        const float separationSquared((testPosition - referencePoint).GetMagnitudeSquared());
+
+        if (separationSquared < shortestDistanceSquared)
+            shortestDistanceSquared = separationSquared;
+    }
+
+    return std::sqrt(shortestDistanceSquared);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+
+float TwoViewDeltaRayMatchingAlgorithm::GetClosestDistance(const CaloHit *const pCaloHit, const CaloHitList &caloHitList) const
+{
+    float shortestDistanceSquared(std::numeric_limits<float>::max());
+    const CartesianVector referencePoint(pCaloHit->GetPositionVector());
+
+    for (const CaloHit *const pTestCaloHit : caloHitList)
+    {
+        const CartesianVector &position(pTestCaloHit->GetPositionVector());
+        float separationSquared((position - referencePoint).GetMagnitudeSquared());
+
+        if (separationSquared < shortestDistanceSquared)
+            shortestDistanceSquared = separationSquared;
+    }
+
+    return std::sqrt(shortestDistanceSquared);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TwoViewDeltaRayMatchingAlgorithm::GetClosestPositions(const CartesianPointVector &pCluster1, const Cluster *const pCluster2, CartesianVector &outputPosition1,
+    CartesianVector &outputPosition2) const
+{
+    bool distanceFound(false);
+    float minDistanceSquared(std::numeric_limits<float>::max());
+
+    CartesianVector closestPosition1(0.f, 0.f, 0.f);
+    CartesianVector closestPosition2(0.f, 0.f, 0.f);
+
+    CaloHitList caloHitList2;
+    pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
+
+    for (const CartesianVector &positionVector1 : pCluster1)
+    {
+        for (const CaloHit *const pCaloHit : caloHitList2)
+        {
+            const CartesianVector &positionVector2(pCaloHit->GetPositionVector());
+
+            const float distanceSquared((positionVector1 - positionVector2).GetMagnitudeSquared());
+
+            if (distanceSquared < minDistanceSquared)
+            {
+                minDistanceSquared = distanceSquared;
+                closestPosition1 = positionVector1;
+                closestPosition2 = positionVector2;
+                distanceFound = true;
+            }
+        }
+    }
+
+    if (!distanceFound)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    outputPosition1 = closestPosition1;
+    outputPosition2 = closestPosition2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector TwoViewDeltaRayMatchingAlgorithm::GetClosestPosition(const CartesianVector &referencePoint, const CartesianPointVector &cartesianPointVector, const Cluster *const pCluster) const
+{
+    CartesianVector closestPoint(0.f,0.f,0.f);
+    float shortestDistanceSquared(std::numeric_limits<float>::max());
+
+    for (const CartesianVector &testPosition : cartesianPointVector)
+    {
+        if (LArClusterHelper::GetClosestDistance(testPosition, pCluster) > 0.5f)
+            continue;
+
+        const float separationSquared((testPosition - referencePoint).GetMagnitude());
+
+        if (separationSquared > 5.f)
+            continue;
+
+        if (separationSquared < shortestDistanceSquared)
+        {
+            shortestDistanceSquared = separationSquared;
+            closestPoint = testPosition;
+        }
+    }
+
+    return closestPoint;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 } // namespace lar_content
