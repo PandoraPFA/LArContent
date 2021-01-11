@@ -143,7 +143,7 @@ bool TwoViewDeltaRayMergeTool::CreatePfo(TwoViewDeltaRayMatchingAlgorithm *const
 
     const Cluster *const pBestMatchedCluster(element.GetOverlapResult().GetBestMatchedCluster());
     
-    std::cout << "best matched cluster hit number: " << pBestMatchedCluster->GetNCaloHits() << std::endl;
+    //std::cout << "best matched cluster hit number: " << pBestMatchedCluster->GetNCaloHits() << std::endl;
 
     if (pBestMatchedCluster)
     {
@@ -152,7 +152,7 @@ bool TwoViewDeltaRayMergeTool::CreatePfo(TwoViewDeltaRayMatchingAlgorithm *const
     else
     {
         std::cout << "TwoViewCreation" << std::endl;
-        /*
+	/*  
         ClusterList c1({element.GetCluster1()}), c2({element.GetCluster2()});
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &c1, "ClusterList1", BLUE);
         PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &c2, "ClusterList2", RED);
@@ -197,7 +197,7 @@ void TwoViewDeltaRayMergeTool::GrowThirdView(TwoViewDeltaRayMatchingAlgorithm *c
     
     if (pMatchedMuonPfo)
     {
-        std::cout << "BEST MATCHED IS A MUON" << std::endl;
+      //std::cout << "BEST MATCHED IS A MUON" << std::endl;
         
         CartesianPointVector deltaRayProjectedPositions;
         this->ProjectPositions(element.GetCluster1(), element.GetCluster2(), deltaRayProjectedPositions);
@@ -209,13 +209,13 @@ void TwoViewDeltaRayMergeTool::GrowThirdView(TwoViewDeltaRayMatchingAlgorithm *c
         CaloHitList deltaRayHits;
         if ((this->CollectDeltaRayHits(element, deltaRayProjectedPositions, pMatchedMuonPfo, deltaRayHits) != STATUS_CODE_SUCCESS) || (deltaRayHits.empty()))
         {
-	  std::cout << "couldn't pull oute a DR cluster" << std::endl;
+	  //std::cout << "couldn't pull oute a DR cluster" << std::endl;
             const Cluster *pSeedCluster(nullptr);
             this->GetBestMatchedAvailableCluster(element.GetOverlapResult().GetMatchedClusterList(), pSeedCluster);
             
             if (pSeedCluster)
             {
-	      std::cout << "NO SEED FOUND" << std::endl;
+	      //std::cout << "NO SEED FOUND" << std::endl;
                 //ClusterList seedBefore({pSeedCluster});
                 //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedBefore, "seedBefore", BLUE);
                 
@@ -229,10 +229,10 @@ void TwoViewDeltaRayMergeTool::GrowThirdView(TwoViewDeltaRayMatchingAlgorithm *c
 	        pAlgorithm->RemoveThirdViewCluster(pSeedCluster);                
                 protoParticle.m_clusterList.push_back(pSeedCluster);
             }
-            else
-            {
-                std::cout << "no seed cluster found" << std::endl;
-	    }
+            //else
+	      //{
+	      //std::cout << "no seed cluster found" << std::endl;
+	      //}
         }
         else
         {
@@ -244,7 +244,7 @@ void TwoViewDeltaRayMergeTool::GrowThirdView(TwoViewDeltaRayMatchingAlgorithm *c
             }
             */
 
-	  std::cout << "oulled out DR cluster" << std::endl;
+	  //std::cout << "oulled out DR cluster" << std::endl;
 
             const Cluster *const pSeedCluster(this->SplitCluster(pAlgorithm, pBestMatchedCluster, deltaRayHits));
             
@@ -262,7 +262,7 @@ void TwoViewDeltaRayMergeTool::GrowThirdView(TwoViewDeltaRayMatchingAlgorithm *c
     }
     else
     {
-        std::cout << "BEST MATCHED IS AN AVAILBALE DELTA RAY" << std::endl;
+      //std::cout << "BEST MATCHED IS AN AVAILBALE DELTA RAY" << std::endl;
 
         //ClusterList seedBefore({pBestMatchedCluster});
         //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &seedBefore, "seedBefore", BLUE);
@@ -287,7 +287,7 @@ void TwoViewDeltaRayMergeTool::MergeThirdView(TwoViewDeltaRayMatchingAlgorithm *
     // the original copy of this will change throughout function... 
     ClusterList matchedClusters(element.GetOverlapResult().GetMatchedClusterList());
         
-    std::cout << "matched cluster list size: " << matchedClusters.size() << std::endl;
+    //std::cout << "matched cluster list size: " << matchedClusters.size() << std::endl;
 
     ClusterSet checkedClusters;
     checkedClusters.insert(pSeedCluster);
@@ -336,9 +336,9 @@ void TwoViewDeltaRayMergeTool::MergeThirdView(TwoViewDeltaRayMatchingAlgorithm *
                         
         if (reducedChiSquared < 1.f)
         {
-	  std::cout << "before removal... "<< std::endl;
+	  //std::cout << "before removal... "<< std::endl;
             pAlgorithm->RemoveThirdViewCluster(pClusterToDelete);
-	  std::cout << "after removal... "<< std::endl;
+	    //std::cout << "after removal... "<< std::endl;
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm,
                pAlgorithm->GetThirdViewClusterListName()));
                         

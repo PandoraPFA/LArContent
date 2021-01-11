@@ -83,7 +83,9 @@ void CosmicRayRemovalTool::RemoveMuonHits(ThreeViewDeltaRayMatchingAlgorithm *co
                 continue;
 
             if (!this->IsBestElement(element, hitType, elementList))
+	    { 
                 continue;
+	    }
 
             checkedClusters.insert(element.GetCluster(hitType));
 
@@ -205,7 +207,7 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
         }
 
         // Check if significant
-        if (furthestSeparation < 5.f)
+        if (furthestSeparation < 3.f)
             return false;
 
         
@@ -228,8 +230,9 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
 	PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &extendedPoint, "extendedPoint", BLACK, 2);
 	PandoraMonitoringApi::ViewEvent(this->GetPandora());
 	*/
+	return true;	
     } 
-
+    /*
     CaloHitList minusMuonHits, minusDeltaRayHits, plusMuonHits, plusDeltaRayHits;    
     const CartesianVector minusPosition(muonVertex - (muonDirection * 5.f)), plusPosition(muonVertex + (muonDirection * 5.f));
 
@@ -250,7 +253,7 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
 
     if ((plusDeltaRayHits.size() > 2))
         return true;   
-
+    */
     return false;
 }
 
@@ -340,7 +343,7 @@ StatusCode CosmicRayRemovalTool::GrowSeed(const TensorType::Element &element, co
             const float distanceToMuonHits((projectedHitsFraction < 0.8f) ? muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude() :
                 this->GetClosestDistance(pCaloHit, muonProjectedPositions));
 
-            if ((distanceToMuonHits > 1.f) && (distanceToDeltaRayHits < distanceToMuonHits))
+            if ((distanceToMuonHits > 0.5f) && (distanceToDeltaRayHits < distanceToMuonHits))
 	        {
                 collectedHits.push_back(pCaloHit);
                 hitsAdded = true;
@@ -427,7 +430,12 @@ void CosmicRayRemovalTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *cons
     
     clusterVector.push_back(pMuonCluster); pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front());
     clusterVector.push_back(pDeltaRay); pfoVector.push_back(nullptr);
-    
+    /*
+      ClusterList dr({pDeltaRay});
+      PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &dr, "dr", VIOLET, 2);
+	PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    */
+
     pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
 }
 
