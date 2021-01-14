@@ -275,4 +275,47 @@ void LArHitWidthHelper::GetExtremalCoordinatesX(const ConstituentHitVector &cons
     }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArHitWidthHelper::GetClosestPointToLine2D(const CartesianVector &lineStart, const CartesianVector &lineDirection, const CaloHit *const pCaloHit)
+{
+    const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+
+    if (std::fabs(lineDirection.GetZ()) < std::numeric_limits<float>::epsilon())
+        return hitPosition;
+
+    float xOnLine(lineStart.GetX());
+    if (std::fabs(lineDirection.GetX()) > std::numeric_limits<float>::epsilon())
+    {
+        const float gradient(lineDirection.GetZ() / lineDirection.GetX());
+        xOnLine += ((hitPosition.GetZ() - lineStart.GetZ()) / gradient);
+    }
+
+    const float &hitWidth(pCaloHit->GetCellSize1());
+    const float hitLowXEdge(hitPosition.GetX() - (hitWidth * 0.5f));
+    const float hitHighXEdge(hitPosition.GetX() + (hitWidth * 0.5f));
+    const float closestPointX(xOnLine < hitLowXEdge ? hitLowXEdge :
+        xOnLine > hitHighXEdge ? hitHighXEdge : xOnLine);
+
+    return CartesianVector(closestPointX, 0.f, hitPosition.GetZ());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArHitWidthHelper::GetClosestDistanceToPoint2D(const CaloHit *const pCaloHit, const CartesianVector &point2D)
+{
+    const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+    const float hitWidth(pCaloHit->GetCellSize1());
+    const float hitLowXEdge(hitPosition.GetX() - (hitWidth * 0.5f));
+    const float hitHighXEdge(hitPosition.GetX() + (hitWidth * 0.5f));
+    const float modDeltaZ(std::fabs(hitPosition.GetZ() - point2D.GetZ()));
+
+    if ((hitLowXEdge < point2D.GetX()) && (hitHighXEdge > point2D.GetX()))
+        return modDeltaZ;
+
+    const float deltaX = hitLowXEdge > point2D.GetX() ? (point2D.GetX() - hitLowXEdge) : (point2D.GetX() - hitHighXEdge);
+
+    return std::sqrt((deltaX * deltaX) + (modDeltaZ * modDeltaZ));
+}
+
 } // namespace lar_content

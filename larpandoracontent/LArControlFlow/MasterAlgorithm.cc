@@ -11,7 +11,6 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArContent.h"
-
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"

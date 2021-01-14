@@ -809,6 +809,26 @@ void LArMCParticleHelper::SelectCaloHits(const CaloHitList *const pCaloHitList, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsDescendentOf(const MCParticle *const pMCParticle, const int pdg, const bool isChargeSensitive)
+{
+    const MCParticle *pCurrentParticle = pMCParticle;
+    while (!pCurrentParticle->GetParentList().empty())
+    {   
+        if (pCurrentParticle->GetParentList().size() > 1)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+
+        const MCParticle *pParent = *(pCurrentParticle->GetParentList().begin());
+        const bool found{isChargeSensitive ? pParent->GetParticleId() == pdg : std::abs(pParent->GetParticleId()) == std::abs(pdg)};
+        if (found)
+            return true;
+        pCurrentParticle = pParent;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArMCParticleHelper::SelectGoodCaloHits(const CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap,
     CaloHitList &selectedGoodCaloHitList, const bool selectInputHits, const float minHitSharingFraction)
 {
@@ -969,5 +989,6 @@ CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, cons
 
     return sharedHits;
 }
+
 
 } // namespace lar_content
