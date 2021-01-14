@@ -27,12 +27,17 @@ class RANSAC
 
 public:
 
-    RANSAC(double threshold, int numIterations = 1000)
+    /**
+     *  @brief  Default constructor.
+     *
+     *  @param threshold Threshold to be used for model to point distance.
+     *  @param numIterations How many iterations to run at most.
+     */
+    RANSAC(double threshold, int numIterations = 1000) :
+        m_numIterations(numIterations),
+        m_threshold(threshold)
     {
         this->Reset();
-
-        m_threshold = threshold;
-        m_numIterations = numIterations;
     };
 
     /**
@@ -40,12 +45,31 @@ public:
      */
     void Reset() { m_data.clear(); };
 
+    /**
+     *  @brief Destructor
+     */
     virtual ~RANSAC() {};
 
+    /**
+     *  @brief Get the best model, where the best model has the most inliers.
+     */
     std::shared_ptr<T> GetBestModel() { return m_bestModel; };
+
+    /**
+     *  @brief Get the parameters that are inliers for the best model.
+     */
     ParameterVector& GetBestInliers() { return m_bestInliers; };
 
+    /**
+     *  @brief Get the second best model, where the second best model has the second most unique inliers, compared to the best model.
+     *         This prevents the second best model being a model that is right next to the best model, and is instead somewhat more
+     *         unique.
+     */
     std::shared_ptr<T> GetSecondBestModel() { return m_secondBestModel; };
+
+    /**
+     *  @brief Get the parameters that are inliers for the second best model.
+     */
     ParameterVector& GetSecondBestInliers() { return m_secondBestInliers; };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,6 +78,8 @@ public:
      *  @brief  Given a vector of data, get the best and second best model for it.
      *
      *  @param  data The data to use for this RANSAC run.
+     *
+     *  @return bool If the models were populated.
      */
     bool Estimate(const ParameterVector &data)
     {
@@ -68,7 +94,7 @@ public:
         std::vector<std::shared_ptr<T>> sampledModels(m_numIterations);
 
         RANSAC::CheckModel(inlierFrac, inliers, sampledModels);
-        double bestModelScore = -1;
+        double bestModelScore(-1);
 
         for (unsigned int i = 0; i < sampledModels.size(); ++i)
         {
@@ -83,7 +109,7 @@ public:
             }
         }
 
-        double secondModelScore = -1;
+        double secondModelScore(-1);
 
         for (unsigned int i = 0; i < sampledModels.size(); ++i)
         {
@@ -129,9 +155,8 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
     /**
-     *  @brief  Compare a candidate model to the current best model, to decide
-     *  if it is sufficiently unique compared to the current best model, and
-     *  the existing most-unique model.
+     *  @brief  Compare a candidate model to the current best model, to decide if it is sufficiently unique compared to the current best
+     *  model, and the existing most-unique model.
      *
      *  @param  candidateInliers  The current inlying parameters to consider.
      *  @param  diff A parameter vector to fill with unique parameters.
@@ -144,8 +169,7 @@ private:
         for (unsigned int i = 0; i < candidateInliers.size(); ++i)
         {
             const auto p1 = candidateInliers[i];
-
-            const unsigned int maxDiffSize = diff.size() + (candidateInliers.size() - i);
+            const unsigned int maxDiffSize(diff.size() + (candidateInliers.size() - i));
 
             // ATTN: Early return.
             if (maxDiffSize < m_secondUniqueParamCount)
@@ -162,7 +186,7 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
     /**
-     *  @brief  Generate a vector of samples to generate models from.
+     *  @brief  Generate a vector of samples to generate models from. These samples are randomly sampled from the full input data.
      */
     void GenerateSamples()
     {
@@ -209,5 +233,6 @@ private:
         }
     };
 };
+
 } // namespace lar_content
 #endif // LAR_RANSAC_ALGO_TEMPLATED_H

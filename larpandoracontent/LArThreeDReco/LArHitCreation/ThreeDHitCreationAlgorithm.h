@@ -257,6 +257,7 @@ private:
      *
      *  @param  hit The ProtoHit to project.
      *  @param  view The view to project the hit into.
+     *  @param  projectedHit The resultant hit from projecting the hit into the given view.
      */
     void Project3DHit(const ProtoHit &hit, const pandora::HitType view, ProtoHit &projectedHit);
 

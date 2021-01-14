@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/RANSACMethod.h
+ *  @file   larpandoracontent/LArThreeDReco/LArHitCreation/RANSACMethod.cc
  *
  *  @brief  Implementation of the RANSAC related methods.
  *
@@ -36,28 +36,28 @@ void LArRANSACMethod::Run(RANSACHitVector &consistentHits, ProtoHitVector &proto
     ParameterVector candidatePoints;
     this->GetCandidatePoints(consistentHits, candidatePoints);
 
-    const float RANSAC_THRESHOLD = 2.5;
-    const int RANSAC_ITERS = 100; // TODO: Should either be dynamic, or a config option.
+    const float RANSAC_THRESHOLD(2.5);
+    const int RANSAC_ITERS(100); // TODO: Should either be dynamic, or a config option.
     RANSAC<PlaneModel, 3> estimator(RANSAC_THRESHOLD, RANSAC_ITERS);
     estimator.Estimate(candidatePoints);
 
     RANSACHitVector primaryResult;
-    const int primaryModelCount = this->RunOverRANSACOutput(estimator, RANSACResult::Best,
-            consistentHits, primaryResult);
+    const int primaryModelCount(this->RunOverRANSACOutput(estimator, RANSACResult::Best, consistentHits, primaryResult));
 
     RANSACHitVector secondaryResult;
-    const int secondModelCount = this->RunOverRANSACOutput(estimator, RANSACResult::Second,
-            consistentHits, secondaryResult);
+    const int secondModelCount(this->RunOverRANSACOutput(estimator, RANSACResult::Second, consistentHits, secondaryResult));
 
-    float primaryFavoured = 0;
-    float secondaryFavoured = 0;
+    float primaryFavoured(0);
+    float secondaryFavoured(0);
 
-    for (auto hit : primaryResult) {
+    for (auto hit : primaryResult)
+    {
         if (hit.IsFavourable())
             ++primaryFavoured;
     }
 
-    for (auto hit : secondaryResult) {
+    for (auto hit : secondaryResult)
+    {
         if (hit.IsFavourable())
             ++secondaryFavoured;
     }
@@ -66,10 +66,10 @@ void LArRANSACMethod::Run(RANSACHitVector &consistentHits, ProtoHitVector &proto
     //       considered hits from the fitting, and how many chosen hits are
     //       "favoured". This gives a balance between the model that follows
     //       the most tools, and uses good tools.
-    const int primaryTotal = estimator.GetBestInliers().size() + primaryModelCount + primaryFavoured;
-    const int secondaryTotal = estimator.GetSecondBestInliers().size() + secondModelCount + secondaryFavoured;
+    const int primaryTotal(estimator.GetBestInliers().size() + primaryModelCount + primaryFavoured);
+    const int secondaryTotal(estimator.GetSecondBestInliers().size() + secondModelCount + secondaryFavoured);
 
-    const RANSACHitVector bestResult = primaryTotal > secondaryTotal ? primaryResult : secondaryResult;
+    const RANSACHitVector bestResult(primaryTotal > secondaryTotal ? primaryResult : secondaryResult);
 
     for (auto hit : bestResult)
         protoHitVector.push_back(hit.GetProtoHit());
@@ -81,19 +81,19 @@ void LArRANSACMethod::GetCandidatePoints(RANSACHitVector &allHits, ParameterVect
 {
     if (allHits.size() < 1000)
     {
-       for (auto hit : allHits)
-           candidatePoints.push_back(std::make_shared<RANSACHit>(hit));
+        for (auto hit : allHits)
+            candidatePoints.push_back(std::make_shared<RANSACHit>(hit));
 
-       return;
+        return;
     }
 
     std::mt19937 eng(allHits.size());
-    const unsigned int hitsToUse = (allHits.size() - 1) * 0.40;
+    const unsigned int hitsToUse((allHits.size() - 1) * 0.40);
 
     // INFO: Fisher-Yates shuffle to get N unique random elements.
     for (unsigned int i = 0; i <= hitsToUse; ++i)
     {
-        int j = GetIntsInRange(i, allHits.size() - 1, eng);
+        int j(GetIntsInRange(i, allHits.size() - 1, eng));
         RANSACHit pointI = allHits[i];
         allHits[i] = allHits[j];
         allHits[j] = pointI;
@@ -104,29 +104,20 @@ void LArRANSACMethod::GetCandidatePoints(RANSACHitVector &allHits, ParameterVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACResult run,
-        RANSACHitVector &hitsToUse, RANSACHitVector &finalHits
-)
+int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACResult run, RANSACHitVector &hitsToUse, RANSACHitVector &finalHits)
 {
     std::map<const CaloHit*, RANSACHit> inlyingHitMap;
-    const float RANSAC_THRESHOLD = 2.5; // TODO: Consolidate to config option.
-    const float EXTEND_THRESHOLD = 6.25; // TODO: Config.
+    const float RANSAC_THRESHOLD(2.5); // TODO: Consolidate to config option.
+    const float EXTEND_THRESHOLD(6.25); // TODO: Config.
 
     const ParameterVector currentInliers = run == RANSACResult::Best ? ransac.GetBestInliers() : ransac.GetSecondBestInliers();
-
-    if (currentInliers.size() == 0 || hitsToUse.size() == 0)
-    {
-        for (auto const& caloProtoPair : inlyingHitMap)
-            finalHits.push_back(caloProtoPair.second);
-
-        return 0;
-    }
 
     const auto bestModel = ransac.GetBestModel();
     auto secondModel = ransac.GetSecondBestModel();
 
-    // ATTN: The second model can technically be NULL, so set to first model in
-    //       that case, as that won't cause any issues.
+    // ATTN: The second model can technically be NULL, so set to first model in that case, as that won't cause any issues.
+    //       This is because its possible for the second model to not be populated (if say the first model fits everything),
+    //       but this method will not run at all if no models were populated.
     if (!secondModel)
         secondModel = bestModel;
 
@@ -143,13 +134,13 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
         if (hit == nullptr)
             throw std::runtime_error("Inlying hit was not of type RANSACHit");
 
-        const bool addedHit = LArRANSACMethod::AddToHitMap(*hit, inlyingHitMap);
+        const bool addedHit(LArRANSACMethod::AddToHitMap(*hit, inlyingHitMap));
 
         if (addedHit)
             sortedHits.push_back(*hit);
     }
 
-    if (sortedHits.size() < 3)
+    if (sortedHits.size() < 3 || hitsToUse.size() == 0)
     {
         for (auto const& caloProtoPair : inlyingHitMap)
             finalHits.push_back(caloProtoPair.second);
@@ -161,19 +152,18 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
     {
         if ((inlyingHitMap.count(hit.GetProtoHit().GetParentCaloHit2D()) == 0))
         {
-            const float modelDisp = otherModel.ComputeDistanceMeasure(std::make_shared<RANSACHit>(hit));
+            const float modelDisp(otherModel.ComputeDistanceMeasure(std::make_shared<RANSACHit>(hit)));
 
-            // ATTN: A hit is unfavourable if its from a bad tool, or is in the
-            //       other model. Unfavourable means it will attempt to not be
+            // ATTN: A hit is unfavourable if its from a bad tool, or is in the other model. Unfavourable means it will attempt to not be
             //       used, but can be used if needed.
-            const bool isNotInOtherModel = modelDisp > RANSAC_THRESHOLD;
-            const bool isAlreadyFavourable = hit.IsFavourable();
+            const bool isNotInOtherModel(modelDisp > RANSAC_THRESHOLD);
+            const bool isAlreadyFavourable(hit.IsFavourable());
             nextHits.emplace_back(hit.GetProtoHit(), isNotInOtherModel && isAlreadyFavourable);
         }
     }
 
-    const CartesianVector fitOrigin = currentModel.GetOrigin();
-    const CartesianVector fitDirection = currentModel.GetDirection();
+    const CartesianVector fitOrigin(currentModel.GetOrigin());
+    const CartesianVector fitDirection(currentModel.GetDirection());
     const auto sortByModelDisplacement = [&fitOrigin, &fitDirection] (RANSACHit a, RANSACHit b) {
         float displacementA = (a.GetProtoHit().GetPosition3D() - fitOrigin).GetDotProduct(fitDirection);
         float displacementB = (b.GetProtoHit().GetPosition3D() - fitOrigin).GetDotProduct(fitDirection);
@@ -188,24 +178,20 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
     for (auto hit : sortedHits)
         currentPoints3D.push_back(hit);
 
-    const int FIT_ITERATIONS = 1000; // TODO: Config?
+    const int FIT_ITERATIONS(1000); // TODO: Config?
 
     RANSACHitVector hitsToUseForFit;
     RANSACHitVector hitsToAdd;
 
     LArRANSACMethod::GetHitsForFit(currentPoints3D, hitsToUseForFit, 0, 0);
 
-    int smallIterCount = 0;
+    int smallIterCount(0);
     ExtendDirection extendDirection = ExtendDirection::Forward;
-    int coherentHitCount = 0;
+    int coherentHitCount(0);
 
-    // INFO: For each iteration, try and extend the fit. Fitting is run
-    //       multiple times per iteration, stopping after the first iteration
+    // INFO: For each iteration, try and extend the fit. Fitting is run multiple times per iteration, stopping after the first iteration
     //       that adds hits.
-    //
-    //       If hits are added, add them to the total hit map and make the new
-    //       hits available for further iterations of the fit extending.
-    //
+    //       If hits are added, add them to the total hit map and make the new hits available for further iterations of the fit extending.
     //       When no hits remain, repeat from other end of fit, then stop.
     for (unsigned int iter = 0; iter < FIT_ITERATIONS; ++iter)
     {
@@ -213,10 +199,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
 
         for (float fits = 1; fits < 4.0; ++fits)
         {
-            LArRANSACMethod::ExtendFit(
-                nextHits, hitsToUseForFit, hitsToAdd,
-                (EXTEND_THRESHOLD * fits), extendDirection
-            );
+            LArRANSACMethod::ExtendFit(nextHits, hitsToUseForFit, hitsToAdd, (EXTEND_THRESHOLD * fits), extendDirection);
 
             if (hitsToAdd.size() > 0)
                 break;
@@ -235,10 +218,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
                 currentPoints3D.push_back(hit);
         }
 
-        const bool continueFitting =
-            LArRANSACMethod::GetHitsForFit(currentPoints3D, hitsToUseForFit,
-            hitsToAdd.size(), smallIterCount);
-
+        const bool continueFitting = LArRANSACMethod::GetHitsForFit(currentPoints3D, hitsToUseForFit, hitsToAdd.size(), smallIterCount);
         coherentHitCount += hitsToAdd.size();
 
         // ATTN: If finished first pass, reset and run from opposite end.
@@ -276,15 +256,11 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArRANSACMethod::GetHitsForFit(
-        std::list<RANSACHit> &currentPoints3D,
-        RANSACHitVector &hitsToUseForFit,
-        const int addedHitCount,
-        int smallAdditionCount
-)
+bool LArRANSACMethod::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANSACHitVector &hitsToUseForFit, const int addedHitCount,
+    int smallAdditionCount)
 {
-    const int HITS_TO_KEEP = 80; // TODO: Config and consolidate (reverse bit).
-    const int FINISHED_THRESHOLD = 10; // TODO: Config
+    const int HITS_TO_KEEP(80); // TODO: Config and consolidate (reverse bit).
+    const int FINISHED_THRESHOLD(10); // TODO: Config
 
     // ATTN: Four options:
     //  Added no hits at the end: Stop.
@@ -299,7 +275,7 @@ bool LArRANSACMethod::GetHitsForFit(
 
     if (addedHitCount <= 2 && currentPoints3D.size() != 0)
     {
-        int i = 0;
+        int i(0);
         auto it = currentPoints3D.begin();
         while(i <= HITS_TO_KEEP && currentPoints3D.size() != 0)
         {
@@ -342,8 +318,8 @@ bool LArRANSACMethod::AddToHitMap(RANSACHit &hit, std::map<const CaloHit*, RANSA
     }
     else
     {
-        const float bestMetric = inlyingHitMap.at(twoDHit).GetDisplacement();
-        const float metricValue = hit.GetDisplacement();
+        const float bestMetric(inlyingHitMap.at(twoDHit).GetDisplacement());
+        const float metricValue(hit.GetDisplacement());
 
         if (metricValue < bestMetric)
         {
@@ -357,11 +333,10 @@ bool LArRANSACMethod::AddToHitMap(RANSACHit &hit, std::map<const CaloHit*, RANSA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool hitIsCloseToEnd(RANSACHit &hit, const CartesianVector &fitEnd,
-        const CartesianVector &fitDirection, float threshold)
+bool hitIsCloseToEnd(RANSACHit &hit, const CartesianVector &fitEnd, const CartesianVector &fitDirection, float threshold)
 {
     const CartesianVector hitPosition = hit.GetProtoHit().GetPosition3D();
-    const float dispFromFitEnd = (hitPosition - fitEnd).GetDotProduct(fitDirection);
+    const float dispFromFitEnd((hitPosition - fitEnd).GetDotProduct(fitDirection));
 
     return (dispFromFitEnd > 0.0 && std::abs(dispFromFitEnd) < threshold);
 }
@@ -379,7 +354,7 @@ void projectedHitDisplacement(RANSACHit &hit, const ThreeDSlidingFitResult slidi
     if (positionStatusCode != STATUS_CODE_SUCCESS || directionStatusCode != STATUS_CODE_SUCCESS)
         return;
 
-    const float displacement = (hitPosition - projectedPosition).GetCrossProduct(projectedDirection).GetMagnitude();
+    const float displacement((hitPosition - projectedPosition).GetCrossProduct(projectedDirection).GetMagnitude());
 
     hit.SetDisplacement(displacement);
 }
@@ -387,25 +362,20 @@ void projectedHitDisplacement(RANSACHit &hit, const ThreeDSlidingFitResult slidi
 void hitDisplacement(RANSACHit &hit, const CartesianVector fitEnd, const CartesianVector fitDirection)
 {
     const CartesianVector hitPosition = hit.GetProtoHit().GetPosition3D();
-    const float displacement = (hitPosition - fitEnd).GetCrossProduct(fitDirection).GetMagnitude();
+    const float displacement((hitPosition - fitEnd).GetCrossProduct(fitDirection).GetMagnitude());
 
     hit.SetDisplacement(displacement);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArRANSACMethod::ExtendFit(
-    std::list<RANSACHit> &hitsToTestAgainst,
-    RANSACHitVector &hitsToUseForFit,
-    std::vector<RANSACHit> &hitsToAdd,
-    const float distanceToFitThreshold,
-    const ExtendDirection extendDirection
-)
+void LArRANSACMethod::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSACHitVector &hitsToUseForFit, std::vector<RANSACHit> &hitsToAdd,
+    const float distanceToFitThreshold, const ExtendDirection extendDirection)
 {
     if (hitsToUseForFit.size() == 0)
         return;
 
-    float distanceToEndThreshold = 10; // TODO: Config?
+    float distanceToEndThreshold(10); // TODO: Config?
 
     CartesianPointVector fitPoints;
     for (auto hit : hitsToUseForFit)
@@ -431,27 +401,20 @@ void LArRANSACMethod::ExtendFit(
     if (distanceToProjectOverGap > 0)
         distanceToEndThreshold += std::min(distanceToProjectOverGap, 50.0f);
 
-    // ATTN: This is done in 3 stages to split up the 3 different qualities of
-    //       hits:
+    // ATTN: This is done in 3 stages to split up the 3 different qualities of hits:
     //          - Hits based on the fit projections.
     //          - Hits based against the fit.
     //          - Unfavourable hits.
     auto projectedDisplacementTest = [&slidingFit] (RANSACHit &hit, float threshold) {
         projectedHitDisplacement(hit, slidingFit);
-        if (hit.GetDisplacement() < threshold && hit.IsFavourable())
-            return true;
-        return false;
+        return hit.GetDisplacement() < threshold && hit.IsFavourable();
     };
     auto displacementTest = [&fitEnd, &fitDirection] (RANSACHit &hit, float threshold) {
         hitDisplacement(hit, fitEnd, fitDirection);
-        if (hit.GetDisplacement() < threshold && hit.IsFavourable())
-            return true;
-        return false;
+        return hit.GetDisplacement() < threshold && hit.IsFavourable();
     };
     auto unfavourableTest = [] (RANSACHit &hit, float threshold) {
-        if (hit.GetDisplacement() < threshold)
-            return true;
-        return false;
+        return hit.GetDisplacement() < threshold;
     };
     std::vector<std::function<bool(RANSACHit&, float)>> tests = {projectedDisplacementTest,
         displacementTest, unfavourableTest};
@@ -463,7 +426,7 @@ void LArRANSACMethod::ExtendFit(
             hitsToCheck.push_back(it);
     }
 
-    unsigned int currentTest = 0;
+    unsigned int currentTest(0);
     while (hitsToAdd.size() == 0 && currentTest < tests.size())
     {
         for (auto it : hitsToCheck)

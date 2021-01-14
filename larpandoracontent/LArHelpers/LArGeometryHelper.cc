@@ -457,7 +457,7 @@ float LArGeometryHelper::ProjectAcrossGap3D(const Pandora &pandora, const Cartes
         const float cosTheta = (pointToGap).GetCosOpeningAngle(testDirection);
         const float distanceToProject = totalGapSize / cosTheta;
 
-        if (distanceToProject < bestGapSize)
+        if (std::fabs(distanceToProject) < bestGapSize)
             bestGapSize = std::fabs(distanceToProject);
     }
 

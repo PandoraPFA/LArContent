@@ -216,10 +216,7 @@ void ThreeDHitCreationAlgorithm::IterativeTreatment(ProtoHitVector &protoHitVect
 
 void ThreeDHitCreationAlgorithm::Project3DHit(const ProtoHit &hit, const HitType view, ProtoHit &projectedHit)
 {
-    projectedHit.SetPosition3D(
-        LArGeometryHelper::ProjectPosition(this->GetPandora(), hit.GetPosition3D(), view),
-        hit.GetChi2()
-    );
+    projectedHit.SetPosition3D(LArGeometryHelper::ProjectPosition(this->GetPandora(), hit.GetPosition3D(), view), hit.GetChi2());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -233,28 +230,20 @@ void ThreeDHitCreationAlgorithm::GetSetIntersection(RANSACHitVector &first, RANS
     std::sort(first.begin(), first.end(), compareFunction);
     std::sort(second.begin(), second.end(), compareFunction);
 
-    std::set_intersection(
-        first.begin(), first.end(),
-        second.begin(), second.end(),
-        std::inserter(result, result.begin()),
-        compareFunction
-    );
+    std::set_intersection(first.begin(), first.end(), second.begin(), second.end(), std::inserter(result, result.begin()), compareFunction);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *const pPfo, ProtoHitVectorMap &allProtoHitVectors,
-        ProtoHitVector &protoHitVector)
+void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *const pPfo, ProtoHitVectorMap &allProtoHitVectors, ProtoHitVector &protoHitVector)
 {
     if (allProtoHitVectors.size() == 0)
         return;
 
-    const float DISTANCE_THRESHOLD = 0.05; // TODO: Move to config option.
+    const float DISTANCE_THRESHOLD(0.05); // TODO: Move to config option.
     const std::vector<HitType> views = {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
-
-    std::map<HitType, RANSACHitVector> goodHits;
-
     const std::vector<std::string> toolsToAvoid = {"Tool0039", "Tool0043"}; // TODO: Config option?
+    std::map<HitType, RANSACHitVector> goodHits;
 
     for (auto toolVectorPair : allProtoHitVectors)
     {
@@ -271,6 +260,9 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
         for (const auto &hit : toolVectorPair.second)
         {
             const CaloHit* twoDHit = hit.GetParentCaloHit2D();
+
+            if (twoDHit == nullptr)
+                continue;
 
             for (HitType view : views)
             {
@@ -358,14 +350,8 @@ void ThreeDHitCreationAlgorithm::InterpolationMethod(const ParticleFlowObject *c
 
         ProtoHit interpolatedHit(currentCaloHit);
 
-        const CartesianVector projectedHit = LArGeometryHelper::ProjectPosition(
-                this->GetPandora(),
-                projectedPosition,
-                currentCaloHit->GetHitType()
-        );
-        const double distanceBetweenHitsSqrd = (
-                (currentCaloHit->GetPositionVector() - projectedHit).GetMagnitudeSquared()
-        );
+        const CartesianVector projectedHit(LArGeometryHelper::ProjectPosition(this->GetPandora(), projectedPosition, currentCaloHit->GetHitType()));
+        const double distanceBetweenHitsSqrd((currentCaloHit->GetPositionVector() - projectedHit).GetMagnitudeSquared());
 
         const double sigmaUVW(LArGeometryHelper::GetSigmaUVW(this->GetPandora()));
         const double sigma3DFit(sigmaUVW * m_sigma3DFitMultiplier);
@@ -373,9 +359,7 @@ void ThreeDHitCreationAlgorithm::InterpolationMethod(const ParticleFlowObject *c
 
         interpolatedHit.SetPosition3D(projectedPosition, interpolatedChi2);
         interpolatedHit.SetInterpolated(true);
-        interpolatedHit.AddTrajectorySample(
-                TrajectorySample(projectedPosition, currentCaloHit->GetHitType(), sigmaUVW)
-        );
+        interpolatedHit.AddTrajectorySample(TrajectorySample(projectedPosition, currentCaloHit->GetHitType(), sigmaUVW));
 
         protoHitVector.push_back(interpolatedHit);
     }
