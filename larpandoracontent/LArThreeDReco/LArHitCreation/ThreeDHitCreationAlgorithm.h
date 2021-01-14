@@ -175,7 +175,7 @@ public:
         /**
          *  @brief  Set the protohit as an interpolated hit or not.
          *
-         *  @param  if the hit is interpolated
+         *  @param  interpolated if the hit is interpolated
          */
         void SetInterpolated(const bool interpolated);
 
@@ -188,6 +188,8 @@ public:
 
         /**
          * @brief  Equality operator for a ProtoHit, compares position and parent hit.
+         *
+         * @param other The other protoHit to check equality against.
          */
         bool operator==(const ProtoHit &other) const;
 

@@ -224,10 +224,8 @@ public:
         const float gapTolerance = 0.f);
 
     /**
-     *  @brief  If a 3D test point lies in a registered gap, return a point
-     *          for the opposite edge of the gap. This in ran recursively to
-     *          deal with cases where a gap can be followed by other gaps, such
-     *          to the furthest edge of any chained gaps. Opposite side is
+     *  @brief  If a 3D test point lies in a registered gap, return a point for the opposite edge of the gap. This in ran recursively to
+     *          deal with cases where a gap can be followed by other gaps, such to the furthest edge of any chained gaps. Opposite side is
      *          determined based on the given direction.
      *
      *  @param  pandora the associated pandora instance
@@ -236,7 +234,9 @@ public:
      *  @param  gapTolerance the gap tolerance
      *  @param  recurseLimit the maximum amount of gaps to consider, if multiple are present.
      *
-     *  @return CartesianVector
+     *  @return float The distance to project the given test point forward to leave any gaps. For a gap of width 10, this will be 10
+     *                plus the gap tolerance on the far side, and the distance from the test point to the start of the gap. If the
+     *                test point is not in the gap (or in the tolerance area around the gap), this will return 0.
      */
     static float ProjectAcrossGap3D(const pandora::Pandora &pandora, const pandora::CartesianVector &testPoint3D,
             const pandora::CartesianVector &testDirection, const float gapTolerance = 0.f, const int recurseLimit = 0);

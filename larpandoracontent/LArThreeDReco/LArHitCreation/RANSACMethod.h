@@ -45,14 +45,14 @@ public:
     /**
      *  @brief  Get the associated ProtoHit.
      *
-     *  @return ProtoHit
+     *  @return ProtoHit the current protohit the RANSAC hit was built with.
      */
     ProtoHit GetProtoHit() const;
 
     /**
      *  @brief  Get the stored displacement.
      *
-     *  @return float
+     *  @return float Displacement of the RANSAC hit from the RANSAC fit.
      */
     float GetDisplacement() const;
 
@@ -61,7 +61,7 @@ public:
      *          Only set if the displacement is lower than the current. This
      *          allows many values to be given, but only the best stored.
      *
-     *  @param  displacement  The current displacement value;
+     *  @param  displacement  The current displacement value.
      */
     void SetDisplacement(float displacement);
 
@@ -69,7 +69,7 @@ public:
      *  @brief  Get the 3D position of the protoHit as an Eigen::Vector3f.
      *          This is to make Eigen calculations easier in the RANSAC methods.
      *
-     *  @return Eigen::Vector3f
+     *  @return Eigen::Vector3f The 3D position of the hit.
      */
     Eigen::Vector3f GetVector() const;
 
@@ -142,10 +142,13 @@ protected:
      *  @param  ransac          The complete RANSAC object, containing both the models.
      *  @param  run             Enum describing which run to consider (Best or Second).
      *  @param  hitsToUse       The hits to be used in the fit extending.
-     *  @param  protoHitVector  Vector to store the final complete model in.
+     *  @param  finalHits       Vector to store the final complete model in.
+     *
+     *  @return int Count of every considered hit. This can be larger than the size of finalHits, as it will include hits that were good,
+     *              but a better hit existed. That is, if two 3D hits options are from one 2D hit, only one 3D hit is chosen and stored.
+     *              If both are good, this count will be 2, not 1, to indicate the given model fit them both.
      */
     int RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACResult run, RANSACHitVector &hitsToUse, RANSACHitVector &finalHits);
-
 
     /**
      *  @brief  Given a set of selected hits and candidate hits, try and add
@@ -190,6 +193,8 @@ protected:
      *  @param  hitsToAdd            The vector of hits to populated to use for fitting, if appropriate.
      *  @param  addedHitCount        The number of hits added in the last fit.
      *  @param  smallAdditionCount   The current number of iterations that added a small number of hits.
+     *
+     *  @return bool If the next fit should be run or not.
      */
      bool GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANSACHitVector &hitsToAdd,
              const int addedHitCount, int smallAdditionCount);
