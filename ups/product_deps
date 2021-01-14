@@ -3,7 +3,7 @@
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
 # ATTN This package supports two build systems; please ensure version is specified here *and* in non-cetbuildtools section of CMakeLists.txt
-parent larpandoracontent v03_20_00
+parent larpandoracontent v03_22_03
 defaultqual e19
 
 # larpandoracontent has no fcl files
@@ -14,20 +14,21 @@ fcldir  -
 product		version
 eigen		v3_3_5
 pandora		v03_16_00
+libtorch	v1_5_1a	-	optional
 cetbuildtools	v7_14_00	-	only_for_build
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
 # Make a table by adding columns before "notes". 
-qualifier	pandora 	eigen notes
-e19:py2:debug	e19:py2:debug   -nq-
-e19:py2:prof	e19:py2:prof    -nq-
-e19:debug	e19:debug	-nq-
-e19:prof	e19:prof	-nq-
-c7:py2:debug	c7:py2:debug    -nq-
-c7:py2:prof	c7:py2:prof     -nq-
-c7:debug	c7:debug	-nq-
-c7:prof		c7:prof		-nq-
+qualifier	pandora 	eigen	libtorch notes
+e19:py2:debug	e19:py2:debug   -nq-	e19:eigen
+e19:py2:prof	e19:py2:prof    -nq-	e19:eigen
+e19:debug	e19:debug	-nq-	e19:eigen
+e19:prof	e19:prof	-nq-	e19:eigen
+c7:py2:debug	c7:py2:debug    -nq-	-
+c7:py2:prof	c7:py2:prof     -nq-	-
+c7:debug	c7:debug	-nq-	-
+c7:prof		c7:prof		-nq-	-
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:

@@ -52,8 +52,38 @@ public:
      */
     unsigned int GetLArTPCVolumeId() const;
 
+    /**
+     *  @brief  Get the probability that the hit is track-like
+     *
+     *  @return the probability the hit is track-like
+     */
+    float GetTrackProbability() const;
+
+    /**
+     *  @brief  Get the probability that the hit is shower-like
+     *
+     *  @return the probability the hit is shower-like
+     */
+    float GetShowerProbability() const;
+
+    /**
+     *  @brief  Set the probability that the hit is track-like
+     *
+     *  @param  probability the probability the hit is track-like
+     */
+    void SetTrackProbability(const float probability);
+
+    /**
+     *  @brief  Set the probability that the hit is shower-like
+     *
+     *  @param  probability the probability the hit is shower-like
+     */
+    void SetShowerProbability(const float probability);
+
 private:
     unsigned int            m_larTPCVolumeId;       ///< The lar tpc volume id
+    pandora::InputFloat     m_pTrack;               ///< The probability that the hit is track-like
+    pandora::InputFloat     m_pShower;              ///< The probability that the hit is shower-like
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -110,6 +140,40 @@ inline LArCaloHit::LArCaloHit(const LArCaloHitParameters &parameters) :
 inline unsigned int LArCaloHit::GetLArTPCVolumeId() const
 {
     return m_larTPCVolumeId;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArCaloHit::GetTrackProbability() const
+{
+    return m_pTrack.Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float LArCaloHit::GetShowerProbability() const
+{
+    return m_pShower.Get();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArCaloHit::SetTrackProbability(const float probability)
+{
+    if (probability >= 0.f)
+        m_pTrack = probability;
+    else
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArCaloHit::SetShowerProbability(const float probability)
+{
+    if (probability >= 0.f)
+        m_pShower = probability;
+    else
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_INVALID_PARAMETER);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
