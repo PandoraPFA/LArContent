@@ -80,6 +80,16 @@ protected:
      */
     virtual void GetBestPosition3D(const pandora::HitType hitType, const pandora::CartesianVector &fitPosition, ProtoHit &protoHit) const;
 
+    /**
+     *  @brief  Given the current detector volumes and a 3D position, give the distance outside the detector the position is.
+     *          Will be 0 for a contained position, otherwise the largest displacement of the Y or Z coord. It is assumed X
+     *          is always valid.
+     *
+     *  @param  larTPCMap a map of LArTPC volumes, to check how contained the given position is.
+     *  @param  position3D the current 3D position to check relative to the detector.
+     */
+    double GetDistanceToDetectorEdge(const pandora::LArTPCMap &larTPCMap, const pandora::CartesianVector &position3D) const;
+
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     double      m_sigmaX2;              ///< The sigmaX squared value, for calculation of chi2 deltaX term
