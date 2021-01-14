@@ -262,15 +262,11 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nMCStepPositions));
         for (auto const &mcStepPosition : mcStepPositions)
-        {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(mcStepPosition));
-        }
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nMCStepMomentas));
         for (auto const &mcStepMomenta : mcStepMomentas)
-        {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(mcStepMomenta));
-        }
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
