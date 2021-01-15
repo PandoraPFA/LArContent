@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMergeTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayRecoveryTool.cc
  *
  *  @brief  Implementation of the delta ray merge tool class.
  *
@@ -7,7 +7,7 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMergeTool.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayRecoveryTool.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -20,13 +20,13 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoViewDeltaRayMergeTool::TwoViewDeltaRayMergeTool()
+TwoViewDeltaRayRecoveryTool::TwoViewDeltaRayRecoveryTool()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewDeltaRayMergeTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
+bool TwoViewDeltaRayRecoveryTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -40,7 +40,7 @@ bool TwoViewDeltaRayMergeTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-    void TwoViewDeltaRayMergeTool::MakeMerges(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix, bool &mergesMade) const
+void TwoViewDeltaRayRecoveryTool::MakeMerges(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix, bool &mergesMade) const
 {
     bool mergeMade(true);
 
@@ -59,7 +59,7 @@ bool TwoViewDeltaRayMergeTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgo
 
             ClusterSet checkedClusters;
             MatrixType::ElementList elementList;
-            pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
+            pAlgorithm->GetConnectedElements(pKeyCluster, false, elementList, checkedClusters);
 
             if (elementList.empty())
                 continue;
@@ -83,7 +83,7 @@ bool TwoViewDeltaRayMergeTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewDeltaRayMergeTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList) const
+bool TwoViewDeltaRayRecoveryTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList) const
 {
     bool found(false);   
         
@@ -130,10 +130,8 @@ bool TwoViewDeltaRayMergeTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorit
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-    
-//------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoViewDeltaRayMergeTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode TwoViewDeltaRayRecoveryTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
 {
     return STATUS_CODE_SUCCESS;
 }

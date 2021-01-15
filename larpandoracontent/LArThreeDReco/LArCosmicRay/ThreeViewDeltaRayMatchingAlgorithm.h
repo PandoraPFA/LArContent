@@ -40,10 +40,16 @@ public:
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
+    typedef ThreeViewDeltaRayMatchingAlgorithm::MatchingType::TensorType TensorType;
+
     /**
      *  @brief  Default constructor
      */
     ThreeViewDeltaRayMatchingAlgorithm();
+
+    void GetConnectedElements(const pandora::Cluster *const pCluster1, const bool hasAssociatedMuon, TensorType::ElementList &elementList, pandora::ClusterSet &checkedClusters);
+
+    void GetUnambiguousElements(const bool hasAssociatedMuon, TensorType::ElementList &elementList);
 
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
 

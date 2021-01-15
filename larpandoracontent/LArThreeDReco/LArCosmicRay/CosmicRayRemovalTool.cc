@@ -38,17 +38,17 @@ bool CosmicRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgori
 
     ClusterSet usedKeyClusters;
     for (const Cluster *const pKeyCluster : sortedKeyClusters)
-    {
-        if (!pKeyCluster->IsAvailable())
-            continue;
-        
+    {        
         if (usedKeyClusters.count(pKeyCluster))
             continue;
 
-        unsigned int nU(0), nV(0), nW(0);
-        TensorType::ElementList elementList;
-        overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
+        ClusterSet checkedClusters;
+        TensorType::ElementList elementList;        
+        pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
 
+        if (elementList.empty())
+            continue;
+        
         for (const TensorType::Element &element : elementList)
             usedKeyClusters.insert(element.GetCluster(TPC_VIEW_U));
 

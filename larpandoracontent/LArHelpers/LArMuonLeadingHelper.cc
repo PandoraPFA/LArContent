@@ -375,18 +375,12 @@ void LArMuonLeadingHelper::AddHits(const MCParticle *const pLeadingMCParticle, c
         }
     }
 
-    /*
+    CaloHitList &hits(leadingMCToTrueHitListMap.at(pLeadingMCParticle));
     for (const CaloHit *const pCaloHit : leadingHitList)
     {
-        const CartesianVector shiftedPosition(pCaloHit->GetPositionVector().GetX() - pCaloHit->GetX0(), pCaloHit->GetPositionVector().GetY(), pCaloHit->GetPositionVector().GetZ());
-        PandoraMonitoringApi::AddMarkerToVisualization(pandora, &shiftedPosition, "Reconstructable Delta Ray Hits", RED, 2);
-    }
-
-    PandoraMonitoringApi::ViewEvent(pandora);
-    */
-
-    CaloHitList &hits(leadingMCToTrueHitListMap.at(pLeadingMCParticle));
-    hits.insert(hits.end(), leadingHitList.begin(), leadingHitList.end());
+        if (std::find(hits.begin(), hits.end(), pCaloHit) == hits.end())
+            hits.push_back(pCaloHit);
+    }  
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------ 

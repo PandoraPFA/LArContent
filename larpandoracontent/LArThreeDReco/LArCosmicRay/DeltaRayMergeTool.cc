@@ -58,24 +58,23 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
             if (usedKeyClusters.count(pKeyCluster))
                 continue;
 
-            unsigned int nU(0), nV(0), nW(0);
+            ClusterSet checkedClusters;
             TensorType::ElementList elementList;
-            overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
+            pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
 
+            if (elementList.empty())
+                continue;
+            
             for (const TensorType::Element &element : elementList)
 	        {
                 if (usedKeyClusters.count(element.GetClusterU()))
-		{
                     continue;
-		}
 
                 usedKeyClusters.insert(element.GetClusterU());
             }
 
             if (elementList.size() < 2)
-	    {
                 continue;
-	    }
 
             if (this->MakeTwoCommonViewMerges(pAlgorithm, elementList))
 	        {
@@ -98,13 +97,14 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
         for (const Cluster *const pKeyCluster : sortedKeyClusters)
         {
             if (usedKeyClusters.count(pKeyCluster))
-	    {
                 continue;
-	    }
 
-            unsigned int nU(0), nV(0), nW(0);
+            ClusterSet checkedClusters;
             TensorType::ElementList elementList;
-            overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
+            pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
+
+            if (elementList.empty())
+                continue;            
 
             for (const TensorType::Element &element : elementList)
 	        {
@@ -115,9 +115,7 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
             }
 
             if (elementList.size() < 2)
-	    {
                 continue;
-	    }
 
 	        if (this->MakeOneCommonViewMerges(pAlgorithm, elementList))
 	        {
@@ -142,24 +140,23 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
             if (usedKeyClusters.count(pKeyCluster))
                 continue;
 
-            unsigned int nU(0), nV(0), nW(0);
+            ClusterSet checkedClusters;
             TensorType::ElementList elementList;
-            overlapTensor.GetConnectedElements(pKeyCluster, true, elementList, nU, nV, nW);
+            pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
+
+            if (elementList.empty())
+                continue;            
 
             for (const TensorType::Element &element : elementList)
 	        {
                 if (usedKeyClusters.count(element.GetClusterU()))
-		{
                     continue;
-		}
 
                     usedKeyClusters.insert(element.GetClusterU());
             }
 
             if (elementList.size() < 2)
-	    {
                 continue;
-	    }
 
             if (this->PickOutGoodMatches(pAlgorithm, elementList))
             {
