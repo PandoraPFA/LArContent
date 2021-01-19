@@ -35,6 +35,26 @@ public:
     virtual ~DlVertexingAlgorithm() = default;
 
 private:
+    class CaloHitTuple
+    {
+    public:
+        CaloHitTuple(const pandora::Pandora &pandora, const pandora::CaloHit *pCaloHitU, const pandora::CaloHit *pCaloHitV, const pandora::CaloHit *pCaloHitW);
+
+        const pandora::CartesianVector &GetPosition() const;
+        float GetChi2() const;
+        std::string ToString() const;
+        const pandora::CaloHit *GetCaloHitU() const;
+        const pandora::CaloHit *GetCaloHitV() const;
+        const pandora::CaloHit *GetCaloHitW() const;
+
+    private:
+        const pandora::CaloHit *m_pCaloHitU;    ///< The hit in the U view
+        const pandora::CaloHit *m_pCaloHitV;    ///< The hit in the V view
+        const pandora::CaloHit *m_pCaloHitW;    ///< The hit in the W view
+        pandora::CartesianVector m_pos;         ///< Calculated 3D position
+        float                   m_chi2;         ///< Chi squared of calculated position
+    };
+
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode Train();

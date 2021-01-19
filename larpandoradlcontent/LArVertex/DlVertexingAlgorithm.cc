@@ -6,10 +6,13 @@
  *  $Log: $
  */
 
+#include <cmath>
+
 #include <torch/script.h>
 #include <torch/torch.h>
 
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
 
@@ -105,20 +108,11 @@ StatusCode DlVertexingAlgorithm::Train()
             const double x{vertex.GetX()};
             featureVector.push_back(x);
             if (isW)
-            {
-                const double w{transform->YZtoW(vertex.GetY(), vertex.GetZ())};
-                featureVector.push_back(w);
-            }
+                featureVector.push_back(transform->YZtoW(vertex.GetY(), vertex.GetZ()));
             else if (isV)
-            {
-                const double v{transform->YZtoV(vertex.GetY(), vertex.GetZ())};
-                featureVector.push_back(v);
-            }
+                featureVector.push_back(transform->YZtoV(vertex.GetY(), vertex.GetZ()));
             else
-            {
-                const double u{transform->YZtoU(vertex.GetY(), vertex.GetZ())};
-                featureVector.push_back(u);
-            }
+                featureVector.push_back(transform->YZtoU(vertex.GetY(), vertex.GetZ()));
         }
 
         // Calo hits
@@ -131,9 +125,10 @@ StatusCode DlVertexingAlgorithm::Train()
                 if (mcToHitsMap.find(pMCParticle) == mcToHitsMap.end())
                     continue;
 
-                const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()};
+                const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetInputEnergy()};
                 featureVector.push_back(static_cast<double>(x));
                 featureVector.push_back(static_cast<double>(z));
+                featureVector.push_back(static_cast<double>(adc));
                 ++nHits;
             }
             catch (...)
@@ -151,23 +146,27 @@ StatusCode DlVertexingAlgorithm::Train()
 
 StatusCode DlVertexingAlgorithm::Infer()
 {
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
+    MCParticleVector primaries;
+    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
+    const CartesianVector &vertex{primaries.front()->GetVertex()};
+
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
 
+    CaloHitList vertexCandidatesU, vertexCandidatesV, vertexCandidatesW;
     for (const std::string listName : m_caloHitListNames)
     {
         const CaloHitList *pCaloHitList{nullptr};
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listName, pCaloHitList));
 
-        const bool isU(pCaloHitList->front()->GetHitType() == TPC_VIEW_U ? true : false);
-        const bool isV(pCaloHitList->front()->GetHitType() == TPC_VIEW_V ? true : false);
-        const bool isW(pCaloHitList->front()->GetHitType() == TPC_VIEW_W ? true : false);
+        HitType view{pCaloHitList->front()->GetHitType()};
+        const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
         if (!isU && !isV && !isW)
             return STATUS_CODE_NOT_ALLOWED;
-        // Temporary
-        if (!isW)
-            continue;
 
-        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), pCaloHitList, listName, BLACK));
+        if (isW)
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), pCaloHitList, listName, BLACK));
 
         const int imageWidth = 256;
         const int imageHeight = 256;
@@ -177,7 +176,7 @@ StatusCode DlVertexingAlgorithm::Infer()
         const float xRange = (xMax - xMin) < std::numeric_limits<float>::epsilon() ? 1.f : xMax - xMin;
         const float zRange = (zMax - zMin) < std::numeric_limits<float>::epsilon() ? 1.f : zMax - zMin;
 
-        // Pixel normalisation must match that used during training
+        // ATTN - Pixel normalisation must match that used during training
         const float baseline{255.f};
         const float pixelValue = (baseline - m_pixelShift) / m_pixelScale;
 
@@ -211,6 +210,19 @@ StatusCode DlVertexingAlgorithm::Infer()
             LArDLHelper::Forward(m_modelW, inputs, output);
         auto outputAccessor = output.accessor<float, 4>();
 
+        // Find the maximum vertex score
+        float maxScore{0.f};
+        for (int pz = 0; pz < imageHeight; ++pz)
+        {
+            for (int px = 0; px < imageWidth; ++px)
+            {
+                const float actPrimary = outputAccessor[0][1][pz][px];
+                if (actPrimary > maxScore)
+                    maxScore = actPrimary;
+            }
+        }
+        const float threshold{maxScore - std::numeric_limits<float>::epsilon()};
+
         // Tag the hits associated with each active pixel as candidate vertices
         CaloHitList vertexHits;
         for (int pz = 0; pz < imageHeight; ++pz)
@@ -220,17 +232,147 @@ StatusCode DlVertexingAlgorithm::Infer()
                 const float actPrimary = outputAccessor[0][1][pz][px];
                 //const float actSecondary = exp(outputAccessor[0][2][pz][px]);
                 const float actNull = outputAccessor[0][0][pz][px];
-                if (actPrimary > actNull)
+                if (actPrimary > actNull && actPrimary > threshold)
                 {
                     // We want the get or create if not found behaviour because vertex pixels are not guaranteed to contain hits.
                     // Nothing will be displayed in this case, but the loop will continue to run without issue.
                     for (const CaloHit *pCaloHit : pixelToCaloHits[std::make_pair(pz, px)])
+                    {
                         vertexHits.push_back(pCaloHit);
+                        if (isW)
+                            vertexCandidatesW.emplace_back(pCaloHit);
+                        else if (isV)
+                            vertexCandidatesV.emplace_back(pCaloHit);
+                        else
+                            vertexCandidatesU.emplace_back(pCaloHit);
+                    }
                 }
             }
         }
+        if (!isW)
+            continue;
         std::string vertexName{"vtx_" + listName};
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vertexHits, vertexName, RED));
+        const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+        const CartesianVector tvu(vertex.GetX(), 0, (float)transform->YZtoU(vertex.GetY(), vertex.GetZ()));
+        const CartesianVector tvv(vertex.GetX(), 0, (float)transform->YZtoV(vertex.GetY(), vertex.GetZ()));
+        const CartesianVector tvw(vertex.GetX(), 0, (float)transform->YZtoW(vertex.GetY(), vertex.GetZ()));
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvu, "utruth", BLUE, 1));
+        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvv, "vtruth", BLUE, 1));
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvw, "wtruth", BLUE, 1));
+    }
+
+    int nEmptyLists{0};
+    if (vertexCandidatesU.empty())
+        ++nEmptyLists;
+    if (vertexCandidatesV.empty())
+        ++nEmptyLists;
+    if (vertexCandidatesW.empty())
+        ++nEmptyLists;
+    std::vector<CaloHitTuple> hits3D;
+    if (nEmptyLists == 0)
+    {
+        for (const CaloHit *pCaloHitU : vertexCandidatesU)
+        {
+            const CartesianVector &posU(pCaloHitU->GetPositionVector());
+            for (const CaloHit *pCaloHitV : vertexCandidatesV)
+            {
+                const CartesianVector &posV(pCaloHitV->GetPositionVector());
+                for (const CaloHit *pCaloHitW : vertexCandidatesW)
+                {
+                    const CartesianVector &posW(pCaloHitW->GetPositionVector());
+                    const float dxUV{std::fabs(posU.GetX() - posV.GetX())}, dxUW{std::fabs(posU.GetX() - posW.GetX())}, dxVW{std::fabs(posV.GetX() - posW.GetX())};
+                    if (dxUV < 1.5 && dxUW < 1.5 && dxVW < 1.5)
+                    {
+                        CaloHitTuple hit3D(this->GetPandora(), pCaloHitU, pCaloHitV, pCaloHitW);
+                        hits3D.push_back(hit3D);
+                    }
+                }
+            }
+        }
+    }
+    else if (nEmptyLists == 1)
+    {
+        if (vertexCandidatesU.empty())
+        {   // V and W available
+            for (const CaloHit *pCaloHitV : vertexCandidatesV)
+            {
+                const CartesianVector &posV(pCaloHitV->GetPositionVector());
+                for (const CaloHit *pCaloHitW : vertexCandidatesW)
+                {
+                    const CartesianVector &posW(pCaloHitW->GetPositionVector());
+                    const float dxVW{std::fabs(posV.GetX() - posW.GetX())};
+                    if (dxVW < 1.5)
+                    {
+                        CaloHitTuple hit3D(this->GetPandora(), nullptr, pCaloHitV, pCaloHitW);
+                        hits3D.push_back(hit3D);
+                    }
+                }
+            }
+        }
+        else if (vertexCandidatesV.empty())
+        {   // U and W available
+            for (const CaloHit *pCaloHitU : vertexCandidatesU)
+            {
+                const CartesianVector &posU(pCaloHitU->GetPositionVector());
+                for (const CaloHit *pCaloHitW : vertexCandidatesW)
+                {
+                    const CartesianVector &posW(pCaloHitW->GetPositionVector());
+                    const float dxUW{std::fabs(posU.GetX() - posW.GetX())};
+                    if (dxUW < 1.5)
+                    {
+                        CaloHitTuple hit3D(this->GetPandora(), pCaloHitU, nullptr, pCaloHitW);
+                        hits3D.push_back(hit3D);
+                    }
+                }
+            }
+        }
+        else
+        {   // U and V available
+            for (const CaloHit *pCaloHitU : vertexCandidatesU)
+            {
+                const CartesianVector &posU(pCaloHitU->GetPositionVector());
+                for (const CaloHit *pCaloHitV : vertexCandidatesV)
+                {
+                    const CartesianVector &posV(pCaloHitV->GetPositionVector());
+                    const float dxUV{std::fabs(posU.GetX() - posV.GetX())};
+                    if (dxUV < 1.5)
+                    {
+                        CaloHitTuple hit3D(this->GetPandora(), pCaloHitU, pCaloHitV, nullptr);
+                        hits3D.push_back(hit3D);
+                    }
+                }
+            }
+        }
+    }
+    else
+    {   // Not enough hits in different views to return any candidates
+        std::cout << "Not enough views" << std::endl;
+        return STATUS_CODE_SUCCESS;
+    }
+
+    std::sort(hits3D.begin(), hits3D.end(), [] (const CaloHitTuple &t1, const CaloHitTuple &t2) -> bool { return t1.GetChi2() < t2.GetChi2(); });
+    // Consider a random sample of a smaller number of hits to avoid combinatorial explosion
+    std::map<const CaloHit*, bool> uHitMap, vHitMap, wHitMap;
+    std::vector<CaloHitTuple> candidates3D;
+    for (const CaloHitTuple &hit3D : hits3D)
+    {
+        const CaloHit *pCaloHitU{hit3D.GetCaloHitU()}, *pCaloHitV{hit3D.GetCaloHitV()}, *pCaloHitW{hit3D.GetCaloHitW()};
+        if (pCaloHitU && uHitMap.find(pCaloHitU) != uHitMap.end())
+            continue;
+        if (pCaloHitV && uHitMap.find(pCaloHitV) != uHitMap.end())
+            continue;
+        if (pCaloHitW && uHitMap.find(pCaloHitW) != uHitMap.end())
+            continue;
+        candidates3D.push_back(hit3D);
+        if (pCaloHitU)
+            uHitMap[pCaloHitU] = true;
+        if (pCaloHitV)
+            vHitMap[pCaloHitV] = true;
+        if (pCaloHitW)
+            wHitMap[pCaloHitW] = true;
+
+        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hit3D.GetPosition(), "candidate", GREEN, 1));
     }
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
@@ -248,7 +390,6 @@ StatusCode DlVertexingAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCContribut
 
     LArMCParticleHelper::PrimaryParameters parameters;
     parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
-    parameters.m_foldBackHierarchy = false;
     LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList2D, parameters,
         LArMCParticleHelper::IsBeamNeutrinoFinalState, mcToHitsMap);
 
@@ -263,8 +404,7 @@ StatusCode DlVertexingAlgorithm::CompleteMCHierarchy(const LArMCParticleHelper::
     try
     {
         for (const auto [ mc, hits ] : mcToHitsMap)
-        {
-            (void) hits;
+        {   (void) hits;
             mcHierarchy.push_back(mc);
             LArMCParticleHelper::GetAllAncestorMCParticles(mc, mcHierarchy);
         }
@@ -335,6 +475,84 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         "CaloHitListNames", m_caloHitListNames));
 
     return STATUS_CODE_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+DlVertexingAlgorithm::CaloHitTuple::CaloHitTuple(const pandora::Pandora &pandora, const CaloHit *pCaloHitU, const CaloHit *pCaloHitV,
+    const CaloHit *pCaloHitW) :
+    m_pCaloHitU{pCaloHitU},
+    m_pCaloHitV{pCaloHitV},
+    m_pCaloHitW{pCaloHitW},
+    m_pos{0.f, 0.f, 0.f},
+    m_chi2{0.f}
+{
+    const bool hasU{m_pCaloHitU}, hasV{m_pCaloHitV}, hasW{m_pCaloHitW};
+    if (hasW && hasV && hasU)
+        LArGeometryHelper::MergeThreePositions3D(pandora, TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W,
+            m_pCaloHitU->GetPositionVector(), m_pCaloHitV->GetPositionVector(), m_pCaloHitW->GetPositionVector(), m_pos, m_chi2);
+    else if (hasW && hasV)
+        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_V, TPC_VIEW_W,
+            m_pCaloHitV->GetPositionVector(), m_pCaloHitW->GetPositionVector(), m_pos, m_chi2);
+    else if (hasW && hasU)
+        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_U, TPC_VIEW_W,
+            m_pCaloHitU->GetPositionVector(), m_pCaloHitW->GetPositionVector(), m_pos, m_chi2);
+    else if (hasV && hasU)
+        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_U, TPC_VIEW_V,
+            m_pCaloHitU->GetPositionVector(), m_pCaloHitV->GetPositionVector(), m_pos, m_chi2);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+const CartesianVector &DlVertexingAlgorithm::CaloHitTuple::GetPosition() const
+{
+    return m_pos;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+float DlVertexingAlgorithm::CaloHitTuple::GetChi2() const
+{
+    return m_chi2;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+std::string DlVertexingAlgorithm::CaloHitTuple::ToString() const
+{
+    const CartesianVector &uPos{m_pCaloHitU ? m_pCaloHitU->GetPositionVector() : CartesianVector(0, 0, 0)};
+    const CartesianVector &vPos{m_pCaloHitV ? m_pCaloHitV->GetPositionVector() : CartesianVector(0, 0, 0)};
+    const CartesianVector &wPos{m_pCaloHitW ? m_pCaloHitW->GetPositionVector() : CartesianVector(0, 0, 0)};
+    const float ux{uPos.GetX()}, uz{uPos.GetZ()};
+    const float vx{vPos.GetX()}, vz{vPos.GetZ()};
+    const float wx{wPos.GetX()}, wz{wPos.GetZ()};
+    const float x{m_pos.GetX()}, y{m_pos.GetY()}, z{m_pos.GetZ()};
+
+    return "U: (" + std::to_string(ux) + ", " + std::to_string(uz) +  ")   V: (" + std::to_string(vx) + ", " + std::to_string(vz) +
+        ")   W: (" + std::to_string(wx) + ", " + std::to_string(wz) + ")   3D: (" +
+        std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")   X2 = " + std::to_string(m_chi2);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+const CaloHit *DlVertexingAlgorithm::CaloHitTuple::GetCaloHitU() const
+{
+    return m_pCaloHitU;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+const CaloHit *DlVertexingAlgorithm::CaloHitTuple::GetCaloHitV() const
+{
+    return m_pCaloHitV;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+const CaloHit *DlVertexingAlgorithm::CaloHitTuple::GetCaloHitW() const
+{
+    return m_pCaloHitW;
 }
 
 } // namespace lar_dl_content
