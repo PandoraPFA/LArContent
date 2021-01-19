@@ -32,7 +32,7 @@ public:
      */
     DlVertexingAlgorithm();
 
-    virtual ~DlVertexingAlgorithm() = default;
+    virtual ~DlVertexingAlgorithm();
 
 private:
     class CaloHitTuple
@@ -102,6 +102,7 @@ private:
     LArDLHelper::TorchModel m_modelW;               ///< The model for the W view
     float                   m_pixelShift;           ///< Pixel normalisation shift
     float                   m_pixelScale;           ///< Pixel normalisation scale
+    bool                    m_visualise;            ///< Whether or not to visualise the candidate vertices
 };
 
 } // namespace lar_dl_content

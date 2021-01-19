@@ -26,8 +26,21 @@ DlVertexingAlgorithm::DlVertexingAlgorithm():
     m_trainingMode{false},
     m_trainingOutputFile{""},
     m_pixelShift{0.f},
-    m_pixelScale{1.f}
+    m_pixelScale{1.f},
+    m_visualise{false}
 {
+}
+
+DlVertexingAlgorithm::~DlVertexingAlgorithm()
+{
+    try
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "vertex_dr", "vertex.root", "RECREATE"));
+    }
+    catch(const StatusCodeException&)
+    {
+        std::cout << "DlVertexingAlgorithm: Unable to write ROOT tree" << std::endl;
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -165,7 +178,7 @@ StatusCode DlVertexingAlgorithm::Infer()
         if (!isU && !isV && !isW)
             return STATUS_CODE_NOT_ALLOWED;
 
-        if (isW)
+        if (isW && m_visualise)
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), pCaloHitList, listName, BLACK));
 
         const int imageWidth = 256;
@@ -251,15 +264,18 @@ StatusCode DlVertexingAlgorithm::Infer()
         }
         if (!isW)
             continue;
-        std::string vertexName{"vtx_" + listName};
-        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vertexHits, vertexName, RED));
-        const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-        const CartesianVector tvu(vertex.GetX(), 0, (float)transform->YZtoU(vertex.GetY(), vertex.GetZ()));
-        const CartesianVector tvv(vertex.GetX(), 0, (float)transform->YZtoV(vertex.GetY(), vertex.GetZ()));
-        const CartesianVector tvw(vertex.GetX(), 0, (float)transform->YZtoW(vertex.GetY(), vertex.GetZ()));
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvu, "utruth", BLUE, 1));
-        //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvv, "vtruth", BLUE, 1));
-        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvw, "wtruth", BLUE, 1));
+        if (m_visualise)
+        {
+            std::string vertexName{"vtx_" + listName};
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vertexHits, vertexName, RED));
+            const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+            const CartesianVector tvu(vertex.GetX(), 0, (float)transform->YZtoU(vertex.GetY(), vertex.GetZ()));
+            const CartesianVector tvv(vertex.GetX(), 0, (float)transform->YZtoV(vertex.GetY(), vertex.GetZ()));
+            const CartesianVector tvw(vertex.GetX(), 0, (float)transform->YZtoW(vertex.GetY(), vertex.GetZ()));
+            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvu, "utruth", BLUE, 1));
+            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvv, "vtruth", BLUE, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvw, "wtruth", BLUE, 1));
+        }
     }
 
     int nEmptyLists{0};
@@ -355,6 +371,7 @@ StatusCode DlVertexingAlgorithm::Infer()
     // Consider a random sample of a smaller number of hits to avoid combinatorial explosion
     std::map<const CaloHit*, bool> uHitMap, vHitMap, wHitMap;
     std::vector<CaloHitTuple> candidates3D;
+    FloatVector drs;
     for (const CaloHitTuple &hit3D : hits3D)
     {
         const CaloHit *pCaloHitU{hit3D.GetCaloHitU()}, *pCaloHitV{hit3D.GetCaloHitV()}, *pCaloHitW{hit3D.GetCaloHitW()};
@@ -371,10 +388,23 @@ StatusCode DlVertexingAlgorithm::Infer()
             vHitMap[pCaloHitV] = true;
         if (pCaloHitW)
             wHitMap[pCaloHitW] = true;
+        const float dr{std::sqrt(hit3D.GetPosition().GetDistanceSquared(vertex))};
+        drs.push_back(dr);
 
-        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hit3D.GetPosition(), "candidate", GREEN, 1));
+        if (m_visualise)
+            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hit3D.GetPosition(), "candidate", GREEN, 1));
     }
-    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    if (m_visualise)
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+
+    if (!drs.empty())
+    {
+        std::sort(drs.begin(), drs.end());
+        const float drMin{drs.front()};
+        std::cout << "Min dr = " << drMin << std::endl;
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex_dr", "dr_min", drMin));
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex_dr"));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -453,6 +483,8 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode",
         m_trainingMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise",
+        m_visualise));
 
     if (m_trainingMode)
     {
