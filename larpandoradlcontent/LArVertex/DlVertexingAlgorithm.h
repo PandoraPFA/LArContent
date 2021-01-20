@@ -94,8 +94,18 @@ private:
      **/
     void GetHitRegion(const pandora::CaloHitList& caloHitList, float& xMin, float& xMax, float& zMin, float& zMax) const;
 
+    /**
+     *  @brief Create a vertex list from the candidate vertices.
+     *
+     *  @param  candidates The candidate positions with which to create the list.
+     *
+     *  @return The StatusCode resulting from the function
+     */
+    pandora::StatusCode MakeCandidateVertexList(const pandora::CartesianPointVector &positions);
+
     bool                    m_trainingMode;         ///< Training mode
     std::string             m_trainingOutputFile;   ///< Output file name for training examples
+    std::string             m_outputVertexListName; ///< Output vertex list name
     pandora::StringVector   m_caloHitListNames;     ///< Names of input calo hit lists
     LArDLHelper::TorchModel m_modelU;               ///< The model for the U view
     LArDLHelper::TorchModel m_modelV;               ///< The model for the V view

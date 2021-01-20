@@ -33,14 +33,6 @@ DlVertexingAlgorithm::DlVertexingAlgorithm():
 
 DlVertexingAlgorithm::~DlVertexingAlgorithm()
 {
-    try
-    {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "vertex_dr", "vertex.root", "RECREATE"));
-    }
-    catch(const StatusCodeException&)
-    {
-        std::cout << "DlVertexingAlgorithm: Unable to write ROOT tree" << std::endl;
-    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -159,12 +151,6 @@ StatusCode DlVertexingAlgorithm::Train()
 
 StatusCode DlVertexingAlgorithm::Infer()
 {
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
-    MCParticleVector primaries;
-    LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
-    const CartesianVector &vertex{primaries.front()->GetVertex()};
-
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
 
     CaloHitList vertexCandidatesU, vertexCandidatesV, vertexCandidatesW;
@@ -262,20 +248,6 @@ StatusCode DlVertexingAlgorithm::Infer()
                 }
             }
         }
-        if (!isW)
-            continue;
-        if (m_visualise)
-        {
-            std::string vertexName{"vtx_" + listName};
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vertexHits, vertexName, RED));
-            const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-            const CartesianVector tvu(vertex.GetX(), 0, (float)transform->YZtoU(vertex.GetY(), vertex.GetZ()));
-            const CartesianVector tvv(vertex.GetX(), 0, (float)transform->YZtoV(vertex.GetY(), vertex.GetZ()));
-            const CartesianVector tvw(vertex.GetX(), 0, (float)transform->YZtoW(vertex.GetY(), vertex.GetZ()));
-            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvu, "utruth", BLUE, 1));
-            //PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvv, "vtruth", BLUE, 1));
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &tvw, "wtruth", BLUE, 1));
-        }
     }
 
     int nEmptyLists{0};
@@ -363,7 +335,6 @@ StatusCode DlVertexingAlgorithm::Infer()
     }
     else
     {   // Not enough hits in different views to return any candidates
-        std::cout << "Not enough views" << std::endl;
         return STATUS_CODE_SUCCESS;
     }
 
@@ -372,6 +343,7 @@ StatusCode DlVertexingAlgorithm::Infer()
     std::map<const CaloHit*, bool> uHitMap, vHitMap, wHitMap;
     std::vector<CaloHitTuple> candidates3D;
     FloatVector drs;
+    CartesianPointVector positions;
     for (const CaloHitTuple &hit3D : hits3D)
     {
         const CaloHit *pCaloHitU{hit3D.GetCaloHitU()}, *pCaloHitV{hit3D.GetCaloHitV()}, *pCaloHitW{hit3D.GetCaloHitW()};
@@ -388,23 +360,18 @@ StatusCode DlVertexingAlgorithm::Infer()
             vHitMap[pCaloHitV] = true;
         if (pCaloHitW)
             wHitMap[pCaloHitW] = true;
-        const float dr{std::sqrt(hit3D.GetPosition().GetDistanceSquared(vertex))};
-        drs.push_back(dr);
+        const CartesianVector &position{hit3D.GetPosition()};
+        positions.emplace_back(position);
 
         if (m_visualise)
             PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &hit3D.GetPosition(), "candidate", GREEN, 1));
     }
+
+    if (!positions.empty())
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->MakeCandidateVertexList(positions));
+
     if (m_visualise)
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-
-    if (!drs.empty())
-    {
-        std::sort(drs.begin(), drs.end());
-        const float drMin{drs.front()};
-        std::cout << "Min dr = " << drMin << std::endl;
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex_dr", "dr_min", drMin));
-        PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex_dr"));
-    }
 
     return STATUS_CODE_SUCCESS;
 }
@@ -479,6 +446,30 @@ void DlVertexingAlgorithm::GetHitRegion(const CaloHitList& caloHitList, float& x
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
+StatusCode DlVertexingAlgorithm::MakeCandidateVertexList(const CartesianPointVector &positions)
+{
+    const VertexList *pVertexList{nullptr};
+    std::string temporaryListName;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
+
+    for (const CartesianVector position : positions)
+    {
+        PandoraContentApi::Vertex::Parameters parameters;
+        parameters.m_position = position;
+        parameters.m_vertexLabel = VERTEX_INTERACTION;
+        parameters.m_vertexType = VERTEX_3D;
+
+        const Vertex *pVertex(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+    }
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
+    //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingMode",
@@ -501,6 +492,7 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         LArDLHelper::LoadModel(modelName, m_modelW);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PixelShift", m_pixelShift));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PixelScale", m_pixelScale));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
