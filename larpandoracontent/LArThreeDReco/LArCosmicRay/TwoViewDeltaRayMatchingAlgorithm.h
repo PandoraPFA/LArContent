@@ -63,7 +63,10 @@ public:
 
     const std::string &GetThirdViewClusterListName() const;
 
-    pandora::StatusCode PerformMatching(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV, const pandora::CaloHitList &clusterW,
+    pandora::StatusCode PerformThreeViewMatching(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,
+        float &reducedChiSquared) const;
+    
+    pandora::StatusCode PerformThreeViewMatching(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV, const pandora::CaloHitList &clusterW,
         float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints, XOverlap &XOverlap) const;
 
     bool CreatePfo(const MatrixType::Element &element);
@@ -91,7 +94,7 @@ private:
     pandora::StatusCode GetProjectedPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         pandora::CartesianPointVector &projectedPositions) const;
     
-    void CollectHits(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::CartesianPointVector &projectedPositions,
+    void CollectThirdViewClusters(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::CartesianPointVector &projectedPositions,
         pandora::ClusterList &matchedClusters) const;
 
     void GetBestMatchedCluster(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::PfoList &commonMuonPfoList,
@@ -106,7 +109,7 @@ private:
 
     void MergeThirdView(const MatrixType::Element &element, const pandora::Cluster *const pSeedCluster);
 
-    pandora::StatusCode CollectDeltaRayHits(const MatrixType::Element &element,
+    pandora::StatusCode PullOutDeltaRayHits(const MatrixType::Element &element,
         const pandora::ParticleFlowObject *const pParentMuon, pandora::CaloHitList &collectedHits) const;
 
     pandora::StatusCode ProjectMuonPositions(const pandora::HitType &thirdViewHitType, const pandora::ParticleFlowObject *const pParentMuon,
@@ -114,6 +117,8 @@ private:
 
     pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector,
         const pandora::Cluster *const pCluster) const;
+
+    float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::CartesianPointVector &cartesianPointVector) const;
 
     float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector) const;
 
@@ -159,6 +164,9 @@ private:
     float                             m_maxDisplacementSquared;
     float                             m_minMatchedFraction;
     unsigned int                      m_minMatchedPoints;
+    unsigned int                      m_minProjectedPositions;
+    float                      m_maxDistanceFromPrediction;
+    float                      m_maxGoodMatchReducedChiSquared;
     float m_pseudoChi2Cut;
     std::string m_inputClusterListName;
     std::string m_muonPfoListName;
