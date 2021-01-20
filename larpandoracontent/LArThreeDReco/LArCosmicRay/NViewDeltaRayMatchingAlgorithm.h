@@ -31,6 +31,8 @@ public:
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
+    typedef std::vector<pandora::HitType> HitTypeVector;
+
     /**
      *  @brief  Default constructor
      */
@@ -42,6 +44,9 @@ public:
 
     void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
+    pandora::StatusCode PerformThreeViewMatching(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,
+        float &reducedChiSquared) const;
+    
     pandora::StatusCode PerformThreeViewMatching(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
         float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints, XOverlap &XOverlap) const;
 
