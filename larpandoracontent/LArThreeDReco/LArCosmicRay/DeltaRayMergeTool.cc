@@ -421,7 +421,7 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                     float chiSquaredSum(0.f);
                     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
                         
-                    StatusCode status(pAlgorithm->PerformMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xOverlapObject));
+                    StatusCode status(pAlgorithm->PerformThreeViewMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xOverlapObject));
                         
                     if (status == STATUS_CODE_NOT_FOUND)
                         continue;
