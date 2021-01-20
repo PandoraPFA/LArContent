@@ -13,9 +13,12 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/NViewDeltaRayMatchingAlgorithm.h"
+
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
@@ -235,6 +238,29 @@ void NViewDeltaRayMatchingAlgorithm<T>::GetNearbyMuonPfos(const Cluster *const p
         
         this->GetNearbyMuonPfos(pNearbyCluster, consideredClusters, nearbyMuonPfos);
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3,
+    float &reducedChiSquared) const
+{
+    float chiSquaredSum(0.f);
+    unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+    XOverlap xThreeViewOverlapObject(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+    
+    CaloHitList caloHitList1, caloHitList2, caloHitList3;
+    pCluster1->GetOrderedCaloHitList().FillCaloHitList(caloHitList1);
+    pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
+    pCluster3->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
+    
+    if (this->PerformThreeViewMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xThreeViewOverlapObject) == STATUS_CODE_NOT_FOUND)
+        return STATUS_CODE_NOT_FOUND;
+
+    reducedChiSquared = chiSquaredSum / nSamplingPoints;
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -663,6 +689,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xml
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class NViewDeltaRayMatchingAlgorithm<ThreeViewMatchingControl<DeltaRayOverlapResult> >;
+template class NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> >;
 
 } // namespace lar_content
 
