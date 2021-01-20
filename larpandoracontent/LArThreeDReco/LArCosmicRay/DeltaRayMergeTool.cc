@@ -66,7 +66,7 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
                 continue;
             
             for (const TensorType::Element &element : elementList)
-	        {
+            {
                 if (usedKeyClusters.count(element.GetClusterU()))
                     continue;
 
@@ -77,7 +77,7 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
                 continue;
 
             if (this->MakeTwoCommonViewMerges(pAlgorithm, elementList))
-	        {
+            {
                 mergeMade = true; mergesMade = true;
                 break;
             }
@@ -107,7 +107,7 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
                 continue;            
 
             for (const TensorType::Element &element : elementList)
-	        {
+            {
                 if (usedKeyClusters.count(element.GetClusterU()))
                     continue;
 
@@ -117,8 +117,8 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
             if (elementList.size() < 2)
                 continue;
 
-	        if (this->MakeOneCommonViewMerges(pAlgorithm, elementList))
-	        {
+            if (this->MakeOneCommonViewMerges(pAlgorithm, elementList))
+            {
                 mergeMade = true; mergesMade = true;
                 break;
             }
@@ -148,11 +148,11 @@ void DeltaRayMergeTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAl
                 continue;            
 
             for (const TensorType::Element &element : elementList)
-	        {
+            {
                 if (usedKeyClusters.count(element.GetClusterU()))
                     continue;
 
-                    usedKeyClusters.insert(element.GetClusterU());
+                usedKeyClusters.insert(element.GetClusterU());
             }
 
             if (elementList.size() < 2)
