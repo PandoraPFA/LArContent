@@ -22,6 +22,7 @@ namespace lar_content
 class HitCreationBaseTool;
 class ThreeDSlidingFitResult;
 class RANSACHit;
+class RANSACMethodTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -339,6 +340,7 @@ private:
 
     typedef std::vector<HitCreationBaseTool*> HitCreationToolVector;
     HitCreationToolVector   m_algorithmToolVector;      ///< The algorithm tool vector
+    RANSACMethodTool*       m_ransacMethodTool;         ///< RANSAC Method tool
 
     std::string             m_inputPfoListName;         ///< The name of the input pfo list
     std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
@@ -346,12 +348,11 @@ private:
 
     bool                    m_iterateTrackHits;         ///< Whether to enable iterative improvement of 3D hits for track trajectories
     bool                    m_iterateShowerHits;        ///< Whether to enable iterative improvement of 3D hits for showers
-    bool                    m_useRANSACMethod;          ///< Whether to use the RANSAC based consolidated method.
     unsigned int            m_slidingFitHalfWindow;     ///< The sliding linear fit half window
     unsigned int            m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
     double                  m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
     double                  m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
-    double                  m_interpolationCutOff;      ///< Max distance for a point to be interpolated from.
+    double                  m_interpolationCutOff;      ///< Max distance for a point to be interpolated from
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

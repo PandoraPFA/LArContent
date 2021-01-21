@@ -382,9 +382,7 @@ void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSAC
         fitPoints.push_back(hit.GetProtoHit().GetPosition3D());
 
     const unsigned int layerWindow(100);
-    std::cout << "Getting wire pitch" << std::endl;
     const float pitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    std::cout << "Got the wire pitch" << std::endl;
     const ThreeDSlidingFitResult slidingFit(&fitPoints, layerWindow, pitch);
 
     CartesianVector fitDirection = slidingFit.GetGlobalMaxLayerDirection();

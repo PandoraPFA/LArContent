@@ -27,9 +27,9 @@ namespace lar_content
 {
 
 ThreeDHitCreationAlgorithm::ThreeDHitCreationAlgorithm() :
+    m_ransacMethodTool(nullptr),
     m_iterateTrackHits(true),
     m_iterateShowerHits(false),
-    m_useRANSACMethod(false),
     m_slidingFitHalfWindow(10),
     m_nHitRefinementIterations(10),
     m_sigma3DFitMultiplier(0.2),
@@ -66,6 +66,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
     CaloHitList allNewThreeDHits;
     ProtoHitVectorMap allProtoHitVectors;
+    const bool usingRANSAC = m_ransacMethodTool != nullptr;
 
     PfoVector pfoVector(pPfoList->begin(), pPfoList->end());
     std::sort(pfoVector.begin(), pfoVector.end(), LArPfoHelper::SortByNHits);
@@ -85,7 +86,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
             pHitCreationTool->Run(this, pPfo, remainingTwoDHits, protoHitVector);
 
-            if (m_useRANSACMethod && LArPfoHelper::IsTrack(pPfo))
+            if (usingRANSAC && LArPfoHelper::IsTrack(pPfo))
             {
                 // TODO: Replace 10 with a configuration controlled number.
                 for (unsigned int i = 0; i < 10; ++i)
@@ -99,7 +100,7 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
                 }
 
                 this->IterativeTreatment(protoHitVector);
-                allProtoHitVectors.insert(ProtoHitVectorMap::value_type(pHitCreationTool->GetInstanceName(), protoHitVector));
+                allProtoHitVectors.insert(ProtoHitVectorMap::value_type(pHitCreationTool->GetType(), protoHitVector));
                 protoHitVector.clear();
             }
         }
@@ -113,10 +114,10 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
         );
 
         // ATTN: Skip for RANSAC, since it will be done later.
-        if (shouldUseIterativeTreatment && !m_useRANSACMethod)
+        if (shouldUseIterativeTreatment && !usingRANSAC)
             this->IterativeTreatment(protoHitVector);
 
-        if (m_useRANSACMethod && LArPfoHelper::IsTrack(pPfo))
+        if (usingRANSAC && LArPfoHelper::IsTrack(pPfo))
         {
             this->ConsolidatedMethod(pPfo, allProtoHitVectors, protoHitVector);
             allProtoHitVectors.clear();
@@ -242,7 +243,7 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
 
     const float DISTANCE_THRESHOLD(0.05); // TODO: Move to config option.
     const std::vector<HitType> views = {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
-    const std::vector<std::string> toolsToAvoid = {"Tool0039", "Tool0043"}; // TODO: Config option?
+    const std::vector<std::string> toolsToAvoid = {"LArMultiValuedLongitudinalTrackHits"}; // TODO: Config option?
     std::map<HitType, RANSACHitVector> goodHits;
 
     for (auto toolVectorPair : allProtoHitVectors)
@@ -289,8 +290,9 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
     RANSACHitVector consistentHits;
     this->GetSetIntersection(goodHits[TPC_VIEW_W], UVconsistentHits, consistentHits);
 
-    RANSACMethodTool ransacMethod;
-    ransacMethod.Run(consistentHits, protoHitVector);
+    // RANSACMethodTool ransacMethod;
+    m_ransacMethodTool->Run(consistentHits, protoHitVector);
+    // ransacMethod.Run(consistentHits, protoHitVector);
 
     this->InterpolationMethod(pPfo, protoHitVector);
     this->IterativeTreatment(protoHitVector);
@@ -494,7 +496,7 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
         PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, uFit, vFit, wFit, sigma3DFit, bestY, bestZ, chi2);
 
-        if (m_useRANSACMethod)
+        if (m_ransacMethodTool != nullptr)
             position3D.SetValues(protoHit.GetPosition3D().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
         else
             position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
@@ -652,6 +654,16 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
+
+        if ((*iter)->GetType() == "LArRANSACMethod")
+        {
+            RANSACMethodTool *const pRANSACMethodTool(dynamic_cast<RANSACMethodTool*>(*iter));
+            if (pRANSACMethodTool)
+                m_ransacMethodTool = pRANSACMethodTool;
+
+            continue;
+        }
+
         HitCreationBaseTool *const pHitCreationTool(dynamic_cast<HitCreationBaseTool*>(*iter));
 
         if (!pHitCreationTool)
@@ -669,9 +681,6 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IterateShowerHits", m_iterateShowerHits));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseRANSAC", m_useRANSACMethod));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InterpolationCut", m_interpolationCutOff));
