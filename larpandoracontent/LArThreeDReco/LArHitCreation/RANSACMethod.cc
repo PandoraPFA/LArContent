@@ -28,6 +28,17 @@ using namespace pandora;
 namespace lar_content
 {
 
+RANSACMethodTool::RANSACMethodTool() :
+    m_ransacThreshold(2.5),
+    m_ransacIterations(100),
+    m_fitIterations(1000),
+    m_fitSize(80),
+    m_distToEndThreshold(10.0),
+    m_distToFitThreshold(6.25),
+    m_finishedThreshold(10)
+{
+}
+
 void RANSACMethodTool::Run(RANSACHitVector &consistentHits, ProtoHitVector &protoHitVector)
 {
     if (consistentHits.size() < 3)
@@ -36,9 +47,7 @@ void RANSACMethodTool::Run(RANSACHitVector &consistentHits, ProtoHitVector &prot
     ParameterVector candidatePoints;
     this->GetCandidatePoints(consistentHits, candidatePoints);
 
-    const float RANSAC_THRESHOLD(2.5);
-    const int RANSAC_ITERS(100); // TODO: Should either be dynamic, or a config option.
-    RANSAC<PlaneModel, 3> estimator(RANSAC_THRESHOLD, RANSAC_ITERS);
+    RANSAC<PlaneModel, 3> estimator(m_ransacThreshold, m_ransacIterations);
     estimator.Estimate(candidatePoints);
 
     RANSACHitVector primaryResult;
@@ -107,22 +116,19 @@ void RANSACMethodTool::GetCandidatePoints(RANSACHitVector &allHits, ParameterVec
 int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACResult run, RANSACHitVector &hitsToUse, RANSACHitVector &finalHits)
 {
     std::map<const CaloHit*, RANSACHit> inlyingHitMap;
-    const float RANSAC_THRESHOLD(2.5); // TODO: Consolidate to config option.
-    const float EXTEND_THRESHOLD(6.25); // TODO: Config.
+
+    if (run == RANSACResult::Second && !ransac.GetSecondBestModel())
+        return 0;
 
     const ParameterVector currentInliers = run == RANSACResult::Best ? ransac.GetBestInliers() : ransac.GetSecondBestInliers();
-
-    const auto bestModel = ransac.GetBestModel();
-    auto secondModel = ransac.GetSecondBestModel();
 
     // ATTN: The second model can technically be NULL, so set to first model in that case, as that won't cause any issues.
     //       This is because its possible for the second model to not be populated (if say the first model fits everything),
     //       but this method will not run at all if no models were populated.
-    if (!secondModel)
-        secondModel = bestModel;
-
-    const PlaneModel currentModel = run == RANSACResult::Best ? *bestModel : *secondModel;
-    const PlaneModel otherModel = run == RANSACResult::Best ? *secondModel : *bestModel;
+    const auto bestModel = ransac.GetBestModel().get();
+    const auto secondModel = ransac.GetSecondBestModel() ? ransac.GetSecondBestModel().get() : bestModel;
+    const auto currentModel = run == RANSACResult::Best ? bestModel : secondModel;
+    const auto otherModel = run == RANSACResult::Best ? secondModel : bestModel;
 
     RANSACHitVector sortedHits;
     std::list<RANSACHit> nextHits;
@@ -152,18 +158,18 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
     {
         if ((inlyingHitMap.count(hit.GetProtoHit().GetParentCaloHit2D()) == 0))
         {
-            const float modelDisp(otherModel.ComputeDistanceMeasure(std::make_shared<RANSACHit>(hit)));
+            const float modelDisp(otherModel->ComputeDistanceMeasure(std::make_shared<RANSACHit>(hit)));
 
             // ATTN: A hit is unfavourable if its from a bad tool, or is in the other model. Unfavourable means it will attempt to not be
             //       used, but can be used if needed.
-            const bool isNotInOtherModel(modelDisp > RANSAC_THRESHOLD);
+            const bool isNotInOtherModel(modelDisp > m_ransacThreshold);
             const bool isAlreadyFavourable(hit.IsFavourable());
             nextHits.emplace_back(hit.GetProtoHit(), isNotInOtherModel && isAlreadyFavourable);
         }
     }
 
-    const CartesianVector fitOrigin(currentModel.GetOrigin());
-    const CartesianVector fitDirection(currentModel.GetDirection());
+    const CartesianVector fitOrigin(currentModel->GetOrigin());
+    const CartesianVector fitDirection(currentModel->GetDirection());
     const auto sortByModelDisplacement = [&fitOrigin, &fitDirection] (RANSACHit a, RANSACHit b) {
         float displacementA = (a.GetProtoHit().GetPosition3D() - fitOrigin).GetDotProduct(fitDirection);
         float displacementB = (b.GetProtoHit().GetPosition3D() - fitOrigin).GetDotProduct(fitDirection);
@@ -171,35 +177,30 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
     };
 
     std::sort(sortedHits.begin(), sortedHits.end(), sortByModelDisplacement);
-
-    // TODO: If RANSAC was good enough (i.e. it got everything) skip the sorting and similar.
     std::list<RANSACHit> currentPoints3D;
 
     for (auto hit : sortedHits)
         currentPoints3D.push_back(hit);
 
-    const int FIT_ITERATIONS(1000); // TODO: Config?
-
     RANSACHitVector hitsToUseForFit;
     RANSACHitVector hitsToAdd;
-
     RANSACMethodTool::GetHitsForFit(currentPoints3D, hitsToUseForFit, 0, 0);
 
     int smallIterCount(0);
-    ExtendDirection extendDirection = ExtendDirection::Forward;
     int coherentHitCount(0);
+    ExtendDirection extendDirection = ExtendDirection::Forward;
 
     // INFO: For each iteration, try and extend the fit. Fitting is run multiple times per iteration, stopping after the first iteration
     //       that adds hits.
     //       If hits are added, add them to the total hit map and make the new hits available for further iterations of the fit extending.
     //       When no hits remain, repeat from other end of fit, then stop.
-    for (unsigned int iter = 0; iter < FIT_ITERATIONS; ++iter)
+    for (unsigned int iter = 0; iter < m_fitIterations; ++iter)
     {
         hitsToAdd.clear();
 
         for (float fits = 1; fits < 4.0; ++fits)
         {
-            RANSACMethodTool::ExtendFit(nextHits, hitsToUseForFit, hitsToAdd, (EXTEND_THRESHOLD * fits), extendDirection);
+            RANSACMethodTool::ExtendFit(nextHits, hitsToUseForFit, hitsToAdd, (m_distToFitThreshold * fits), extendDirection);
 
             if (hitsToAdd.size() > 0)
                 break;
@@ -232,7 +233,7 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
 
             auto it = sortedHits.begin();
             // TODO: Randomly chosen "at least 5 fits worth", evaluate.
-            while (currentPoints3D.size() < (5 * 80) && it != sortedHits.end())
+            while (currentPoints3D.size() < (5 * m_fitSize) && it != sortedHits.end())
             {
                 currentPoints3D.push_back(*it);
                 ++it;
@@ -259,9 +260,6 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
 bool RANSACMethodTool::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANSACHitVector &hitsToUseForFit, const int addedHitCount,
     int smallAdditionCount)
 {
-    const int HITS_TO_KEEP(80); // TODO: Config and consolidate (reverse bit).
-    const int FINISHED_THRESHOLD(10); // TODO: Config
-
     // ATTN: Four options:
     //  Added no hits at the end: Stop.
     //  Added small number of hits at end repeatedly: Stop.
@@ -270,19 +268,19 @@ bool RANSACMethodTool::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANS
     if (addedHitCount == 0 && currentPoints3D.size() == 0)
         return false;
 
-    if (addedHitCount < 2 && smallAdditionCount > FINISHED_THRESHOLD)
+    if (addedHitCount < 2 && smallAdditionCount > m_finishedThreshold)
         return false;
 
     if (addedHitCount <= 2 && currentPoints3D.size() != 0)
     {
         int i(0);
         auto it = currentPoints3D.begin();
-        while(i <= HITS_TO_KEEP && currentPoints3D.size() != 0)
+        while(i <= m_fitSize && currentPoints3D.size() != 0)
         {
             hitsToUseForFit.push_back(*it);
             it = currentPoints3D.erase(it);
 
-            if (hitsToUseForFit.size() >= HITS_TO_KEEP)
+            if (hitsToUseForFit.size() >= m_fitSize)
                 hitsToUseForFit.erase(hitsToUseForFit.begin());
 
             ++i;
@@ -291,7 +289,7 @@ bool RANSACMethodTool::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANS
     else if (addedHitCount > 0)
     {
         auto it = hitsToUseForFit.begin();
-        while (hitsToUseForFit.size() > HITS_TO_KEEP)
+        while (hitsToUseForFit.size() > m_fitSize)
             it = hitsToUseForFit.erase(it);
     }
 
@@ -375,7 +373,7 @@ void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSAC
     if (hitsToUseForFit.size() == 0)
         return;
 
-    float distanceToEndThreshold(10); // TODO: Config?
+    float distanceToEndThreshold(m_distToEndThreshold);
 
     CartesianPointVector fitPoints;
     for (auto hit : hitsToUseForFit)
@@ -446,8 +444,30 @@ void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSAC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode RANSACMethodTool::ReadSettings(const pandora::TiXmlHandle /* xmlHandle */)
+StatusCode RANSACMethodTool::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "RANSACThreshold", m_ransacThreshold));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxRANSACIterations", m_ransacIterations));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxFitIterations", m_fitIterations));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FitImprovementSize", m_fitSize));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DistanceToProjectFit", m_distToEndThreshold));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DistanceToProjectOnToFit", m_distToFitThreshold));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "FinishedThreshold", m_finishedThreshold));
+
     return STATUS_CODE_SUCCESS;
 }
+
 } // namespace lar_content

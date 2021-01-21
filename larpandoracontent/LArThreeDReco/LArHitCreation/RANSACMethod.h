@@ -115,7 +115,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    RANSACMethodTool() = default;
+    RANSACMethodTool();
 
     /**
      *  @brief  Destructor
@@ -213,6 +213,15 @@ protected:
      *  @param  candidatePoints  Vector to store the chosen candidate hits in.
      */
     void GetCandidatePoints(RANSACHitVector &allHits, ParameterVector &candidatePoints);
+
+private:
+    float m_ransacThreshold;         ///< RANSAC distance threshold (Distance from point to line, to be included).
+    int   m_ransacIterations;        ///< RANSAC iterations (How many iterations to run at most, with early stopping).
+    int   m_fitIterations;           ///< Number of fitting iterations, to improve the RANSAC model.
+    int   m_fitSize;                 ///< Number of hits to use in fit extending. Small = follow small features.
+    float m_distToEndThreshold;      ///< How far to project in front of the current fit line.
+    float m_distToFitThreshold;      ///< How far to project a point on to the line, to consider it part of the fit.
+    int   m_finishedThreshold;       ///< How many small fits to consider the fitting process complete.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

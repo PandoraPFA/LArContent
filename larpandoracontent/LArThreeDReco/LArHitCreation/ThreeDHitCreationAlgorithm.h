@@ -339,20 +339,21 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::vector<HitCreationBaseTool*> HitCreationToolVector;
-    HitCreationToolVector   m_algorithmToolVector;      ///< The algorithm tool vector
-    RANSACMethodTool*       m_ransacMethodTool;         ///< RANSAC Method tool
+    HitCreationToolVector    m_algorithmToolVector;      ///< The algorithm tool vector
+    RANSACMethodTool*        m_ransacMethodTool;         ///< RANSAC Method tool
+    std::vector<std::string> m_toolsToAvoid;             ///< Less preferable tools to be used in the RANSAC.
 
-    std::string             m_inputPfoListName;         ///< The name of the input pfo list
-    std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
-    std::string             m_outputClusterListName;    ///< The name of the output cluster list
+    std::string              m_inputPfoListName;         ///< The name of the input pfo list
+    std::string              m_outputCaloHitListName;    ///< The name of the output calo hit list
+    std::string              m_outputClusterListName;    ///< The name of the output cluster list
 
-    bool                    m_iterateTrackHits;         ///< Whether to enable iterative improvement of 3D hits for track trajectories
-    bool                    m_iterateShowerHits;        ///< Whether to enable iterative improvement of 3D hits for showers
-    unsigned int            m_slidingFitHalfWindow;     ///< The sliding linear fit half window
-    unsigned int            m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
-    double                  m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
-    double                  m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
-    double                  m_interpolationCutOff;      ///< Max distance for a point to be interpolated from
+    bool                     m_iterateTrackHits;         ///< Whether to enable iterative improvement of 3D hits for track trajectories
+    bool                     m_iterateShowerHits;        ///< Whether to enable iterative improvement of 3D hits for showers
+    unsigned int             m_slidingFitHalfWindow;     ///< The sliding linear fit half window
+    unsigned int             m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
+    double                   m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
+    double                   m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
+    double                   m_interpolationCutOff;      ///< Max distance for a point to be interpolated from
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

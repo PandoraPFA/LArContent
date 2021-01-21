@@ -28,6 +28,7 @@ namespace lar_content
 
 ThreeDHitCreationAlgorithm::ThreeDHitCreationAlgorithm() :
     m_ransacMethodTool(nullptr),
+    m_toolsToAvoid({"LArMultiValuedLongitudinalTrackHits"}),
     m_iterateTrackHits(true),
     m_iterateShowerHits(false),
     m_slidingFitHalfWindow(10),
@@ -696,6 +697,9 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "IterationMaxChi2Ratio", m_iterationMaxChi2Ratio));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
+        "ToolsToAvoid", m_toolsToAvoid));
 
     return STATUS_CODE_SUCCESS;
 }
