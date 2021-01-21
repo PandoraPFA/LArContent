@@ -11,6 +11,7 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
+#include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
@@ -485,10 +486,13 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     {
         std::string modelName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameU", modelName));
+        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
         LArDLHelper::LoadModel(modelName, m_modelU);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameV", modelName));
+        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
         LArDLHelper::LoadModel(modelName, m_modelV);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameW", modelName));
+        modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
         LArDLHelper::LoadModel(modelName, m_modelW);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PixelShift", m_pixelShift));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PixelScale", m_pixelScale));
