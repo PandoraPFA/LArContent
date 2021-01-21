@@ -63,6 +63,8 @@ private:
     const pandora::Cluster *MergeClusterGroup(const pandora::ClusterList &clusterGroup);
 
     void PerformRecovery(const pandora::HitType &hitType);
+
+    void ClearContainers();
     
     HitToClusterMap       m_hitToClusterMapU;
     HitToClusterMap       m_hitToClusterMapV;

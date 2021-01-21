@@ -52,7 +52,19 @@ public:
 
     pandora::StatusCode PerformThreeViewMatching(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV, const pandora::CaloHitList &clusterW,
         float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints, XOverlap &XOverlap) const;
+
+    pandora::StatusCode ProjectMuonPositions(const pandora::HitType &thirdViewHitType, const pandora::ParticleFlowObject *const pParentMuon,
+        pandora::CartesianPointVector &projectedPositions) const;
     
+    pandora::StatusCode GetProjectedPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+        pandora::CartesianPointVector &projectedPositions) const;    
+
+    pandora::StatusCode CollectDeltaRayHitsFromMuon(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+        const pandora::Cluster *const pThirdViewCluster, const pandora::ParticleFlowObject *const pParentMuon, pandora::CaloHitList &collectedHits) const;
+
+    void SplitMuonCluster(const std::string &clusterListName, const pandora::Cluster *const pMuonCluster, const pandora::CaloHitList &collectedHits,
+        const pandora::Cluster *&pDeltaRayCluster) const;    
+
     void UpdateForNewClusters(const pandora::ClusterVector &newClusterList, const pandora::PfoVector &pfoList);
     
     void UpdateContainers(const pandora::ClusterVector &newClusterVector, const pandora::PfoVector &pfoVector);
@@ -112,6 +124,7 @@ protected:
     float                             m_xOverlapWindow;             ///< The maximum allowed displacement in x position
     float                             m_minMatchedFraction;
     unsigned int                      m_minMatchedPoints;
+    unsigned int                      m_minProjectedPositions;
 };
     
 } // namespace lar_content

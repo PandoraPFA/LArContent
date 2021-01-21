@@ -62,9 +62,6 @@ private:
         TrackTwoViewTopologyOverlapResult &overlapResult) const;
 
     void FindCommonMuonParents(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, pandora::PfoList &commonMuonPfoList) const;
-
-    pandora::StatusCode GetProjectedPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        pandora::CartesianPointVector &projectedPositions) const;
     
     void CollectThirdViewClusters(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::CartesianPointVector &projectedPositions,
         pandora::ClusterList &matchedClusters) const;
@@ -77,49 +74,20 @@ private:
 
     void MergeThirdView(const MatrixType::Element &element, const pandora::Cluster *const pSeedCluster);
 
-    pandora::StatusCode PullOutDeltaRayHits(const MatrixType::Element &element,
-        const pandora::ParticleFlowObject *const pParentMuon, pandora::CaloHitList &collectedHits) const;
-
-    pandora::StatusCode ProjectMuonPositions(const pandora::HitType &thirdViewHitType, const pandora::ParticleFlowObject *const pParentMuon,
-        pandora::CartesianPointVector &projectedPositions) const;
-
-    pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector,
-        const pandora::Cluster *const pCluster) const;
-
-    float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::CartesianPointVector &cartesianPointVector) const;
-
-    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector) const;
-
-    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
-
-    void GetClosestPositions(const pandora::CartesianPointVector &pCluster1, const pandora::Cluster *const pCluster2, pandora::CartesianVector &outputPosition1,
-        pandora::CartesianVector &outputPosition2) const;
-
-    const pandora::Cluster *SplitCluster(const pandora::Cluster *const pMuonCluster, pandora::CaloHitList &collectedHits) const;
-
     void GetBestMatchedAvailableCluster(const pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster) const;
 
     void GrowThirdView(const MatrixType::Element &element, ProtoParticle &protoParticle);
 
-    
-    void GetClusterSpanX(const pandora::CaloHitList &caloHitList, float &xMin, float &xMax) const;
-    pandora::StatusCode GetClusterSpanZ(const pandora::CaloHitList &caloHitList, const float xMin, const float xMax, float &zMin, float &zMax) const;
-
-    //WILL NEED AN UPDATE AND DELETE CLUSTER FUNCTION
+    std::string m_inputClusterListName;    
 
     typedef std::vector<DeltaRayMatrixTool*> MatrixToolVector;
     MatrixToolVector                  m_algorithmToolVector;          ///< The algorithm tool vector
     
     unsigned int                      m_nMaxMatrixToolRepeats;
     unsigned int                      m_minClusterCaloHits;
-    float                             m_maxDisplacementSquared;
-    unsigned int                      m_minProjectedPositions;
-    float                      m_maxDistanceFromPrediction;
-    float                      m_maxGoodMatchReducedChiSquared;
+    float                             m_maxDistanceFromPrediction;
+    float                             m_maxGoodMatchReducedChiSquared;
 
-    std::string m_inputClusterListName;
-    std::string m_muonPfoListName;
-    std::string m_deltaRayPfoListName;
 
 };
 

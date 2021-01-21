@@ -71,7 +71,7 @@ void DeltaRayRemovalTool::RemoveDeltaRayHits(ThreeViewDeltaRayMatchingAlgorithm 
     {
         for (const HitType &hitType : hitTypeVector)
 	    {
-            const Cluster *const pDeltaRayCluster(element.GetCluster(hitType));
+            const Cluster *pDeltaRayCluster(element.GetCluster(hitType));
             
             if (checkedClusters.count(pDeltaRayCluster))
                 continue;
@@ -90,9 +90,15 @@ void DeltaRayRemovalTool::RemoveDeltaRayHits(ThreeViewDeltaRayMatchingAlgorithm 
             
             checkedClusters.insert(pDeltaRayCluster);
 
+            const ParticleFlowObject *const pParentMuon(element.GetOverlapResult().GetCommonMuonPfoList().front());
+
+            const Cluster *pMuonCluster(nullptr);
+            if (this->GetMuonCluster(element, hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+                continue;
+
 	        // Attempt to pull delta ray hits out of muon cluster
             CaloHitList deltaRayHits;
-            if (this->CollectDeltaRayHits(element, hitType, deltaRayHits) != STATUS_CODE_SUCCESS)
+            if (pAlgorithm->CollectDeltaRayHitsFromMuon(nullptr, nullptr, element.GetCluster(hitType), pParentMuon, deltaRayHits) != STATUS_CODE_SUCCESS)
                 continue;
             
             if (deltaRayHits.empty())
@@ -100,7 +106,14 @@ void DeltaRayRemovalTool::RemoveDeltaRayHits(ThreeViewDeltaRayMatchingAlgorithm 
 
             modifiedClusters.insert(pDeltaRayCluster);
 
-            this->SplitCluster(pAlgorithm, element, hitType, deltaRayHits);
+            pAlgorithm->UpdateUponDeletion(pMuonCluster); pAlgorithm->UpdateUponDeletion(pDeltaRayCluster);
+
+            pAlgorithm->SplitMuonCluster(pAlgorithm->GetClusterListName(hitType), pMuonCluster, deltaRayHits, pDeltaRayCluster);
+            
+            ClusterVector clusterVector; PfoVector pfoVector;
+            clusterVector.push_back(pMuonCluster); pfoVector.push_back(pParentMuon);
+            clusterVector.push_back(pDeltaRayCluster); pfoVector.push_back(nullptr);
+            pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
         }
     }
 
@@ -205,107 +218,6 @@ bool DeltaRayRemovalTool::IsContaminated(const TensorType::Element &element, con
         return true;
 
     return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-StatusCode DeltaRayRemovalTool::CollectDeltaRayHits(const TensorType::Element &element, const HitType &hitType, CaloHitList &collectedHits) const
-{
-    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
-    
-    if (this->GetMuonCluster(element, hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
-        return STATUS_CODE_NOT_FOUND;
-    
-    CartesianPointVector muonProjectedPositions;
-    this->ProjectMuonPositions(element, hitType, muonProjectedPositions);    
-
-    const float projectedHitsFraction(static_cast<float>(muonProjectedPositions.size()) / pMuonCluster->GetNCaloHits());
-
-    CartesianVector muonDirection(0.f, 0.f, 0.f), positionOnMuon(0.f, 0.f, 0.f);
-    if (projectedHitsFraction < 0.8f)
-    {
-        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult slidingFitResult(pMuonCluster, 40, slidingFitPitch);
-
-        CartesianVector deltaRayVertex(0.f,0.f,0.f), muonVertex(0.f,0.f,0.f);
-        LArClusterHelper::GetClosestPositions(pDeltaRayCluster, pMuonCluster, deltaRayVertex, muonVertex);
-
-        positionOnMuon = this->GetClosestPosition(muonVertex, muonProjectedPositions, pMuonCluster);
-
-	    if (positionOnMuon.GetMagnitude() < std::numeric_limits<float>::epsilon())
-            return STATUS_CODE_NOT_FOUND;
-
-        float rL(0.f), rT(0.f);
-        slidingFitResult.GetLocalPosition(positionOnMuon, rL, rT);
-        slidingFitResult.GetGlobalFitDirection(rL, muonDirection);
-    }
-
-    CaloHitList muonCaloHitList;
-    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);
-
-    bool hitsAdded(true);
-    while (hitsAdded)
-    {
-        hitsAdded = false;
-
-        for (const CaloHit *const pCaloHit : muonCaloHitList)
-        {
-            if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
-                continue;
-
-            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-            
-            const float distanceToDeltaRayHits(std::min(LArClusterHelper::GetClosestDistance(hitPosition, pDeltaRayCluster),
-                this->GetClosestDistance(pCaloHit, collectedHits)));
-            const float distanceToMuonHits((projectedHitsFraction < 0.8f) ? muonDirection.GetCrossProduct(hitPosition - positionOnMuon).GetMagnitude() :
-                this->GetClosestDistance(pCaloHit, muonProjectedPositions));
-
-	        if ((std::fabs(distanceToMuonHits - distanceToDeltaRayHits) > std::numeric_limits<float>::epsilon()) && (distanceToDeltaRayHits < distanceToMuonHits)
-                    && (distanceToMuonHits > 1.f) && (distanceToDeltaRayHits < 1.f))
-	        {
-                collectedHits.push_back(pCaloHit);
-                hitsAdded = true;
-            }
-        }
-    }
-
-    // Catch if delta ray has travelled along muon
-    if ((static_cast<float>(collectedHits.size()) / muonCaloHitList.size()) > 0.05)
-        return STATUS_CODE_NOT_FOUND;
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void DeltaRayRemovalTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
-    const HitType &hitType, CaloHitList &collectedHits) const
-{
-    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
-    
-    if (this->GetMuonCluster(element, hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
-        return;
-
-    pAlgorithm->UpdateUponDeletion(pMuonCluster);    
-    pAlgorithm->UpdateUponDeletion(pDeltaRayCluster);
-  
-    CaloHitList muonCaloHitList;
-    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);
-    
-    for (const CaloHit *const pCaloHit : muonCaloHitList)
-    {
-        if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*pAlgorithm, pMuonCluster, pCaloHit));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*pAlgorithm, pDeltaRayCluster, pCaloHit));
-        }
-    }
-
-    ClusterVector clusterVector; PfoVector pfoVector;
-    clusterVector.push_back(pMuonCluster); clusterVector.push_back(pDeltaRayCluster);
-    pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front()); pfoVector.push_back(nullptr);
-
-    pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
