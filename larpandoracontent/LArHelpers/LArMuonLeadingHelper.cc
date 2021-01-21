@@ -132,7 +132,7 @@ void LArMuonLeadingHelper::GetMCToLeadingMap(const MCParticleList *const pMCPart
 //------------------------------------------------------------------------------------------------------------------------------------------    
 
 void LArMuonLeadingHelper::SelectReconstructableLeadingParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const ValidationParameters &parameters,
-    LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap, const Pandora &pandora)
+    const CaloHitList &recoMuonHitList, LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap, const Pandora &pandora)
 {
     // Obtain map: [mc particle -> leading muon child mc]
     LArMCParticleHelper::MCRelationMap mcToLeadingMCMap;
@@ -142,7 +142,8 @@ void LArMuonLeadingHelper::SelectReconstructableLeadingParticles(const MCParticl
     // Unless selectInputHits == false
     CaloHitList selectedCaloHitList;
     LeadingMCParticleToPostPhotonHitLists leadingMCParticleToPostPhotonHitLists;
-    LArMuonLeadingHelper::SelectCaloHits(pCaloHitList, mcToLeadingMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction, leadingMCParticleToPostPhotonHitLists);
+    LArMuonLeadingHelper::SelectCaloHits(pCaloHitList, mcToLeadingMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction,
+        recoMuonHitList, leadingMCParticleToPostPhotonHitLists);
 
     // Obtain maps: [hit -> leading muon child mc], [leading muon child mc -> list of hits]
     LArMCParticleHelper::CaloHitToMCMap trueHitToLeadingMCMap;
@@ -163,7 +164,8 @@ void LArMuonLeadingHelper::SelectReconstructableLeadingParticles(const MCParticl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMuonLeadingHelper::SelectCaloHits(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap,
-    CaloHitList &selectedCaloHitList, const bool selectInputHits, const float minHitSharingFraction, LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists)
+    CaloHitList &selectedCaloHitList, const bool selectInputHits, const float minHitSharingFraction, const CaloHitList &recoMuonHitList,
+    LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists)
 {
     if (!selectInputHits)
     {
@@ -180,9 +182,17 @@ void LArMuonLeadingHelper::SelectCaloHits(const CaloHitList *const pCaloHitList,
             if (mcToTargetMCMap.find(pHitParticle) == mcToTargetMCMap.end())
                 continue;
 
+            // Remove hits from metrics that have been taken by the muon
+            if (!LArMCParticleHelper::IsCosmicRay(mcToTargetMCMap.at(pHitParticle)))
+            {
+                if (std::find(recoMuonHitList.begin(), recoMuonHitList.end(), pCaloHit) != recoMuonHitList.end())
+                    continue;
+            }
+
             MCParticleVector mcParticleContributionVector;
             for (const auto &mapEntry : pCaloHit->GetMCParticleWeightMap())
                 mcParticleContributionVector.push_back(mapEntry.first);
+            
             std::sort(mcParticleContributionVector.begin(), mcParticleContributionVector.end(), PointerLessThan<MCParticle>());
 
             MCParticleWeightMap targetWeightMap;
@@ -452,6 +462,122 @@ void LArMuonLeadingHelper::SelectLeadingMCParticles(const MCParticleList *pMCPar
     std::sort(selectedParticles.begin(), selectedParticles.end(), LArMCParticleHelper::SortByMomentum);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArMuonLeadingHelper::GetClosestDistance(const Cluster *const pCluster, const CartesianPointVector &cartesianPointVector)
+{
+    float closestDistance(std::numeric_limits<float>::max());
     
+    CaloHitList caloHitList;
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        const float distance(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, cartesianPointVector));
+
+        if (distance < closestDistance)
+            closestDistance = distance;
+    }
+
+    return closestDistance;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArMuonLeadingHelper::GetClosestDistance(const CaloHit *const pCaloHit, const CartesianPointVector &cartesianPointVector)
+{
+    float shortestDistanceSquared(std::numeric_limits<float>::max());
+    const CartesianVector referencePoint(pCaloHit->GetPositionVector());
+
+    for (const CartesianVector &testPosition : cartesianPointVector)
+    {
+        const float separationSquared((testPosition - referencePoint).GetMagnitudeSquared());
+
+        if (separationSquared < shortestDistanceSquared)
+            shortestDistanceSquared = separationSquared;
+    }
+
+    return std::sqrt(shortestDistanceSquared);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+
+float LArMuonLeadingHelper::GetClosestDistance(const CaloHit *const pReferenceCaloHit, const CaloHitList &caloHitList)
+{
+    CartesianPointVector cartesianPointVector;
+    
+    for (const CaloHit *const pCaloHit : caloHitList)
+        cartesianPointVector.push_back(pCaloHit->GetPositionVector());
+
+    return LArMuonLeadingHelper::GetClosestDistance(pReferenceCaloHit, cartesianPointVector);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMuonLeadingHelper::GetClosestPositions(const CartesianPointVector &pCluster1, const Cluster *const pCluster2, CartesianVector &outputPosition1,
+    CartesianVector &outputPosition2)
+{
+    bool distanceFound(false);
+    float minDistanceSquared(std::numeric_limits<float>::max());
+
+    CartesianVector closestPosition1(0.f, 0.f, 0.f);
+    CartesianVector closestPosition2(0.f, 0.f, 0.f);
+
+    CaloHitList caloHitList2;
+    pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
+
+    for (const CartesianVector &positionVector1 : pCluster1)
+    {
+        for (const CaloHit *const pCaloHit : caloHitList2)
+        {
+            const CartesianVector &positionVector2(pCaloHit->GetPositionVector());
+
+            const float distanceSquared((positionVector1 - positionVector2).GetMagnitudeSquared());
+
+            if (distanceSquared < minDistanceSquared)
+            {
+                minDistanceSquared = distanceSquared;
+                closestPosition1 = positionVector1;
+                closestPosition2 = positionVector2;
+                distanceFound = true;
+            }
+        }
+    }
+
+    if (!distanceFound)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    outputPosition1 = closestPosition1;
+    outputPosition2 = closestPosition2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CartesianVector LArMuonLeadingHelper::GetClosestPosition(const CartesianVector &referencePoint, const CartesianPointVector &cartesianPointVector,
+    const Cluster *const pCluster)
+{
+    CartesianVector closestPoint(0.f, 0.f, 0.f);
+    float shortestDistanceSquared(std::numeric_limits<float>::max());
+
+    for (const CartesianVector &testPosition : cartesianPointVector)
+    {
+        if (LArClusterHelper::GetClosestDistance(testPosition, pCluster) > 0.5f)
+            continue;
+
+        const float separationSquared((testPosition - referencePoint).GetMagnitude());
+
+        if (separationSquared > 5.f)
+            continue;
+
+        if (separationSquared < shortestDistanceSquared)
+        {
+            shortestDistanceSquared = separationSquared;
+            closestPoint = testPosition;
+        }
+    }
+
+    return closestPoint;
+}
+
 } // namespace lar_content
 

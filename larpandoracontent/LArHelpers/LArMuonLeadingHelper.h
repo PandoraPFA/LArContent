@@ -51,10 +51,11 @@ public:
     static void GetMCToLeadingMap(const pandora::MCParticleList *const pMCParticleList, LArMCParticleHelper::MCRelationMap &mcToLeadingMap);
 
     static void SelectReconstructableLeadingParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, const ValidationParameters &parameters,
-                                                      LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap,  const pandora::Pandora &pandora);
+       const pandora::CaloHitList &recoMuonHitList, LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap,  const pandora::Pandora &pandora);
 
     static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap,
-                               pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float minHitSharingFraction, LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists); 
+        pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float minHitSharingFraction,
+        const pandora::CaloHitList &recoMuonHitList, LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists); 
 
     static void GetPfoMatchContamination(const pandora::MCParticle *const pLeadingParticle, const pandora::CaloHitList &matchedPfoHitList,
         pandora::CaloHitList &parentTrackHits, pandora::CaloHitList &otherTrackHits, pandora::CaloHitList &otherShowerHits);
@@ -68,7 +69,19 @@ public:
                                                    LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const pandora::Pandora &pandora);
     static void AddHits(const pandora::MCParticle *const pLeadingParticle, const LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists, const float maxBremsstrahlungSeparation,
                         LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const pandora::HitType &tpcView, const pandora::Pandora &pandora);
-    
+
+    static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector,
+        const pandora::Cluster *const pCluster);
+
+    static float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::CartesianPointVector &cartesianPointVector);
+
+    static float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector);
+
+    static float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList);
+
+    static void GetClosestPositions(const pandora::CartesianPointVector &pCluster1, const pandora::Cluster *const pCluster2, pandora::CartesianVector &outputPosition1,
+        pandora::CartesianVector &outputPosition2);
+
  private:
     static void SelectLeadingMCParticles(const pandora::MCParticleList *pMCParticleList, pandora::MCParticleVector &selectedParticles);
 

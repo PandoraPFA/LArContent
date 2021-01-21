@@ -25,7 +25,33 @@ OneViewDeltaRayMatchingAlgorithm::OneViewDeltaRayMatchingAlgorithm() :
 {
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void OneViewDeltaRayMatchingAlgorithm::ClearContainers()
+{
+    m_hitToClusterMapU.clear();
+    m_hitToClusterMapV.clear();
+    m_hitToClusterMapW.clear();    
+
+    m_kdTreeU.clear();
+    m_kdTreeV.clear();
+    m_kdTreeW.clear();    
+
+    m_muonProximityMapU.clear();
+    m_muonProximityMapV.clear();
+    m_muonProximityMapW.clear();
+   
+    m_availableProximityMapU.clear();
+    m_availableProximityMapV.clear();
+    m_availableProximityMapW.clear();
+
+    m_clusterToPfoMapU.clear();
+    m_clusterToPfoMapV.clear();
+    m_clusterToPfoMapW.clear();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 
 StatusCode OneViewDeltaRayMatchingAlgorithm::Run()
 {
@@ -47,7 +73,9 @@ StatusCode OneViewDeltaRayMatchingAlgorithm::Run()
 
     this->PerformRecovery(TPC_VIEW_U);
     this->PerformRecovery(TPC_VIEW_V);
-    this->PerformRecovery(TPC_VIEW_W);    
+    this->PerformRecovery(TPC_VIEW_W);
+
+    this->ClearContainers();
 
     return STATUS_CODE_SUCCESS;
 }

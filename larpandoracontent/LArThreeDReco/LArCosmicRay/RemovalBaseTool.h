@@ -49,27 +49,16 @@ protected:
     bool IsBestElement(const TensorType::Element &element, const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
 
     
-    bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineEnd, const float distanceToLine) const;     
+    bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineEnd,
+        const float distanceToLine) const;     
 
     void FindExtrapolatedHits(const pandora::Cluster *const pCluster, const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary,
-			      pandora::CaloHitList &collectedHits) const;
+	    pandora::CaloHitList &collectedHits) const;
 
     bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;
-  
 
-    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
-
-    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector) const;
-    void ProjectPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, pandora::CartesianPointVector &projectedPositions) const;
-
-    pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector, const pandora::Cluster *const pCluster) const;
-
-    void ProjectDeltaRayPositions(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CartesianPointVector &projectedPositions) const;
-    void ProjectMuonPositions(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CartesianPointVector &projectedPositions) const;
-    
-
-
-    float m_xOverlapWindow;
+    pandora::StatusCode ProjectDeltaRayPositions(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
+        const pandora::HitType &hitType, pandora::CartesianPointVector &projectedPositions) const;
 };
 
 } // namespace lar_content

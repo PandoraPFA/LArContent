@@ -67,6 +67,9 @@ private:
     //void SetUnfoldedMatching(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, const pandora::PfoList *pPfoList,
     //ValidationInfo &validationInfo) const;
 
+    void GetRecoMuonHits(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
+        const pandora::PfoList *const pPfoList, pandora::CaloHitList &recoMuonHitList) const;
+
     void PrintHits(const pandora::CaloHitList caloHitList, const std::string &stringTag, const Color &colour, bool print) const;
 
     void PrintHits(const pandora::CaloHitList totalCaloHitList, const pandora::CaloHitList otherShowerCaloHitList, const pandora::CaloHitList otherTrackCaloHitList,
@@ -86,6 +89,7 @@ private:
     
     LArMuonLeadingHelper::ValidationParameters  m_validationParameters;
 
+    bool m_removeRecoMuonHits;    
     bool m_deltaRayMode;
     bool m_michelMode;
     int m_muonsToSkip;

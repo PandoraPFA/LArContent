@@ -64,7 +64,8 @@ private:
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the output list of identified delta ray hits
      */
-    void CreateSeed(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits) const;
+    void CreateSeed(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
+        pandora::CaloHitList &collectedHits) const;
 
     /**
      *  @brief  Examine remaining hits in the delta ray cluster adding them to the delta ray seed or parent muon if appropriate and a separate list if not
@@ -76,8 +77,8 @@ private:
      *
      *  @return  whether the muon projection mechanics were successful - abort process if not
      */   
-    pandora::StatusCode GrowSeed(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits,
-        pandora::CaloHitList &deltaRayRemantHits) const;
+    pandora::StatusCode GrowSeed(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
+        pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemantHits) const;
 
     /**
      *  @brief  Fragment the delta ray cluster, refining the matched delta ray cluster perhaps creating significant remnants in the process
