@@ -213,8 +213,7 @@ private:
      *  @param  inliers The vector of inlying parameters for each model.
      *  @param  sampledModels Vector of the actual models that were generated and evaluated.
      */
-    void CheckModel(std::vector<double> &inlierFrac, std::vector<ParameterVector> &inliers,
-            std::vector<std::shared_ptr<T>> &sampledModels)
+    void CheckModel(std::vector<double> &inlierFrac, std::vector<ParameterVector> &inliers, std::vector<std::shared_ptr<T>> &sampledModels)
     {
         for (unsigned int i = 0; i < m_numIterations; ++i)
         {

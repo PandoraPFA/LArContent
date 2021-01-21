@@ -82,9 +82,9 @@ private:
 };
 
 /**
- *  @brief  LArRANSACMethod class
+ *  @brief  RANSACMethodTool class
  */
-class LArRANSACMethod : public pandora::AlgorithmTool
+class RANSACMethodTool : public pandora::AlgorithmTool
 {
 public:
 
@@ -97,7 +97,8 @@ public:
      *          Forward and backward don't have actual meanings here,
      *          just "one way and the opposite direction".
      */
-    enum ExtendDirection {
+    enum ExtendDirection
+    {
         Forward,
         Backward
     };
@@ -105,7 +106,8 @@ public:
     /**
      *  @brief  Describe which RANSAC output to use.
      */
-    enum RANSACResult {
+    enum RANSACResult
+    {
         Best,
         Second
     };
@@ -113,12 +115,12 @@ public:
     /**
      *  @brief  Default constructor
      */
-    LArRANSACMethod() = default;
+    RANSACMethodTool() = default;
 
     /**
      *  @brief  Destructor
      */
-    virtual ~LArRANSACMethod();
+    virtual ~RANSACMethodTool();
 
     /**
      *  @brief  Run the full RANSAC process over the given hits and populate
@@ -171,6 +173,8 @@ protected:
      *
      *  @param  hit  The RANSACHit to consider adding to the hit map.
      *  @param  inlyingHitMap  The hit map, matching a calo hit to its best RANSACHit.
+     *
+     *  @return bool if the hit was added to the hit map.
      */
      bool AddToHitMap(RANSACHit &hit, std::map<const pandora::CaloHit*, RANSACHit> &inlyingHitMap);
 
@@ -213,7 +217,7 @@ protected:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArRANSACMethod::~LArRANSACMethod() {}
+inline RANSACMethodTool::~RANSACMethodTool() {}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -80,11 +80,6 @@ public:
     class ProtoHit
     {
     public:
-        /**
-         *  @brief  Constructor to init ProtoHit.
-         *
-         */
-        ProtoHit();
 
         /**
          *  @brief  Constructor
@@ -99,13 +94,6 @@ public:
          *  @return the address of the parent 2D calo hit
          */
         const pandora::CaloHit *GetParentCaloHit2D() const;
-
-        /**
-         *  @brief  Whether the proto hit has been initialised
-         *
-         *  @return boolean
-         */
-        bool IsInitialised() const;
 
         /**
          *  @brief  Whether the proto hit position is set
@@ -195,7 +183,6 @@ public:
 
     private:
         const pandora::CaloHit     *m_pParentCaloHit2D;         ///< The address of the parent 2D calo hit
-        bool                        m_isInitialised;            ///< Whether the ProtoHit has been initialised
         bool                        m_isPositionSet;            ///< Whether the output 3D position has been set
         bool                        m_isInterpolated;           ///< Whether the 3D position was built with interpolation.
         pandora::CartesianVector    m_position3D;               ///< The output 3D position
@@ -400,21 +387,8 @@ inline double ThreeDHitCreationAlgorithm::TrajectorySample::GetSigma() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit() :
-    m_pParentCaloHit2D(nullptr),
-    m_isInitialised(false),
-    m_isPositionSet(false),
-    m_isInterpolated(false),
-    m_position3D(0.f, 0.f, 0.f),
-    m_chi2(std::numeric_limits<double>::max())
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *const pParentCaloHit2D) :
     m_pParentCaloHit2D(pParentCaloHit2D),
-    m_isInitialised(true),
     m_isPositionSet(false),
     m_isInterpolated(false),
     m_position3D(0.f, 0.f, 0.f),
@@ -434,13 +408,6 @@ inline const pandora::CaloHit *ThreeDHitCreationAlgorithm::ProtoHit::GetParentCa
 inline bool ThreeDHitCreationAlgorithm::ProtoHit::IsPositionSet() const
 {
     return m_isPositionSet;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline bool ThreeDHitCreationAlgorithm::ProtoHit::IsInitialised() const
-{
-    return m_isInitialised;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

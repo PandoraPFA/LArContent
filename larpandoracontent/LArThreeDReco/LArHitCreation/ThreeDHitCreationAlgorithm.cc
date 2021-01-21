@@ -289,7 +289,7 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
     RANSACHitVector consistentHits;
     this->GetSetIntersection(goodHits[TPC_VIEW_W], UVconsistentHits, consistentHits);
 
-    LArRANSACMethod ransacMethod;
+    RANSACMethodTool ransacMethod;
     ransacMethod.Run(consistentHits, protoHitVector);
 
     this->InterpolationMethod(pPfo, protoHitVector);
@@ -486,14 +486,18 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
         }
         else
         {
-            // std::cout << "ThreeDHitCreationAlgorithm::IterativeTreatment - Unexpected number of trajectory samples" << std::endl;
+            std::cout << "ThreeDHitCreationAlgorithm::IterativeTreatment - Unexpected number of trajectory samples" << std::endl;
             // throw StatusCodeException(STATUS_CODE_FAILURE);
             continue; // TODO: Fix this, check why it happens and if it is specific to the changes I've made.
         }
 
         double bestY(std::numeric_limits<double>::max()), bestZ(std::numeric_limits<double>::max());
         PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->GetMinChiSquaredYZ(u, v, w, sigmaU, sigmaV, sigmaW, uFit, vFit, wFit, sigma3DFit, bestY, bestZ, chi2);
-        position3D.SetValues(protoHit.GetPosition3D().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
+
+        if (m_useRANSACMethod)
+            position3D.SetValues(protoHit.GetPosition3D().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
+        else
+            position3D.SetValues(pCaloHit2D->GetPositionVector().GetX(), static_cast<float>(bestY), static_cast<float>(bestZ));
 
         protoHit.SetPosition3D(position3D, chi2);
     }

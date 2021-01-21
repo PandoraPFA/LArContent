@@ -28,7 +28,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-void LArRANSACMethod::Run(RANSACHitVector &consistentHits, ProtoHitVector &protoHitVector)
+void RANSACMethodTool::Run(RANSACHitVector &consistentHits, ProtoHitVector &protoHitVector)
 {
     if (consistentHits.size() < 3)
         return; // TODO: Here we should default to the old behaviour.
@@ -77,7 +77,7 @@ void LArRANSACMethod::Run(RANSACHitVector &consistentHits, ProtoHitVector &proto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArRANSACMethod::GetCandidatePoints(RANSACHitVector &allHits, ParameterVector &candidatePoints)
+void RANSACMethodTool::GetCandidatePoints(RANSACHitVector &allHits, ParameterVector &candidatePoints)
 {
     if (allHits.size() < 1000)
     {
@@ -104,7 +104,7 @@ void LArRANSACMethod::GetCandidatePoints(RANSACHitVector &allHits, ParameterVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACResult run, RANSACHitVector &hitsToUse, RANSACHitVector &finalHits)
+int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACResult run, RANSACHitVector &hitsToUse, RANSACHitVector &finalHits)
 {
     std::map<const CaloHit*, RANSACHit> inlyingHitMap;
     const float RANSAC_THRESHOLD(2.5); // TODO: Consolidate to config option.
@@ -134,7 +134,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
         if (hit == nullptr)
             throw std::runtime_error("Inlying hit was not of type RANSACHit");
 
-        const bool addedHit(LArRANSACMethod::AddToHitMap(*hit, inlyingHitMap));
+        const bool addedHit(RANSACMethodTool::AddToHitMap(*hit, inlyingHitMap));
 
         if (addedHit)
             sortedHits.push_back(*hit);
@@ -183,7 +183,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
     RANSACHitVector hitsToUseForFit;
     RANSACHitVector hitsToAdd;
 
-    LArRANSACMethod::GetHitsForFit(currentPoints3D, hitsToUseForFit, 0, 0);
+    RANSACMethodTool::GetHitsForFit(currentPoints3D, hitsToUseForFit, 0, 0);
 
     int smallIterCount(0);
     ExtendDirection extendDirection = ExtendDirection::Forward;
@@ -199,7 +199,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
 
         for (float fits = 1; fits < 4.0; ++fits)
         {
-            LArRANSACMethod::ExtendFit(nextHits, hitsToUseForFit, hitsToAdd, (EXTEND_THRESHOLD * fits), extendDirection);
+            RANSACMethodTool::ExtendFit(nextHits, hitsToUseForFit, hitsToAdd, (EXTEND_THRESHOLD * fits), extendDirection);
 
             if (hitsToAdd.size() > 0)
                 break;
@@ -207,7 +207,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
 
         for (auto hit : hitsToAdd)
         {
-            const bool hitAdded = LArRANSACMethod::AddToHitMap(hit, inlyingHitMap);
+            const bool hitAdded = RANSACMethodTool::AddToHitMap(hit, inlyingHitMap);
 
             if (hitAdded)
                 hitsToUseForFit.push_back(hit);
@@ -218,7 +218,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
                 currentPoints3D.push_back(hit);
         }
 
-        const bool continueFitting = LArRANSACMethod::GetHitsForFit(currentPoints3D, hitsToUseForFit, hitsToAdd.size(), smallIterCount);
+        const bool continueFitting = RANSACMethodTool::GetHitsForFit(currentPoints3D, hitsToUseForFit, hitsToAdd.size(), smallIterCount);
         coherentHitCount += hitsToAdd.size();
 
         // ATTN: If finished first pass, reset and run from opposite end.
@@ -239,7 +239,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
             }
 
             std::reverse(currentPoints3D.begin(), currentPoints3D.end());
-            LArRANSACMethod::GetHitsForFit(currentPoints3D, hitsToUseForFit, 0, 0);
+            RANSACMethodTool::GetHitsForFit(currentPoints3D, hitsToUseForFit, 0, 0);
         }
         else if (!continueFitting && extendDirection == ExtendDirection::Backward)
             break;
@@ -256,7 +256,7 @@ int LArRANSACMethod::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACRe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArRANSACMethod::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANSACHitVector &hitsToUseForFit, const int addedHitCount,
+bool RANSACMethodTool::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANSACHitVector &hitsToUseForFit, const int addedHitCount,
     int smallAdditionCount)
 {
     const int HITS_TO_KEEP(80); // TODO: Config and consolidate (reverse bit).
@@ -307,7 +307,7 @@ bool LArRANSACMethod::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANSA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArRANSACMethod::AddToHitMap(RANSACHit &hit, std::map<const CaloHit*, RANSACHit> &inlyingHitMap)
+bool RANSACMethodTool::AddToHitMap(RANSACHit &hit, std::map<const CaloHit*, RANSACHit> &inlyingHitMap)
 {
     const CaloHit* twoDHit =  hit.GetProtoHit().GetParentCaloHit2D();
 
@@ -369,7 +369,7 @@ void hitDisplacement(RANSACHit &hit, const CartesianVector fitEnd, const Cartesi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArRANSACMethod::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSACHitVector &hitsToUseForFit, std::vector<RANSACHit> &hitsToAdd,
+void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSACHitVector &hitsToUseForFit, std::vector<RANSACHit> &hitsToAdd,
     const float distanceToFitThreshold, const ExtendDirection extendDirection)
 {
     if (hitsToUseForFit.size() == 0)
@@ -382,7 +382,9 @@ void LArRANSACMethod::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSACH
         fitPoints.push_back(hit.GetProtoHit().GetPosition3D());
 
     const unsigned int layerWindow(100);
+    std::cout << "Getting wire pitch" << std::endl;
     const float pitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    std::cout << "Got the wire pitch" << std::endl;
     const ThreeDSlidingFitResult slidingFit(&fitPoints, layerWindow, pitch);
 
     CartesianVector fitDirection = slidingFit.GetGlobalMaxLayerDirection();
@@ -446,7 +448,7 @@ void LArRANSACMethod::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSACH
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LArRANSACMethod::ReadSettings(const pandora::TiXmlHandle /* xmlHandle */)
+StatusCode RANSACMethodTool::ReadSettings(const pandora::TiXmlHandle /* xmlHandle */)
 {
     return STATUS_CODE_SUCCESS;
 }
