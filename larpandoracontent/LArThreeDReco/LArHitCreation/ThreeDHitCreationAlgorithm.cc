@@ -291,10 +291,7 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
     RANSACHitVector consistentHits;
     this->GetSetIntersection(goodHits[TPC_VIEW_W], UVconsistentHits, consistentHits);
 
-    // RANSACMethodTool ransacMethod;
     m_ransacMethodTool->Run(consistentHits, protoHitVector);
-    // ransacMethod.Run(consistentHits, protoHitVector);
-
     this->InterpolationMethod(pPfo, protoHitVector);
     this->IterativeTreatment(protoHitVector);
 }
@@ -319,7 +316,7 @@ void ThreeDHitCreationAlgorithm::InterpolationMethod(const ParticleFlowObject *c
     CartesianPointVector currentPoints3D;
     this->ExtractResults(protoHitVector, originalChi2, currentPoints3D);
 
-    if (currentPoints3D.size() <= 1)
+    if (currentPoints3D.size() <= 3)
         return;
 
     const ThreeDSlidingFitResult slidingFitResult(&currentPoints3D, layerWindow, layerPitch);
