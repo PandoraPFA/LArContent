@@ -21,7 +21,7 @@ namespace lar_content
 {
 
 OneViewDeltaRayMatchingAlgorithm::OneViewDeltaRayMatchingAlgorithm() :
-    m_availableSearchRegion1D(1.f)
+    m_availableSearchRegion1D(2.f)
 {
 }
 
@@ -55,6 +55,7 @@ void OneViewDeltaRayMatchingAlgorithm::ClearContainers()
 
 StatusCode OneViewDeltaRayMatchingAlgorithm::Run()
 {
+  
     this->FillHitToClusterMap(TPC_VIEW_U);
     this->FillHitToClusterMap(TPC_VIEW_V);
     this->FillHitToClusterMap(TPC_VIEW_W);

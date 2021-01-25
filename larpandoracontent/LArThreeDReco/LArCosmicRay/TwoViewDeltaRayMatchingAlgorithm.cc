@@ -181,7 +181,7 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluste
     PfoList commonMuonPfoList;
     this->FindCommonMuonParents(pCluster1, pCluster2, commonMuonPfoList);
     
-    if (commonMuonPfoList.size())
+    if (commonMuonPfoList.empty())
         return STATUS_CODE_NOT_FOUND;
 
     // Project delta ray clusters into the theird view
@@ -392,7 +392,9 @@ bool TwoViewDeltaRayMatchingAlgorithm::CreatePfo(const MatrixType::Element &elem
 
     ProtoParticleVector protoParticleVector({protoParticle});
 
-    return (this->CreateThreeDParticles(protoParticleVector));
+    //return (this->CreateThreeDParticles(protoParticleVector));
+
+    return this->CreatePfos(protoParticleVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------     

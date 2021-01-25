@@ -31,7 +31,7 @@ class DeltaRayMatrixTool;
 class TwoViewDeltaRayMatchingAlgorithm : public NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> >
 {
 public:
-    typedef NViewMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> > BaseAlgorithm;
+    typedef NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> > BaseAlgorithm;
     typedef TwoViewDeltaRayMatchingAlgorithm::MatchingType::MatrixType MatrixType;
 
     /**
