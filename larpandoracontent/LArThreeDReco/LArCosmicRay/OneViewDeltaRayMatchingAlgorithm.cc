@@ -312,7 +312,7 @@ void OneViewDeltaRayMatchingAlgorithm::PerformOneViewMatching(const HitType &hit
 
         const ParticleFlowObject *pClosestMuonPfo(nullptr);        
 
-	float closestDistance(-std::numeric_limits<float>::max());
+	float closestDistance(std::numeric_limits<float>::max());
 	for (const Cluster *const pNearbyCluster : nearbyClusters)
         {
 	  if (!this->IsMuonPfo(pNearbyCluster))
