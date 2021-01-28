@@ -40,6 +40,9 @@ private:
 
     const pandora::ClusterList GetInputClusterList(const pandora::HitType &hitType);
     const pandora::PfoList GetMuonPfoList();
+    bool IsMuonPfo(const pandora::Cluster *const pCluster);
+    const pandora::PfoList GetDeltaRayPfoList();
+    bool IsDeltaRayPfo(const pandora::Cluster *const pCluster);
     void FillHitToClusterMap(const pandora::HitType &hitType);
     void AddToClusterMap(const pandora::Cluster *const pCluster);
     void FillClusterToPfoMap(const pandora::HitType &hitType);
@@ -49,10 +52,13 @@ private:
 
     void PerformOneViewMatching(const pandora::HitType &hitType);
 
-    void GetNearbyClusters(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::ClusterList &foundClusters);
+    void CreateDeltaRay(const pandora::Cluster *const pAvailableCluster, const pandora::ParticleFlowObject *const pClosestMuonPfo, pandora::ClusterSet &modifiedClusters);
+    bool AddIntoExistingDeltaRay(const pandora::Cluster *const pAvailableCluster, const pandora::ParticleFlowObject *const pClosestMuonPfo);
+
+    void GetNearbyAvailableClusters(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::ClusterList &foundClusters);
     
     void GetProjectedNearbyClusters(const pandora::ClusterList &deltaRayClusterGroup, const pandora::ParticleFlowObject *const pMuonPfo,
-        const pandora::HitType &hitType, pandora::ClusterList &foundClusters);
+        const pandora::HitType &hitType, const bool findAvailable, pandora::ClusterList &foundClusters);
 
     void GetClusterSpanX(const pandora::ClusterList &clusterList, float &xMin, float &xMax);
 
@@ -78,17 +84,14 @@ private:
     HitKDTree2D m_kdTreeV;
     HitKDTree2D m_kdTreeW;
 
-    ClusterProximityMap   m_muonProximityMapU;
-    ClusterProximityMap   m_muonProximityMapV;
-    ClusterProximityMap   m_muonProximityMapW;
-   
-    ClusterProximityMap   m_availableProximityMapU;
-    ClusterProximityMap   m_availableProximityMapV;
-    ClusterProximityMap   m_availableProximityMapW;
+    ClusterProximityMap   m_clusterProximityMapU;
+    ClusterProximityMap   m_clusterProximityMapV;
+    ClusterProximityMap   m_clusterProximityMapW;
 
-    float    m_availableSearchRegion1D;
+    float    m_searchRegion1D;
     
     std::string m_muonPfoListName;    
+    std::string m_deltaRayPfoListName;    
     std::string m_inputClusterListNameU;
     std::string m_inputClusterListNameV;
     std::string m_inputClusterListNameW;
