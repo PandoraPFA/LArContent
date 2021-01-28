@@ -92,14 +92,14 @@ bool TwoViewDeltaRayMergeTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorit
     
     for (const MatrixType::Element &element : elementList)
     {            
-        const Cluster *const pCluster1(element.GetCluster1()), *const pCluster2(element.GetCluster2()), *const pCluster3(element.GetOverlapResult().GetBestMatchedCluster());
+      const Cluster *const pCluster1(element.GetCluster1()), *const pCluster2(element.GetCluster2());//, *const pCluster3(element.GetOverlapResult().GetBestMatchedCluster());
 
         //ATTN: Best matched cluster can be removed during pfo creation process and may not be replaceable
-        if (!pCluster3)
-            continue;
+        //if (!pCluster3)
+	//continue;
 
         const float chiSquared = element.GetOverlapResult().GetReducedChiSquared();
-        const unsigned int hitSum(pCluster1->GetNCaloHits() + pCluster2->GetNCaloHits() + (pCluster3 ? pCluster3->GetNCaloHits() : 0));
+        const unsigned int hitSum(pCluster1->GetNCaloHits() + pCluster2->GetNCaloHits()); //+ (pCluster3 ? pCluster3->GetNCaloHits() : 0));
 
         if ((hitSum == highestHitCount) && (chiSquared < bestChiSquared))
         {
