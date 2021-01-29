@@ -1,7 +1,7 @@
 /**
- *  @file   larpandoracontent/LArVertex/TrackDirectionTool.h
+ *  @file   larpandoracontent/LArControlFlow/TrackDirectionTool.h
  *
- *  @brief  Header file for the candidate vertex creation AlgorithmTool class.
+ *  @brief  Header file for the track direction finding tool AlgorithmTool class.
  *
  *  $Log: $
  */
@@ -15,17 +15,6 @@
 #include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
-
-//#include "TCanvas.h"
-//#include "TF1.h"
-//#include "TAxis.h"
-//#include "TH1F.h"
-//#include "TMath.h"
-//#include "TMinuit.h"  //eliminate
-//#include "TGraph.h"
-//#include "TGraphErrors.h"
-//#include "TFile.h"
-//#include "TTree.h"
 
 #include <utility>
 #include <algorithm>
@@ -41,7 +30,6 @@
 namespace lar_content
 {
 
-  //class TrackDirectionTool : public pandora::AlgorithmTool
 class TrackDirectionTool : public TrackDirectionBaseTool
 {
 
@@ -49,16 +37,9 @@ friend void GetSplitChiSquared(int &npar, double *gin, double &f, double *par, i
 
 public:
 
-// class Factory : public pandora::AlgorithmToolFactory
-//  {
-//  public:
-//      pandora::AlgorithmTool *CreateAlgorithmTool() const;
-//    };
-//
     TrackDirectionTool();
     pandora::StatusCode Initialize();
-    //~TrackDirectionTool();
-    // void FindDirections(const pandora::ParticleFlowObject *const pPfo, bool &directioncosmic, float &downprobability, float &deltachi2, float &deltachi2alone, float &minchi2perhit, bool &incomplete, const MasterAlgorithm *const pAlgorithm);
+
     void FindDirections(const pandora::ParticleFlowObject *const pPfo, bool &directioncosmic, float &downprobability, const MasterAlgorithm *const pAlgorithm);
 
     class HitCharge
@@ -243,8 +224,6 @@ public:
         void SetFRObject(SplitObject frObject);
         SplitObject GetFRObject();
 
-        void DrawFit();
-
         void SetMCDirection(int direction);
         int GetMCDirection();
 
@@ -333,11 +312,8 @@ public:
 
     //-----------------------------------------------------------------------------------------------
 
-    // void SetLookupTable();
 
     const pandora::Cluster* GetTargetClusterFromPFO(const pandora::ParticleFlowObject* PFO, const LArTrackStateVector &trackStateVector);
-
-    //void ReadLookupTableFromTree(LookupTable &lookupTable);
 
     void SetEndpoints(DirectionFitObject &fitResult, const pandora::Cluster *const pCluster);
 
@@ -395,8 +371,6 @@ public:
 
     void ComputeProbability(DirectionFitObject &fitResult);
 
-    //void SetGlobalMinuitPreliminaries(HitChargeVector &hitChargeVector);
-
     void PerformFits(HitChargeVector &hitChargeVector, HitChargeVector &forwardsFitPoints, HitChargeVector &backwardsFitPoints, int numberHitsToConsider, float &forwardsChiSquared, float &backwardsChiSquared, int &fitStatus1, int &fitStatus2);
 
     void GetCalorimetricDirection(const pandora::Cluster* pTargetClusterW, DirectionFitObject &finalDirectionFitObject);
@@ -411,23 +385,20 @@ public:
 
     const TwoDSlidingFitResult &GetCachedSlidingFit(const pandora::Cluster *const pCluster) const;
 
-    //void TidyUp();
-
-    //void ClearGlobalVariables();
-
     static bool SortHitChargeVectorByRL(HitCharge &hitCharge1, HitCharge &hitCharge2);
     static bool SortHitChargeVectorByChargeOverWidth(HitCharge &hitCharge1, HitCharge &hitCharge2);
     static bool SortByDistanceToNN(HitCharge &hitCharge1, HitCharge &hitCharge2);
     static bool SortJumpVector(JumpObject &jumpObject1, JumpObject &jumpObject2);
 
+    void BinHitChargeVector(HitChargeVector &hitChargeVector, HitChargeVector &binnedHitChargeVector);
+    double DensityCorrection(double &T, double &M);
+    double BetheBloch(double &T, double &M);
+    void FillLookupTable(LookupTable &lookupTable, double M);
+    double GetEnergyfromLength(LookupTable &lookupTable, double &trackLength);
+    double GetLengthfromEnergy(LookupTable &lookupTable, double &currentEnergy);
+
+
 };
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-/* inline pandora::AlgorithmTool *TrackDirectionTool::Factory::CreateAlgorithmTool() const */
-/* { */
-/*     return new TrackDirectionTool(); */
-/* } */
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1125,68 +1096,6 @@ inline TrackDirectionTool::SplitObject TrackDirectionTool::DirectionFitObject::G
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void TrackDirectionTool::DirectionFitObject::DrawFit()
-{
-//   float firstLengthPosition((*(m_hitchargevector.begin())).GetLongitudinalPosition());
-//   float lastLengthPosition((*(std::prev(m_hitchargevector.end(), 1))).GetLongitudinalPosition());
-//   float trackLength(lastLengthPosition - firstLengthPosition);
-
-//   HitChargeVector hitChargeVector(m_hitchargevector), forwardsRecoHits(m_forwardsrecohits), backwardsRecoHits(m_backwardsrecohits);
-
-//    TGraphErrors *Hits = new TGraphErrors(hitChargeVector.size());
-//    TGraphErrors *fitHits = new TGraphErrors(forwardsRecoHits.size());
-//    int n(0), i(0);
-    
-//   for (HitCharge hitCharge : hitChargeVector)
-//    {    
-//        Hits->SetPoint(n, hitCharge.GetLongitudinalPosition(), hitCharge.GetChargeOverWidth());
-	//       n++; 
-//    }    
-//
-//    if (m_forwardschisquared/m_nhits < m_backwardschisquared/m_nhits || m_hypothesis == 2)
-//    {
-//        for (HitCharge hitCharge : forwardsRecoHits)
-//        {    
-//           fitHits->SetPoint(i, hitCharge.GetLongitudinalPosition(), hitCharge.GetChargeOverWidth());
-//           i++; 
-//       }    
-//    }
-
-//    if (m_forwardschisquared/m_nhits > m_backwardschisquared/m_nhits || m_hypothesis == 2)
-//   {
-//       for (HitCharge hitCharge : backwardsRecoHits)
-//      {    
-//          fitHits->SetPoint(i, hitCharge.GetLongitudinalPosition(), hitCharge.GetChargeOverWidth());
-//         i++; 
-	    //      }  
-//   }
-
-//   if (hitChargeVector.size() != 0 && forwardsRecoHits.size() != 0 && backwardsRecoHits.size() != 0)
-//   {    
-//      TCanvas *canvas = new TCanvas("canvas", "canvas", 900, 600);
-//      canvas->cd();
-//      
-//      Hits->GetXaxis()->SetLimits(-0.05 * trackLength, 1.05 * trackLength);
-//      Hits->SetMarkerStyle(20);
-//      Hits->SetMarkerSize(0.5);
-//      Hits->SetMarkerColor(kBlack); 
-        
-//      fitHits->SetMarkerStyle(20);
-//      fitHits->SetMarkerSize(0.5);
-//      fitHits->SetMarkerColor(kMagenta);
-
-//      Hits->SetTitle(";Longitudinal Coordinate L_{2D} (cm); Q/w (charge/cm)"); //Bethe-Bloch Theory Fit
-//       Hits->Draw("AP");
-//      fitHits->Draw("Psame");
-
-        //PANDORA_MONITORING_API(Pause(this->GetPandora()));
-//      canvas->SaveAs("fit.png");
-        //delete canvas;
-//   } 
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 inline void TrackDirectionTool::DirectionFitObject::SetMCDirection(int direction)
 {
     m_mcdirection = direction;
@@ -1196,9 +1105,6 @@ inline void TrackDirectionTool::DirectionFitObject::SetMCDirection(int direction
 
 inline int TrackDirectionTool::DirectionFitObject::GetMCDirection()
 {
-    //if (m_mcdirection == -1)
-    //    std::cout << "MC information not available." << std::endl;
-
     return m_mcdirection;
 }
 

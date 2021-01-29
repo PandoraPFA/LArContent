@@ -40,7 +40,7 @@
 #include "larpandoracontent/LArControlFlow/PreProcessingAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/SlicingAlgorithm.h"
 #include "larpandoracontent/LArControlFlow/StitchingCosmicRayMergingTool.h"
-#include "larpandoracontent/LArControlFlow/PostMasterAnalysis.h"
+#include "larpandoracontent/LArControlFlow/TrackDirectionTool.h"
 
 #include "larpandoracontent/LArCustomParticles/PcaShowerParticleBuildingAlgorithm.h"
 #include "larpandoracontent/LArCustomParticles/TrackParticleBuildingAlgorithm.h"
@@ -190,13 +190,6 @@
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h"
 
-#include "larpandoracontent/LArDirection/ExampleDirectionAlgorithm.h"
-#include "larpandoracontent/LArDirection/DirectionAnalysisAlgorithm.h"
-#include "larpandoracontent/LArDirection/DirectionClusterSplittingAlgorithm.h"
-
-#include "larpandoracontent/LArControlFlow/TrackDirectionTool.h"
-#include "larpandoracontent/LArDirection/DirectionFlowProbabilityTool.h"
-
 #include "larpandoracontent/LArContent.h"
 
 #define LAR_ALGORITHM_LIST(d)                                                                                                   \
@@ -294,12 +287,7 @@
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
     d("LArBdtVertexSelection",                  BdtVertexSelectionAlgorithm)                                                    \
-    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)                                                    \
-    d("LArExampleDirection",                    ExampleDirectionAlgorithm)                                                      \
-    d("LArDirectionAnalysis",                   DirectionAnalysisAlgorithm)                                                     \
-    d("LArDirectionClusterSplitting",           DirectionClusterSplittingAlgorithm)                                             \
-    d("LArPostMasterAnalysis",                  PostMasterAnalysis) 
-
+    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
@@ -364,7 +352,6 @@
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
     d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)	                                              	\
     d("LArTrackDirectionTool",                  TrackDirectionTool)                                                             \
-    d("LArDirectionFlowProbabilityTool",        DirectionFlowProbabilityTool)                                                   \
     d("LArSliceIdMonitoring",                   SliceIdMonitoringTool)
 
 

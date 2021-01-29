@@ -23,12 +23,8 @@ SimpleNeutrinoIdTool::SimpleNeutrinoIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-  void SimpleNeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb, const SliceVector &sliceVector)
+  void SimpleNeutrinoIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &/*pfotoprobabilitymapb*/, const SliceVector &/*sliceVector*/)
 {
-  if (1==2) {
-    std::cout << pfotoprobabilitymapb.size() << std::endl;
-    std::cout << sliceVector.size() << std::endl;
-  }
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 

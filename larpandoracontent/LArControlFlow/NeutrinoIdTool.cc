@@ -71,18 +71,14 @@ void NeutrinoIdTool<T>::SelectOutputPfos(const Algorithm *const pAlgorithm, cons
 
     if (m_useTrainingMode)
     {
-      std::cout << "Training Mode!" << std::endl;
         // ATTN in training mode, just return everything as a cosmic-ray
         this->SelectAllPfos(pAlgorithm, crSliceHypotheses, selectedPfos);
-	std::cout << "selected all pfos" << std::endl;
 
         unsigned int bestSliceIndex(std::numeric_limits<unsigned int>::max());
         if (!this->GetBestMCSliceIndex(pAlgorithm, nuSliceHypotheses, crSliceHypotheses, bestSliceIndex)) return;
-	std::cout << "got best mc slice index" << std::endl;
 
         for (unsigned int sliceIndex = 0; sliceIndex < nSlices; ++sliceIndex)
         {
-	  std::cout << "slice loop" << std::endl;
             const SliceFeatures &features(sliceFeaturesVector.at(sliceIndex));
             if (!features.IsFeatureVectorAvailable()) continue;
 
@@ -90,7 +86,6 @@ void NeutrinoIdTool<T>::SelectOutputPfos(const Algorithm *const pAlgorithm, cons
             features.GetFeatureVector(featureVector);
             LArMvaHelper::ProduceTrainingExample(m_trainingOutputFile, sliceIndex == bestSliceIndex, featureVector);
         }
-	std::cout << "Finishing training mode!" << std::endl;
         return;
     }
 
@@ -612,11 +607,26 @@ NeutrinoIdTool<T>::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const Pfo
 	m_featureVector.push_back(crLongestTrackDirY);
 	m_featureVector.push_back(crLongestTrackDeflection);
 	m_featureVector.push_back(crFracHitsInLongestTrack);
-	// m_featureVector.push_back(nCRHitsMax);
+	//m_featureVector.push_back(nCRHitsMax);
 	//	m_featureVector.push_back(minprobnu_f);
 	m_featureVector.push_back(maxprobnu_f);
 	//	m_featureVector.push_back(minprobcr_f);
 	m_featureVector.push_back(maxprobcr_f);
+
+	std::cout << "  " << std::endl;
+	std::cout << "nuNFinalStatePfos " << nuNFinalStatePfos << std::endl;
+	std::cout << "nuNHitsTotal " << nuNHitsTotal << std::endl;
+	std::cout << "nuVertexY " << nuVertexY << std::endl;
+	std::cout << "nuWeightedDirZ " << nuWeightedDirZ  << std::endl;
+	std::cout << "nuNSpacePointsInSphere " << nuNSpacePointsInSphere << std::endl;
+	std::cout << "nuEigenRatioInSphere " << nuEigenRatioInSphere << std::endl;
+	std::cout << "crLongestTrackDirY " << crLongestTrackDirY << std::endl;
+	std::cout << "crLongestTrackDeflection " << crLongestTrackDeflection << std::endl;
+	std::cout << "crFracHitsInLongestTrack " << crFracHitsInLongestTrack << std::endl;
+	std::cout << "(nCRHitsMax) " << nCRHitsMax << std::endl;
+	std::cout << "maxprobnu_f " << maxprobnu_f << std::endl;
+	std::cout << "maxprobcr_f " << maxprobcr_f << std::endl;
+	std::cout << "   " << std::endl;
 
         m_isAvailable = true;
     }

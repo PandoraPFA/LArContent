@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArControlFlow/TrackDirectionTool.cc
  *
- *  @brief  Implementation of the candidate vertex creation Tool class.
+ *  @brief  Implementation of the track direction finding Tool class.
  *
  *  $Log: $
  */
@@ -10,36 +10,23 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-//#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
 #include "larpandoracontent/LArControlFlow/TrackDirectionTool.h"
 
-#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
-
-
-
-#include <ctime>
-#include <list>
-//#include <algorithm>
-#include <iterator>
-#include <vector>
-//#include <fstream>
-#include <chrono>
 
 using namespace pandora;
 
 //----------------------------------------------------------------------------------------------------------------------------------
 
-#include "larpandoracontent/LArControlFlow/ToolMinuitFunctions.h"
-
 namespace lar_content
 {
 
   TrackDirectionTool::TrackDirectionTool() :
-    m_slidingFitWindow(20), 
-    m_minClusterCaloHits(20), 
-    m_minClusterLength(10.f),
+    m_slidingFitWindow(5), 
+    m_minClusterCaloHits(5), 
+    m_minClusterLength(1.f),
     m_numberTrackEndHits(100000), 
     m_enableFragmentRemoval(true), 
     m_enableSplitting(true), 
@@ -59,52 +46,18 @@ StatusCode TrackDirectionTool::Initialize()
   return STATUS_CODE_SUCCESS;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-  // TrackDirectionTool::~TrackDirectionTool() {
-
-  //   if (m_writeTable)
-  //   {
-  //       PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_lookupTableFileName.c_str(), "UPDATE"));
-  //   }
-  // }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-//To run from master algorithm
-//  void TrackDirectionTool::FindDirections(const pandora::ParticleFlowObject *const pPfo, bool &directioncosmic, float &downprobability, float &deltachi2, float &deltachi2alone, float &minchi2perhit, bool &incomplete, const MasterAlgorithm *const) 
+//------------------------------------------------------------------------------------------------------------------------------------------ 
   void TrackDirectionTool::FindDirections(const pandora::ParticleFlowObject *const pPfo, bool &directioncosmic, float &downprobability, const MasterAlgorithm *const) 
   {
-    // incomplete = true;
-    
       try
-        {
-	   std::cout << "    " << std::endl;
-    	  // std::cout << "At start of finding directions...                                                                                                                                                                                                                                                                                        " << std::endl;
-	   
+        {  
 	   TrackDirectionTool::DirectionFitObject fitResult = this->GetPfoDirection(pPfo);
-	   //  incomplete = false;
 	   directioncosmic = false;
 	   downprobability = -1;
             
-	   std::cout << "                                DIRECTION RESULTS FOR PFO >>>>            " << std::endl;
-	   std::cout << "Probability: " << fitResult.GetProbability() << std::endl;       //think probability of being a CR
+	   std::cout << "DIRECTION RESULTS FOR PFO >>>>" << std::endl;
+	   std::cout << "Probability: " << fitResult.GetProbability() << std::endl;     
 	   downprobability = fitResult.GetProbability();
-	   // deltachi2alone = fitResult.GetForwardsChiSquared() - fitResult.GetBackwardsChiSquared();
-	   //deltachi2 = fitResult.GetDeltaChiSquaredPerHit();
-	   // minchi2perhit = fitResult.GetMinChiSquaredPerHit();
-	   std::cout << "Vertex position: (" << fitResult.GetBeginpoint().GetX() << ", " << fitResult.GetBeginpoint().GetY() << ", " << fitResult.GetBeginpoint().GetZ() << ")" << std::endl;
-	   std::cout << "Endpoint position: (" << fitResult.GetEndpoint().GetX() << ", " << fitResult.GetEndpoint().GetY() << ", " << fitResult.GetEndpoint().GetZ() << ")" << std::endl;
-	   //std::cout << "Hypothosis: " << fitResult.GetHypothesis() << std::endl;
-
-	   /*
-	   float ymax = 0.0;
-	   if(fitResult.GetBeginpoint().GetY() > fitResult.GetEndpoint().GetY()) {
-	     ymax = fitResult.GetBeginpoint().GetY();
-	   } else if (fitResult.GetBeginpoint().GetY() < fitResult.GetEndpoint().GetY()) {
-	     ymax = fitResult.GetEndpoint().GetY();
-	   }
-	   */
-	   // std::cout << "ymax " << ymax << std::endl;
 
 	   if (fitResult.GetProbability() < 0.96) {
 	     directioncosmic = false;
@@ -117,73 +70,7 @@ StatusCode TrackDirectionTool::Initialize()
         }
         catch (...)
 	  {
-    
-    /*
-	    CaloHitList totalcalohits;
-	    CaloHitList totalcalohitsW;
-	    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, totalcalohits);
-	    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, totalcalohits);
-	    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, totalcalohits);
-	    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, totalcalohitsW);
-	    std::cout << "total = " << totalcalohits.size() << std::endl;
-	    std::cout << "total W = " << totalcalohitsW.size() << std::endl;
-
-
-	    ClusterList clusterList = pPfo->GetClusterList();
-	    std::cout << "cluster size = " << clusterList.size() << std::endl;
-	    const Cluster* pCluster = clusterList.back();
-
-	    int w = 0;
-	    for (auto c :clusterList) {
-	      if (w == 2) {
-		pCluster = c;
-	      }
-	      w++;
-	    }
-	    
-	    float length = LArClusterHelper::GetLength(pCluster);
-	    std::cout << "length = " << length << std::endl;
-
-	    
-	    if(totalcalohits.size() < 16) {
-	       directioncosmic = true;
-	       downprobability = -2.0;
-	       // deltachi2 = 0.0;
-	       // deltachi2alone = 0.0;
-	       //minchi2perhit = 0.0;
-	       
-	       
-	       // incomplete = false;
-	    }	    
-	    else if (totalcalohitsW.size() < 6 && totalcalohitsW.size() > 0 ) {
-	      // if (totalcalohitsW.size() < 6 && totalcalohitsW.size() > 0 ) {
-	      directioncosmic = true;
-	      downprobability = -3.0;
-	      // deltachi2 = 0.0;
-	      // deltachi2alone = 0.0;
-	      // minchi2perhit = 0.0;
-	       
-	       
-	      // incomplete = false;
-	    }	   
-	    else if(length < 2.0 && totalcalohitsW.size() != 0) {
-	      // if(length < 1.0 && totalcalohitsW.size() != 0) {
-	      directioncosmic = true;
-	      downprobability = -4.0;
-	      // deltachi2 = 0.0;
-	      // // deltachi2alone = 0.0;
-	      //  minchi2perhit = 0.0;
-	       
-	       
-	      // incomplete = false;
-	      
-	    }
-	    
-	    
-    */
 	    std::cout << "Skipping..." << std::endl;
-	    //  }
-    
 	  }
   }
 
@@ -200,10 +87,6 @@ StatusCode TrackDirectionTool::Initialize()
             std::cout << "ERROR: cluster is not in the W view!" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
         }
-
-	// if (globalMuonLookupTable.GetMap().empty())
-        //    this->SetLookupTable();
-
 
         DirectionFitObject finalDirectionFitObject;
 
@@ -230,8 +113,11 @@ TrackDirectionTool::DirectionFitObject TrackDirectionTool::GetPfoDirection(const
     {
       const pandora::Vertex *const pVertex = LArPfoHelper::GetVertex(pPfo);
       const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
       LArTrackStateVector trackStateVector;
       LArPfoHelper::GetSlidingFitTrajectory(pPfo, pVertex, m_slidingFitWindow, slidingFitPitch, trackStateVector);
+
+     
 
       const Cluster *const pClusterW = GetTargetClusterFromPFO(pPfo, trackStateVector);
 
@@ -241,10 +127,6 @@ TrackDirectionTool::DirectionFitObject TrackDirectionTool::GetPfoDirection(const
       LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, totalcalohits);
 
 
-
-      // std::cout << "min = " <<  m_minClusterCaloHits << std::endl;
-      // std::cout << "here = " << pClusterW->GetNCaloHits()  << std::endl;
-      // std::cout << "total = " << totalcalohits.size() << std::endl;
         if (pClusterW->GetNCaloHits() <= m_minClusterCaloHits)
         {
             std::cout << "ERROR: PFO is tiny!" << std::endl;
@@ -272,7 +154,6 @@ TrackDirectionTool::DirectionFitObject TrackDirectionTool::GetPfoDirection(const
 
 void TrackDirectionTool::WriteLookupTableToTree(LookupTable &lookupTable)
 {
-  //this this then used after having been updated?
     std::vector<int> mapVector1, reverseMapVector2;
     std::vector<double> mapVector2, reverseMapVector1;
 
@@ -292,8 +173,6 @@ void TrackDirectionTool::WriteLookupTableToTree(LookupTable &lookupTable)
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "mapVector2", &mapVector2));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "reverseMapVector1", &reverseMapVector1));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "reverseMapVector2", &reverseMapVector2));
-    //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "binWidth", lookupTable.GetBinWidth()));
-    //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "initialEnergy", lookupTable.GetInitialEnergy()));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "maxRange", lookupTable.GetMaxRange()));
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
 }
@@ -302,17 +181,9 @@ void TrackDirectionTool::WriteLookupTableToTree(LookupTable &lookupTable)
 
 const Cluster* TrackDirectionTool::GetTargetClusterFromPFO(const ParticleFlowObject* pPfo, const LArTrackStateVector &trackStateVector)
 {
-    //HitType hitType(TPC_VIEW_W);
     ClusterList clusterListW;
     LArPfoHelper::GetTwoDClusterList(pPfo, clusterListW);
 
-    /*
-    if (clusterListW.size() == 0)
-    {
-        std::cout << "ERROR: no W clusters could be extracted from the PFO!" << std::endl;
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-	}
-    */
     if (trackStateVector.size() != 0) {
       TrackState firstTrackState(*(trackStateVector.begin())), lastTrackState(trackStateVector.back());
       const pandora::CartesianVector initialPosition(firstTrackState.GetPosition());
@@ -334,12 +205,6 @@ const Cluster* TrackDirectionTool::GetTargetClusterFromPFO(const ParticleFlowObj
 	  const pandora::CartesianVector lowZClusterVector(innerCoordinate.GetZ() < outerCoordinate.GetZ() ? innerCoordinate : outerCoordinate);
 	  const pandora::CartesianVector highZClusterVector(innerCoordinate.GetZ() > outerCoordinate.GetZ() ? innerCoordinate : outerCoordinate);
 
-	  /*
-	    std::cout << "Cluster inner coordinates: (" << innerCoordinate.GetX() << ", " << innerCoordinate.GetY() << ", " << innerCoordinate.GetZ() << ")" << std::endl;
-	    std::cout << "Cluster outer coordinates: (" << outerCoordinate.GetX() << ", " << outerCoordinate.GetY() << ", " << outerCoordinate.GetZ() << ")" << std::endl;
-	    std::cout << "Track low Z coordinates: (" << lowZVector.GetX() << ", " << lowZVector.GetY() << ", " << lowZVector.GetZ() << ")" << std::endl;
-	    std::cout << "Track high Z coordinates: (" << highZVector.GetX() << ", " << highZVector.GetY() << ", " << highZVector.GetZ() << ")" << std::endl;
-	  */
 
 	  if (innerCoordinate.GetY() != 0 || outerCoordinate.GetY() != 0) 
             continue;
@@ -533,16 +398,6 @@ void TrackDirectionTool::SimpleTrackEndFilter(HitChargeVector &hitChargeVector)
         hitChargeVector.pop_back();
 
 
-    //This piece of logic removes hits that have uncharacteristically high or low Q/w values (in tails of Q/w distribution)
-    /*
-    while (hitChargeVector.size() > 1) {
-      hitChargeVector.erase(
-			    std::remove_if(hitChargeVector.begin(), hitChargeVector.end(),
-					   [](HitCharge & hitCharge) { return hitCharge.m_intails; }),
-			    hitChargeVector.end());
-    }
-    */
-
     for (HitChargeVector::const_iterator iter = hitChargeVector.begin(); iter != hitChargeVector.end(); )
       {
         if ((*iter).m_intails==true && hitChargeVector.size() > 1) {
@@ -627,7 +482,7 @@ void TrackDirectionTool::TrackEndFilter(HitChargeVector &hitChargeVector, Direct
             float plusMinusNRatio(std::max((hitCharge.GetChargeOverWidth()/minusNHitCharge.GetChargeOverWidth()), (hitCharge.GetChargeOverWidth()/plusNHitCharge.GetChargeOverWidth())));
             float distanceFromBodyQoverW(std::abs(hitCharge.GetChargeOverWidth() - bodyQoverW));
 
-            if (distanceFromBodyQoverW >= 4.8 || std::abs(1.0 - nearestRatio) >= 0.4 || std::abs(1.0 - plusMinusNRatio) >= 0.7) //filter out Bragg peak?
+            if (distanceFromBodyQoverW >= 4.8 || std::abs(1.0 - nearestRatio) >= 0.4 || std::abs(1.0 - plusMinusNRatio) >= 0.7)
                 iter = filteredHitChargeVector.erase(iter);
             else
                 ++iter;
@@ -981,7 +836,6 @@ void TrackDirectionTool::GetTrackLength(HitChargeVector &hitChargeVector, float 
 
 void TrackDirectionTool::GetAverageQoverWTrackBody(HitChargeVector &hitChargeVector, float &averageChargeTrackBody)
 {
-    //temp vector because I do not want to mess with the sorting of the original vector
     HitChargeVector tempHitChargeVector;
 
     for (HitCharge &hitCharge : hitChargeVector)
@@ -1007,7 +861,6 @@ void TrackDirectionTool::GetAverageQoverWTrackBody(HitChargeVector &hitChargeVec
 
 void TrackDirectionTool::GetQoverWRange(HitChargeVector &hitChargeVector, float &QoverWRange)
 {
-    //temp vector because I do not want to mess with the sorting of the original vector
     HitChargeVector tempHitChargeVector;
 
     for (HitCharge &hitCharge : hitChargeVector)
@@ -1034,7 +887,7 @@ void TrackDirectionTool::GetQoverWRange(HitChargeVector &hitChargeVector, float 
 void TrackDirectionTool::FindKinkSplit(HitChargeVector &hitChargeVector, std::vector<float> &splitPositions)
 {
     HitChargeVector binnedHitChargeVector = hitChargeVector;
-    BinHitChargeVector(hitChargeVector, binnedHitChargeVector);  //comment
+    BinHitChargeVector(hitChargeVector, binnedHitChargeVector);
 
     std::vector<JumpObject> kinkObjects;
 
@@ -1235,13 +1088,13 @@ void TrackDirectionTool::FindPlateauSplit(HitChargeVector &hitChargeVector, std:
 
             float hitFractionLeft(hitCountLeft/totalHitsLeft), hitFractionRight(hitCountRight/totalHitsRight);
 
-            if (hitFractionLeft > bestHitFractionLeft) // && hitCountLeft >= 5
+            if (hitFractionLeft > bestHitFractionLeft)
             {
                 bestHitFractionLeft = hitFractionLeft;
                 bestChargeLeft = currentCharge;
             }
 
-            if (hitFractionRight > bestHitFractionRight) //&& hitCountRight >= 5
+            if (hitFractionRight > bestHitFractionRight)
             {
                 bestHitFractionRight = hitFractionRight;
                 bestChargeRight = currentCharge;
@@ -1302,7 +1155,7 @@ void TrackDirectionTool::FindPlateauSplit(HitChargeVector &hitChargeVector, std:
 
 void TrackDirectionTool::FindJumpSplit(HitChargeVector &hitChargeVector, std::vector<JumpObject> &jumpObjects)
 {
-  HitChargeVector binnedHitChargeVector;        //comment
+    HitChargeVector binnedHitChargeVector;       
     BinHitChargeVector(hitChargeVector, binnedHitChargeVector);
 
     std::vector<JumpObject> normalJumps, binnedJumps;
@@ -1467,120 +1320,19 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
   
   if (deltaChiSquaredPerHit < 0.0 && deltaChiSquaredPerHit > -40.0) {
     float beta = 0.01;
-    float alpha = 0.30465 + (0.00082051*fitResult.GetNHits()) - (0.12857*fitResult.GetMinChiSquaredPerHit());  //need refining, alex
+    float alpha = 0.30465 + (0.00082051*fitResult.GetNHits()) - (0.12857*fitResult.GetMinChiSquaredPerHit());
     if (alpha < 0) {
       alpha = 0.000000000000000000000000000000001;
     } 
-    float pmax = 0.90706 + (0.00011538*fitResult.GetNHits()) - (0.032143*fitResult.GetMinChiSquaredPerHit());   //need refining, alex
+    float pmax = 0.90706 + (0.00011538*fitResult.GetNHits()) - (0.032143*fitResult.GetMinChiSquaredPerHit()); 
     float x = std::abs(deltaChiSquaredPerHit);
-    // std::cout << "deltaChiSquaredPerHit  " << deltaChiSquaredPerHit << std::endl;
     float paa = (1.0/(2.0*alpha));
     float pab = ((2.0*alpha*pmax)+(2.0*beta*pmax) - alpha - beta);
-    // std::cout << "(pow(((alpha + beta)/beta), beta/alpha)) " << (pow(((alpha + beta)/beta), beta/alpha)) << std::endl;
     float pac = (pow(((alpha + beta)/beta), beta/alpha));
     float p0 = 0.5 + paa*((pab)*(pac));
     float pc = 0.5 + (p0 - 0.5)*(1.0 - exp(-alpha*x))*(exp(-beta*x));
 
-    // std::cout << "fitResult.GetNHits() " << fitResult.GetNHits() << std::endl;
-    // std::cout << "fitResult.GetMinChiSquaredPerHit() " << fitResult.GetMinChiSquaredPerHit() << std::endl;
-    // std::cout << "alpha = " << alpha << std::endl;
-    // std::cout << "pmax = " << pmax << std::endl;
-    // std::cout << "p0 = " << p0 << std::endl;
-    // std::cout << "pc = " << pc << std::endl;
     fitResult.SetProbability(pc);
-  
-
-    //This was always commented
-    /*
-    //------------------------------------------------------
-    // The fit result parameters
-    const auto nHits = fitResult.GetNHits();
-    const auto minChi2PerHit = fitResult.GetMinChiSquaredPerHit();
-    // To find alpha and pMax we use a fit at fixed beta
-    const float beta_f = 0.01;// Calculate alpha from the fit result
-    const float alpha_0 = 0.30465;
-    const float alpha_1 = 0.00082051;
-    const float alpha_2 = -0.12857;
-    const float alpha_t = alpha_0 + (alpha_1 * nHits) + (alpha_2 * minChi2PerHit);
-    if (alpha_t < 0)
-      std::cout << "alpha = " << alpha_t << ", is less than zero!" << std::endl;
-    // Calculate pMax from the fit result
-    const float pMax_0 = 0.90706;
-    const float pMax_1 = 0.00011538;
-    const float pMax_2 = -0.032143;
-    const float pMax = pMax_0 + (pMax_1 * nHits) + (pMax_2 * minChi2PerHit);
-    // Get the analytic value of pMax, as calculated from alpha and beta_f
-    const float gamma_f = beta_f / (alpha_t + beta_f);
-    if (gamma_f < 0)
-      std::cout << "gamma_f = " << gamma_f << ", is less than zero!" << std::endl;
-    const float pMax_f = (1 - gamma_f) * std::pow(gamma_f, beta_f / alpha_t);
-    // In general pMax and pMax_f won't be identical?
-
-    std::cout << " ---------------------------------------------------- " << std::endl;
-    std::cout << "pMax from fit = " << pMax << std::endl;
-    std::cout << "pMax from alpha and beta_f = " << pMax_f << std::endl;
-    std::cout << " ---------------------------------------------------- " << std::endl;
-
-    const float gamma = beta_f / (alpha_t + beta_f);
-    
-    // Choose these to be whatever small numbers you like
-    const float threshold = 0.001;
-    const float betaStepFraction = 0.01;
-
-    while (std::abs(((1 - gamma) * std::pow(gamma, beta / alpha)) - pMax) > threshold)
-      {
-	// Check the value of pMax at values of beta around the current value
-	const float betaMinus = beta * (1 - betaStepFraction);
-	const float betaPlus = beta * (1 + betaStepFraction);   
-	const float pMaxError = std::abs(((1 - gamma) * std::pow(gamma, beta / alpha)) - pMax);
-	const float pMaxMinusError = std::abs(((1 - gamma) * std::pow(gamma, betaMinus / alpha)) - pMax);
-	const float pMaxPlusError = std::abs(((1 - gamma) * std::pow(gamma, betaPlus / alpha)) - pMax);    // Print out the current step
-	std::cout << "beta = " << beta << ". Error = " << pMaxError << std::endl;    // Check if the current value of beta is better than a step in either direction
-	if (pMaxError < pMaxMinusError && pMaxError < pMaxPlusError)
-	  break;   
-
-
-	// Step beta in whichever direction is best
-	beta *= 1 + (pMaxPlusError < pMaxMinusError ? 1.f : -1.f) * betaStepFraction;
-      }
-
-
-    // Now we have got beta somewhere close to the analytic answer, just update pMax to make everything work out
-    const float pMax_final = (1 - gamma) * std::pow(gamma, beta / alpha);
-    std::cout << "beta (fixed) = " << beta_f << std::endl;
-    std::cout << "alpha (from fit) = " << alpha << " (use this one)"<< std::endl;
-    std::cout << "pMax (from fit) = " << pMax << std::endl;
-    std::cout << "beta (minimal error) = " << beta << " (use this one)"<< std::endl;
-    std::cout << "pMax (final) = " << pMax_final << " (use this one)" << std::endl;
-
-    //------------------------------------------
-
-
-    float beta2 = 0.01;
-    float alpha2 = 0.265 + (0.0009*fitResult.GetNHits()) - (0.1133*fitResult.GetMinChiSquaredPerHit());  //jesse
-    float pmax2 = 0.8897 + (0.00024*fitResult.GetNHits()) - (0.01407*fitResult.GetMinChiSquaredPerHit());
-    float x2 = deltaChiSquaredPerHit;     //this might be working backwards?
-    //float x = fitResult.GetBackwardsChiSquaredPerHit() - fitResult.GetForwardsChiSquaredPerHit();
-    std::cout << "deltaChiSquaredPerHit  " << deltaChiSquaredPerHit << std::endl;
-    float paa2 = (1.0/(2.0*alpha2));
-    float pab2 = ((2.0*alpha2*pmax2)+(2.0*beta2*pmax2) - alpha2 - beta2);
-    std::cout << "(pow(((alpha + beta)/beta), beta/alpha)) " << (pow(((alpha2 + beta2)/beta2), beta2/alpha2)) << std::endl;
-    float pac2 = 0;
-    if(((alpha2 + beta2)/beta2) >= 0) {
-      pac2 = (pow(((alpha2 + beta2)/beta2), beta2/alpha2));
-    }
-    else if(((alpha2 + beta2)/beta2) < 0) {
-      pac2 = -1*(pow(abs(((alpha2 + beta2)/beta2)), beta2/alpha2));
-    }
-    float p02 = 0.5 + paa2*((pab2)*(pac2));
-    float pc2 = 0.5 + (p02-0.5)*(1.0-exp(-alpha2*x2))*(exp(-beta2*x2));
-    std::cout << "alpha j= " << alpha2 << std::endl;
-    std::cout << "pmax j= " << pmax2 << std::endl;
-    std::cout << "p0 j= " << p02 << std::endl;
-    std::cout << "pc j= " << pc2 << std::endl;
-    */
-
-
   
   }
   else {
@@ -1590,59 +1342,13 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
   }
   
   
-  /*
-  if (deltaChiSquaredPerHit < -15.0 || deltaChiSquaredPerHit > 15.0)  //in thesis this is 40??? Joris what were you doing
-    {
-        float probability(0.5);
-        fitResult.SetProbability(probability);
-        return;
-    }
-
-        std::map<float, int> deltaChiSquaredPerHitToBinMap = {
-        {-15.0, 1}, {-14.625, 2}, {-14.25, 3}, {-13.875, 4}, {-13.5, 5}, {-13.125, 6}, {-12.75, 7}, {-12.375, 8}, {-12.0, 9}, {-11.625, 10},
-        {-11.25, 11}, {-10.875, 12}, {-10.5, 13}, {-10.125, 14}, {-9.75, 15}, {-9.375, 16}, {-9.0, 17}, {-8.625, 18}, {-8.25, 19}, {-7.875, 20},
-        {-7.5, 21}, {-7.125, 22}, {-6.75, 23}, {-6.375, 24}, {-6.0, 25}, {-5.625, 26}, {-5.25, 27}, {-4.875, 28}, {-4.5, 29}, {-4.125, 30},
-        {-3.75, 31}, {-3.375, 33}, {-3.0, 33}, {-2.625, 34}, {-2.25, 35}, {-1.875, 36}, {-1.5, 37}, {-1.125, 38}, {-0.75, 39}, {-0.375, 40},
-        {0.0, 41}, {0.375, 42}, {0.75, 43}, {1.125, 44}, {1.5, 45}, {1.875, 46}, {2.25, 47}, {2.625, 48}, {3.0, 49}, {3.375, 50},
-        {3.75, 51}, {4.125, 52}, {4.5, 53}, {4.875, 55}, {5.25, 55}, {5.625, 56}, {6.0, 57}, {6.375, 58}, {6.75, 59}, {7.125, 60},
-        {7.5, 61}, {7.875, 62}, {8.25, 63}, {8.625, 66}, {9.0, 66}, {9.375, 66}, {9.75, 67}, {10.125, 68}, {10.5, 69}, {10.875, 70},
-        {11.25, 71}, {11.625, 72}, {12.0, 73}, {12.375, 77}, {12.75, 77}, {13.125, 77}, {13.5, 77}, {13.875, 78}, {14.25, 79}, {14.625, 80}
-        };
-
-        std::map<int, float> binToProbabilityMap = {
-        {1, 0.396614}, {2, 0.396614}, {3, 0.567965}, {4, 0.677773}, {5, 0.630863}, {6, 0.567965}, {7, 0.66352}, {8, 0.612035}, {9, 0.66352}, {10, 0.773655},
-        {11, 0.743075}, {12, 0.812674}, {13, 0.858101}, {14, 0.829472}, {15, 0.84969}, {16, 0.829472}, {17, 0.895234}, {18, 0.905632}, {19, 0.920437}, {20, 0.931227},
-        {21, 0.940389}, {22, 0.945513}, {23, 0.958795}, {24, 0.961112}, {25, 0.965044}, {26, 0.969887}, {27, 0.975667}, {28, 0.981012}, {29, 0.982457}, {30, 0.983119},
-        {31, 0.98561}, {32, 0.98807}, {33, 0.989574}, {34, 0.989973}, {35, 0.98897}, {36, 0.944622}, {37, 0.861042}, {38, 0.81822}, {39, 0.78381}, {40, 0.53081},
-        {41, 0.31489}, {42, 0.175161}, {44, 0.157666}, {44, 0.081415}, {45, 0.0977991}, {46, 0.0102574}, {47, 0.0107648}, {48, 0.0078804}, {49, 0.00898676}, {50, 0.0112083},
-        {51, 0.0108723}, {52, 0.0100676}, {53, 0.0100676}, {54, 0.0113249}, {55, 0.0124953}, {56, 0.0115656}, {57, 0.0124953}, {58, 0.0146878}, {59, 0.0153076}, {60, 0.0208913},
-        {61, 0.0217255}, {62, 0.0293406}, {63, 0.0319228}, {64, 0.0271449}, {65, 0.0387419}, {66, 0.0492657}, {67, 0.0676391}, {68, 0.0471319}, {69, 0.041712}, {70, 0.0981396},
-        {71, 0.107868}, {72, 0.0831429}, {73, 0.178738}, {74, 0.119737}, {75, 0.107868}, {76, 0.178738}, {77, 0.134541}, {78, 0.521117}, {79, 0.266179}, {80, 0.266179}
-        };
-
-        std::map<float, int>::iterator binIter = deltaChiSquaredPerHitToBinMap.lower_bound(deltaChiSquaredPerHit);
-        if(binIter != deltaChiSquaredPerHitToBinMap.begin()) {--binIter;}
-        int bin((*binIter).second);
-
-        std::map<int, float>::iterator probabilityIter = binToProbabilityMap.lower_bound(bin);
-        if(probabilityIter != binToProbabilityMap.begin()) {--probabilityIter;}
-        float probability((*probabilityIter).second);
-
-  
-        fitResult.SetProbability(probability);
-  */
-  
 }
 
 
 //---------------------------------------------------------------------------------------------------------------------------------
 
-void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitChargeVector &forwardsFitPoints, HitChargeVector &backwardsFitPoints, int numberHitsToConsider, float &forwardsChiSquared, float &backwardsChiSquared, int &fitStatus1, int &fitStatus2)
+  void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitChargeVector &forwardsFitPoints, HitChargeVector &backwardsFitPoints, int numberHitsToConsider, float &forwardsChiSquared, float &backwardsChiSquared, int &/*fitStatus1*/, int &/*fitStatus2*/)
 {
-  //std::cout << "start: PerformFits" << std::endl;
-  if (1==2) {
-    std::cout << "fit status: " << fitStatus1 << "  :  " << fitStatus2 << std::endl;
-  }
 
   lar_content::TrackDirectionTool::LookupTable globalMuonLookupTable;
   if (globalMuonLookupTable.GetMap().empty()){
@@ -1670,38 +1376,26 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
 
 
    //forwards fit
-    //NON ROOT VERSION
    double particleMass(105.7);
    double maxScale = 0;
    if (trackLength != 0) {
-     maxScale = globalMuonLookupTable.GetMaxRange()/trackLength;   //maxScale = maxrange/tracklength
+     maxScale = globalMuonLookupTable.GetMaxRange()/trackLength;
      if (maxScale < 1.1) {
        maxScale = 1.1;
      }
    }
-   // std::cout <<globalMuonLookupTable.GetMaxRange() << std::endl;
-   //std::cout << trackLength<< std::endl;
-   //std::cout << "maxScale " << maxScale << std::endl;
    LookupTable lookupTable = globalMuonLookupTable;
 
    const int nParameters = 3;
     const std::string parName[nParameters]   = {"ENDENERGY", "SCALE", "EXTRA"};
     const double vstart[nParameters] = {2.1, 1.0, 1.0};
-    //const double step[nParameters] = {1.e-1, 1.e-1, 1.e-1};
-    // alex const double step[nParameters] = {50, 5, 1};
     const double step[nParameters] = {0.5, 5, 0.5};
-    //const double lowphysbound[nParameters] = {2.0, 0.01, 0.1};
-    // const double highphysbound[nParameters] = {1.0e3, maxScale, 1.0e1};
     const double highphysbound[nParameters] = {25, maxScale, 1.0e1};
     std::list<double> chisquaredlist;
     std::vector<double> p0list;
     std::vector<double> p1list;
     std::vector<double> p2list;
     
-    //minimise starts here
-    //while (lastchisquared >= chisquared) {
-
-    // auto t_start = std::chrono::high_resolution_clock::now();
     double M = 105.7;  //mass
     for (double p0=vstart[0]; p0 < highphysbound[0];p0 = p0 + step[0]){
       double Ee(p0);
@@ -1715,7 +1409,6 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
 
 	  double chisquared(0.0);
 
-	  //minimise this bit-----
 	  for (lar_content::TrackDirectionTool::HitCharge hitCharge : binnedHitChargeVector) //for each hit charge in the binned vector
 	    {
 	      double L_i(Ls + (p1 * hitCharge.GetLongitudinalPosition())); //length
@@ -1726,8 +1419,7 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
 
 	      chisquared += ( (ChargeOverWidth - dEdx_2D) * (ChargeOverWidth - dEdx_2D) )/(hitCharge.GetUncertainty() * hitCharge.GetUncertainty());
 	    }
-	  //-----------
-	  // if (p0 <= 25) {
+
 	  if (chisquaredlist.size() > 0) {
 	    if (chisquared < chisquaredlist.back()){
 	      chisquaredlist.push_back(chisquared);
@@ -1738,13 +1430,6 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
 	      p0list.erase(p0list.begin());
 	      p1list.erase(p1list.begin());
 	      p2list.erase(p2list.begin());
-	  
-	      // }
-	      // if(chisquared/size < 50) {
-	      // std::cout << "chisquared  " << chisquared << std::endl;
-	      //   std::cout << "size  " <<size << std::endl;
-	      //   std::cout << "chisquared/size  "<< chisquared/size << std::endl;
-	      //  }
 	    }
 	  }
 	  else {
@@ -1757,13 +1442,6 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
       }
     }
 
-    // auto t_end = std::chrono::high_resolution_clock::now();
-    // std::cout << "time: " << std::chrono::duration<double, std::milli>(t_end-t_start).count() << std::endl;
-
-    //std::list<double>::iterator minchisquared = std::min_element(chisquaredlist.begin(), chisquaredlist.end());
-    // auto index = std::distance(chisquaredlist.begin(), minchisquared);   
-
-    // int indexvalue = index;
      int indexvalue = 0;
     double outpar[nParameters];
 
@@ -1771,41 +1449,29 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
     outpar[1] = p1list[indexvalue];
     outpar[2] = p2list[indexvalue];
 
-    //std::cout << "outpar[0]  " << outpar[0] << std::endl;
- 
-
     //backwards fit
     //--------------------------------------------------------------------
-    //NON ROOT VERSION
     const int nParameters2 = 3;
     const std::string parName2[nParameters2]   = {"ENDENERGY", "SCALE", "EXTRA"};
     const double vstart2[nParameters2] = {2.1, 1.0, 1.0};
-    //const double step2[nParameters2] = {1.e-1, 1.e-1, 1.e-1};
-    //alex const double step2[nParameters] = {0.5, 5, 1};
     const double step2[nParameters] = {0.5, 5, 0.5};
-    //const double lowphysbound2[nParameters2] = {2.0, 0.01, 0.1};
-    //const double highphysbound2[nParameters2] = {1.0e3, maxScale, 1.0e1};
     const double highphysbound2[nParameters2] = {25, maxScale, 1.0e1};
     std::list<double> chisquaredlist2;
     std::vector<double> p0list2;
     std::vector<double> p1list2;
     std::vector<double> p2list2;
 
-    
-    //minimise starts here
-    //while (lastchisquared >= chisquared) {
     for (double p02=vstart2[0];  p02 < highphysbound2[0];p02 = p02 + step2[0]){
       double Ee(p02);
-      double Le(GetLengthfromEnergy(lookupTable, Ee));  //length
+      double Le(GetLengthfromEnergy(lookupTable, Ee)); 
       for (double p12=vstart2[1]; p12 < highphysbound2[1];p12 = p12 + step2[1]){
-	double L(p12 * trackLength); //energy, length
+	double L(p12 * trackLength); 
 	double Ls(Le - L);
-	double Es(GetEnergyfromLength(lookupTable, Ls));    //energy
+	double Es(GetEnergyfromLength(lookupTable, Ls));   
 	double alpha((Es - Ee)/TotalCharge), beta(L/TotalHitWidth);
 	for (double p22=vstart2[2];  p22 < highphysbound2[2];p22 = p22 + step2[2]){
 	     
 	  double chisquared2(0.0);
-	  //minimise this bit-----
 	  for (lar_content::TrackDirectionTool::HitCharge hitCharge : binnedHitChargeVector) //for each hit charge in the binned vector
 	    {
 	      double L_i(Ls + (p12 * hitCharge.GetLongitudinalPosition())); //length
@@ -1816,8 +1482,7 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
 
 	      chisquared2 += ( (ChargeOverWidth - dEdx_2D) * (ChargeOverWidth - dEdx_2D) )/(hitCharge.GetUncertainty() * hitCharge.GetUncertainty());
 	    }
-	  //-----------
-	  // if (p02 <= 25) {
+
 	  if (chisquaredlist2.size() > 0) {
 	    if (chisquared2 < chisquaredlist2.back()){
 	      chisquaredlist2.push_back(chisquared2);
@@ -1829,14 +1494,6 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
 	      p1list2.erase(p1list2.begin());
 	      p2list2.erase(p2list2.begin());
 	    }
-
-	    // if(chisquared2/size < 100) {
-	    //   std::cout << chisquared2 << std::endl;
-	    //   std::cout << size << std::endl;
-	    //  std::cout << chisquared2/size << std::endl;
-	    //  }
-	    // }
-
 	  }
 	  else {
 	    chisquaredlist2.push_back(chisquared2);
@@ -1848,10 +1505,6 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
       }
     }
      
-    //  std::list<double>::iterator minchisquared2 = std::min_element(chisquaredlist2.begin(), chisquaredlist2.end());
-    // auto index2 = std::distance(chisquaredlist2.begin(), minchisquared2);   
-
-    // int indexvalue2 = index2;
     int indexvalue2 = 0;
     double outpar2[nParameters];
 
@@ -1859,17 +1512,13 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
     outpar2[1] = p1list2[indexvalue2];
     outpar2[2] = p2list2[indexvalue2];
 
-    //std::cout << "outpar2[0]  " << outpar2[0] << std::endl;
-
-    
-
     //--------------------------------------------------------------------------
 
-    double f_Ee(outpar[0]), f_L(outpar[1] * trackLength);                           //e = end, i = start, s = ?, maybe here s = i 
+    double f_Ee(outpar[0]), f_L(outpar[1] * trackLength);
     double f_Le(GetLengthfromEnergy(lookupTable, f_Ee));
     double f_Ls = f_Le - f_L;
 
-    double f_Es = GetEnergyfromLength(lookupTable, f_Ls);   //this length? think so
+    double f_Es = GetEnergyfromLength(lookupTable, f_Ls);
     double f_deltaE = f_Es - f_Ee;
 
     double f_alpha = f_deltaE/TotalCharge;
@@ -1879,7 +1528,7 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
     double b_Le(GetLengthfromEnergy(lookupTable, b_Ee));
     double b_Ls = b_Le - b_L;
 
-    double b_Es = GetEnergyfromLength(lookupTable, b_Ls);  //this shoule be energy at start?
+    double b_Es = GetEnergyfromLength(lookupTable, b_Ls);
     double b_deltaE = b_Es - b_Ee;
 
     double b_alpha = b_deltaE/TotalCharge;
@@ -1889,9 +1538,9 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
     
     int nHitsConsidered(0);
 
-    for (HitCharge &hitCharge : hitChargeVector)                              //calculate a chisquared for each hit
+    for (HitCharge &hitCharge : hitChargeVector)
     {
-      double f_L_i = f_Ls + (outpar[1] * hitCharge.GetLongitudinalPosition());         //sum these?  
+      double f_L_i = f_Ls + (outpar[1] * hitCharge.GetLongitudinalPosition()); 
         double f_E_i = GetEnergyfromLength(lookupTable, f_L_i);
         double f_dEdx_2D = outpar[2] * (f_beta/f_alpha) * BetheBloch(f_E_i, particleMass);
 
@@ -1952,20 +1601,19 @@ void TrackDirectionTool::GetCalorimetricDirection(const Cluster* pTargetClusterW
     this->FillHitChargeVector(pTargetClusterW, hitChargeVector);
 
     HitChargeVector filteredHitChargeVector;
-    this->TrackInnerFilter(hitChargeVector, filteredHitChargeVector);   //hit + Bragg?
+    this->TrackInnerFilter(hitChargeVector, filteredHitChargeVector);
     this->SimpleTrackEndFilter(filteredHitChargeVector);
-    //this->TrackEndFilter(filteredHitChargeVector, directionFitObject); //TEST COMMENT
+    //this->TrackEndFilter(filteredHitChargeVector, directionFitObject);
 
     if (pTargetClusterW->GetNCaloHits() < 1.5 * m_minClusterCaloHits || LArClusterHelper::GetLength(pTargetClusterW) < m_minClusterLength)
     {
         std::cout << "W Cluster too small" << std::endl;
-	std::cout << LArClusterHelper::GetLength(pTargetClusterW) << std::endl;
         throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
     this->FitHitChargeVector(filteredHitChargeVector, directionFitObject);
 
-    //this->TestHypothesisOne(directionFitObject);           //where were these being used?
+    //this->TestHypothesisOne(directionFitObject);
     //this->TestHypothesisTwo(directionFitObject);
     //this->TestHypothesisThree(directionFitObject);
 }
@@ -1974,19 +1622,9 @@ void TrackDirectionTool::GetCalorimetricDirection(const Cluster* pTargetClusterW
 
 void TrackDirectionTool::TestHypothesisOne(DirectionFitObject &directionFitObject)
 {
-  /*
-    bool likelyForwards(directionFitObject.GetDirectionEstimate() == 1 && directionFitObject.GetHitChargeVector().size() >= 400 && directionFitObject.GetForwardsChiSquared()/directionFitObject.GetNHits() <= 1.25);
-    bool likelyBackwards(directionFitObject.GetDirectionEstimate() == 0 && directionFitObject.GetHitChargeVector().size() <= 200 && directionFitObject.GetBackwardsChiSquared()/directionFitObject.GetNHits() <= 1.25);
-  */
   
   bool likelyForwards((directionFitObject.GetMinChiSquaredPerHit() <= 1.5 && directionFitObject.GetForwardsChiSquaredPerHit() <= directionFitObject.GetBackwardsChiSquaredPerHit()) || directionFitObject.GetNHits() >= 400);
   bool likelyBackwards((directionFitObject.GetMinChiSquaredPerHit() <= 1.5 && directionFitObject.GetForwardsChiSquaredPerHit() > directionFitObject.GetBackwardsChiSquaredPerHit()));
-  
-
-  /*  std::cout << " directionFitObject.GetDirectionEstimate()  " << directionFitObject.GetDirectionEstimate() << "     directionFitObject.GetHitChargeVector().size()     " << directionFitObject.GetHitChargeVector().size() << "      directionFitObject.GetForwardsChiSquared()/directionFitObject.GetNHits()    " <<  directionFitObject.GetForwardsChiSquared()/directionFitObject.GetNHits() << std::endl;
-   */
-
-  //  std::cout << "directionFitObject.GetMinChiSquaredPerHit() " << directionFitObject.GetMinChiSquaredPerHit() << "  GetForwardsChiSquaredPerHit()"  << directionFitObject.GetForwardsChiSquaredPerHit() << "  GetBackwardsChiSquaredPerHit()   " <<   directionFitObject.GetBackwardsChiSquaredPerHit() << "         directionFitObject.GetNHits()  " << directionFitObject.GetNHits() << std::endl;
 
   if (likelyForwards || likelyBackwards)
     {
@@ -1994,7 +1632,7 @@ void TrackDirectionTool::TestHypothesisOne(DirectionFitObject &directionFitObjec
       directionFitObject.SetHypothesis(1); 
     }
   else {
-    std::cout << "Not hypothosis one" << std::endl;
+    std::cout << "Not Hypothosis #1" << std::endl;
   }
 }
 
@@ -2003,7 +1641,6 @@ void TrackDirectionTool::TestHypothesisOne(DirectionFitObject &directionFitObjec
 void TrackDirectionTool::TestHypothesisTwo(DirectionFitObject &directionFitObject)
 {
   if (directionFitObject.GetHypothesis() == 1 || m_enableSplitting == false) {
-    std::cout << "returned" << std::endl;
     return;
   }
 
@@ -2021,8 +1658,6 @@ void TrackDirectionTool::TestHypothesisTwo(DirectionFitObject &directionFitObjec
 
     if (splitApplied)
     {
-      
-        //std::cout << "Split applied" << std::endl;
         std::cout << "Applied Hypothesis #2 (Split Particle)" << std::endl;
         directionFitObject.SetHypothesis(2); 
 
@@ -2031,13 +1666,12 @@ void TrackDirectionTool::TestHypothesisTwo(DirectionFitObject &directionFitObjec
         directionFitObject.SetBackwardsFitCharges(backwardsSplitResult.GetBackwardsFitCharges());
 
         //Delta chi squared should still make sense for distributions, so take the likely muon
-        //DirectionFitObject largestFitObject(forwardsSplitResult.GetNHits() > backwardsSplitResult.GetNHits() ? forwardsSplitResult : backwardsSplitResult);
         directionFitObject.SetForwardsChiSquared(largestFitObject.GetForwardsChiSquared());
         directionFitObject.SetBackwardsChiSquared(largestFitObject.GetBackwardsChiSquared());
         directionFitObject.SetNHits(largestFitObject.GetNHits());
     }
     else {
-      std::cout << "Not hypothosis two" << std::endl;
+      std::cout << "Not Hypothosis #2" << std::endl;
     }
 }
 
@@ -2062,7 +1696,7 @@ void TrackDirectionTool::TestHypothesisThree(DirectionFitObject &directionFitObj
 
     if (likelyCorrectFragmentRemoval)
     {
-        //std::cout << "Applied Hypothesis #3: fragment removed." << std::endl;
+        std::cout << "Applied Hypothesis #3: fragment removed." << std::endl;
         directionFitObject.SetHypothesis(3); 
         directionFitObject = fragmentRemovalDirectionFitObject;
     }
@@ -2137,6 +1771,223 @@ bool TrackDirectionTool::SortByDistanceToNN(HitCharge &hitCharge1, HitCharge &hi
 bool TrackDirectionTool::SortJumpVector(JumpObject &jumpObject1, JumpObject &jumpObject2)
 {
     return jumpObject1.GetJumpValue() > jumpObject2.GetJumpValue();
+}
+//----------------------------------------------------------------------------------------------------------------------------------
+void TrackDirectionTool::BinHitChargeVector(HitChargeVector &hitChargeVector, HitChargeVector &binnedHitChargeVector)
+{
+    float binSize = (hitChargeVector.size() > 50 ? (0.5 + (hitChargeVector.size() - 50) * 2.5/300) : 0.0);
+
+    if (binSize <= 0.0)
+    {
+        binnedHitChargeVector = hitChargeVector;
+        return;
+    }
+    else if (binSize > 4.0)
+        binSize = 4.0;
+
+    float trackLength(0.f);
+
+    for (HitCharge &hitCharge : hitChargeVector)
+    {
+        if (hitCharge.GetLongitudinalPosition() > trackLength)
+            trackLength = hitCharge.GetLongitudinalPosition();
+    }
+
+    for (float i = binSize; i <= trackLength; i += binSize)
+    {
+        int nHitsBin(0);
+        float meanBinPosition(0.f), meanBinWidth(0.f);
+        float meanBinCharge(0.f), sumSquaredSigmas(0.f);
+
+        for (HitCharge &hitCharge : hitChargeVector)
+        {
+            if (hitCharge.GetLongitudinalPosition() > i)
+                break;
+
+            if (hitCharge.GetLongitudinalPosition() < i && hitCharge.GetLongitudinalPosition() >= (i - binSize))
+            {
+                nHitsBin++;
+                meanBinPosition += hitCharge.GetLongitudinalPosition();
+                meanBinWidth += hitCharge.GetHitWidth();
+
+                meanBinCharge += hitCharge.GetCharge();
+                sumSquaredSigmas += (hitCharge.GetUncertainty() * hitCharge.GetUncertainty());
+            }
+        }
+
+        if (nHitsBin == 0)
+            continue;
+
+        meanBinPosition /= nHitsBin;
+        meanBinWidth /= nHitsBin;
+        meanBinCharge /= nHitsBin;
+        sumSquaredSigmas /= (nHitsBin * nHitsBin);
+
+        float binUncertainty(std::sqrt(sumSquaredSigmas));
+        HitCharge binnedHitCharge(NULL, meanBinPosition, meanBinWidth, meanBinCharge, binUncertainty);
+        if (binnedHitCharge.GetCharge() > 0.1)
+            binnedHitChargeVector.push_back(binnedHitCharge);
+    }
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+double TrackDirectionTool::DensityCorrection(double &T, double &M)
+{
+
+    double p = std::sqrt((T*T) + 2*T*M);
+    double gamma = std::sqrt(1 + ((p/M) * (p/M)));
+    double beta = std::sqrt(1 - 1 / (gamma*gamma));
+    double X = std::log10(beta*gamma);
+    const double C = 5.2146;
+    const double a = 0.19559;
+    const double m = 3.0;
+    const double X1 = 3.0;
+    const double X0 = 0.2000;
+    const double delta0 = 0.0;
+
+    if (X < X0)
+        return delta0;
+    else if ((X > X0) && (X < X1))
+        return 2 * X * std::log(10) - C + (a * (std::pow((X1 - X), m)));
+    else
+        return 2 * X * std::log(10) + C;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+double TrackDirectionTool::BetheBloch(double &T, double &M)
+{
+  const double K = 0.307075; // constant K in MeV cm mol^-1
+  const double z = 1; // charge in e
+  const double Z = 18; // Atomic number Z
+  const double A = 39.948; // Atomic mass in g mol-1
+  const double m_e = 0.511; // Mass of electron in MeV
+  const double rho = 1.396; // Density of material in g cm^-3 (here: argon density)
+  const double I = 0.000188; // Ionisation energy in MeV
+
+
+    double p(std::sqrt((T*T) + 2*T*M));
+    double gamma(std::sqrt(1 + ((p/M) * (p/M))));
+    double beta(std::sqrt(1 - 1 / (gamma*gamma)));
+
+    double T_max(2 * m_e * (beta*gamma*beta*gamma) / (1 + 2 * gamma * m_e / M + ((m_e/M) * (m_e/M))));
+    return rho * ((K * z * z * Z) / A) * (0.5*std::log(2 * m_e * T_max * (beta*gamma*beta*gamma) / (I*I) ) - (beta*beta) - (0.5*DensityCorrection(p, M))) / (beta*beta); //in MeV/cm
+
+}
+//----------------------------------------------------------------------------------------------------------------------------------
+
+void TrackDirectionTool::FillLookupTable(LookupTable &lookupTable, double M)
+{
+    std::map<int, double> lookupMap;
+    std::map<double, int> reverseLookupMap;
+
+    double currentEnergy(lookupTable.GetInitialEnergy()), binWidth(lookupTable.GetBinWidth());
+    int maxBin(0);
+
+    for (double n = 0; n < 100000; ++n)
+    {
+        double currentdEdx = BetheBloch(currentEnergy, M);
+
+        if ((currentdEdx * binWidth) >= currentEnergy)
+        {
+            double maxRange = (n * binWidth) + (currentEnergy/currentdEdx);
+            lookupTable.SetMaxRange(maxRange);
+            maxBin = n;
+
+            lookupMap.insert(std::pair<int, double>(n, 0.0));
+            reverseLookupMap.insert(std::pair<double, int>(0.0, n));
+            break;
+        }
+        else
+        {
+            lookupMap.insert(std::pair<int, double>(n, currentEnergy));
+            reverseLookupMap.insert(std::pair<double, int>(currentEnergy, n));
+        }
+
+        currentEnergy -= (currentdEdx * binWidth);
+    }
+
+
+    //remove redundant entries to make lookup much faster
+    for (std::map<int, double>::iterator it = lookupMap.begin(); it != lookupMap.end(); it++)
+    {
+        double n(it->first);
+        double val(it->second);
+        double distanceFromMaxRange((maxBin - n) * binWidth);
+
+        if (n == 0 || n == maxBin)
+            continue;
+        else
+        {
+            double distanceMagnitude(floor(distanceFromMaxRange/2.0));
+            double samplingDistance((1 + distanceMagnitude) * binWidth);
+
+            if (!(remainder(distanceFromMaxRange, samplingDistance) == 0.0))
+            {
+                lookupMap.erase(n);
+                reverseLookupMap.erase(val);
+            }
+        }
+    }
+
+    lookupTable.SetMap(lookupMap);
+    lookupTable.SetReverseMap(reverseLookupMap);
+
+    if (lookupTable.GetMaxRange() == 0.f)
+        std::cout << "Warning: the lookup table max range has not been correctly set." << std::endl;
+}
+//----------------------------------------------------------------------------------------------------------------------------------
+
+double TrackDirectionTool::GetEnergyfromLength(LookupTable &lookupTable, double &trackLength)
+{
+    std::map<int, double> lookupMap(lookupTable.GetMap());
+    double binWidth(lookupTable.GetBinWidth());
+
+    if (trackLength >= lookupTable.GetMaxRange())
+        return 0.5; //0 energy means infinite dE/dx
+    else if (trackLength <= 1.0)
+      return lookupTable.GetInitialEnergy();
+
+    int n(std::floor(trackLength/binWidth));
+    std::map<int, double>::iterator nextEntryIterator(lookupMap.upper_bound(n));
+    std::map<int, double>::iterator previousEntryIterator(std::prev(nextEntryIterator , 1));
+
+    double leftLength(previousEntryIterator->first * binWidth), rightLength(nextEntryIterator->first * binWidth);
+    double leftEnergy(previousEntryIterator->second), rightEnergy(nextEntryIterator->second);
+    double lengthDifference(rightLength - leftLength);
+    double energyDifference(leftEnergy - rightEnergy);
+
+    double finalEnergy(leftEnergy - (((trackLength - leftLength)/(lengthDifference)) * (energyDifference)));
+
+    //very small energy values leadt to huge dE/dx values: truncate
+    if (finalEnergy <= 2.0)
+        return 2.0;
+    else
+        return finalEnergy;
+}
+
+//----------------------------------------------------------------------------------------------------------------------------------
+
+double TrackDirectionTool::GetLengthfromEnergy(LookupTable &lookupTable, double &currentEnergy)
+{
+    std::map<double, int> reverseLookupMap(lookupTable.GetReverseMap());
+    double binWidth(lookupTable.GetBinWidth());
+
+    if (currentEnergy <= 0.0)
+      return lookupTable.GetMaxRange();
+    else if (currentEnergy >= lookupTable.GetInitialEnergy())
+        return 0.0;
+
+    std::map<double, int>::iterator nextEntryIterator(reverseLookupMap.upper_bound(currentEnergy));
+    std::map<double, int>::iterator previousEntryIterator(std::prev(nextEntryIterator , 1));
+
+    double upperEnergy(nextEntryIterator->first), lowerEnergy(previousEntryIterator->first);
+    double leftLength(nextEntryIterator->second * binWidth), rightLength(previousEntryIterator->second * binWidth);
+    double lengthDifference(rightLength - leftLength);
+    double energyDifference(upperEnergy - lowerEnergy);
+
+    return leftLength + (((upperEnergy - currentEnergy)/energyDifference) * lengthDifference);
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------

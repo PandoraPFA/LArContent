@@ -25,12 +25,8 @@ CheatingBeamParticleIdTool::CheatingBeamParticleIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-  void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const /*pAlgorithm*/, const SliceHypotheses &testBeamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb, const SliceVector &sliceVector)
+  void CheatingBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const /*pAlgorithm*/, const SliceHypotheses &testBeamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &/*pfotoprobabilitymapb*/, const SliceVector &/*sliceVector*/)
 {
-  if(1==2) {
-    std::cout << pfotoprobabilitymapb.size() << std::endl;
-    std::cout << sliceVector.size() << std::endl;
-  }
   if (testBeamSliceHypotheses.size() != crSliceHypotheses.size())
     throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 

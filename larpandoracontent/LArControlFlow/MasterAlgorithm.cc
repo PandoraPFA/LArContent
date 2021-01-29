@@ -88,7 +88,6 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
 
     if (m_visualizeOverallRecoStatus)
     {
-        std::cout << "ShiftPfoHierarchy: x0 " << x0 << std::endl;
         PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "BeforeShiftCRPfos", GREEN));
     }
 
@@ -203,11 +202,6 @@ StatusCode MasterAlgorithm::Run()
         PfoList clearCosmicRayPfos, ambiguousPfos;
 	bool directioncosmic;
 	float downprobability = -1;
-	//	float deltachi2;
-	//	float deltachi2alone;
-	//	float minchi2perhit;
-	//	bool incomplete;
-	// PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos, directioncosmic, downprobability, deltachi2, deltachi2alone, minchi2perhit, incomplete));
 	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos, directioncosmic, downprobability));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
@@ -397,31 +391,17 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-// StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos, bool &directioncosmic, float &downprobability, float &deltachi2, float &deltachi2alone, float &minchi2perhit, bool &incomplete) const
+
  StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos, bool &directioncosmic, float &downprobability) const
   {
-    //UNDO FOR TDT
-    //-------------------------------------------------------down
-    //METRIC
-    //int Size = 0; //mc stuff
     std::list<std::pair<const pandora::MCParticle*, int>> mchitslist;
     std::list<std::pair<const pandora::MCParticle*, int>> mcpairslist;
     MCParticleList mcparticlelist;
     std::list<std::pair<const pandora::MCParticle*, int>>::iterator it;
     std::list<std::pair<const pandora::MCParticle*, int>>::iterator it2;
     CaloHitList totalcalohits;
-    //PfoList totalpfolist;
-    // int clearcosmiccount = 0; //mc stuff
-    // int clearneutrinocount = 0;
-    // int correctcr = 0;
-    // int incorrectcr = 0;
-    //int correctneutrino = 0;
-    //int incorrectneutrino = 0;
-    //bool isClearCosmic = false;
     std::vector<float> viewsizelist;
- 
-    //------------------------------------------------------------------up
-    //---------------------------------------------------------------------------------------------------------
+
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
 
@@ -440,40 +420,6 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
     for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
       pCosmicRayTaggingTool->FindAmbiguousPfos(nonStitchedParentCosmicRayPfos, ambiguousPfos, this);
 
-    
-
-    //UNDO
-    //-------------------------------------------------------------down
-    // std::unordered_map<const Pfo*, float> pfotoprobabilitymap;
-    /*
-    std::unordered_map<const Pfo*, float> pfotodeltachi2map;
-    std::unordered_map<const Pfo*, float> pfotodeltachi2alonemap;
-    std::unordered_map<const Pfo*, float> pfotominchi2perhitmap;
-    */
-    // std::unordered_map<const Pfo*, float> truecosmicpfotoprobabilitymap;
-    // std::unordered_map<const Pfo*, float> truecosmicpfotodeltachi2map;
-    // std::unordered_map<const Pfo*, float> truecosmicpfotodeltachi2alonemap;
-    //std::unordered_map<const Pfo*, bool>  truecosmicpfotoisdownmap;
-    // std::unordered_map<const Pfo*, float>  truecosmicpfotominchi2perhitmap;
-    //  std::unordered_map<const Pfo*, float> trueneutrinopfotoprobabilitymap;
-    // std::unordered_map<const Pfo*, float> trueneutrinopfotodeltachi2map;
-    // std::unordered_map<const Pfo*, float> trueneutrinopfotodeltachi2alonemap;
-    // std::unordered_map<const Pfo*, bool>  trueneutrinopfotoisdownmap;
-    // std::unordered_map<const Pfo*, float>  trueneutrinopfotominchi2perhitmap;
-    //---------------------------------------------------------------------up
-
-    /*
-    for (const Pfo *const pPfo : nonStitchedParentCosmicRayPfos)
-    {
-        const bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
-
-        if (isClearCosmic)
-            clearCosmicRayPfos.push_back(pPfo);
-    }
-    */
-
-    //UNDO
-    //---------------------------------------------------------------------------------down
 
 
     for (const Pfo *const pPPPfo : nonStitchedParentCosmicRayPfos) {
@@ -482,81 +428,7 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
       directioncosmic = false;
       downprobability = -1.0;
       if(!isClearCosmic){  //if it's not already clearly a cosmic, see if it's above 80% probability of being one
-	//std::cout << "     " << std::endl;
-	//std::cout << "CLEAR FINAL STATE? " << LArPfoHelper::IsFinalState(pPPPfo) << std::endl;
-	/*
-	  for (TrackDirectionBaseTool *const pTrackDirectionTool : m_trackDirectionToolVector){
-	  try{
-	  // pTrackDirectionTool->FindDirections(pPPPfo, directioncosmic, downprobability, deltachi2, deltachi2alone, minchi2perhit, incomplete, this);  //probability
-	  pTrackDirectionTool->FindDirections(pPPPfo, directioncosmic, downprobability, this);  //probability 
-	  }
-	  catch(...){
-	  std::cout << "Runtime error in TrackDirectionTool!" << std::endl;
-	  }
-	*/
-	// if (incomplete == false) {
-	// pfotoprobabilitymap.insert({pPPPfo,downprobability});
-	/*
-	  pfotodeltachi2map.insert({pPPPfo,deltachi2});
-	  pfotodeltachi2alonemap.insert({pPPPfo,deltachi2alone});
-	  pfotominchi2perhitmap.insert({pPPPfo, minchi2perhit});
-	*/
-	// std::cout << "bottom of the try block" << std::endl;
-	// }
 
-//----------CUTS-----------------------------------------------------------------------------------
-	/*
-	CaloHitList totalcalohitsN;
-	CaloHitList totalcalohitsW;
-	LArPfoHelper::GetCaloHits(pPPPfo, TPC_VIEW_U, totalcalohitsN);
-	LArPfoHelper::GetCaloHits(pPPPfo, TPC_VIEW_V, totalcalohitsN);
-	LArPfoHelper::GetCaloHits(pPPPfo, TPC_VIEW_W, totalcalohitsN);
-	LArPfoHelper::GetCaloHits(pPPPfo, TPC_VIEW_W, totalcalohitsW);
-	std::cout << "total = " << totalcalohitsN.size() << std::endl;
-	std::cout << "total W = " << totalcalohitsW.size() << std::endl;
-
-
-	ClusterList clusterList = pPPPfo->GetClusterList();
-	std::cout << "cluster size = " << clusterList.size() << std::endl;
-	const Cluster* pCluster = clusterList.back();
-
-	int w = 0;
-	for (auto c :clusterList) {
-	  if (w == 2) {
-	    pCluster = c;
-	  }
-	  w++;
-	}
-	    
-	float length = LArClusterHelper::GetLength(pCluster);
-	std::cout << "length = " << length << std::endl;
-
-	
-	if(totalcalohitsN.size() < 15) {
-	  directioncosmic = true;
-	  downprobability = -2.0;
-	}	    
-	else if (totalcalohitsW.size() < 4 && totalcalohitsW.size() > 0 ) {
-	  directioncosmic = true;
-	  downprobability = -3.0;
-	}	   
-	else if(length < 1.0 && totalcalohitsW.size() != 0) {
-	  directioncosmic = true;
-	  downprobability = -4.0;
-	      
-	}
-	
-	    
-	  
-	std::cout << "final directioncosmic : " << directioncosmic << std::endl;
-	std::cout << "down probability : " << downprobability << std::endl;
-
-	if(directioncosmic == true) {
-	  isClearCosmic = true;               //if it is, change the bool
-	}
-
-      }
-	*/
       }
 //-----------------CUTS----------------------------------------------------------------------
       if (isClearCosmic) {
@@ -565,308 +437,10 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
       }
     }
 
-    //}
-  //----------------------------------------------------------------------------------------------------up
-
-  //  if (incomplete == false) {
-      //UNDO
-      //-------------------------------------------------------------------------------------------------down
-    /*  Top of MC things
-    std::cout << "  " << std::endl;
-    std::cout << "*pRecreatedCRPfos.size " << pRecreatedCRPfos->size() << std::endl;
-      for (const Pfo *const pPPPPfo : *pRecreatedCRPfos ) {
-	try{
-	  const MCParticle *pMCParticle = LArMCParticleHelper::GetMainMCParticle(pPPPPfo);
-	  mcparticlelist.push_back(pMCParticle);
-	  //totalpfolist.push_back(pPPPfo);
-	  LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_U, totalcalohits);
-	  LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_V, totalcalohits);
-	  LArPfoHelper::GetCaloHits(pPPPPfo, TPC_VIEW_W, totalcalohits);
-	  std::cout << "MC particle found" << std::endl;
-	}
-	catch(...){
-	}
-
-      }
-
-
-   
-      //get the MC particles to hits map
-      LArMCParticleHelper::MCContributionMap mcMCParticlesToGoodHitsMap;
-      LArMCParticleHelper::PrimaryParameters parameters;
-      parameters.m_minPrimaryGoodHits = 0;
-      parameters.m_minHitsForGoodView = 0;
-      parameters.m_minPrimaryGoodViews = 0;
-      parameters.m_minHitSharingFraction = 0;
-      parameters.m_selectInputHits = true;
-      LArMCParticleHelper::SelectReconstructableMCParticles(&mcparticlelist, &totalcalohits, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcMCParticlesToGoodHitsMap); 
-
-      std::cout << "mcMCParticlesToGoodHitsMap,size() " << mcMCParticlesToGoodHitsMap.size() << std::endl;
-
-
-  
-      //get the pfos to hits map
-      LArMCParticleHelper::PfoContributionMap PfosToGoodHitsMap;
-      LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(*pRecreatedCRPfos, {mcMCParticlesToGoodHitsMap}, PfosToGoodHitsMap);  //changed
-
- 
-
-      //find hits shared between Pfos and MCParticles
-      LArMCParticleHelper::PfoToMCParticleHitSharingMap PfotoMCParticleMap;
-      LArMCParticleHelper::MCParticleToPfoHitSharingMap ParticletoPfoMap;
-      LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(PfosToGoodHitsMap, {mcMCParticlesToGoodHitsMap}, PfotoMCParticleMap, ParticletoPfoMap);
-
-
-    
-      MCParticleVector mcParticleVector;
-      LArMonitoringHelper::GetOrderedMCParticleVector({mcMCParticlesToGoodHitsMap}, mcParticleVector);
-      PfoVector pfoVector;
-      LArMonitoringHelper::GetOrderedPfoVector({PfosToGoodHitsMap}, pfoVector);
-      
-
-
-      unsigned int nMatches = std::numeric_limits<unsigned int>::max();
-      std::cout << "nMatches = " << nMatches << std::endl;
-      LArMonitoringHelper::PrintMatchingTable(pfoVector, mcParticleVector, ParticletoPfoMap, nMatches);
-      std::cout << "nMatches = " << nMatches << std::endl;
-
-
-    
-      for (const auto &pMCParticle : mcParticleVector)
-	{
-	  const auto &caloHitList2 = mcMCParticlesToGoodHitsMap.at(pMCParticle);
-	  // std::cout << "  " << std::endl;
-	  // std::cout << "Primary MCParticle " << pMCParticle << std::endl;
-	  // std::cout << "  - PDG : " << pMCParticle->GetParticleId() << std::endl;
-	  // std::cout << "  - NHits : " << caloHitList2.size() << std::endl; 
-	  Size = caloHitList2.size();
-	  mchitslist.push_back(std::make_pair(pMCParticle, Size));
-	  // std::cout << "  " << std::endl;
-      
-	}
-
-    
-      for (const auto &ppfo : pfoVector)
-	{
-	  mcpairslist.clear();
-	
-	  const auto &caloHitList3 = PfosToGoodHitsMap.at(ppfo);
-	  // std::cout << "Pfo " << ppfo << std::endl;
-	  // std::cout << "  - PDG : " << ppfo->GetParticleId() << std::endl;
-	  // std::cout << "  - NHits shared total: " << caloHitList3.size() << std::endl;
-	  //  std::cout << "  - is final state?: " << LArPfoHelper::IsFinalState(ppfo)  << std::endl;
-	
-	  const auto iter = PfotoMCParticleMap.find(ppfo);
-	  // if (iter == PfotoMCParticleMap.end()) {
-	  //   std::cout << "Pfo not found." << std::endl;
-	  // }
-	  if ( (iter->second.size()) != 0) {
-	    const auto hitsvector = iter->second;
-	    for (int i = 0; i < hitsvector.size(); i++){
-	      mcpairslist.push_back(std::make_pair(hitsvector[i].first, hitsvector[i].second.size()));
-	    }
-	  }
-
-     
-      
-	  for (const Pfo *const pPPfo : *pRecreatedCRPfos) {
-	    if(LArPfoHelper::IsFinalState(pPPfo)) {
-	      //bool isNotClearCosmic2(clearCosmicRayPfos.end() == std::find(clearCosmicRayPfos.begin(), clearCosmicRayPfos.end(), pPPfo));
-	      bool isClearCosmic2(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPPfo));
-	      //METRIC
-
-	      // for (auto& y: pfoToIsLikelyCRMuonMap ) {
-	      //  if (x.first == ppfo){
-	      if (pPPfo == ppfo) {
-		//Get details about the pfo - need the list of hits in it
-		CaloHitList caloHitList;
-		CaloHitList caloHitListU;
-		CaloHitList caloHitListV;
-		CaloHitList caloHitListW;
-		LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_U, caloHitList);
-		LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_V, caloHitList);
-		LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_W, caloHitList);
-		LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_U, caloHitListU);
-		LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_V, caloHitListV);
-		LArPfoHelper::GetCaloHits(pPPfo, TPC_VIEW_W, caloHitListW);
-      
-	        float hitsinpfo = caloHitList.size();
-    */ //Bottom of MC 1
-		/*
-		ClusterList clusterList = ppfo->GetClusterList();
-		
-		const Cluster* pCluster = clusterList.back();
-		int w = 0;
-		for (auto c :clusterList) {
-		  if (w == 2) {
-		    pCluster = c;
-		  }
-		  w++;
-		}
-		*/
-		//	float length = LArClusterHelper::GetLength(pCluster);
-    /* MC stuff 2
-		if (caloHitListU.size() >= 5) {
-		  viewsizelist.push_back(caloHitListU.size());
-		}
-		if (caloHitListV.size() >= 5) {
-		  viewsizelist.push_back(caloHitListV.size());
-		}
-		if (caloHitListW.size() >= 5) {
-		  viewsizelist.push_back(caloHitListW.size());
-		}
-
-		
-
-		float PurityTot = 0;
-		float SigTot = 0;
-		//	bool isDownward = 1; //default as 1, will need to change to 0 (i.e. definetly a neutrino)
-		if (hitsinpfo >= 15) {
-		  if (viewsizelist.size() >= 2) {
-		    //  std::cout << "hits in pfo = " << hitsinpfo << std::endl;
-		    //  std::cout << "hits in pfo W = " << caloHitListW.size() << std::endl;
-		    //	  std::cout << "length in W = " << length << std::endl;
-		  for(it=mchitslist.begin(); it!=mchitslist.end(); ++it) {
-		    if (caloHitList3.size() != 0) {
-		      std::pair<const pandora::MCParticle *, int> mchitsvalue = *it;
-		      for(it2=mcpairslist.begin(); it2!=mcpairslist.end(); ++it2) {
-			std::pair<const pandora::MCParticle *, int> mcpairvalue = *it2;
-			if (mchitslist.size() == 1){
-			  if (mchitsvalue.first == mcpairvalue.first && mcpairvalue.second != 0 && caloHitList3.size()==mcpairvalue.second) { //check mcvalue actually in this pfo	
-			    float puritytemp  = (float)caloHitList3.size()/(float)hitsinpfo;  
-			    float sigtemp = (float)mcpairvalue.second/(float)mchitsvalue.second;
-			    PurityTot = puritytemp;
-			    SigTot = SigTot + sigtemp;
-			    // std::cout << "Purity temp = " << (float)caloHitList3.size() << "  over  " <<(float)hitsinpfo <<  std::endl;
-			    //  std::cout << "Sig temp = " << (float)mcpairvalue.second << "  over  " <<(float)mchitsvalue.second <<  std::endl;
-			    //----------------------------------------------------------------------------
-			    // isDownward = mchitsvalue.first->GetMomentum().GetUnitVector().GetDotProduct(CartesianVector(0.f, 1.f, 0.f)) < 0;
-			    //std::cout << "is down? " << isDownward << std::endl;
-			  }
-			}
-			else if (mchitsvalue.first == mcpairvalue.first && mcpairvalue.second != 0) {
-			  const auto iterb = ParticletoPfoMap.find(mchitsvalue.first);   //look at particle to pfo map for a given mcparticle
-			  if (iterb == ParticletoPfoMap.end()){
-			    std::cout << "MCParticle not found." << std::endl;
-			  }
-			  else if ( (iterb->second.size()) != 0) {      //if it is found with something in the vector
-			    const auto hitsvectorb = iterb->second;      //pull out the vector
-			    for (int i = 0; i < hitsvectorb.size(); i++){    //for each element of the vector
-			      if (hitsvectorb[i].first == ppfo && hitsvectorb[i].second.size() != 0 ) {  //if pfo in vector matches current pfo + some number of shared hits is not 0
-				float puritytemp  = (float)caloHitList3.size()/(float)hitsinpfo;   
-				float sigtemp = (float)hitsvectorb[i].second.size()/(float)mchitsvalue.second;
-				PurityTot = puritytemp;
-				SigTot = SigTot + sigtemp;
-				//	std::cout << "Purity temp = " << (float)caloHitList3.size() << "  over  " <<(float)hitsinpfo <<  std::endl;
-				//	std::cout << "Sig temp = " << (float)hitsvectorb[i].second.size() << "  over  " <<(float)mchitsvalue.second <<  std::endl;
-				//  isDownward = mchitsvalue.first->GetMomentum().GetUnitVector().GetDotProduct(CartesianVector(0.f, 1.f, 0.f)) < 0;
-				//std::cout << "is down? " << isDownward << std::endl;
-			      }
-			    }
-
-			  }
-			}
-		      }
-		    }
-		  }
-	    
-		  // std::cout << "Purity = " << PurityTot << std::endl;
-		  //  std::cout << "Sig = " << SigTot << std::endl;
-		  //  std::cout << "is down? " << isDownward << std::endl;
-
-		  if (PurityTot < 0.05 && SigTot < 0.1){
-		    //std::cout << "Clear Cosmic" << std::endl;
-		    clearcosmiccount = clearcosmiccount + 1;
-	        
-		    if (isClearCosmic2 == 1) {
-		      //  std::cout << "Tagged as a CR" << std::endl;
-		      correctcr = correctcr + 1;
-		    }
-		    if (isClearCosmic2 == 0) {
-		      // std::cout << "potential neutrino" << std::endl;
-		      incorrectcr = incorrectcr + 1;
-		    }
-		  }
-		  else if (PurityTot > 0.95 && SigTot > 0.1) {
-		    // std::cout << "Clear Neutrino" << std::endl;
-
-		    clearneutrinocount = clearneutrinocount + 1;
-		    if (isClearCosmic2 == 1) {
-		      //  std::cout << "Tagged as a CR" << std::endl;
-		      incorrectneutrino = incorrectneutrino + 1;
-		    }
-		    if (isClearCosmic2 == 0) {
-		      //  std::cout << "potential neutrino" << std::endl;
-		      correctneutrino = correctneutrino + 1;
-		    }
-		  }
-		  else{
-		    //  std::cout << "Unclear" << std::endl;
-		  }
-		  //std::cout << "                                  " << std::endl;
-	      
-		  }
-		}
-		else{
-		  // std::cout << "Number of hits too low to consider" << std::endl;
-		  continue;
-		}
-	      }
-   
-	    }
-	  
-	  }
-	}
-  
-
-    //Time to test the efficiency!!! 
-    //need fraction of cosmic tagged/total cosmic as found by purity/sig
-    std::cout << "   " << std::endl;
-    float cosmiceff = (float)correctcr/(float)clearcosmiccount;
-    std::cout << "Tagged clear cosmic = " << cosmiceff*100 << "%" << std::endl;
-    float cosmicmis = (float)incorrectcr/(float)clearcosmiccount;
-    std::cout << "clear cosmic identified as neutrino = " << cosmicmis*100 << "%" << std::endl;
-    
-    float neutrinoeff = (float)correctneutrino/(float)clearneutrinocount;
-    std::cout << "protected clear neutrinos = " << neutrinoeff*100 << "%" << std::endl;
-    float neutrinomis = (float)incorrectneutrino/(float)clearneutrinocount;
-    std::cout << "clear neutrino identified as cosmic = " << neutrinomis*100 << "%" << std::endl;
-    
-
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "cosmiceff", cosmiceff));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "cosmicmis", cosmicmis));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "neutrinoeff", neutrinoeff));
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttree", "neutrinomis", neutrinomis));
-    PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttree"));
-    
-    */ //Mc stuff 2
-    
-    // PANDORA_MONITORING_API(ScanTree(this->GetPandora(), "ttree"))
-
-    //for (const Pfo *const pPfo : clearCosmicRayPfos) {
-    // bool found(ambiguousPfos.end() != std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
-    // if (found == true) {
-    //	ambiguousPfos.remove(pPfo);
-	//}
-    // }
-    //  std::cout << "SIZE END = " << ambiguousPfos.size() << std::endl;
-    //---------------------------------------------------------------------------------------------------------------up
-    //--------------------------------------------------------------------------------------------------
     for (const Pfo *const pPfo : *pRecreatedCRPfos) ///repeat the process for a different set
       {
         bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
-	//	if(!isClearCosmic){       //BACK IN LATER - don't think need now has have removed all found clear cosmics from ambiguousPfos
-	//	  for (TrackDirectionBaseTool *const pTrackDirectionTool : m_trackDirectionToolVector){
-	//	    pTrackDirectionTool->FindDirections(pPfo, directioncosmic, this);
-	//std::cout << "final directioncosmic : " << directioncosmic << std::endl;
 
-	//    if(directioncosmic == true) {
-	//      isClearCosmic = true;
-	//	    }
-
-	//	  }
-	//	}
-	
         PandoraContentApi::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["IsClearCosmic"] = (isClearCosmic ? 1.f : 0.f);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
