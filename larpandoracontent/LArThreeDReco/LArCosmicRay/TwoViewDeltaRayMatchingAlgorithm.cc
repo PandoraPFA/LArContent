@@ -32,6 +32,25 @@ TwoViewDeltaRayMatchingAlgorithm::TwoViewDeltaRayMatchingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+TwoViewDeltaRayMatchingAlgorithm::HitTypeVector TwoViewDeltaRayMatchingAlgorithm::GetHitTypeVector()
+{
+    HitTypeVector hitTypeVector;
+    
+    HitTypeVector fullHitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
+
+    auto &hitTypeToIndexMap(this->GetMatchingControl().m_hitTypeToIndexMap);
+
+    for (const HitType &hitType : fullHitTypeVector)
+    {
+        if (hitTypeToIndexMap.find(hitType) != hitTypeToIndexMap.end())
+            hitTypeVector.push_back(hitType);
+    }
+    
+    return hitTypeVector;    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
 void TwoViewDeltaRayMatchingAlgorithm::GetConnectedElements(const Cluster *const pClusterA, const bool hasAssociatedMuon, MatrixType::ElementList &elementList, ClusterSet &checkedClusters)
 {
     if (checkedClusters.count(pClusterA))
@@ -538,6 +557,9 @@ void TwoViewDeltaRayMatchingAlgorithm::MergeThirdView(const MatrixType::Element 
 
 StatusCode TwoViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "ClusterRebuilding", m_reclusteringAlgorithmName));
+    
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
 
     AlgorithmToolVector algorithmToolVector;

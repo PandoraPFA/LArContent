@@ -52,8 +52,8 @@ private:
 
     void PerformOneViewMatching(const pandora::HitType &hitType);
 
-    void CreateDeltaRay(const pandora::Cluster *const pAvailableCluster, const pandora::ParticleFlowObject *const pClosestMuonPfo, pandora::ClusterSet &modifiedClusters);
-    bool AddIntoExistingDeltaRay(const pandora::Cluster *const pAvailableCluster, const pandora::ParticleFlowObject *const pClosestMuonPfo);
+    void CreateDeltaRay(const pandora::Cluster *const pAvailableCluster, const pandora::PfoList &nearbyMuonPfoList, pandora::ClusterSet &modifiedClusters);
+    bool AddIntoExistingDeltaRay(const pandora::Cluster *const pAvailableCluster, const pandora::PfoList &nearbyMuonPfo);
 
     void GetNearbyAvailableClusters(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::ClusterList &foundClusters);
     
@@ -89,6 +89,7 @@ private:
     ClusterProximityMap   m_clusterProximityMapW;
 
     float    m_searchRegion1D;
+    float m_overlapExtension;
     
     std::string m_muonPfoListName;    
     std::string m_deltaRayPfoListName;    

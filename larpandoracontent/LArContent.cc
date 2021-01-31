@@ -82,6 +82,7 @@
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/SpanAcceptanceTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewClearDeltaRayTool.h"
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewCosmicRayRemovalTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMergeTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayRecoveryTool.h"
@@ -331,6 +332,7 @@
     d("LArDeltaRayMerge",                       DeltaRayMergeTool)                                                              \
     d("LArDeltaRayRecovery",                    DeltaRayRecoveryTool)                                                           \
     d("LArTwoViewDeltaRayMerge",                TwoViewDeltaRayMergeTool)                                                       \
+    d("LArTwoViewCosmicRayRemoval",             TwoViewCosmicRayRemovalTool)                                                    \
     d("LArSpanAcceptance",                      SpanAcceptanceTool)                                                             \
     d("LArTwoViewClearDeltaRay",                TwoViewClearDeltaRayTool)                                                       \
     d("LArTwoViewDeltaRayRecovery",             TwoViewDeltaRayRecoveryTool)                                                    \

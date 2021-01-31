@@ -33,11 +33,14 @@ class TwoViewDeltaRayMatchingAlgorithm : public NViewDeltaRayMatchingAlgorithm<T
 public:
     typedef NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> > BaseAlgorithm;
     typedef TwoViewDeltaRayMatchingAlgorithm::MatchingType::MatrixType MatrixType;
-
+    typedef std::vector<pandora::HitType> HitTypeVector;
+    
     /**
      *  @brief  Default constructor
      */
     TwoViewDeltaRayMatchingAlgorithm();
+
+    HitTypeVector GetHitTypeVector();
 
     void GetConnectedElements(const pandora::Cluster *const pClusterA, const bool hasAssociatedMuon, MatrixType::ElementList &elementList, pandora::ClusterSet &checkedClusters);
 
@@ -51,6 +54,8 @@ public:
     const std::string &GetThirdViewClusterListName() const;
 
     bool CreatePfo(const MatrixType::Element &element);
+
+    std::string GetClusteringAlgName() const;
     
 private:
     void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3);
@@ -86,10 +91,17 @@ private:
     unsigned int                      m_nMaxMatrixToolRepeats;
     unsigned int                      m_minClusterCaloHits;
     float                             m_maxDistanceFromPrediction;
-    float                             m_maxGoodMatchReducedChiSquared;
+    float m_maxGoodMatchReducedChiSquared;
 
-
+    std::string  m_reclusteringAlgorithmName;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline std::string TwoViewDeltaRayMatchingAlgorithm::GetClusteringAlgName() const
+{
+    return m_reclusteringAlgorithmName;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
