@@ -21,7 +21,8 @@ namespace lar_content
 {
 
 OneViewDeltaRayMatchingAlgorithm::OneViewDeltaRayMatchingAlgorithm() :
-    m_searchRegion1D(2.f)
+  m_searchRegion1D(2.f),
+  m_overlapExtension(1.f)
 {
 }
 
@@ -311,12 +312,14 @@ void OneViewDeltaRayMatchingAlgorithm::PerformOneViewMatching(const HitType &hit
         const ClusterList &nearbyClusters(clusterProximityMap.at(pAvailableCluster));
 
         const ParticleFlowObject *pClosestMuonPfo(nullptr);        
-
+	PfoList nearbyMuonPfoList;
 	float closestDistance(std::numeric_limits<float>::max());
 	for (const Cluster *const pNearbyCluster : nearbyClusters)
         {
 	  if (!this->IsMuonPfo(pNearbyCluster))
 	    continue;
+
+	  nearbyMuonPfoList.push_back(clusterToPfoMap.at(pNearbyCluster));
 
 	  const float separation(LArClusterHelper::GetClosestDistance(pNearbyCluster, pAvailableCluster));
                 
@@ -330,16 +333,16 @@ void OneViewDeltaRayMatchingAlgorithm::PerformOneViewMatching(const HitType &hit
 	if (!pClosestMuonPfo)
 	  continue;
     
-	//if (this->AddIntoExistingDeltaRay(pAvailableCluster, pClosestMuonPfo))
-	//continue;
+        if (this->AddIntoExistingDeltaRay(pAvailableCluster, nearbyMuonPfoList))
+	  continue;
 
-	this->CreateDeltaRay(pAvailableCluster, pClosestMuonPfo, modifiedClusters);
+	this->CreateDeltaRay(pAvailableCluster, nearbyMuonPfoList, modifiedClusters);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OneViewDeltaRayMatchingAlgorithm::CreateDeltaRay(const Cluster *const pAvailableCluster, const ParticleFlowObject *const pClosestMuonPfo, ClusterSet &modifiedClusters)
+void OneViewDeltaRayMatchingAlgorithm::CreateDeltaRay(const Cluster *const pAvailableCluster, const PfoList &nearbyMuonPfoList, ClusterSet &modifiedClusters)
 {
     const HitType &hitType(LArClusterHelper::GetClusterHitType(pAvailableCluster));
 
@@ -352,11 +355,19 @@ void OneViewDeltaRayMatchingAlgorithm::CreateDeltaRay(const Cluster *const pAvai
 
     ClusterList projectedClusters1;
     const HitType projectedHitType1((hitType == TPC_VIEW_U) ? TPC_VIEW_V : (hitType == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
-    this->GetProjectedNearbyClusters(clusterGroup, pClosestMuonPfo, projectedHitType1, true, projectedClusters1);
+
+    for (const ParticleFlowObject *const pNearbyMuonPfo : nearbyMuonPfoList)
+    {
+      this->GetProjectedNearbyClusters(clusterGroup, pNearbyMuonPfo, projectedHitType1, true, projectedClusters1);
+    }
 
     ClusterList projectedClusters2;
     const HitType projectedHitType2((projectedHitType1 == TPC_VIEW_U) ? TPC_VIEW_V : (projectedHitType1 == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
-    this->GetProjectedNearbyClusters(clusterGroup, pClosestMuonPfo, projectedHitType2, true, projectedClusters2);
+
+    for (const ParticleFlowObject *const pNearbyMuonPfo : nearbyMuonPfoList)
+    {
+      this->GetProjectedNearbyClusters(clusterGroup, pNearbyMuonPfo, projectedHitType2, true, projectedClusters2);
+    }
 
     const Cluster *const pCluster1(this->MergeClusterGroup(clusterGroup));
     const Cluster *const pCluster2(this->MergeClusterGroup(projectedClusters1));
@@ -367,61 +378,66 @@ void OneViewDeltaRayMatchingAlgorithm::CreateDeltaRay(const Cluster *const pAvai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool OneViewDeltaRayMatchingAlgorithm::AddIntoExistingDeltaRay(const Cluster *const pAvailableCluster, const ParticleFlowObject *const pClosestMuonPfo)
+bool OneViewDeltaRayMatchingAlgorithm::AddIntoExistingDeltaRay(const Cluster *const pAvailableCluster, const PfoList &nearbyMuonPfoList)
 {
   const HitType &hitType(LArClusterHelper::GetClusterHitType(pAvailableCluster));
 
   ClusterList projectedClusters1;
   const HitType projectedHitType1((hitType == TPC_VIEW_U) ? TPC_VIEW_V : (hitType == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
-  this->GetProjectedNearbyClusters({pAvailableCluster}, pClosestMuonPfo, projectedHitType1, false, projectedClusters1);
-
-  if (projectedClusters1.size() > 1)
-  {
-    std::cout << "ISOBEL: THIS SHOULDN'T HAPPEN (DR [1])" << std::endl;
-    throw;
-  }
-
   const ClusterToPfoMap &clusterToPfoMap1((projectedHitType1 == TPC_VIEW_U) ? m_clusterToPfoMapU : (projectedHitType1 == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
-  const ParticleFlowObject *pPfo1(nullptr);
 
-  if (!projectedClusters1.empty())
-    pPfo1 = clusterToPfoMap1.at(projectedClusters1.front());
+  for (const ParticleFlowObject *const pNearbyMuonPfo : nearbyMuonPfoList)
+  {
+    this->GetProjectedNearbyClusters({pAvailableCluster}, pNearbyMuonPfo, projectedHitType1, false, projectedClusters1);
+  }
 
   ClusterList projectedClusters2;
   const HitType projectedHitType2((projectedHitType1 == TPC_VIEW_U) ? TPC_VIEW_V : (projectedHitType1 == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
-  this->GetProjectedNearbyClusters({pAvailableCluster}, pClosestMuonPfo, projectedHitType2, false, projectedClusters2);
-
-  if (projectedClusters2.size() > 1)
-  {
-    std::cout << "ISOBEL: THIS SHOULDN'T HAPPEN (DR [2])" << std::endl;
-    throw;
-  }
-
   const ClusterToPfoMap &clusterToPfoMap2((projectedHitType2 == TPC_VIEW_U) ? m_clusterToPfoMapU : (projectedHitType2 == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
-  const ParticleFlowObject *pPfo2(nullptr);
-
-  if (!projectedClusters2.empty())
-    pPfo2 = clusterToPfoMap2.at(projectedClusters2.front());
-
-  if (!pPfo1 && !pPfo2)
-    return false;
-
-  if (pPfo1 && pPfo2)
+  for (const ParticleFlowObject *const pNearbyMuonPfo : nearbyMuonPfoList)
   {
-    if (pPfo1 != pPfo2)
-      return false;
-
-    this->RemoveClusterFromProximityMaps(pAvailableCluster);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo1, pAvailableCluster));
-
-    return true;
+    this->GetProjectedNearbyClusters({pAvailableCluster}, pNearbyMuonPfo, projectedHitType2, false, projectedClusters2);
   }
 
-  const ParticleFlowObject *const pPfoToEnlarge(pPfo1 ? pPfo1 : pPfo2);
-  this->RemoveClusterFromProximityMaps(pAvailableCluster);
-  PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfoToEnlarge, pAvailableCluster));
+  for (const Cluster *const pCluster1 : projectedClusters1)
+  {
+    const ParticleFlowObject *pPfo1(nullptr);
+    pPfo1 = clusterToPfoMap1.at(pCluster1);
 
-  return true;
+    for (const Cluster *const pCluster2 : projectedClusters2)
+    {
+      const ParticleFlowObject *pPfo2(nullptr);
+      pPfo2 = clusterToPfoMap2.at(pCluster2);
+
+      if (pPfo1 == pPfo2)
+      {
+	this->RemoveClusterFromProximityMaps(pAvailableCluster);
+	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo1, pAvailableCluster));
+
+	return true;
+      }
+    }
+  }
+
+  if ((projectedClusters1.size() == 1) && projectedClusters2.empty())
+  {
+      const ParticleFlowObject *pPfo1(clusterToPfoMap1.at(projectedClusters1.front()));
+      this->RemoveClusterFromProximityMaps(pAvailableCluster);
+      PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo1, pAvailableCluster));
+
+      return true;
+  }
+
+  if ((projectedClusters2.size() == 1) && projectedClusters1.empty())
+  {
+      const ParticleFlowObject *pPfo2(clusterToPfoMap2.at(projectedClusters2.front()));
+      this->RemoveClusterFromProximityMaps(pAvailableCluster);
+      PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo2, pAvailableCluster));
+
+      return true;
+  }
+
+  return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -490,7 +506,7 @@ void OneViewDeltaRayMatchingAlgorithm::GetProjectedNearbyClusters(const ClusterL
 	float minX(0.f), maxX(0.f);
         pNearbyCluster->GetClusterSpanX(minX, maxX);
 
-        if ((maxX < spanMinX) || (minX > spanMaxX))
+        if ((maxX < (spanMinX - m_overlapExtension)) || (minX > (spanMaxX + m_overlapExtension)))
             continue;
         
         if (pNearbyCluster->GetNCaloHits() > highestHit)
