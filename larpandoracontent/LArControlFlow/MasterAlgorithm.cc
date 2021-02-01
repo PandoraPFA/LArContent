@@ -61,13 +61,6 @@ MasterAlgorithm::MasterAlgorithm() :
 }
 
   MasterAlgorithm::~MasterAlgorithm() {
-    try
-      {            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ttree", "output.root", "UPDATE"));
-      }
-    catch (const StatusCodeException &)
-      {
-	std::cout << " Unable to write tree  to file " << std::endl;
-      }
   }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
