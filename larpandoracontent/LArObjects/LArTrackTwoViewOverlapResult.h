@@ -115,6 +115,8 @@ public:
      */
      TrackTwoViewTopologyOverlapResult&operator=(const TrackTwoViewTopologyOverlapResult &rhs);
 
+    const pandora::Cluster *GetBestMatchedAvailableCluster() const;
+
     /**
      *  @brief  Track two view overlap result less than operator
      *

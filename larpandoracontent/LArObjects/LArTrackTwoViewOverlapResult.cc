@@ -6,6 +6,7 @@
  *  $Log: $
  */
 
+#include "Objects/Cluster.h"
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
 using namespace pandora;
@@ -55,6 +56,28 @@ TrackTwoViewTopologyOverlapResult::~TrackTwoViewTopologyOverlapResult()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+const Cluster *TrackTwoViewTopologyOverlapResult::GetBestMatchedAvailableCluster() const
+{
+    unsigned int highestNHits(0);
+    const Cluster *pBestMatchedCluster(nullptr);
+
+    for (const Cluster *const pMatchedCluster : m_matchedClusterList)
+    {
+        if (!pMatchedCluster->IsAvailable())
+            continue;
+        
+        if (pMatchedCluster->GetNCaloHits() > highestNHits)
+        {
+            highestNHits = pMatchedCluster->GetNCaloHits();
+            pBestMatchedCluster = pMatchedCluster;
+        }
+    }
+
+    return pBestMatchedCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+    
 TrackTwoViewTopologyOverlapResult &TrackTwoViewTopologyOverlapResult::operator=(const TrackTwoViewTopologyOverlapResult &rhs)
 {
     m_isInitialized = rhs.m_isInitialized;

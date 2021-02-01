@@ -454,11 +454,13 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ProjectMuonPositions(const HitType
             LArPfoHelper::GetClusters(pParentMuon, hitType1, muonClusterList1);
             LArPfoHelper::GetClusters(pParentMuon, hitType2, muonClusterList2);
             
-            if ((muonClusterList1.size() != 1) || (muonClusterList1.size() != 1))
+            if ((muonClusterList1.size() != 1) || (muonClusterList2.size() != 1))
                 return STATUS_CODE_NOT_FOUND;
             
             break;
         }
+
+        break;
     }
 
     return (this->GetProjectedPositions(muonClusterList1.front(), muonClusterList2.front(), projectedPositions));
