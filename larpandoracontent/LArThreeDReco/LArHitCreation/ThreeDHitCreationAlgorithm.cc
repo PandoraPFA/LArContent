@@ -35,7 +35,9 @@ ThreeDHitCreationAlgorithm::ThreeDHitCreationAlgorithm() :
     m_nHitRefinementIterations(10),
     m_sigma3DFitMultiplier(0.2),
     m_iterationMaxChi2Ratio(1.),
-    m_interpolationCutOff(10.)
+    m_interpolationCutOff(10.),
+    m_maxInterpolationRatio(0.8),
+    m_avoidedDistThresold(0.05)
 {
 }
 
@@ -89,7 +91,6 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
             if (usingRANSAC && LArPfoHelper::IsTrack(pPfo))
             {
-                // TODO: Replace 10 with a configuration controlled number.
                 for (unsigned int i = 0; i < 10; ++i)
                 {
                     const unsigned int sizeBefore = protoHitVector.size();
@@ -242,9 +243,7 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
     if (allProtoHitVectors.size() == 0)
         return;
 
-    const float DISTANCE_THRESHOLD(0.05); // TODO: Move to config option.
     const std::vector<HitType> views = {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
-    const std::vector<std::string> toolsToAvoid = {"LArMultiValuedLongitudinalTrackHits"}; // TODO: Config option?
     std::map<HitType, RANSACHitVector> goodHits;
 
     for (auto toolVectorPair : allProtoHitVectors)
@@ -252,8 +251,8 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
         if (toolVectorPair.second.size() == 0)
             continue;
 
-        const auto avoidedIt = std::find(toolsToAvoid.begin(), toolsToAvoid.end(), toolVectorPair.first);
-        const bool goodTool = avoidedIt == toolsToAvoid.end();
+        const auto avoidedIt = std::find(m_toolsToAvoid.begin(), m_toolsToAvoid.end(), toolVectorPair.first);
+        const bool goodTool = avoidedIt == m_toolsToAvoid.end();
 
         // INFO: Project every 3D hit into all 2D views, so how well they match
         // can be compared. This is only really a concern for the tools which
@@ -279,7 +278,7 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
 
                 const float disp = std::fabs(hitForView.GetPosition3D().GetX() - twoDHit->GetPositionVector().GetX());
 
-                if (disp <= DISTANCE_THRESHOLD)
+                if (disp <= m_avoidedDistThresold)
                     goodHits[view].push_back(RANSACHit(hit, goodTool));
             }
         }
@@ -310,7 +309,7 @@ void ThreeDHitCreationAlgorithm::InterpolationMethod(const ParticleFlowObject *c
         return;
 
     const float layerPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    const unsigned int layerWindow(100); // TODO: Check if this should be the same or different.
+    const unsigned int layerWindow(100);
 
     double originalChi2(0.);
     CartesianPointVector currentPoints3D;
@@ -320,7 +319,6 @@ void ThreeDHitCreationAlgorithm::InterpolationMethod(const ParticleFlowObject *c
         return;
 
     const ThreeDSlidingFitResult slidingFitResult(&currentPoints3D, layerWindow, layerPitch);
-    // CartesianVector fitDirection = slidingFitResult.GetGlobalMaxLayerDirection();
 
     const float sizeBefore = protoHitVector.size();
 
@@ -338,18 +336,7 @@ void ThreeDHitCreationAlgorithm::InterpolationMethod(const ParticleFlowObject *c
         if (positionStatusCode != STATUS_CODE_SUCCESS || directionStatusCode != STATUS_CODE_SUCCESS)
             continue;
 
-        // TODO: Tune cut off.
-        // Now we have a position for the interpolated hit, we need to make a
-        // protoHit out of it.  This includes the calculation of a chi2 value,
-        // for how good the interpolation is.
-        // const float displacement = projectedPosition.GetCrossProduct(fitDirection).GetMagnitude();
-        // const float otherDisp = projectedPosition.GetCrossProduct(projectedDirection).GetMagnitude();
-
-        // if (otherDisp > 150)
-        //     continue;
-
         ProtoHit interpolatedHit(currentCaloHit);
-
         const CartesianVector projectedHit(LArGeometryHelper::ProjectPosition(this->GetPandora(), projectedPosition, currentCaloHit->GetHitType()));
         const double distanceBetweenHitsSqrd((currentCaloHit->GetPositionVector() - projectedHit).GetMagnitudeSquared());
 
@@ -362,15 +349,16 @@ void ThreeDHitCreationAlgorithm::InterpolationMethod(const ParticleFlowObject *c
         interpolatedHit.AddTrajectorySample(TrajectorySample(projectedPosition, currentCaloHit->GetHitType(), sigmaUVW));
 
         protoHitVector.push_back(interpolatedHit);
-    }
 
-    // ATTN: If we've interpolated at least 80% of this particle, don't use it.
-    //
-    // TODO: Swap to option?
-    // TODO: This ideally would be earlier on, and wouldn't clear, but just drop the interpolated.
-    const float numberOfInterpolatedHits = protoHitVector.size() - sizeBefore;
-    if (numberOfInterpolatedHits >= (0.8 * protoHitVector.size()))
-        protoHitVector.clear();
+        // ATTN: If we've interpolated at least m_maxInterpolationRatio% of this particle, don't use it.
+        const float numberOfInterpolatedHits = protoHitVector.size() - sizeBefore;
+
+        if (numberOfInterpolatedHits >= (m_maxInterpolationRatio * protoHitVector.size()))
+        {
+            protoHitVector.clear();
+            break;
+        }
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

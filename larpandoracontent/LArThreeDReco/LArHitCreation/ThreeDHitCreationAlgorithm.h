@@ -354,6 +354,8 @@ private:
     double                   m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
     double                   m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
     double                   m_interpolationCutOff;      ///< Max distance for a point to be interpolated from
+    double                   m_maxInterpolationRatio;    ///< Max percentage of hits to interpolate (0.0 to 1.0);
+    double                   m_avoidedDistThresold;      ///< Distance threshold to consider a hit from an avoided tool.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

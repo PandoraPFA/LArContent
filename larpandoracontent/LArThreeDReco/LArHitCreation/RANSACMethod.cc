@@ -42,7 +42,7 @@ RANSACMethodTool::RANSACMethodTool() :
 void RANSACMethodTool::Run(RANSACHitVector &consistentHits, ProtoHitVector &protoHitVector)
 {
     if (consistentHits.size() < 3)
-        return; // TODO: Here we should default to the old behaviour.
+        return;
 
     ParameterVector candidatePoints;
     this->GetCandidatePoints(consistentHits, candidatePoints);
@@ -213,8 +213,6 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
             if (hitAdded)
                 hitsToUseForFit.push_back(hit);
 
-            // TODO: Do we always want to add the hits? Or only at start/end, not the middle?
-            //       Should this be apart of the other check above?
             if (currentPoints3D.size() == 0)
                 currentPoints3D.push_back(hit);
         }
@@ -232,7 +230,9 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
             smallIterCount = 0;
 
             auto it = sortedHits.begin();
-            // TODO: Randomly chosen "at least 5 fits worth", evaluate.
+
+            // INFO: Store enough hits for at least 5 fits worth.
+            //       This was chosen to ensure the fits had enough hits to be somewhat anchored.
             while (currentPoints3D.size() < (5 * m_fitSize) && it != sortedHits.end())
             {
                 currentPoints3D.push_back(*it);
@@ -288,9 +288,13 @@ bool RANSACMethodTool::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANS
     }
     else if (addedHitCount > 0)
     {
-        auto it = hitsToUseForFit.begin();
-        while (hitsToUseForFit.size() > m_fitSize)
-            it = hitsToUseForFit.erase(it);
+        // INFO: Delete all elements past m_fitSize.
+        if (hitsToUseForFit.size() > m_fitSize)
+        {
+            auto it = hitsToUseForFit.begin();
+            std::advance(it, m_fitSize);
+            hitsToUseForFit.erase(it, hitsToUseForFit.end());
+        }
     }
 
     // ATTN: This keeps track of the number of iterations that add only a small
@@ -388,7 +392,6 @@ void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSAC
 
     if (extendDirection == ExtendDirection::Backward)
     {
-        // TODO: This seems a bit iffy...does this work as I expect?
         fitDirection = slidingFit.GetGlobalMinLayerDirection();
         fitEnd = slidingFit.GetGlobalMinLayerPosition();
         fitDirection = fitDirection * -1.0;

@@ -163,6 +163,10 @@ private:
      */
     void CompareToBestModel(ParameterVector &candidateInliers, ParameterVector &diff)
     {
+        // ATTN: If there isn't a best model, can't compare to it.
+        if (!m_bestModel)
+            return;
+
         if (candidateInliers.size() < m_secondUniqueParamCount)
             return;
 
@@ -219,6 +223,10 @@ private:
         {
             // Evaluate the current model, so that its performance can be checked later.
             const std::shared_ptr<T> randomModel = std::make_shared<T>(m_samples[i]);
+
+            if (!randomModel)
+                throw std::runtime_error("RANSAC - Unable to allocate model to evaluate.");
+
             const std::pair<double, ParameterVector> evalPair = randomModel->Evaluate(m_data, m_threshold);
 
             // Push back into history.
