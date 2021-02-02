@@ -28,6 +28,9 @@ class TwoDSlidingFitResult;
 class LArGeometryHelper
 {
 public:
+
+    typedef std::set<unsigned int> UIntSet;
+
     /**
      *  @brief  Merge two views (U,V) to give a third view (Z).
      *
@@ -196,7 +199,7 @@ public:
      *  @param  view the 2D projection
      */
     static pandora::CartesianVector GetWireAxis(const pandora::Pandora &pandora, const pandora::HitType view);
-
+ 
     /**
      *  @brief  Whether a 2D test point lies in a registered gap with the associated hit type
      *
@@ -253,8 +256,16 @@ public:
      *  @param  maxSigmaDiscrepancy maximum allowed discrepancy between lar tpc sigmaUVW values
      */
     static float GetSigmaUVW(const pandora::Pandora &pandora, const float maxSigmaDiscrepancy = 0.01);
-};
 
+    /**
+     *  @brief  Return the set of common daughter volumes between two 2D clusters
+     *
+     *  @param  intersect the set of shared daughter volumes
+     *  @param  pCluster1 the first cluster
+     *  @param  pCluster2 the second cluster
+     */
+    static void GetCommonDaughterVolumes (const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, UIntSet &intersect);
+};
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float LArGeometryHelper::GetWireZPitch(const pandora::Pandora &pandora, const float maxWirePitchWDiscrepancy)
