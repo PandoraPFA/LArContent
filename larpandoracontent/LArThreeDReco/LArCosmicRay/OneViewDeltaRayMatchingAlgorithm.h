@@ -57,7 +57,7 @@ private:
 
     void GetNearbyAvailableClusters(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::ClusterList &foundClusters);
     
-    void GetProjectedNearbyClusters(const pandora::ClusterList &deltaRayClusterGroup, const pandora::ParticleFlowObject *const pMuonPfo,
+    void GetProjectedNearbyClusters(const pandora::ClusterList &deltaRayClusterGroup, const pandora::PfoList &nearbyMuonPfoList,
         const pandora::HitType &hitType, const bool findAvailable, pandora::ClusterList &foundClusters);
 
     void GetClusterSpanX(const pandora::ClusterList &clusterList, float &xMin, float &xMax);
