@@ -88,7 +88,7 @@ else()
     foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
         set(${PROJ}_VERSION_MAJOR 03)
         set(${PROJ}_VERSION_MINOR 22)
-        set(${PROJ}_VERSION_PATCH 05)
+        set(${PROJ}_VERSION_PATCH 06)
         set(${PROJ}_VERSION "${${PROJ}_VERSION_MAJOR}.${${PROJ}_VERSION_MINOR}.${${PROJ}_VERSION_PATCH}")
     endforeach()
 
