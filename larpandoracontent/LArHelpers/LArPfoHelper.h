@@ -184,7 +184,8 @@ public:
      *  @param  pPfo the address of the first Pfo
      *  @param  pPfo the address of the second Pfo
      */
-    static float GetTwoDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2);
+    static pandora::StatusCode GetTwoDSeparation(
+        const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2, float &separation);
 
     /**
      *  @brief  Get distance between two Pfos using 3D clusters

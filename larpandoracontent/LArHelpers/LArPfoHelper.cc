@@ -257,7 +257,7 @@ float LArPfoHelper::GetClosestDistance(const ParticleFlowObject *const pPfo, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2)
+StatusCode LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2, float &separation)
 {
     ClusterList clusterListU1, clusterListV1, clusterListW1;
     ClusterList clusterListU2, clusterListV2, clusterListW2;
@@ -270,31 +270,32 @@ float LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, con
     LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_V, clusterListV2);
     LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_W, clusterListW2);
 
-    float numViews(0.f);
-    float distanceSquared(0.f);
+    float numViews(0.f), distance(0.f);
 
     if (!clusterListU1.empty() && !clusterListU2.empty())
     {
-        distanceSquared += LArClusterHelper::GetClosestDistance(clusterListU1, clusterListU2);
+        distance += LArClusterHelper::GetClosestDistance(clusterListU1, clusterListU2);
         numViews += 1.f;
     }
 
     if (!clusterListV1.empty() && !clusterListV2.empty())
     {
-        distanceSquared += LArClusterHelper::GetClosestDistance(clusterListV1, clusterListV2);
+        distance += LArClusterHelper::GetClosestDistance(clusterListV1, clusterListV2);
         numViews += 1.f;
     }
 
     if (!clusterListW1.empty() && !clusterListW2.empty())
     {
-        distanceSquared += LArClusterHelper::GetClosestDistance(clusterListW1, clusterListW2);
+        distance += LArClusterHelper::GetClosestDistance(clusterListW1, clusterListW2);
         numViews += 1.f;
     }
 
     if (numViews < std::numeric_limits<float>::epsilon())
-        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        return STATUS_CODE_NOT_FOUND;
 
-    return distanceSquared / numViews;
+    separation = distance / numViews;
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -7,25 +7,28 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/RemovalBaseTool.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
+
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/RemovalBaseTool.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-RemovalBaseTool::RemovalBaseTool()
+RemovalBaseTool::RemovalBaseTool() :
+    m_distanceToLine(0.5)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
- StatusCode RemovalBaseTool::GetMuonCluster(const TensorType::Element &element, const HitType &hitType, const Cluster *&pMuonCluster) const
+StatusCode RemovalBaseTool::GetMuonCluster(const TensorType::Element &element, const HitType &hitType, const Cluster *&pMuonCluster) const
 {
     const PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
 
@@ -47,8 +50,8 @@ RemovalBaseTool::RemovalBaseTool()
 
 bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType &hitType, const TensorType::ElementList &elementList) const
 {
-    float chiSquared(element.GetOverlapResult().GetReducedChi2());
-    unsigned int hitNumber(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
+    const float chiSquared(element.GetOverlapResult().GetReducedChi2());
+    const unsigned int hitSum(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
             
     for (const TensorType::Element &testElement : elementList)
     {
@@ -58,12 +61,12 @@ bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const Hi
         if ((testElement.GetClusterU() == element.GetClusterU()) && (testElement.GetClusterV() == element.GetClusterV()) && (testElement.GetClusterW() == element.GetClusterW()))
             continue;
 
-        const unsigned int hitSum(testElement.GetClusterU()->GetNCaloHits() + testElement.GetClusterV()->GetNCaloHits() + testElement.GetClusterW()->GetNCaloHits());
+        //DOES IT PASS THE ELEMENT CHECKS??
 
-        if ((hitSum == hitNumber) && (testElement.GetOverlapResult().GetReducedChi2() < chiSquared))
-            return false;
+        const unsigned int testHitSum(testElement.GetClusterU()->GetNCaloHits() + testElement.GetClusterV()->GetNCaloHits() + testElement.GetClusterW()->GetNCaloHits());
+        const float testChiSquared(testElement.GetOverlapResult().GetReducedChi2());
         
-        if (hitSum > hitNumber)
+        if ((testHitSum > hitSum) || ((testHitSum == hitSum) && (testChiSquared < chiSquared)))
             return false;
     }
 
@@ -121,7 +124,7 @@ void RemovalBaseTool::FindExtrapolatedHits(const Cluster *const pCluster, const 
         if (!this->IsInLineSegment(lowerBoundary, upperBoundary, pCaloHit->GetPositionVector()))
             continue;
 
-        if (!this->IsCloseToLine(pCaloHit->GetPositionVector(), lowerBoundary, upperBoundary, 0.5))
+        if (!this->IsCloseToLine(pCaloHit->GetPositionVector(), lowerBoundary, upperBoundary, m_distanceToLine))
             continue;
 
         collectedHits.push_back(pCaloHit);
@@ -160,8 +163,11 @@ StatusCode RemovalBaseTool::ProjectDeltaRayPositions(ThreeViewDeltaRayMatchingAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode RemovalBaseTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
+StatusCode RemovalBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "DistanceToLine", m_distanceToLine));
+    
     return STATUS_CODE_SUCCESS;
 }
 

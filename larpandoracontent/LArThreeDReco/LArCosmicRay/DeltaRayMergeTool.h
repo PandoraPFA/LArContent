@@ -19,7 +19,6 @@ namespace lar_content
 class DeltaRayMergeTool : public DeltaRayTensorTool
 {
 public:
-    typedef std::vector<pandora::HitType> HitTypeVector;
     /**
      *  @brief  Default constructor
      */
@@ -29,7 +28,7 @@ private:
     bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor, bool &mergesMade) const;
+    void ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor, bool &mergesMade) const;
     
     bool MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const;
 
@@ -44,18 +43,16 @@ private:
     bool IsConnected(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster) const;
 
     void FindVertices(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster, pandora::CaloHitList &vertexList) const;
-    float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList) const;
 
     bool IsBrokenCluster(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete) const;
 
     bool MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const;
 
-    bool PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const;
-
     float m_maxUnambiguousClusterSeparation;
     float m_maxDRSeparationFromTrack;
     float m_maxVertexSeparation;
     float m_maxClusterSeparation;
+    float m_maxGoodMatchReducedChiSquared;
 };
 
 } // namespace lar_content

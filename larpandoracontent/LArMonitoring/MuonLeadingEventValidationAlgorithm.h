@@ -52,6 +52,12 @@ private:
     void FillValidationInfo(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
         const pandora::PfoList *const pPfoList, ValidationInfo &validationInfo) const;
 
+    void DetermineIncorrectlyReconstructedMuons(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
+        const pandora::PfoList *const pPfoList, pandora::MCParticleList &incorrectlyReconstructedCosmicRays) const;
+    
+    void FillDeltaRayValidationInfo(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
+        const pandora::PfoList *const pPfoList, ValidationInfo &validationInfo) const;
+
     typedef std::unordered_map<const pandora::ParticleFlowObject*, unsigned int> PfoToIdMap;
 
     /**
@@ -86,14 +92,19 @@ private:
 
 
     typedef std::vector<pandora::HitType> HitTypeVector;
-    
+
+    LArMCParticleHelper::PrimaryParameters      m_cosmicRayValidationParameters;    
     LArMuonLeadingHelper::ValidationParameters  m_validationParameters;
+
+    pandora::MCParticleList m_correctlyReconstructedCosmicRays;
 
     bool m_removeRecoMuonHits;    
     bool m_deltaRayMode;
     bool m_michelMode;
     int m_muonsToSkip;
     bool m_visualize;
+    bool m_ignoreIncorrectMuons;
+    bool m_writeRawMatchesToTree;
 };
 
 } // namespace lar_content
