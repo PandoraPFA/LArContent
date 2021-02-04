@@ -42,6 +42,8 @@ public:
 
     HitTypeVector GetHitTypeVector();
 
+    const pandora::Cluster *GetCluster(const MatrixType::Element &element, const pandora::HitType &hitType);
+
     void GetConnectedElements(const pandora::Cluster *const pClusterA, const bool hasAssociatedMuon, MatrixType::ElementList &elementList, pandora::ClusterSet &checkedClusters);
 
     void GetUnambiguousElements(const bool hasAssociatedMuon, MatrixType::ElementList &elementList);
