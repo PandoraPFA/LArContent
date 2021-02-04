@@ -30,19 +30,69 @@ MuonLeadingEventValidationAlgorithm::MuonLeadingEventValidationAlgorithm() :
     m_deltaRayMode(false),
     m_michelMode(false),
     m_muonsToSkip(0),
-    m_visualize(false)
+    m_visualize(false),
+    m_ignoreIncorrectMuons(false),
+    m_writeRawMatchesToTree(false)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 MuonLeadingEventValidationAlgorithm::~MuonLeadingEventValidationAlgorithm()
-{
+{ 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void MuonLeadingEventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
+    const PfoList *const pPfoList, ValidationInfo &validationInfo) const
+{    
+    this->FillDeltaRayValidationInfo(pMCParticleList, pCaloHitList, pPfoList, validationInfo);
+
+    if (m_ignoreIncorrectMuons)
+    {
+        MCParticleList incorrectlyReconstructedCosmicRays;
+        this->DetermineIncorrectlyReconstructedMuons(pMCParticleList, pCaloHitList, pPfoList, incorrectlyReconstructedCosmicRays);
+
+        LArMCParticleHelper::MCContributionMap allMCToHitsMap(validationInfo.GetAllMCParticleToHitsMap());
+        LArMCParticleHelper::MCContributionMap targetMCToHitsMap(validationInfo.GetTargetMCParticleToHitsMap());
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap matchingMap(validationInfo.GetMCToPfoHitSharingMap());
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap interpretedMatchingMap(validationInfo.GetInterpretedMCToPfoHitSharingMap());
+
+        for (const MCParticle *const pIncorrectCosmicRay : incorrectlyReconstructedCosmicRays)
+        {
+            auto allIter(allMCToHitsMap.find(pIncorrectCosmicRay));
+
+            if (allIter != allMCToHitsMap.end())
+                allMCToHitsMap.erase(allIter);
+
+            auto targetIter(targetMCToHitsMap.find(pIncorrectCosmicRay));
+
+            if (targetIter != targetMCToHitsMap.end())
+                targetMCToHitsMap.erase(targetIter);
+
+            auto matchingIter(matchingMap.find(pIncorrectCosmicRay));
+
+            if (matchingIter != matchingMap.end())
+                matchingMap.erase(matchingIter);
+            
+            auto interpretedMatchingIter(interpretedMatchingMap.find(pIncorrectCosmicRay));
+
+            if (interpretedMatchingIter != interpretedMatchingMap.end())
+                interpretedMatchingMap.erase(interpretedMatchingIter);
+        }
+
+        validationInfo.SetAllMCParticleToHitsMap(allMCToHitsMap);
+        validationInfo.SetTargetMCParticleToHitsMap(targetMCToHitsMap);
+        validationInfo.SetMCToPfoHitSharingMap(matchingMap);
+        validationInfo.SetInterpretedMCToPfoHitSharingMap(interpretedMatchingMap);
+    }
+    
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void MuonLeadingEventValidationAlgorithm::FillDeltaRayValidationInfo(const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
     const PfoList *const pPfoList, ValidationInfo &validationInfo) const
 {
     CaloHitList recoMuonHitList;
@@ -52,18 +102,14 @@ void MuonLeadingEventValidationAlgorithm::FillValidationInfo(const MCParticleLis
     if (pMCParticleList && pCaloHitList)
     {
         // Get reconstructable MCParticle hit ownership map (non-muon leading hierarchy is folded whilst muon is unfolded)
-        LArMuonLeadingHelper::ValidationParameters recoValidationParams(m_validationParameters);
-        recoValidationParams.m_minHitSharingFraction = 0.9f;
-        recoValidationParams.m_maxBremsstrahlungSeparation = 2.5f;
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;        
-        LArMuonLeadingHelper::SelectReconstructableLeadingParticles(pMCParticleList, pCaloHitList, recoValidationParams, recoMuonHitList,
+        LArMuonLeadingHelper::SelectReconstructableLeadingParticles(pMCParticleList, pCaloHitList, m_validationParameters, recoMuonHitList,
             targetMCParticleToHitsMap, this->GetPandora());    
-        
+
+        // Do not change the hit share fraction (these hits are classed as 'ambiguous' and should not be in the metrics)
         LArMuonLeadingHelper::ValidationParameters allValidationParams(m_validationParameters);
         allValidationParams.m_minPrimaryGoodHits = 0;
         allValidationParams.m_minHitsForGoodView = 0;
-        allValidationParams.m_minHitSharingFraction = 0.9f;
-        allValidationParams.m_maxBremsstrahlungSeparation = 2.5f;
         LArMCParticleHelper::MCContributionMap allMCParticleToHitsMap;
         LArMuonLeadingHelper::SelectReconstructableLeadingParticles(pMCParticleList, pCaloHitList, allValidationParams, recoMuonHitList,
             allMCParticleToHitsMap, this->GetPandora());
@@ -92,14 +138,139 @@ void MuonLeadingEventValidationAlgorithm::FillValidationInfo(const MCParticleLis
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+void MuonLeadingEventValidationAlgorithm::DetermineIncorrectlyReconstructedMuons(const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
+    const PfoList *const pPfoList, MCParticleList &incorrectlyReconstructedCosmicRays) const
+{
+    // Perform cosmic ray matching
+    ValidationInfo validationInfo;
     
-void MuonLeadingEventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInfo, const bool /*useInterpretedMatching*/, const bool printToScreen, const bool fillTree) const
+    if (pMCParticleList && pCaloHitList)
+    {
+        LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_validationParameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
+
+        // Since muon reco, set sharing hit fraction to 0 (ask why john did this for uboone?)
+        LArMCParticleHelper::PrimaryParameters parameters(m_validationParameters);
+        parameters.m_minPrimaryGoodHits = 0;
+        parameters.m_minHitsForGoodView = 0;
+        parameters.m_minHitSharingFraction = 0.f;
+        LArMCParticleHelper::MCContributionMap allMCParticleToHitsMap;
+        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, allMCParticleToHitsMap);
+
+        validationInfo.SetTargetMCParticleToHitsMap(targetMCParticleToHitsMap);
+        validationInfo.SetAllMCParticleToHitsMap(allMCParticleToHitsMap);
+    }
+
+    if (pPfoList)
+    {
+        PfoList allConnectedPfos;
+        LArPfoHelper::GetAllConnectedPfos(*pPfoList, allConnectedPfos);
+
+        PfoList finalStatePfos;
+        for (const ParticleFlowObject *const pPfo : allConnectedPfos)
+        {
+            if (pPfo->GetParentPfoList().empty())
+                finalStatePfos.push_back(pPfo);
+        }
+
+        LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
+        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, m_validationParameters.m_foldBackHierarchy);
+
+        validationInfo.SetPfoToHitsMap(pfoToHitsMap);
+    }
+
+    LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCHitSharingMap;
+    LArMCParticleHelper::MCParticleToPfoHitSharingMap mcToPfoHitSharingMap;
+    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(validationInfo.GetPfoToHitsMap(), {validationInfo.GetAllMCParticleToHitsMap()}, pfoToMCHitSharingMap, mcToPfoHitSharingMap);
+    validationInfo.SetMCToPfoHitSharingMap(mcToPfoHitSharingMap);
+
+    LArMCParticleHelper::MCParticleToPfoHitSharingMap interpretedMCToPfoHitSharingMap;
+    this->InterpretMatching(validationInfo, interpretedMCToPfoHitSharingMap);
+    validationInfo.SetInterpretedMCToPfoHitSharingMap(interpretedMCToPfoHitSharingMap);
+
+    // Determine correctly reconstructed cosmic rays
+    MCParticleVector targetCosmicRayVector;
+    LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetTargetMCParticleToHitsMap()}, targetCosmicRayVector);
+
+    for (const MCParticle *const pTargetCosmicRay : targetCosmicRayVector)
+    {
+        if (mcToPfoHitSharingMap.at(pTargetCosmicRay).empty())
+        {
+            incorrectlyReconstructedCosmicRays.push_back(pTargetCosmicRay);
+            continue;
+        }
+
+        const CaloHitList &mcHitList(validationInfo.GetAllMCParticleToHitsMap().at(pTargetCosmicRay));
+
+        unsigned int nAboveThresholdMatches(0);
+        for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pTargetCosmicRay))
+        {
+            const CaloHitList &sharedHitList(pfoToSharedHits.second);
+            const CaloHitList &pfoHitList(validationInfo.GetPfoToHitsMap().at(pfoToSharedHits.first));
+            
+            const bool isGoodMatch(this->IsGoodMatch(mcHitList, pfoHitList, sharedHitList));
+
+            if (isGoodMatch)
+                ++nAboveThresholdMatches;
+        }
+
+        if (nAboveThresholdMatches != 1)
+            incorrectlyReconstructedCosmicRays.push_back(pTargetCosmicRay);
+    }
+
+    /////////////////////////
+    /*
+    for (const MCParticle *const pCosmicRay : targetCosmicRayVector)
+    {
+        bool isCorrect(std::find(correctlyReconstructedCosmicRays.begin(), correctlyReconstructedCosmicRays.end(), pCosmicRay) != correctlyReconstructedCosmicRays.end());
+
+        if (mcToPfoHitSharingMap.at(pCosmicRay).empty())
+        {
+            std::cout << "No Matches: " << std::endl;
+            std::cout << "Correct: " << isCorrect << std::endl;
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            continue;
+        }
+
+        const CaloHitList &mcHitList(validationInfo.GetAllMCParticleToHitsMap().at(pCosmicRay));
+
+        unsigned int nAboveThresholdMatches(0);
+        for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pCosmicRay))
+        {
+            const CaloHitList &sharedHitList(pfoToSharedHits.second);
+            const CaloHitList &pfoHitList(validationInfo.GetPfoToHitsMap().at(pfoToSharedHits.first));
+            
+            const bool isGoodMatch(this->IsGoodMatch(mcHitList, pfoHitList, sharedHitList));
+
+            if (isGoodMatch)
+                ++nAboveThresholdMatches;
+
+            if (isGoodMatch)
+            {
+                PfoList matchedPfo({pfoToSharedHits.first});
+                PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &matchedPfo, "Matched Pfo", BLUE);
+            }
+        }
+
+        std::cout << nAboveThresholdMatches << " above threshold matches" << std::endl;
+        std::cout << "Correct: " << isCorrect << std::endl;
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    }
+    */
+    /////////////////////////    
+}       
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+    
+void MuonLeadingEventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const
 {
     // Folded hit ownership/sharing maps for leading muon ionisation particles
     const LArMCParticleHelper::MCContributionMap &foldedAllMCToHitsMap(validationInfo.GetAllMCParticleToHitsMap());
     const LArMCParticleHelper::MCContributionMap &foldedTargetMCToHitsMap(validationInfo.GetTargetMCParticleToHitsMap());
     const LArMCParticleHelper::PfoContributionMap &foldedPfoToHitsMap(validationInfo.GetPfoToHitsMap());
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &foldedMCToPfoHitSharingMap(validationInfo.GetInterpretedMCToPfoHitSharingMap());
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &foldedMCToPfoHitSharingMap((fillTree && m_writeRawMatchesToTree) ? validationInfo.GetMCToPfoHitSharingMap() :
+        useInterpretedMatching ? validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
     
     // Consider only delta rays from reconstructable CR muons
     MCParticleVector mcCRVector;
@@ -575,6 +746,8 @@ StatusCode MuonLeadingEventValidationAlgorithm::ReadSettings(const TiXmlHandle x
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FoldToPrimaries", m_validationParameters.m_foldBackHierarchy));
 
+    //////////////////////////////////////////////////////////
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DeltaRayMode", m_deltaRayMode));
 
@@ -589,6 +762,12 @@ StatusCode MuonLeadingEventValidationAlgorithm::ReadSettings(const TiXmlHandle x
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "RemoveRecoMuonHits", m_removeRecoMuonHits));                                                
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "IgnoreIncorrectMuons", m_ignoreIncorrectMuons));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "WriteRawMatchesToTree", m_writeRawMatchesToTree));    
     
     return EventValidationBaseAlgorithm::ReadSettings(xmlHandle);
 }
@@ -598,15 +777,14 @@ StatusCode MuonLeadingEventValidationAlgorithm::ReadSettings(const TiXmlHandle x
 void MuonLeadingEventValidationAlgorithm::GetRecoMuonHits(const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
     const PfoList *const pPfoList, CaloHitList &recoMuonHitList) const
 {
+    recoMuonHitList.clear();
+    
     ValidationInfo validationInfo;
     
     if (pMCParticleList && pCaloHitList)
     {
-        recoMuonHitList.clear();
         // Get reconstructable MCParticle hit ownership map (non-muon leading hierarchy is folded whilst muon is unfolded)
         LArMuonLeadingHelper::ValidationParameters recoValidationParams(m_validationParameters);
-        recoValidationParams.m_minHitSharingFraction = 0.9f;
-        recoValidationParams.m_maxBremsstrahlungSeparation = 2.5f;
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;        
         LArMuonLeadingHelper::SelectReconstructableLeadingParticles(pMCParticleList, pCaloHitList, recoValidationParams, recoMuonHitList,
             targetMCParticleToHitsMap, this->GetPandora());    
@@ -614,8 +792,6 @@ void MuonLeadingEventValidationAlgorithm::GetRecoMuonHits(const MCParticleList *
         LArMuonLeadingHelper::ValidationParameters allValidationParams(m_validationParameters);
         allValidationParams.m_minPrimaryGoodHits = 0;
         allValidationParams.m_minHitsForGoodView = 0;
-        allValidationParams.m_minHitSharingFraction = 0.9f;
-        allValidationParams.m_maxBremsstrahlungSeparation = 2.5f;
         LArMCParticleHelper::MCContributionMap allMCParticleToHitsMap;
         LArMuonLeadingHelper::SelectReconstructableLeadingParticles(pMCParticleList, pCaloHitList, allValidationParams, recoMuonHitList,
             allMCParticleToHitsMap, this->GetPandora());
@@ -664,7 +840,6 @@ void MuonLeadingEventValidationAlgorithm::GetRecoMuonHits(const MCParticleList *
             const ParticleFlowObject *const pCosmicRayPfo(cosmicRayMatchedPfoPair->first);
                     
             recoMuonHitList.insert(recoMuonHitList.end(), foldedPfoToHitsMap.at(pCosmicRayPfo).begin(), foldedPfoToHitsMap.at(pCosmicRayPfo).end());
-                    
         }
     }
 }
