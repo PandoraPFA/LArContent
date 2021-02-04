@@ -50,6 +50,23 @@ TwoViewDeltaRayMatchingAlgorithm::HitTypeVector TwoViewDeltaRayMatchingAlgorithm
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+const Cluster *TwoViewDeltaRayMatchingAlgorithm::GetCluster(const MatrixType::Element &element, const HitType &hitType)
+{
+    auto hitTypeToIndexMap(this->GetMatchingControl().m_hitTypeToIndexMap);
+
+    auto iter(hitTypeToIndexMap.find(hitType));
+
+    if (iter == hitTypeToIndexMap.end())
+      return element.GetOverlapResult().GetBestMatchedAvailableCluster(); 
+
+    if (iter->second == 1)
+        return element.GetCluster1();
+
+    return element.GetCluster2();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
     
 void TwoViewDeltaRayMatchingAlgorithm::GetConnectedElements(const Cluster *const pClusterA, const bool hasAssociatedMuon, MatrixType::ElementList &elementList, ClusterSet &checkedClusters)
 {

@@ -45,7 +45,7 @@ private:
      *
      *  @return  whether the checks pass
      */    
-    bool PassElementChecks(const MatrixType::Element &element, const pandora::HitType &hitType) const;    
+    bool PassElementChecks(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element, const pandora::HitType &hitType) const;    
 
     /**
      *  @brief  Determine whether the cluster under investigation has muon contamination
@@ -123,7 +123,7 @@ private:
      *
      *  @return  whether the input element is the best element
      */
-    bool IsBestElement(const MatrixType::Element &element, const pandora::HitType &hitType, const MatrixType::ElementList &elementList) const;
+    bool IsBestElement(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element, const pandora::HitType &hitType, const MatrixType::ElementList &elementList) const;
 
    
     bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineEnd,
@@ -137,7 +137,7 @@ private:
     pandora::StatusCode ProjectDeltaRayPositions(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element,
         const pandora::HitType &hitType, pandora::CartesianPointVector &projectedPositions) const;
 
-    const pandora::Cluster *GetCluster(const MatrixType::Element &element, const pandora::HitType &hitType) const;
+    const pandora::Cluster *GetCluster(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element, const pandora::HitType &hitType) const;
 
     float m_minSeparation;    ///< The minimum delta ray - parent muon cluster separation
 };
