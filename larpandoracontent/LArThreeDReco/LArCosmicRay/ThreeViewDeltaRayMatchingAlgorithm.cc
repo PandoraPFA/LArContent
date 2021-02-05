@@ -194,12 +194,6 @@ void ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *c
 StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
     DeltaRayOverlapResult &overlapResult) const
 {
-    PfoList commonMuonPfoList;
-    this->FindCommonMuonParents(pClusterU, pClusterV, pClusterW, commonMuonPfoList);
-
-    if (commonMuonPfoList.empty())
-        return STATUS_CODE_NOT_FOUND;
-    
     float chiSquaredSum(0.f);
     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
     XOverlap xOverlapObject(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
@@ -209,7 +203,13 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
     if (statusCode != STATUS_CODE_SUCCESS)
         return statusCode;
 
-     overlapResult = DeltaRayOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chiSquaredSum, xOverlapObject, commonMuonPfoList);
+    PfoList commonMuonPfoList;
+    this->FindCommonMuonParents(pClusterU, pClusterV, pClusterW, commonMuonPfoList);
+
+    if (commonMuonPfoList.empty())
+        return STATUS_CODE_NOT_FOUND;
+
+    overlapResult = DeltaRayOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chiSquaredSum, xOverlapObject, commonMuonPfoList);
     
     return STATUS_CODE_SUCCESS;
 }
