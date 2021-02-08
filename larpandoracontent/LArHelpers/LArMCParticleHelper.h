@@ -392,6 +392,14 @@ public:
      */
     static bool IsDescendentOf(const pandora::MCParticle *const pMCParticle, const int pdg, const bool isChargeSensitive = false);
 
+    /**
+     *  @brief  Retrieve a linearised representation of the MC particle hierarchy in breadth first order
+     *
+     *  @param  pMCParticle an MC particle in the hierarchy - can be any particle
+     *  @param  mcParticleList the output MC particle list
+     */
+    static void GetBreadthFirstHierarchyRepresentation(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &mcParticleList);
+
 private:
     /**
      *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
