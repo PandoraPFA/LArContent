@@ -18,7 +18,6 @@ namespace lar_content
 class RemovalBaseTool : public DeltaRayTensorTool
 {
 public:
-    typedef std::vector<pandora::HitType> HitTypeVector;
     /**
      *  @brief  Default constructor
      */
@@ -59,6 +58,8 @@ protected:
 
     pandora::StatusCode ProjectDeltaRayPositions(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
         const pandora::HitType &hitType, pandora::CartesianPointVector &projectedPositions) const;
+
+    float m_distanceToLine;
 };
 
 } // namespace lar_content

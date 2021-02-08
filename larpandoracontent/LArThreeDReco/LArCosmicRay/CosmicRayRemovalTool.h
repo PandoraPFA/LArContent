@@ -35,7 +35,7 @@ private:
      *  @param  elementList the tensor element list
      *  @param  changesMade receive boolean indicating whether clusters in element have been modified
      */
-    void RemoveMuonHits(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &changesMade) const;
+    void ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &changesMade) const;
 
     /**
      *  @brief  Determine whether element satifies simple checks
@@ -45,7 +45,9 @@ private:
      *
      *  @return  whether the checks pass
      */    
-    bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const;    
+    bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const;
+
+    bool IsMichel(const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
      *  @brief  Determine whether the cluster under investigation has muon contamination
@@ -80,6 +82,9 @@ private:
     pandora::StatusCode GrowSeed(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
         pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemantHits) const;
 
+    void CollectHits(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection, const pandora::Cluster *const pDeltaRayCluster,
+        const float &minDistanceFromMuon, const bool demandCloserToCollected, const pandora::CaloHitList &protectedHits, pandora::CaloHitList &collectedHits) const;
+
     /**
      *  @brief  Fragment the delta ray cluster, refining the matched delta ray cluster perhaps creating significant remnants in the process
      *
@@ -106,6 +111,7 @@ private:
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
 
     float m_minSeparation;    ///< The minimum delta ray - parent muon cluster separation
+    float m_minContaminationLength;
 };
 
 } // namespace lar_content

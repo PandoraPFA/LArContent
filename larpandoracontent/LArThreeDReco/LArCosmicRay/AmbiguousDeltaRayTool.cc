@@ -1,40 +1,43 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayRecoveryTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.cc
  *
- *  @brief  Implementation of the delta ray recovery tool class.
+ *  @brief  Implementation of the delta ray merge tool class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayRecoveryTool.h"
+
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-DeltaRayRecoveryTool::DeltaRayRecoveryTool()
+AmbiguousDeltaRayTool::AmbiguousDeltaRayTool() :
+    m_maxGoodMatchReducedChiSquared(1.f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayRecoveryTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool AmbiguousDeltaRayTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    bool mergesMade(false);
+    this->ExamineConnectedElements(pAlgorithm, overlapTensor);
 
-    this->MakeMerges(pAlgorithm, overlapTensor, mergesMade);
-
-    return mergesMade;
+    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayRecoveryTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor, bool &mergesMade) const
+void AmbiguousDeltaRayTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor) const
 {
     bool mergeMade(true);
 
@@ -51,24 +54,23 @@ void DeltaRayRecoveryTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const 
             if (usedKeyClusters.count(pKeyCluster))
                 continue;
 
-            ClusterSet checkedClusters;
             TensorType::ElementList elementList;
-            pAlgorithm->GetConnectedElements(pKeyCluster, false, elementList, checkedClusters);
-
-            if (elementList.empty())
-                continue;
+            overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);            
 
             for (const TensorType::Element &element : elementList)
-	        {
+            {
                 if (usedKeyClusters.count(element.GetClusterU()))
                     continue;
 
                 usedKeyClusters.insert(element.GetClusterU());
             }
 
+            if (elementList.size() < 2)
+                continue;
+
             if (this->PickOutGoodMatches(pAlgorithm, elementList))
             {
-                mergeMade = true; mergesMade = true;
+                mergeMade = true;
                 break;
             }
         }
@@ -77,7 +79,7 @@ void DeltaRayRecoveryTool::MakeMerges(ThreeViewDeltaRayMatchingAlgorithm *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayRecoveryTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const
+bool AmbiguousDeltaRayTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const
 {
     ProtoParticleVector protoParticleVector;
     
@@ -89,32 +91,25 @@ bool DeltaRayRecoveryTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm
     {
         found = false;
 
-        float highestHitCount(-std::numeric_limits<float>::max()), bestChiSquared(0.f);
+        unsigned int highestHitCount(0);
+        float bestChiSquared(std::numeric_limits<float>::max());
         const Cluster *pBestClusterU(nullptr), *pBestClusterV(nullptr), *pBestClusterW(nullptr);
 
         for (const TensorType::Element &element : elementList)
-        {
-            if (element.GetOverlapResult().GetReducedChi2() > 1.f)
-                continue;
-            
+        {            
             const Cluster *const pClusterU(element.GetCluster(TPC_VIEW_U)), *const pClusterV(element.GetCluster(TPC_VIEW_V)), *const pClusterW(element.GetCluster(TPC_VIEW_W));
             
             if (usedClusters.count(pClusterU) || usedClusters.count(pClusterV) || usedClusters.count(pClusterW))
                 continue;
 
-            const float chiSquared = element.GetOverlapResult().GetReducedChi2();            
+            const float chiSquared = element.GetOverlapResult().GetReducedChi2();
+
+            if (chiSquared > m_maxGoodMatchReducedChiSquared)
+                continue;
+            
             const unsigned int hitSum(pClusterU->GetNCaloHits() + pClusterV->GetNCaloHits() + pClusterW->GetNCaloHits());
 
-            if ((hitSum == highestHitCount) && (chiSquared < bestChiSquared))
-            {
-                bestChiSquared = chiSquared;
-                highestHitCount = hitSum;
-                pBestClusterU = pClusterU; pBestClusterV = pClusterV; pBestClusterW = pClusterW;
-                
-                continue;
-            }
-            
-            if (hitSum > highestHitCount)
+            if ((hitSum > highestHitCount) || ((hitSum == highestHitCount) && (chiSquared < bestChiSquared)))
             {
                 bestChiSquared = chiSquared;
                 highestHitCount = hitSum;
@@ -146,8 +141,11 @@ bool DeltaRayRecoveryTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode DeltaRayRecoveryTool::ReadSettings(const TiXmlHandle /*xmlHandle*/)
-{          
+StatusCode AmbiguousDeltaRayTool::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxGoodMatchReducedChiSquared", m_maxGoodMatchReducedChiSquared)); 
+    
     return STATUS_CODE_SUCCESS;
 }
 

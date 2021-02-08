@@ -23,7 +23,7 @@ SpanAcceptanceTool::SpanAcceptanceTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SpanAcceptanceTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &/*overlapTensor*/)
+bool SpanAcceptanceTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -31,10 +31,7 @@ bool SpanAcceptanceTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorith
     bool changesMade(false);
 
     TensorType::ElementList elementList;
-    pAlgorithm->GetUnambiguousElements(true, elementList);
-
-    if (elementList.empty())
-        return changesMade;
+    overlapTensor.GetUnambiguousElements(true, elementList);
 
     this->InvestigateSpanAcceptances(pAlgorithm, elementList, changesMade);
 

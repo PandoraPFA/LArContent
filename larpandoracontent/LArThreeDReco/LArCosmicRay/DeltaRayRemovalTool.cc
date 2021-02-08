@@ -7,11 +7,13 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayRemovalTool.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
+
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayRemovalTool.h"
 
 using namespace pandora;
 
@@ -42,12 +44,8 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
         if (usedKeyClusters.count(pKeyCluster))
             continue;
 
-        ClusterSet checkedClusters;
         TensorType::ElementList elementList;
-        pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
-
-        if (elementList.empty())
-            continue;
+        overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);
         
         for (const TensorType::Element &element : elementList)
             usedKeyClusters.insert(element.GetCluster(TPC_VIEW_U));
