@@ -41,12 +41,11 @@ namespace lar_content
   }
 
 
-  void SliceIdMonitoringTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb, const SliceVector &sliceVector) {
+  void SliceIdMonitoringTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap, const SliceVector &sliceVector) {
     
   if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
-    std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << " with probability map size " << pfotoprobabilitymapb.size() <<std::endl;
+    std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << " with probability map size " << pfoToProbabilityMap.size() <<std::endl;
 
-  std::cout << "SlicePfo Info: "  << nuSliceHypotheses.size() << "  " << crSliceHypotheses.size() << "  " << selectedPfos.size() << "  " << pfotoprobabilitymapb.size() << "  " << sliceVector.size() << std::endl;
 
   const CaloHitList *pAllReconstructedCaloHitList(nullptr);
   PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pAllReconstructedCaloHitList));
@@ -68,11 +67,11 @@ namespace lar_content
   std::cout << "nu hits in mc " << nuNHitsTotal.size() << std::endl;
   
 
-  std::list<float> complist;
-  std::vector<CaloHitList> calolistlist;
-  std::vector<bool> isselectedbestlist;
-  float completenesstotal = 0.0;
-  float totalslicessize = 0;
+  std::list<float> compList;
+  std::vector<CaloHitList> caloListList;
+  std::vector<bool> isSelectedBestList;
+  float completenessTotal = 0.0;
+  float totalSlicesSize = 0;
 
 
 
@@ -83,7 +82,7 @@ namespace lar_content
       const auto nuHypothesis = nuSliceHypotheses.at(sliceIndex);
       const auto crHypothesis = crSliceHypotheses.at(sliceIndex);    // Check that something was reconstructed
 
-      totalslicessize = nuHypothesis.size() + crHypothesis.size();
+      totalSlicesSize = nuHypothesis.size() + crHypothesis.size();
 
       if (nuHypothesis.empty() && crHypothesis.empty()) {
         continue;  
@@ -125,35 +124,35 @@ namespace lar_content
       std::cout << "isSelectedAsNu = " << isSelectedAsNu << std::endl;
       std::cout << "-----------------------------------" << std::endl;
 
-      complist.push_back(completeness);
-      calolistlist.push_back(caloHitList);
-      isselectedbestlist.push_back(isSelectedAsNu);
-      completenesstotal = completenesstotal + completeness;
+      compList.push_back(completeness);
+      caloListList.push_back(caloHitList);
+      isSelectedBestList.push_back(isSelectedAsNu);
+      completenessTotal = completenessTotal + completeness;
  
     }
 
   //find max completeness
-  int isbestselected = 0;
+  int isBestSelected = 0;
   int isa0nan = 0;
-  if (totalslicessize != 0) {
-    std::list<float>::iterator maxcomp = std::max_element(complist.begin(), complist.end());
-    auto index = std::distance(complist.begin(), maxcomp);   
+  if (totalSlicesSize != 0) {
+    std::list<float>::iterator maxcomp = std::max_element(compList.begin(), compList.end());
+    auto index = std::distance(compList.begin(), maxcomp);   
 
     int indexvalue = index;
-    CaloHitList bestCaloHitList = calolistlist[indexvalue];
-    isbestselected = isselectedbestlist[indexvalue];
+    CaloHitList bestCaloHitList = caloListList[indexvalue];
+    isBestSelected = isSelectedBestList[indexvalue];
 
-    std::cout << "sum comp = " << completenesstotal << std::endl;
-    if (completenesstotal == 0.0 || isnan(completenesstotal) == true) {
-      isbestselected = 0;
+    std::cout << "sum comp = " << completenessTotal << std::endl;
+    if (completenessTotal == 0.0 || isnan(completenessTotal) == true) {
+      isBestSelected = 0;
       isa0nan = 1;
-      std::cout << "In the 0/nan sin bin" << std::endl;
+      std::cout << "This is a 0/nan: " << isa0nan <<std::endl;
     }
   }
 
-  std::cout << "true = " << isbestselected  << std::endl;
+  std::cout << "true = " << isBestSelected  << std::endl;
 
-  PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttreed", "wasright", isbestselected));
+  PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttreed", "wasright", isBestSelected));
   PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ttreed", "isa0nan", isa0nan));
   PANDORA_MONITORING_API(FillTree(this->GetPandora(), "ttreed"));
 

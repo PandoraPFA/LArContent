@@ -15,7 +15,6 @@
 #include "larpandoracontent/LArControlFlow/MultiPandoraApi.h"
 
 #include "Pandora/Algorithm.h"
-//#include "larpandoracontent/LArControlFlow/TrackDirectionTool.h"
 
 #include <unordered_map>
 
@@ -147,8 +146,8 @@ protected:
      *  @param  clearCosmicRayPfos to receive the list of clear cosmic-ray pfos
      *  @param  ambiguousPfos to receive the list of ambiguous cosmic-ray pfos for further analysis
      */
-    // pandora::StatusCode TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos, bool &directioncosmic, float &downprobability, float &deltachi2, float &deltachi2alone, float &minchi2perhit, bool &incomplete) const;
-    pandora::StatusCode TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos, bool &directioncosmic, float &downprobability) const;
+
+    pandora::StatusCode TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, pandora::PfoList &clearCosmicRayPfos, pandora::PfoList &ambiguousPfos) const;
 
     /**
      *  @brief  Run cosmic-ray hit removal, freeing hits in ambiguous pfos for further processing
@@ -345,7 +344,6 @@ protected:
     SliceIdToolVector           m_sliceIdToolVector;                ///< The slice id tool vector
     SliceSelectionToolVector    m_sliceSelectionToolVector;         ///< The slice selection tool vector
 
-    //TrackDirectionTool      *m_pTrackDirectionTool;
     typedef std::vector<TrackDirectionBaseTool*> TrackDirectionToolVector;
     TrackDirectionToolVector           m_trackDirectionToolVector;
 
@@ -425,7 +423,7 @@ public:
      *  @param  sliceNuPfos to receive the list of selected pfos
      */
   virtual void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
-				pandora::PfoList &selectedPfos, const PfoToFloatMap &pfotoprobabilitymapb, const SliceVector &sliceVector) = 0;
+				pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap, const SliceVector &sliceVector) = 0;
 };
 //-------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -442,8 +440,8 @@ public:
     *  @param  ambiguousPfos to receive the list of ambiguous pfos 
     *  @param  pAlgorithm the address of this master algorithm
     */
-  // virtual void  FindDirections(const pandora::ParticleFlowObject *const pPfo, bool &directioncosmic, float &downprobability, float &deltachi2, float &deltachi2alone, float &minchi2perhit, bool &incomplete, const MasterAlgorithm *const pAlgorithm) = 0;
-   virtual void  FindDirections(const pandora::ParticleFlowObject *const pPfo, bool &directioncosmic, float &downprobability, const MasterAlgorithm *const pAlgorithm) = 0;
+
+   virtual void  FindDirections(const pandora::ParticleFlowObject *const pPfo, float &downProbability, const MasterAlgorithm *const pAlgorithm) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

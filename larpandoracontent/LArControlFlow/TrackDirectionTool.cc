@@ -34,7 +34,6 @@ namespace lar_content
     m_tableStepSize(0.5f),
     m_writeTable(false), 
     m_lookupTableFileName("lookuptable.root"), 
-    m_probabilityFileName("probability.root"),
     m_treeName("lookuptable")
   {
    
@@ -47,30 +46,18 @@ StatusCode TrackDirectionTool::Initialize()
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------ 
-  void TrackDirectionTool::FindDirections(const pandora::ParticleFlowObject *const pPfo, bool &directioncosmic, float &downprobability, const MasterAlgorithm *const) 
+  void TrackDirectionTool::FindDirections(const pandora::ParticleFlowObject *const pPfo, float &downProbability, const MasterAlgorithm *const) 
   {
       try
         {  
 	   TrackDirectionTool::DirectionFitObject fitResult = this->GetPfoDirection(pPfo);
-	   directioncosmic = false;
-	   downprobability = -1;
-            
-	   std::cout << "DIRECTION RESULTS FOR PFO >>>>" << std::endl;
-	   std::cout << "Probability: " << fitResult.GetProbability() << std::endl;     
-	   downprobability = fitResult.GetProbability();
-
-	   if (fitResult.GetProbability() < 0.96) {
-	     directioncosmic = false;
-	   }
-	   if (fitResult.GetProbability() >= 0.96) {
-	     directioncosmic = true;
-	   }
-	   
+	   downProbability = -1;    
+	   downProbability = fitResult.GetProbability();	   
 
         }
         catch (...)
 	  {
-	    std::cout << "Skipping..." << std::endl;
+	    //std::cout << "Skipping..." << std::endl;
 	  }
   }
 
@@ -84,7 +71,7 @@ StatusCode TrackDirectionTool::Initialize()
         
         if (LArClusterHelper::GetClusterHitType(pTargetClusterW) != TPC_VIEW_W)
         {
-            std::cout << "ERROR: cluster is not in the W view!" << std::endl;
+	  //std::cout << "ERROR: cluster is not in the W view!" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
@@ -129,7 +116,7 @@ TrackDirectionTool::DirectionFitObject TrackDirectionTool::GetPfoDirection(const
 
         if (pClusterW->GetNCaloHits() <= m_minClusterCaloHits)
         {
-            std::cout << "ERROR: PFO is tiny!" << std::endl;
+	  //std::cout << "ERROR: PFO is tiny!" << std::endl;
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
         }
 
@@ -221,7 +208,7 @@ const Cluster* TrackDirectionTool::GetTargetClusterFromPFO(const ParticleFlowObj
 
       if (bestClusterList.size() == 0)
 	{
-	  std::cout << "ERROR: no W clusters could be extracted from the PFO!" << std::endl;
+	  //std::cout << "ERROR: no W clusters could be extracted from the PFO!" << std::endl;
 	  throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 	}
 
@@ -1341,7 +1328,6 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
     return;
   }
   
-  
 }
 
 
@@ -1391,25 +1377,25 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
     const double vstart[nParameters] = {2.1, 1.0, 1.0};
     const double step[nParameters] = {0.5, 5, 0.5};
     const double highphysbound[nParameters] = {25, maxScale, 1.0e1};
-    std::list<double> chisquaredlist;
+    std::list<double> chiSquaredList;
     std::vector<double> p0list;
     std::vector<double> p1list;
     std::vector<double> p2list;
     
-    double M = 105.7;  //mass
+    double M = 105.7; 
     for (double p0=vstart[0]; p0 < highphysbound[0];p0 = p0 + step[0]){
       double Ee(p0);
-      double Le(GetLengthfromEnergy(lookupTable, Ee));  //length
+      double Le(GetLengthfromEnergy(lookupTable, Ee)); 
       for (double p1=vstart[1]; p1 < highphysbound[1];p1 = p1 + step[1]){
-	double L(p1 * trackLength); //energy, length
+	double L(p1 * trackLength);
 	double Ls(Le - L);
-	double Es(GetEnergyfromLength(lookupTable, Ls));    //energy
+	double Es(GetEnergyfromLength(lookupTable, Ls));   
 	double alpha((Es - Ee)/TotalCharge), beta(L/TotalHitWidth);
 	for (double p2=vstart[2]; p2 < highphysbound[2];p2 = p2 + step[2]){
 
-	  double chisquared(0.0);
+	  double chiSquared(0.0);
 
-	  for (lar_content::TrackDirectionTool::HitCharge hitCharge : binnedHitChargeVector) //for each hit charge in the binned vector
+	  for (lar_content::TrackDirectionTool::HitCharge hitCharge : binnedHitChargeVector)
 	    {
 	      double L_i(Ls + (p1 * hitCharge.GetLongitudinalPosition())); //length
 	      double E_i(GetEnergyfromLength(lookupTable, L_i));       //energy
@@ -1417,23 +1403,23 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
 	      double dEdx_2D(p2 * (beta/alpha) * BetheBloch(E_i, M));   //energy per length, calculated
 	      double ChargeOverWidth(hitCharge.GetChargeOverWidth());  //energy per length, experimental
 
-	      chisquared += ( (ChargeOverWidth - dEdx_2D) * (ChargeOverWidth - dEdx_2D) )/(hitCharge.GetUncertainty() * hitCharge.GetUncertainty());
+	      chiSquared += ( (ChargeOverWidth - dEdx_2D) * (ChargeOverWidth - dEdx_2D) )/(hitCharge.GetUncertainty() * hitCharge.GetUncertainty());
 	    }
 
-	  if (chisquaredlist.size() > 0) {
-	    if (chisquared < chisquaredlist.back()){
-	      chisquaredlist.push_back(chisquared);
+	  if (chiSquaredList.size() > 0) {
+	    if (chiSquared < chiSquaredList.back()){
+	      chiSquaredList.push_back(chiSquared);
 	      p0list.push_back(p0);
 	      p1list.push_back(p1);
 	      p2list.push_back(p2);
-	      chisquaredlist.pop_front();
+	      chiSquaredList.pop_front();
 	      p0list.erase(p0list.begin());
 	      p1list.erase(p1list.begin());
 	      p2list.erase(p2list.begin());
 	    }
 	  }
 	  else {
-	    chisquaredlist.push_back(chisquared);
+	    chiSquaredList.push_back(chiSquared);
 	    p0list.push_back(p0);
 	    p1list.push_back(p1);
 	    p2list.push_back(p2);
@@ -1456,7 +1442,7 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
     const double vstart2[nParameters2] = {2.1, 1.0, 1.0};
     const double step2[nParameters] = {0.5, 5, 0.5};
     const double highphysbound2[nParameters2] = {25, maxScale, 1.0e1};
-    std::list<double> chisquaredlist2;
+    std::list<double> chiSquaredList2;
     std::vector<double> p0list2;
     std::vector<double> p1list2;
     std::vector<double> p2list2;
@@ -1469,10 +1455,9 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
 	double Ls(Le - L);
 	double Es(GetEnergyfromLength(lookupTable, Ls));   
 	double alpha((Es - Ee)/TotalCharge), beta(L/TotalHitWidth);
-	for (double p22=vstart2[2];  p22 < highphysbound2[2];p22 = p22 + step2[2]){
-	     
-	  double chisquared2(0.0);
-	  for (lar_content::TrackDirectionTool::HitCharge hitCharge : binnedHitChargeVector) //for each hit charge in the binned vector
+	for (double p22=vstart2[2];  p22 < highphysbound2[2];p22 = p22 + step2[2]){    
+	  double chiSquared2(0.0);
+	  for (lar_content::TrackDirectionTool::HitCharge hitCharge : binnedHitChargeVector) 
 	    {
 	      double L_i(Ls + (p12 * hitCharge.GetLongitudinalPosition())); //length
 	      double E_i(GetEnergyfromLength(lookupTable, L_i));       //energy
@@ -1480,23 +1465,23 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
 	      double dEdx_2D(p22 * (beta/alpha) * BetheBloch(E_i, M));   //energy per length, calculated
 	      double ChargeOverWidth(hitCharge.GetChargeOverWidth());  //energy per length, experimental
 
-	      chisquared2 += ( (ChargeOverWidth - dEdx_2D) * (ChargeOverWidth - dEdx_2D) )/(hitCharge.GetUncertainty() * hitCharge.GetUncertainty());
+	      chiSquared2 += ( (ChargeOverWidth - dEdx_2D) * (ChargeOverWidth - dEdx_2D) )/(hitCharge.GetUncertainty() * hitCharge.GetUncertainty());
 	    }
 
-	  if (chisquaredlist2.size() > 0) {
-	    if (chisquared2 < chisquaredlist2.back()){
-	      chisquaredlist2.push_back(chisquared2);
+	  if (chiSquaredList2.size() > 0) {
+	    if (chiSquared2 < chiSquaredList2.back()){
+	      chiSquaredList2.push_back(chiSquared2);
 	      p0list2.push_back(p02);
 	      p1list2.push_back(p12);
 	      p2list2.push_back(p22);
-	      chisquaredlist2.pop_front();
+	      chiSquaredList2.pop_front();
 	      p0list2.erase(p0list2.begin());
 	      p1list2.erase(p1list2.begin());
 	      p2list2.erase(p2list2.begin());
 	    }
 	  }
 	  else {
-	    chisquaredlist2.push_back(chisquared2);
+	    chiSquaredList2.push_back(chiSquared2);
 	    p0list2.push_back(p02);
 	    p1list2.push_back(p12);
 	    p2list2.push_back(p22);
@@ -1607,7 +1592,6 @@ void TrackDirectionTool::GetCalorimetricDirection(const Cluster* pTargetClusterW
 
     if (pTargetClusterW->GetNCaloHits() < 1.5 * m_minClusterCaloHits || LArClusterHelper::GetLength(pTargetClusterW) < m_minClusterLength)
     {
-        std::cout << "W Cluster too small" << std::endl;
         throw StatusCodeException(STATUS_CODE_FAILURE);
     }
 
@@ -1737,7 +1721,7 @@ const TwoDSlidingFitResult &TrackDirectionTool::GetCachedSlidingFit(const Cluste
 
     if (m_slidingFitResultMap.end() == iter)
     {
-        std::cout << "Sliding fit retrieval failure" << std::endl;
+      //std::cout << "Sliding fit retrieval failure" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 

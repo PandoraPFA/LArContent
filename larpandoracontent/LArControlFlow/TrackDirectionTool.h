@@ -16,15 +16,6 @@
 
 #include "larpandoracontent/LArControlFlow/MasterAlgorithm.h"
 
-#include <utility>
-#include <algorithm>
-#include <deque>
-#include <unordered_map>
-#include <iomanip>
-#include <math.h>
-#include <iostream>
-#include <fstream>
-#include <istream>
 #include <numeric>
 
 namespace lar_content
@@ -40,7 +31,7 @@ public:
     TrackDirectionTool();
     pandora::StatusCode Initialize();
 
-    void FindDirections(const pandora::ParticleFlowObject *const pPfo, bool &directioncosmic, float &downprobability, const MasterAlgorithm *const pAlgorithm);
+    void FindDirections(const pandora::ParticleFlowObject *const pPfo, float &downProbability, const MasterAlgorithm *const pAlgorithm);
 
     class HitCharge
     {

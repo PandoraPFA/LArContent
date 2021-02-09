@@ -193,9 +193,7 @@ StatusCode MasterAlgorithm::Run()
     if (m_shouldRunCosmicHitRemoval)
     {
         PfoList clearCosmicRayPfos, ambiguousPfos;
-	bool directioncosmic;
-	float downprobability = -1;
-	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos, directioncosmic, downprobability));
+	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
 
@@ -385,16 +383,8 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 
- StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos, bool &directioncosmic, float &downprobability) const
+ StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
   {
-    std::list<std::pair<const pandora::MCParticle*, int>> mchitslist;
-    std::list<std::pair<const pandora::MCParticle*, int>> mcpairslist;
-    MCParticleList mcparticlelist;
-    std::list<std::pair<const pandora::MCParticle*, int>>::iterator it;
-    std::list<std::pair<const pandora::MCParticle*, int>>::iterator it2;
-    CaloHitList totalcalohits;
-    std::vector<float> viewsizelist;
-
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
 
@@ -418,19 +408,14 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
     for (const Pfo *const pPPPfo : nonStitchedParentCosmicRayPfos) {
 
       bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPPPfo));
-      directioncosmic = false;
-      downprobability = -1.0;
-      if(!isClearCosmic){  //if it's not already clearly a cosmic, see if it's above 80% probability of being one
-
-      }
-//-----------------CUTS----------------------------------------------------------------------
+ 
       if (isClearCosmic) {
 	clearCosmicRayPfos.push_back(pPPPfo);
-	//	ambiguousPfos.remove(pPPPfo);    // could do this later, if it's already been found as a pfo it won't be again
+	//	ambiguousPfos.remove(pPPPfo);
       }
     }
 
-    for (const Pfo *const pPfo : *pRecreatedCRPfos) ///repeat the process for a different set
+    for (const Pfo *const pPfo : *pRecreatedCRPfos)
       {
         bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
 
@@ -640,80 +625,57 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
         std::cout << "Select best slice hypotheses" << std::endl;
     
     
-    PfoList selectedSlicePfos; ////giant pfo list
-    
-    
+    PfoList selectedSlicePfos;
     PfoList selectedSlicePfosB;
-    //  float downprobability = -1;
-    bool directioncosmic;
 
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
-    {
-       const PfoList &neutrinoPfoList(nuSliceHypotheses.at(sliceIndex));
+      {
+	const PfoList &neutrinoPfoList(nuSliceHypotheses.at(sliceIndex));
 
-       for (const Pfo *const pNeutrinoPfo : neutrinoPfoList)
-	 {
-	   PfoList daughterPfos = pNeutrinoPfo->GetDaughterPfoList();
-	   for (const ParticleFlowObject *const pDaughterPfo : daughterPfos) {
-	     //std::cout << " daughters " << pDaughterPfo  << std::endl;
-	     selectedSlicePfosB.push_back(pDaughterPfo);
-	   }
-
-	 }
-
-    }
+	for (const Pfo *const pNeutrinoPfo : neutrinoPfoList)
+	  {
+	    PfoList daughterPfos = pNeutrinoPfo->GetDaughterPfoList();
+	    for (const ParticleFlowObject *const pDaughterPfo : daughterPfos) {
+	      selectedSlicePfosB.push_back(pDaughterPfo);
+	    }
+	  }
+      }
 
 
 
     for (unsigned int sliceIndex = 0, nSlices = crSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
        const PfoList &cosmicPfoList(crSliceHypotheses.at(sliceIndex));
-
-       for (const Pfo *const pcosmicPfo : cosmicPfoList)
+       for (const Pfo *const pCosmicPfo : cosmicPfoList)
         {
-	  //std::cout << "crnut " << pcosmicPfo << std::endl;
-	  selectedSlicePfosB.push_back(pcosmicPfo);
-
+	  selectedSlicePfosB.push_back(pCosmicPfo);
 	}
-
     }
 
-    //std::cout << " size   :   " <<  selectedSlicePfosB.size() << std::endl; 
+    PfoToFloatMap pfoToProbabilityMap;
 
-    std::unordered_map<const Pfo*, float> pfotoprobabilitymap;
-    PfoToFloatMap pfotoprobabilitymapb;
-    //std::cout << "------------------Running over Slices---------------------" << std::endl;
-    for (const Pfo *const pPPPfo :  selectedSlicePfosB) {
-      float downprobability = -1;
+    for (const Pfo *const pPfo :  selectedSlicePfosB) {
+      float downProbability = -1;
       for (TrackDirectionBaseTool *const pTrackDirectionTool : m_trackDirectionToolVector){
 	try{
-	  pTrackDirectionTool->FindDirections(pPPPfo, directioncosmic, downprobability, this);  //probability
-	  pfotoprobabilitymapb.insert({pPPPfo,downprobability});
-	  // std::cout << " ^^ Pfo = " << pPPPfo << std::endl;
+	  pTrackDirectionTool->FindDirections(pPfo, downProbability, this);
+	  pfoToProbabilityMap.insert({pPfo,downProbability});
 	}
 	catch(...){
-	  std::cout << "Runtime error in TrackDirectionTool!" << std::endl;
 	}
       }
     }
-    //  std::cout << "------------------Done Running over Slices---------------------" << std::endl;
     
     
-    //probability from list
-    //map of pfo to probability
-    //map into select output pfos
-    // PfoToFloatMap pfotoprobabilitymapb;
 
     if (m_shouldPerformSliceId)
     {
-      // std::cout << "option 1 run SelectoutputPfos" << std::endl;
         for (SliceIdBaseTool *const pSliceIdTool : m_sliceIdToolVector)
-	  pSliceIdTool->SelectOutputPfos(this, nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos, pfotoprobabilitymapb, sliceVector);
+	  pSliceIdTool->SelectOutputPfos(this, nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos, pfoToProbabilityMap, sliceVector);
 
     }
     else if (m_shouldRunNeutrinoRecoOption != m_shouldRunCosmicRecoOption)
     {
-      // std::cout << "option 2 run call em crs" << std::endl;
         const SliceHypotheses &sliceHypotheses(m_shouldRunNeutrinoRecoOption ? nuSliceHypotheses : crSliceHypotheses);
 
         for (const PfoList &slice : sliceHypotheses)
