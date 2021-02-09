@@ -57,7 +57,6 @@ StatusCode TrackDirectionTool::Initialize()
         }
         catch (...)
 	  {
-	    //std::cout << "Skipping..." << std::endl;
 	  }
   }
 
@@ -71,7 +70,6 @@ StatusCode TrackDirectionTool::Initialize()
         
         if (LArClusterHelper::GetClusterHitType(pTargetClusterW) != TPC_VIEW_W)
         {
-	  //std::cout << "ERROR: cluster is not in the W view!" << std::endl;
             throw StatusCodeException(STATUS_CODE_FAILURE);
         }
 
@@ -80,8 +78,7 @@ StatusCode TrackDirectionTool::Initialize()
         this->AddToSlidingFitCache(pTargetClusterW);
         this->GetCalorimetricDirection(pTargetClusterW, finalDirectionFitObject);
         this->ComputeProbability(finalDirectionFitObject);
-        this->SetEndpoints(finalDirectionFitObject, pTargetClusterW);
-        //this->SetMCTruth(finalDirectionFitObject, pTargetClusterW);
+        this->SetEndpoints(finalDirectionFitObject, pTargetClusterW);;
 
         return finalDirectionFitObject;
     }
@@ -116,7 +113,6 @@ TrackDirectionTool::DirectionFitObject TrackDirectionTool::GetPfoDirection(const
 
         if (pClusterW->GetNCaloHits() <= m_minClusterCaloHits)
         {
-	  //std::cout << "ERROR: PFO is tiny!" << std::endl;
             throw StatusCodeException(STATUS_CODE_NOT_FOUND);
         }
 
@@ -208,7 +204,6 @@ const Cluster* TrackDirectionTool::GetTargetClusterFromPFO(const ParticleFlowObj
 
       if (bestClusterList.size() == 0)
 	{
-	  //std::cout << "ERROR: no W clusters could be extracted from the PFO!" << std::endl;
 	  throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 	}
 
@@ -247,23 +242,6 @@ void TrackDirectionTool::SetEndpoints(DirectionFitObject &fitResult, const LArTr
 
     fitResult.SetBeginpoint(lowZVector);
     fitResult.SetEndpoint(highZVector);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::SetMCTruth(DirectionFitObject &fitResult, const Cluster *const pCluster)
-{
-    CartesianVector mcEndpoint(MCParticleHelper::GetMainMCParticle(pCluster)->GetEndpoint());
-    CartesianVector mcBeginpoint(MCParticleHelper::GetMainMCParticle(pCluster)->GetVertex());
-    CartesianVector mcDirection((mcEndpoint - mcBeginpoint).GetUnitVector());
-
-    CartesianVector recoBeginpoint(fitResult.GetBeginpoint());
-    CartesianVector recoEndpoint(fitResult.GetEndpoint());
-
-    if ((mcBeginpoint - recoBeginpoint).GetMagnitude() < (mcBeginpoint - recoEndpoint).GetMagnitude())
-        fitResult.SetMCDirection(1);
-    else
-        fitResult.SetMCDirection(0);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -354,22 +332,6 @@ void TrackDirectionTool::SetNearestNeighbourValues(HitChargeVector &innerHitChar
     std::sort(innerHitChargeVector.begin(), innerHitChargeVector.end(), SortHitChargeVectorByRL);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FragmentRemoval(HitChargeVector &hitChargeVector, HitChargeVector &filteredHitChargeVector, float &splitPosition)
-{
-    float trackLength(0.f);
-    this->GetTrackLength(hitChargeVector, trackLength);
-
-    std::vector<JumpObject> jumpsVector;
-    this->FindLargestJumps(hitChargeVector, jumpsVector);
-
-    std::vector<JumpObject> peakJumps;
-    this->FindPeakJumps(hitChargeVector, jumpsVector);
-
-    this->AttemptFragmentRemoval(hitChargeVector, jumpsVector, filteredHitChargeVector, splitPosition);
-}
-
 //----------------------------------------------------------------------------------------------------------------------------------
 
 void TrackDirectionTool::SimpleTrackEndFilter(HitChargeVector &hitChargeVector)
@@ -434,337 +396,6 @@ void TrackDirectionTool::SimpleTrackEndFilter(HitChargeVector &hitChargeVector)
             ++iter;
 	}
     }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::TrackEndFilter(HitChargeVector &hitChargeVector, DirectionFitObject &directionFitObject)
-{
-    float trackLength(0.f);
-    this->GetTrackLength(hitChargeVector, trackLength);
-
-    DirectionFitObject beforeDirectionFitObject;
-    this->FitHitChargeVector(hitChargeVector, beforeDirectionFitObject);
-
-    int beforeNumberHits(hitChargeVector.size());
-    float bodyQoverW(0.f);
-    this->GetAverageQoverWTrackBody(hitChargeVector, bodyQoverW);
-
-    int nHitsToSkip(3), counterFromBeginning(-1), counterToEnd(hitChargeVector.size() - 1);
-    float trackEndRange(0.025);
-    
-    HitChargeVector filteredHitChargeVector(hitChargeVector);
-
-    for (HitChargeVector::const_iterator iter = filteredHitChargeVector.begin(); iter != filteredHitChargeVector.end(); )
-    {
-        //This counter exists so that the hit charge N hits over never points before begin() or after end(), hence the use of std::min below
-        ++counterFromBeginning;
-        --counterToEnd;
-
-        HitCharge hitCharge(*iter), nextHitCharge(*std::next(iter, std::min(1, counterToEnd))), plusNHitCharge(*std::next(iter, std::min(nHitsToSkip, counterToEnd))), previousHitCharge(*std::prev(iter, std::min(1, counterFromBeginning))), minusNHitCharge(*std::prev(iter, std::min(nHitsToSkip, counterFromBeginning)));
-
-        if (hitCharge.GetLongitudinalPosition()/trackLength <= trackEndRange || hitCharge.GetLongitudinalPosition()/trackLength >= (1.0 - trackEndRange))
-        {
-            float nearestRatio(std::max((hitCharge.GetChargeOverWidth()/previousHitCharge.GetChargeOverWidth()), (hitCharge.GetChargeOverWidth()/nextHitCharge.GetChargeOverWidth())));
-            float plusMinusNRatio(std::max((hitCharge.GetChargeOverWidth()/minusNHitCharge.GetChargeOverWidth()), (hitCharge.GetChargeOverWidth()/plusNHitCharge.GetChargeOverWidth())));
-            float distanceFromBodyQoverW(std::abs(hitCharge.GetChargeOverWidth() - bodyQoverW));
-
-            if (distanceFromBodyQoverW >= 4.8 || std::abs(1.0 - nearestRatio) >= 0.4 || std::abs(1.0 - plusMinusNRatio) >= 0.7)
-                iter = filteredHitChargeVector.erase(iter);
-            else
-                ++iter;
-        }
-        else
-        {
-            ++iter;
-        }
-    }
-
-    std::sort(filteredHitChargeVector.begin(), filteredHitChargeVector.end(), SortHitChargeVectorByRL);
-
-    DirectionFitObject afterDirectionFitObject;
-    this->FitHitChargeVector(filteredHitChargeVector, afterDirectionFitObject);
-
-    float tefBeforeChiSquaredPerHit(beforeDirectionFitObject.GetMinChiSquaredPerHit()), tefAfterChiSquaredPerHit(afterDirectionFitObject.GetMinChiSquaredPerHit());
-  
-    float chiSquaredPerHitChange(beforeDirectionFitObject.GetMinChiSquaredPerHit() - afterDirectionFitObject.GetMinChiSquaredPerHit());
-    float N(beforeNumberHits);
-    bool shouldApply(true);
-
-    if (beforeNumberHits < 400 && chiSquaredPerHitChange < (6.0 - ((N/400) * 7.0)))
-        shouldApply = false;
-    if (beforeNumberHits >= 400 && chiSquaredPerHitChange < 1.0)
-        shouldApply = false;
-
-    SplitObject tefObject;
-    tefObject.SetSplitPosition(0.f);
-    tefObject.SetBeforeMinChiSquaredPerHit(tefBeforeChiSquaredPerHit);
-    tefObject.SetAfterMinChiSquaredPerHit(tefAfterChiSquaredPerHit);
-    tefObject.SetMinChiSquaredPerHitChange(tefBeforeChiSquaredPerHit - tefAfterChiSquaredPerHit);
-    tefObject.SetBeforeNHits(hitChargeVector.size());
-    tefObject.SetAfterNHits(filteredHitChargeVector.size());
-    tefObject.SetSplitApplied(shouldApply);
-    tefObject.SetBeforeDeltaChiSquaredPerHit(beforeDirectionFitObject.GetDeltaChiSquaredPerHit());
-
-    directionFitObject.SetTEFObject(tefObject);
-
-    if (shouldApply)
-    {
-        hitChargeVector = filteredHitChargeVector;
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::AttemptFragmentRemoval(HitChargeVector &hitChargeVector, std::vector<JumpObject> &jumpsVector, HitChargeVector &filteredHitChargeVector, float &finalSplitPosition)
-{
-    DirectionFitObject beforeDirectionFitObject;
-    this->FitHitChargeVector(hitChargeVector, beforeDirectionFitObject);
-
-    float bestSplitPosition(0.f);
-
-    HitChargeVector bestHitChargeVector;
-    DirectionFitObject bestDirectionFitObject(beforeDirectionFitObject);
-
-    for (JumpObject &jumpObject : jumpsVector)
-    {
-        float splitPosition(jumpObject.GetLongitudinalPosition());
-
-        HitChargeVector smallHitCollection, largeHitCollection;
-        this->SplitHitCollectionBySize(hitChargeVector, splitPosition, smallHitCollection, largeHitCollection);
-
-        DirectionFitObject afterDirectionFitObject;
-        this->FitHitChargeVector(largeHitCollection, afterDirectionFitObject);
-
-        if (afterDirectionFitObject.GetMinChiSquaredPerHit() < bestDirectionFitObject.GetMinChiSquaredPerHit())
-        {
-            bestSplitPosition = splitPosition;
-            bestHitChargeVector = largeHitCollection;
-            bestDirectionFitObject = afterDirectionFitObject;
-        }
-    }
-
-    finalSplitPosition = bestSplitPosition;
-    filteredHitChargeVector = bestHitChargeVector;
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FindLargestJumps(HitChargeVector &hitChargeVector, std::vector<JumpObject> &normalJumps)
-{
-  HitChargeVector binnedHitChargeVector;  //comments
-    BinHitChargeVector(hitChargeVector, binnedHitChargeVector);
-
-    std::vector<HitChargeVector> bothVectors;
-    bothVectors.push_back(hitChargeVector);
-    bothVectors.push_back(binnedHitChargeVector);
-
-    for (HitChargeVector &vector : bothVectors)
-    {
-        int searchRange(0.05 * vector.size());
-
-        for (int jumpRange = 1; jumpRange <= 5; jumpRange++)
-        {
-            for (int i = 0; i < searchRange; i++)
-            {
-                float binJump = (std::abs(vector.at(i).GetChargeOverWidth() - vector.at(i + jumpRange).GetChargeOverWidth()));
-                float jumpPosition(vector.at(i + jumpRange).GetLongitudinalPosition());
-                JumpObject jumpObject(jumpPosition, binJump);
-                normalJumps.push_back(jumpObject);
-            }
-
-            for (int j = vector.size() - searchRange; j < vector.size() - jumpRange; j++)
-            {
-                float binJump = (std::abs(vector.at(j).GetChargeOverWidth() - vector.at(j + jumpRange).GetChargeOverWidth()));
-                float jumpPosition(vector.at(j).GetLongitudinalPosition());
-                JumpObject jumpObject(jumpPosition, binJump);
-
-                normalJumps.push_back(jumpObject);
-            }
-        }
-    }
-
-    std::sort(normalJumps.begin(), normalJumps.end(), SortJumpVector);
-    if (normalJumps.size() > 3)
-        normalJumps.erase(normalJumps.begin() + 3, normalJumps.end());
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FindPeakJumps(HitChargeVector &hitChargeVector, std::vector<JumpObject> &peakJumps)
-{
-    float jumpPosition(0.f), jumpValue(0.f), currentLargestQoverW(0.f);
-
-    for (HitCharge &hitCharge : hitChargeVector)
-    {
-        if (hitCharge.GetChargeOverWidth() > currentLargestQoverW)
-        {
-            currentLargestQoverW = hitCharge.GetChargeOverWidth();
-            jumpPosition = hitCharge.GetLongitudinalPosition();
-        }
-    }
-
-    float jumpPosition1(jumpPosition - 0.5), jumpPosition2(jumpPosition + 0.5);
-    JumpObject jumpObject(jumpPosition, jumpValue);
-    JumpObject jumpObject1(jumpPosition1, jumpValue);
-    JumpObject jumpObject2(jumpPosition2, jumpValue);
-    peakJumps.push_back(jumpObject);
-    peakJumps.push_back(jumpObject1);
-    peakJumps.push_back(jumpObject2);
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FindTrackEndJumps(HitChargeVector &hitChargeVector, std::vector<JumpObject> &trackEndJumps)
-{
-    float trackLength(0.f);
-    this->GetTrackLength(hitChargeVector, trackLength);
-
-    for (float edge = 0.01; edge <= 0.25; edge += 0.01)
-    {
-        float jumpPosition1(edge * trackLength), jumpPosition2((1.0 - edge) * trackLength), jumpValue(0.f);
-        JumpObject jumpObject1(jumpPosition1, jumpValue);
-        JumpObject jumpObject2(jumpPosition2, jumpValue);
-
-        trackEndJumps.push_back(jumpObject1);
-        trackEndJumps.push_back(jumpObject2);
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::ParticleSplitting(HitChargeVector &hitChargeVector, DirectionFitObject &backwardsDirectionFitObject, DirectionFitObject &forwardsDirectionFitObject, bool &splitApplied, SplitObject &splitObject)
-{
-    DirectionFitObject beforeDirectionFitObject;
-    this->FitHitChargeVector(hitChargeVector, beforeDirectionFitObject);
-    DirectionFitObject outputBackwardsDirectionFitObject(beforeDirectionFitObject), outputForwardsDirectionFitObject(beforeDirectionFitObject);
-    backwardsDirectionFitObject = beforeDirectionFitObject;
-    forwardsDirectionFitObject = beforeDirectionFitObject;
-
-    float afterSplitChiSquared(beforeDirectionFitObject.GetMinChiSquaredPerHit()), bestSplitPosition(0.f);
-
-    std::vector<float> calorimetricSplitPositions;
-    this->CreateCalorimetricSplitHitVector(hitChargeVector, calorimetricSplitPositions);
-
-
-    for (float &splitPosition : calorimetricSplitPositions)
-    {
-        HitChargeVector backwardsTestHitCollection, forwardsTestHitCollection;
-        this->SplitHitCollectionByLeftRight(hitChargeVector, splitPosition, backwardsTestHitCollection, forwardsTestHitCollection);
-
-        DirectionFitObject backwardsTestDirectionFitObject, forwardsTestDirectionFitObject;
-        this->FitHitChargeVector(backwardsTestHitCollection, forwardsTestHitCollection, backwardsTestDirectionFitObject, forwardsTestDirectionFitObject);
-
-        float splitMinChiSquared((backwardsTestDirectionFitObject.GetNHits() > 0 ? backwardsTestDirectionFitObject.GetBackwardsChiSquared()/backwardsTestDirectionFitObject.GetNHits() : 0.f) + (forwardsTestDirectionFitObject.GetNHits() > 0 ? forwardsTestDirectionFitObject.GetForwardsChiSquared()/forwardsTestDirectionFitObject.GetNHits() : 0.f));
-
-        //float kinkSize(0.f);
-        //this->FindKinkSize(pTargetClusterW, splitPosition, kinkSize);
-
-        if (splitMinChiSquared < afterSplitChiSquared)
-        {
-            afterSplitChiSquared = splitMinChiSquared;
-            bestSplitPosition = splitPosition;
-            outputBackwardsDirectionFitObject = backwardsTestDirectionFitObject;
-            outputForwardsDirectionFitObject = forwardsTestDirectionFitObject;
-        }
-    }
-
-    if (outputBackwardsDirectionFitObject.GetNHits() == 0 || outputForwardsDirectionFitObject.GetNHits() == 0)
-        return;
-
-    float ChiSquaredPerHitChange(beforeDirectionFitObject.GetMinChiSquaredPerHit() - (outputBackwardsDirectionFitObject.GetBackwardsChiSquared()/outputBackwardsDirectionFitObject.GetNHits() + outputForwardsDirectionFitObject.GetForwardsChiSquared()/outputForwardsDirectionFitObject.GetNHits()));
-    int beforeNumberHits((int)beforeDirectionFitObject.GetHitChargeVector().size());
-    float N(beforeNumberHits);
-    bool shouldApply(true);
-
-    if (beforeNumberHits < 400 && ChiSquaredPerHitChange < (5.65777 - (0.586666/50) * N))
-        shouldApply = false;
-    if (beforeNumberHits >= 400 && ChiSquaredPerHitChange < 1.0)
-        shouldApply = false;
-
-    if (shouldApply)
-    {
-        splitApplied = true;
-        backwardsDirectionFitObject = outputBackwardsDirectionFitObject;
-        forwardsDirectionFitObject = outputForwardsDirectionFitObject;
-
-        splitObject.SetSplitPosition(bestSplitPosition);
-        splitObject.SetBeforeMinChiSquaredPerHit(beforeDirectionFitObject.GetMinChiSquaredPerHit());
-        splitObject.SetAfterMinChiSquaredPerHit(beforeDirectionFitObject.GetMinChiSquaredPerHit() - ChiSquaredPerHitChange);
-        splitObject.SetMinChiSquaredPerHitChange(ChiSquaredPerHitChange);
-        splitObject.SetBeforeNHits(hitChargeVector.size());
-        splitObject.SetSplitApplied(splitApplied);
-        splitObject.SetBeforeDeltaChiSquaredPerHit(beforeDirectionFitObject.GetDeltaChiSquaredPerHit());
-    }
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FindKinkSize(const Cluster* pCluster, float &splitPosition, float &kinkSize)
-{
-    try
-    {
-        const TwoDSlidingFitResult &slidingFit(this->GetCachedSlidingFit(pCluster));
-        const LayerFitResultMap &layerFitResultMap(slidingFit.GetLayerFitResultMap());
-        const int minLayer(layerFitResultMap.begin()->first), maxLayer(layerFitResultMap.rbegin()->first);
-
-        const int nLayersHalfWindow(slidingFit.GetLayerFitHalfWindow());
-        const int nLayersSpanned(1 + maxLayer - minLayer);
-
-        if (nLayersSpanned <= 2 * nLayersHalfWindow)
-            return;
-
-        for (LayerFitResultMap::const_iterator iter = layerFitResultMap.begin(), iterEnd = layerFitResultMap.end(); iter != iterEnd; ++iter)
-        {
-            const int iLayer(iter->first);
-
-            const float rL(slidingFit.GetL(iLayer));
-            const float rL1(slidingFit.GetL(iLayer - nLayersHalfWindow));
-            const float rL2(slidingFit.GetL(iLayer + nLayersHalfWindow));
-
-            CartesianVector centralPosition(0.f,0.f,0.f), firstDirection(0.f,0.f,0.f), secondDirection(0.f,0.f,0.f);
-
-            if ((STATUS_CODE_SUCCESS != slidingFit.GetGlobalFitPosition(rL, centralPosition)) ||
-                (STATUS_CODE_SUCCESS != slidingFit.GetGlobalFitDirection(rL1, firstDirection)) ||
-                (STATUS_CODE_SUCCESS != slidingFit.GetGlobalFitDirection(rL2, secondDirection)))
-            {
-                continue;
-            }
-
-            const float cosTheta(firstDirection.GetDotProduct(secondDirection));
-            if (std::abs(splitPosition - rL) <= 3.0 && cosTheta > kinkSize && cosTheta < 1.0)
-                kinkSize = (180.0 / 3.1415926535) * std::acos(cosTheta);
-        }
-    }
-    catch (...)
-    {
-        return;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::CreateCalorimetricSplitHitVector(HitChargeVector &hitChargeVector, std::vector<float> &splitPositions)
-{
-    std::vector<JumpObject> jumpObjects;
-    this->FindJumpSplit(hitChargeVector, jumpObjects);
-    this->FindPlateauSplit(hitChargeVector, jumpObjects);
-
-    for (auto &jumpObject: jumpObjects)
-        splitPositions.push_back(jumpObject.GetLongitudinalPosition());
-
-    float QoverWRange(0.f);
-    this->GetQoverWRange(hitChargeVector, QoverWRange);
-
-    auto it = find_if(jumpObjects.begin(), jumpObjects.end(), [&QoverWRange](JumpObject& obj) {return obj.GetJumpValue() > 0.1 * QoverWRange;});
-
-    if (it == jumpObjects.end())
-        this->FindKinkSplit(hitChargeVector, splitPositions);
-
-    //this->FindBowlSplit(hitChargeVector, splitPositions);
-
-    sort( splitPositions.begin(), splitPositions.end() );
-    splitPositions.erase( unique( splitPositions.begin(), splitPositions.end() ), splitPositions.end() );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -867,397 +498,6 @@ void TrackDirectionTool::GetQoverWRange(HitChargeVector &hitChargeVector, float 
     }
 
     QoverWRange = (maxQoverW - minQoverW);
-}
-
-//--------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FindKinkSplit(HitChargeVector &hitChargeVector, std::vector<float> &splitPositions)
-{
-    HitChargeVector binnedHitChargeVector = hitChargeVector;
-    BinHitChargeVector(hitChargeVector, binnedHitChargeVector);
-
-    std::vector<JumpObject> kinkObjects;
-
-    float minCharge(10000.f), maxCharge(0.f);
-
-    for (HitCharge &hitCharge : binnedHitChargeVector)
-    {
-        if (hitCharge.GetCharge() < minCharge)
-            minCharge = hitCharge.GetCharge();
-
-        if (hitCharge.GetCharge() > maxCharge)
-            maxCharge = hitCharge.GetCharge();
-    }
-
-    float fullChargeRange(maxCharge - minCharge);
-    float chargeHalfWidth(0.1 * fullChargeRange);
-
-    for (HitCharge &bin1 : binnedHitChargeVector)
-    {
-        HitChargeVector leftHitCollection, rightHitCollection;
-
-        for (HitCharge &vector : binnedHitChargeVector)
-        {
-            if (vector.GetLongitudinalPosition() <= bin1.GetLongitudinalPosition())
-                leftHitCollection.push_back(vector);
-            else
-                rightHitCollection.push_back(vector);
-        }
-
-        if (leftHitCollection.size() == 0 || rightHitCollection.size() == 0)
-            continue;
-
-        float bestLeftScore(0.f), bestLeftSlope(0.f);
-
-        for (HitCharge &bin2 : leftHitCollection)
-        {
-            float chargeDifference(bin2.GetCharge() - bin1.GetCharge());
-            float positionDifference(bin1.GetLongitudinalPosition() - bin2.GetLongitudinalPosition());
-            float slope(chargeDifference/positionDifference);
-
-            int nLeftHits(0);
-            for (HitCharge &bin3 : leftHitCollection)
-            {
-                float lineValue(bin2.GetCharge() - ((bin3.GetLongitudinalPosition() - bin2.GetLongitudinalPosition()) * slope));
-                if (std::abs(bin3.GetCharge() - lineValue) < chargeHalfWidth)
-                    nLeftHits++;
-            }
-
-            float score((float)nLeftHits/leftHitCollection.size());
-
-            if (score > bestLeftScore)
-            {
-                bestLeftScore = score;
-                bestLeftSlope = slope;
-            }
-        }
-
-
-        float bestRightScore(0.f), bestRightSlope(0.f);
-
-        for (HitCharge &bin2 : rightHitCollection)
-        {
-            float chargeDifference(bin2.GetCharge() - bin1.GetCharge());
-            float positionDifference(bin1.GetLongitudinalPosition() - bin2.GetLongitudinalPosition());
-            float slope(chargeDifference/positionDifference);
-
-            int nRightHits(0);
-            for (HitCharge &bin3 : rightHitCollection)
-            {
-                float lineValue(bin2.GetCharge() - ((bin3.GetLongitudinalPosition() - bin2.GetLongitudinalPosition()) * slope));
-                if (std::abs(bin3.GetCharge() - lineValue) < chargeHalfWidth)
-                    nRightHits++;
-            }
-
-            float score((float)nRightHits/rightHitCollection.size());
-
-            if (score > bestRightScore)
-            {
-                bestRightScore = score;
-                bestRightSlope = slope;
-            }
-        }
-
-        float kinkPosition(bin1.GetLongitudinalPosition());
-        float totalScore(bestLeftScore + bestRightScore);
-
-        CartesianVector leftSlopeVector(1.f, 0.f, bestLeftSlope);
-        CartesianVector rightSlopeVector(1.f, 0.f, bestRightSlope);
-        float openingAngle(leftSlopeVector.GetOpeningAngle(rightSlopeVector));
-
-        JumpObject kinkObject(kinkPosition, totalScore, openingAngle);
-        kinkObjects.push_back(kinkObject);
-    }
-
-    std::sort(kinkObjects.begin(), kinkObjects.end(), SortJumpVector);
-
-    int cutOff(3), nAdded(0);
-    float latestJumpPosition(0.f), latestJumpValue(0.f), range(3.f);
-
-    for (int i = 0; i < kinkObjects.size(); i++)
-    {
-        if (nAdded >= cutOff)
-            break;
-
-        JumpObject kinkObject(kinkObjects.at(i));
-
-        if (kinkObject.GetJumpValue() < 1.5)
-            continue;
-
-        if (nAdded == 0)
-        {
-            if (kinkObject.GetOpeningAngle() > 0.05)
-                splitPositions.push_back(kinkObjects.at(i).GetLongitudinalPosition());
-
-            latestJumpPosition = kinkObjects.at(i).GetLongitudinalPosition();
-            latestJumpValue = kinkObjects.at(i).GetJumpValue();
-            nAdded++;
-        }
-        else
-        {
-            if ((kinkObject.GetLongitudinalPosition() - latestJumpPosition) < range && kinkObject.GetJumpValue() > latestJumpValue)
-            {
-                latestJumpPosition = kinkObjects.at(i).GetLongitudinalPosition();
-                latestJumpValue = kinkObjects.at(i).GetJumpValue();
-
-                if (kinkObject.GetOpeningAngle() > 0.05)
-                {
-                    splitPositions.pop_back();
-                    splitPositions.push_back(kinkObjects.at(i).GetLongitudinalPosition());
-                }
-            }
-            else if ((kinkObject.GetLongitudinalPosition() - latestJumpPosition) > range)
-            {
-                latestJumpPosition = kinkObjects.at(i).GetLongitudinalPosition();
-                latestJumpValue = kinkObjects.at(i).GetJumpValue();
-                nAdded++;
-
-                if (kinkObject.GetOpeningAngle() > 0.05)
-                    splitPositions.push_back(kinkObjects.at(i).GetLongitudinalPosition());
-            }
-        }
-    }
-}
-//--------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FindPlateauSplit(HitChargeVector &hitChargeVector, std::vector<JumpObject> &jumpObjects)
-{
-    float trackLength(0.f);
-    this->GetTrackLength(hitChargeVector, trackLength);
-
-    float averageCharge(0.f);
-    this->GetAverageQoverWTrackBody(hitChargeVector, averageCharge);
-
-    std::vector<JumpObject> plateauObjects;
-
-
-    /////////////CHANGE SETTINGS HERE/////////////
-
-    float positionStepSize(0.1);
-    float chargeStep(0.10);
-    float trackScanRange(0.05 * trackLength);
-
-    //////////////////////////////////////////////
-
-    for (float currentPosition = 0; currentPosition < trackLength; currentPosition += positionStepSize)
-    {
-        int totalHitsLeft(0), totalHitsRight(0);
-
-        for (HitCharge &hitCharge : hitChargeVector)
-        {
-            if (std::abs(currentPosition - hitCharge.GetLongitudinalPosition()) > trackScanRange)
-                continue;
-
-            if (hitCharge.GetLongitudinalPosition() <= currentPosition)
-                totalHitsLeft++;
-            else
-                totalHitsRight++;
-        }
-
-        float bestHitFractionLeft(0), bestHitFractionRight(0);
-        float bestChargeLeft(0), bestChargeRight(0);
-
-        for (float currentCharge = chargeStep; currentCharge < 10.0; currentCharge += chargeStep)
-        {
-            float hitCountLeft(0.f), hitCountRight(0.f);
-
-            for (HitCharge &hitCharge : hitChargeVector)
-            {
-                if (std::abs(currentPosition - hitCharge.GetLongitudinalPosition()) > trackScanRange)
-                    continue;
-
-                if (hitCharge.GetLongitudinalPosition() <= currentPosition && hitCharge.GetCharge() > (currentCharge - chargeStep) && hitCharge.GetCharge() < (currentCharge + chargeStep))
-                    hitCountLeft += 1.0;
-
-                if (hitCharge.GetLongitudinalPosition() > currentPosition && hitCharge.GetCharge() > (currentCharge - chargeStep) && hitCharge.GetCharge() < (currentCharge + chargeStep))
-                    hitCountRight += 1.0;
-            }
-
-            float hitFractionLeft(hitCountLeft/totalHitsLeft), hitFractionRight(hitCountRight/totalHitsRight);
-
-            if (hitFractionLeft > bestHitFractionLeft)
-            {
-                bestHitFractionLeft = hitFractionLeft;
-                bestChargeLeft = currentCharge;
-            }
-
-            if (hitFractionRight > bestHitFractionRight)
-            {
-                bestHitFractionRight = hitFractionRight;
-                bestChargeRight = currentCharge;
-            }
-        }
-
-        float chargeRange(std::abs(bestChargeLeft - bestChargeRight));
-
-        float currentScore(bestHitFractionLeft + bestHitFractionRight);
-        currentScore *= chargeRange/averageCharge;
-        JumpObject plateauObject(currentPosition, currentScore);
-
-        plateauObjects.push_back(plateauObject);
-    }
-
-    std::sort(plateauObjects.begin(), plateauObjects.end(), SortJumpVector);
-    int cutOff(3), nAdded(0);
-    float latestJumpPosition(0.f), latestJumpValue(0.f), range(3.f);
-
-    for (int i = 0; i < plateauObjects.size(); i++)
-    {
-        if (nAdded >= cutOff)
-            break;
-
-        JumpObject plateauObject(plateauObjects.at(i));
-
-        if (plateauObject.GetJumpValue() < 0.1)
-            continue;
-
-        if (nAdded == 0)
-        {
-            jumpObjects.push_back(plateauObjects.at(i));
-            latestJumpPosition = plateauObjects.at(i).GetLongitudinalPosition();
-            latestJumpValue = plateauObjects.at(i).GetJumpValue();
-            nAdded++;
-        }
-        else
-        {
-            if ((plateauObject.GetLongitudinalPosition() - latestJumpPosition) < range && plateauObject.GetJumpValue() > latestJumpValue)
-            {
-                jumpObjects.pop_back();
-                jumpObjects.push_back(plateauObjects.at(i));
-                latestJumpPosition = plateauObjects.at(i).GetLongitudinalPosition();
-                latestJumpValue = plateauObjects.at(i).GetJumpValue();
-            }
-            else if ((plateauObject.GetLongitudinalPosition() - latestJumpPosition) > range)
-            {
-                jumpObjects.push_back(plateauObjects.at(i));
-                latestJumpPosition = plateauObjects.at(i).GetLongitudinalPosition();
-                latestJumpValue = plateauObjects.at(i).GetJumpValue();
-                nAdded++;
-            }
-        }
-    }
-}
-
-//--------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FindJumpSplit(HitChargeVector &hitChargeVector, std::vector<JumpObject> &jumpObjects)
-{
-    HitChargeVector binnedHitChargeVector;       
-    BinHitChargeVector(hitChargeVector, binnedHitChargeVector);
-
-    std::vector<JumpObject> normalJumps, binnedJumps;
-
-    std::vector<HitChargeVector> bothVectors;
-    bothVectors.push_back(hitChargeVector);
-    bothVectors.push_back(binnedHitChargeVector);
-
-    for (HitChargeVector &vector : bothVectors)
-    {
-        for (int jumpRange = 1; jumpRange <= 5; jumpRange++)
-        {
-            for (int i = 0; i <= vector.size() - (jumpRange + 1); i++)
-            {
-                float combinedUncertainty = vector.at(i).GetUncertainty() + vector.at(i + jumpRange).GetUncertainty();
-                float binJump = (std::abs(vector.at(i).GetChargeOverWidth() - vector.at(i + jumpRange).GetChargeOverWidth()));
-                binJump /= combinedUncertainty;
-                float jumpPosition(vector.at(i + jumpRange).GetLongitudinalPosition());
-                JumpObject jumpObject(jumpPosition, binJump);
-
-                if (vector.size() == hitChargeVector.size())
-                    normalJumps.push_back(jumpObject);
-
-                if (vector.size() == binnedHitChargeVector.size())
-                    binnedJumps.push_back(jumpObject);
-            }
-        }
-    }
-
-    std::sort(normalJumps.begin(), normalJumps.end(), SortJumpVector);
-    std::sort(binnedJumps.begin(), binnedJumps.end(), SortJumpVector);
-
-    int cutOff(10), nAdded(0);
-    float latestJumpPosition(0.f), latestJumpValue(0.f), range(3.f);
-
-    for (int i = 0; i < normalJumps.size(); i++)
-    {
-        if (nAdded >= cutOff)
-            break;
-
-        JumpObject jumpObject(normalJumps.at(i));
-
-        if (jumpObject.GetJumpValue() < 1.0)
-            continue;
-
-        if (nAdded == 0)
-        {
-            jumpObjects.push_back(normalJumps.at(i));
-            latestJumpPosition = normalJumps.at(i).GetLongitudinalPosition();
-            latestJumpValue = normalJumps.at(i).GetJumpValue();
-            nAdded++;
-        }
-        else
-        {
-            if ((jumpObject.GetLongitudinalPosition() - latestJumpPosition) < range && jumpObject.GetJumpValue() > latestJumpValue)
-            {
-                jumpObjects.pop_back();
-                jumpObjects.push_back(normalJumps.at(i));
-                latestJumpPosition = normalJumps.at(i).GetLongitudinalPosition();
-                latestJumpValue = normalJumps.at(i).GetJumpValue();
-            }
-            else if ((jumpObject.GetLongitudinalPosition() - latestJumpPosition) > range)
-            {
-                jumpObjects.push_back(normalJumps.at(i));
-                latestJumpPosition = normalJumps.at(i).GetLongitudinalPosition();
-                latestJumpValue = normalJumps.at(i).GetJumpValue();
-                nAdded++;
-            }
-        }
-    }
-
-    nAdded = 0;
-
-    for (int i = 0; i < binnedJumps.size(); i++)
-    {
-        if (nAdded >= cutOff)
-            break;
-
-        JumpObject jumpObject(binnedJumps.at(i));
-
-        if (jumpObject.GetJumpValue() < 1.0)
-            continue;
-
-        if (nAdded == 0)
-        {
-            jumpObjects.push_back(normalJumps.at(i));
-            latestJumpPosition = binnedJumps.at(i).GetLongitudinalPosition();
-            latestJumpValue = binnedJumps.at(i).GetJumpValue();
-            nAdded++;
-        }
-        else
-        {
-            if ((jumpObject.GetLongitudinalPosition() - latestJumpPosition) < range && jumpObject.GetJumpValue() > latestJumpValue)
-            {
-                jumpObjects.pop_back();
-                jumpObjects.push_back(normalJumps.at(i));
-                latestJumpPosition = binnedJumps.at(i).GetLongitudinalPosition();
-                latestJumpValue = binnedJumps.at(i).GetJumpValue();
-            }
-            else if ((jumpObject.GetLongitudinalPosition() - latestJumpPosition) > range)
-            {
-                jumpObjects.push_back(normalJumps.at(i));
-                latestJumpPosition = binnedJumps.at(i).GetLongitudinalPosition();
-                latestJumpValue = binnedJumps.at(i).GetJumpValue();
-                nAdded++;
-            }
-        }
-    }
-}
-
-//--------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::FindBowlSplit(HitChargeVector &hitChargeVector, std::vector<float> &splitPositions)
-{
-    splitPositions.push_back(hitChargeVector.at(hitChargeVector.size()/2).GetLongitudinalPosition());
 }
 
 //--------------------------------------------------------------------------------------------------------------------------------
@@ -1588,7 +828,6 @@ void TrackDirectionTool::GetCalorimetricDirection(const Cluster* pTargetClusterW
     HitChargeVector filteredHitChargeVector;
     this->TrackInnerFilter(hitChargeVector, filteredHitChargeVector);
     this->SimpleTrackEndFilter(filteredHitChargeVector);
-    //this->TrackEndFilter(filteredHitChargeVector, directionFitObject);
 
     if (pTargetClusterW->GetNCaloHits() < 1.5 * m_minClusterCaloHits || LArClusterHelper::GetLength(pTargetClusterW) < m_minClusterLength)
     {
@@ -1596,94 +835,6 @@ void TrackDirectionTool::GetCalorimetricDirection(const Cluster* pTargetClusterW
     }
 
     this->FitHitChargeVector(filteredHitChargeVector, directionFitObject);
-
-    //this->TestHypothesisOne(directionFitObject);
-    //this->TestHypothesisTwo(directionFitObject);
-    //this->TestHypothesisThree(directionFitObject);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::TestHypothesisOne(DirectionFitObject &directionFitObject)
-{
-  
-  bool likelyForwards((directionFitObject.GetMinChiSquaredPerHit() <= 1.5 && directionFitObject.GetForwardsChiSquaredPerHit() <= directionFitObject.GetBackwardsChiSquaredPerHit()) || directionFitObject.GetNHits() >= 400);
-  bool likelyBackwards((directionFitObject.GetMinChiSquaredPerHit() <= 1.5 && directionFitObject.GetForwardsChiSquaredPerHit() > directionFitObject.GetBackwardsChiSquaredPerHit()));
-
-  if (likelyForwards || likelyBackwards)
-    {
-      std::cout << "Applied Hypothesis #1 (Single Clean Particle)" << std::endl;
-      directionFitObject.SetHypothesis(1); 
-    }
-  else {
-    std::cout << "Not Hypothosis #1" << std::endl;
-  }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::TestHypothesisTwo(DirectionFitObject &directionFitObject)
-{
-  if (directionFitObject.GetHypothesis() == 1 || m_enableSplitting == false) {
-    return;
-  }
-
-    DirectionFitObject backwardsSplitResult, forwardsSplitResult;
-    HitChargeVector filteredHitChargeVector(directionFitObject.GetHitChargeVector());
-
-    bool splitApplied(false);
-    SplitObject splitObject;
-    this->ParticleSplitting(filteredHitChargeVector, backwardsSplitResult, forwardsSplitResult, splitApplied, splitObject);
-    DirectionFitObject largestFitObject(forwardsSplitResult.GetNHits() == forwardsSplitResult.GetNHits() ? forwardsSplitResult : backwardsSplitResult);
-
-    //To create a chi squared change scatter plot
-    splitObject.SetAfterNHits(largestFitObject.GetNHits());
-    directionFitObject.SetSplitObject(splitObject);
-
-    if (splitApplied)
-    {
-        std::cout << "Applied Hypothesis #2 (Split Particle)" << std::endl;
-        directionFitObject.SetHypothesis(2); 
-
-        //Forwards and backwards now refer to the best fits for the forwards and backwards particles
-        directionFitObject.SetForwardsFitCharges(forwardsSplitResult.GetForwardsFitCharges());
-        directionFitObject.SetBackwardsFitCharges(backwardsSplitResult.GetBackwardsFitCharges());
-
-        //Delta chi squared should still make sense for distributions, so take the likely muon
-        directionFitObject.SetForwardsChiSquared(largestFitObject.GetForwardsChiSquared());
-        directionFitObject.SetBackwardsChiSquared(largestFitObject.GetBackwardsChiSquared());
-        directionFitObject.SetNHits(largestFitObject.GetNHits());
-    }
-    else {
-      std::cout << "Not Hypothosis #2" << std::endl;
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void TrackDirectionTool::TestHypothesisThree(DirectionFitObject &directionFitObject)
-{
-    if (directionFitObject.GetHypothesis() == 1 || directionFitObject.GetHypothesis() == 2 || m_enableFragmentRemoval == false)
-        return;
-
-    HitChargeVector filteredHitChargeVector(directionFitObject.GetHitChargeVector()), fragmentlessHitChargeVector;
-    float splitPosition(0.f);
-    this->FragmentRemoval(filteredHitChargeVector, fragmentlessHitChargeVector, splitPosition);
-
-    DirectionFitObject fragmentRemovalDirectionFitObject;
-    this->FitHitChargeVector(fragmentlessHitChargeVector, fragmentRemovalDirectionFitObject);
-
-    bool likelyCorrectFragmentRemoval(directionFitObject.GetDirectionEstimate() != fragmentRemovalDirectionFitObject.GetDirectionEstimate() && directionFitObject.GetMinChiSquaredPerHit() - fragmentRemovalDirectionFitObject.GetMinChiSquaredPerHit() >= 2.0);
-
-    SplitObject frObject(filteredHitChargeVector.size(), fragmentlessHitChargeVector.size(), directionFitObject.GetMinChiSquaredPerHit(), fragmentRemovalDirectionFitObject.GetMinChiSquaredPerHit(), directionFitObject.GetMinChiSquaredPerHit() - fragmentRemovalDirectionFitObject.GetMinChiSquaredPerHit(), 0.f);
-    directionFitObject.SetFRObject(frObject); 
-
-    if (likelyCorrectFragmentRemoval)
-    {
-        std::cout << "Applied Hypothesis #3: fragment removed." << std::endl;
-        directionFitObject.SetHypothesis(3); 
-        directionFitObject = fragmentRemovalDirectionFitObject;
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1721,7 +872,6 @@ const TwoDSlidingFitResult &TrackDirectionTool::GetCachedSlidingFit(const Cluste
 
     if (m_slidingFitResultMap.end() == iter)
     {
-      //std::cout << "Sliding fit retrieval failure" << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
     }
 
@@ -1750,12 +900,6 @@ bool TrackDirectionTool::SortByDistanceToNN(HitCharge &hitCharge1, HitCharge &hi
     return hitCharge1.GetDistanceToNN() < hitCharge2.GetDistanceToNN();
 }
 
-//----------------------------------------------------------------------------------------------------------------------------------
-
-bool TrackDirectionTool::SortJumpVector(JumpObject &jumpObject1, JumpObject &jumpObject2)
-{
-    return jumpObject1.GetJumpValue() > jumpObject2.GetJumpValue();
-}
 //----------------------------------------------------------------------------------------------------------------------------------
 void TrackDirectionTool::BinHitChargeVector(HitChargeVector &hitChargeVector, HitChargeVector &binnedHitChargeVector)
 {
@@ -1944,7 +1088,7 @@ double TrackDirectionTool::GetEnergyfromLength(LookupTable &lookupTable, double 
 
     double finalEnergy(leftEnergy - (((trackLength - leftLength)/(lengthDifference)) * (energyDifference)));
 
-    //very small energy values leadt to huge dE/dx values: truncate
+    //very small energy values lead to huge dE/dx values: truncate
     if (finalEnergy <= 2.0)
         return 2.0;
     else

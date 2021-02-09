@@ -310,8 +310,6 @@ public:
 
     void SetEndpoints(DirectionFitObject &fitResult, const LArTrackStateVector &trackStateVector);
 
-    void SetMCTruth(DirectionFitObject &fitResult, const pandora::Cluster *const pCluster);
-
     void FillHitChargeVector(const pandora::Cluster *const pCluster, HitChargeVector &hitChargeVector);
 
     void TrackInnerFilter(HitChargeVector &hitChargeVector, HitChargeVector &filteredHitChargeVector);
@@ -321,22 +319,6 @@ public:
     void FragmentRemoval(HitChargeVector &hitChargeVector, HitChargeVector &filteredHitChargeVector, float &splitPosition);
 
     void SimpleTrackEndFilter(HitChargeVector &hitChargeVector);
-
-    void TrackEndFilter(HitChargeVector &hitChargeVector, DirectionFitObject &directionFitObject);
-
-    void AttemptFragmentRemoval(HitChargeVector &hitChargeVector, std::vector<JumpObject> &jumpsVector, HitChargeVector &filteredHitChargeVector, float &finalSplitPosition);
-
-    void FindLargestJumps(HitChargeVector &hitChargeVector, std::vector<JumpObject> &leftJumps);
-
-    void FindPeakJumps(HitChargeVector &hitChargeVector, std::vector<JumpObject> &peakJumps);
-
-    void FindTrackEndJumps(HitChargeVector &hitChargeVector, std::vector<JumpObject> &trackEndJumps);
-
-    void ParticleSplitting(HitChargeVector &hitChargeVector, DirectionFitObject &fitResult1, DirectionFitObject &fitResult2, bool &splitApplied, SplitObject &splitObject);
-
-    void FindKinkSize(const pandora::Cluster *const pCluster, float &splitPosition, float &kinkSize);
-
-    void CreateCalorimetricSplitHitVector(HitChargeVector &hitChargeVector, std::vector<float> &splitPositions);
 
     void SplitHitCollectionBySize(HitChargeVector &hitChargeVector, float &splitPosition, HitChargeVector &smallHitChargeVector, HitChargeVector &largeHitChargeVector);
 
@@ -348,14 +330,6 @@ public:
 
     void GetQoverWRange(HitChargeVector &hitChargeVector, float &QoverWRange);
 
-    void FindKinkSplit(HitChargeVector &hitChargeVector, std::vector<float> &splitPositions);
-
-    void FindPlateauSplit(HitChargeVector &hitChargeVector, std::vector<JumpObject> &jumpObjects);
-
-    void FindJumpSplit(HitChargeVector &hitChargeVector, std::vector<JumpObject> &jumpObjects);
-
-    void FindBowlSplit(HitChargeVector &hitChargeVector, std::vector<float> &splitPositions);
-
     void FitHitChargeVector(HitChargeVector &hitChargeVector, TrackDirectionTool::DirectionFitObject &fitResult, int numberHitsToConsider=1000000);
 
     void FitHitChargeVector(HitChargeVector &hitChargeVector1, HitChargeVector &hitChargeVector2, TrackDirectionTool::DirectionFitObject &fitResult1, TrackDirectionTool::DirectionFitObject &fitResult2, int numberHitsToConsider=1000000);
@@ -366,12 +340,6 @@ public:
 
     void GetCalorimetricDirection(const pandora::Cluster* pTargetClusterW, DirectionFitObject &finalDirectionFitObject);
 
-    void TestHypothesisOne(DirectionFitObject &directionFitObject);
-
-    void TestHypothesisTwo(DirectionFitObject &directionFitObject);
-
-    void TestHypothesisThree(DirectionFitObject &directionFitObject);
-
     void AddToSlidingFitCache(const pandora::Cluster *const pCluster);
 
     const TwoDSlidingFitResult &GetCachedSlidingFit(const pandora::Cluster *const pCluster) const;
@@ -379,13 +347,16 @@ public:
     static bool SortHitChargeVectorByRL(HitCharge &hitCharge1, HitCharge &hitCharge2);
     static bool SortHitChargeVectorByChargeOverWidth(HitCharge &hitCharge1, HitCharge &hitCharge2);
     static bool SortByDistanceToNN(HitCharge &hitCharge1, HitCharge &hitCharge2);
-    static bool SortJumpVector(JumpObject &jumpObject1, JumpObject &jumpObject2);
-
     void BinHitChargeVector(HitChargeVector &hitChargeVector, HitChargeVector &binnedHitChargeVector);
+
     double DensityCorrection(double &T, double &M);
+
     double BetheBloch(double &T, double &M);
+
     void FillLookupTable(LookupTable &lookupTable, double M);
+
     double GetEnergyfromLength(LookupTable &lookupTable, double &trackLength);
+
     double GetLengthfromEnergy(LookupTable &lookupTable, double &currentEnergy);
 
 
@@ -1109,45 +1080,6 @@ inline void TrackDirectionTool::DirectionFitObject::Print()
     std::cout << "Best chi squared per hit: " << std::min(m_forwardschisquared, m_backwardschisquared)/m_nhits << std::endl;
     std::cout << "Number of hits: " << m_nhits << std::endl;
     std::cout << "Hypothesis: " << m_hypothesis << std::endl;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline TrackDirectionTool::JumpObject::JumpObject(float &longitudinalPosition, float &jumpValue) :
-    m_longitudinalposition(longitudinalPosition),
-    m_jumpvalue(jumpValue),
-    m_openingangle(0.f)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline TrackDirectionTool::JumpObject::JumpObject(float &longitudinalPosition, float &jumpValue, float &openingAngle) :
-    m_longitudinalposition(longitudinalPosition),
-    m_jumpvalue(jumpValue),
-    m_openingangle(openingAngle)
-{
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float TrackDirectionTool::JumpObject::GetLongitudinalPosition()
-{
-    return m_longitudinalposition;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float TrackDirectionTool::JumpObject::GetJumpValue()
-{
-    return m_jumpvalue;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float TrackDirectionTool::JumpObject::GetOpeningAngle()
-{
-    return m_openingangle;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
