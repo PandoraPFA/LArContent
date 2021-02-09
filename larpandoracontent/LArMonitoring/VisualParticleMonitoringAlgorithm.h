@@ -51,6 +51,24 @@ private:
     void VisualizeMCByPdgCode(const LArMCParticleHelper::MCContributionMap &mcMap);
 
     /**
+     *  @brief  Visualize the PFO particles independently (not colour-coded by PID).
+     *
+     *  This function visualises each PFO.
+     *
+     *  @param  pfoList The list of PFOs to visualize
+     **/
+    void VisualizeIndependentPfo(const pandora::PfoList &pfoList);
+
+    /**
+     *  @brief  Visualize the PFO particles according to their PID.
+     *
+     *  This function visualises each PFO according to its particle ID.
+     *
+     *  @param  pfoList The list of PFOs to visualize
+     **/
+    void VisualizePfoByParticleId(const pandora::PfoList &pfoList);
+
+    /**
      *  @brief  Selects the MC particles to consider based on reconstructability criteria
      *
      *  @param  pMCList The input MC particle list
@@ -61,7 +79,11 @@ private:
         LArMCParticleHelper::MCContributionMap &mcMap);
 
     std::string     m_caloHitListName;      ///< Name of input calo hit list
-    bool            m_groupByPdg;           ///< Whether or not to group MC particles by particle id
+    std::string     m_pfoListName;          ///< Name of input PFO list
+    bool            m_visualizeMC;          ///< Whether or not to visualize MC particles
+    bool            m_visualizePfo;         ///< Whether or not to visualize PFOs
+    bool            m_groupMCByPdg;         ///< Whether or not to group MC particles by particle id
+    bool            m_showPfoByPid;         ///< Whether or not to colour PFOs by particle id
     bool            m_isTestBeam;           ///< Whether or not this is a test beam experiment
 };
 

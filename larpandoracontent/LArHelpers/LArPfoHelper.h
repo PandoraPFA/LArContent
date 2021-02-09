@@ -387,6 +387,14 @@ public:
      */
     static bool SortByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
 
+    /**
+     *  @brief  Retrieve a linearised representation of the PFO hierarchy in breadth first order
+     *
+     *  @param  pPfo a PFO in the hierarchy - can be any PFO
+     *  @param  pfoList the output PFO list
+     */
+    static void GetBreadthFirstHierarchyRepresentation(const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &pfoList);
+
 private:
     /**
      *  @brief  Implementation of sliding fit trajectory extraction
