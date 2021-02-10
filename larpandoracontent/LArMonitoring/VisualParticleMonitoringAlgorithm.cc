@@ -24,6 +24,7 @@ VisualParticleMonitoringAlgorithm::VisualParticleMonitoringAlgorithm() :
     m_visualizePfo(false),
     m_groupMCByPdg(false),
     m_showPfoByPid(false),
+    m_showPfoMatchedMC(false),
     m_isTestBeam{false}
 {
 }
@@ -38,15 +39,19 @@ VisualParticleMonitoringAlgorithm::~VisualParticleMonitoringAlgorithm()
 
 StatusCode VisualParticleMonitoringAlgorithm::Run()
 {
-    if (m_visualizeMC)
+#ifdef MONITORING
+    LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
+    if (m_visualizeMC || m_showPfoMatchedMC)
     {
         const CaloHitList *pCaloHitList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
         const MCParticleList *pMCParticleList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
-        LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
         this->MakeSelection(pMCParticleList, pCaloHitList, targetMCParticleToHitsMap);
+    }
 
+    if (m_visualizeMC)
+    {
         if (m_groupMCByPdg)
             this->VisualizeMCByPdgCode(targetMCParticleToHitsMap);
         else
@@ -57,24 +62,29 @@ StatusCode VisualParticleMonitoringAlgorithm::Run()
         const PfoList *pPfoList(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
         if (m_showPfoByPid)
+        {
             this->VisualizePfoByParticleId(*pPfoList);
+        }
         else
-            this->VisualizeIndependentPfo(*pPfoList);
+        {
+            if (m_showPfoMatchedMC)
+                this->VisualizeIndependentPfo(*pPfoList, targetMCParticleToHitsMap);
+            else
+                this->VisualizeIndependentPfo(*pPfoList);
+        }
     }
-
+#endif // MONITORING
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+#ifdef MONITORING
+
 void VisualParticleMonitoringAlgorithm::VisualizeIndependentMC(const LArMCParticleHelper::MCContributionMap &mcMap)
 {
     std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
     std::map<int, Color> colors = {{0, RED}, {1, BLACK}, {2, BLUE}, {3, CYAN}, {4, MAGENTA}, {5, GREEN}, {6, ORANGE}, {7, GRAY}};
-    /*
-    std::map<std::string, Color> colors = {{"mu", MAGENTA}, {"e", RED}, {"gamma", ORANGE}, {"kaon", BLACK}, {"pi", GREEN}, {"p", BLUE},
-        {"other", GRAY}};
-    */
     MCParticleList linearisedMC;
     if (mcMap.empty())
         return;
@@ -136,6 +146,7 @@ void VisualParticleMonitoringAlgorithm::VisualizeMCByPdgCode(const LArMCParticle
     std::map<std::string, CaloHitList> uHits, vHits, wHits;
     for (const auto [ key, value ] : keys)
     {
+        (void)key;  // GCC 7 support, 8+ doesn't need this
         uHits[value] = CaloHitList();
         vHits[value] = CaloHitList();
         wHits[value] = CaloHitList();
@@ -174,20 +185,29 @@ void VisualParticleMonitoringAlgorithm::VisualizeMCByPdgCode(const LArMCParticle
     PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
 
     for (const auto [ key, value ] : keys)
+    {
+        (void)key;  // GCC 7 support, 8+ doesn't need this
         if (!uHits[value].empty())
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits[value], "u_" + value, colors[value]));
+    }
     if (!uHits["other"].empty())
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits["other"], "u_other", colors["other"]));
 
     for (const auto [ key, value ] : keys)
+    {
+        (void)key;  // GCC 7 support, 8+ doesn't need this
         if (!vHits[value].empty())
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vHits[value], "v_" + value, colors[value]));
+    }
     if (!vHits["other"].empty())
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits["other"], "v_other", colors["other"]));
 
     for (const auto [ key, value ] : keys)
+    {
+        (void)key;  // GCC 7 support, 8+ doesn't need this
         if (!wHits[value].empty())
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &wHits[value], "w_" + value, colors[value]));
+    }
     if (!wHits["other"].empty())
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits["other"], "w_other", colors["other"]));
 
@@ -197,6 +217,15 @@ void VisualParticleMonitoringAlgorithm::VisualizeMCByPdgCode(const LArMCParticle
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VisualParticleMonitoringAlgorithm::VisualizeIndependentPfo(const PfoList &pfoList)
+{
+    // ATTN - If we aren't showing matched MC, just pass in an empty MC to hits map
+    LArMCParticleHelper::MCContributionMap mcMap;
+    this->VisualizeIndependentPfo(pfoList, mcMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void VisualParticleMonitoringAlgorithm::VisualizeIndependentPfo(const PfoList &pfoList, const LArMCParticleHelper::MCContributionMap &mcMap)
 {
     std::map<int, Color> colors = {{0, RED}, {1, BLACK}, {2, BLUE}, {3, CYAN}, {4, MAGENTA}, {5, GREEN}, {6, ORANGE}, {7, GRAY}};
     PfoList linearisedPfo;
@@ -224,7 +253,7 @@ void VisualParticleMonitoringAlgorithm::VisualizeIndependentPfo(const PfoList &p
                 uHits.emplace_back(pCaloHit);
             else if (view == HitType::TPC_VIEW_V)
                 vHits.emplace_back(pCaloHit);
-            else
+            else if (view == HitType::TPC_VIEW_W)
                 wHits.emplace_back(pCaloHit);
         }
         std::string suffix{std::to_string(pfoIdx)};
@@ -236,6 +265,41 @@ void VisualParticleMonitoringAlgorithm::VisualizeIndependentPfo(const PfoList &p
         if (!wHits.empty())
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &wHits, "w_" + suffix, colors[colorIdx]));
         colorIdx = colorIdx >= colors.size() ? 0 : colorIdx + 1;
+        if (m_showPfoMatchedMC)
+        {
+            try
+            {
+                const MCParticle *pMC{LArMCParticleHelper::GetMainMCParticle(pPfo)};
+                if (pMC)
+                {
+                    const auto iter{mcMap.find(pMC)};
+                    if (iter != mcMap.end())
+                    {
+                        CaloHitList uHitsMC, vHitsMC, wHitsMC;
+                        for (const CaloHit *pCaloHit : iter->second)
+                        {
+                            const HitType view{pCaloHit->GetHitType()};
+                            if (view == HitType::TPC_VIEW_U)
+                                uHitsMC.emplace_back(pCaloHit);
+                            else if (view == HitType::TPC_VIEW_V)
+                                vHitsMC.emplace_back(pCaloHit);
+                            else if (view == HitType::TPC_VIEW_W)
+                                wHitsMC.emplace_back(pCaloHit);
+                        }
+                        std::string mcSuffix(suffix + "_MC");
+                        if (!uHitsMC.empty())
+                            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHitsMC, "u_" + mcSuffix, colors[colorIdx]));
+                        if (!vHitsMC.empty())
+                            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vHitsMC, "v_" + mcSuffix, colors[colorIdx]));
+                        if (!wHitsMC.empty())
+                            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &wHitsMC, "w_" + mcSuffix, colors[colorIdx]));
+                    }
+                }
+            }
+            catch (const StatusCodeException&)
+            {   // No matched MC, move on
+            }
+        }
         ++pfoIdx;
     }
 
@@ -340,6 +404,7 @@ void VisualParticleMonitoringAlgorithm::MakeSelection(const MCParticleList *pMCL
         LArMCParticleHelper::SelectReconstructableMCParticles(pMCList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcMap);
     }
 }
+#endif // MONITORING
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -355,9 +420,9 @@ StatusCode VisualParticleMonitoringAlgorithm::ReadSettings(const TiXmlHandle xml
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizePFO", m_visualizePfo));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GroupMCByPDG", m_groupMCByPdg));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowPFOByPID", m_showPfoByPid));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowPFOMatchedMC", m_showPfoMatchedMC));
 
     return STATUS_CODE_SUCCESS;
 }
 
 } // namespace lar_content
-

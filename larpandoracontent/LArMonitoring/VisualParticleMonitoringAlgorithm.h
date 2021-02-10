@@ -32,6 +32,7 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+#ifdef MONITORING
     /**
      *  @brief  Visualize all MC particles independently.
      *
@@ -60,6 +61,16 @@ private:
     void VisualizeIndependentPfo(const pandora::PfoList &pfoList);
 
     /**
+     *  @brief  Visualize the PFO particles independently (not colour-coded by PID).
+     *
+     *  This function visualises each PFO.
+     *
+     *  @param  pfoList The list of PFOs to visualize
+     *  @param  mcMap The map from MC particles to calo hits
+     **/
+    void VisualizeIndependentPfo(const pandora::PfoList &pfoList, const LArMCParticleHelper::MCContributionMap &mcMap);
+
+    /**
      *  @brief  Visualize the PFO particles according to their PID.
      *
      *  This function visualises each PFO according to its particle ID.
@@ -77,6 +88,7 @@ private:
      **/
     void MakeSelection(const pandora::MCParticleList *pMCList, const pandora::CaloHitList *pCaloHitList,
         LArMCParticleHelper::MCContributionMap &mcMap);
+#endif // MONITORING
 
     std::string     m_caloHitListName;      ///< Name of input calo hit list
     std::string     m_pfoListName;          ///< Name of input PFO list
@@ -84,10 +96,10 @@ private:
     bool            m_visualizePfo;         ///< Whether or not to visualize PFOs
     bool            m_groupMCByPdg;         ///< Whether or not to group MC particles by particle id
     bool            m_showPfoByPid;         ///< Whether or not to colour PFOs by particle id
+    bool            m_showPfoMatchedMC;     ///< Whether or not to display the best matched MC particle for a PFO
     bool            m_isTestBeam;           ///< Whether or not this is a test beam experiment
 };
 
 } // namespace lar_content
 
 #endif // LAR_VISUAL_PARTICLE_MONITORING_ALGORITHM_H
-
