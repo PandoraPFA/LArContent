@@ -393,7 +393,9 @@ public:
     static bool IsDescendentOf(const pandora::MCParticle *const pMCParticle, const int pdg, const bool isChargeSensitive = false);
 
     /**
-     *  @brief  Retrieve a linearised representation of the MC particle hierarchy in breadth first order
+     *  @brief  Retrieve a linearised representation of the MC particle hierarchy in breadth first order. This iterates over the MC
+     *          hierarchy in a manor that sees primaries at the front of the list, with progressively deeper tiers later in the list.
+     *          This is useful for some visualisation cases.
      *
      *  @param  pMCParticle an MC particle in the hierarchy - can be any particle
      *  @param  mcParticleList the output MC particle list

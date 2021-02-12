@@ -831,10 +831,10 @@ bool LArMCParticleHelper::IsDescendentOf(const MCParticle *const pMCParticle, co
 
 void LArMCParticleHelper::GetBreadthFirstHierarchyRepresentation(const MCParticle *const pMCParticle, MCParticleList &mcParticleList)
 {
-    const MCParticle *const root{LArMCParticleHelper::GetParentMCParticle(pMCParticle)};
+    const MCParticle *const pRoot{LArMCParticleHelper::GetParentMCParticle(pMCParticle)};
     MCParticleList queue;
-    mcParticleList.emplace_back(root);
-    queue.emplace_back(root);
+    mcParticleList.emplace_back(pRoot);
+    queue.emplace_back(pRoot);
 
     while (!queue.empty())
     {
