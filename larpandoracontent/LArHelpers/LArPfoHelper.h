@@ -388,7 +388,9 @@ public:
     static bool SortByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
 
     /**
-     *  @brief  Retrieve a linearised representation of the PFO hierarchy in breadth first order
+     *  @brief  Retrieve a linearised representation of the PFO hierarchy in breadth first order. This iterates over the PFO hierarchy in a
+     *          manor that sees primaries at the front of the list, with progressively deeper tiers later in the list. This is useful for
+     *          some visualisation cases.
      *
      *  @param  pPfo a PFO in the hierarchy - can be any PFO
      *  @param  pfoList the output PFO list

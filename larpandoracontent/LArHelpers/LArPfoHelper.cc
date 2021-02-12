@@ -648,18 +648,18 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
 
 void LArPfoHelper::GetBreadthFirstHierarchyRepresentation(const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &pfoList)
 {
-    const ParticleFlowObject *root{pPfo};
-    PfoList parents{root->GetParentPfoList()};
+    const ParticleFlowObject *pRoot{pPfo};
+    PfoList parents{pRoot->GetParentPfoList()};
     while (!parents.empty())
     {
         if (parents.size() > 1)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-        root = parents.front();
-        parents = root->GetParentPfoList();
+        pRoot = parents.front();
+        parents = pRoot->GetParentPfoList();
     }
     PfoList queue;
-    pfoList.emplace_back(root);
-    queue.emplace_back(root);
+    pfoList.emplace_back(pRoot);
+    queue.emplace_back(pRoot);
 
     while (!queue.empty())
     {
