@@ -38,6 +38,10 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2,
     const Cluster *const)
 {
+    //std::cout << "-------------------------------------------------------------------------------" << std::endl;
+    //std::cout << "I am in CalculateOverlapResul and calculating overlap for a pair of clusters with hits: " << pCluster1->GetNCaloHits() << " " << pCluster2->GetNCaloHits() << std::endl;
+
+
     m_randomNumberGenerator.seed(static_cast<std::mt19937::result_type>(pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
 
     TwoViewTransverseOverlapResult overlapResult;
@@ -45,6 +49,16 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 
     if (overlapResult.IsInitialized())
         this->GetMatchingControl().GetOverlapMatrix().SetOverlapResult(pCluster1, pCluster2, overlapResult);
+
+    /*PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
+    ClusterList cluster1, cluster2;
+    cluster1.push_back(pCluster1);
+    cluster2.push_back(pCluster2);
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(),&cluster1, "Cluster1", RED);
+    PandoraMonitoringApi::VisualizeClusters(this->GetPandora(),&cluster2, "Cluster2", BLUE);
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    std::cout << "-------------------------------------------------------------------------------" << std::endl;*/
+
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -54,12 +68,14 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 {
     UIntSet daughterVolumeIntersection;
     LArGeometryHelper::GetCommonDaughterVolumes(pCluster1, pCluster2, daughterVolumeIntersection);
-
+    //std::cout<<"deb0"<<std::endl;
     if (daughterVolumeIntersection.empty())
         return STATUS_CODE_NOT_FOUND;
+    //std::cout<<"deb1"<<std::endl;
     
     if (this->GetPrimaryAxisDotDriftAxis(pCluster1) > m_maxDotProduct || this->GetPrimaryAxisDotDriftAxis(pCluster2) > m_maxDotProduct)
         return STATUS_CODE_NOT_FOUND;
+    //std::cout<<"deb2"<<std::endl;
 
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
     pCluster1->GetClusterSpanX(xMin1, xMax1);
@@ -68,9 +84,11 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const TwoViewXOverlap twoViewXOverlap(xMin1, xMax1, xMin2, xMax2);
     if (twoViewXOverlap.GetXSpan0() < std::numeric_limits<float>::epsilon() || twoViewXOverlap.GetXSpan1() < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    //std::cout<<"deb3"<<std::endl;
 
     if (twoViewXOverlap.GetTwoViewXOverlapSpan() < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_NOT_FOUND;
+    //std::cout<<"deb4"<<std::endl;
 
     float xOverlapMin(twoViewXOverlap.GetTwoViewXOverlapMin());
     float xOverlapMax(twoViewXOverlap.GetTwoViewXOverlapMax());
@@ -87,9 +105,11 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 
     if (m_minSamples > std::min(overlapHits1.size(), overlapHits2.size()))
         return STATUS_CODE_NOT_FOUND;
+    //std::cout<<"deb5"<<std::endl;
 
     if (1 > m_downsampleFactor)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    //std::cout<<"deb6"<<std::endl;
     const unsigned int nSamples(std::max(m_minSamples, static_cast<unsigned int>(std::min(overlapHits1.size(), overlapHits2.size())) /
         m_downsampleFactor));
 
@@ -123,16 +143,19 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     const float matchingScore(1.f - pvalue);
     if (matchingScore < m_minOverallMatchingScore)
         return STATUS_CODE_NOT_FOUND;
+    //std::cout<<"deb7"<<std::endl;
 
     const unsigned int nLocallyMatchedSamplingPoints(this->CalculateNumberOfLocallyMatchingSamplingPoints(resampledDiscreteProbabilityVector1,
         resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
     const int nComparisons(static_cast<int>(resampledDiscreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
     if (1 > nComparisons)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    //std::cout<<"deb8"<<std::endl;
 
     const float locallyMatchedFraction(static_cast<float>(nLocallyMatchedSamplingPoints) / static_cast<float>(nComparisons));
     if (locallyMatchedFraction < m_minOverallLocallyMatchedFraction)
         return STATUS_CODE_NOT_FOUND;
+    //std::cout<<"deb9"<<std::endl;
 
     overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,
         correlation, twoViewXOverlap);
