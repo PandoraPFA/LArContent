@@ -39,7 +39,7 @@ StatusCode CheatingVertexCreationParticleGunAlgorithm::Run()
 	if (!LArMCParticleHelper::IsPrimary(pMCParticle))
             continue;
         PandoraContentApi::Vertex::Parameters parameters;
-        parameters.m_position = CartesianVector(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), pMCParticle->GetEndpoint().GetZ());
+        parameters.m_position = CartesianVector(pMCParticle->GetVertex().GetX() + m_vertexXCorrection, pMCParticle->GetVertex().GetY(), pMCParticle->GetVertex().GetZ());
         parameters.m_vertexLabel = VERTEX_INTERACTION;
         parameters.m_vertexType = VERTEX_3D;
         const Vertex *pVertex(nullptr);
