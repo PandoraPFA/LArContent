@@ -245,7 +245,7 @@ bool LArMuonLeadingHelper::RejectBremsstrahlungHits(const CaloHit *const pCaloHi
     MCParticleList ancestorMCParticleList;
     LArMCParticleHelper::GetAllAncestorMCParticles(pHitMCParticle, ancestorMCParticleList);
 
-    unsigned int highestTier(0);
+    int highestTier(0);
     const MCParticle *leadingMCParticle(nullptr), *highestTierPhoton(nullptr);
 
     for (const MCParticle *const pAncestorMCParticle : ancestorMCParticleList)
