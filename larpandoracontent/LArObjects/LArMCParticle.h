@@ -167,21 +167,21 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
     {
         pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nuanceCode));
-        //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(isDR));
-        //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(isDecay));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(isDR));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(isDecay));
 
-        binaryFileReader.ReadVariable(isDR);
-        binaryFileReader.ReadVariable(isDecay);
+        //binaryFileReader.ReadVariable(isDR);
+        //binaryFileReader.ReadVariable(isDecay);
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
         pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NuanceCode", nuanceCode));
-        //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("IsDR", isDR));
-        //PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("IsDecay", isDecay));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("IsDR", isDR));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("IsDecay", isDecay));
 
-        xmlFileReader.ReadVariable("IsDR", isDR);
-        xmlFileReader.ReadVariable("IsDecay", isDecay);
+        //xmlFileReader.ReadVariable("IsDR", isDR);
+        //xmlFileReader.ReadVariable("IsDecay", isDecay);
     }
     else
     {
