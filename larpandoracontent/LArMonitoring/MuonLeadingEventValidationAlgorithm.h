@@ -76,7 +76,7 @@ private:
     void GetRecoMuonHits(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
         const pandora::PfoList *const pPfoList, pandora::CaloHitList &recoMuonHitList) const;
 
-    void PrintHits(const pandora::CaloHitList caloHitList, const std::string &stringTag, const Color &colour, bool print) const;
+    void PrintHits(const pandora::CaloHitList caloHitList, const std::string &stringTag, const Color &colour) const;
 
     void PrintHits(const pandora::CaloHitList totalCaloHitList, const pandora::CaloHitList otherShowerCaloHitList, const pandora::CaloHitList otherTrackCaloHitList,
         const pandora::CaloHitList parentTrackCaloHitList, const std::string &stringTag) const;
