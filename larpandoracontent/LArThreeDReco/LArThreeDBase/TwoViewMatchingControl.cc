@@ -206,9 +206,6 @@ void TwoViewMatchingControl<T>::PerformMainLoop()
     std::sort(clusterVector1.begin(), clusterVector1.end(), LArClusterHelper::SortByNHits);
     std::sort(clusterVector2.begin(), clusterVector2.end(), LArClusterHelper::SortByNHits);
 
-    //std::cout << " clusterVector1 size = " << clusterVector1.size() << std::endl;
-    //std::cout << " clusterVector2 size = " << clusterVector2.size() << std::endl;
-
     for (const Cluster *const pCluster1 : clusterVector1)
     {
         for (const Cluster *const pCluster2 : clusterVector2)
