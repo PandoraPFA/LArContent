@@ -335,7 +335,6 @@
     d("LArUndershootTracks",                    UndershootTracksTool)                                                           \
     d("LArTwoViewClearTracks",                  TwoViewClearTracksTool)                                                         \
     d("LArTwoViewLongTracks",                   TwoViewLongTracksTool)                                                          \
-    d("LArTwoViewUndershootTracks",             TwoViewUndershootTracksTool)                                                    \
     d("LArTwoViewSimpleTracks",                 TwoViewSimpleTracksTool)                                                        \
     d("LArEnergyKickFeature",                   EnergyKickFeatureTool)                                                          \
     d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \
