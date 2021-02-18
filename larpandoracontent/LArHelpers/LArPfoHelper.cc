@@ -173,6 +173,38 @@ void LArPfoHelper::GetAllDownstreamPfos(const ParticleFlowObject *const pPfo, Pf
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetAllDownstreamPfos(
+    const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputTrackPfoList, pandora::PfoList &outputLeadingShowerPfoList)
+{
+    if (LArPfoHelper::IsTrack(pPfo))
+    {
+        outputTrackPfoList.emplace_back(pPfo);
+        const PfoList &childPfoList(pPfo->GetDaughterPfoList());
+        for (const ParticleFlowObject *pChild : childPfoList)
+        {
+            if (std::find(outputTrackPfoList.begin(), outputTrackPfoList.end(), pChild) == outputTrackPfoList.end())
+            {
+                const int pdg{std::abs(pChild->GetParticleId())};
+                if (pdg == E_MINUS)
+                {
+                    outputLeadingShowerPfoList.emplace_back(pChild);
+                }
+                else
+                {
+                    outputTrackPfoList.emplace_back(pChild);
+                    LArPfoHelper::GetAllDownstreamPfos(pChild, outputTrackPfoList, outputLeadingShowerPfoList);
+                }
+            }
+        }
+    }
+    else
+    {
+        outputLeadingShowerPfoList.emplace_back(pPfo);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 int LArPfoHelper::GetHierarchyTier(const ParticleFlowObject *const pPfo)
 {
     const ParticleFlowObject *pParentPfo = pPfo;

@@ -248,13 +248,41 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
 
 void LArMCParticleHelper::GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &descendentMCParticleList)
 {
-    const MCParticleList &daughterMCParticleList = pMCParticle->GetDaughterList();
+    const MCParticleList &daughterMCParticleList(pMCParticle->GetDaughterList());
     for (const MCParticle *pDaughterMCParticle : daughterMCParticleList)
     {
         if (std::find(descendentMCParticleList.begin(), descendentMCParticleList.end(), pDaughterMCParticle) == descendentMCParticleList.end())
         {
-            descendentMCParticleList.push_back(pDaughterMCParticle);
+            descendentMCParticleList.emplace_back(pDaughterMCParticle);
             LArMCParticleHelper::GetAllDescendentMCParticles(pDaughterMCParticle, descendentMCParticleList);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMCParticleHelper::GetAllDescendentMCParticles(const MCParticle *const pMCParticle, MCParticleList &descendentTrackParticles,
+    MCParticleList &leadingShowerParticles, MCParticleList &leadingNeutrons)
+{
+    const MCParticleList &daughterMCParticleList(pMCParticle->GetDaughterList());
+    for (const MCParticle *pDaughterMCParticle : daughterMCParticleList)
+    {
+        if (std::find(descendentTrackParticles.begin(), descendentTrackParticles.end(), pDaughterMCParticle) == descendentTrackParticles.end())
+        {
+            const int pdg{std::abs(pDaughterMCParticle->GetParticleId())};
+            if (pdg == E_MINUS || pdg == PHOTON)
+            {
+                leadingShowerParticles.emplace_back(pDaughterMCParticle);
+            }
+            else if (pdg == NEUTRON)
+            {
+                leadingNeutrons.emplace_back(pDaughterMCParticle);
+            }
+            else
+            {
+                descendentTrackParticles.emplace_back(pDaughterMCParticle);
+                LArMCParticleHelper::GetAllDescendentMCParticles(pDaughterMCParticle, descendentTrackParticles, leadingShowerParticles, leadingNeutrons);
+            }
         }
     }
 }
