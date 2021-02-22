@@ -22,7 +22,8 @@ namespace lar_content
 CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
     m_useParentShowerVertex(false),
     m_isDualPhase(false),
-    m_halfWindowLayers(30)
+    m_halfWindowLayers(30),
+    m_maxVertexDisplacementFromTrack(1.f)
 {
 }
 
@@ -247,36 +248,69 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const ParticleFlow
     if (daughterList.empty() || parentList.empty())
         return;
 
-    bool foundVtx(false);
-    float vtxDistanceSquared(0.f);
-    CartesianVector vtxPosition(0.f, 0.f, 0.f);
+    bool foundHighestYVertex(false);
 
-    for (ClusterList::const_iterator dIter = daughterList.begin(), dIterEnd = daughterList.end(); dIter != dIterEnd; ++dIter)
+    float highestYPosition(-std::numeric_limits<float>::max());
+    float closestDistanceSquared(std::numeric_limits<float>::max());
+
+    CartesianVector closestVertexPosition(0.f, 0.f, 0.f);
+    CartesianVector highestYVertexPosition(0.f, 0.f, 0.f);
+
+    for (const Cluster *const pDaughterCluster : daughterList)
     {
-        const Cluster *const pDaughterCluster = *dIter;
+        CaloHitList daughterCaloHitList;
+        pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(daughterCaloHitList);
 
-        for (ClusterList::const_iterator pIter = parentList.begin(), pIterEnd = parentList.end(); pIter != pIterEnd; ++pIter)
+        for (const Cluster *const pParentCluster : parentList)
         {
-            const Cluster *const pParentCluster = *pIter;
+            CaloHitList parentCaloHitList;
+            pParentCluster->GetOrderedCaloHitList().FillCaloHitList(parentCaloHitList);
 
-            CartesianVector closestDaughterPosition(0.f, 0.f, 0.f), closestParentPosition(0.f, 0.f, 0.f);
-            LArClusterHelper::GetClosestPositions(pDaughterCluster, pParentCluster, closestDaughterPosition, closestParentPosition);
-
-            const float closestDistanceSquared((closestDaughterPosition - closestParentPosition).GetMagnitudeSquared());
-
-            if (!foundVtx || closestDistanceSquared < vtxDistanceSquared)
+            for (const CaloHit *const pDaughterCaloHit : daughterCaloHitList)
             {
-                foundVtx = true;
-                vtxDistanceSquared = closestDistanceSquared;
-                vtxPosition = (m_useParentShowerVertex ? closestParentPosition : closestDaughterPosition);
+                const CartesianVector &daughterPosition(pDaughterCaloHit->GetPositionVector());
+
+                for (const CaloHit *const pParentCaloHit : parentCaloHitList)
+                {
+                    const CartesianVector &parentPosition(pParentCaloHit->GetPositionVector());
+                    const float separationSquared((daughterPosition - parentPosition).GetMagnitudeSquared());
+
+                    if (separationSquared < closestDistanceSquared)
+                    {
+                        closestDistanceSquared = separationSquared;
+                        closestVertexPosition = daughterPosition;
+                    }
+
+                    if (separationSquared < (m_maxVertexDisplacementFromTrack * m_maxVertexDisplacementFromTrack))
+                    {
+                        if (daughterPosition.GetY() > highestYPosition)
+                        {
+                            foundHighestYVertex = true;
+                            highestYPosition = daughterPosition.GetY();
+                            highestYVertexPosition = daughterPosition;
+                        }
+                    }
+                }
             }
         }
     }
 
-    if (!foundVtx)
-        return;
+    std::cout << "Vertex Selection" << std::endl;
 
-    this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
+    const CartesianVector &daughterVertex(foundHighestYVertex ? highestYVertexPosition : closestVertexPosition);
+    const CartesianVector &vertexPosition(m_useParentShowerVertex ? LArClusterHelper::GetClosestPosition(daughterVertex, parentList) : daughterVertex);
+
+    PfoList deltaRayList({pDaughterPfo});
+    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &deltaRayList, "DeltaRayPfo", RED);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &highestYVertexPosition, "Hightest Y", BLACK, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &closestVertexPosition, "Closest", VIOLET, 2);
+
+    PfoList cosmicRayList({pParentPfo});
+    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &cosmicRayList, "CosmicRayPfo", BLUE);
+
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    this->SetParticleParameters(vertexPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -325,6 +359,9 @@ StatusCode CosmicRayVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlH
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_halfWindowLayers));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IsDualPhase", m_isDualPhase));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxVertexDisplacementFromTrack", m_maxVertexDisplacementFromTrack));
 
     return STATUS_CODE_SUCCESS;
 }

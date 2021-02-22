@@ -83,6 +83,7 @@ private:
     unsigned int m_halfWindowLayers; ///< number of layers to use for half-window of sliding fit
     std::string m_parentPfoListName; ///< The name of the input pfo list
     std::string m_vertexListName;    ///< The name of the output vertex list
+    float m_maxVertexDisplacementFromTrack;
 };
 
 } // namespace lar_content
