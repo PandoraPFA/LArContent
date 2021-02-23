@@ -44,6 +44,8 @@ public:
     std::string GetClusteringAlgName() const;
     
 private:
+    typedef std::vector<DeltaRayTensorTool*> TensorToolVector;
+    
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
@@ -52,24 +54,16 @@ private:
     void FindCommonMuonParents(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW, pandora::PfoList &commonMuonPfoList) const;
 
     void ExamineOverlapContainer();
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<DeltaRayTensorTool*> TensorToolVector;
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);    
+
     TensorToolVector                  m_algorithmToolVector;          ///< The algorithm tool vector
-    
+    std::string                       m_reclusteringAlgorithmName;
+    unsigned int                      m_minClusterCaloHits;    
     unsigned int                      m_nMaxTensorToolRepeats;
-    unsigned int                      m_minClusterCaloHits;
 
-    std::string  m_reclusteringAlgorithmName;
 };
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline std::string ThreeViewDeltaRayMatchingAlgorithm::GetClusteringAlgName() const
-{
-    return m_reclusteringAlgorithmName;
-}
-    
 //------------------------------------------------------------------------------------------------------------------------------------------
     
 /**
@@ -92,7 +86,14 @@ public:
      */
     virtual bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
 };
-    
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline std::string ThreeViewDeltaRayMatchingAlgorithm::GetClusteringAlgName() const
+{
+    return m_reclusteringAlgorithmName;
+}
+
 } // namespace lar_content
 
 #endif // #ifndef LAR_THREE_VIEW_DELTA_RAY_MATCHING_ALGORITHM_H

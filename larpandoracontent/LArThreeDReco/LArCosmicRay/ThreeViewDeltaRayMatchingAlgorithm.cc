@@ -22,8 +22,8 @@ namespace lar_content
 {
 
 ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm() :
-    m_nMaxTensorToolRepeats(10),
-    m_minClusterCaloHits(5)
+    m_minClusterCaloHits(5),
+    m_nMaxTensorToolRepeats(10)
 {
 }
 
@@ -77,9 +77,21 @@ void ThreeViewDeltaRayMatchingAlgorithm::FindCommonMuonParents(const Cluster *co
 {
     ClusterList consideredClustersU, consideredClustersV, consideredClustersW;
     PfoList nearbyMuonPfosU, nearbyMuonPfosV, nearbyMuonPfosW;
+    
     this->GetNearbyMuonPfos(pClusterU, consideredClustersU, nearbyMuonPfosU);
+
+    if (nearbyMuonPfosU.empty())
+        return;
+    
     this->GetNearbyMuonPfos(pClusterV, consideredClustersV, nearbyMuonPfosV);
+
+    if (nearbyMuonPfosV.empty())
+        return;
+    
     this->GetNearbyMuonPfos(pClusterW, consideredClustersW, nearbyMuonPfosW);
+
+    if (nearbyMuonPfosW.empty())
+        return;    
 
     for (const ParticleFlowObject *const pNearbyMuonU : nearbyMuonPfosU)
     {
@@ -119,10 +131,7 @@ void ThreeViewDeltaRayMatchingAlgorithm::ExamineOverlapContainer()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ClusterRebuilding", m_reclusteringAlgorithmName));
-    
+{   
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MuonPfoListName", m_muonPfoListName));
     
     AlgorithmToolVector algorithmToolVector;
@@ -139,11 +148,14 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xm
         m_algorithmToolVector.push_back(pDeltaRayTensorTool);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));    
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
+        "ClusterRebuilding", m_reclusteringAlgorithmName));    
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinClusterCaloHits", m_minClusterCaloHits));
+    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));    
     
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }
