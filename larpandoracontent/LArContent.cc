@@ -28,7 +28,6 @@
 #include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h"
-#include "larpandoracontent/LArCheating/CheatingVertexCreationParticleGunAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexSelectionAlgorithm.h"
 
 #include "larpandoracontent/LArControlFlow/BdtBeamParticleIdTool.h"
@@ -129,6 +128,7 @@
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewClearTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewLongTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewUndershootTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewOvershootTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
@@ -214,7 +214,6 @@
     d("LArCheatingPfoCreation",                 CheatingPfoCreationAlgorithm)                                                   \
     d("LArCheatingCosmicRayRemoval",            CheatingCosmicRayRemovalAlgorithm)                                              \
     d("LArCheatingVertexCreation",              CheatingVertexCreationAlgorithm)                                                \
-    d("LArCheatingVertexCreationParticleGun",   CheatingVertexCreationParticleGunAlgorithm)                                     \
     d("LArCheatingVertexSelection",             CheatingVertexSelectionAlgorithm)                                               \
     d("LArPcaShowerParticleBuilding",           PcaShowerParticleBuildingAlgorithm)                                             \
     d("LArMaster",                              MasterAlgorithm)                                                                \
@@ -342,6 +341,7 @@
     d("LArTwoViewClearTracks",                  TwoViewClearTracksTool)                                                         \
     d("LArTwoViewLongTracks",                   TwoViewLongTracksTool)                                                          \
     d("LArTwoViewUndershootTracks",             TwoViewUndershootTracksTool)                                                    \
+    d("LArTwoViewOvershootTracks",              TwoViewOvershootTracksTool)                                                     \
     d("LArTwoViewSimpleTracks",                 TwoViewSimpleTracksTool)                                                        \
     d("LArEnergyKickFeature",                   EnergyKickFeatureTool)                                                          \
     d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \
