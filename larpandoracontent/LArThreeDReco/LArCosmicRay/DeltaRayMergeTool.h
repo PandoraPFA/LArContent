@@ -12,7 +12,6 @@
 
 namespace lar_content
 {
-
 /**
  *  @brief  DeltaRayMergeTool class
  */

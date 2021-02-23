@@ -46,7 +46,7 @@ bool DeltaRayMergeTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm
 
 void DeltaRayMergeTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor, bool &mergesMade) const
 {
-    bool mergeMade(true);
+    bool mergeMade(true), finishedTwoViewMerges(false);
 
     while (mergeMade)
     {
@@ -65,52 +65,18 @@ void DeltaRayMergeTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgori
             overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);
             
             for (const TensorType::Element &element : elementList)
-            {
-                if (usedKeyClusters.count(element.GetClusterU()))
-                    continue;
-
                 usedKeyClusters.insert(element.GetClusterU());
-            }
 
             if (elementList.size() < 2)
                 continue;
 
-            if (this->MakeTwoCommonViewMerges(pAlgorithm, elementList))
+            if (!finishedTwoViewMerges && this->MakeTwoCommonViewMerges(pAlgorithm, elementList))
             {
                 mergeMade = true; mergesMade = true;
                 break;
             }
-        }
-    }
 
-    mergeMade = true;
-
-    while (mergeMade)
-    {
-        mergeMade = false;
-
-        ClusterVector sortedKeyClusters;
-        overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
-
-        ClusterSet usedKeyClusters;
-        for (const Cluster *const pKeyCluster : sortedKeyClusters)
-        {
-            if (usedKeyClusters.count(pKeyCluster))
-                continue;
-
-            TensorType::ElementList elementList;
-            overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);
-
-            for (const TensorType::Element &element : elementList)
-            {
-                if (usedKeyClusters.count(element.GetClusterU()))
-                    continue;
-
-                usedKeyClusters.insert(element.GetClusterU());
-            }
-
-            if (elementList.size() < 2)
-                continue;
+            finishedTwoViewMerges = true;
 
             if (this->MakeOneCommonViewMerges(pAlgorithm, elementList))
             {
@@ -125,9 +91,6 @@ void DeltaRayMergeTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgori
 
 bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const
 {
-    const HitTypeVector hitTypeVector1({TPC_VIEW_U, TPC_VIEW_V});
-    const HitTypeVector hitTypeVector2({TPC_VIEW_V, TPC_VIEW_W});
-
     for (const TensorType::Element &element1 : elementList)
     {
         for (const TensorType::Element &element2 : elementList)
@@ -138,11 +101,11 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                 continue;
             }
 
-            for (const HitType &hitType1 : hitTypeVector1)
+            for (const HitType &hitType1 : {TPC_VIEW_U, TPC_VIEW_V})
             {
                 if ((element1.GetCluster(hitType1) == element2.GetCluster(hitType1)))
                 {
-                    for(const HitType &hitType2 : hitTypeVector2)
+                    for(const HitType &hitType2 : {TPC_VIEW_V, TPC_VIEW_W})
                     {
                         if (hitType1 == hitType2)
                             continue;
@@ -194,8 +157,8 @@ bool DeltaRayMergeTool::AreAssociated(const TensorType::Element &element1, const
 
     if (connectedMuonPfoList1.empty() || connectedMuonPfoList2.empty())
     {
-      if (this->IsBrokenCluster(pCluster1, pCluster2))                                                                                                                                   
-          return true;
+        if (this->IsBrokenCluster(pCluster1, pCluster2))                                                                                                                               
+            return true;
     }
 
     for (const ParticleFlowObject *const pConnectedMuon1 : connectedMuonPfoList1)
@@ -309,8 +272,6 @@ void DeltaRayMergeTool::FindVertices(const Pfo *const pCommonMuonPfo, const Clus
 
 bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const
 {
-    const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
-    
     for (const TensorType::Element &element1 : elementList)
     {
         for (const TensorType::Element &element2 : elementList)
@@ -321,7 +282,7 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                 continue;
             }
 
-            for (const HitType &hitType : hitTypeVector)
+            for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
             {
                 if (element1.GetCluster(hitType) == element2.GetCluster(hitType))
                 {
@@ -409,7 +370,5 @@ StatusCode DeltaRayMergeTool::ReadSettings(const TiXmlHandle xmlHandle)
     
     return STATUS_CODE_SUCCESS;
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 } // namespace lar_content
