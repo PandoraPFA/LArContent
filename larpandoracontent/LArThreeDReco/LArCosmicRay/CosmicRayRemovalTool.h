@@ -1,10 +1,11 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemoval.h
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h
  *
- *  @brief  Header file for the cosmic ray removal tool class
+ *  @brief  Header file for the cosmic ray removal tool class.
  *
  *  $Log: $
  */
+
 #ifndef COSMIC_RAY_REMOVAL_TOOL_H
 #define COSMIC_RAY_REMOVAL_TOOL_H 1
 
@@ -45,9 +46,7 @@ private:
      *
      *  @return  whether the checks pass
      */    
-    bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const;
-
-    bool IsMichel(const TensorType::Element &element, const pandora::HitType &hitType) const;
+    bool PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
      *  @brief  Determine whether the cluster under investigation has muon contamination
@@ -57,7 +56,7 @@ private:
      *
      *  @return  whether the cluster contains muon hits to remove
      */        
-    bool IsContaminated(const TensorType::Element &element, const pandora::HitType &hitType) const;
+    bool IsContaminated(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
      *  @brief  Collect hits in the delta ray cluster that lie close to calculated projected positions forming a seed to later grow
@@ -82,7 +81,7 @@ private:
     pandora::StatusCode GrowSeed(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
         pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemantHits) const;
 
-    void CollectHits(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection, const pandora::Cluster *const pDeltaRayCluster,
+    void CollectHitsFromDeltaRay(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection, const pandora::Cluster *const pDeltaRayCluster,
         const float &minDistanceFromMuon, const bool demandCloserToCollected, const pandora::CaloHitList &protectedHits, pandora::CaloHitList &collectedHits) const;
 
     /**
@@ -94,7 +93,7 @@ private:
      *  @param  collectedHits the list of identified delta ray hits
      *  @param  deltaRayRemantHits the list of remainder hits 
      */       
-    void SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
+    void SplitDeltaRayCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
         pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemnantHits) const;
 
     /**
@@ -109,9 +108,13 @@ private:
      */        
     void FragmentRemnant(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const pandora::HitType &hitType, const pandora::Cluster *const pMuonCluster,
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
-
+    
     float m_minSeparation;    ///< The minimum delta ray - parent muon cluster separation
+    unsigned int m_slidingFitWindow;
     float m_minContaminationLength;
+    float m_maxDistanceToHit;
+    unsigned int m_minRemnantClusterSize;
+    float m_maxDistanceToTrack;
 };
 
 } // namespace lar_content

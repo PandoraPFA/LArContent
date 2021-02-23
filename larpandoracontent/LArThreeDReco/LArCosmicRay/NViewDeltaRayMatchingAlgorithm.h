@@ -44,6 +44,8 @@ public:
 
     void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
+    pandora::StatusCode GetMuonCluster(const pandora::PfoList &commonMuonPfoList, const pandora::HitType &hitType, const pandora::Cluster *&pMuonCluster) const;
+    
     pandora::StatusCode PerformThreeViewMatching(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,
         float &reducedChiSquared) const;
     
@@ -59,8 +61,18 @@ public:
     pandora::StatusCode GetProjectedPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         pandora::CartesianPointVector &projectedPositions) const;    
 
-    pandora::StatusCode CollectDeltaRayHitsFromMuon(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+    pandora::StatusCode CollectHitsFromMuon(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         const pandora::Cluster *const pThirdViewCluster, const pandora::ParticleFlowObject *const pParentMuon, pandora::CaloHitList &collectedHits) const;
+
+    pandora::StatusCode ParameteriseMuon(const pandora::ParticleFlowObject *const pParentMuon, const pandora::Cluster *const pDeltaRayCluster,
+        const pandora::HitType &hitType, pandora::CartesianVector &positionOnMuon, pandora::CartesianVector &muonDirection) const;
+
+    pandora::StatusCode ParameteriseMuon(const pandora::ParticleFlowObject *const pParentMuon, const pandora::CartesianPointVector &deltaRayProjectedPositions,
+        const pandora::HitType &hitType, pandora::CartesianVector &positionOnMuon, pandora::CartesianVector &muonDirection) const;
+
+    void CollectHitsFromMuon(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection,
+        const pandora::Cluster *const pMuonCluster, const pandora::CartesianPointVector &projectedPositions, const float &minDistanceFromMuon,
+        const float maxDistanceToCollected, pandora::CaloHitList &collectedHits) const;
 
     void SplitMuonCluster(const std::string &clusterListName, const pandora::Cluster *const pMuonCluster, const pandora::CaloHitList &collectedHits,
         const pandora::Cluster *&pDeltaRayCluster) const;    

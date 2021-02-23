@@ -15,6 +15,7 @@
 
 #include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/NViewDeltaRayMatchingAlgorithm.h"
 
@@ -212,6 +213,25 @@ void NViewDeltaRayMatchingAlgorithm<T>::FillStrayClusterList(const HitType &hitT
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
+StatusCode NViewDeltaRayMatchingAlgorithm<T>::GetMuonCluster(const PfoList &commonMuonPfoList, const HitType &hitType, const Cluster *&pMuonCluster) const
+{
+    if (commonMuonPfoList.size() != 1)
+        return STATUS_CODE_NOT_FOUND;
+
+    ClusterList muonClusterList;
+    LArPfoHelper::GetClusters(commonMuonPfoList.front(), hitType, muonClusterList);
+            
+    if (muonClusterList.size() != 1)
+        return STATUS_CODE_NOT_FOUND;
+
+    pMuonCluster = muonClusterList.front();
+
+    return STATUS_CODE_SUCCESS;
+}
+    
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::GetNearbyMuonPfos(const Cluster *const pCluster, ClusterList &consideredClusters, PfoList &nearbyMuonPfos) const 
 {
     const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
@@ -253,13 +273,8 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Clu
     float chiSquaredSum(0.f);
     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
     XOverlap xThreeViewOverlapObject(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
-    
-    CaloHitList caloHitList1, caloHitList2, caloHitList3;
-    pCluster1->GetOrderedCaloHitList().FillCaloHitList(caloHitList1);
-    pCluster2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
-    pCluster3->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
-    
-    if (this->PerformThreeViewMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xThreeViewOverlapObject) == STATUS_CODE_NOT_FOUND)
+
+    if (this->PerformThreeViewMatching(pCluster1, pCluster2, pCluster3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xThreeViewOverlapObject) == STATUS_CODE_NOT_FOUND)
         return STATUS_CODE_NOT_FOUND;
 
     reducedChiSquared = chiSquaredSum / nSamplingPoints;
@@ -272,13 +287,97 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Clu
 template<typename T>
 StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
     float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints, XOverlap &xOverlapObject) const
-{   
-    CaloHitList caloHitListU, caloHitListV, caloHitListW;    
-    pClusterU->GetOrderedCaloHitList().FillCaloHitList(caloHitListU);
-    pClusterV->GetOrderedCaloHitList().FillCaloHitList(caloHitListV);
-    pClusterW->GetOrderedCaloHitList().FillCaloHitList(caloHitListW);
+{    
+    float xMinU(-std::numeric_limits<float>::max()), xMaxU(+std::numeric_limits<float>::max());
+    float xMinV(-std::numeric_limits<float>::max()), xMaxV(+std::numeric_limits<float>::max());
+    float xMinW(-std::numeric_limits<float>::max()), xMaxW(+std::numeric_limits<float>::max());
 
-    return (this->PerformThreeViewMatching(caloHitListU, caloHitListV, caloHitListW, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xOverlapObject));
+    pClusterU->GetClusterSpanX(xMinU, xMaxU);
+    pClusterV->GetClusterSpanX(xMinV, xMaxV);
+    pClusterW->GetClusterSpanX(xMinW, xMaxW);
+
+    // Need to remove the xPitch from calculations to be consistent with view xSpan calculated in the xOverlapObject
+    const float xMinCentre(std::max(xMinU, std::max(xMinV, xMinW)));
+    const float xMaxCentre(std::min(xMaxU, std::min(xMaxV, xMaxW)));
+    const float xCentreOverlap(xMaxCentre - xMinCentre);
+
+    if (xCentreOverlap < std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_NOT_FOUND;
+    
+    const float xPitch(0.5 * m_xOverlapWindow);
+    const float xMin(std::max(xMinU, std::max(xMinV, xMinW)) - xPitch);
+    const float xMax(std::min(xMaxU, std::min(xMaxV, xMaxW)) + xPitch);
+    const float xOverlap(xMax - xMin);
+
+    const HitType hitTypeU(LArClusterHelper::GetClusterHitType(pClusterU));
+    const HitType hitTypeV(LArClusterHelper::GetClusterHitType(pClusterV));
+    const HitType hitTypeW(LArClusterHelper::GetClusterHitType(pClusterW));
+
+    if (hitTypeU == hitTypeV ||  hitTypeU == hitTypeW || hitTypeV == hitTypeW)
+       return STATUS_CODE_FAILURE;
+
+    const unsigned int nPoints(1 + static_cast<unsigned int>(xOverlap / xPitch));
+
+    chiSquaredSum = 0.f; nSamplingPoints = 0; nMatchedSamplingPoints = 0;
+    
+    for (unsigned int n = 0; n < nPoints; ++n)
+    {
+        const float x(xMin + (xMax - xMin) * (static_cast<float>(n) + 0.5f) / static_cast<float>(nPoints));
+        const float xmin(x - xPitch);
+        const float xmax(x + xPitch);
+
+        try
+        {
+            float zMinU(0.f), zMinV(0.f), zMinW(0.f), zMaxU(0.f), zMaxV(0.f), zMaxW(0.f);
+            pClusterU->GetClusterSpanZ(xmin, xmax, zMinU, zMaxU);
+            pClusterV->GetClusterSpanZ(xmin, xmax, zMinV, zMaxV);
+            pClusterW->GetClusterSpanZ(xmin, xmax, zMinW, zMaxW);
+
+            const float zU(0.5f * (zMinU + zMaxU));
+            const float zV(0.5f * (zMinV + zMaxV));
+            const float zW(0.5f * (zMinW + zMaxW));
+
+            const float dzU(zMaxU - zMinU);
+            const float dzV(zMaxV - zMinV);
+            const float dzW(zMaxW - zMinW);
+            const float dzPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
+            const float zprojU(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeV, hitTypeW, zV, zW));
+            const float zprojV(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeW, hitTypeU, zW, zU));
+            const float zprojW(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitTypeU, hitTypeV, zU, zV));
+
+            ++nSamplingPoints;
+
+            const float deltaSquared(((zU - zprojU) * (zU - zprojU) + (zV - zprojV) * (zV - zprojV) + (zW - zprojW) * (zW - zprojW)) / 3.f);
+            const float sigmaSquared(dzU * dzU + dzV * dzV + dzW * dzW + dzPitch * dzPitch);
+            const float pseudoChi2(deltaSquared / sigmaSquared);
+
+            chiSquaredSum += pseudoChi2;
+            
+            if (pseudoChi2 < m_pseudoChi2Cut)
+                ++nMatchedSamplingPoints;
+        }
+        catch(StatusCodeException &statusCodeException)
+        {
+            if (statusCodeException.GetStatusCode() != STATUS_CODE_NOT_FOUND)
+                return statusCodeException.GetStatusCode();
+
+            continue;
+        }
+    }
+
+    // Apply tensor threshold cuts
+    if (nSamplingPoints == 0)
+        return STATUS_CODE_NOT_FOUND;
+
+    const float matchedFraction(static_cast<float>(nMatchedSamplingPoints) / static_cast<float>(nSamplingPoints));
+
+    if ((matchedFraction < m_minMatchedFraction) || (nMatchedSamplingPoints < m_minMatchedPoints))
+        return STATUS_CODE_NOT_FOUND;
+
+    xOverlapObject = XOverlap(xMinU, xMaxU, xMinV, xMaxV, xMinW, xMaxW, xCentreOverlap);
+
+    return STATUS_CODE_SUCCESS;
 }
    
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -530,15 +629,15 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::GetProjectedPositions(const Cluste
     return STATUS_CODE_SUCCESS;
 }
     
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectDeltaRayHitsFromMuon(const Cluster *const pCluster1, const Cluster *const pCluster2,
+StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster *const pCluster1, const Cluster *const pCluster2,
     const Cluster *const pThirdViewCluster, const ParticleFlowObject *const pParentMuon, CaloHitList &collectedHits) const
 {
     HitType thirdViewHitType(TPC_VIEW_U);
     CartesianPointVector deltaRayProjectedPositions;
+    
     if (!pThirdViewCluster)
     {
         if (this->GetProjectedPositions(pCluster1, pCluster2, deltaRayProjectedPositions) != STATUS_CODE_SUCCESS)
@@ -565,71 +664,23 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectDeltaRayHitsFromMuon(const 
 
         thirdViewHitType = LArClusterHelper::GetClusterHitType(pThirdViewCluster);
     }
-    
-    CartesianPointVector muonProjectedPositions;
-    if (this->ProjectMuonPositions(thirdViewHitType, pParentMuon, muonProjectedPositions) != STATUS_CODE_SUCCESS)
-        return STATUS_CODE_NOT_FOUND;
 
     ClusterList muonClusterList;
     LArPfoHelper::GetClusters(pParentMuon, thirdViewHitType, muonClusterList);
             
     if (muonClusterList.size() != 1)
         return STATUS_CODE_NOT_FOUND;
-    
+
     const Cluster *const pMuonCluster(muonClusterList.front());
 
-    const float projectedHitsFraction(static_cast<float>(muonProjectedPositions.size()) / pMuonCluster->GetNCaloHits());    
-
-    CartesianVector muonDirection(0.f, 0.f, 0.f), positionOnMuon(0.f, 0.f, 0.f);
-    if (projectedHitsFraction < 0.8f)
-    {
-        const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const TwoDSlidingFitResult slidingFitResult(pMuonCluster, 40, slidingFitPitch);
-
-        CartesianVector deltaRayVertex(0.f,0.f,0.f), muonVertex(0.f,0.f,0.f);
-        LArMuonLeadingHelper::GetClosestPositions(deltaRayProjectedPositions, pMuonCluster, deltaRayVertex, muonVertex);
-
-        positionOnMuon = LArMuonLeadingHelper::GetClosestPosition(muonVertex, muonProjectedPositions, pMuonCluster);
-
-	    if (positionOnMuon.GetMagnitude() < std::numeric_limits<float>::epsilon())
-            return STATUS_CODE_NOT_FOUND;
-
-        float rL(0.f), rT(0.f);
-        slidingFitResult.GetLocalPosition(positionOnMuon, rL, rT);
-        slidingFitResult.GetGlobalFitDirection(rL, muonDirection);
-    }
-
-    CaloHitList muonCaloHitList;
-    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);
-
-    bool hitsAdded(true);
-    while (hitsAdded)
-    {
-        hitsAdded = false;
-
-        for (const CaloHit *const pCaloHit : muonCaloHitList)
-        {
-            if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
-                continue;
-
-            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-            
-            const float distanceToDeltaRayHits(std::min(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, deltaRayProjectedPositions),
-                LArMuonLeadingHelper::GetClosestDistance(pCaloHit, collectedHits)));
-            const float distanceToMuonHits((projectedHitsFraction < 0.8f) ? muonDirection.GetCrossProduct(hitPosition - positionOnMuon).GetMagnitude() :
-                LArMuonLeadingHelper::GetClosestDistance(pCaloHit, muonProjectedPositions));
-
-	        if ((std::fabs(distanceToMuonHits - distanceToDeltaRayHits) > std::numeric_limits<float>::epsilon()) && (distanceToDeltaRayHits < distanceToMuonHits)
-                    && (distanceToMuonHits > 1.f) && (distanceToDeltaRayHits < 1.f))
-	        {
-                collectedHits.push_back(pCaloHit);
-                hitsAdded = true;
-            }
-        }
-    }
+    // To avoid fluctuatuions, parameterise the muon track
+    CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
+    this->ParameteriseMuon(pParentMuon, deltaRayProjectedPositions, thirdViewHitType, positionOnMuon, muonDirection);
+    
+    this->CollectHitsFromMuon(positionOnMuon, muonDirection, pMuonCluster, deltaRayProjectedPositions, 1.f, 1.f, collectedHits);
 
     // Catch if delta ray has travelled along muon
-    if ((static_cast<float>(collectedHits.size()) / muonCaloHitList.size()) > 0.05)
+    if ((static_cast<float>(collectedHits.size()) / pMuonCluster->GetNCaloHits()) > 0.05)
         return STATUS_CODE_NOT_FOUND;
 
     return STATUS_CODE_SUCCESS;
@@ -637,36 +688,99 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectDeltaRayHitsFromMuon(const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-/*
-void DeltaRayRemovalTool::SplitCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
-    const HitType &hitType, CaloHitList &collectedHits) const
+template<typename T>
+StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlowObject *const pParentMuon, const Cluster *const pDeltaRayCluster,
+    const HitType &hitType, CartesianVector &positionOnMuon, CartesianVector &muonDirection) const
 {
-    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
+    CaloHitList deltaRayHitList;
+    pDeltaRayCluster->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
+
+    CartesianPointVector deltaRayProjectedPositions;
+    for (const CaloHit *const pCaloHit : deltaRayHitList)
+        deltaRayProjectedPositions.push_back(pCaloHit->GetPositionVector());
+
+    return this->ParameteriseMuon(pParentMuon, deltaRayProjectedPositions, hitType, positionOnMuon, muonDirection);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlowObject *const pParentMuon, const CartesianPointVector &deltaRayProjectedPositions,
+    const HitType &hitType, CartesianVector &positionOnMuon, CartesianVector &muonDirection) const
+{
+    ClusterList muonClusterList;
+    LArPfoHelper::GetClusters(pParentMuon, hitType, muonClusterList);
+            
+    if (muonClusterList.size() != 1)
+        return STATUS_CODE_NOT_FOUND;
+
+    const Cluster *const pMuonCluster(muonClusterList.front());
     
-    if (this->GetMuonCluster(element, hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
-        return;
-  
-    CaloHitList muonCaloHitList;
-    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);
+    CartesianPointVector muonProjectedPositions;
+    if (this->ProjectMuonPositions(hitType, pParentMuon, muonProjectedPositions) != STATUS_CODE_SUCCESS)
+        return STATUS_CODE_NOT_FOUND;
+
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const TwoDSlidingFitResult slidingFitResult(pMuonCluster, 40, slidingFitPitch);
+
+    CartesianVector deltaRayVertex(0.f, 0.f, 0.f), muonVertex(0.f, 0.f, 0.f);
+    LArMuonLeadingHelper::GetClosestPositions(deltaRayProjectedPositions, pMuonCluster, deltaRayVertex, muonVertex);
+
+    positionOnMuon = LArMuonLeadingHelper::GetClosestPosition(muonVertex, muonProjectedPositions, pMuonCluster);
+
+    if (positionOnMuon.GetMagnitude() < std::numeric_limits<float>::epsilon())
+        return STATUS_CODE_NOT_FOUND;
+
+    float rL(0.f), rT(0.f);
+    slidingFitResult.GetLocalPosition(positionOnMuon, rL, rT);
+    slidingFitResult.GetGlobalFitDirection(rL, muonDirection);
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const CartesianVector &positionOnMuon, const CartesianVector &muonDirection,
+    const Cluster *const pMuonCluster, const CartesianPointVector &projectedPositions, const float &minDistanceFromMuon, const float maxDistanceToCollected,
+     CaloHitList &collectedHits) const
+{
+    CaloHitList cosmicRayHitList;
+    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(cosmicRayHitList);
     
-    for (const CaloHit *const pCaloHit : muonCaloHitList)
+    bool hitsAdded(true);
+    while (hitsAdded)
     {
-        if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
+        hitsAdded = false;
+
+	    for (const CaloHit *const pCaloHit : cosmicRayHitList)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*pAlgorithm, pMuonCluster, pCaloHit));
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*pAlgorithm, pDeltaRayCluster, pCaloHit));
+            if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
+                continue;
+
+            const float distanceToCollectedHits(std::min(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, projectedPositions),
+                LArMuonLeadingHelper::GetClosestDistance(pCaloHit, collectedHits)));
+            const float distanceToMuonHits(muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude());
+
+            if ((std::fabs(distanceToMuonHits - distanceToCollectedHits) < std::numeric_limits<float>::epsilon()) || (distanceToMuonHits < minDistanceFromMuon) ||
+                (distanceToCollectedHits > distanceToMuonHits) || (distanceToCollectedHits > maxDistanceToCollected))
+            {
+                continue;
+            }
+                
+            collectedHits.push_back(pCaloHit);
+            hitsAdded = true;
         }
     }
 }
-*/
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::SplitMuonCluster(const std::string &clusterListName, const Cluster *const pMuonCluster,
     const CaloHitList &collectedHits, const Cluster *&pDeltaRayCluster) const
 {
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
-
-    //const Cluster *pDeltaRayCluster(nullptr);
 
     CaloHitList muonCaloHitList;
     pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(muonCaloHitList);

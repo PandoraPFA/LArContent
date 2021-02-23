@@ -28,24 +28,43 @@ RemovalBaseTool::RemovalBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode RemovalBaseTool::GetMuonCluster(const TensorType::Element &element, const HitType &hitType, const Cluster *&pMuonCluster) const
+bool RemovalBaseTool::IsMuonEndpoint(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
+    const bool ignoreHitType, const HitType &hitTypeToIgnore) const
 {
-    const PfoList commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
+    const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
 
-    if (commonMuonPfoList.size() != 1)
-        return STATUS_CODE_NOT_FOUND;
+    for (const HitType &hitType : hitTypeVector)
+    {
+        if (ignoreHitType && (hitType == hitTypeToIgnore))
+            continue;
 
-    ClusterList muonClusterList;
-    LArPfoHelper::GetClusters(commonMuonPfoList.front(), hitType, muonClusterList);
-            
-    if (muonClusterList.size() != 1)
-        return STATUS_CODE_NOT_FOUND;
+        const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
+    
+        if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+            return true;
 
-    pMuonCluster = muonClusterList.front();
+        float xMinDR(-std::numeric_limits<float>::max()), xMaxDR(+std::numeric_limits<float>::max());
+        pDeltaRayCluster->GetClusterSpanX(xMinDR, xMaxDR);
+        
+        float xMinCR(-std::numeric_limits<float>::max()), xMaxCR(+std::numeric_limits<float>::max());
+        pMuonCluster->GetClusterSpanX(xMinCR, xMaxCR);
 
-    return STATUS_CODE_SUCCESS;
-}
+        if ((xMinDR < xMinCR) || (xMaxDR > xMaxCR))
+            return true;
+	
+        float zMinDR(-std::numeric_limits<float>::max()), zMaxDR(+std::numeric_limits<float>::max());
+        pDeltaRayCluster->GetClusterSpanZ(xMinDR, xMaxDR, zMinDR, zMaxDR);
+        
+        float zMinCR(-std::numeric_limits<float>::max()), zMaxCR(+std::numeric_limits<float>::max());
+        pMuonCluster->GetClusterSpanZ(xMinCR, xMaxCR, zMinCR, zMaxCR);
 
+        if ((zMinDR < zMinCR) || (zMaxDR > zMaxCR))
+            return true;
+    }
+
+    return false;
+}  
+    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType &hitType, const TensorType::ElementList &elementList) const
@@ -162,7 +181,7 @@ StatusCode RemovalBaseTool::ProjectDeltaRayPositions(ThreeViewDeltaRayMatchingAl
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
+    
 StatusCode RemovalBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
