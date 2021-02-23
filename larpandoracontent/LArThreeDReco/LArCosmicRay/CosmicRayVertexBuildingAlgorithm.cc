@@ -295,11 +295,12 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const ParticleFlow
         }
     }
 
+    const CartesianVector &daughterVertex(foundHighestYVertex ? highestYVertexPosition : closestVertexPosition);
+    const CartesianVector &vertexPosition(m_useParentShowerVertex ? LArClusterHelper::GetClosestPosition(daughterVertex, parentList) : daughterVertex);    
+
+    /*
     std::cout << "Vertex Selection" << std::endl;
     
-    const CartesianVector &daughterVertex(foundHighestYVertex ? highestYVertexPosition : closestVertexPosition);
-    const CartesianVector &vertexPosition(m_useParentShowerVertex ? LArClusterHelper::GetClosestPosition(daughterVertex, parentList) : daughterVertex);
-
     PfoList deltaRayList({pDaughterPfo});
     PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &deltaRayList, "DeltaRayPfo", RED);
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &highestYVertexPosition, "Hightest Y", BLACK, 2);
@@ -309,7 +310,8 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const ParticleFlow
     PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &cosmicRayList, "CosmicRayPfo", BLUE);
     
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
+    */
+    
     this->SetParticleParameters(vertexPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
 }
 
