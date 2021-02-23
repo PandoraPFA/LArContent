@@ -679,8 +679,11 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster 
     
     this->CollectHitsFromMuon(positionOnMuon, muonDirection, pMuonCluster, deltaRayProjectedPositions, 1.f, 1.f, collectedHits);
 
+    if (collectedHits.empty())
+        return STATUS_CODE_NOT_FOUND;
+
     // Catch if delta ray has travelled along muon
-    if ((static_cast<float>(collectedHits.size()) / pMuonCluster->GetNCaloHits()) > 0.05)
+    if ((static_cast<float>(collectedHits.size()) / pMuonCluster->GetNCaloHits()) > 0.05f)
         return STATUS_CODE_NOT_FOUND;
 
     return STATUS_CODE_SUCCESS;
@@ -1080,7 +1083,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xml
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class NViewDeltaRayMatchingAlgorithm<ThreeViewMatchingControl<DeltaRayOverlapResult> >;
-template class NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> >;
+template class NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult> >;
 
 } // namespace lar_content
 

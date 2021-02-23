@@ -28,10 +28,10 @@ class DeltaRayMatrixTool;
 /**
  *  @brief  TwoViewDeltaRayMatchingAlgorithm class
  */
-class TwoViewDeltaRayMatchingAlgorithm : public NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> >
+class TwoViewDeltaRayMatchingAlgorithm : public NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult> >
 {
 public:
-    typedef NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> > BaseAlgorithm;
+    typedef NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult> > BaseAlgorithm;
     typedef TwoViewDeltaRayMatchingAlgorithm::MatchingType::MatrixType MatrixType;
     typedef std::vector<pandora::HitType> HitTypeVector;
     
@@ -43,10 +43,6 @@ public:
     HitTypeVector GetHitTypeVector();
 
     const pandora::Cluster *GetCluster(const MatrixType::Element &element, const pandora::HitType &hitType);
-
-    void GetConnectedElements(const pandora::Cluster *const pClusterA, const bool hasAssociatedMuon, MatrixType::ElementList &elementList, pandora::ClusterSet &checkedClusters);
-
-    void GetUnambiguousElements(const bool hasAssociatedMuon, MatrixType::ElementList &elementList);
 
     bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
 
@@ -63,10 +59,10 @@ private:
     void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3);
 
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,
-        const pandora::CaloHitList &projectedHits, TrackTwoViewTopologyOverlapResult &overlapResult) const;    
+        const pandora::CaloHitList &projectedHits, TwoViewDeltaRayOverlapResult &overlapResult) const;    
     
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        TrackTwoViewTopologyOverlapResult &overlapResult) const;
+        TwoViewDeltaRayOverlapResult &overlapResult) const;
 
     void FindCommonMuonParents(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, pandora::PfoList &commonMuonPfoList) const;
     

@@ -374,7 +374,7 @@ void LArMuonLeadingHelper::AddHits(const MCParticle *const pLeadingMCParticle, c
             if (std::find(leadingHitList.begin(), leadingHitList.end(), pPostBremsstrahlungHit) != leadingHitList.end())
                 continue;
             
-            const float separationDistance(LArClusterHelper::GetClosestDistanceWithShiftedHits(pPostBremsstrahlungHit, leadingHitList));
+            const float separationDistance(LArClusterHelper::GetClosestDistance(pPostBremsstrahlungHit->GetPositionVector(), leadingHitList));
 
             if (separationDistance < maxBremsstrahlungSeparation)
             {

@@ -57,20 +57,11 @@ bool TwoViewDeltaRayMergeTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgo
             if (usedKeyClusters.count(pKeyCluster))
                 continue;
 
-            ClusterSet checkedClusters;
             MatrixType::ElementList elementList;
-            pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
-
-            if (elementList.empty())
-                continue;
+            overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList);
 
             for (const MatrixType::Element &element : elementList)
-	        {
-                if (usedKeyClusters.count(element.GetCluster1()))
-                    continue;
-
                 usedKeyClusters.insert(element.GetCluster1());
-            }
 
             if (this->PickOutGoodMatches(pAlgorithm, elementList))
             {
@@ -88,7 +79,7 @@ bool TwoViewDeltaRayMergeTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorit
     bool found(false);   
         
     float highestHitCount(-std::numeric_limits<float>::max()), bestChiSquared(0.f);
-    MatrixType::Element bestElement(nullptr, nullptr, TrackTwoViewTopologyOverlapResult(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f), PfoList(), nullptr, ClusterList(), 0.f));
+    MatrixType::Element bestElement(nullptr, nullptr, TwoViewDeltaRayOverlapResult(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f), PfoList(), nullptr, ClusterList(), 0.f));
     
     for (const MatrixType::Element &element : elementList)
     {            

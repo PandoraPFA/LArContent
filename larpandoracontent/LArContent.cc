@@ -67,7 +67,6 @@
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/ClearDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
@@ -80,11 +79,9 @@
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayRemovalTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/OneViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewClearDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewCosmicRayRemovalTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayMergeTool.h"
-#include "larpandoracontent/LArThreeDReco/LArCosmicRay/TwoViewDeltaRayRecoveryTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/UnambiguousDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/UnattachedDeltaRaysAlgorithm.h"
 
@@ -327,15 +324,12 @@
     d("LArTransverseMatrixVisualization",       TransverseMatrixVisualizationTool)                                              \
     d("LArTransverseTensorVisualization",       TransverseTensorVisualizationTool)                                              \
     d("LArAmbiguousDeltaRay",                   AmbiguousDeltaRayTool)                                                          \
-    d("LArClearDeltaRay",                       ClearDeltaRayTool)                                                              \
     d("LArCosmicRayRemoval",                    CosmicRayRemovalTool)                                                           \
     d("LArDeltaRayRemoval",                     DeltaRayRemovalTool)                                                            \
     d("LArDeltaRayMerge",                       DeltaRayMergeTool)                                                              \
     d("LArTwoViewDeltaRayMerge",                TwoViewDeltaRayMergeTool)                                                       \
     d("LArTwoViewCosmicRayRemoval",             TwoViewCosmicRayRemovalTool)                                                    \
     d("LArUnambiguousDeltaRay",                 UnambiguousDeltaRayTool)                                                        \
-    d("LArTwoViewClearDeltaRay",                TwoViewClearDeltaRayTool)                                                       \
-    d("LArTwoViewDeltaRayRecovery",             TwoViewDeltaRayRecoveryTool)                                                    \
     d("LArDeltaRayTensorVisualization",         DeltaRayTensorVisualizationTool)                                                \
     d("LArDeltaRayMatrixVisualization",         DeltaRayMatrixVisualizationTool)                                                \
     d("LArCheatingBeamParticleId",              CheatingBeamParticleIdTool)                                                     \

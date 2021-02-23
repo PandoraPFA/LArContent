@@ -155,11 +155,15 @@ public:
      */
     static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
 
+    /**
+     *  @brief  Get closest distance between a specified position vector and the hits in a specified calo hit list
+     *
+     *  @param  position the position vector
+     *  @param  caloHitList the list of calo hits
+     *
+     *  @return the closest distance
+     */
     static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::CaloHitList &caloHitList);
-
-    static float GetClosestDistanceWithShiftedHits(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList);
-
-    static float GetClosestDistanceWithShiftedHits(const pandora::CaloHitList &caloHitList1, const pandora::CaloHitList &caloHitList2);
 
     /**
      *  @brief  Get closest position in a list of clusters to a specified input position vector
@@ -180,6 +184,16 @@ public:
      *  @return the closest position
      */
     static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
+
+    /**
+     *  @brief  Get closest position of hits in a given calo hit list to a specified input position vector
+     *
+     *  @param  position the position vector
+     *  @param  caloHitList the list of calo hits
+     *
+     *  @return the closest position
+     */
+    static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::CaloHitList &caloHitList);
 
     /**
      *  @brief  Get pair of closest positions for a pair of clusters

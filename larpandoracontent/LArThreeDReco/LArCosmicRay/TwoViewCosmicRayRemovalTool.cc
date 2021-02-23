@@ -42,14 +42,10 @@ bool TwoViewCosmicRayRemovalTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pA
     {        
         if (usedKeyClusters.count(pKeyCluster))
             continue;
-
-        ClusterSet checkedClusters;
-        MatrixType::ElementList elementList;        
-        pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
-
-        if (elementList.empty())
-            continue;
         
+        MatrixType::ElementList elementList;        
+        overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList);
+
         for (const MatrixType::Element &element : elementList)
             usedKeyClusters.insert(element.GetCluster1());
 

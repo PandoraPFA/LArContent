@@ -14,7 +14,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult() :
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult() :
     m_isInitialized(false),
     m_xOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f)),
     m_commonMuonPfoList(),
@@ -25,7 +25,7 @@ TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult(const TwoViewXOverlap &xOverlap, const PfoList &commonMuonPfoList,
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult(const TwoViewXOverlap &xOverlap, const PfoList &commonMuonPfoList,
     const Cluster *const pBestMatchedCluster, const ClusterList &matchedClusterList, const float reducedChiSquared) :
     m_isInitialized(true),
     m_xOverlap(xOverlap),
@@ -38,25 +38,25 @@ TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult(const TwoVi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewTopologyOverlapResult::TrackTwoViewTopologyOverlapResult(const TrackTwoViewTopologyOverlapResult &rhs) :
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult(const TwoViewDeltaRayOverlapResult &rhs) :
     m_isInitialized(rhs.m_isInitialized),
     m_xOverlap(rhs.GetXOverlap()),
     m_commonMuonPfoList(rhs.GetCommonMuonPfoList()),
     m_pBestMatchedCluster(rhs.GetBestMatchedCluster()),
     m_matchedClusterList(rhs.GetMatchedClusterList()),
-    m_reducedChiSquared(std::numeric_limits<float>::max())
+    m_reducedChiSquared(rhs.GetReducedChiSquared())
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewTopologyOverlapResult::~TrackTwoViewTopologyOverlapResult()
+TwoViewDeltaRayOverlapResult::~TwoViewDeltaRayOverlapResult()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *TrackTwoViewTopologyOverlapResult::GetBestMatchedAvailableCluster() const
+const Cluster *TwoViewDeltaRayOverlapResult::GetBestMatchedAvailableCluster() const
 {
     unsigned int highestNHits(0);
     const Cluster *pBestMatchedCluster(nullptr);
@@ -78,7 +78,7 @@ const Cluster *TrackTwoViewTopologyOverlapResult::GetBestMatchedAvailableCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewTopologyOverlapResult &TrackTwoViewTopologyOverlapResult::operator=(const TrackTwoViewTopologyOverlapResult &rhs)
+TwoViewDeltaRayOverlapResult &TwoViewDeltaRayOverlapResult::operator=(const TwoViewDeltaRayOverlapResult &rhs)
 {
     m_isInitialized = rhs.m_isInitialized;
     m_xOverlap = rhs.GetXOverlap();
@@ -92,7 +92,7 @@ TrackTwoViewTopologyOverlapResult &TrackTwoViewTopologyOverlapResult::operator=(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackTwoViewTopologyOverlapResult::operator<(const TrackTwoViewTopologyOverlapResult &rhs) const
+bool TwoViewDeltaRayOverlapResult::operator<(const TwoViewDeltaRayOverlapResult &rhs) const
 {
     if (this == &rhs)
         return false;
