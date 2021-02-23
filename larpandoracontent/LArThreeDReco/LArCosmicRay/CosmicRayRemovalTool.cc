@@ -53,7 +53,7 @@ bool CosmicRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgori
         overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);
         
         for (const TensorType::Element &element : elementList)
-            usedKeyClusters.insert(element.GetCluster(TPC_VIEW_U));
+            usedKeyClusters.insert(element.GetClusterU());
 
         this->ExamineConnectedElements(pAlgorithm, elementList, changesMade);
     }
