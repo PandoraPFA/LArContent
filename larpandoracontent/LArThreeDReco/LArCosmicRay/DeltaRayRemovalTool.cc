@@ -50,9 +50,9 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
         overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);
         
         for (const TensorType::Element &element : elementList)
-            usedKeyClusters.insert(element.GetCluster(TPC_VIEW_U));
+            usedKeyClusters.insert(element.GetClusterU());
 
-        this->RemoveDeltaRayHits(pAlgorithm, elementList, changesMade);
+        this->ExamineConnectedElements(pAlgorithm, elementList, changesMade);
     }
     
     return changesMade;
@@ -60,7 +60,7 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayRemovalTool::RemoveDeltaRayHits(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
+void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
     bool &changesMade) const
 {
     ClusterSet modifiedClusters, checkedClusters;
