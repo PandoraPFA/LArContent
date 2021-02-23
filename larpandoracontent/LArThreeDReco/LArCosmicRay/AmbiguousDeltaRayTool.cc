@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.cc
  *
- *  @brief  Implementation of the delta ray merge tool class.
+ *  @brief  Implementation of the ambiguous delta ray tool class.
  *
  *  $Log: $
  */
@@ -58,12 +58,7 @@ void AmbiguousDeltaRayTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAl
             overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);            
 
             for (const TensorType::Element &element : elementList)
-            {
-                if (usedKeyClusters.count(element.GetClusterU()))
-                    continue;
-
                 usedKeyClusters.insert(element.GetClusterU());
-            }
 
             if (elementList.size() < 2)
                 continue;
@@ -97,7 +92,7 @@ bool AmbiguousDeltaRayTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorith
 
         for (const TensorType::Element &element : elementList)
         {            
-            const Cluster *const pClusterU(element.GetCluster(TPC_VIEW_U)), *const pClusterV(element.GetCluster(TPC_VIEW_V)), *const pClusterW(element.GetCluster(TPC_VIEW_W));
+            const Cluster *const pClusterU(element.GetClusterU()), *const pClusterV(element.GetClusterV()), *const pClusterW(element.GetClusterW());
             
             if (usedClusters.count(pClusterU) || usedClusters.count(pClusterV) || usedClusters.count(pClusterW))
                 continue;
