@@ -296,8 +296,8 @@ void TrainedVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &c
     }
 
     const float xSpan(this->GetCoordinateSpan(xMax, xMin));
-    const float ySpan(this->GetCoordinateSpan(yMax, zMin));
-    const float zSpan(this->GetCoordinateSpan(yMax, zMin));
+    const float ySpan(this->GetCoordinateSpan(yMax, yMin));
+    const float zSpan(this->GetCoordinateSpan(zMax, zMin));
 
     // Calculate the volume and longitudinality of the event (ySpan often 0 - to be investigated).
     if ((xSpan > std::numeric_limits<float>::epsilon()) && (ySpan > std::numeric_limits<float>::epsilon()))
