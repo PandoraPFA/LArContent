@@ -66,7 +66,12 @@ private:
      *
      *  @param  pPfo the daughter Pfo
      */
-    void BuildCosmicRayDaughter(const pandora::ParticleFlowObject *const pPfo) const;
+    //void BuildCosmicRayDaughter(const pandora::ParticleFlowObject *const pPfo) const;
+
+    void BuildCosmicRayDaughter(const LArPointingClusterMap &pointingClusterMap, const pandora::ParticleFlowObject *const pDaughterPfo) const;
+    
+    pandora::CartesianVector ProjectPosition(const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineEnd,
+        const pandora::CartesianVector &position) const;
 
     /**
      *  @brief  Set the vertex and direction of the Pfos

@@ -374,6 +374,43 @@ void LArClusterHelper::GetClosestPositions(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArClusterHelper::GetClosestPositions(const ClusterList &clusterList1, const ClusterList &clusterList2, CartesianVector &outputPosition1,
+    CartesianVector &outputPosition2)
+{
+    bool distanceFound(false);
+    float minDistanceSquared(std::numeric_limits<float>::max());
+
+    CartesianVector closestPosition1(0.f, 0.f, 0.f), closestPosition2(0.f, 0.f, 0.f);
+
+    for (const Cluster *const pCluster1 : clusterList1)
+    {
+        for (const Cluster *const pCluster2 : clusterList2)
+        {
+            CartesianVector positionVector1(0.f, 0.f, 0.f), positionVector2(0.f, 0.f, 0.f);
+            
+            LArClusterHelper::GetClosestPositions(pCluster1, pCluster2, positionVector1, positionVector2);
+
+            const float distanceSquared((positionVector1 - positionVector2).GetMagnitudeSquared());
+
+            if (distanceSquared < minDistanceSquared)
+            {
+                minDistanceSquared = distanceSquared;
+                closestPosition1 = positionVector1;
+                closestPosition2 = positionVector2;
+                distanceFound = true;
+            }
+        }
+    }
+
+    if (!distanceFound)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    outputPosition1 = closestPosition1;
+    outputPosition2 = closestPosition2;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArClusterHelper::GetClusterBoundingBox(const Cluster *const pCluster, CartesianVector &minimumCoordinate, CartesianVector &maximumCoordinate)
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
