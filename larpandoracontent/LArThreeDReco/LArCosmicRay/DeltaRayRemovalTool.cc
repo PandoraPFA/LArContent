@@ -93,7 +93,10 @@ void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgo
                 continue;
             
             if (deltaRayHits.empty())
-                continue;
+            {
+                std::cout << "ISOBEL THIS SHOULDN'T HAPPEN" << std::endl;
+                throw;
+            }
 
             modifiedClusters.insert(pDeltaRayCluster);
 

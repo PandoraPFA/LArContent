@@ -57,20 +57,11 @@ bool TwoViewDeltaRayMergeTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgo
             if (usedKeyClusters.count(pKeyCluster))
                 continue;
 
-            ClusterSet checkedClusters;
             MatrixType::ElementList elementList;
-            pAlgorithm->GetConnectedElements(pKeyCluster, true, elementList, checkedClusters);
-
-            if (elementList.empty())
-                continue;
+            overlapMatrix.GetConnectedElements(pKeyCluster, true, elementList);
 
             for (const MatrixType::Element &element : elementList)
-	        {
-                if (usedKeyClusters.count(element.GetCluster1()))
-                    continue;
-
                 usedKeyClusters.insert(element.GetCluster1());
-            }
 
             if (this->PickOutGoodMatches(pAlgorithm, elementList))
             {
