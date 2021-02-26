@@ -31,7 +31,7 @@ ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm() :
 
 bool ThreeViewDeltaRayMatchingAlgorithm::DoesClusterPassTesorThreshold(const Cluster *const pCluster) const
 {
-    return (pCluster->GetNCaloHits() < m_minClusterCaloHits);
+    return (pCluster->GetNCaloHits() >= m_minClusterCaloHits);
 }    
 
 //------------------------------------------------------------------------------------------------------------------------------------------
