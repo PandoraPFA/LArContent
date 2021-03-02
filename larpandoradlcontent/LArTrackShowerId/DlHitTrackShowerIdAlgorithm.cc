@@ -139,7 +139,9 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
     const float eps{1.1920929e-7};  // Python float epsilon, used in image padding
 
     if (m_visualize)
+    {
         PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+    }
 
     for (const std::string listName : m_caloHitListNames)
     {
@@ -294,7 +296,9 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
     }
 
     if (m_visualize)
+    {
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
