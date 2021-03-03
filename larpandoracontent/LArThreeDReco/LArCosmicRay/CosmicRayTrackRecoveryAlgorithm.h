@@ -173,6 +173,7 @@ private:
     float          m_clusterMinSpanZ;           ///<
     float          m_clusterMinOverlapX;        ///<
     float          m_clusterMaxDeltaX;          ///<
+    unsigned int   m_clusterMinHits;            ///<
 
     std::string    m_inputClusterListNameU;     ///<
     std::string    m_inputClusterListNameV;     ///<
