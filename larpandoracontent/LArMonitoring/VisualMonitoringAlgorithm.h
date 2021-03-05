@@ -91,6 +91,7 @@ private:
     pandora::StringVector   m_vertexListNames;          ///< Names of vertex lists to show
 
     bool                    m_displayEvent;             ///< Whether to display the event
+    std::string             m_saveEventPath;            ///< The path to save event displays to. m_displayEvent must also be set.
     bool                    m_showDetector;             ///< Whether to display the detector geometry
     std::string             m_detectorView;             ///< The detector view, default, xy or xz
 

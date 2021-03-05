@@ -381,6 +381,27 @@ public:
     static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const MCRelationMap &mcToTargetMCMap,
         pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float maxPhotonPropagation);
 
+    /**
+     *  @brief  Determine if the MC particle is a descendent of a particle with the given PDG code.
+     *
+     *  @param  pMCParticle the descendent particle 
+     *  @param  pdg the PDG code of the ancestor particle
+     *  @param  isChargeSensitive whether or not to consider the sign of the PDG code when looking for the ancestor (default: false)
+     *
+     *  @return true if the MC particle has an ancestor with the matching PDG code, false otherwise
+     */
+    static bool IsDescendentOf(const pandora::MCParticle *const pMCParticle, const int pdg, const bool isChargeSensitive = false);
+
+    /**
+     *  @brief  Retrieve a linearised representation of the MC particle hierarchy in breadth first order. This iterates over the MC
+     *          hierarchy in a manor that sees primaries at the front of the list, with progressively deeper tiers later in the list.
+     *          This is useful for some visualisation cases.
+     *
+     *  @param  pMCParticle an MC particle in the hierarchy - can be any particle
+     *  @param  mcParticleList the output MC particle list
+     */
+    static void GetBreadthFirstHierarchyRepresentation(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &mcParticleList);
+
 private:
     /**
      *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)

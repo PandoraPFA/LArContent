@@ -8,9 +8,7 @@
 #ifndef LAR_TRACK_SHOWER_ID_FEATURE_TOOLS_H
 #define LAR_TRACK_SHOWER_ID_FEATURE_TOOLS_H 1
 
-//#include "larpandoracontent/LArObjects/LArSupportVectorMachine.h"
-#include "larpandoracontent/LArObjects/LArAdaBoostDecisionTree.h"
-#include <Eigen/Dense>
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
 namespace lar_content
 {
@@ -18,8 +16,10 @@ namespace lar_content
 typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::Cluster *const>  ClusterCharacterisationFeatureTool;
 typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::ParticleFlowObject *const>  PfoCharacterisationFeatureTool;
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
- *   @brief  ShowerFitFeatureTool to calculate variables related to sliding shower fit
+ *   @brief  TwoDShowerFitFeatureTool to calculate variables related to sliding shower fit
  */
 class TwoDShowerFitFeatureTool : public ClusterCharacterisationFeatureTool
 {
@@ -49,10 +49,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  LinearFitFeatureTool class for the calculation of variables related to sliding linear fit
+ *   @brief  TwoDLinearFitFeatureTool class for the calculation of variables related to 2d sliding linear fit
  */
 class TwoDLinearFitFeatureTool : public ClusterCharacterisationFeatureTool
 {
@@ -86,10 +85,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  VertexDistanceFeatureTool class for the calculation of distance to neutrino vertex
+ *   @brief  TwoDVertexDistanceFeatureTool class for the calculation of 2d distance to neutrino vertex
  */
 class TwoDVertexDistanceFeatureTool : public ClusterCharacterisationFeatureTool
 {
@@ -117,9 +115,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
+
 /**
- *   @brief  class for the calculation of curvature/"wiggliness" of pfos
+ *   @brief  PfoHierarchyFeatureTool for calculation of features relating to reconstructed particle hierarchy
  */
 class PfoHierarchyFeatureTool : public PfoCharacterisationFeatureTool
 {
@@ -133,21 +131,12 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
- /**
-   *  @brief  Calculation of how much a pfo wiggles
-   *
-   *  @param  pAlgorithm                   address of the calling algorithm
-   *  @param  pInputPfo                    PFO that we are characterising
-   */
-
 };
-//------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  LinearFitFeatureTool class for the calculation of variables related to sliding linear fit
+ *   @brief  ThreeDLinearFitFeatureTool class for the calculation of variables related to 3d sliding linear fit
  */
 class ThreeDLinearFitFeatureTool : public PfoCharacterisationFeatureTool
 {
@@ -181,10 +170,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  VertexDistanceFeatureTool class for the calculation of distance to neutrino vertex
+ *   @brief  ThreeDVertexDistanceFeatureTool class for the calculation of 3d distance to neutrino vertex
  */
 class ThreeDVertexDistanceFeatureTool : public PfoCharacterisationFeatureTool
 {
@@ -198,14 +186,12 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  VertexDistanceFeatureTool class for the calculation of distance to neutrino vertex
+ *   @brief  ThreeDOpeningAngleFeatureTool class for the calculation of distance to neutrino vertex
  */
 class ThreeDOpeningAngleFeatureTool : public PfoCharacterisationFeatureTool
 {
@@ -219,19 +205,36 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    void Divide3DCaloHitList(const pandora::Algorithm *const pAlgorithm, pandora::CaloHitList &threeDCaloHitList,
+
+    /**
+     *  @brief  Obtain positions at the vertex and non-vertex end of a list of three dimensional calo hits
+     *
+     *  @param  threeDCaloHitList the list of three dimensional calo hits
+     *  @param  pointVectorStart to receive the positions at the start/vertex region
+     *  @param  pointVectorEnd to receive the positions at the end region (opposite end to vertex)
+     */
+    void Divide3DCaloHitList(const pandora::Algorithm *const pAlgorithm, const pandora::CaloHitList &threeDCaloHitList,
         pandora::CartesianPointVector &pointVectorStart, pandora::CartesianPointVector &pointVectorEnd);
 
+    /**
+     *  @brief  Use the results of principal component analysis to calculate an opening angle
+     *
+     *  @param  principal the principal axis
+     *  @param  secondary the secondary axis
+     *  @param  eigenValues the eigenvalues
+     *
+     *  @return the opening angle
+     */
     float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary, const pandora::CartesianVector &eigenValues) const;
 
-    float m_hitFraction;           ///< fraction of hits in start and end of pfo
+    float   m_hitFraction;          ///< Fraction of hits in start and end of pfo
+    float   m_defaultValue;         ///< Default value to return, in case calculation not feasible
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  PCA class for the calculation of PCA-related variables
+ *   @brief  ThreeDPCAFeatureTool class for the calculation of PCA-related variables
  */
 class ThreeDPCAFeatureTool : public PfoCharacterisationFeatureTool
 {
@@ -248,10 +251,9 @@ private:
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  ChargeFeatureTool class for the calculation of concentration
+ *   @brief  ThreeDChargeFeatureTool class for the calculation of charge-related features
  */
 class ThreeDChargeFeatureTool : public PfoCharacterisationFeatureTool
 {
