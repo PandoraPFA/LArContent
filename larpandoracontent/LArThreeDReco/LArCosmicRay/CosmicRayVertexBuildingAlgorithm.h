@@ -66,7 +66,7 @@ private:
      *
      *  @param  pPfo the daughter Pfo
      */
-    //void BuildCosmicRayDaughter(const pandora::ParticleFlowObject *const pPfo) const;
+    void BuildCosmicRayDaughter(const pandora::ParticleFlowObject *const pPfo) const;
 
     void BuildCosmicRayDaughter(const LArPointingClusterMap &pointingClusterMap, const pandora::ParticleFlowObject *const pDaughterPfo) const;
     

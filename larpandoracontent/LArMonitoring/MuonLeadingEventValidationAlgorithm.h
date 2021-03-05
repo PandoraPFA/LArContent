@@ -105,6 +105,7 @@ private:
     bool m_visualize;
     bool m_ignoreIncorrectMuons;
     bool m_writeRawMatchesToTree;
+    std::vector<int>  m_deltaRayIDs;
 };
 
 } // namespace lar_content

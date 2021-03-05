@@ -129,7 +129,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParticles(const LArPointing
         }
         else
         {
-            this->BuildCosmicRayDaughter(pointingClusterMap, pPfo);
+            this->BuildCosmicRayDaughter(pPfo);
         }
     }
 }
@@ -234,6 +234,88 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const ParticleFlowObject *const pDaughterPfo) const
+{
+    if (pDaughterPfo->GetParentPfoList().size() != 1)
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    const ParticleFlowObject *const pParentPfo = *(pDaughterPfo->GetParentPfoList().begin());
+
+    ClusterList parentList, daughterList;
+    LArPfoHelper::GetClusters(pParentPfo, TPC_3D, parentList);
+    LArPfoHelper::GetClusters(pDaughterPfo, TPC_3D, daughterList);
+
+    if (daughterList.empty() || parentList.empty())
+        return;
+
+    bool foundClosestHighestYVertex(false);
+    
+    float closestHighestYPosition(-std::numeric_limits<float>::max());
+    float highestYPosition(-std::numeric_limits<float>::max());
+
+    CartesianVector closestHighestYVertexPosition(0.f, 0.f, 0.f);
+    CartesianVector highestYVertexPosition(0.f, 0.f, 0.f);
+    
+    for (const Cluster *const pDaughterCluster : daughterList)
+    {
+        CaloHitList daughterCaloHitList;
+        pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(daughterCaloHitList);
+        
+        for (const Cluster *const pParentCluster : parentList)
+        {
+            CaloHitList parentCaloHitList;
+            pParentCluster->GetOrderedCaloHitList().FillCaloHitList(parentCaloHitList);
+
+            for (const CaloHit *const pDaughterCaloHit : daughterCaloHitList)
+            {
+                const CartesianVector &daughterPosition(pDaughterCaloHit->GetPositionVector());
+                    
+                for (const CaloHit *const pParentCaloHit : parentCaloHitList)
+                {
+                    const CartesianVector &parentPosition(pParentCaloHit->GetPositionVector());
+                    const float separationSquared((daughterPosition - parentPosition).GetMagnitudeSquared());
+
+                    if (daughterPosition.GetY() > highestYPosition)
+                    {
+		        highestYPosition = daughterPosition.GetY();
+                        highestYVertexPosition = daughterPosition;
+                    }
+
+                    if (separationSquared < (m_maxVertexDisplacementFromTrack * m_maxVertexDisplacementFromTrack))
+                    {
+                        if (daughterPosition.GetY() > closestHighestYPosition)
+                        {
+                            foundClosestHighestYVertex = true;
+                            closestHighestYPosition = daughterPosition.GetY();
+                            closestHighestYVertexPosition = daughterPosition;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    const CartesianVector &daughterVertex(foundClosestHighestYVertex ? closestHighestYVertexPosition : highestYVertexPosition);
+    const CartesianVector &vertexPosition(m_useParentShowerVertex ? LArClusterHelper::GetClosestPosition(daughterVertex, parentList) : daughterVertex);    
+
+    /*
+    std::cout << "Vertex Selection" << std::endl;
+    
+    PfoList deltaRayList({pDaughterPfo});
+    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &deltaRayList, "DeltaRayPfo", RED, false, false);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &highestYVertexPosition, "Hightest Y", BLACK, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &closestVertexPosition, "Closest", VIOLET, 2);
+
+    PfoList cosmicRayList({pParentPfo});
+    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &cosmicRayList, "CosmicRayPfo", BLUE, false, false);
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    */
+    
+    this->SetParticleParameters(vertexPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+/*
 void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const LArPointingClusterMap &pointingClusterMap, const ParticleFlowObject *const pDaughterPfo) const
 {
     if (pDaughterPfo->GetParentPfoList().size() != 1)
@@ -318,13 +400,12 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const LArPointingC
 
     if (!foundVertex)
     {
-        std::cout << "did not find vertex via highest vertical coordinate method..." << std::endl;
+      //std::cout << "did not find vertex via highest vertical coordinate method..." << std::endl;
         LArClusterHelper::GetClosestPositions(parentList, daughterList, parentVertexPosition, daughterVertexPosition);
     }
 
     const CartesianVector &vertexPosition(m_useParentShowerVertex ? parentVertexPosition : daughterVertexPosition);
 
-    /*
 
 PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
 
@@ -342,7 +423,7 @@ PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR
     PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &parentVertexPosition, "parentVertexPosition", BLUE, 2);
     
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
+
 
 
 
@@ -354,7 +435,7 @@ PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR
     this->SetParticleParameters(vertexPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
 }
 
-
+*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 CartesianVector CosmicRayVertexBuildingAlgorithm::ProjectPosition(const CartesianVector &lineStart, const CartesianVector &lineEnd, const CartesianVector &position) const
