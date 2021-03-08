@@ -53,7 +53,8 @@ TrainedVertexSelectionAlgorithm::TrainedVertexSelectionAlgorithm() :
     m_maxTrueVertexRadius(1.f),
     m_useRPhiFeatureForRegion(false),
     m_dropFailedRPhiFastScoreCandidates(true),
-    m_testBeamMode(false)
+    m_testBeamMode(false),
+    m_use2DEventShapes(false)
 {
 }
 
@@ -251,10 +252,10 @@ typename TrainedVertexSelectionAlgorithm::EventFeatureInfo TrainedVertexSelectio
     allClusters.insert(allClusters.end(), clusterListV.begin(), clusterListV.end());
     allClusters.insert(allClusters.end(), clusterListW.begin(), clusterListW.end());
 
-    float eventVolume(0.f), longitudinality(0.f);
-    this->GetEventShapeFeatures(allClusters, eventVolume, longitudinality);
+    float eventArea(0.f), longitudinality(0.f);
+    this->GetEventShapeFeatures(allClusters, eventArea, longitudinality);
 
-    return EventFeatureInfo(eventShoweryness, eventEnergy, eventVolume, longitudinality, nHits, nClusters, vertexVector.size());
+    return EventFeatureInfo(eventShoweryness, eventEnergy, eventArea, longitudinality, nHits, nClusters, vertexVector.size());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -281,10 +282,10 @@ inline bool TrainedVertexSelectionAlgorithm::IsClusterShowerLike(const Cluster *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrainedVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &clusterList, float &eventVolume, float &longitudinality) const
+void TrainedVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &clusterList, float &eventArea, float &longitudinality) const
 {
     InputFloat xMin, yMin, zMin, xMax, yMax, zMax;
-
+  
     for (const Cluster *const pCluster : clusterList)
     {
         CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f, 0.f, 0.f);
@@ -295,28 +296,49 @@ void TrainedVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &c
         this->UpdateSpanCoordinate(minPosition.GetZ(), maxPosition.GetZ(), zMin, zMax);
     }
 
-    const float xSpan(this->GetCoordinateSpan(xMax, xMin));
-    const float ySpan(this->GetCoordinateSpan(yMax, yMin));
-    const float zSpan(this->GetCoordinateSpan(zMax, zMin));
-
-    // Calculate the volume and longitudinality of the event (ySpan often 0 - to be investigated).
-    if ((xSpan > std::numeric_limits<float>::epsilon()) && (ySpan > std::numeric_limits<float>::epsilon()))
+    // Calculate the area and longitudinality of the event. Option retained for deprecated implementation.
+    if (m_use2DEventShapes)
     {
-        eventVolume     = xSpan * ySpan * zSpan;
-        longitudinality = zSpan / (xSpan + ySpan);
+      const float xSpan(this->GetCoordinateSpan(xMax, xMin));
+      const float zSpan(this->GetCoordinateSpan(zMax, zMin));
+      
+      if ((xSpan > std::numeric_limits<float>::epsilon()))
+      {
+	eventArea       = xSpan * zSpan;
+	longitudinality = zSpan / (xSpan + xSpan);
+      }
     }
-
-    else if (ySpan > std::numeric_limits<float>::epsilon())
+    
+    else
     {
-        eventVolume     = ySpan * ySpan * zSpan;
-        longitudinality = zSpan / (ySpan + ySpan);
-    }
+      if (m_trainingSetMode)
+      {
+	std::cout << "TrainedVertexSelectionAlgorithm: WARNING -- Using deprecated event shape features for training, "
+		  << "consider setting Use2DEventFeatures to true" << std::endl;
+      }
 
-    else if (xSpan > std::numeric_limits<float>::epsilon())
-    {
-        eventVolume     = xSpan * xSpan * zSpan;
-        longitudinality = zSpan / (xSpan + xSpan);
-    }
+      const float xSpan(this->GetCoordinateSpan(xMax, xMin));
+      const float ySpan(this->GetCoordinateSpan(yMax, zMin));
+      const float zSpan(this->GetCoordinateSpan(yMax, zMin));
+      
+      if ((xSpan > std::numeric_limits<float>::epsilon()) && (ySpan > std::numeric_limits<float>::epsilon()))
+      {
+	eventArea       = xSpan * ySpan * zSpan;
+	longitudinality = zSpan / (xSpan + ySpan);
+      }
+
+      else if (ySpan > std::numeric_limits<float>::epsilon())
+      {
+	eventArea       = ySpan * ySpan * zSpan;
+	longitudinality = zSpan / (ySpan + ySpan);
+      }
+      
+      else if (xSpan > std::numeric_limits<float>::epsilon())
+      {
+	eventArea       = xSpan * xSpan * zSpan;
+	longitudinality = zSpan / (xSpan + xSpan);
+      }
+    }   
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -348,7 +370,7 @@ void TrainedVertexSelectionAlgorithm::AddEventFeaturesToVector(const EventFeatur
 {
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventShoweryness));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventEnergy));
-    featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventVolume));
+    featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventArea));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_longitudinality));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_nHits));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_nClusters));
@@ -748,6 +770,9 @@ StatusCode TrainedVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "TestBeamMode", m_testBeamMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "Use2DEventShapes", m_use2DEventShapes));
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }

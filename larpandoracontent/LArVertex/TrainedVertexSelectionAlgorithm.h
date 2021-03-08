@@ -76,18 +76,18 @@ public:
          *
          *  @param  eventShoweryness the event showeryness feature
          *  @param  eventEnergy the energy of the event
-         *  @param  eventVolume the volume of the event
+         *  @param  eventArea the area of the event
          *  @param  longitudinality the longitudinality of the event
          *  @param  nHits the number of hits in the event
          *  @param  nClusters the number of clusters in the event
          *  @param  nCandidates the total number of vertex candidates
          */
-        EventFeatureInfo(const float eventShoweryness, const float eventEnergy, const float eventVolume, const float longitudinality,
+        EventFeatureInfo(const float eventShoweryness, const float eventEnergy, const float eventArea, const float longitudinality,
             const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates);
 
         float           m_eventShoweryness;        ///< The event showeryness feature
         float           m_eventEnergy;             ///< The event energy
-        float           m_eventVolume;             ///< The volume of the event
+        float           m_eventArea;               ///< The area of the event
         float           m_longitudinality;         ///< The longitudinality of the event
         unsigned int    m_nHits;                   ///< The number of hits in the event
         unsigned int    m_nClusters;               ///< The number of clusters in the event
@@ -217,10 +217,10 @@ protected:
      *  @brief  Get the event shape features
      *
      *  @param  clusterList the cluster list
-     *  @param  eventVolume the event volume
+     *  @param  eventArea the event area
      *  @param  longitudinality the event longitudinality
      */
-    void GetEventShapeFeatures(const pandora::ClusterList &clusterList, float &eventVolume, float &longitudinality) const;
+    void GetEventShapeFeatures(const pandora::ClusterList &clusterList, float &eventArea, float &longitudinality) const;
 
     /**
      *  @brief  Update the min/max coordinate spans
@@ -391,6 +391,8 @@ protected:
     bool                  m_useRPhiFeatureForRegion;              ///< Whether to use the r/phi feature for the region vertex
     bool                  m_dropFailedRPhiFastScoreCandidates;    ///< Whether to drop candidates that fail the r/phi fast score test
     bool                  m_testBeamMode;                         ///< Test beam mode
+
+    bool                  m_use2DEventShapes;                     ///< Whether to use fixed 2D event shape features (true) or pre-fix features (false)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -409,10 +411,10 @@ inline TrainedVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrainedVertexSelectionAlgorithm::EventFeatureInfo::EventFeatureInfo(const float eventShoweryness, const float eventEnergy,
-    const float eventVolume, const float longitudinality, const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates) :
+    const float eventArea, const float longitudinality, const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates) :
     m_eventShoweryness(eventShoweryness),
     m_eventEnergy(eventEnergy),
-    m_eventVolume(eventVolume),
+    m_eventArea(eventArea),
     m_longitudinality(longitudinality),
     m_nHits(nHits),
     m_nClusters(nClusters),
