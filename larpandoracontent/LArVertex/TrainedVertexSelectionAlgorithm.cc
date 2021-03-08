@@ -305,7 +305,7 @@ void TrainedVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &c
       if ((xSpan > std::numeric_limits<float>::epsilon()))
       {
 	eventArea       = xSpan * zSpan;
-	longitudinality = zSpan / (xSpan + xSpan);
+	longitudinality = zSpan / (xSpan + zSpan);
       }
     }
     
