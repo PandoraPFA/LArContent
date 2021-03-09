@@ -186,7 +186,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nuanceCode));
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nMCStepPositions));
-        for (int step = 0; step < nMCStepPositions; ++step)
+        for (unsigned int step = 0; step < nMCStepPositions; ++step)
         {
             pandora::CartesianVector mcStepPosition(0.0, 0.0, 0.0);
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(mcStepPosition));
@@ -194,7 +194,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         }
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nMCStepMomentas));
-        for (int step = 0; step < nMCStepMomentas; ++step)
+        for (unsigned int step = 0; step < nMCStepMomentas; ++step)
         {
             pandora::CartesianVector mcStepMomenta(0.0, 0.0, 0.0);
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(mcStepMomenta));
@@ -207,7 +207,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NuanceCode", nuanceCode));
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NumberOfMCStepPositions", nMCStepPositions));
-        for (int step = 0; step < nMCStepPositions; ++step)
+        for (unsigned int step = 0; step < nMCStepPositions; ++step)
         {
             pandora::CartesianVector mcStepPosition(0.0, 0.0, 0.0);
             std::stringstream mcStepPositionName;
@@ -217,7 +217,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         }
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NumberOfMCStepMomentas", nMCStepMomentas));
-        for (int step = 0; step < nMCStepMomentas; ++step)
+        for (unsigned int step = 0; step < nMCStepMomentas; ++step)
         {
             pandora::CartesianVector mcStepMomenta(0.0, 0.0, 0.0);
             std::stringstream mcStepMomentaName;
