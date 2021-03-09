@@ -7,7 +7,6 @@
  */
 
 #include "Api/PandoraApi.h"
-#include "Api/PandoraContentApi.h"
 
 #include "Pandora/AlgorithmHeaders.h"
 
@@ -19,7 +18,6 @@
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArStitchingHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
@@ -28,8 +26,6 @@
 #include "larpandoracontent/LArPlugins/LArRotationalTransformationPlugin.h"
 
 #include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
-
-#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 
 using namespace pandora;
 
@@ -57,11 +53,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_filePathEnvironmentVariable("FW_SEARCH_PATH"),
     m_inTimeMaxX0(1.f)
 {
-
 }
-
-  MasterAlgorithm::~MasterAlgorithm() {
-  }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -75,12 +67,12 @@ void MasterAlgorithm::ShiftPfoHierarchy(const ParticleFlowObject *const pParentP
     if (pfoToLArTPCMap.end() == larTPCIter)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-
     PfoList pfoList;
     LArPfoHelper::GetAllDownstreamPfos(pParentPfo, pfoList);
 
     if (m_visualizeOverallRecoStatus)
     {
+        std::cout << "ShiftPfoHierarchy: x0 " << x0 << std::endl;
         PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &pfoList, "BeforeShiftCRPfos", GREEN));
     }
 
@@ -160,43 +152,34 @@ void MasterAlgorithm::StitchPfos(const ParticleFlowObject *const pPfoToEnlarge, 
 
 StatusCode MasterAlgorithm::Run()
 {
-
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Reset());
 
     if (!m_workerInstancesInitialized)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->InitializeWorkerInstances());
-    
 
     if (m_passMCParticlesToWorkerInstances)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CopyMCParticles());
-
 
     PfoToFloatMap stitchedPfosToX0Map;
     VolumeIdToHitListMap volumeIdToHitListMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetVolumeIdToHitListMap(volumeIdToHitListMap));
 
-
     if (m_shouldRunAllHitsCosmicReco)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayReconstruction(volumeIdToHitListMap));
 
-
         PfoToLArTPCMap pfoToLArTPCMap;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RecreateCosmicRayPfos(pfoToLArTPCMap));
 
-
         if (m_shouldRunStitching)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->StitchCosmicRayPfos(pfoToLArTPCMap, stitchedPfosToX0Map));
-
     }
 
     if (m_shouldRunCosmicHitRemoval)
     {
         PfoList clearCosmicRayPfos, ambiguousPfos;
-	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos));
-
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->TagCosmicRayPfos(stitchedPfosToX0Map, clearCosmicRayPfos, ambiguousPfos));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunCosmicRayHitRemoval(ambiguousPfos));
-
     }
 
     SliceVector sliceVector;
@@ -207,8 +190,6 @@ StatusCode MasterAlgorithm::Run()
         SliceHypotheses nuSliceHypotheses, crSliceHypotheses;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSliceReconstruction(sliceVector, nuSliceHypotheses, crSliceHypotheses));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses, sliceVector));
-
-
     }
 
     return STATUS_CODE_SUCCESS;
@@ -382,57 +363,51 @@ StatusCode MasterAlgorithm::StitchCosmicRayPfos(PfoToLArTPCMap &pfoToLArTPCMap, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-
- StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
-  {
+StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosToX0Map, PfoList &clearCosmicRayPfos, PfoList &ambiguousPfos) const
+{
     const PfoList *pRecreatedCRPfos(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(this->GetPandora(), pRecreatedCRPfos));
 
     PfoList nonStitchedParentCosmicRayPfos;
     for (const Pfo *const pPfo : *pRecreatedCRPfos)
-      {
-	if (!pPfo->GetParentPfoList().empty())
-	  continue;
+    {
+        if (!pPfo->GetParentPfoList().empty())
+            continue;
+        PfoToFloatMap::const_iterator pfoToX0Iter = stitchedPfosToX0Map.find(pPfo);
+        const float x0Shift((pfoToX0Iter != stitchedPfosToX0Map.end()) ? pfoToX0Iter->second : 0.f);
+        PfoList &targetList((std::fabs(x0Shift) > m_inTimeMaxX0) ? clearCosmicRayPfos : nonStitchedParentCosmicRayPfos);
+        targetList.push_back(pPfo);
 
-	PfoToFloatMap::const_iterator pfoToX0Iter = stitchedPfosToX0Map.find(pPfo);
-	const float x0Shift((pfoToX0Iter != stitchedPfosToX0Map.end()) ? pfoToX0Iter->second : 0.f);
-	PfoList &targetList((std::fabs(x0Shift) > m_inTimeMaxX0) ? clearCosmicRayPfos : nonStitchedParentCosmicRayPfos);
-	targetList.push_back(pPfo);
-      }
-
-    for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
-      pCosmicRayTaggingTool->FindAmbiguousPfos(nonStitchedParentCosmicRayPfos, ambiguousPfos, this);
-
-
-
-    for (const Pfo *const pPPPfo : nonStitchedParentCosmicRayPfos) {
-
-      bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPPPfo));
- 
-      if (isClearCosmic) {
-	clearCosmicRayPfos.push_back(pPPPfo);
-	//	ambiguousPfos.remove(pPPPfo);
-      }
     }
 
-    for (const Pfo *const pPfo : *pRecreatedCRPfos)
-      {
-        bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
+    for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
+        pCosmicRayTaggingTool->FindAmbiguousPfos(nonStitchedParentCosmicRayPfos, ambiguousPfos, this);
 
+    for (const Pfo *const pPfo : nonStitchedParentCosmicRayPfos)
+    {
+        const bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
+
+        if (isClearCosmic)
+            clearCosmicRayPfos.push_back(pPfo);
+   }
+
+    for (const Pfo *const pPfo : *pRecreatedCRPfos)
+    {
+        const bool isClearCosmic(ambiguousPfos.end() == std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo));
         PandoraContentApi::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["IsClearCosmic"] = (isClearCosmic ? 1.f : 0.f);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
-      }
+    }
 
     if (m_visualizeOverallRecoStatus)
-      {
+    {
         PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &clearCosmicRayPfos, "ClearCRPfos", RED));
         PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), &ambiguousPfos, "AmbiguousCRPfos", BLUE));
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
-      }
+    }
 
     return STATUS_CODE_SUCCESS;
-  }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -527,7 +502,6 @@ StatusCode MasterAlgorithm::RunSlicing(const VolumeIdToHitListMap &volumeIdToHit
     if (m_printOverallRecoStatus)
         std::cout << "Identified " << sliceVector.size() << " slice(s)" << std::endl;
 
-
     return STATUS_CODE_SUCCESS;
 }
 
@@ -589,7 +563,6 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             if (m_printOverallRecoStatus)
                 std::cout << "Running cr worker instance for slice " << (sliceCounter + 1) << " of " << selectedSliceVector.size() << std::endl;
 
-
             const PfoList *pSliceCRPfos(nullptr);
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::ProcessEvent(*m_pSliceCRWorkerInstance));
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::GetCurrentPfoList(*m_pSliceCRWorkerInstance, pSliceCRPfos));
@@ -619,12 +592,11 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-  StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceVector &sliceVector) const
+StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceVector &sliceVector) const
 {
     if (m_printOverallRecoStatus)
         std::cout << "Select best slice hypotheses" << std::endl;
-    
-    
+
     PfoList selectedSlicePfos;
     PfoList selectedSlicePfosB;
 
@@ -665,13 +637,12 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
 	}
       }
     }
-    
-    
+
 
     if (m_shouldPerformSliceId)
     {
         for (SliceIdBaseTool *const pSliceIdTool : m_sliceIdToolVector)
-	  pSliceIdTool->SelectOutputPfos(this, nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos, pfoToProbabilityMap, sliceVector);
+	     pSliceIdTool->SelectOutputPfos(this, nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos, pfoToProbabilityMap, sliceVector);
 
     }
     else if (m_shouldRunNeutrinoRecoOption != m_shouldRunCosmicRecoOption)
@@ -682,7 +653,6 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
             selectedSlicePfos.insert(selectedSlicePfos.end(), slice.begin(), slice.end());
     }
 
- 
     PfoList newSlicePfoList;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->Recreate(selectedSlicePfos, newSlicePfoList));
 
@@ -1256,7 +1226,6 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReadExternalSettings(pExternalParameters, !pExternalParameters ? InputBool() :
         pExternalParameters->m_printOverallRecoStatus, xmlHandle, "PrintOverallRecoStatus", m_printOverallRecoStatus));
 
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "VisualizeOverallRecoStatus", m_visualizeOverallRecoStatus));
 
@@ -1274,7 +1243,6 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
- 
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CRSettingsFile", m_crSettingsFile));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NuSettingsFile", m_nuSettingsFile));
@@ -1293,15 +1261,10 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedClusterListName", m_recreatedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedVertexListName", m_recreatedVertexListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMaxX0", m_inTimeMaxX0));
-
-
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "ClusterListName", m_clusterListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PfoListName", m_pfoListName));
- 
-
 
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "TrackDirection", algorithmToolVector));
@@ -1327,9 +1290,7 @@ StatusCode MasterAlgorithm::ReadExternalSettings(const ExternalSteeringParameter
     }
     else
     {
-  
         PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, xmlTag, outputBool));
-	
     }
 
     return STATUS_CODE_SUCCESS;

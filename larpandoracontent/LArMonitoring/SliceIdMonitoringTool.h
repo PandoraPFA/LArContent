@@ -23,7 +23,8 @@ public:
     SliceIdMonitoringTool();
     virtual ~SliceIdMonitoringTool();
 
-    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap, const SliceVector &sliceVector);
+    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
+        pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap, const SliceVector &sliceVector);
 
 private:
     /**
@@ -34,23 +35,16 @@ private:
      *  @return the number of neutrino induced hits in the input list
      */
     pandora::CaloHitList CountNeutrinoInducedHits(const pandora::CaloHitList &caloHitList) const;
-    
 
     /**
      *  @brief  Read settings
      */
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float                                       m_minPurity;                  ///< The minimum purity to consider a Pfo as "pure"
-     float                                       m_minSignificance;            ///< The minimum significance to consider a Pfo as "significant"
-
+    float m_minPurity;       ///< The minimum purity to consider a Pfo as "pure"
+    float m_minSignificance; ///< The minimum significance to consider a Pfo as "significant"
 };
 
-
-
-}
+} // namespace lar_content
 
 #endif
-
-
-

@@ -53,7 +53,7 @@ private:
          *  @param  crPfos input list of Pfos reconstructed under the cosmic ray hypothesis
          *  @param  pTool address of the tool using this class
          */
-      SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const NeutrinoIdTool *const pTool, const PfoToFloatMap &pfoToProbabilityMap);
+        SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const NeutrinoIdTool *const pTool, const PfoToFloatMap &pfoToProbabilityMap);
 
         /**
          *  @brief  Check if all features were calculable

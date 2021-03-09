@@ -39,7 +39,7 @@ BeamParticleIdTool::BeamParticleIdTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-  void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &beamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &/*pfotoprobabilitymapb*/, const SliceVector &/*sliceVector*/)
+void BeamParticleIdTool::SelectOutputPfos(const Algorithm *const pAlgorithm, const SliceHypotheses &beamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos, const PfoToFloatMap &/*pfotoprobabilitymapb*/, const SliceVector &/*sliceVector*/)
 {
     if (beamSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
