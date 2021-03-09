@@ -273,9 +273,9 @@ bool RANSACMethodTool::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANS
 
     if (addedHitCount <= 2 && currentPoints3D.size() != 0)
     {
-        int i(0);
+        unsigned int i(0);
         auto it = currentPoints3D.begin();
-        while(i <= m_fitSize && currentPoints3D.size() != 0)
+        while (i <= m_fitSize && currentPoints3D.size() != 0)
         {
             hitsToUseForFit.push_back(*it);
             it = currentPoints3D.erase(it);
