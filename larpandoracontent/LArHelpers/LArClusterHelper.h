@@ -155,11 +155,15 @@ public:
      */
     static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
 
+    /**
+     *  @brief  Get closest distance between a specified position vector and the hits in a specified calo hit list
+     *
+     *  @param  position the position vector
+     *  @param  caloHitList the list of calo hits
+     *
+     *  @return the closest distance
+     */
     static float GetClosestDistance(const pandora::CartesianVector &position, const pandora::CaloHitList &caloHitList);
-
-    static float GetClosestDistanceWithShiftedHits(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList);
-
-    static float GetClosestDistanceWithShiftedHits(const pandora::CaloHitList &caloHitList1, const pandora::CaloHitList &caloHitList2);
 
     /**
      *  @brief  Get closest position in a list of clusters to a specified input position vector
@@ -182,15 +186,14 @@ public:
     static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Get pair of closest positions for a pair of clusters
+     *  @brief  Get closest position of hits in a given calo hit list to a specified input position vector
      *
-     *  @param  pCluster1 the address of the first cluster
-     *  @param  pCluster2 the address of the second cluster
-     *  @param  the closest position in the first cluster
-     *  @param  the closest position in the second cluster
+     *  @param  position the position vector
+     *  @param  caloHitList the list of calo hits
+     *
+     *  @return the closest position
      */
-    static void GetClosestPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        pandora::CartesianVector &position1, pandora::CartesianVector &position2);
+    static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &position, const pandora::CaloHitList &caloHitList);
 
     /**
      *  @brief  Get pair of closest positions for a pair of clusters
@@ -200,7 +203,7 @@ public:
      *  @param  the closest position in the first cluster
      *  @param  the closest position in the second cluster
      */
-    static void GetClosestPositions(const pandora::ClusterList &clusterList1, const pandora::ClusterList &clusterList2,
+    static void GetClosestPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         pandora::CartesianVector &position1, pandora::CartesianVector &position2);
 
     /**
