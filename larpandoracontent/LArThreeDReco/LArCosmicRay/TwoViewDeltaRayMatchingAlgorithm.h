@@ -28,10 +28,10 @@ class DeltaRayMatrixTool;
 /**
  *  @brief  TwoViewDeltaRayMatchingAlgorithm class
  */
-class TwoViewDeltaRayMatchingAlgorithm : public NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> >
+class TwoViewDeltaRayMatchingAlgorithm : public NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult> >
 {
 public:
-    typedef NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult> > BaseAlgorithm;
+    typedef NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult> > BaseAlgorithm;
     typedef TwoViewDeltaRayMatchingAlgorithm::MatchingType::MatrixType MatrixType;
     typedef std::vector<pandora::HitType> HitTypeVector;
     
@@ -59,10 +59,10 @@ private:
     void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3);
 
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,
-        const pandora::CaloHitList &projectedHits, TrackTwoViewTopologyOverlapResult &overlapResult) const;    
+        const pandora::CaloHitList &projectedHits, TwoViewDeltaRayOverlapResult &overlapResult) const;    
     
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        TrackTwoViewTopologyOverlapResult &overlapResult) const;
+        TwoViewDeltaRayOverlapResult &overlapResult) const;
 
     void FindCommonMuonParents(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, pandora::PfoList &commonMuonPfoList) const;
     

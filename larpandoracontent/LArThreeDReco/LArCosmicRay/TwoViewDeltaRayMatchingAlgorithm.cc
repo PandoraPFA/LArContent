@@ -74,7 +74,7 @@ bool TwoViewDeltaRayMatchingAlgorithm::DoesClusterPassTesorThreshold(const Clust
     
 void TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
-    TrackTwoViewTopologyOverlapResult overlapResult;
+    TwoViewDeltaRayOverlapResult overlapResult;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pCluster1, pCluster2, overlapResult));
     
     if (overlapResult.IsInitialized())
@@ -83,7 +83,7 @@ void TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------     
 
-StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, TrackTwoViewTopologyOverlapResult &overlapResult) const
+StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, TwoViewDeltaRayOverlapResult &overlapResult) const
 {
     // Add pitch here?
     float xMin1(0.f), xMax1(0.f), xMin2(0.f), xMax2(0.f);
@@ -136,7 +136,7 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluste
 
     TwoViewXOverlap xOverlapObject(xMin1, xMax1, xMin2, xMax2);
 
-    overlapResult = TrackTwoViewTopologyOverlapResult(xOverlapObject, commonMuonPfoList, pBestMatchedCluster, matchedClusterList, reducedChiSquared);
+    overlapResult = TwoViewDeltaRayOverlapResult(xOverlapObject, commonMuonPfoList, pBestMatchedCluster, matchedClusterList, reducedChiSquared);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -427,7 +427,7 @@ void TwoViewDeltaRayMatchingAlgorithm::RemoveThirdViewCluster(const Cluster *con
         
         for (auto &entry : iter2)
         {
-            TrackTwoViewTopologyOverlapResult &overlapResult(entry.second);
+            TwoViewDeltaRayOverlapResult &overlapResult(entry.second);
 
             ClusterList matchedClusters(overlapResult.GetMatchedClusterList());
 
@@ -441,7 +441,7 @@ void TwoViewDeltaRayMatchingAlgorithm::RemoveThirdViewCluster(const Cluster *con
             const Cluster *pBestMatchedCluster(nullptr); float reducedChiSquared(std::numeric_limits<float>::max());
             this->GetBestMatchedCluster(iter1->first, entry.first, overlapResult.GetCommonMuonPfoList(), matchedClusters, pBestMatchedCluster, reducedChiSquared);
 
-            overlapResult = TrackTwoViewTopologyOverlapResult(overlapResult.GetXOverlap(), overlapResult.GetCommonMuonPfoList(), pBestMatchedCluster, matchedClusters, reducedChiSquared);
+            overlapResult = TwoViewDeltaRayOverlapResult(overlapResult.GetXOverlap(), overlapResult.GetCommonMuonPfoList(), pBestMatchedCluster, matchedClusters, reducedChiSquared);
             theMatrix.ReplaceOverlapResult(iter1->first, entry.first, overlapResult);
         }
     }

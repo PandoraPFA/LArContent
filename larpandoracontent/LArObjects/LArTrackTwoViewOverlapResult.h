@@ -17,27 +17,27 @@
 
 namespace lar_content
 {
-
 /**
- *  @brief  TrackTwoViewTopologyOverlapResult class
+ *  @brief  TwoViewDeltaRayOverlapResult class
  */
-class TrackTwoViewTopologyOverlapResult
+class TwoViewDeltaRayOverlapResult
 {
 public:
     /**
      *  @brief Default constructor
      */
-    TrackTwoViewTopologyOverlapResult();
+    TwoViewDeltaRayOverlapResult();
 
     /**
      *  @brief  Constructor
      *
-     *  @param  nMatchedSamplingPoints
-     *  @param  nSamplingPoints
-     *  @param  chi2
-     *  @param  xOverlap
+     *  @param  xOverlap the xOverlap of the two clusters
+     *  @param  commonMuonPfoList the list of muon pfos whose clusters lie close to delta ray clusters in all views 
+     *  @param  pBestMatchedCluster the largest cluster that lies on the projected hits
+     *  @param  matchedClusterList the list of clusters that lie on the projected hits
+     *  @param  reducedChiSquared the reduced chi squared
      */
-    TrackTwoViewTopologyOverlapResult(const TwoViewXOverlap &xOverlap, const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const pBestMatchedCluster,
+    TwoViewDeltaRayOverlapResult(const TwoViewXOverlap &xOverlap, const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const pBestMatchedCluster,
         const pandora::ClusterList &matchedClusterList, const float reducedChiSquared);
 
     /**
@@ -45,12 +45,12 @@ public:
      *
      *  @param  rhs
      */
-    TrackTwoViewTopologyOverlapResult(const TrackTwoViewTopologyOverlapResult &rhs);
+    TwoViewDeltaRayOverlapResult(const TwoViewDeltaRayOverlapResult &rhs);
 
     /**
      *  @brief  Destructor
      */
-    ~TrackTwoViewTopologyOverlapResult();
+    ~TwoViewDeltaRayOverlapResult();
 
     /**
      *  @brief  Whether the track overlap result has been initialized
@@ -74,63 +74,54 @@ public:
     const pandora::Cluster *GetBestMatchedCluster() const;
 
     /**
-     *  @brief  Get the best matched cluster
+     *  @brief  Get the common muon pfo list
      *
-     *  @return the best matched cluster
-     */
-    void SetBestMatchedCluster(const pandora::Cluster *const pCluster);    
-
-    /**
-     *  @brief  Get the best matched cluster
-     *
-     *  @return the best matched cluster
+     *  @return the common muon pfo list
      */
     const pandora::PfoList &GetCommonMuonPfoList() const;
 
     /**
-     *  @brief  Get the best matched cluster
+     *  @brief  Get the matched cluster list
      *
-     *  @return the best matched cluster
+     *  @return the matched cluster list
      */
     const pandora::ClusterList &GetMatchedClusterList() const;
 
     /**
-     *  @brief  Get the best matched cluster
+     *  @brief  Get the reduced chi squared value
      *
-     *  @return the best matched cluster
-     */
-    void SetMatchedClusterList(const pandora::ClusterList &matchedClusterList);     
-
-    /**
-     *  @brief  Get the best matched cluster
-     *
-     *  @return the best matched cluster
+     *  @return the reduced chi squared value
      */
     float GetReducedChiSquared() const;     
+
+    /**
+     *  @brief  Get the best matched available cluster
+     *
+     *  @return the best matched available cluster
+     */
+    const pandora::Cluster *GetBestMatchedAvailableCluster() const;
 
     /**
      *  @brief  Track overlap result assigment operator
      *
      *  @param  rhs the track overlap result to assign
      */
-     TrackTwoViewTopologyOverlapResult&operator=(const TrackTwoViewTopologyOverlapResult &rhs);
-
-    const pandora::Cluster *GetBestMatchedAvailableCluster() const;
+    TwoViewDeltaRayOverlapResult&operator=(const TwoViewDeltaRayOverlapResult &rhs);
 
     /**
      *  @brief  Track two view overlap result less than operator
      *
      *  @param  rhs the track two view overlap result for comparison
      */
-    bool operator<(const TrackTwoViewTopologyOverlapResult &rhs) const;
+    bool operator<(const TwoViewDeltaRayOverlapResult &rhs) const;
 
 private:
-    bool                            m_isInitialized;
+    bool                            m_isInitialized;                ///< Whether the two view delta ray overlap result has been initialized
     TwoViewXOverlap                 m_xOverlap;                     ///< The x overlap object
-    pandora::PfoList                m_commonMuonPfoList;
-    const pandora::Cluster         *m_pBestMatchedCluster;
-    pandora::ClusterList            m_matchedClusterList;
-    float                           m_reducedChiSquared;
+    pandora::PfoList                m_commonMuonPfoList;            ///< The list of muon pfos whose clusters lie close to delta ray clusters in all views 
+    const pandora::Cluster         *m_pBestMatchedCluster;          ///< The largest cluster that lies on the projected hits
+    pandora::ClusterList            m_matchedClusterList;           ///< The list of clusters that lie on the projected hits
+    float                           m_reducedChiSquared;            ///< The reduced chi squared of the best matched cluster
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -319,56 +310,42 @@ typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResu
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool TrackTwoViewTopologyOverlapResult::IsInitialized() const
+inline bool TwoViewDeltaRayOverlapResult::IsInitialized() const
 {
     return m_isInitialized;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const TwoViewXOverlap &TrackTwoViewTopologyOverlapResult::GetXOverlap() const
+inline const TwoViewXOverlap &TwoViewDeltaRayOverlapResult::GetXOverlap() const
 {
     return m_xOverlap;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::Cluster *TrackTwoViewTopologyOverlapResult::GetBestMatchedCluster() const
+inline const pandora::Cluster *TwoViewDeltaRayOverlapResult::GetBestMatchedCluster() const
 {
     return m_pBestMatchedCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void TrackTwoViewTopologyOverlapResult::SetBestMatchedCluster(const pandora::Cluster *const pBestMatchedCluster)
-{
-    m_pBestMatchedCluster = pBestMatchedCluster;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const pandora::PfoList &TrackTwoViewTopologyOverlapResult::GetCommonMuonPfoList() const
+inline const pandora::PfoList &TwoViewDeltaRayOverlapResult::GetCommonMuonPfoList() const
 {
     return m_commonMuonPfoList;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const pandora::ClusterList &TrackTwoViewTopologyOverlapResult::GetMatchedClusterList() const
+inline const pandora::ClusterList &TwoViewDeltaRayOverlapResult::GetMatchedClusterList() const
 {
     return m_matchedClusterList;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void TrackTwoViewTopologyOverlapResult::SetMatchedClusterList(const pandora::ClusterList &matchedClusterList)
-{
-    m_matchedClusterList = matchedClusterList;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline float TrackTwoViewTopologyOverlapResult::GetReducedChiSquared() const
+inline float TwoViewDeltaRayOverlapResult::GetReducedChiSquared() const
 {
     return m_reducedChiSquared;
 }

@@ -120,7 +120,7 @@ StatusCode NViewMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class NViewMatchingAlgorithm<TwoViewMatchingControl<float>>;
-template class NViewMatchingAlgorithm<TwoViewMatchingControl<TrackTwoViewTopologyOverlapResult>>;
+template class NViewMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult>>;
 template class NViewMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult>>;
 template class NViewMatchingAlgorithm<ThreeViewMatchingControl<float>>;
 template class NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult>>;

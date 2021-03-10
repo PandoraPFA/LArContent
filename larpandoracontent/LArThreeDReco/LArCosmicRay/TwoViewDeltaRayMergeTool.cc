@@ -79,7 +79,7 @@ bool TwoViewDeltaRayMergeTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorit
     bool found(false);   
         
     float highestHitCount(-std::numeric_limits<float>::max()), bestChiSquared(0.f);
-    MatrixType::Element bestElement(nullptr, nullptr, TrackTwoViewTopologyOverlapResult(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f), PfoList(), nullptr, ClusterList(), 0.f));
+    MatrixType::Element bestElement(nullptr, nullptr, TwoViewDeltaRayOverlapResult(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f), PfoList(), nullptr, ClusterList(), 0.f));
     
     for (const MatrixType::Element &element : elementList)
     {            
