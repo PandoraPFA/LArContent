@@ -77,7 +77,6 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
     for (const ParticleFlowObject *const pPfo : pfoVector)
     {
         ProtoHitVector protoHitVector;
-        unsigned int numberOfFailedAlgorithms = 0;
 
         for (HitCreationBaseTool *const pHitCreationTool : m_algorithmToolVector)
         {
@@ -106,9 +105,6 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
                 protoHitVector.clear();
             }
         }
-
-        if (numberOfFailedAlgorithms == m_algorithmToolVector.size())
-            continue;
 
         const bool shouldUseIterativeTreatment = (
                 (m_iterateTrackHits && LArPfoHelper::IsTrack(pPfo)) ||

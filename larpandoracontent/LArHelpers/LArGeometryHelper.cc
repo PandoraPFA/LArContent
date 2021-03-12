@@ -439,26 +439,42 @@ float LArGeometryHelper::ProjectAcrossGap3D(const Pandora &pandora, const Cartes
 
         // ATTN: Right now, this only works for gaps with only X components.
         //       If the Z is used for detector gaps, can cause infs.
-        const float gapWidth = std::fabs(lineGap->GetLineStartX() - lineGap->GetLineEndX());
 
+        // INFO: Get the angles from the current point to each gap edge.
+        const CartesianVector startPoint(lineGap->GetLineStartX(), testPoint.GetY(), testPoint.GetZ());
         const float distanceToStart = std::fabs(testPoint.GetX() - lineGap->GetLineStartX());
+        const float angleToStart = startPoint.GetCosOpeningAngle(testDirection);
+
+        const CartesianVector endPoint(lineGap->GetLineEndX(), testPoint.GetY(), testPoint.GetZ());
         const float distanceToEnd = std::fabs(testPoint.GetX() - lineGap->GetLineEndX());
-        const float middleOfGap = std::fabs((lineGap->GetLineStartX() + lineGap->GetLineEndX()) / 2);
-        const CartesianVector gapPoint(middleOfGap, 0, testPoint.GetZ());
+        const float angleToEnd = endPoint.GetCosOpeningAngle(testDirection);
 
-        const float distanceToGap = std::min(distanceToStart, distanceToEnd);
-        const float totalGapSize = distanceToGap + gapWidth;
+        // INFO: Choose the gap infront of the current point.
+        const bool shouldUseGapStart = angleToStart > angleToEnd ? true : false;
+        const CartesianVector targetEdge = shouldUseGapStart ? startPoint : endPoint;
+        const float distanceToTargetEdge = shouldUseGapStart ? distanceToStart : distanceToEnd;
 
-        const CartesianVector pointToGap(gapPoint - testPoint);
-
-        if (!(testDirection.GetX() < 0) == (pointToGap.GetX() < 0))
+        // INFO: If we are at the current gap edge in the right direction, skip gap.
+        if (distanceToTargetEdge == 0)
             continue;
 
-        const float cosTheta = (pointToGap).GetCosOpeningAngle(testDirection);
-        const float distanceToProject = totalGapSize / cosTheta;
+        const CartesianVector pointToGap(targetEdge - testPoint);
 
-        if (std::fabs(distanceToProject) < bestGapSize)
-            bestGapSize = std::fabs(distanceToProject);
+        if (!((testDirection.GetX() < 0) == (pointToGap.GetX() < 0)))
+            continue;
+
+        // INFO: Init to total distance, update if less or more is needed based on current direction.
+        float distanceToProject = distanceToTargetEdge;
+
+        try
+        {
+            const float cosTheta = (pointToGap).GetCosOpeningAngle(testDirection);
+            distanceToProject = cosTheta != 0 ? distanceToTargetEdge / cosTheta : distanceToTargetEdge;
+        }
+        catch (StatusCodeException &) {}
+
+        if (distanceToProject < bestGapSize)
+            bestGapSize = distanceToProject;
     }
 
     if (bestGapSize == std::numeric_limits<float>::max())
