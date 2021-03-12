@@ -189,7 +189,7 @@ StatusCode MasterAlgorithm::Run()
     {
         SliceHypotheses nuSliceHypotheses, crSliceHypotheses;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSliceReconstruction(sliceVector, nuSliceHypotheses, crSliceHypotheses));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses, sliceVector));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -373,11 +373,11 @@ StatusCode MasterAlgorithm::TagCosmicRayPfos(const PfoToFloatMap &stitchedPfosTo
     {
         if (!pPfo->GetParentPfoList().empty())
             continue;
-
         PfoToFloatMap::const_iterator pfoToX0Iter = stitchedPfosToX0Map.find(pPfo);
         const float x0Shift((pfoToX0Iter != stitchedPfosToX0Map.end()) ? pfoToX0Iter->second : 0.f);
         PfoList &targetList((std::fabs(x0Shift) > m_inTimeMaxX0) ? clearCosmicRayPfos : nonStitchedParentCosmicRayPfos);
         targetList.push_back(pPfo);
+
     }
 
     for (CosmicRayTaggingBaseTool *const pCosmicRayTaggingTool : m_cosmicRayTaggingToolVector)
@@ -592,17 +592,58 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses) const
+StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceVector &sliceVector) const
 {
     if (m_printOverallRecoStatus)
         std::cout << "Select best slice hypotheses" << std::endl;
 
     PfoList selectedSlicePfos;
+    PfoList selectedSlicePfosB;
+
+    for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+      {
+	const PfoList &neutrinoPfoList(nuSliceHypotheses.at(sliceIndex));
+
+	for (const Pfo *const pNeutrinoPfo : neutrinoPfoList)
+	  {
+	    PfoList daughterPfos = pNeutrinoPfo->GetDaughterPfoList();
+	    for (const ParticleFlowObject *const pDaughterPfo : daughterPfos) {
+	      selectedSlicePfosB.push_back(pDaughterPfo);
+	    }
+	  }
+      }
+
+
+
+    for (unsigned int sliceIndex = 0, nSlices = crSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
+    {
+       const PfoList &cosmicPfoList(crSliceHypotheses.at(sliceIndex));
+       for (const Pfo *const pCosmicPfo : cosmicPfoList)
+        {
+	  selectedSlicePfosB.push_back(pCosmicPfo);
+	}
+    }
+
+    PfoToFloatMap pfoToProbabilityMap;
+
+    for (const Pfo *const pPfo :  selectedSlicePfosB) {
+      float downProbability = -1;
+      for (TrackDirectionBaseTool *const pTrackDirectionTool : m_trackDirectionToolVector){
+	try{
+	  pTrackDirectionTool->FindDirections(pPfo, downProbability, this);
+	  pfoToProbabilityMap.insert({pPfo,downProbability});
+	}
+	catch(...){
+	}
+      }
+    }
+
 
     if (m_shouldPerformSliceId)
     {
         for (SliceIdBaseTool *const pSliceIdTool : m_sliceIdToolVector)
-            pSliceIdTool->SelectOutputPfos(this, nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos);
+	     pSliceIdTool->SelectOutputPfos(this, nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos, pfoToProbabilityMap, sliceVector);
+
     }
     else if (m_shouldRunNeutrinoRecoOption != m_shouldRunCosmicRecoOption)
     {
@@ -1220,6 +1261,20 @@ StatusCode MasterAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedClusterListName", m_recreatedClusterListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RecreatedVertexListName", m_recreatedVertexListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMaxX0", m_inTimeMaxX0));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ClusterListName", m_clusterListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "PfoListName", m_pfoListName));
+
+    AlgorithmToolVector algorithmToolVector;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "TrackDirection", algorithmToolVector));
+
+    for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
+      {
+        TrackDirectionBaseTool *const pTrackDirectionTool(dynamic_cast<TrackDirectionBaseTool*>(pAlgorithmTool));
+	if (!pTrackDirectionTool) return STATUS_CODE_INVALID_PARAMETER;
+	m_trackDirectionToolVector.push_back(pTrackDirectionTool);
+      }
 
     return STATUS_CODE_SUCCESS;
 }

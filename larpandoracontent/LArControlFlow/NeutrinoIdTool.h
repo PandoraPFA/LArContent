@@ -37,7 +37,7 @@ public:
      */
     NeutrinoIdTool();
 
-    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
+    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap, const SliceVector &sliceVector);
 
 private:
     /**
@@ -53,7 +53,7 @@ private:
          *  @param  crPfos input list of Pfos reconstructed under the cosmic ray hypothesis
          *  @param  pTool address of the tool using this class
          */
-        SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const NeutrinoIdTool *const pTool);
+        SliceFeatures(const pandora::PfoList &nuPfos, const pandora::PfoList &crPfos, const NeutrinoIdTool *const pTool, const PfoToFloatMap &pfoToProbabilityMap);
 
         /**
          *  @brief  Check if all features were calculable
@@ -158,7 +158,7 @@ private:
      *  @param  crSliceHypotheses the input cosmic slice hypotheses
      *  @param  sliceFeaturesVector vector to hold the slice features
      */
-    void GetSliceFeatures(const NeutrinoIdTool *const pTool, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const;
+    void GetSliceFeatures(const NeutrinoIdTool *const pTool, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector,  const PfoToFloatMap &pfoToProbabilityMap) const;
 
     /**
      *  @brief  Get the slice with the most neutrino induced hits using Monte-Carlo information
@@ -228,7 +228,7 @@ private:
      *  @param  sliceFeaturesVector vector holding the slice features
      *  @param  selectedPfos the list of pfos to populate
      */
-    void SelectPfosByProbability(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, pandora::PfoList &selectedPfos) const;
+    void SelectPfosByProbability(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap) const;
 
     /**
      *  @brief  Add the given pfos to the selected Pfo list
