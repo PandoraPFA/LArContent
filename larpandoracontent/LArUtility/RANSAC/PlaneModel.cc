@@ -25,8 +25,7 @@ double PlaneModel::ComputeDistanceMeasure(const SharedParameter param) const
     if(currentPoint == nullptr)
         throw std::runtime_error("PlaneModel::ComputeDistanceMeasure() - Passed parameter are not of type RANSACHit.");
 
-    const RANSACHit hit(*currentPoint);
-    const Eigen::Vector3f currentPos(hit.GetVector() - m_origin);
+    const Eigen::Vector3f currentPos((*currentPoint).GetVector() - m_origin);
 
     const Eigen::Vector3f b(currentPos.dot(m_direction) * m_direction);
     const double distance((currentPos - b).norm());
@@ -94,7 +93,7 @@ std::pair<double, ParameterVector> PlaneModel::Evaluate(const ParameterVector &p
             inliers.push_back(param);
     }
 
-    if (inliers.size() == 0)
+    if (inliers.empty())
         return std::make_pair(0.0, inliers);
 
     const double inlierFraction(inliers.size() / totalParams);

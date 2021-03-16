@@ -138,7 +138,7 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
         const auto hit = std::dynamic_pointer_cast<RANSACHit>(inlier);
 
         if (hit == nullptr)
-            throw std::runtime_error("Inlying hit was not of type RANSACHit");
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         const bool addedHit(RANSACMethodTool::AddToHitMap(*hit, inlyingHitMap));
 
@@ -146,7 +146,7 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
             sortedHits.push_back(*hit);
     }
 
-    if (sortedHits.size() < 3 || hitsToUse.size() == 0)
+    if (sortedHits.size() < 3 || hitsToUse.empty())
     {
         for (auto const& caloProtoPair : inlyingHitMap)
             finalHits.push_back(caloProtoPair.second);
@@ -198,7 +198,7 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
     {
         hitsToAdd.clear();
 
-        for (float fits = 1; fits < 4.0; ++fits)
+        for (int fits = 1; fits < 4; ++fits)
         {
             RANSACMethodTool::ExtendFit(nextHits, hitsToUseForFit, hitsToAdd, (m_distToFitThreshold * fits), extendDirection);
 
@@ -213,7 +213,7 @@ int RANSACMethodTool::RunOverRANSACOutput(RANSAC<PlaneModel, 3> &ransac, RANSACR
             if (hitAdded)
                 hitsToUseForFit.push_back(hit);
 
-            if (currentPoints3D.size() == 0)
+            if (currentPoints3D.empty())
                 currentPoints3D.push_back(hit);
         }
 
@@ -265,7 +265,7 @@ bool RANSACMethodTool::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANS
     //  Added small number of hits at end repeatedly: Stop.
     //  Added small number of hits inside fit: Clear and add hits.
     //  Added lots of hits of hits: Don't add hits, just trim vector.
-    if (addedHitCount == 0 && currentPoints3D.size() == 0)
+    if (addedHitCount == 0 && currentPoints3D.empty())
         return false;
 
     if (addedHitCount < 2 && smallAdditionCount > m_finishedThreshold)
@@ -299,7 +299,7 @@ bool RANSACMethodTool::GetHitsForFit(std::list<RANSACHit> &currentPoints3D, RANS
 
     // ATTN: This keeps track of the number of iterations that add only a small
     // number of hits. Resets if a larger iteration is reached.
-    if (addedHitCount < 5 && currentPoints3D.size() == 0)
+    if (addedHitCount < 5 && currentPoints3D.empty())
         ++smallAdditionCount;
     else if (addedHitCount > 15)
         smallAdditionCount = 0;
@@ -374,7 +374,7 @@ void hitDisplacement(RANSACHit &hit, const CartesianVector fitEnd, const Cartesi
 void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSACHitVector &hitsToUseForFit, std::vector<RANSACHit> &hitsToAdd,
     const float distanceToFitThreshold, const ExtendDirection extendDirection)
 {
-    if (hitsToUseForFit.size() == 0)
+    if (hitsToUseForFit.empty())
         return;
 
     float distanceToEndThreshold(m_distToEndThreshold);
@@ -405,7 +405,8 @@ void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSAC
     // ATTN: This is done in 3 stages to split up the 3 different qualities of hits:
     //          - Hits based on the fit projections.
     //          - Hits based against the fit.
-    //          - Unfavourable hits.
+    //          - Use the cached value from the previous two tests, but ignore
+    //            the favourable test.
     auto projectedDisplacementTest = [&slidingFit] (RANSACHit &hit, float threshold) {
         projectedHitDisplacement(hit, slidingFit);
         return hit.GetDisplacement() < threshold && hit.IsFavourable();
@@ -414,11 +415,11 @@ void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSAC
         hitDisplacement(hit, fitEnd, fitDirection);
         return hit.GetDisplacement() < threshold && hit.IsFavourable();
     };
-    auto unfavourableTest = [] (RANSACHit &hit, float threshold) {
+    auto displacementTestIgnoreFavourableFlag = [] (RANSACHit &hit, float threshold) {
         return hit.GetDisplacement() < threshold;
     };
     std::vector<std::function<bool(RANSACHit&, float)>> tests = {projectedDisplacementTest,
-        displacementTest, unfavourableTest};
+        displacementTest, displacementTestIgnoreFavourableFlag};
 
     std::vector<std::list<RANSACHit>::iterator> hitsToCheck;
     for (auto it = hitsToTestAgainst.begin(); it != hitsToTestAgainst.end(); ++it)
@@ -428,7 +429,7 @@ void RANSACMethodTool::ExtendFit(std::list<RANSACHit> &hitsToTestAgainst, RANSAC
     }
 
     unsigned int currentTest(0);
-    while (hitsToAdd.size() == 0 && currentTest < tests.size())
+    while (hitsToAdd.empty() && currentTest < tests.size())
     {
         for (auto it : hitsToCheck)
         {

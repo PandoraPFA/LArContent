@@ -236,7 +236,7 @@ void ThreeDHitCreationAlgorithm::GetSetIntersection(RANSACHitVector &first, RANS
 
 void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *const pPfo, ProtoHitVectorMap &allProtoHitVectors, ProtoHitVector &protoHitVector)
 {
-    if (allProtoHitVectors.size() == 0)
+    if (allProtoHitVectors.empty())
         return;
 
     const std::vector<HitType> views = {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W};
@@ -244,7 +244,7 @@ void ThreeDHitCreationAlgorithm::ConsolidatedMethod(const ParticleFlowObject *co
 
     for (auto toolVectorPair : allProtoHitVectors)
     {
-        if (toolVectorPair.second.size() == 0)
+        if (toolVectorPair.second.empty())
             continue;
 
         const auto avoidedIt = std::find(m_toolsToAvoid.begin(), m_toolsToAvoid.end(), toolVectorPair.first);

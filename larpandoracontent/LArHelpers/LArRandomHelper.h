@@ -31,4 +31,4 @@ int GetIntsInRange(const int low, const int high, std::mt19937 &eng);
 
 } // namespace lar_content
 
-#endif // #ifndef LAR_GEOMETRY_HELPER_H
+#endif // #ifndef LAR_RANDOM_HELPER_H
