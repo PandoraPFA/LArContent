@@ -646,6 +646,35 @@ bool LArPfoHelper::SortByNHits(const ParticleFlowObject *const pLhs, const Parti
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetBreadthFirstHierarchyRepresentation(const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &pfoList)
+{
+    const ParticleFlowObject *pRoot{pPfo};
+    PfoList parents{pRoot->GetParentPfoList()};
+    while (!parents.empty())
+    {
+        if (parents.size() > 1)
+            throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+        pRoot = parents.front();
+        parents = pRoot->GetParentPfoList();
+    }
+    PfoList queue;
+    pfoList.emplace_back(pRoot);
+    queue.emplace_back(pRoot);
+
+    while (!queue.empty())
+    {
+        const PfoList &daughters{queue.front()->GetDaughterPfoList()};
+        queue.pop_front();
+        for (const ParticleFlowObject *pDaughter : daughters)
+        {
+            pfoList.emplace_back(pDaughter);
+            queue.emplace_back(pDaughter);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 template <typename T>
 void LArPfoHelper::SlidingFitTrajectoryImpl(const T *const pT, const CartesianVector &vertexPosition, const unsigned int layerWindow,
     const float layerPitch, LArTrackStateVector &trackStateVector, IntVector *const pIndexVector)

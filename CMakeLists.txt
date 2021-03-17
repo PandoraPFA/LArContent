@@ -88,7 +88,7 @@ else()
     foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
         set(${PROJ}_VERSION_MAJOR 03)
         set(${PROJ}_VERSION_MINOR 22)
-        set(${PROJ}_VERSION_PATCH 04)
+        set(${PROJ}_VERSION_PATCH 08)
         set(${PROJ}_VERSION "${${PROJ}_VERSION_MAJOR}.${${PROJ}_VERSION_MINOR}.${${PROJ}_VERSION_PATCH}")
     endforeach()
 
@@ -131,7 +131,7 @@ else()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
     # Low level settings - compiler etc
-    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wno-sign-compare -Wshadow -fno-strict-aliasing -std=c++17 ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-Wall -Wextra -Werror -pedantic -Wno-long-long -Wshadow -fno-strict-aliasing -std=c++17 ${CMAKE_CXX_FLAGS}")
 
     include(CheckCXXCompilerFlag)
     unset(COMPILER_SUPPORTS_CXX_FLAGS CACHE)

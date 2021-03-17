@@ -829,6 +829,27 @@ bool LArMCParticleHelper::IsDescendentOf(const MCParticle *const pMCParticle, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArMCParticleHelper::GetBreadthFirstHierarchyRepresentation(const MCParticle *const pMCParticle, MCParticleList &mcParticleList)
+{
+    const MCParticle *const pRoot{LArMCParticleHelper::GetParentMCParticle(pMCParticle)};
+    MCParticleList queue;
+    mcParticleList.emplace_back(pRoot);
+    queue.emplace_back(pRoot);
+
+    while (!queue.empty())
+    {
+        const MCParticleList &daughters{queue.front()->GetDaughterList()};
+        queue.pop_front();
+        for (const MCParticle *pDaughter : daughters)
+        {
+            mcParticleList.emplace_back(pDaughter);
+            queue.emplace_back(pDaughter);
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArMCParticleHelper::SelectGoodCaloHits(const CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap,
     CaloHitList &selectedGoodCaloHitList, const bool selectInputHits, const float minHitSharingFraction)
 {
