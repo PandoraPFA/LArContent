@@ -138,7 +138,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,
         correlation, twoViewXOverlap);
 
-    if (p_ValidationTool) p_ValidationTool->Run();
+    if (p_ValidationTool) 
+        p_ValidationTool->Run(pCluster1, pCluster2, resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, overlapResult);
 
     return STATUS_CODE_SUCCESS;
 }
