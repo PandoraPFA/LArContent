@@ -6,7 +6,7 @@
  *  $Log: $
  */
 
-#include "Pandora/AlgorithmHeaders.h"
+//#include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArMonitoring/TwoViewTransverseTracksValidationTool.h"
 
@@ -15,8 +15,16 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoViewTransverseTracksValidationTool::TwoViewTransverseTracksValidationTool()
+TwoViewTransverseTracksValidationTool::TwoViewTransverseTracksValidationTool() :
+    m_treeName("mytree"),
+    m_outputFileName("output.root")
 {
+    //PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "matchtree", "ksuv", var));
+}
+
+TwoViewTransverseTracksValidationTool::~TwoViewTransverseTracksValidationTool()
+{
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_treeName.c_str(), m_outputFileName.c_str(), "UPDATE"));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -25,7 +33,14 @@ bool TwoViewTransverseTracksValidationTool::Run(const pandora::Cluster *const pC
     const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2,
     const TwoViewTransverseOverlapResult &overlapResult)
 {
-    std::cout<<"This runs"<<std::endl;
+
+    TreeDataBox treeDataBox;
+    //RegisterTreeDatum(1.f, treeDataBox);
+
+    StoreAndRegisterDatum(static_cast<int>(discreteProbabilityVector1.GetSize()), "distSize1", treeDataBox);
+
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
+   
     return true;
 }
 
