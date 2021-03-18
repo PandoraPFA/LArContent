@@ -21,7 +21,9 @@ TwoViewTransverseTracksValidationTool::TwoViewTransverseTracksValidationTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewTransverseTracksValidationTool::Run(/*fill in*/)
+bool TwoViewTransverseTracksValidationTool::Run(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+    const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2,
+    const TwoViewTransverseOverlapResult &overlapResult)
 {
     std::cout<<"This runs"<<std::endl;
     return true;
