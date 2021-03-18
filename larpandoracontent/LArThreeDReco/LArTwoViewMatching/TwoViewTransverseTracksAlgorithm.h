@@ -11,6 +11,8 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArMonitoring/TwoViewTransverseTracksValidationTool.h"
+
 #include "larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h"
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
@@ -90,6 +92,8 @@ private:
     float                       m_minOverallMatchingScore;               ///< The minimum required global matching score to fill the overlap result
     float                       m_minOverallLocallyMatchedFraction;      ///< The minimum required lcoally matched fraction to fill the overlap result
     std::mt19937                m_randomNumberGenerator;                 ///< The random number generator
+
+    TwoViewTransverseTracksValidationTool* p_ValidationTool;             ///< The validation tool
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

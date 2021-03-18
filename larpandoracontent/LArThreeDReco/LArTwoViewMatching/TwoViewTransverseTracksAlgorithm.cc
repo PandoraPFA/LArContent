@@ -29,7 +29,8 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_maxDotProduct(0.998f),
     m_minOverallMatchingScore(0.1f),
     m_minOverallLocallyMatchedFraction(0.1f),
-    m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0))
+    m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0)),
+    p_ValidationTool(nullptr)
 {
 }
 
@@ -137,6 +138,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,
         correlation, twoViewXOverlap);
 
+    if (p_ValidationTool) p_ValidationTool->Run();
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -242,9 +245,15 @@ StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlH
         TransverseMatrixTool *const pTransverseMatrixTool(dynamic_cast<TransverseMatrixTool*>(*iter));
 
         if (!pTransverseMatrixTool)
-            return STATUS_CODE_INVALID_PARAMETER;
-
-        m_algorithmToolVector.push_back(pTransverseMatrixTool);
+        {
+            p_ValidationTool = dynamic_cast<TwoViewTransverseTracksValidationTool*>(*iter); 
+            if (!p_ValidationTool)
+                return STATUS_CODE_INVALID_PARAMETER;
+        }
+        else
+        {
+            m_algorithmToolVector.push_back(pTransverseMatrixTool);
+        }
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
