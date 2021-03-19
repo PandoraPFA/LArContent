@@ -16,7 +16,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoViewTransverseTracksValidationTool::TwoViewTransverseTracksValidationTool() : m_treeName("mytree"), m_outputFileName("output.root")
+TwoViewTransverseTracksValidationTool::TwoViewTransverseTracksValidationTool() :
+    m_treeName("mytree"), 
+    m_outputFileName("output.root")
 {
 }
 
