@@ -5,21 +5,18 @@
  *
  *  $Log: $
  */
-
-#include <limits>
-
 #include "Helpers/MCParticleHelper.h"
 
 #include "larpandoracontent/LArMonitoring/TwoViewTransverseTracksValidationTool.h"
+
+#include <limits>
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-TwoViewTransverseTracksValidationTool::TwoViewTransverseTracksValidationTool() :
-    m_treeName("mytree"),
-    m_outputFileName("output.root")
+TwoViewTransverseTracksValidationTool::TwoViewTransverseTracksValidationTool() : m_treeName("mytree"), m_outputFileName("output.root")
 {
 }
 
@@ -30,7 +27,7 @@ TwoViewTransverseTracksValidationTool::~TwoViewTransverseTracksValidationTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewTransverseTracksValidationTool::Run(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+bool TwoViewTransverseTracksValidationTool::Run(const Cluster *const pCluster1, const Cluster *const pCluster2,
     const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2,
     const TwoViewTransverseOverlapResult &overlapResult)
 {
@@ -59,16 +56,16 @@ bool TwoViewTransverseTracksValidationTool::Run(const pandora::Cluster *const pC
     CollectChargeProfileInformation(discreteProbabilityVector2, treeDataBox, "2");
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
-   
+
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewTransverseTracksValidationTool::IsSameMCParticle(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2)
+bool TwoViewTransverseTracksValidationTool::IsSameMCParticle(const Cluster *const pCluster1, const Cluster *const pCluster2)
 {
-    const pandora::MCParticle *const pMCParticle1(MCParticleHelper::GetMainMCParticle(pCluster1));
-    const pandora::MCParticle *const pMCParticle2(MCParticleHelper::GetMainMCParticle(pCluster2));
+    const MCParticle *const pMCParticle1(MCParticleHelper::GetMainMCParticle(pCluster1));
+    const MCParticle *const pMCParticle2(MCParticleHelper::GetMainMCParticle(pCluster2));
 
     if (pMCParticle1 && pMCParticle2)
     {
@@ -80,8 +77,7 @@ bool TwoViewTransverseTracksValidationTool::IsSameMCParticle(const pandora::Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewTransverseTracksValidationTool::CollectTruthInformation(const pandora::Cluster *const pCluster, 
-    TreeDataBox &treeDataBox, std::string clusterName)
+void TwoViewTransverseTracksValidationTool::CollectTruthInformation(const Cluster *const pCluster, TreeDataBox &treeDataBox, std::string clusterName)
 {
     constexpr float floatDefault(std::numeric_limits<int>::lowest());
 
@@ -92,7 +88,7 @@ void TwoViewTransverseTracksValidationTool::CollectTruthInformation(const pandor
     float momXMCParticle(floatDefault), momYMCParticle(floatDefault), momZMCParticle(floatDefault);
     float posXMCParticle(floatDefault), posYMCParticle(floatDefault), posZMCParticle(floatDefault);
 
-    const pandora::MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
+    const MCParticle *const pMCParticle(MCParticleHelper::GetMainMCParticle(pCluster));
     if (pMCParticle)
     {
         foundMCParticle = 1;
@@ -107,30 +103,30 @@ void TwoViewTransverseTracksValidationTool::CollectTruthInformation(const pandor
         posZMCParticle = pMCParticle->GetVertex().GetZ();
     }
 
-    StoreAndRegisterDatum(foundMCParticle, ("foundMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(pdgMCParticle, ("pdgMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(isPrimaryMCParticle, ("isPrimaryMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(energyMCParticle, ("energyMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(momXMCParticle, ("momXMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(momYMCParticle, ("momYMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(momZMCParticle, ("momZMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(posXMCParticle, ("posXMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(posYMCParticle, ("posYMCParticle"+clusterName), treeDataBox);
-    StoreAndRegisterDatum(posZMCParticle, ("posZMCParticle"+clusterName), treeDataBox);
+    StoreAndRegisterDatum(foundMCParticle, ("foundMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(pdgMCParticle, ("pdgMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(isPrimaryMCParticle, ("isPrimaryMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(energyMCParticle, ("energyMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(momXMCParticle, ("momXMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(momYMCParticle, ("momYMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(momZMCParticle, ("momZMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(posXMCParticle, ("posXMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(posYMCParticle, ("posYMCParticle" + clusterName), treeDataBox);
+    StoreAndRegisterDatum(posZMCParticle, ("posZMCParticle" + clusterName), treeDataBox);
 
     return;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewTransverseTracksValidationTool::CollectChargeProfileInformation(const DiscreteProbabilityVector &discreteProbabilityVector,
-    TreeDataBox &treeDataBox, std::string clusterName)
+void TwoViewTransverseTracksValidationTool::CollectChargeProfileInformation(
+    const DiscreteProbabilityVector &discreteProbabilityVector, TreeDataBox &treeDataBox, std::string clusterName)
 {
-    std::string xName("xValues"+clusterName);
-    std::string probabilityDensityName("probDensityValues"+clusterName);
-    std::string probabilityName("probValues"+clusterName);
-    std::string cumulativeProbabilityName("cumulProbValues"+clusterName);
-    std::string widthName("widthValues"+clusterName);
+    std::string xName("xValues" + clusterName);
+    std::string probabilityDensityName("probDensityValues" + clusterName);
+    std::string probabilityName("probValues" + clusterName);
+    std::string cumulativeProbabilityName("cumulProbValues" + clusterName);
+    std::string widthName("widthValues" + clusterName);
 
     StoreAndRegisterDatum(std::vector<float>(), xName, treeDataBox);
     StoreAndRegisterDatum(std::vector<float>(), probabilityDensityName, treeDataBox);
@@ -156,11 +152,9 @@ void TwoViewTransverseTracksValidationTool::CollectChargeProfileInformation(cons
 
 StatusCode TwoViewTransverseTracksValidationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TreeName", m_treeName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treeName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputFileName", m_outputFileName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OutputFileName", m_outputFileName));
 
     return STATUS_CODE_SUCCESS;
 }
