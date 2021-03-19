@@ -8,7 +8,10 @@
 #ifndef TWO_VIEW_TRANSVERSE_TRACKS_VALIDATION_TOOL_H
 #define TWO_VIEW_TRANSVERSE_TRACKS_VALIDATION_TOOL_H 1
 
+#include <any>
 #include <memory>
+#include <type_traits>
+#include <typeinfo>
 
 #include "PandoraMonitoringApi.h"
 
@@ -43,24 +46,27 @@ public:
 private:
     class AbstractDatum
     {
-//        public:
-//            virtual void RegisterDatumWithTree(const pandora::Pandora *const p_Pandora, const std::string treeName, 
-//                const std::string branchName) = 0;
-//
+        public:
+            template <typename T>
+            void emplace_back(const T &t);
+        private:
+            virtual void emplace_back_impl(const std::any &value) = 0;
     };
 
     template <typename T> 
     class TreeDatum : public AbstractDatum
     {
         public:
-            TreeDatum(T t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string datumName);
+            TreeDatum(const T &t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string datumName);
+
+            void emplace_back_impl(const std::any &value) override;
 
         private:
-//            void RegisterDatumWithTree(const pandora::Pandora *const p_Pandora, const std::string treeName, 
-//                const std::string branchName) /*override*/;
-
             T m_Datum;
     };
+
+    template<typename U> struct is_std_vector final : std::false_type {};
+    template<typename... U> struct is_std_vector<std::vector<U...> > final : std::true_type {};
 
     typedef std::map<std::string, std::unique_ptr<AbstractDatum> > TreeDataBox;
 
@@ -68,7 +74,7 @@ private:
     void StoreAndRegisterDatum(const T &t, const std::string datumName, TreeDataBox &treeDataBox);
 
     template <typename T>
-    void RegisterTreeDatum(const T &t, const std::string datumName) const;
+    void RegisterTreeDatum(T &t, const std::string datumName) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -77,35 +83,54 @@ private:
 };
 
 template <typename T>
-TwoViewTransverseTracksValidationTool::TreeDatum<T>::TreeDatum(T t, const TwoViewTransverseTracksValidationTool *const pTool, 
+void TwoViewTransverseTracksValidationTool::AbstractDatum::emplace_back(const T &t)
+{
+    emplace_back_impl(std::any(t));
+}
+
+template <typename T>
+TwoViewTransverseTracksValidationTool::TreeDatum<T>::TreeDatum(const T &t, const TwoViewTransverseTracksValidationTool *const pTool, 
     const std::string datumName) :
     m_Datum(t)
 {
-    
-    pTool->RegisterTreeDatum(t, datumName);
-    //RegisterDatumWithTree(p_Pandora, treeName, branchName, m_Datum);
-    //PANDORA_MONITORING_API(SetTreeVariable(pandoraInstance, treeName, branchName, m_Datum));
+    pTool->RegisterTreeDatum(m_Datum, datumName);
+}
+
+template <typename T>
+void TwoViewTransverseTracksValidationTool::TreeDatum<T>::emplace_back_impl(const std::any &value)
+{
+    if constexpr (is_std_vector<T>::value)
+    {
+        m_Datum.emplace_back((std::any_cast<typename T::value_type>(value)));
+    }
+    else
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_ALLOWED);
+
+    return;
 }
 
 template <typename T>
 void TwoViewTransverseTracksValidationTool::StoreAndRegisterDatum(const T &t, const std::string datumName, TreeDataBox &treeDataBox)
 {
-    treeDataBox.try_emplace(datumName, (new TreeDatum<T>(t, this, datumName)));
+    auto [iterator, inserted] = treeDataBox.try_emplace(datumName, (new TreeDatum<T>(t, this, datumName)));
+    if (!inserted)
+        throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
     return;
 }
 
 
 template <typename T>
-void TwoViewTransverseTracksValidationTool::RegisterTreeDatum(const T &t, const std::string datumName) const
+void TwoViewTransverseTracksValidationTool::RegisterTreeDatum(T &t, const std::string datumName) const
 {
-    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), datumName.c_str(), t));
+    if constexpr (is_std_vector<T>::value)
+    {
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), datumName.c_str(), &t));
+    }
+    else
+    {
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), datumName.c_str(), t));
+    }
 }
-
-//void TwoViewTransverseTracksValidationTool::TreeDatum::RegisterDatumWithTree(const pandora::Pandora *const p_Pandora, 
-//    const std::string treeName, const std::string branchName)
-//{
-//    PANDORA_MONITORING_API(SetTreeVariable(p_Pandora, treeName, branchName, m_Datum));
-//}
 
 } // namespace lar_content
 

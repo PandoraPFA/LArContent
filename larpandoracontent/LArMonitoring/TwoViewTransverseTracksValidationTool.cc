@@ -38,6 +38,11 @@ bool TwoViewTransverseTracksValidationTool::Run(const pandora::Cluster *const pC
     //RegisterTreeDatum(1.f, treeDataBox);
 
     StoreAndRegisterDatum(static_cast<int>(discreteProbabilityVector1.GetSize()), "distSize1", treeDataBox);
+    //std::vector<float> *vec = new std::vector<float>();
+    //StoreAndRegisterDatum(vec, "vect1", treeDataBox);
+    StoreAndRegisterDatum(std::vector<float>(8.f,1.f), "vect1", treeDataBox);
+    treeDataBox["vect1"]->emplace_back(2.f);
+    treeDataBox["vect1"]->emplace_back(6.f);
 
     PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
    
