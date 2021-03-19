@@ -11,7 +11,6 @@
 #include <any>
 #include <memory>
 #include <type_traits>
-#include <typeinfo>
 
 #include "PandoraMonitoringApi.h"
 
