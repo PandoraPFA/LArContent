@@ -53,7 +53,7 @@ private:
     };
 
     template <typename T> 
-    class TreeDatum : public AbstractDatum
+    class TreeDatum final : public AbstractDatum
     {
         public:
             TreeDatum(const T &t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string datumName);
@@ -64,8 +64,8 @@ private:
             T m_Datum;
     };
 
-    template<typename U> struct is_std_vector final : std::false_type {};
-    template<typename... U> struct is_std_vector<std::vector<U...> > final : std::true_type {};
+    template<typename T> struct is_std_vector final : std::false_type {};
+    template<typename... T> struct is_std_vector<std::vector<T...> > final : std::true_type {};
 
     typedef std::map<std::string, std::unique_ptr<AbstractDatum> > TreeDataBox;
 
