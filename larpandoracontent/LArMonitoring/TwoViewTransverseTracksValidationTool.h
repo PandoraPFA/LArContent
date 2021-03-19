@@ -75,6 +75,13 @@ private:
     template <typename T>
     void RegisterTreeDatum(T &t, const std::string datumName) const;
 
+    void CollectTruthInformation(const pandora::Cluster *const pCluster, TreeDataBox &treeDataBox, std::string clusterName);
+
+    void CollectChargeProfileInformation(const DiscreteProbabilityVector &discreteProbabilityVector, TreeDataBox &treeDataBox,
+        std::string clusterName);
+
+    bool IsSameMCParticle(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2);
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string m_treeName;            ///< name of output tree
