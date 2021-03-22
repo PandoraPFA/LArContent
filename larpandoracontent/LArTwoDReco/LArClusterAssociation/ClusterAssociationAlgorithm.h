@@ -103,13 +103,10 @@ private:
     /**
      *  @brief  Update cluster association map to reflect an ambiguous cluster merge
      *
-     *  @param  pClusterToEnlarge address of the cluster to be enlarged
-     *  @param  pClusterToDelete address of the cluster to be deleted
-     *  @param  isForwardMerge whether merge is forward (pClusterToEnlarge is forward-associated with pClusterToDelete)
+     *  @param  pCluster address of the cluster to be cleared
      *  @param  clusterAssociationMap the cluster association map
      */
-    void UpdateForAmbiguousMerge(const pandora::Cluster *const pClusterToEnlarge, const pandora::Cluster *const pClusterToDelete,
-        const bool isForwardMerge, ClusterAssociationMap &clusterAssociationMap) const;
+    void UpdateForAmbiguousMerge(const pandora::Cluster *const pCluster, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
      *  @brief  Navigate along cluster associations, from specified cluster, in specified direction
