@@ -89,20 +89,20 @@ void ClusterAssociationAlgorithm::UnambiguousPropagation(const Cluster *const pC
     if (clusterAssociationMap.end() == iterEnlarge)
         return;
 
-    ClusterSet &clusterSetEnlarge(isForward ? iterEnlarge->second.m_forwardAssociations : iterEnlarge->second.m_backwardAssociations);
+    ClusterList &clusterListEnlarge(isForward ? iterEnlarge->second.m_forwardAssociations : iterEnlarge->second.m_backwardAssociations);
 
-    if (clusterSetEnlarge.size() != 1)
+    if (clusterListEnlarge.size() != 1)
         return;
 
-    const Cluster *const pClusterToDelete = *(clusterSetEnlarge.begin());
+    const Cluster *const pClusterToDelete = clusterListEnlarge.front();
     ClusterAssociationMap::iterator iterDelete = clusterAssociationMap.find(pClusterToDelete);
 
     if (clusterAssociationMap.end() == iterDelete)
         return;
 
-    ClusterSet &clusterSetDelete(isForward ? iterDelete->second.m_backwardAssociations : iterDelete->second.m_forwardAssociations);
+    ClusterList &clusterListDelete(isForward ? iterDelete->second.m_backwardAssociations : iterDelete->second.m_forwardAssociations);
 
-    if (clusterSetDelete.size() != 1)
+    if (clusterListDelete.size() != 1)
         return;
 
     this->UpdateForUnambiguousMerge(pClusterToEnlarge, pClusterToDelete, isForward, clusterAssociationMap);
@@ -123,29 +123,28 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(const Cluster *const pClu
 
     const Cluster *pExtremalCluster = pCluster;
 
-    ClusterSet firstClusterSet;
-    this->NavigateAlongAssociations(clusterAssociationMap, pCluster, isForward, pExtremalCluster, firstClusterSet);
+    ClusterList firstClusterList;
+    this->NavigateAlongAssociations(clusterAssociationMap, pCluster, isForward, pExtremalCluster, firstClusterList);
 
-    ClusterSet secondClusterSet;
-    this->NavigateAlongAssociations(clusterAssociationMap, pExtremalCluster, !isForward, pExtremalCluster, secondClusterSet);
+    ClusterList secondClusterList;
+    this->NavigateAlongAssociations(clusterAssociationMap, pExtremalCluster, !isForward, pExtremalCluster, secondClusterList);
 
-    ClusterVector daughterClusterVector;
+    ClusterList daughterClusterList;
 
     if (pCluster == pExtremalCluster)
     {
-        for (const Cluster *const pFirstCluster : firstClusterSet)
+        for (const Cluster *const pFirstCluster : firstClusterList)
         {
-            if ((pCluster != pFirstCluster) && (secondClusterSet.count(pFirstCluster)) &&
-                (daughterClusterVector.end() == std::find(daughterClusterVector.begin(), daughterClusterVector.end(), pFirstCluster)))
+            if ((pCluster != pFirstCluster) &&
+                (secondClusterList.end() != std::find(secondClusterList.begin(), secondClusterList.end(), pFirstCluster)) &&
+                (daughterClusterList.end() == std::find(daughterClusterList.begin(), daughterClusterList.end(), pFirstCluster)))
             {
-                daughterClusterVector.push_back(pFirstCluster);
+                daughterClusterList.push_back(pFirstCluster);
             }
         }
     }
 
-    std::sort(daughterClusterVector.begin(), daughterClusterVector.end(), LArClusterHelper::SortByNHits);
-
-    for (ClusterVector::iterator dIter = daughterClusterVector.begin(), dIterEnd = daughterClusterVector.end(); dIter != dIterEnd; ++dIter)
+    for (ClusterList::iterator dIter = daughterClusterList.begin(), dIterEnd = daughterClusterList.end(); dIter != dIterEnd; ++dIter)
     {
         this->UpdateForAmbiguousMerge(pCluster, *dIter, isForward, clusterAssociationMap);
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pCluster, *dIter));
@@ -165,29 +164,29 @@ void ClusterAssociationAlgorithm::UpdateForUnambiguousMerge(const Cluster *const
     if ((clusterAssociationMap.end() == iterEnlarge) || (clusterAssociationMap.end() == iterDelete))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    ClusterSet &clusterSetToMove(isForwardMerge ? iterDelete->second.m_forwardAssociations : iterDelete->second.m_backwardAssociations);
-    ClusterSet &clusterSetToReplace(isForwardMerge ? iterEnlarge->second.m_forwardAssociations : iterEnlarge->second.m_backwardAssociations);
-    clusterSetToReplace = clusterSetToMove;
+    ClusterList &clusterListToMove(isForwardMerge ? iterDelete->second.m_forwardAssociations : iterDelete->second.m_backwardAssociations);
+    ClusterList &clusterListToReplace(isForwardMerge ? iterEnlarge->second.m_forwardAssociations : iterEnlarge->second.m_backwardAssociations);
+    clusterListToReplace = clusterListToMove;
     clusterAssociationMap.erase(iterDelete);
 
     for (ClusterAssociationMap::iterator iter = clusterAssociationMap.begin(), iterEnd = clusterAssociationMap.end(); iter != iterEnd; ++iter)
     {
-        ClusterSet &forwardClusters = iter->second.m_forwardAssociations;
-        ClusterSet &backwardClusters = iter->second.m_backwardAssociations;
+        ClusterList &forwardClusters = iter->second.m_forwardAssociations;
+        ClusterList &backwardClusters = iter->second.m_backwardAssociations;
 
-        ClusterSet::iterator forwardIter = forwardClusters.find(pClusterToDelete);
-        ClusterSet::iterator backwardIter = backwardClusters.find(pClusterToDelete);
+        ClusterList::iterator forwardIter = std::find(forwardClusters.begin(), forwardClusters.end(), pClusterToDelete);
+        ClusterList::iterator backwardIter = std::find(backwardClusters.begin(), backwardClusters.end(), pClusterToDelete);
 
         if (forwardClusters.end() != forwardIter)
         {
             forwardClusters.erase(forwardIter);
-            forwardClusters.insert(pClusterToEnlarge);
+            forwardClusters.push_back(pClusterToEnlarge);
         }
 
         if (backwardClusters.end() != backwardIter)
         {
             backwardClusters.erase(backwardIter);
-            backwardClusters.insert(pClusterToEnlarge);
+            backwardClusters.push_back(pClusterToEnlarge);
         }
     }
 }
@@ -203,10 +202,10 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const p
     if ((clusterAssociationMap.end() == iterEnlarge) || (clusterAssociationMap.end() == iterDelete))
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-    ClusterSet &clusterSetEnlarge(isForwardMerge ? iterEnlarge->second.m_forwardAssociations : iterEnlarge->second.m_backwardAssociations);
-    ClusterSet &clusterSetDelete(isForwardMerge ? iterDelete->second.m_backwardAssociations : iterDelete->second.m_forwardAssociations);
+    ClusterList &clusterListEnlarge(isForwardMerge ? iterEnlarge->second.m_forwardAssociations : iterEnlarge->second.m_backwardAssociations);
+    ClusterList &clusterListDelete(isForwardMerge ? iterDelete->second.m_backwardAssociations : iterDelete->second.m_forwardAssociations);
 
-    for (ClusterSet::iterator iter = clusterSetEnlarge.begin(); iter != clusterSetEnlarge.end();)
+    for (ClusterList::iterator iter = clusterListEnlarge.begin(); iter != clusterListEnlarge.end();)
     {
         if ((*iter) != pClusterToDelete)
         {
@@ -215,15 +214,15 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const p
             if (clusterAssociationMap.end() == iterAssociation)
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            ClusterSet &associatedClusterSet(isForwardMerge ? iterAssociation->second.m_backwardAssociations : iterAssociation->second.m_forwardAssociations);
+            ClusterList &associatedClusterList(isForwardMerge ? iterAssociation->second.m_backwardAssociations : iterAssociation->second.m_forwardAssociations);
 
-            ClusterSet::iterator enlargeIter = associatedClusterSet.find(pClusterToEnlarge);
+            ClusterList::iterator enlargeIter = std::find(associatedClusterList.begin(), associatedClusterList.end(), pClusterToEnlarge);
 
-            if (associatedClusterSet.end() == enlargeIter)
+            if (associatedClusterList.end() == enlargeIter)
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            associatedClusterSet.erase(enlargeIter);
-            clusterSetEnlarge.erase(iter++);
+            associatedClusterList.erase(enlargeIter);
+            clusterListEnlarge.erase(iter++);
         }
         else
         {
@@ -231,7 +230,7 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const p
         }
     }
 
-    for (ClusterSet::iterator iter = clusterSetDelete.begin(); iter != clusterSetDelete.end();)
+    for (ClusterList::iterator iter = clusterListDelete.begin(); iter != clusterListDelete.end();)
     {
         if ((*iter) != pClusterToEnlarge)
         {
@@ -240,15 +239,15 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const p
             if (clusterAssociationMap.end() == iterAssociation)
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            ClusterSet &associatedClusterSet(isForwardMerge ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);
+            ClusterList &associatedClusterList(isForwardMerge ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);
 
-            ClusterSet::iterator deleteIter = associatedClusterSet.find(pClusterToDelete);
+            ClusterList::iterator deleteIter = std::find(associatedClusterList.begin(), associatedClusterList.end(), pClusterToDelete);
 
-            if (associatedClusterSet.end() == deleteIter)
+            if (associatedClusterList.end() == deleteIter)
                 throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
-            associatedClusterSet.erase(deleteIter);
-            clusterSetDelete.erase(iter++);
+            associatedClusterList.erase(deleteIter);
+            clusterListDelete.erase(iter++);
         }
         else
         {
@@ -262,23 +261,24 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const p
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssociationMap &clusterAssociationMap, const Cluster *const pCluster,
-    const bool isForward, const Cluster *&pExtremalCluster, ClusterSet &clusterSet) const
+    const bool isForward, const Cluster *&pExtremalCluster, ClusterList &clusterList) const
 {
     ClusterAssociationMap::const_iterator iterAssociation = clusterAssociationMap.find(pCluster);
 
     if (clusterAssociationMap.end() == iterAssociation)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    (void) clusterSet.insert(pCluster);
+    if (clusterList.end() == std::find(clusterList.begin(), clusterList.end(), pCluster))
+        clusterList.push_back(pCluster);
 
     if ((pCluster != pExtremalCluster) && this->IsExtremalCluster(isForward, pExtremalCluster, pCluster))
           pExtremalCluster = pCluster;
 
-    const ClusterSet &associatedClusterSet(isForward ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);
+    const ClusterList &associatedClusterList(isForward ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);
 
-    for (ClusterSet::const_iterator iter = associatedClusterSet.begin(), iterEnd = associatedClusterSet.end(); iter != iterEnd; ++iter)
+    for (ClusterList::const_iterator iter = associatedClusterList.begin(), iterEnd = associatedClusterList.end(); iter != iterEnd; ++iter)
     {
-        this->NavigateAlongAssociations(clusterAssociationMap, *iter, isForward, pExtremalCluster, clusterSet);
+        this->NavigateAlongAssociations(clusterAssociationMap, *iter, isForward, pExtremalCluster, clusterList);
     }
 }
 

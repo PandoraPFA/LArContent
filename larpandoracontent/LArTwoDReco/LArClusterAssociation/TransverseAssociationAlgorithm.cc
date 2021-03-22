@@ -224,14 +224,26 @@ void TransverseAssociationAlgorithm::FillAssociationMap(const ClusterToClustersM
 
             if (this->IsAssociated(true, pClusterI, pClusterJ, nearbyClusters))
             {
-                firstAssociationMap[pClusterI].m_forwardAssociations.insert(pClusterJ);
-                secondAssociationMap[pClusterJ].m_backwardAssociations.insert(pClusterI);
+                ClusterList &forwardAssociations(firstAssociationMap[pClusterI].m_forwardAssociations);
+                ClusterList &backwardAssociations(secondAssociationMap[pClusterJ].m_backwardAssociations);
+
+                if (forwardAssociations.end() == std::find(forwardAssociations.begin(), forwardAssociations.end(), pClusterJ))
+                    forwardAssociations.push_back(pClusterJ);
+
+                if (backwardAssociations.end() == std::find(backwardAssociations.begin(), backwardAssociations.end(), pClusterI))
+                    backwardAssociations.push_back(pClusterI);
             }
 
             if (this->IsAssociated(false, pClusterI, pClusterJ, nearbyClusters))
             {
-                firstAssociationMap[pClusterI].m_backwardAssociations.insert(pClusterJ);
-                secondAssociationMap[pClusterJ].m_forwardAssociations.insert(pClusterI);
+                ClusterList &forwardAssociations(secondAssociationMap[pClusterJ].m_forwardAssociations);
+                ClusterList &backwardAssociations(firstAssociationMap[pClusterI].m_backwardAssociations);
+
+                if (backwardAssociations.end() == std::find(backwardAssociations.begin(), backwardAssociations.end(), pClusterJ))
+                    backwardAssociations.push_back(pClusterJ);
+
+                if (forwardAssociations.end() == std::find(forwardAssociations.begin(), forwardAssociations.end(), pClusterI))
+                    forwardAssociations.push_back(pClusterI);
             }
         }
     }
@@ -282,8 +294,8 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterT
             if (pInnerCluster == pOuterCluster)
                 continue;
 
-            if (iterInner->second.m_forwardAssociations.count(pOuterCluster) == 0 ||
-                iterOuter->second.m_backwardAssociations.count(pInnerCluster) == 0)
+            if ((iterInner->second.m_forwardAssociations.end() == std::find(iterInner->second.m_forwardAssociations.begin(), iterInner->second.m_forwardAssociations.end(), pOuterCluster)) ||
+                (iterInner->second.m_backwardAssociations.end() == std::find(iterInner->second.m_backwardAssociations.begin(), iterInner->second.m_backwardAssociations.end(), pInnerCluster)))
                 continue;
 
             if (!this->IsExtremalCluster(true, pInnerCluster, pOuterCluster) ||
@@ -293,8 +305,14 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterT
             if (!this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster, nearbyClusters))
                 continue;
 
-            clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
-            clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
+            ClusterList &forwardAssociations(clusterAssociationMap[pInnerCluster].m_forwardAssociations);
+            ClusterList &backwardAssociations(clusterAssociationMap[pOuterCluster].m_backwardAssociations);
+
+            if (forwardAssociations.end() == std::find(forwardAssociations.begin(), forwardAssociations.end(), pOuterCluster))
+                forwardAssociations.push_back(pOuterCluster);
+
+            if (backwardAssociations.end() == std::find(backwardAssociations.begin(), backwardAssociations.end(), pInnerCluster))
+                backwardAssociations.push_back(pInnerCluster);
         }
     }
 }
@@ -308,7 +326,7 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const ClusterToCluste
     if (associationMap.end() == iterI)
         return;
 
-    for (ClusterSet::const_iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+    for (ClusterList::const_iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
         const Cluster *const pClusterJ = *iterJ;
 
@@ -316,7 +334,7 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const ClusterToCluste
             associatedVector.push_back(pClusterJ);
     }
 
-    for (ClusterSet::const_iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+    for (ClusterList::const_iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
     {
         const Cluster *const pClusterJ = *iterJ;
 
@@ -638,7 +656,8 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
                 if (secondAssociationMapSwapped.end() == iterSecondCheck)
                     continue;
 
-                if (iterSecondCheck->second.m_forwardAssociations.count(pOuterCluster) > 0)
+                if (iterSecondCheck->second.m_forwardAssociations.end() != std::find(iterSecondCheck->second.m_forwardAssociations.begin(),
+                    iterSecondCheck->second.m_forwardAssociations.end(), pOuterCluster))
                 {
                     isNeighbouringCluster = false;
                     break;
@@ -646,7 +665,12 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
             }
 
             if (isNeighbouringCluster)
-                clusterAssociationMap[pCluster].m_forwardAssociations.insert(pOuterCluster);
+            {
+                ClusterList &forwardAssociations(clusterAssociationMap[pCluster].m_forwardAssociations);
+
+                if (forwardAssociations.end() == std::find(forwardAssociations.begin(), forwardAssociations.end(), pOuterCluster))
+                    forwardAssociations.push_back(pOuterCluster);
+            }
         }
 
         for (const Cluster *const pInnerCluster : sortedInnerClusters)
@@ -659,7 +683,8 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
                 if (secondAssociationMapSwapped.end() == iterSecondCheck)
                     continue;
 
-                if (iterSecondCheck->second.m_backwardAssociations.count(pInnerCluster) > 0)
+                if (iterSecondCheck->second.m_backwardAssociations.end() != std::find(iterSecondCheck->second.m_backwardAssociations.begin(),
+                    iterSecondCheck->second.m_backwardAssociations.end(), pInnerCluster))
                 {
                     isNeighbouringCluster = false;
                     break;
@@ -667,7 +692,12 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
             }
 
             if (isNeighbouringCluster)
-                clusterAssociationMap[pCluster].m_backwardAssociations.insert(pInnerCluster);
+            {
+                ClusterList &backwardAssociations(clusterAssociationMap[pCluster].m_backwardAssociations);
+
+                if (backwardAssociations.end() == std::find(backwardAssociations.begin(), backwardAssociations.end(), pInnerCluster))
+                    backwardAssociations.push_back(pInnerCluster);
+            }
         }
     }
 }
@@ -699,27 +729,33 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
         {
             int nCounter(+1);
 
-            if (inputAssociation.m_backwardAssociations.count(pForwardCluster))
+            if (inputAssociation.m_backwardAssociations.end() != std::find(inputAssociation.m_backwardAssociations.begin(), inputAssociation.m_backwardAssociations.end(), pForwardCluster))
                 --nCounter;
 
             ClusterAssociationMap::const_iterator iterCheck = inputAssociationMap.find(pForwardCluster);
             if (inputAssociationMap.end() != iterCheck)
             {
-                if (iterCheck->second.m_forwardAssociations.count(pCluster))
+                if (iterCheck->second.m_forwardAssociations.end() != std::find(iterCheck->second.m_forwardAssociations.begin(), iterCheck->second.m_forwardAssociations.end(), pCluster))
                     --nCounter;
 
-                if (iterCheck->second.m_backwardAssociations.count(pCluster))
+                if (iterCheck->second.m_backwardAssociations.end() != std::find(iterCheck->second.m_backwardAssociations.begin(), iterCheck->second.m_backwardAssociations.end(), pCluster))
                     ++nCounter;
             }
 
             if (nCounter > 0)
             {
-                if(!(outputAssociationMap[pCluster].m_backwardAssociations.count(pForwardCluster) == 0 &&
-                     outputAssociationMap[pForwardCluster].m_forwardAssociations.count(pCluster) == 0))
+                if (!((outputAssociationMap[pCluster].m_backwardAssociations.end() == std::find(outputAssociationMap[pCluster].m_backwardAssociations.begin(), outputAssociationMap[pCluster].m_backwardAssociations.end(), pForwardCluster)) &&
+                     (outputAssociationMap[pForwardCluster].m_forwardAssociations.end() == std::find(outputAssociationMap[pForwardCluster].m_forwardAssociations.begin(), outputAssociationMap[pForwardCluster].m_forwardAssociations.end(), pCluster))))
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                outputAssociationMap[pCluster].m_forwardAssociations.insert(pForwardCluster);
-                outputAssociationMap[pForwardCluster].m_backwardAssociations.insert(pCluster);
+                ClusterList &forwardAssociations(outputAssociationMap[pCluster].m_forwardAssociations);
+                ClusterList &backwardAssociations(outputAssociationMap[pForwardCluster].m_backwardAssociations);
+
+                if (forwardAssociations.end() == std::find(forwardAssociations.begin(), forwardAssociations.end(), pForwardCluster))
+                    forwardAssociations.push_back(pForwardCluster);
+
+                if (backwardAssociations.end() == std::find(backwardAssociations.begin(), backwardAssociations.end(), pCluster))
+                    backwardAssociations.push_back(pCluster);
             }
         }
 
@@ -728,27 +764,33 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
         {
             int nCounter(-1);
 
-            if (inputAssociation.m_forwardAssociations.count(pBackwardCluster))
+            if (inputAssociation.m_forwardAssociations.end() != std::find(inputAssociation.m_forwardAssociations.begin(), inputAssociation.m_forwardAssociations.end(), pBackwardCluster))
                 ++nCounter;
 
             ClusterAssociationMap::const_iterator iterCheck = inputAssociationMap.find(pBackwardCluster);
             if (inputAssociationMap.end() != iterCheck)
             {
-                if (iterCheck->second.m_backwardAssociations.count(pCluster))
+                if (iterCheck->second.m_backwardAssociations.end() != std::find(iterCheck->second.m_backwardAssociations.begin(), iterCheck->second.m_backwardAssociations.end(), pCluster))
                     ++nCounter;
 
-                if (iterCheck->second.m_forwardAssociations.count(pCluster))
+                if (iterCheck->second.m_forwardAssociations.end() != std::find(iterCheck->second.m_forwardAssociations.begin(), iterCheck->second.m_forwardAssociations.end(), pCluster))
                     --nCounter;
             }
 
             if (nCounter < 0)
             {
-                if(!(outputAssociationMap[pCluster].m_forwardAssociations.count(pBackwardCluster) == 0 &&
-                     outputAssociationMap[pBackwardCluster].m_backwardAssociations.count(pCluster) == 0))
+                if (!((outputAssociationMap[pCluster].m_forwardAssociations.end() == std::find(outputAssociationMap[pCluster].m_forwardAssociations.begin(), outputAssociationMap[pCluster].m_forwardAssociations.end(), pBackwardCluster)) &&
+                     (outputAssociationMap[pBackwardCluster].m_backwardAssociations.end() == std::find(outputAssociationMap[pBackwardCluster].m_backwardAssociations.begin(), outputAssociationMap[pBackwardCluster].m_backwardAssociations.end(), pCluster))))
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                outputAssociationMap[pCluster].m_backwardAssociations.insert(pBackwardCluster);
-                outputAssociationMap[pBackwardCluster].m_forwardAssociations.insert(pCluster);
+                ClusterList &forwardAssociations(outputAssociationMap[pBackwardCluster].m_forwardAssociations);
+                ClusterList &backwardAssociations(outputAssociationMap[pCluster].m_backwardAssociations);
+
+                if (forwardAssociations.end() == std::find(forwardAssociations.begin(), forwardAssociations.end(), pCluster))
+                    forwardAssociations.push_back(pCluster);
+
+                if (backwardAssociations.end() == std::find(backwardAssociations.begin(), backwardAssociations.end(), pBackwardCluster))
+                    backwardAssociations.push_back(pBackwardCluster);
             }
         }
     }

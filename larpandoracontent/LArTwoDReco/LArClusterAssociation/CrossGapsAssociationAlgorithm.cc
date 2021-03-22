@@ -91,8 +91,14 @@ void CrossGapsAssociationAlgorithm::PopulateClusterAssociationMap(const ClusterV
             if (!this->AreClustersAssociated(fitIterI->second, fitIterJ->second))
                 continue;
 
-            clusterAssociationMap[pInnerCluster].m_forwardAssociations.insert(pOuterCluster);
-            clusterAssociationMap[pOuterCluster].m_backwardAssociations.insert(pInnerCluster);
+            ClusterList &forwardAssociations(clusterAssociationMap[pInnerCluster].m_forwardAssociations);
+            ClusterList &backwardAssociations(clusterAssociationMap[pOuterCluster].m_backwardAssociations);
+
+            if (forwardAssociations.end() == std::find(forwardAssociations.begin(), forwardAssociations.end(), pOuterCluster))
+                forwardAssociations.push_back(pOuterCluster);
+
+            if (backwardAssociations.end() == std::find(backwardAssociations.begin(), backwardAssociations.end(), pInnerCluster))
+                backwardAssociations.push_back(pInnerCluster);
         }
     }
 }

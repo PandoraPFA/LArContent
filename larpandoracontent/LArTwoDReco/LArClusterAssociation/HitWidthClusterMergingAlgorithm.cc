@@ -86,8 +86,14 @@ void HitWidthClusterMergingAlgorithm::PopulateClusterAssociationMap(const Cluste
             if (!this->AreClustersAssociated(currentClusterParameters, testClusterParameters))
                 continue;
 
-            clusterAssociationMap[pCurrentCluster].m_forwardAssociations.insert(pTestCluster);
-            clusterAssociationMap[pTestCluster].m_backwardAssociations.insert(pCurrentCluster);
+            ClusterList &forwardAssociations(clusterAssociationMap[pCurrentCluster].m_forwardAssociations);
+            ClusterList &backwardAssociations(clusterAssociationMap[pTestCluster].m_backwardAssociations);
+
+            if (forwardAssociations.end() == std::find(forwardAssociations.begin(), forwardAssociations.end(), pTestCluster))
+                forwardAssociations.push_back(pTestCluster);
+
+            if (backwardAssociations.end() == std::find(backwardAssociations.begin(), backwardAssociations.end(), pCurrentCluster))
+                backwardAssociations.push_back(pCurrentCluster);
         }
     }
 
@@ -402,19 +408,19 @@ void HitWidthClusterMergingAlgorithm::RemoveShortcutAssociations(const ClusterVe
                 if (secondaryMapIter == clusterAssociationMap.end())
                     continue;
 
-                const ClusterSet &secondaryForwardAssociations(secondaryMapIter->second.m_forwardAssociations);
+                const ClusterList &secondaryForwardAssociations(secondaryMapIter->second.m_forwardAssociations);
 
-                if (secondaryForwardAssociations.find(pConsideredCluster) != secondaryForwardAssociations.end())
+                if (secondaryForwardAssociations.end() != std::find(secondaryForwardAssociations.begin(), secondaryForwardAssociations.end(), pConsideredCluster))
                 {
-                    ClusterSet &tempPrimaryForwardAssociations(tempMap.find(pCluster)->second.m_forwardAssociations);
-                    const ClusterSet::const_iterator forwardAssociationToRemove(tempPrimaryForwardAssociations.find(pConsideredCluster));
+                    ClusterList &tempPrimaryForwardAssociations(tempMap.find(pCluster)->second.m_forwardAssociations);
+                    const ClusterList::const_iterator forwardAssociationToRemove(std::find(tempPrimaryForwardAssociations.begin(), tempPrimaryForwardAssociations.end(), pConsideredCluster));
 
                     // if association has already been removed
                     if(forwardAssociationToRemove == tempPrimaryForwardAssociations.end())
                         continue;
 
-                    ClusterSet &tempPrimaryBackwardAssociations(tempMap.find(pConsideredCluster)->second.m_backwardAssociations);
-                    const ClusterSet::const_iterator backwardAssociationToRemove(tempPrimaryBackwardAssociations.find(pCluster));
+                    ClusterList &tempPrimaryBackwardAssociations(tempMap.find(pConsideredCluster)->second.m_backwardAssociations);
+                    const ClusterList::const_iterator backwardAssociationToRemove(std::find(tempPrimaryBackwardAssociations.begin(), tempPrimaryBackwardAssociations.end(), pCluster));
 
                     // if association has already been removed
                     if (backwardAssociationToRemove == tempPrimaryBackwardAssociations.end())
