@@ -44,4 +44,3 @@ void LArDLHelper::Forward(TorchModel &model, const TorchInputVector &input, Torc
 }
 
 } // namespace lar_dl_content
-

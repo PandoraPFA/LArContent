@@ -10,6 +10,8 @@
 
 #include "Objects/CartesianVector.h"
 
+#include <vector>
+
 namespace lar_content
 {
 

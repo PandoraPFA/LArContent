@@ -33,7 +33,8 @@ public:
      *          above which cluster hits are broken into their constituent hits - only used with cluster input
      */
     template <typename T>
-    TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch, const float axisDeviationLimitForHitDivision = 0.95f);
+    TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const float axisDeviationLimitForHitDivision = 0.95f);
 
     /**
      *  @brief  Constructor using specified primary axis. The orthogonal axis must be perpendicular to the primary axis.
@@ -48,8 +49,9 @@ public:
      *          above which cluster hits are broken into their constituent hits - only used with cluster input
      */
     template <typename T>
-    TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch, const pandora::CartesianVector &axisIntercept,
-        const pandora::CartesianVector &axisDirection, const pandora::CartesianVector &orthoDirection, const float axisDeviationLimitForHitDivision = 0.95f);
+    TwoDSlidingFitResult(const T *const pT, const unsigned int layerFitHalfWindow, const float layerPitch,
+        const pandora::CartesianVector &axisIntercept, const pandora::CartesianVector &axisDirection,
+        const pandora::CartesianVector &orthoDirection, const float axisDeviationLimitForHitDivision = 0.95f);
 
     /**
      *  @brief  Constructor using specified primary axis and layer fit contribution map. User is responsible for ensuring that
@@ -64,7 +66,8 @@ public:
      *  @param  layerFitContributionMap the layer fit contribution map
      */
     TwoDSlidingFitResult(const unsigned int layerFitHalfWindow, const float layerPitch, const pandora::CartesianVector &axisIntercept,
-        const pandora::CartesianVector &axisDirection, const pandora::CartesianVector &orthoDirection, const LayerFitContributionMap &layerFitContributionMap);
+        const pandora::CartesianVector &axisDirection, const pandora::CartesianVector &orthoDirection,
+        const LayerFitContributionMap &layerFitContributionMap);
 
     /**
      *  @brief  Get the address of the cluster, if originally provided
@@ -124,14 +127,14 @@ public:
      */
     const LayerFitContributionMap &GetLayerFitContributionMap() const;
 
-     /**
+    /**
      *  @brief  Get the fit segment list
      *
      *  @return the fit segment list
      */
     const FitSegmentList &GetFitSegmentList() const;
 
-     /**
+    /**
      *  @brief  Get the layer fit half window length
      *
      *  @return the layer fit half window length
@@ -355,8 +358,8 @@ public:
      *
      *  @return status code, faster than throwing in regular use-cases
      */
-    pandora::StatusCode GetTransverseProjection(const float x, const FitSegment &fitSegment, pandora::CartesianVector &position,
-        pandora::CartesianVector &direction) const;
+    pandora::StatusCode GetTransverseProjection(
+        const float x, const FitSegment &fitSegment, pandora::CartesianVector &position, pandora::CartesianVector &direction) const;
 
     /**
      *  @brief  Get extrapolated position (beyond span) for a given input coordinate
@@ -492,8 +495,8 @@ private:
      *
      *  @return status code, faster than throwing in regular use-cases
      */
-    pandora::StatusCode GetLongitudinalSurroundingLayers(const float rL, LayerFitResultMap::const_iterator &firstLayerIter,
-        LayerFitResultMap::const_iterator &secondLayerIter) const;
+    pandora::StatusCode GetLongitudinalSurroundingLayers(
+        const float rL, LayerFitResultMap::const_iterator &firstLayerIter, LayerFitResultMap::const_iterator &secondLayerIter) const;
 
     /**
      *  @brief  Get iterators for layers surrounding a specified transverse position
@@ -521,7 +524,7 @@ private:
     void GetLongitudinalInterpolationWeights(const float rL, const LayerFitResultMap::const_iterator &firstLayerIter,
         const LayerFitResultMap::const_iterator &secondLayerIter, double &firstWeight, double &secondWeight) const;
 
-   /**
+    /**
      *  @brief  Get interpolation weights for layers surrounding a specified transverse position
      *
      *  @param  x the transverse coordinate
@@ -533,19 +536,19 @@ private:
     void GetTransverseInterpolationWeights(const float x, const LayerFitResultMap::const_iterator &firstLayerIter,
         const LayerFitResultMap::const_iterator &secondLayerIter, double &firstWeight, double &secondWeight) const;
 
-    const pandora::Cluster     *m_pCluster;                 ///< The address of the cluster
-    unsigned int                m_layerFitHalfWindow;       ///< The layer fit half window
-    float                       m_layerPitch;               ///< The layer pitch, units cm
-    pandora::CartesianVector    m_axisIntercept;            ///< The axis intercept position
-    pandora::CartesianVector    m_axisDirection;            ///< The axis direction vector
-    pandora::CartesianVector    m_orthoDirection;           ///< The orthogonal direction vector
-    LayerFitResultMap           m_layerFitResultMap;        ///< The layer fit result map
-    LayerFitContributionMap     m_layerFitContributionMap;  ///< The layer fit contribution map
-    FitSegmentList              m_fitSegmentList;           ///< The fit segment list
+    const pandora::Cluster *m_pCluster;                ///< The address of the cluster
+    unsigned int m_layerFitHalfWindow;                 ///< The layer fit half window
+    float m_layerPitch;                                ///< The layer pitch, units cm
+    pandora::CartesianVector m_axisIntercept;          ///< The axis intercept position
+    pandora::CartesianVector m_axisDirection;          ///< The axis direction vector
+    pandora::CartesianVector m_orthoDirection;         ///< The orthogonal direction vector
+    LayerFitResultMap m_layerFitResultMap;             ///< The layer fit result map
+    LayerFitContributionMap m_layerFitContributionMap; ///< The layer fit contribution map
+    FitSegmentList m_fitSegmentList;                   ///< The fit segment list
 };
 
 typedef std::vector<TwoDSlidingFitResult> TwoDSlidingFitResultList;
-typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
+typedef std::unordered_map<const pandora::Cluster *, TwoDSlidingFitResult> TwoDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------

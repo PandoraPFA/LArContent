@@ -17,8 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusterGrowingAlgorithm::ClusterGrowingAlgorithm() :
-    m_maxClusterSeparation(2.5f)
+ClusterGrowingAlgorithm::ClusterGrowingAlgorithm() : m_maxClusterSeparation(2.5f)
 {
 }
 
@@ -34,7 +33,8 @@ StatusCode ClusterGrowingAlgorithm::Run()
     }
     else
     {
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pClusterList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(
+            STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pClusterList));
     }
 
     if (!pClusterList || pClusterList->empty())
@@ -69,8 +69,8 @@ StatusCode ClusterGrowingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterGrowingAlgorithm::GetListOfNonSeedClusters(const ClusterVector &inputClusters, const ClusterVector &seedClusters,
-    ClusterVector &nonSeedClusters) const
+void ClusterGrowingAlgorithm::GetListOfNonSeedClusters(
+    const ClusterVector &inputClusters, const ClusterVector &seedClusters, ClusterVector &nonSeedClusters) const
 {
     for (ClusterVector::const_iterator iter = inputClusters.begin(), iterEnd = inputClusters.end(); iter != iterEnd; ++iter)
     {
@@ -87,8 +87,8 @@ void ClusterGrowingAlgorithm::GetListOfNonSeedClusters(const ClusterVector &inpu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterGrowingAlgorithm::PopulateClusterMergeMap(const ClusterVector &seedClusters, const ClusterVector &nonSeedClusters,
-    ClusterMergeMap &clusterMergeMap) const
+void ClusterGrowingAlgorithm::PopulateClusterMergeMap(
+    const ClusterVector &seedClusters, const ClusterVector &nonSeedClusters, ClusterMergeMap &clusterMergeMap) const
 {
     for (ClusterVector::const_iterator nIter = nonSeedClusters.begin(), nIterEnd = nonSeedClusters.end(); nIter != nIterEnd; ++nIter)
     {
@@ -119,7 +119,8 @@ void ClusterGrowingAlgorithm::PopulateClusterMergeMap(const ClusterVector &seedC
 void ClusterGrowingAlgorithm::MergeClusters(const ClusterMergeMap &clusterMergeMap) const
 {
     ClusterList parentClusterList;
-    for (const auto &mapEntry : clusterMergeMap) parentClusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterMergeMap)
+        parentClusterList.push_back(mapEntry.first);
     parentClusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : parentClusterList)
@@ -137,8 +138,8 @@ void ClusterGrowingAlgorithm::MergeClusters(const ClusterMergeMap &clusterMergeM
             }
             else
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pAssociatedCluster,
-                    m_inputClusterListName, m_inputClusterListName));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                    PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pAssociatedCluster, m_inputClusterListName, m_inputClusterListName));
             }
         }
     }
@@ -148,11 +149,11 @@ void ClusterGrowingAlgorithm::MergeClusters(const ClusterMergeMap &clusterMergeM
 
 StatusCode ClusterGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputClusterListName", m_inputClusterListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterSeparation", m_maxClusterSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxClusterSeparation", m_maxClusterSeparation));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -40,13 +40,13 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string  m_parentPfoListName;               ///< The parent Pfo list name
-    std::string  m_daughterPfoListName;             ///< The daughter Pfo list name
+    std::string m_parentPfoListName;   ///< The parent Pfo list name
+    std::string m_daughterPfoListName; ///< The daughter Pfo list name
 
-    unsigned int m_minCaloHitsPerCluster;           ///< The minimum number of calo hits per candidate cluster
-    unsigned int m_minSeedClusterCaloHits;          ///< The minimum number of calo hits for seed clusters
-    float        m_maxSeedClusterLength;            ///< The maximum length of a parent clusters
-    float        m_maxSeedClusterDisplacement;      ///< The maximum distance between parent and daughter clusters
+    unsigned int m_minCaloHitsPerCluster;  ///< The minimum number of calo hits per candidate cluster
+    unsigned int m_minSeedClusterCaloHits; ///< The minimum number of calo hits for seed clusters
+    float m_maxSeedClusterLength;          ///< The maximum length of a parent clusters
+    float m_maxSeedClusterDisplacement;    ///< The maximum distance between parent and daughter clusters
 };
 
 } // namespace lar_content

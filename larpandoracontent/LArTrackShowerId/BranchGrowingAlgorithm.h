@@ -80,12 +80,12 @@ protected:
         AssociationType GetType() const;
 
     private:
-        unsigned int    m_order;
+        unsigned int m_order;
         AssociationType m_type;
     };
 
-    typedef std::unordered_map<const pandora::Cluster*, Association> ClusterAssociationMap;
-    typedef std::unordered_map<const pandora::Cluster*, ClusterAssociationMap> ClusterUsageMap;
+    typedef std::unordered_map<const pandora::Cluster *, Association> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster *, ClusterAssociationMap> ClusterUsageMap;
 
     /**
      *  @brief  Determine whether two clusters are associated
@@ -108,7 +108,7 @@ protected:
     void FindAssociatedClusters(const pandora::Cluster *const pParticleSeed, pandora::ClusterVector &candidateClusters,
         ClusterUsageMap &forwardUsageMap, ClusterUsageMap &backwardUsageMap) const;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterVector> SeedAssociationList;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterVector> SeedAssociationList;
 
     /**
      *  @brief  Identify cluster merges
@@ -126,17 +126,13 @@ protected:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline BranchGrowingAlgorithm::Association::Association() :
-    m_order(std::numeric_limits<unsigned int>::max()),
-    m_type(NONE)
+inline BranchGrowingAlgorithm::Association::Association() : m_order(std::numeric_limits<unsigned int>::max()), m_type(NONE)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline BranchGrowingAlgorithm::Association::Association(const unsigned int order, const AssociationType type) :
-    m_order(order),
-    m_type(type)
+inline BranchGrowingAlgorithm::Association::Association(const unsigned int order, const AssociationType type) : m_order(order), m_type(type)
 {
 }
 

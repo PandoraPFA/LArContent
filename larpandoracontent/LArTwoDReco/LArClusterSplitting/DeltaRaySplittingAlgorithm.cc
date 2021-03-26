@@ -38,18 +38,24 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResul
 
     for (unsigned int principalForward = 0; principalForward < 2; ++principalForward)
     {
-        const CartesianVector principalVertex(1==principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
-        const CartesianVector principalEnd(1==principalForward ? principalSlidingFit.GetGlobalMaxLayerPosition() : principalSlidingFit.GetGlobalMinLayerPosition());
-        const CartesianVector principalDirection(1==principalForward ? principalSlidingFit.GetGlobalMinLayerDirection() : principalSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
+        const CartesianVector principalVertex(
+            1 == principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
+        const CartesianVector principalEnd(
+            1 == principalForward ? principalSlidingFit.GetGlobalMaxLayerPosition() : principalSlidingFit.GetGlobalMinLayerPosition());
+        const CartesianVector principalDirection(1 == principalForward ? principalSlidingFit.GetGlobalMinLayerDirection()
+                                                                       : principalSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
 
         if (LArClusterHelper::GetClosestDistance(principalVertex, branchSlidingFit.GetCluster()) > m_maxLongitudinalDisplacement)
             continue;
 
         for (unsigned int branchForward = 0; branchForward < 2; ++branchForward)
         {
-            const CartesianVector branchVertex(1==branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
-            const CartesianVector branchEnd(1==branchForward ? branchSlidingFit.GetGlobalMaxLayerPosition() : branchSlidingFit.GetGlobalMinLayerPosition());
-            const CartesianVector branchDirection(1==branchForward ? branchSlidingFit.GetGlobalMinLayerDirection() : branchSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
+            const CartesianVector branchVertex(
+                1 == branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
+            const CartesianVector branchEnd(
+                1 == branchForward ? branchSlidingFit.GetGlobalMaxLayerPosition() : branchSlidingFit.GetGlobalMinLayerPosition());
+            const CartesianVector branchDirection(
+                1 == branchForward ? branchSlidingFit.GetGlobalMinLayerDirection() : branchSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
 
             // Require vertices to be closest two ends
             const float vertex_to_vertex((principalVertex - branchVertex).GetMagnitudeSquared());
@@ -77,9 +83,9 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResul
             bool foundSplit(false);
 
             const float halfWindowLength(branchSlidingFit.GetLayerFitHalfWindowLength());
-            const float deltaL(1==branchForward ? +halfWindowLength : -halfWindowLength);
+            const float deltaL(1 == branchForward ? +halfWindowLength : -halfWindowLength);
 
-            float branchDistance(std::max(0.f,vertexProjection) + 0.5f * m_stepSize);
+            float branchDistance(std::max(0.f, vertexProjection) + 0.5f * m_stepSize);
 
             while (!foundSplit)
             {
@@ -94,8 +100,8 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResul
                     break;
 
                 float localL(0.f), localT(0.f);
-                CartesianVector truncatedPosition(0.f,0.f,0.f);
-                CartesianVector forwardDirection(0.f,0.f,0.f);
+                CartesianVector truncatedPosition(0.f, 0.f, 0.f);
+                CartesianVector forwardDirection(0.f, 0.f, 0.f);
                 branchSlidingFit.GetLocalPosition(linearProjection, localL, localT);
 
                 if ((STATUS_CODE_SUCCESS != branchSlidingFit.GetGlobalFitPosition(localL, truncatedPosition)) ||
@@ -104,7 +110,7 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResul
                     continue;
                 }
 
-                CartesianVector truncatedDirection(1==branchForward ? forwardDirection : forwardDirection * -1.f);
+                CartesianVector truncatedDirection(1 == branchForward ? forwardDirection : forwardDirection * -1.f);
                 const float cosTheta(-truncatedDirection.GetDotProduct(principalDirection));
 
                 float rT1(0.f), rL1(0.f), rT2(0.f), rL2(0.f);
@@ -132,17 +138,16 @@ void DeltaRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResul
 
 StatusCode DeltaRaySplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "StepSize", m_stepSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "StepSize", m_stepSize));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCosRelativeAngle", m_minCosRelativeAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosRelativeAngle", m_minCosRelativeAngle));
 
     return TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(xmlHandle);
 }

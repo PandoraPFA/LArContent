@@ -52,12 +52,12 @@ protected:
         /**
          *  @brief  return the address of the branch Cluster
          */
-        const pandora::Cluster* GetBranchCluster() const;
+        const pandora::Cluster *GetBranchCluster() const;
 
         /**
          *  @brief  return the address of the replacement Cluster
          */
-        const pandora::Cluster* GetReplacementCluster() const;
+        const pandora::Cluster *GetReplacementCluster() const;
 
         /**
          *  @brief  return the start position of the replacement cluster
@@ -74,12 +74,12 @@ protected:
          */
         const pandora::CartesianVector &GetBranchDirection() const;
 
-        private:
-        const pandora::Cluster     *m_pBranchCluster;            ///<
-        const pandora::Cluster     *m_pReplacementCluster;       ///<
-        pandora::CartesianVector    m_replacementVertex;         ///<
-        pandora::CartesianVector    m_branchVertex;              ///<
-        pandora::CartesianVector    m_branchDirection;           ///<
+    private:
+        const pandora::Cluster *m_pBranchCluster;      ///<
+        const pandora::Cluster *m_pReplacementCluster; ///<
+        pandora::CartesianVector m_replacementVertex;  ///<
+        pandora::CartesianVector m_branchVertex;       ///<
+        pandora::CartesianVector m_branchDirection;    ///<
     };
 
     typedef std::vector<ClusterExtension> ClusterExtensionList;
@@ -93,12 +93,11 @@ protected:
      *  @param  branchSplitPosition the outputted start position of the branch
      *  @param  branchSplitDirection the outputted start direction of the branch
      */
-    virtual void FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit,
-        const TwoDSlidingFitResult &replacementSlidingFit, pandora::CartesianVector &replacementStartPosition,
-        pandora::CartesianVector &branchSplitPosition, pandora::CartesianVector &branchSplitDirection) const = 0;
+    virtual void FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFit, const TwoDSlidingFitResult &replacementSlidingFit,
+        pandora::CartesianVector &replacementStartPosition, pandora::CartesianVector &branchSplitPosition,
+        pandora::CartesianVector &branchSplitDirection) const = 0;
 
 private:
-
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
      *
@@ -146,7 +145,7 @@ private:
      *  @param  splitPosition the start position of the branch
      *  @param  splitDirection the start direction of the branch
      */
-    float CalculateBranchChi2(const pandora::Cluster* const pCluster, const pandora::CartesianVector &splitPosition,
+    float CalculateBranchChi2(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition,
         const pandora::CartesianVector &splitDirection) const;
 
     /**
@@ -158,9 +157,8 @@ private:
      *  @param  principalCaloHitList the hits to be added to the principal cluster
      *  @param  branchCaloHitList the hits to be split off into the output branch cluster
      */
-    void SplitBranchCluster(const pandora::Cluster* const pCluster, const pandora::CartesianVector &splitPosition,
-        const pandora::CartesianVector &splitDirection, pandora::CaloHitList &principalCaloHitList,
-        pandora::CaloHitList &branchCaloHitList) const;
+    void SplitBranchCluster(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition,
+        const pandora::CartesianVector &splitDirection, pandora::CaloHitList &principalCaloHitList, pandora::CaloHitList &branchCaloHitList) const;
 
     /**
      *  @brief  Run the machinary that performs the cluster splitting and extending
@@ -172,7 +170,7 @@ private:
     pandora::StatusCode RunSplitAndExtension(const ClusterExtensionList &splitList, TwoDSlidingFitResultMap &branchResultMap,
         TwoDSlidingFitResultMap &replacementResultMap) const;
 
-   /**
+    /**
      *  @brief  Remove a branch from a cluster and replace it with a second cluster
      *
      *  @param  pBranchCluster the cluster containing a branch to be removed
@@ -183,26 +181,25 @@ private:
     pandora::StatusCode ReplaceBranch(const pandora::Cluster *const pBranchCluster, const pandora::Cluster *const pReplacementCluster,
         const pandora::CartesianVector &branchSplitPosition, const pandora::CartesianVector &branchSplitDirection) const;
 
-    unsigned int  m_shortHalfWindowLayers;          ///<
-    unsigned int  m_longHalfWindowLayers;           ///<
-    float         m_minClusterLength;               ///<
-    float         m_vetoDisplacement;               ///<
-    bool          m_runCosmicMode;                  ///<
+    unsigned int m_shortHalfWindowLayers; ///<
+    unsigned int m_longHalfWindowLayers;  ///<
+    float m_minClusterLength;             ///<
+    float m_vetoDisplacement;             ///<
+    bool m_runCosmicMode;                 ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TwoDSlidingFitSplittingAndSplicingAlgorithm::ClusterExtension::ClusterExtension(const pandora::Cluster *const pBranchCluster,
-        const pandora::Cluster *const pReplacementCluster, const pandora::CartesianVector &replacementVertex,
-        const pandora::CartesianVector &branchVertex, const pandora::CartesianVector &branchDirection) :
+    const pandora::Cluster *const pReplacementCluster, const pandora::CartesianVector &replacementVertex,
+    const pandora::CartesianVector &branchVertex, const pandora::CartesianVector &branchDirection) :
     m_pBranchCluster(pBranchCluster),
     m_pReplacementCluster(pReplacementCluster),
     m_replacementVertex(replacementVertex),
     m_branchVertex(branchVertex),
     m_branchDirection(branchDirection)
 {
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -91,8 +91,8 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::GetListOfCleanClusters(const C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, const unsigned int halfWindowLayers,
-    TwoDSlidingFitResultMap &slidingFitResultMap) const
+void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildSlidingFitResultMap(
+    const ClusterVector &clusterVector, const unsigned int halfWindowLayers, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -189,8 +189,7 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
             {
                 const CartesianVector relativeDirection((branchSplitPositionJ - branchSplitPositionI).GetUnitVector());
 
-                if (branchSplitDirectionI.GetDotProduct(relativeDirection) > 0.f &&
-                    branchSplitDirectionJ.GetDotProduct(relativeDirection) < 0.f )
+                if (branchSplitDirectionI.GetDotProduct(relativeDirection) > 0.f && branchSplitDirectionJ.GetDotProduct(relativeDirection) < 0.f)
                 {
                     try
                     {
@@ -208,12 +207,14 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::BuildClusterExtensionList(cons
             // Select the overall best split position
             if (branchChisqI > branchChisqJ)
             {
-                clusterExtensionList.push_back(ClusterExtension(pClusterI, pClusterJ, replacementStartPositionJ, branchSplitPositionI, branchSplitDirectionI));
+                clusterExtensionList.push_back(
+                    ClusterExtension(pClusterI, pClusterJ, replacementStartPositionJ, branchSplitPositionI, branchSplitDirectionI));
             }
 
             else if (branchChisqJ > branchChisqI)
             {
-                clusterExtensionList.push_back(ClusterExtension(pClusterJ, pClusterI, replacementStartPositionI, branchSplitPositionJ, branchSplitDirectionJ));
+                clusterExtensionList.push_back(
+                    ClusterExtension(pClusterJ, pClusterI, replacementStartPositionI, branchSplitPositionJ, branchSplitDirectionJ));
             }
         }
     }
@@ -225,11 +226,13 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
     const TwoDSlidingFitResultMap &branchMap, const TwoDSlidingFitResultMap &replacementMap, ClusterExtensionList &outputList) const
 {
     ClusterList branchList;
-    for (const auto &mapEntry : branchMap) branchList.push_back(mapEntry.first);
+    for (const auto &mapEntry : branchMap)
+        branchList.push_back(mapEntry.first);
     branchList.sort(LArClusterHelper::SortByNHits);
 
     ClusterList replacementList;
-    for (const auto &mapEntry : replacementMap) replacementList.push_back(mapEntry.first);
+    for (const auto &mapEntry : replacementMap)
+        replacementList.push_back(mapEntry.first);
     replacementList.sort(LArClusterHelper::SortByNHits);
 
     for (const ClusterExtension &thisSplit : inputList)
@@ -287,8 +290,8 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::PruneClusterExtensionList(cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float TwoDSlidingFitSplittingAndSplicingAlgorithm::CalculateBranchChi2(const Cluster* const pCluster, const CartesianVector &splitPosition,
-    const CartesianVector &splitDirection) const
+float TwoDSlidingFitSplittingAndSplicingAlgorithm::CalculateBranchChi2(
+    const Cluster *const pCluster, const CartesianVector &splitPosition, const CartesianVector &splitDirection) const
 {
     CaloHitList principalCaloHitList, branchCaloHitList;
 
@@ -309,14 +312,14 @@ float TwoDSlidingFitSplittingAndSplicingAlgorithm::CalculateBranchChi2(const Clu
     }
 
     if (totalHits > 0.f)
-        return std::sqrt(totalChi2/totalHits);
+        return std::sqrt(totalChi2 / totalHits);
 
     throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitSplittingAndSplicingAlgorithm::SplitBranchCluster(const Cluster* const pCluster, const CartesianVector &splitPosition,
+void TwoDSlidingFitSplittingAndSplicingAlgorithm::SplitBranchCluster(const Cluster *const pCluster, const CartesianVector &splitPosition,
     const CartesianVector &splitDirection, CaloHitList &principalCaloHitList, CaloHitList &branchCaloHitList) const
 {
     // Distribute hits in branch cluster between new principal and residual clusters
@@ -343,8 +346,8 @@ void TwoDSlidingFitSplittingAndSplicingAlgorithm::SplitBranchCluster(const Clust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(const ClusterExtensionList &splitList,
-    TwoDSlidingFitResultMap &branchResultMap, TwoDSlidingFitResultMap &replacementResultMap) const
+StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(
+    const ClusterExtensionList &splitList, TwoDSlidingFitResultMap &branchResultMap, TwoDSlidingFitResultMap &replacementResultMap) const
 {
     bool foundSplit(false);
 
@@ -367,8 +370,8 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
             replacementResultMap.end() == iterReplacement1 || replacementResultMap.end() == iterReplacement2)
             continue;
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster,
-                                                                              branchSplitPosition, branchSplitDirection));
+        PANDORA_RETURN_RESULT_IF(
+            STATUS_CODE_SUCCESS, !=, this->ReplaceBranch(pBranchCluster, pReplacementCluster, branchSplitPosition, branchSplitDirection));
         branchResultMap.erase(iterBranch1);
         branchResultMap.erase(iterBranch2);
 
@@ -386,16 +389,16 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::RunSplitAndExtension(con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster,
-    const CartesianVector &branchSplitPosition, const CartesianVector &branchSplitDirection) const
+StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(const Cluster *const pBranchCluster,
+    const Cluster *const pReplacementCluster, const CartesianVector &branchSplitPosition, const CartesianVector &branchSplitDirection) const
 {
     ClusterList clusterList;
     clusterList.push_back(pBranchCluster);
     clusterList.push_back(pReplacementCluster);
 
     std::string clusterListToSaveName, clusterListToDeleteName;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,
-        clusterListToSaveName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName, clusterListToSaveName));
 
     // Entire replacement cluster goes into new principal cluster
     PandoraContentApi::Cluster::Parameters principalParameters;
@@ -403,7 +406,8 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(const Clus
 
     // Distribute hits in branch cluster between new principal and residual clusters
     PandoraContentApi::Cluster::Parameters residualParameters;
-    this->SplitBranchCluster(pBranchCluster, branchSplitPosition, branchSplitDirection, principalParameters.m_caloHitList, residualParameters.m_caloHitList);
+    this->SplitBranchCluster(
+        pBranchCluster, branchSplitPosition, branchSplitDirection, principalParameters.m_caloHitList, residualParameters.m_caloHitList);
 
     const Cluster *pPrincipalCluster(NULL), *pResidualCluster(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, principalParameters, pPrincipalCluster));
@@ -417,20 +421,19 @@ StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReplaceBranch(const Clus
 
 StatusCode TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShortHalfWindow", m_shortHalfWindowLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShortHalfWindow", m_shortHalfWindowLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "LongHalfWindow", m_longHalfWindowLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LongHalfWindow", m_longHalfWindowLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", m_minClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VetoDisplacement", m_vetoDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VetoDisplacement", m_vetoDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CosmicMode", m_runCosmicMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CosmicMode", m_runCosmicMode));
 
     return STATUS_CODE_SUCCESS;
 }

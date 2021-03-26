@@ -16,7 +16,7 @@ namespace lar_dl_content
 /**
  *  @brief  DlHitValidationlgorithm class
  */
-class DlHitValidationAlgorithm: public pandora::Algorithm
+class DlHitValidationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -30,10 +30,10 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector     m_caloHitListNames;    ///< Name of input calo hit list
-    int                       m_confusionU[2][2];    ///< Confusion matrix for the U view
-    int                       m_confusionV[2][2];    ///< Confusion matrix for the V view
-    int                       m_confusionW[2][2];    ///< Confusion matrix for the W view
+    pandora::StringVector m_caloHitListNames; ///< Name of input calo hit list
+    int m_confusionU[2][2];                   ///< Confusion matrix for the U view
+    int m_confusionV[2][2];                   ///< Confusion matrix for the V view
+    int m_confusionW[2][2];                   ///< Confusion matrix for the W view
 };
 
 } // namespace lar_dl_content

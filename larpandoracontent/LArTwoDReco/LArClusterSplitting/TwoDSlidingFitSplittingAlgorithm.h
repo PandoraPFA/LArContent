@@ -37,15 +37,14 @@ protected:
      *
      *  @return pandora::StatusCode
      */
-    virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult,
-        pandora::CartesianVector& splitPosition) const = 0;
+    virtual pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, pandora::CartesianVector &splitPosition) const = 0;
 
-    unsigned int    m_slidingFitHalfWindow;   ///<
-    float           m_minClusterLength;       ///<
+    unsigned int m_slidingFitHalfWindow; ///<
+    float m_minClusterLength;            ///<
 
 private:
-    pandora::StatusCode DivideCaloHits(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
-        pandora::CaloHitList &secondCaloHitList) const;
+    pandora::StatusCode DivideCaloHits(
+        const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 
     /**
      *  @brief  Use sliding linear fit to separate cluster into two fragments
@@ -57,7 +56,7 @@ private:
      *
      *  @return pandora::StatusCode
      */
-    pandora::StatusCode DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector& splitPosition,
+    pandora::StatusCode DivideCaloHits(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianVector &splitPosition,
         pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 };
 

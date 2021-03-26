@@ -70,9 +70,9 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
             if (slidingFitResult1.GetCluster() == slidingFitResult2.GetCluster())
                 continue;
 
-            CartesianVector splitPosition(0.f,0.f,0.f);
-            CartesianVector firstDirection(0.f,0.f,0.f);
-            CartesianVector secondDirection(0.f,0.f,0.f);
+            CartesianVector splitPosition(0.f, 0.f, 0.f);
+            CartesianVector firstDirection(0.f, 0.f, 0.f);
+            CartesianVector secondDirection(0.f, 0.f, 0.f);
 
             if (STATUS_CODE_SUCCESS != this->FindBestSplitPosition(slidingFitResult1, slidingFitResult2, splitPosition, firstDirection, secondDirection))
                 continue;
@@ -98,7 +98,7 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::PreparationStep(const ClusterVector &/*clusterVector*/)
+StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::PreparationStep(const ClusterVector & /*clusterVector*/)
 {
     return STATUS_CODE_SUCCESS;
 }
@@ -129,8 +129,8 @@ void TwoDSlidingFitSplittingAndSwitchingAlgorithm::GetListOfCleanClusters(const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitSplittingAndSwitchingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector,
-    TwoDSlidingFitResultMap &slidingFitResultMap) const
+void TwoDSlidingFitSplittingAndSwitchingAlgorithm::BuildSlidingFitResultMap(
+    const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -197,8 +197,8 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReplaceClusters(const C
     clusterList.push_back(pCluster2);
 
     std::string clusterListToSaveName, clusterListToDeleteName;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,
-        clusterListToDeleteName, clusterListToSaveName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName, clusterListToSaveName));
 
     // Create new clusters
     const Cluster *pFirstCluster(NULL), *pSecondCluster(NULL);
@@ -215,11 +215,11 @@ StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReplaceClusters(const C
 
 StatusCode TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HalfWindowLayers", m_halfWindowLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HalfWindowLayers", m_halfWindowLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", m_minClusterLength));
 
     return STATUS_CODE_SUCCESS;
 }

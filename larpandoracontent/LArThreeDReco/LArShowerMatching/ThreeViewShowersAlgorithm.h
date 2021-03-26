@@ -26,10 +26,10 @@ class ShowerTensorTool;
 /**
  *  @brief  ThreeViewShowersAlgorithm class
  */
-class ThreeViewShowersAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> >
+class ThreeViewShowersAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult>>
 {
 public:
-    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> > BaseAlgorithm;
+    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult>> BaseAlgorithm;
 
     /**
      *  @brief  Default constructor
@@ -74,16 +74,16 @@ private:
          */
         pandora::StatusCode GetBin(const float x, int &xBin) const;
 
-        float       m_uMinX;         ///< The min x value in the u view
-        float       m_uMaxX;         ///< The max x value in the u view
-        float       m_vMinX;         ///< The min x value in the v view
-        float       m_vMaxX;         ///< The max x value in the v view
-        float       m_wMinX;         ///< The min x value in the w view
-        float       m_wMaxX;         ///< The max x value in the w view
-        float       m_minX;          ///< The min x value of the common x-overlap range
-        float       m_maxX;          ///< The max x value of the common x-overlap range
-        float       m_xOverlapSpan;  ///< The x-overlap span
-        float       m_nPoints;       ///< The number of sampling points to be used
+        float m_uMinX;        ///< The min x value in the u view
+        float m_uMaxX;        ///< The max x value in the u view
+        float m_vMinX;        ///< The min x value in the v view
+        float m_vMaxX;        ///< The max x value in the v view
+        float m_wMinX;        ///< The min x value in the w view
+        float m_wMaxX;        ///< The max x value in the w view
+        float m_minX;         ///< The min x value of the common x-overlap range
+        float m_maxX;         ///< The max x value of the common x-overlap range
+        float m_xOverlapSpan; ///< The x-overlap span
+        float m_nPoints;      ///< The number of sampling points to be used
     };
 
     void TidyUp();
@@ -112,8 +112,8 @@ private:
      *  @param  pClusterW the cluster from the W view
      *  @param  overlapResult to receive the overlap result
      */
-    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
-        ShowerOverlapResult &overlapResult);
+    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV,
+        const pandora::Cluster *const pClusterW, ShowerOverlapResult &overlapResult);
 
     typedef std::pair<ShowerPositionMap, ShowerPositionMap> ShowerPositionMapPair;
 
@@ -128,8 +128,9 @@ private:
      *  @param  positionMapsV to receive the shower position maps for the v view
      *  @param  positionMapsW to receive the shower position maps for the w view
      */
-    void GetShowerPositionMaps(const TwoDSlidingShowerFitResult &fitResultU, const TwoDSlidingShowerFitResult &fitResultV, const TwoDSlidingShowerFitResult &fitResultW,
-        const XSampling &xSampling, ShowerPositionMapPair &positionMapsU, ShowerPositionMapPair &positionMapsV, ShowerPositionMapPair &positionMapsW) const;
+    void GetShowerPositionMaps(const TwoDSlidingShowerFitResult &fitResultU, const TwoDSlidingShowerFitResult &fitResultV,
+        const TwoDSlidingShowerFitResult &fitResultW, const XSampling &xSampling, ShowerPositionMapPair &positionMapsU,
+        ShowerPositionMapPair &positionMapsV, ShowerPositionMapPair &positionMapsW) const;
 
     /**
      *  @brief  Get the best fraction of hits, in the common x-overlap range, contained within the provided pair of shower boundaries
@@ -140,25 +141,25 @@ private:
      *  @param  nSampledHits to receive the number of hits in the common x-overlap range
      *  @param  nMatchedHits to receive the number of sampled hits contained within the shower edges
      */
-    void GetBestHitOverlapFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMapPair &positionMaps,
-        unsigned int &nSampledHits, unsigned int &nMatchedHits) const;
+    void GetBestHitOverlapFraction(const pandora::Cluster *const pCluster, const XSampling &xSampling,
+        const ShowerPositionMapPair &positionMaps, unsigned int &nSampledHits, unsigned int &nMatchedHits) const;
 
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<ShowerTensorTool*> TensorToolVector;
-    TensorToolVector                m_algorithmToolVector;          ///< The algorithm tool vector
-    unsigned int                    m_nMaxTensorToolRepeats;        ///< The maximum number of repeat loops over tensor tools
+    typedef std::vector<ShowerTensorTool *> TensorToolVector;
+    TensorToolVector m_algorithmToolVector; ///< The algorithm tool vector
+    unsigned int m_nMaxTensorToolRepeats;   ///< The maximum number of repeat loops over tensor tools
 
-    unsigned int                    m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    TwoDSlidingShowerFitResultMap   m_slidingFitResultMap;          ///< The sliding shower fit result map
+    unsigned int m_slidingFitWindow;                     ///< The layer window for the sliding linear fits
+    TwoDSlidingShowerFitResultMap m_slidingFitResultMap; ///< The sliding shower fit result map
 
-    bool                            m_ignoreUnavailableClusters;    ///< Whether to ignore (skip-over) unavailable clusters
-    unsigned int                    m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
-    float                           m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
+    bool m_ignoreUnavailableClusters;  ///< Whether to ignore (skip-over) unavailable clusters
+    unsigned int m_minClusterCaloHits; ///< The min number of hits in base cluster selection method
+    float m_minClusterLengthSquared;   ///< The min length (squared) in base cluster selection method
 
-    float                           m_minShowerMatchedFraction;     ///< The minimum shower matched sampling fraction to allow shower grouping
-    unsigned int                    m_minShowerMatchedPoints;       ///< The minimum number of matched shower sampling points to allow shower grouping
+    float m_minShowerMatchedFraction;      ///< The minimum shower matched sampling fraction to allow shower grouping
+    unsigned int m_minShowerMatchedPoints; ///< The minimum number of matched shower sampling points to allow shower grouping
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

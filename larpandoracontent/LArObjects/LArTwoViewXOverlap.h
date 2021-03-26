@@ -109,11 +109,11 @@ public:
     float GetXOverlapFraction1() const;
 
 private:
-    float       m_xMin0;                        ///< The min x value in the view 0
-    float       m_xMax0;                        ///< The max x value in the view 0
-    float       m_xMin1;                        ///< The min x value in the view 1
-    float       m_xMax1;                        ///< The max x value in the view 1
-    float       m_xOverlapSpan;                 ///< The x overlap span
+    float m_xMin0;        ///< The min x value in the view 0
+    float m_xMax0;        ///< The max x value in the view 0
+    float m_xMin1;        ///< The min x value in the view 1
+    float m_xMax1;        ///< The max x value in the view 1
+    float m_xOverlapSpan; ///< The x overlap span
 };
 
 /**

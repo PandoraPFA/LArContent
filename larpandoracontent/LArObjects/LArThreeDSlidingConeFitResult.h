@@ -104,10 +104,10 @@ public:
     float GetBoundedHitFraction(const pandora::Cluster *const pCluster, const float coneLength, const float coneTanHalfAngle) const;
 
 private:
-    pandora::CartesianVector        m_coneApex;                 ///< The cone apex
-    pandora::CartesianVector        m_coneDirection;            ///< The cone direction
-    float                           m_coneLength;               ///< The cone length
-    float                           m_coneTanHalfAngle;         ///< The tangent of the cone half-angle
+    pandora::CartesianVector m_coneApex;      ///< The cone apex
+    pandora::CartesianVector m_coneDirection; ///< The cone direction
+    float m_coneLength;                       ///< The cone length
+    float m_coneTanHalfAngle;                 ///< The tangent of the cone half-angle
 };
 
 typedef std::vector<SimpleCone> SimpleConeList;
@@ -158,19 +158,20 @@ public:
         SimpleConeList &simpleConeList) const;
 
 private:
-    typedef std::list<pandora::TrackState> TrackStateLinkedList;    ///< The track state linked list typedef
+    typedef std::list<pandora::TrackState> TrackStateLinkedList; ///< The track state linked list typedef
 
-    const ThreeDSlidingFitResult    m_slidingFitResult;             ///< The sliding fit result for the full cluster
-    TrackStateMap                   m_trackStateMap;                ///< The track state map
+    const ThreeDSlidingFitResult m_slidingFitResult; ///< The sliding fit result for the full cluster
+    TrackStateMap m_trackStateMap;                   ///< The track state map
 };
 
 typedef std::vector<ThreeDSlidingConeFitResult> ThreeDSlidingConeFitResultList;
-typedef std::unordered_map<const pandora::Cluster*, ThreeDSlidingConeFitResult> ThreeDSlidingConeFitResultMap;
+typedef std::unordered_map<const pandora::Cluster *, ThreeDSlidingConeFitResult> ThreeDSlidingConeFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SimpleCone::SimpleCone(const pandora::CartesianVector &coneApex, const pandora::CartesianVector &coneDirection, const float coneLength, const float coneTanHalfAngle) :
+inline SimpleCone::SimpleCone(const pandora::CartesianVector &coneApex, const pandora::CartesianVector &coneDirection,
+    const float coneLength, const float coneTanHalfAngle) :
     m_coneApex(coneApex),
     m_coneDirection(coneDirection),
     m_coneLength(coneLength),

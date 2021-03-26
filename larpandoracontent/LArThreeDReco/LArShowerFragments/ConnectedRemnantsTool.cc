@@ -17,8 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ConnectedRemnantsTool::ConnectedRemnantsTool() :
-    m_maxClusterSeparation(10.f)
+ConnectedRemnantsTool::ConnectedRemnantsTool() : m_maxClusterSeparation(10.f)
 {
 }
 
@@ -27,21 +26,22 @@ ConnectedRemnantsTool::ConnectedRemnantsTool() :
 bool ConnectedRemnantsTool::Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    ProtoParticleVector protoParticleVector; ClusterMergeMap clusterMergeMap;
+    ProtoParticleVector protoParticleVector;
+    ClusterMergeMap clusterMergeMap;
     this->FindConnectedShowers(overlapTensor, protoParticleVector, clusterMergeMap);
 
     const bool particlesMade(pAlgorithm->CreateThreeDParticles(protoParticleVector));
     const bool mergesMade(pAlgorithm->MakeClusterMerges(clusterMergeMap));
 
-    return (particlesMade||mergesMade);
+    return (particlesMade || mergesMade);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConnectedRemnantsTool::FindConnectedShowers(const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
-    ClusterMergeMap &clusterMergeMap) const
+void ConnectedRemnantsTool::FindConnectedShowers(
+    const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
@@ -142,8 +142,8 @@ bool ConnectedRemnantsTool::IsConnected(const ClusterVector &clusterVector) cons
 
 StatusCode ConnectedRemnantsTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterSeparation", m_maxClusterSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxClusterSeparation", m_maxClusterSeparation));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -26,7 +26,8 @@ public:
      */
     EndAssociatedPfosTool();
 
-    void Run(const NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap);
+    void Run(const NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex,
+        NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap);
 
 private:
     /**
@@ -43,12 +44,12 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float       m_minNeutrinoVertexDistance;            ///< Min distance between candidate parent endpoint and neutrino vertex
-    float       m_minVertexLongitudinalDistance;        ///< Vertex association check: min longitudinal distance cut
-    float       m_maxVertexLongitudinalDistance;        ///< Vertex association check: max longitudinal distance cut
-    float       m_maxVertexTransverseDistance;          ///< Vertex association check: max transverse distance cut
-    float       m_vertexAngularAllowance;               ///< Vertex association check: pointing angular allowance in degrees
-    float       m_maxParentEndpointDistance;            ///< Max distance between candidate parent endpoint and candidate daughter
+    float m_minNeutrinoVertexDistance;     ///< Min distance between candidate parent endpoint and neutrino vertex
+    float m_minVertexLongitudinalDistance; ///< Vertex association check: min longitudinal distance cut
+    float m_maxVertexLongitudinalDistance; ///< Vertex association check: max longitudinal distance cut
+    float m_maxVertexTransverseDistance;   ///< Vertex association check: max transverse distance cut
+    float m_vertexAngularAllowance;        ///< Vertex association check: pointing angular allowance in degrees
+    float m_maxParentEndpointDistance;     ///< Max distance between candidate parent endpoint and candidate daughter
 };
 
 } // namespace lar_content

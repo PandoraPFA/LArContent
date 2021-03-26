@@ -115,12 +115,12 @@ public:
     TrackOverlapResult &operator=(const TrackOverlapResult &rhs);
 
 protected:
-    bool            m_isInitialized;                ///< Whether the track overlap result has been initialized
-    unsigned int    m_nMatchedSamplingPoints;       ///< The number of matched sampling points
-    unsigned int    m_nSamplingPoints;              ///< The number of sampling points
-    float           m_matchedFraction;              ///< The fraction of sampling points resulting in a match
-    float           m_chi2;                         ///< The absolute chi2 value
-    float           m_reducedChi2;                  ///< The chi2 per samping point value
+    bool m_isInitialized;                  ///< Whether the track overlap result has been initialized
+    unsigned int m_nMatchedSamplingPoints; ///< The number of matched sampling points
+    unsigned int m_nSamplingPoints;        ///< The number of sampling points
+    float m_matchedFraction;               ///< The fraction of sampling points resulting in a match
+    float m_chi2;                          ///< The absolute chi2 value
+    float m_reducedChi2;                   ///< The chi2 per samping point value
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -144,8 +144,7 @@ public:
      *  @param  chi2
      *  @param  xOverlap
      */
-    TransverseOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
-        const XOverlap &xOverlap);
+    TransverseOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2, const XOverlap &xOverlap);
 
     /**
      *  @brief  Copy constructor
@@ -174,7 +173,7 @@ public:
     TransverseOverlapResult &operator=(const TransverseOverlapResult &rhs);
 
 private:
-    XOverlap        m_xOverlap;                     ///< The x overlap object
+    XOverlap m_xOverlap; ///< The x overlap object
 };
 
 typedef std::vector<TransverseOverlapResult> TransverseOverlapResultVector;
@@ -255,8 +254,8 @@ public:
     LongitudinalOverlapResult &operator=(const LongitudinalOverlapResult &rhs);
 
 private:
-    float       m_innerChi2;                        ///< The inner chi squared
-    float       m_outerChi2;                        ///< The outer chi squared
+    float m_innerChi2; ///< The inner chi squared
+    float m_outerChi2; ///< The outer chi squared
 };
 
 typedef std::vector<LongitudinalOverlapResult> LongitudinalOverlapResultVector;
@@ -281,8 +280,7 @@ public:
      *  @param  caloHitList
      *  @param  clusterList
      */
-    FragmentOverlapResult(const TrackOverlapResult trackOverlapResult, const pandora::CaloHitList &caloHitList,
-        const pandora::ClusterList &clusterList);
+    FragmentOverlapResult(const TrackOverlapResult trackOverlapResult, const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList);
 
     /**
      *  @brief  Constructor
@@ -337,8 +335,8 @@ public:
     FragmentOverlapResult &operator=(const FragmentOverlapResult &rhs);
 
 private:
-    pandora::CaloHitList    m_caloHitList;      ///< The list of fragment-associated hits
-    pandora::ClusterList    m_clusterList;      ///< The list of fragment-associated clusters
+    pandora::CaloHitList m_caloHitList; ///< The list of fragment-associated hits
+    pandora::ClusterList m_clusterList; ///< The list of fragment-associated clusters
 };
 
 typedef std::vector<FragmentOverlapResult> FragmentOverlapResultVector;

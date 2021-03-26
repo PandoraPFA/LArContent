@@ -178,17 +178,17 @@ private:
         bool GetOutcome() const;
 
     private:
-        int       m_nodeId;               ///< Node id
-        int       m_parentNodeId;         ///< Parent node id
-        int       m_leftChildNodeId;      ///< Left child node id
-        int       m_rightChildNodeId;     ///< Right child node id
-        bool      m_isLeaf;               ///< Is node a leaf
-        double    m_threshold;            ///< Threshold used for decision if decision node
-        int       m_variableId;           ///< Variable cut on for decision if decision node
-        bool      m_outcome;              ///< Outcome if leaf node
+        int m_nodeId;           ///< Node id
+        int m_parentNodeId;     ///< Parent node id
+        int m_leftChildNodeId;  ///< Left child node id
+        int m_rightChildNodeId; ///< Right child node id
+        bool m_isLeaf;          ///< Is node a leaf
+        double m_threshold;     ///< Threshold used for decision if decision node
+        int m_variableId;       ///< Variable cut on for decision if decision node
+        bool m_outcome;         ///< Outcome if leaf node
     };
 
-    typedef std::map<int, const Node*> IdToNodeMap;
+    typedef std::map<int, const Node *> IdToNodeMap;
 
     /**
      *  @brief  WeakClassifier class containing a decision tree and a weight
@@ -256,12 +256,12 @@ private:
         int GetTreeId() const;
 
     private:
-        IdToNodeMap     m_idToNodeMap; ///< Decision tree nodes
-        double          m_weight;      ///< Boost weight
-        int             m_treeId;      ///< Decision tree id
+        IdToNodeMap m_idToNodeMap; ///< Decision tree nodes
+        double m_weight;           ///< Boost weight
+        int m_treeId;              ///< Decision tree id
     };
 
-    typedef std::vector<const WeakClassifier*> WeakClassifiers;
+    typedef std::vector<const WeakClassifier *> WeakClassifiers;
 
     /**
      *  @brief  StrongClassifier class used in application of adaptive boost decision tree
@@ -310,7 +310,7 @@ private:
          */
         pandora::StatusCode ReadComponent(pandora::TiXmlElement *pCurrentXmlElement);
 
-        WeakClassifiers     m_weakClassifiers;     ///< Vector of weak classifers
+        WeakClassifiers m_weakClassifiers; ///< Vector of weak classifers
     };
 
     /**
@@ -322,7 +322,7 @@ private:
      */
     double CalculateScore(const LArMvaHelper::MvaFeatureVector &features) const;
 
-    StrongClassifier     *m_pStrongClassifier;           ///< Strong adaptive boost tree classifier
+    StrongClassifier *m_pStrongClassifier; ///< Strong adaptive boost tree classifier
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

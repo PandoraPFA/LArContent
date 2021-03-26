@@ -18,10 +18,8 @@
 
 #include "larpandoradlcontent/LArDLContent.h"
 
-#define LAR_DL_ALGORITHM_LIST(d)                                                                                                   \
-    d("LArDLMaster",                            DLMasterAlgorithm)                                                                 \
-    d("LArDLHitTrackShowerId",                  DlHitTrackShowerIdAlgorithm)                                                       \
-    d("LArDLHitValidation",                     DlHitValidationAlgorithm)
+#define LAR_DL_ALGORITHM_LIST(d)                                                                                                           \
+    d("LArDLMaster", DLMasterAlgorithm) d("LArDLHitTrackShowerId", DlHitTrackShowerIdAlgorithm) d("LArDLHitValidation", DlHitValidationAlgorithm)
 
 #define LAR_DL_ALGORITHM_TOOL_LIST(d)
 
@@ -33,23 +31,29 @@
 namespace lar_dl_content
 {
 
-#define LAR_DL_CONTENT_CREATE_ALGORITHM_FACTORY(a, b)                                                                              \
-class b##DL_FACTORY : public pandora::AlgorithmFactory                                                                             \
-{                                                                                                                               \
-public:                                                                                                                         \
-    pandora::Algorithm *CreateAlgorithm() const {return new b;};                                                                \
-};
+#define LAR_DL_CONTENT_CREATE_ALGORITHM_FACTORY(a, b)                                                                                      \
+    class b##DL_FACTORY : public pandora::AlgorithmFactory                                                                                 \
+    {                                                                                                                                      \
+    public:                                                                                                                                \
+        pandora::Algorithm *CreateAlgorithm() const                                                                                        \
+        {                                                                                                                                  \
+            return new b;                                                                                                                  \
+        };                                                                                                                                 \
+    };
 
 LAR_DL_ALGORITHM_LIST(LAR_DL_CONTENT_CREATE_ALGORITHM_FACTORY)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-#define LAR_DL_CONTENT_CREATE_ALGORITHM_TOOL_FACTORY(a, b)                                                                         \
-class b##DL_FACTORY : public pandora::AlgorithmToolFactory                                                                         \
-{                                                                                                                               \
-public:                                                                                                                         \
-    pandora::AlgorithmTool *CreateAlgorithmTool() const {return new b;};                                                        \
-};
+#define LAR_DL_CONTENT_CREATE_ALGORITHM_TOOL_FACTORY(a, b)                                                                                 \
+    class b##DL_FACTORY : public pandora::AlgorithmToolFactory                                                                             \
+    {                                                                                                                                      \
+    public:                                                                                                                                \
+        pandora::AlgorithmTool *CreateAlgorithmTool() const                                                                                \
+        {                                                                                                                                  \
+            return new b;                                                                                                                  \
+        };                                                                                                                                 \
+    };
 
 LAR_DL_ALGORITHM_TOOL_LIST(LAR_DL_CONTENT_CREATE_ALGORITHM_TOOL_FACTORY)
 
@@ -58,19 +62,19 @@ LAR_DL_ALGORITHM_TOOL_LIST(LAR_DL_CONTENT_CREATE_ALGORITHM_TOOL_FACTORY)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-#define LAR_DL_CONTENT_REGISTER_ALGORITHM(a, b)                                                                                 \
-{                                                                                                                               \
-    const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmFactory(pandora, a, new lar_dl_content::b##DL_FACTORY));  \
-    if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                             \
-        return statusCode;                                                                                                      \
-}
+#define LAR_DL_CONTENT_REGISTER_ALGORITHM(a, b)                                                                                            \
+    {                                                                                                                                      \
+        const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmFactory(pandora, a, new lar_dl_content::b##DL_FACTORY));         \
+        if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                                    \
+            return statusCode;                                                                                                             \
+    }
 
-#define LAR_DL_CONTENT_REGISTER_ALGORITHM_TOOL(a, b)                                                                                \
-{                                                                                                                                   \
-    const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmToolFactory(pandora, a, new lar_dl_content::b##DL_FACTORY));  \
-    if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                                 \
-        return statusCode;                                                                                                          \
-}
+#define LAR_DL_CONTENT_REGISTER_ALGORITHM_TOOL(a, b)                                                                                       \
+    {                                                                                                                                      \
+        const pandora::StatusCode statusCode(PandoraApi::RegisterAlgorithmToolFactory(pandora, a, new lar_dl_content::b##DL_FACTORY));     \
+        if (pandora::STATUS_CODE_SUCCESS != statusCode)                                                                                    \
+            return statusCode;                                                                                                             \
+    }
 
 pandora::StatusCode LArDLContent::RegisterAlgorithms(const pandora::Pandora &pandora)
 {
@@ -78,4 +82,3 @@ pandora::StatusCode LArDLContent::RegisterAlgorithms(const pandora::Pandora &pan
     LAR_DL_ALGORITHM_TOOL_LIST(LAR_DL_CONTENT_REGISTER_ALGORITHM_TOOL);
     return pandora::STATUS_CODE_SUCCESS;
 }
-

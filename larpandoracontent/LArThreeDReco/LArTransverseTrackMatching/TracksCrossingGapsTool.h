@@ -106,7 +106,7 @@ private:
      *  @return boolean
      */
     bool CheckXPositionInGap(const float xSample, const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
-        const TwoDSlidingFitResult &slidingFitResult3, bool &gapIn1, bool &gapIn2, bool &gapIn3)const;
+        const TwoDSlidingFitResult &slidingFitResult3, bool &gapIn1, bool &gapIn2, bool &gapIn3) const;
 
     /**
      *  @brief  Check whether a x position is at the end of the cluster
@@ -118,13 +118,13 @@ private:
      */
     bool IsEndOfCluster(const float xSample, const TwoDSlidingFitResult &slidingFitResult) const;
 
-    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
-    unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
-    float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
-    unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
-    float           m_maxGapTolerance;                  ///< The max gap tolerance
-    float           m_sampleStepSize;                   ///< The sampling step size used in association checks, units cm
-    unsigned int    m_maxAngleRatio;                    ///< The max ratio allowed in the angle
+    float m_minMatchedFraction;                  ///< The min matched sampling point fraction for particle creation
+    unsigned int m_minMatchedSamplingPoints;     ///< The min number of matched sampling points for particle creation
+    float m_minXOverlapFraction;                 ///< The min x overlap fraction (in each view) for particle creation
+    unsigned int m_minMatchedSamplingPointRatio; ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
+    float m_maxGapTolerance;                     ///< The max gap tolerance
+    float m_sampleStepSize;                      ///< The sampling step size used in association checks, units cm
+    unsigned int m_maxAngleRatio;                ///< The max ratio allowed in the angle
 };
 
 } // namespace lar_content

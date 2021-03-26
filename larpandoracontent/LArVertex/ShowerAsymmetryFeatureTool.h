@@ -35,10 +35,10 @@ public:
      *
      *  @return the shower asymmetry feature
      */
-    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm * const pAlgorithm, const pandora::Vertex * const pVertex,
-        const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &, const VertexSelectionBaseAlgorithm::ClusterListMap &,
-        const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &showerClusterListMap,
-        const float, float &);
+    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm,
+        const pandora::Vertex *const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &,
+        const VertexSelectionBaseAlgorithm::ClusterListMap &, const VertexSelectionBaseAlgorithm::KDTreeMap &,
+        const VertexSelectionBaseAlgorithm::ShowerClusterListMap &showerClusterListMap, const float, float &);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -51,7 +51,8 @@ private:
      *
      *  @return the shower asymmetry feature
      */
-    float GetShowerAsymmetryForView(const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const;
+    float GetShowerAsymmetryForView(
+        const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const;
 
     /**
      *  @brief  Get whether we should use a given shower cluster for asymmetry calculation
@@ -75,7 +76,7 @@ private:
     void CalculateAsymmetryParameters(const VertexSelectionBaseAlgorithm::ShowerCluster &showerCluster, const float projectedVtxPosition,
         const pandora::CartesianVector &showerDirection, float &beforeVtxEnergy, float &afterVtxEnergy) const;
 
-    float   m_vertexClusterDistance;    ///< The distance around the vertex to look for shower clusters
+    float m_vertexClusterDistance; ///< The distance around the vertex to look for shower clusters
 };
 
 } // namespace lar_content

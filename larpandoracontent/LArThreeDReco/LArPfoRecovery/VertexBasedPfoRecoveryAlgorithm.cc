@@ -10,8 +10,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArPfoRecovery/VertexBasedPfoRecoveryAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 using namespace pandora;
@@ -35,7 +35,8 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::Run()
     const VertexList *pVertexList = NULL;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
 
-    const Vertex *const pSelectedVertex((pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+    const Vertex *const pSelectedVertex(
+        (pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
 
     if (!pSelectedVertex)
     {
@@ -92,7 +93,7 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
             if (!pCluster->IsAvailable())
                 continue;
 
-            if (pCluster->GetNCaloHits() <=1)
+            if (pCluster->GetNCaloHits() <= 1)
                 continue;
 
             if (TPC_3D == LArClusterHelper::GetClusterHitType(pCluster))
@@ -108,8 +109,7 @@ StatusCode VertexBasedPfoRecoveryAlgorithm::GetAvailableClusters(const StringVec
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexBasedPfoRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector,
-    TwoDSlidingFitResultMap &slidingFitResultMap) const
+void VertexBasedPfoRecoveryAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -206,12 +206,12 @@ void VertexBasedPfoRecoveryAlgorithm::MatchThreeViews(const Vertex *const pVerte
         const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
         const HitType hitType3(LArClusterHelper::GetClusterHitType(pCluster3));
 
-        const Cluster *const pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 :
-                                       (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
-        const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 :
-                                       (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
-        const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 :
-                                       (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
+        const Cluster *const pClusterU(
+            (TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
+        const Cluster *const pClusterV(
+            (TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
+        const Cluster *const pClusterW(
+            (TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
 
         particleList.push_back(Particle(pClusterU, pClusterV, pClusterW));
 
@@ -262,8 +262,8 @@ void VertexBasedPfoRecoveryAlgorithm::MatchTwoViews(const Vertex *const pVertex,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, const TwoDSlidingFitResultMap &slidingFitResultMap,
-    const ClusterVector &clusters1, const ClusterVector &clusters2, const ClusterVector &clusters3,
-    const Cluster *&pBestCluster1, const Cluster *&pBestCluster2, const Cluster *&pBestCluster3, float &bestChi2) const
+    const ClusterVector &clusters1, const ClusterVector &clusters2, const ClusterVector &clusters3, const Cluster *&pBestCluster1,
+    const Cluster *&pBestCluster2, const Cluster *&pBestCluster3, float &bestChi2) const
 {
     if (clusters1.empty() || clusters2.empty() || clusters3.empty())
         return;
@@ -295,25 +295,25 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
             // Third loop
             for (ClusterVector::const_iterator cIter3 = clusters3.begin(), cIterEnd3 = clusters3.end(); cIter3 != cIterEnd3; ++cIter3)
             {
-                 const Cluster *const pCluster3 = *cIter3;
+                const Cluster *const pCluster3 = *cIter3;
 
-                 TwoDSlidingFitResultMap::const_iterator sIter3 = slidingFitResultMap.find(pCluster3);
-                 if (slidingFitResultMap.end() == sIter3)
-                     continue;
+                TwoDSlidingFitResultMap::const_iterator sIter3 = slidingFitResultMap.find(pCluster3);
+                if (slidingFitResultMap.end() == sIter3)
+                    continue;
 
-                 const TwoDSlidingFitResult &slidingFitResult3 = sIter3->second;
-                 const LArPointingCluster pointingCluster3(slidingFitResult3);
+                const TwoDSlidingFitResult &slidingFitResult3 = sIter3->second;
+                const LArPointingCluster pointingCluster3(slidingFitResult3);
 
-                 // Calculate chi-squared
-                 const float thisChi2(this->GetChi2(pVertex, pointingCluster1, pointingCluster2, pointingCluster3));
+                // Calculate chi-squared
+                const float thisChi2(this->GetChi2(pVertex, pointingCluster1, pointingCluster2, pointingCluster3));
 
-                 if (thisChi2 < bestChi2)
-                 {
-                     bestChi2 = thisChi2;
-                     pBestCluster1 = pCluster1;
-                     pBestCluster2 = pCluster2;
-                     pBestCluster3 = pCluster3;
-                 }
+                if (thisChi2 < bestChi2)
+                {
+                    bestChi2 = thisChi2;
+                    pBestCluster1 = pCluster1;
+                    pBestCluster2 = pCluster2;
+                    pBestCluster3 = pCluster3;
+                }
             }
         }
     }
@@ -366,8 +366,8 @@ void VertexBasedPfoRecoveryAlgorithm::GetBestChi2(const Vertex *const pVertex, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float VertexBasedPfoRecoveryAlgorithm::GetChi2(const Vertex *const pVertex, const LArPointingCluster &pointingCluster1,
-    const LArPointingCluster &pointingCluster2) const
+float VertexBasedPfoRecoveryAlgorithm::GetChi2(
+    const Vertex *const pVertex, const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2) const
 {
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pointingCluster1.GetCluster()));
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pointingCluster2.GetCluster()));
@@ -383,8 +383,8 @@ float VertexBasedPfoRecoveryAlgorithm::GetChi2(const Vertex *const pVertex, cons
 
     float chi2(0.f);
     CartesianVector mergedPosition(0.f, 0.f, 0.f);
-    LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2,
-        pointingVertex1.GetPosition(), pointingVertex2.GetPosition(), mergedPosition, chi2);
+    LArGeometryHelper::MergeTwoPositions3D(
+        this->GetPandora(), hitType1, hitType2, pointingVertex1.GetPosition(), pointingVertex2.GetPosition(), mergedPosition, chi2);
 
     return chi2;
 }
@@ -411,16 +411,15 @@ float VertexBasedPfoRecoveryAlgorithm::GetChi2(const Vertex *const pVertex, cons
 
     float chi2(0.f);
     CartesianVector mergedPosition(0.f, 0.f, 0.f);
-    LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3,
-        pointingVertex1.GetPosition(), pointingVertex2.GetPosition(), pointingVertex3.GetPosition(), mergedPosition, chi2);
+    LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, pointingVertex1.GetPosition(),
+        pointingVertex2.GetPosition(), pointingVertex3.GetPosition(), mergedPosition, chi2);
 
     return chi2;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexBasedPfoRecoveryAlgorithm::SelectAvailableClusters(const ClusterSet &vetoList, const ClusterVector &inputVector,
-    ClusterVector &outputVector) const
+void VertexBasedPfoRecoveryAlgorithm::SelectAvailableClusters(const ClusterSet &vetoList, const ClusterVector &inputVector, ClusterVector &outputVector) const
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
@@ -442,8 +441,7 @@ void VertexBasedPfoRecoveryAlgorithm::SelectClusters(const HitType hitType, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const LArPointingCluster::Vertex &VertexBasedPfoRecoveryAlgorithm::GetInnerVertex(const CartesianVector &vertex,
-    const LArPointingCluster &cluster) const
+const LArPointingCluster::Vertex &VertexBasedPfoRecoveryAlgorithm::GetInnerVertex(const CartesianVector &vertex, const LArPointingCluster &cluster) const
 {
     const float innerDistance((vertex - cluster.GetInnerVertex().GetPosition()).GetMagnitudeSquared());
     const float outerDistance((vertex - cluster.GetOuterVertex().GetPosition()).GetMagnitudeSquared());
@@ -456,8 +454,7 @@ const LArPointingCluster::Vertex &VertexBasedPfoRecoveryAlgorithm::GetInnerVerte
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const LArPointingCluster::Vertex &VertexBasedPfoRecoveryAlgorithm::GetOuterVertex(const CartesianVector &vertex,
-    const LArPointingCluster &cluster) const
+const LArPointingCluster::Vertex &VertexBasedPfoRecoveryAlgorithm::GetOuterVertex(const CartesianVector &vertex, const LArPointingCluster &cluster) const
 {
     const LArPointingCluster::Vertex &innerVertex = this->GetInnerVertex(vertex, cluster);
 
@@ -474,7 +471,8 @@ void VertexBasedPfoRecoveryAlgorithm::BuildParticles(const ParticleList &particl
     if (particleList.empty())
         return;
 
-    const PfoList *pPfoList = NULL; std::string pfoListName;
+    const PfoList *pPfoList = NULL;
+    std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
     for (ParticleList::const_iterator iter = particleList.begin(), iterEnd = particleList.end(); iter != iterEnd; ++iter)
@@ -490,12 +488,15 @@ void VertexBasedPfoRecoveryAlgorithm::BuildParticles(const ParticleList &particl
         const bool isAvailableV((NULL != pClusterV) ? pClusterV->IsAvailable() : true);
         const bool isAvailableW((NULL != pClusterW) ? pClusterW->IsAvailable() : true);
 
-        if(!(isAvailableU && isAvailableV && isAvailableW))
+        if (!(isAvailableU && isAvailableV && isAvailableW))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        if (pClusterU) clusterList.push_back(pClusterU);
-        if (pClusterV) clusterList.push_back(pClusterV);
-        if (pClusterW) clusterList.push_back(pClusterW);
+        if (pClusterU)
+            clusterList.push_back(pClusterU);
+        if (pClusterV)
+            clusterList.push_back(pClusterV);
+        if (pClusterW)
+            clusterList.push_back(pClusterW);
 
         // TODO Correct these placeholder parameters
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
@@ -536,26 +537,23 @@ VertexBasedPfoRecoveryAlgorithm::Particle::Particle(const Cluster *const pCluste
 
 StatusCode VertexBasedPfoRecoveryAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNames", m_inputClusterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputPfoListName", m_outputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_slidingFitHalfWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TwoViewChi2Cut", m_twoViewChi2Cut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TwoViewChi2Cut", m_twoViewChi2Cut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ThreeViewChi2Cut", m_threeViewChi2Cut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ThreeViewChi2Cut", m_threeViewChi2Cut));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -30,8 +30,8 @@ public:
      *  @param  hitType the cluster hit type
      *  @param  coordinateVector the output list of coordinates
      */
-    static void GetCoordinateVector(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType,
-        pandora::CartesianPointVector &coordinateVector);
+    static void GetCoordinateVector(
+        const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::CartesianPointVector &coordinateVector);
 
     /**
      *  @brief  Get a list of calo hits of a particular hit type from a list of pfos
@@ -240,7 +240,7 @@ public:
      */
     static bool IsFinalState(const pandora::ParticleFlowObject *const pPfo);
 
-     /**
+    /**
      *  @brief  Whether a pfo is a final-state particle from a neutrino (or antineutrino) interaction
      *
      *  @param  pPfo the address of the Pfo
@@ -258,7 +258,7 @@ public:
      */
     static bool IsNeutrino(const pandora::ParticleFlowObject *const pPfo);
 
-     /**
+    /**
      *  @brief  Whether a pfo is a final-state particle from a test beam particle interaction
      *
      *  @param  pPfo the address of the Pfo

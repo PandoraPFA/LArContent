@@ -134,7 +134,7 @@ public:
          * @param  columnTitles the string columns titles use empty string for a separator column
          * @param  precision the number of significant figures to display for number type table elements
          */
-        Table(const pandora::StringVector &columnTitles, const unsigned int precision=3);
+        Table(const pandora::StringVector &columnTitles, const unsigned int precision = 3);
 
         /**
          * @brief  Print the table
@@ -148,8 +148,8 @@ public:
          * @param  style the style of the element
          * @param  color the color of the element
          */
-        template<typename T>
-        void AddElement(const T &value, const Style style=REGULAR, const Color color=DEFAULT);
+        template <typename T>
+        void AddElement(const T &value, const Style style = REGULAR, const Color color = DEFAULT);
 
     private:
         /**
@@ -202,18 +202,18 @@ public:
          */
         void UpdateColumnWidth();
 
-        const pandora::StringVector     m_columnTitles;     ///< The vector of columns titles in the table
-        const unsigned int              m_precision;        ///< The number of significant figures to use when displaying number types
-        pandora::StringVector           m_elements;         ///< The vector of flattened table elements
-        pandora::StringVector           m_format;           ///< The formatting of each table element
-        std::vector<unsigned int>       m_widths;           ///< The widths of each column (in units of number of characters)
-        std::stringstream               m_stringstream;     ///< The stringstream to print objects to
+        const pandora::StringVector m_columnTitles; ///< The vector of columns titles in the table
+        const unsigned int m_precision;             ///< The number of significant figures to use when displaying number types
+        pandora::StringVector m_elements;           ///< The vector of flattened table elements
+        pandora::StringVector m_format;             ///< The formatting of each table element
+        std::vector<unsigned int> m_widths;         ///< The widths of each column (in units of number of characters)
+        std::stringstream m_stringstream;           ///< The stringstream to print objects to
     };
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 inline void LArFormattingHelper::Table::AddElement(const T &value, const Style style, const Color color)
 {
     this->CheckAndSetSeparatorColumn();

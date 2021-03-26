@@ -24,10 +24,10 @@ class RemnantTensorTool;
 /**
  *  @brief  ThreeViewRemnantsAlgorithm class
  */
-class ThreeViewRemnantsAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<float> >
+class ThreeViewRemnantsAlgorithm : public NViewMatchingAlgorithm<ThreeViewMatchingControl<float>>
 {
 public:
-    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<float> > BaseAlgorithm;
+    typedef NViewMatchingAlgorithm<ThreeViewMatchingControl<float>> BaseAlgorithm;
 
     /**
      *  @brief  Default constructor
@@ -42,13 +42,13 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<RemnantTensorTool*> RemnantTensorToolVector;
-    RemnantTensorToolVector     m_algorithmToolVector;      ///< The algorithm tool list
+    typedef std::vector<RemnantTensorTool *> RemnantTensorToolVector;
+    RemnantTensorToolVector m_algorithmToolVector; ///< The algorithm tool list
 
-    unsigned int                m_nMaxTensorToolRepeats;    ///< The maximum number of repeat loops over tensor tools
-    unsigned int                m_minClusterCaloHits;       ///< The selection cut on the number of cluster calo hits
-    float                       m_xOverlapWindow;           ///< The sampling pitch in the x coordinate
-    float                       m_pseudoChi2Cut;            ///< The selection cut on the matched chi2
+    unsigned int m_nMaxTensorToolRepeats; ///< The maximum number of repeat loops over tensor tools
+    unsigned int m_minClusterCaloHits;    ///< The selection cut on the number of cluster calo hits
+    float m_xOverlapWindow;               ///< The sampling pitch in the x coordinate
+    float m_pseudoChi2Cut;                ///< The selection cut on the matched chi2
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

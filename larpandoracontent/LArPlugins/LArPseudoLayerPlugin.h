@@ -31,9 +31,9 @@ private:
     pandora::StatusCode Initialize();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float           m_zPitch;       ///< The z pitch
-    float           m_zOffset;      ///< The z offset
-    unsigned int    m_zerothLayer;  ///< The zeroth layer
+    float m_zPitch;             ///< The z pitch
+    float m_zOffset;            ///< The z offset
+    unsigned int m_zerothLayer; ///< The zeroth layer
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -43,6 +43,6 @@ inline unsigned int LArPseudoLayerPlugin::GetPseudoLayerAtIp() const
     return 0;
 }
 
-} // namespace lar
+} // namespace lar_content
 
 #endif // #ifndef LAR_PSEUDO_LAYER_PLUGIN_H

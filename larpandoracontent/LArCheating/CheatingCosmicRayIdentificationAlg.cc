@@ -19,8 +19,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingCosmicRayIdentificationAlg::CheatingCosmicRayIdentificationAlg() :
-    m_maxNeutrinoFraction(0.5f)
+CheatingCosmicRayIdentificationAlg::CheatingCosmicRayIdentificationAlg() : m_maxNeutrinoFraction(0.5f)
 {
 }
 
@@ -29,7 +28,8 @@ CheatingCosmicRayIdentificationAlg::CheatingCosmicRayIdentificationAlg() :
 StatusCode CheatingCosmicRayIdentificationAlg::Run()
 {
     const PfoList *pPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
     if (!pPfoList)
     {
@@ -61,7 +61,8 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_inputPfoListName, m_outputPfoListName, outputPfoList));
 
         if (!outputDaughterPfoList.empty())
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_inputDaughterPfoListName, m_outputDaughterPfoListName, outputDaughterPfoList));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                PandoraContentApi::SaveList(*this, m_inputDaughterPfoListName, m_outputDaughterPfoListName, outputDaughterPfoList));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -71,22 +72,20 @@ StatusCode CheatingCosmicRayIdentificationAlg::Run()
 
 StatusCode CheatingCosmicRayIdentificationAlg::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputPfoListName", m_inputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputPfoListName", m_outputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
 
     m_inputDaughterPfoListName = m_inputPfoListName;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputDaughterPfoListName", m_inputDaughterPfoListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "InputDaughterPfoListName", m_inputDaughterPfoListName));
 
     m_outputDaughterPfoListName = m_outputPfoListName;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputDaughterPfoListName", m_outputDaughterPfoListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "OutputDaughterPfoListName", m_outputDaughterPfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxNeutrinoFraction", m_maxNeutrinoFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxNeutrinoFraction", m_maxNeutrinoFraction));
 
     return STATUS_CODE_SUCCESS;
 }

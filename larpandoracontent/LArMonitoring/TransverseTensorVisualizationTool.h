@@ -29,10 +29,10 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int    m_minClusterConnections;        ///< The minimum number of cluster connections for display
-    bool            m_ignoreUnavailableClusters;    ///< Whether to ignore (skip-over) unavailable clusters in the tensor
-    bool            m_showEachIndividualElement;    ///< Whether to draw each individual tensor element
-    bool            m_showContext;                  ///< Whether to show input cluster lists to add context to tensor elements
+    unsigned int m_minClusterConnections; ///< The minimum number of cluster connections for display
+    bool m_ignoreUnavailableClusters;     ///< Whether to ignore (skip-over) unavailable clusters in the tensor
+    bool m_showEachIndividualElement;     ///< Whether to draw each individual tensor element
+    bool m_showContext;                   ///< Whether to show input cluster lists to add context to tensor elements
 };
 
 } // namespace lar_content

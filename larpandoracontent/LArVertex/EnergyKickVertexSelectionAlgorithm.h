@@ -32,11 +32,11 @@ private:
 
     VertexFeatureTool::FeatureToolVector m_featureToolVector; ///< The feature tool map
 
-    pandora::StringVector   m_inputClusterListNames;        ///< The list of cluster list names
-    unsigned int            m_minClusterCaloHits;           ///< The min number of hits parameter in the energy score
-    unsigned int            m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    float                   m_epsilon;                      ///< The epsilon parameter in the energy score
-    float                   m_asymmetryConstant;            ///< The asymmetry constant parameter in the energy score
+    pandora::StringVector m_inputClusterListNames; ///< The list of cluster list names
+    unsigned int m_minClusterCaloHits;             ///< The min number of hits parameter in the energy score
+    unsigned int m_slidingFitWindow;               ///< The layer window for the sliding linear fits
+    float m_epsilon;                               ///< The epsilon parameter in the energy score
+    float m_asymmetryConstant;                     ///< The asymmetry constant parameter in the energy score
 };
 
 } // namespace lar_content

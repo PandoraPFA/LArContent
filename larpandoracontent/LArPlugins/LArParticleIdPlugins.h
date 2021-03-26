@@ -49,11 +49,11 @@ public:
 
         pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-        unsigned int    m_layerFitHalfWindow;       ///< Layer fit half window, used for calculating sliding muon track width
-        float           m_minLayerOccupancy;        ///< Min layer occupancy for for muon identification
-        float           m_maxTrackWidth;            ///< Max muon track width estimator for muon identification
-        float           m_trackResidualQuantile;    ///< Track residual quantile, used for calculating muon track width
-        unsigned int    m_minClustersPassingId;     ///< Match pfo if at sufficient clusters in pfo pass the cluster particle id logic
+        unsigned int m_layerFitHalfWindow;   ///< Layer fit half window, used for calculating sliding muon track width
+        float m_minLayerOccupancy;           ///< Min layer occupancy for for muon identification
+        float m_maxTrackWidth;               ///< Max muon track width estimator for muon identification
+        float m_trackResidualQuantile;       ///< Track residual quantile, used for calculating muon track width
+        unsigned int m_minClustersPassingId; ///< Match pfo if at sufficient clusters in pfo pass the cluster particle id logic
     };
 };
 

@@ -118,7 +118,7 @@ void CosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmicRayPfos,
     this->CheckIfInTime(candidates, pfoToInTimeMap);
 
     PfoToBoolMap pfoToIsContainedMap;
-    this->CheckIfContained(candidates, pfoToIsContainedMap );
+    this->CheckIfContained(candidates, pfoToIsContainedMap);
 
     PfoToBoolMap pfoToIsTopToBottomMap;
     this->CheckIfTopToBottom(candidates, pfoToIsTopToBottomMap);
@@ -168,8 +168,8 @@ void CosmicRayTaggingTool::GetPfoAssociations(const PfoList &parentCosmicRayPfos
         if (!this->GetValid3DCluster(pPfo, pCluster) || !pCluster)
             continue;
 
-        (void) pfoToSlidingFitsMap.insert(PfoToSlidingFitsMap::value_type(pPfo, std::make_pair(
-            ThreeDSlidingFitResult(pCluster, 5, layerPitch), ThreeDSlidingFitResult(pCluster, 100, layerPitch)))); // TODO Configurable
+        (void)pfoToSlidingFitsMap.insert(PfoToSlidingFitsMap::value_type(pPfo,
+            std::make_pair(ThreeDSlidingFitResult(pCluster, 5, layerPitch), ThreeDSlidingFitResult(pCluster, 100, layerPitch)))); // TODO Configurable
     }
 
     for (const ParticleFlowObject *const pPfo1 : parentCosmicRayPfos)
@@ -192,10 +192,14 @@ void CosmicRayTaggingTool::GetPfoAssociations(const PfoList &parentCosmicRayPfos
             const ThreeDSlidingFitResult &fitPos2(iter2->second.first), &fitDir2(iter2->second.second);
 
             // TODO Use existing LArPointingClusters and IsEmission/IsNode logic, for consistency
-            if (!(this->CheckAssociation(fitPos1.GetGlobalMinLayerPosition(), fitDir1.GetGlobalMinLayerDirection() * -1.f, fitPos2.GetGlobalMinLayerPosition(), fitDir2.GetGlobalMinLayerDirection() * -1.f) ||
-                this->CheckAssociation(fitPos1.GetGlobalMinLayerPosition(), fitDir1.GetGlobalMinLayerDirection() * -1.f, fitPos2.GetGlobalMaxLayerPosition(), fitDir2.GetGlobalMaxLayerDirection()) ||
-                this->CheckAssociation(fitPos1.GetGlobalMaxLayerPosition(), fitDir1.GetGlobalMaxLayerDirection(), fitPos2.GetGlobalMinLayerPosition(), fitDir2.GetGlobalMinLayerDirection() * -1.f) ||
-                this->CheckAssociation(fitPos1.GetGlobalMaxLayerPosition(), fitDir1.GetGlobalMaxLayerDirection(), fitPos2.GetGlobalMaxLayerPosition(), fitDir2.GetGlobalMaxLayerDirection())))
+            if (!(this->CheckAssociation(fitPos1.GetGlobalMinLayerPosition(), fitDir1.GetGlobalMinLayerDirection() * -1.f,
+                      fitPos2.GetGlobalMinLayerPosition(), fitDir2.GetGlobalMinLayerDirection() * -1.f) ||
+                    this->CheckAssociation(fitPos1.GetGlobalMinLayerPosition(), fitDir1.GetGlobalMinLayerDirection() * -1.f,
+                        fitPos2.GetGlobalMaxLayerPosition(), fitDir2.GetGlobalMaxLayerDirection()) ||
+                    this->CheckAssociation(fitPos1.GetGlobalMaxLayerPosition(), fitDir1.GetGlobalMaxLayerDirection(),
+                        fitPos2.GetGlobalMinLayerPosition(), fitDir2.GetGlobalMinLayerDirection() * -1.f) ||
+                    this->CheckAssociation(fitPos1.GetGlobalMaxLayerPosition(), fitDir1.GetGlobalMaxLayerDirection(),
+                        fitPos2.GetGlobalMaxLayerPosition(), fitDir2.GetGlobalMaxLayerDirection())))
             {
                 continue;
             }
@@ -213,8 +217,8 @@ void CosmicRayTaggingTool::GetPfoAssociations(const PfoList &parentCosmicRayPfos
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayTaggingTool::CheckAssociation(const CartesianVector &endPoint1, const CartesianVector &endDir1, const CartesianVector &endPoint2,
-    const CartesianVector &endDir2) const
+bool CosmicRayTaggingTool::CheckAssociation(
+    const CartesianVector &endPoint1, const CartesianVector &endDir1, const CartesianVector &endPoint2, const CartesianVector &endDir2) const
 {
     // TODO This function needs significant tidying and checks (variable names must be self describing, check deltaTheta, etc.)
     const CartesianVector n(endDir1.GetUnitVector());
@@ -237,8 +241,8 @@ bool CosmicRayTaggingTool::CheckAssociation(const CartesianVector &endPoint1, co
     const float maxVertexUncertainty(m_maxAssociationDist * std::sin(deltaTheta) + m_positionalUncertainty);
 
     // Ensure that the distances to the point of closest approch are within the limits
-    if ((lambda < -maxVertexUncertainty) || (mu < -maxVertexUncertainty) ||
-        (lambda > m_maxAssociationDist + maxVertexUncertainty) || (mu > m_maxAssociationDist + maxVertexUncertainty))
+    if ((lambda < -maxVertexUncertainty) || (mu < -maxVertexUncertainty) || (lambda > m_maxAssociationDist + maxVertexUncertainty) ||
+        (mu > m_maxAssociationDist + maxVertexUncertainty))
     {
         return false;
     }
@@ -368,7 +372,9 @@ void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoT
                 if (std::fabs(LArPfoHelper::GetVertex(candidate.m_pPfo)->GetX0()) > m_inTimeMaxX0)
                     isInTime = false;
             }
-            catch (const StatusCodeException &) {}
+            catch (const StatusCodeException &)
+            {
+            }
         }
 
         // Cosmic-ray muons extending outside of (any individual) physical volume if given t0 is that of the beam particle
@@ -385,7 +391,7 @@ void CosmicRayTaggingTool::CheckIfInTime(const CRCandidateList &candidates, PfoT
 
             for (const CaloHit *const pCaloHit : caloHitList)
             {
-                const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit*>(pCaloHit));
+                const LArCaloHit *const pLArCaloHit(dynamic_cast<const LArCaloHit *>(pCaloHit));
 
                 if (!pLArCaloHit)
                     continue;
@@ -425,16 +431,19 @@ void CosmicRayTaggingTool::CheckIfContained(const CRCandidateList &candidates, P
 {
     for (const CRCandidate &candidate : candidates)
     {
-        const float upperY((candidate.m_endPoint1.GetY() > candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
-        const float lowerY((candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
+        const float upperY(
+            (candidate.m_endPoint1.GetY() > candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
+        const float lowerY(
+            (candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
 
-        const float zAtUpperY((candidate.m_endPoint1.GetY() > candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetZ() : candidate.m_endPoint2.GetZ());
-        const float zAtLowerY((candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetZ() : candidate.m_endPoint2.GetZ());
+        const float zAtUpperY(
+            (candidate.m_endPoint1.GetY() > candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetZ() : candidate.m_endPoint2.GetZ());
+        const float zAtLowerY(
+            (candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetZ() : candidate.m_endPoint2.GetZ());
 
-        const bool isContained((upperY < m_face_Yt - m_marginY) && (upperY > m_face_Yb + m_marginY) &&
-            (lowerY < m_face_Yt - m_marginY) && (lowerY > m_face_Yb + m_marginY) &&
-            (zAtUpperY < m_face_Zd - m_marginZ) && (zAtUpperY > m_face_Zu + m_marginZ) &&
-            (zAtLowerY < m_face_Zd - m_marginZ) && (zAtLowerY > m_face_Zu + m_marginZ));
+        const bool isContained((upperY < m_face_Yt - m_marginY) && (upperY > m_face_Yb + m_marginY) && (lowerY < m_face_Yt - m_marginY) &&
+                               (lowerY > m_face_Yb + m_marginY) && (zAtUpperY < m_face_Zd - m_marginZ) && (zAtUpperY > m_face_Zu + m_marginZ) &&
+                               (zAtLowerY < m_face_Zd - m_marginZ) && (zAtLowerY > m_face_Zu + m_marginZ));
 
         if (!pfoToIsContainedMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, isContained)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -447,8 +456,10 @@ void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates,
 {
     for (const CRCandidate &candidate : candidates)
     {
-        const float upperY((candidate.m_endPoint1.GetY() > candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
-        const float lowerY((candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
+        const float upperY(
+            (candidate.m_endPoint1.GetY() > candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
+        const float lowerY(
+            (candidate.m_endPoint1.GetY() < candidate.m_endPoint2.GetY()) ? candidate.m_endPoint1.GetY() : candidate.m_endPoint2.GetY());
 
         const bool isTopToBottom((upperY > m_face_Yt - m_marginY) && (lowerY < m_face_Yb + m_marginY));
 
@@ -459,8 +470,8 @@ void CosmicRayTaggingTool::CheckIfTopToBottom(const CRCandidateList &candidates,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap, const PfoToBoolMap &pfoToIsContainedMap,
-    UIntSet &neutrinoSliceSet) const
+void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap,
+    const PfoToBoolMap &pfoToIsContainedMap, UIntSet &neutrinoSliceSet) const
 {
     IntBoolMap sliceIdToIsInTimeMap;
 
@@ -479,22 +490,25 @@ void CosmicRayTaggingTool::GetNeutrinoSlices(const CRCandidateList &candidates, 
             continue;
 
         const bool likelyNeutrino(candidate.m_canFit && sliceIdToIsInTimeMap.at(candidate.m_sliceId) &&
-            (candidate.m_theta < m_maxNeutrinoCosTheta || pfoToIsContainedMap.at(candidate.m_pPfo)));
+                                  (candidate.m_theta < m_maxNeutrinoCosTheta || pfoToIsContainedMap.at(candidate.m_pPfo)));
 
         if (likelyNeutrino)
-            (void) neutrinoSliceSet.insert(candidate.m_sliceId);
+            (void)neutrinoSliceSet.insert(candidate.m_sliceId);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap, const PfoToBoolMap &pfoToIsTopToBottomMap,
-    const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const
+void CosmicRayTaggingTool::TagCRMuons(const CRCandidateList &candidates, const PfoToBoolMap &pfoToInTimeMap,
+    const PfoToBoolMap &pfoToIsTopToBottomMap, const UIntSet &neutrinoSliceSet, PfoToBoolMap &pfoToIsLikelyCRMuonMap) const
 {
     for (const CRCandidate &candidate : candidates)
     {
-        const bool likelyCRMuon(!neutrinoSliceSet.count(candidate.m_sliceId) && (!pfoToInTimeMap.at(candidate.m_pPfo) || (candidate.m_canFit &&
-            (pfoToIsTopToBottomMap.at(candidate.m_pPfo) || ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature)))) ));
+        const bool likelyCRMuon(
+            !neutrinoSliceSet.count(candidate.m_sliceId) &&
+            (!pfoToInTimeMap.at(candidate.m_pPfo) ||
+                (candidate.m_canFit && (pfoToIsTopToBottomMap.at(candidate.m_pPfo) ||
+                                           ((candidate.m_theta > m_minCosmicCosTheta) && (candidate.m_curvature < m_maxCosmicCurvature))))));
 
         if (!pfoToIsLikelyCRMuonMap.insert(PfoToBoolMap::value_type(candidate.m_pPfo, likelyCRMuon)).second)
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
@@ -566,42 +580,36 @@ void CosmicRayTaggingTool::CRCandidate::CalculateFitVariables(const ThreeDSlidin
 
 StatusCode CosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CutMode", m_cutMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CutMode", m_cutMode));
     std::transform(m_cutMode.begin(), m_cutMode.end(), m_cutMode.begin(), ::tolower);
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AngularUncertainty", m_angularUncertainty ));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AngularUncertainty", m_angularUncertainty));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "PositionalUncertainty", m_positionalUncertainty ));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PositionalUncertainty", m_positionalUncertainty));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAssociationDist", m_maxAssociationDist));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAssociationDist", m_maxAssociationDist));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HitThreshold", m_minimumHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HitThreshold", m_minimumHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InTimeMargin", m_inTimeMargin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMargin", m_inTimeMargin));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InTimeMaxX0", m_inTimeMaxX0));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InTimeMaxX0", m_inTimeMaxX0));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MarginY", m_marginY));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MarginY", m_marginY));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MarginZ", m_marginZ));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MarginZ", m_marginZ));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxNeutrinoCosTheta", m_maxNeutrinoCosTheta));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxNeutrinoCosTheta", m_maxNeutrinoCosTheta));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCosmicCosTheta", m_minCosmicCosTheta));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosmicCosTheta", m_minCosmicCosTheta));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCosmicCurvature", m_maxCosmicCurvature));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCosmicCurvature", m_maxCosmicCurvature));
 
     return STATUS_CODE_SUCCESS;
 }

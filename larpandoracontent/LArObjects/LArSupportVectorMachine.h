@@ -38,9 +38,9 @@ public:
     enum KernelType
     {
         USER_DEFINED = 0,
-        LINEAR       = 1,
-        QUADRATIC    = 2,
-        CUBIC        = 3,
+        LINEAR = 1,
+        QUADRATIC = 2,
+        CUBIC = 3,
         GAUSSIAN_RBF = 4
     };
 
@@ -122,8 +122,8 @@ private:
          */
         SupportVectorInfo(const double yAlpha, LArMvaHelper::MvaFeatureVector supportVector);
 
-        double                          m_yAlpha;        ///< The alpha-value multiplied by the y-value for the support vector
-        LArMvaHelper::MvaFeatureVector  m_supportVector; ///< The support vector
+        double m_yAlpha;                                ///< The alpha-value multiplied by the y-value for the support vector
+        LArMvaHelper::MvaFeatureVector m_supportVector; ///< The support vector
     };
 
     /**
@@ -154,32 +154,32 @@ private:
          */
         double StandardizeParameter(const double parameter) const;
 
-        double    m_muValue;       ///< The average value of this feature
-        double    m_sigmaValue;    ///< The stddev of this feature
+        double m_muValue;    ///< The average value of this feature
+        double m_sigmaValue; ///< The stddev of this feature
     };
 
     typedef std::vector<SupportVectorInfo> SVInfoList;
-    typedef std::vector<FeatureInfo>       FeatureInfoVector;
+    typedef std::vector<FeatureInfo> FeatureInfoVector;
 
     typedef std::map<KernelType, KernelFunction> KernelMap;
 
-    bool              m_isInitialized;       ///< Whether this svm has been initialized
+    bool m_isInitialized; ///< Whether this svm has been initialized
 
-    bool              m_enableProbability;   ///< Whether to enable probability calculations
-    double            m_probAParameter;      ///< The first-order score coefficient for mapping to a probability using the logistic function
-    double            m_probBParameter;      ///< The score offset parameter for mapping to a probability using the logistic function
+    bool m_enableProbability; ///< Whether to enable probability calculations
+    double m_probAParameter;  ///< The first-order score coefficient for mapping to a probability using the logistic function
+    double m_probBParameter;  ///< The score offset parameter for mapping to a probability using the logistic function
 
-    bool              m_standardizeFeatures; ///< Whether to standardize the features
-    unsigned int      m_nFeatures;           ///< The number of features
-    double            m_bias;                ///< The bias term
-    double            m_scaleFactor;         ///< The kernel scale factor
+    bool m_standardizeFeatures; ///< Whether to standardize the features
+    unsigned int m_nFeatures;   ///< The number of features
+    double m_bias;              ///< The bias term
+    double m_scaleFactor;       ///< The kernel scale factor
 
-    SVInfoList        m_svInfoList;          ///< The list of SupportVectorInfo objects
-    FeatureInfoVector m_featureInfoList;     ///< The list of FeatureInfo objects
+    SVInfoList m_svInfoList;             ///< The list of SupportVectorInfo objects
+    FeatureInfoVector m_featureInfoList; ///< The list of FeatureInfo objects
 
-    KernelType        m_kernelType;          ///< The kernel type
-    KernelFunction    m_kernelFunction;      ///< The kernel function
-    KernelMap         m_kernelMap;           ///< Map from the kernel types to the kernel functions
+    KernelType m_kernelType;         ///< The kernel type
+    KernelFunction m_kernelFunction; ///< The kernel function
+    KernelMap m_kernelMap;           ///< Map from the kernel types to the kernel functions
 
     /**
      *  @brief  Read the svm parameters from an xml file
@@ -243,7 +243,8 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double QuadraticKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
+    static double QuadraticKernel(
+        const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  An inhomogeneous cubic kernel
@@ -254,7 +255,8 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double CubicKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
+    static double CubicKernel(
+        const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  A linear kernel
@@ -265,7 +267,8 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double LinearKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
+    static double LinearKernel(
+        const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
 
     /**
      *  @brief  A gaussian RBF kernel
@@ -276,7 +279,8 @@ private:
      *
      *  @return result of the kernel operation
      */
-    static double GaussianRbfKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
+    static double GaussianRbfKernel(
+        const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor = 1.);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -333,7 +337,8 @@ inline void SupportVectorMachine::SetKernelFunction(KernelFunction kernelFunctio
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::LinearKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
+inline double SupportVectorMachine::LinearKernel(
+    const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
 {
     const double denominator(scaleFactor * scaleFactor);
     if (denominator < std::numeric_limits<double>::epsilon())
@@ -348,7 +353,8 @@ inline double SupportVectorMachine::LinearKernel(const LArMvaHelper::MvaFeatureV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::QuadraticKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
+inline double SupportVectorMachine::QuadraticKernel(
+    const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
 {
     const double denominator(scaleFactor * scaleFactor);
     if (denominator < std::numeric_limits<double>::epsilon())
@@ -364,7 +370,8 @@ inline double SupportVectorMachine::QuadraticKernel(const LArMvaHelper::MvaFeatu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::CubicKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
+inline double SupportVectorMachine::CubicKernel(
+    const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
 {
     const double denominator(scaleFactor * scaleFactor);
     if (denominator < std::numeric_limits<double>::epsilon())
@@ -380,7 +387,8 @@ inline double SupportVectorMachine::CubicKernel(const LArMvaHelper::MvaFeatureVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline double SupportVectorMachine::GaussianRbfKernel(const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
+inline double SupportVectorMachine::GaussianRbfKernel(
+    const LArMvaHelper::MvaFeatureVector &supportVector, const LArMvaHelper::MvaFeatureVector &features, const double scaleFactor)
 {
     double total(0.);
     for (unsigned int i = 0; i < features.size(); ++i)
@@ -407,9 +415,7 @@ inline SupportVectorMachine::FeatureInfo::FeatureInfo(const double muValue, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SupportVectorMachine::FeatureInfo::FeatureInfo() :
-    m_muValue(0.),
-    m_sigmaValue(0.)
+inline SupportVectorMachine::FeatureInfo::FeatureInfo() : m_muValue(0.), m_sigmaValue(0.)
 {
 }
 

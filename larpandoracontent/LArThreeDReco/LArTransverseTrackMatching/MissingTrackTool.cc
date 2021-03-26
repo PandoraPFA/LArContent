@@ -6,8 +6,8 @@
  *  $Log: $
  */
 
-#include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/MissingTrackTool.h"
+#include "Pandora/AlgorithmHeaders.h"
 
 using namespace pandora;
 
@@ -27,7 +27,7 @@ MissingTrackTool::MissingTrackTool() :
 bool MissingTrackTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector;
     this->FindMissingTracks(overlapTensor, protoParticleVector);
@@ -57,9 +57,12 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
             const bool includeW(eIter->GetClusterW()->IsAvailable() && !usedClusters.count(eIter->GetClusterW()));
 
             unsigned int nAvailable(0);
-            if (includeU) ++nAvailable;
-            if (includeV) ++nAvailable;
-            if (includeW) ++nAvailable;
+            if (includeU)
+                ++nAvailable;
+            if (includeV)
+                ++nAvailable;
+            if (includeW)
+                ++nAvailable;
 
             if (2 != nAvailable)
                 continue;
@@ -94,9 +97,12 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
                 continue;
 
             ProtoParticle protoParticle;
-            if (includeU) protoParticle.m_clusterList.push_back(eIter->GetClusterU());
-            if (includeV) protoParticle.m_clusterList.push_back(eIter->GetClusterV());
-            if (includeW) protoParticle.m_clusterList.push_back(eIter->GetClusterW());
+            if (includeU)
+                protoParticle.m_clusterList.push_back(eIter->GetClusterU());
+            if (includeV)
+                protoParticle.m_clusterList.push_back(eIter->GetClusterV());
+            if (includeW)
+                protoParticle.m_clusterList.push_back(eIter->GetClusterW());
 
             protoParticleVector.push_back(protoParticle);
             usedClusters.insert(eIter->GetClusterU());
@@ -110,17 +116,17 @@ void MissingTrackTool::FindMissingTracks(const TensorType &overlapTensor, ProtoP
 
 StatusCode MissingTrackTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchedFraction", m_minMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxReducedChiSquared", m_maxReducedChiSquared));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxReducedChiSquared", m_maxReducedChiSquared));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlapFraction", m_minXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction", m_minXOverlapFraction));
 
     return STATUS_CODE_SUCCESS;
 }

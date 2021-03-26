@@ -83,12 +83,14 @@ StatusCode TestBeamParticleCreationAlgorithm::SetupTestBeamPfo(const Pfo *const 
 
     // Move test beam pfo to parent list from its initial track or shower list
     const std::string &originalListName(LArPfoHelper::IsTrack(pTestBeamPfo) ? m_trackPfoListName : m_showerPfoListName);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, originalListName, m_parentPfoListName, PfoList(1, pTestBeamPfo)));
+    PANDORA_RETURN_RESULT_IF(
+        STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, originalListName, m_parentPfoListName, PfoList(1, pTestBeamPfo)));
 
     // Alter metadata: test beam score (1, if not previously set) and particle id (electron if primary pfo shower-like, else charged pion)
     PandoraContentApi::ParticleFlowObject::Metadata pfoMetadata;
     pfoMetadata.m_propertiesToAdd["IsTestBeam"] = 1.f;
-    pfoMetadata.m_propertiesToAdd["TestBeamScore"] = (pNuPfo->GetPropertiesMap().count("TestBeamScore")) ? pNuPfo->GetPropertiesMap().at("TestBeamScore") : 1.f;
+    pfoMetadata.m_propertiesToAdd["TestBeamScore"] =
+        (pNuPfo->GetPropertiesMap().count("TestBeamScore")) ? pNuPfo->GetPropertiesMap().at("TestBeamScore") : 1.f;
     pfoMetadata.m_particleId = (std::fabs(pTestBeamPfo->GetParticleId()) == E_MINUS) ? E_MINUS : PI_PLUS;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pTestBeamPfo, pfoMetadata));
 
@@ -97,7 +99,8 @@ StatusCode TestBeamParticleCreationAlgorithm::SetupTestBeamPfo(const Pfo *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TestBeamParticleCreationAlgorithm::SetupTestBeamVertex(const Pfo *const pNuPfo, const Pfo *const pTestBeamPfo, const CartesianVector &testBeamStartVertex) const
+StatusCode TestBeamParticleCreationAlgorithm::SetupTestBeamVertex(
+    const Pfo *const pNuPfo, const Pfo *const pTestBeamPfo, const CartesianVector &testBeamStartVertex) const
 {
     try
     {
@@ -145,20 +148,15 @@ StatusCode TestBeamParticleCreationAlgorithm::SetupTestBeamVertex(const Pfo *con
 
 StatusCode TestBeamParticleCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ParentPfoListName", m_parentPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentPfoListName", m_parentPfoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "TrackPfoListName", m_trackPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackPfoListName", m_trackPfoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerPfoListName", m_showerPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ShowerPfoListName", m_showerPfoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ParentVertexListName", m_parentVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentVertexListName", m_parentVertexListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "DaughterVertexListName", m_daughterVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DaughterVertexListName", m_daughterVertexListName));
 
     return STATUS_CODE_SUCCESS;
 }

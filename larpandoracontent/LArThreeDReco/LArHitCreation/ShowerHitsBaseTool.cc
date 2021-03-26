@@ -18,8 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ShowerHitsBaseTool::ShowerHitsBaseTool() :
-    m_xTolerance(1.f)
+ShowerHitsBaseTool::ShowerHitsBaseTool() : m_xTolerance(1.f)
 {
 }
 
@@ -29,7 +28,7 @@ void ShowerHitsBaseTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, const
     const CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     try
     {
@@ -77,8 +76,7 @@ void ShowerHitsBaseTool::GetShowerHits3D(const CaloHitVector &inputTwoDHits, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, const CaloHitVector &inputCaloHitVector,
-    CaloHitVector &outputCaloHitVector) const
+void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, const CaloHitVector &inputCaloHitVector, CaloHitVector &outputCaloHitVector) const
 {
     for (const CaloHit *const pCaloHit : inputCaloHitVector)
     {
@@ -93,8 +91,7 @@ void ShowerHitsBaseTool::FilterCaloHits(const float x, const float xTolerance, c
 
 StatusCode ShowerHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "XTolerance", m_xTolerance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "XTolerance", m_xTolerance));
 
     return HitCreationBaseTool::ReadSettings(xmlHandle);
 }

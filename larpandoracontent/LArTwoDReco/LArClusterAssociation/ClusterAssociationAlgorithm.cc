@@ -17,9 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusterAssociationAlgorithm::ClusterAssociationAlgorithm() :
-    m_mergeMade(false),
-    m_resolveAmbiguousAssociations(true)
+ClusterAssociationAlgorithm::ClusterAssociationAlgorithm() : m_mergeMade(false), m_resolveAmbiguousAssociations(true)
 {
 }
 
@@ -51,7 +49,7 @@ StatusCode ClusterAssociationAlgorithm::Run()
                 if (pClusterList->end() == std::find(pClusterList->begin(), pClusterList->end(), pCluster))
                     continue;
 
-                this->UnambiguousPropagation(pCluster, true,  clusterAssociationMap);
+                this->UnambiguousPropagation(pCluster, true, clusterAssociationMap);
                 this->UnambiguousPropagation(pCluster, false, clusterAssociationMap);
             }
         }
@@ -156,8 +154,8 @@ void ClusterAssociationAlgorithm::AmbiguousPropagation(const Cluster *const pClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::UpdateForUnambiguousMerge(const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete, const bool isForwardMerge,
-    ClusterAssociationMap &clusterAssociationMap) const
+void ClusterAssociationAlgorithm::UpdateForUnambiguousMerge(const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete,
+    const bool isForwardMerge, ClusterAssociationMap &clusterAssociationMap) const
 {
     ClusterAssociationMap::iterator iterEnlarge = clusterAssociationMap.find(pClusterToEnlarge);
     ClusterAssociationMap::iterator iterDelete = clusterAssociationMap.find(pClusterToDelete);
@@ -194,8 +192,8 @@ void ClusterAssociationAlgorithm::UpdateForUnambiguousMerge(const Cluster *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete, const bool isForwardMerge,
-    ClusterAssociationMap &clusterAssociationMap) const
+void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const pClusterToEnlarge, const Cluster *const pClusterToDelete,
+    const bool isForwardMerge, ClusterAssociationMap &clusterAssociationMap) const
 {
     ClusterAssociationMap::iterator iterEnlarge = clusterAssociationMap.find(pClusterToEnlarge);
     ClusterAssociationMap::iterator iterDelete = clusterAssociationMap.find(pClusterToDelete);
@@ -261,18 +259,18 @@ void ClusterAssociationAlgorithm::UpdateForAmbiguousMerge(const Cluster *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssociationMap &clusterAssociationMap, const Cluster *const pCluster,
-    const bool isForward, const Cluster *&pExtremalCluster, ClusterSet &clusterSet) const
+void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssociationMap &clusterAssociationMap,
+    const Cluster *const pCluster, const bool isForward, const Cluster *&pExtremalCluster, ClusterSet &clusterSet) const
 {
     ClusterAssociationMap::const_iterator iterAssociation = clusterAssociationMap.find(pCluster);
 
     if (clusterAssociationMap.end() == iterAssociation)
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
 
-    (void) clusterSet.insert(pCluster);
+    (void)clusterSet.insert(pCluster);
 
     if ((pCluster != pExtremalCluster) && this->IsExtremalCluster(isForward, pExtremalCluster, pCluster))
-          pExtremalCluster = pCluster;
+        pExtremalCluster = pCluster;
 
     const ClusterSet &associatedClusterSet(isForward ? iterAssociation->second.m_forwardAssociations : iterAssociation->second.m_backwardAssociations);
 
@@ -286,8 +284,8 @@ void ClusterAssociationAlgorithm::NavigateAlongAssociations(const ClusterAssocia
 
 StatusCode ClusterAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ResolveAmbiguousAssociations", m_resolveAmbiguousAssociations));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ResolveAmbiguousAssociations", m_resolveAmbiguousAssociations));
 
     return STATUS_CODE_SUCCESS;
 }

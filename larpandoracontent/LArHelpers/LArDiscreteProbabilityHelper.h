@@ -33,8 +33,8 @@ public:
      *  @return the p-value
      */
     template <typename T>
-    static float CalculateCorrelationCoefficientPValueFromPermutationTest(const T &t1, const T &t2, 
-        std::mt19937 &randomNumberGenerator, const unsigned int nPermutations);
+    static float CalculateCorrelationCoefficientPValueFromPermutationTest(
+        const T &t1, const T &t2, std::mt19937 &randomNumberGenerator, const unsigned int nPermutations);
 
     /**
      *  @brief  Calculate P value for measured correlation coefficient between two datasets via a integrating the student T dist.
@@ -47,8 +47,8 @@ public:
      *  @return the p-value
      */
     template <typename T>
-    static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(const T &t1, const T &t2, 
-        const unsigned int nIntegrationSteps, const float upperLimit);
+    static float CalculateCorrelationCoefficientPValueFromStudentTDistribution(
+        const T &t1, const T &t2, const unsigned int nIntegrationSteps, const float upperLimit);
 
     /**
      *  @brief  Calculate the correlation coefficient between two datasets 
@@ -149,14 +149,12 @@ inline std::vector<T> LArDiscreteProbabilityHelper::MakeRandomisedSample(const s
 }
 
 template <>
-inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSample(const DiscreteProbabilityVector &t, 
-    std::mt19937 &randomNumberGenerator)
+inline DiscreteProbabilityVector LArDiscreteProbabilityHelper::MakeRandomisedSample(const DiscreteProbabilityVector &t, std::mt19937 &randomNumberGenerator)
 {
-    return DiscreteProbabilityVector(t,randomNumberGenerator);
+    return DiscreteProbabilityVector(t, randomNumberGenerator);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
 
 template <typename T>
 inline unsigned int LArDiscreteProbabilityHelper::GetSize(const std::vector<T> &t)
@@ -165,21 +163,21 @@ inline unsigned int LArDiscreteProbabilityHelper::GetSize(const std::vector<T> &
 }
 
 template <>
-inline unsigned int LArDiscreteProbabilityHelper::GetSize(const DiscreteProbabilityVector& t)
+inline unsigned int LArDiscreteProbabilityHelper::GetSize(const DiscreteProbabilityVector &t)
 {
     return t.GetSize();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 inline float LArDiscreteProbabilityHelper::GetElement(const std::vector<T> &t, const unsigned int index)
 {
     return static_cast<float>(t.at(index));
 }
 
 template <>
-inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityVector& t, const unsigned int index)
+inline float LArDiscreteProbabilityHelper::GetElement(const DiscreteProbabilityVector &t, const unsigned int index)
 {
     return static_cast<float>(t.GetProbability(index));
 }

@@ -18,8 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoPropertiesAlgorithm::NeutrinoPropertiesAlgorithm() :
-    m_includeIsolatedHits(false)
+NeutrinoPropertiesAlgorithm::NeutrinoPropertiesAlgorithm() : m_includeIsolatedHits(false)
 {
 }
 
@@ -28,7 +27,8 @@ NeutrinoPropertiesAlgorithm::NeutrinoPropertiesAlgorithm() :
 StatusCode NeutrinoPropertiesAlgorithm::Run()
 {
     const PfoList *pPfoList(nullptr);
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoPfoListName, pPfoList));
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_neutrinoPfoListName, pPfoList));
 
     if (!pPfoList || pPfoList->empty())
     {
@@ -131,11 +131,10 @@ unsigned int NeutrinoPropertiesAlgorithm::GetNTwoDHitsInPfoChain(const ParticleF
 
 StatusCode NeutrinoPropertiesAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "NeutrinoPfoListName", m_neutrinoPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IncludeIsolatedHits", m_includeIsolatedHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IncludeIsolatedHits", m_includeIsolatedHits));
 
     return STATUS_CODE_SUCCESS;
 }

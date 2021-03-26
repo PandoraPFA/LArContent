@@ -72,8 +72,7 @@ void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMaps()
 void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMap(const std::string &clusterListName, ClusterToClustersMap &nearbyClusters)
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        clusterListName, pClusterList))
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList))
 
     if ((NULL == pClusterList) || pClusterList->empty())
         return;
@@ -88,7 +87,7 @@ void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMap(const std::string &cl
         allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
-            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+            (void)hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
     }
 
     HitKDTree2D kdTree;
@@ -111,7 +110,7 @@ void DeltaRayMatchingAlgorithm::InitializeNearbyClusterMap(const std::string &cl
 
             for (const auto &hit : found)
             {
-                ClusterList  &nearbyClusterList(nearbyClusters[pCluster]);
+                ClusterList &nearbyClusterList(nearbyClusters[pCluster]);
                 const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
 
                 if (nearbyClusterList.end() == std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster))
@@ -135,8 +134,7 @@ void DeltaRayMatchingAlgorithm::ClearNearbyClusterMaps()
 void DeltaRayMatchingAlgorithm::GetAllPfos(const std::string &inputPfoListName, PfoVector &pfoVector) const
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        inputPfoListName, pPfoList));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, inputPfoListName, pPfoList));
 
     if (NULL == pPfoList)
         return;
@@ -172,8 +170,8 @@ void DeltaRayMatchingAlgorithm::GetTrackPfos(const std::string &inputPfoListName
 void DeltaRayMatchingAlgorithm::GetClusters(const std::string &inputClusterListName, pandora::ClusterVector &clusterVector) const
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        inputClusterListName, pClusterList))
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, inputClusterListName, pClusterList))
 
     if (NULL == pClusterList)
         return;
@@ -246,8 +244,8 @@ void DeltaRayMatchingAlgorithm::OneViewMatching(ClusterLengthMap &clusterLengthM
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2, const ClusterVector &clusters3,
-    ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const
+void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2,
+    const ClusterVector &clusters3, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const
 {
     if (clusters1.empty() || clusters2.empty() || clusters3.empty())
         return;
@@ -282,8 +280,8 @@ void DeltaRayMatchingAlgorithm::ThreeViewMatching(const ClusterVector &clusters1
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2, ClusterLengthMap &clusterLengthMap,
-    PfoLengthMap &pfoLengthMap, ParticleList &particleList) const
+void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, const ClusterVector &clusters2,
+    ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const
 {
     if (clusters1.empty() || clusters2.empty())
         return;
@@ -314,8 +312,8 @@ void DeltaRayMatchingAlgorithm::TwoViewMatching(const ClusterVector &clusters1, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::OneViewMatching(const ClusterVector &clusters, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap,
-    ParticleList &particleList) const
+void DeltaRayMatchingAlgorithm::OneViewMatching(
+    const ClusterVector &clusters, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const
 {
     if (clusters.empty())
         return;
@@ -365,9 +363,10 @@ void DeltaRayMatchingAlgorithm::SelectParticles(const ParticleList &initialParti
                 else if (particle2.GetNViews() == particle1.GetNViews() && NULL != particle2.GetParentPfo())
                 {
                     if ((NULL == particle1.GetParentPfo()) || (particle2.GetNCaloHits() > particle1.GetNCaloHits()) ||
-                        (particle2.GetNCaloHits() == particle1.GetNCaloHits() && this->GetLength(particle2, clusterLengthMap) >= this->GetLength(particle1, clusterLengthMap)) )
+                        (particle2.GetNCaloHits() == particle1.GetNCaloHits() &&
+                            this->GetLength(particle2, clusterLengthMap) >= this->GetLength(particle1, clusterLengthMap)))
                     {
-                            isGoodParticle = false;
+                        isGoodParticle = false;
                     }
                 }
 
@@ -434,8 +433,7 @@ void DeltaRayMatchingAlgorithm::CreateParticles(const ParticleList &particleList
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster1, const Cluster *const pCluster2,
-    const Cluster *const pCluster3) const
+bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3) const
 {
     if (nullptr == pCluster1 && nullptr == pCluster2 && nullptr == pCluster3)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -470,7 +468,7 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
     const HitType hitType2(LArClusterHelper::GetClusterHitType(pCluster2));
     const HitType hitType3(LArClusterHelper::GetClusterHitType(pCluster3));
 
-    if (hitType1 == hitType2 ||  hitType2 == hitType3 || hitType3 == hitType1)
+    if (hitType1 == hitType2 || hitType2 == hitType3 || hitType3 == hitType1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const unsigned int nSamplingPoints(1 + static_cast<unsigned int>(xOverlap / xPitch));
@@ -508,7 +506,7 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
             if (pseudoChi2 < m_pseudoChi2Cut)
                 return true;
         }
-        catch(StatusCodeException &statusCodeException)
+        catch (StatusCodeException &statusCodeException)
         {
             if (STATUS_CODE_NOT_FOUND != statusCodeException.GetStatusCode())
                 throw statusCodeException;
@@ -520,8 +518,8 @@ bool DeltaRayMatchingAlgorithm::AreClustersMatched(const Cluster *const pCluster
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3,
-    ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, const ParticleFlowObject *&pBestPfo) const
+void DeltaRayMatchingAlgorithm::FindBestParentPfo(const Cluster *const pCluster1, const Cluster *const pCluster2,
+    const Cluster *const pCluster3, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, const ParticleFlowObject *&pBestPfo) const
 {
     PfoVector pfoVector;
     this->GetTrackPfos(m_parentPfoListName, pfoVector);
@@ -595,7 +593,7 @@ float DeltaRayMatchingAlgorithm::GetLengthFromCache(const Cluster *const pCluste
         return iter->second;
 
     const float lengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
-    (void) clusterLengthMap.insert(ClusterLengthMap::value_type(pCluster, lengthSquared));
+    (void)clusterLengthMap.insert(ClusterLengthMap::value_type(pCluster, lengthSquared));
     return lengthSquared;
 }
 
@@ -609,7 +607,7 @@ float DeltaRayMatchingAlgorithm::GetLengthFromCache(const ParticleFlowObject *co
         return iter->second;
 
     const float lengthSquared(LArPfoHelper::GetTwoDLengthSquared(pPfo));
-    (void) pfoLengthMap.insert(PfoLengthMap::value_type(pPfo, lengthSquared));
+    (void)pfoLengthMap.insert(PfoLengthMap::value_type(pPfo, lengthSquared));
     return lengthSquared;
 }
 
@@ -670,7 +668,8 @@ float DeltaRayMatchingAlgorithm::GetDistanceSquaredToPfo(const Cluster *const pC
 
 void DeltaRayMatchingAlgorithm::CreateDaughterPfo(const ClusterList &clusterList, const ParticleFlowObject *const pParentPfo) const
 {
-    const PfoList *pPfoList = NULL; std::string pfoListName;
+    const PfoList *pPfoList = NULL;
+    std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
     // TODO Correct these placeholder parameters
@@ -699,8 +698,8 @@ void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList,
     for (const Cluster *const pDaughterCluster : clusterList)
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pDaughterCluster));
-        const std::string clusterListName((TPC_VIEW_U == hitType) ? m_inputClusterListNameU :
-                                          (TPC_VIEW_V == hitType) ? m_inputClusterListNameV : m_inputClusterListNameW);
+        const std::string clusterListName(
+            (TPC_VIEW_U == hitType) ? m_inputClusterListNameU : (TPC_VIEW_V == hitType) ? m_inputClusterListNameV : m_inputClusterListNameW);
 
         ClusterList pfoClusters;
         LArPfoHelper::GetClusters(pParentPfo, hitType, pfoClusters);
@@ -710,16 +709,16 @@ void DeltaRayMatchingAlgorithm::AddToDaughterPfo(const ClusterList &clusterList,
 
         const Cluster *const pParentCluster = *(pfoClusters.begin());
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
-            clusterListName, clusterListName));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+            PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-DeltaRayMatchingAlgorithm::Particle::Particle(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3,
-        const ParticleFlowObject *const pPfo) :
+DeltaRayMatchingAlgorithm::Particle::Particle(
+    const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3, const ParticleFlowObject *const pPfo) :
     m_pClusterU(NULL),
     m_pClusterV(NULL),
     m_pClusterW(NULL),
@@ -785,20 +784,17 @@ StatusCode DeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameV", m_inputClusterListNameV));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListNameW", m_inputClusterListNameW));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OverlapWindow", m_xOverlapWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OverlapWindow", m_xOverlapWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DistanceForMatching", m_distanceForMatching));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DistanceForMatching", m_distanceForMatching));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "PseudoChi2Cut", m_pseudoChi2Cut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SearchRegion1D", m_searchRegion1D));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SearchRegion1D", m_searchRegion1D));
 
     return STATUS_CODE_SUCCESS;
 }

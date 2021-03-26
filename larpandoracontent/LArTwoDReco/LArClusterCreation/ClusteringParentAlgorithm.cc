@@ -15,9 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusteringParentAlgorithm::ClusteringParentAlgorithm() :
-    m_replaceCurrentCaloHitList(false),
-    m_replaceCurrentClusterList(true)
+ClusteringParentAlgorithm::ClusteringParentAlgorithm() : m_replaceCurrentCaloHitList(false), m_replaceCurrentClusterList(true)
 {
 }
 
@@ -48,8 +46,8 @@ StatusCode ClusteringParentAlgorithm::Run()
     // Run the initial cluster formation algorithm
     const ClusterList *pClusterList = NULL;
     std::string newClusterListName;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithmName,
-        pClusterList, newClusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        PandoraContentApi::RunClusteringAlgorithm(*this, m_clusteringAlgorithmName, pClusterList, newClusterListName));
 
     // Run the topological association algorithms to modify clusters
     if (!pClusterList->empty() && !m_associationAlgorithmName.empty())
@@ -78,25 +76,21 @@ StatusCode ClusteringParentAlgorithm::Run()
 StatusCode ClusteringParentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     // Daughter algorithm parameters
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ClusterFormation", m_clusteringAlgorithmName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle, "ClusterFormation", m_clusteringAlgorithmName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ClusterAssociation", m_associationAlgorithmName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ProcessAlgorithm(*this, xmlHandle, "ClusterAssociation", m_associationAlgorithmName));
 
     // Input parameters: name of input calo hit list and whether it should persist as the current list after algorithm has finished
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputCaloHitListName", m_inputCaloHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_inputCaloHitListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReplaceCurrentCaloHitList", m_replaceCurrentCaloHitList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ReplaceCurrentCaloHitList", m_replaceCurrentCaloHitList));
 
     // Output parameters: name of output cluster list and whether it should subsequently be used as the current list
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterListName", m_clusterListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ClusterListName", m_clusterListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReplaceCurrentClusterList", m_replaceCurrentClusterList));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ReplaceCurrentClusterList", m_replaceCurrentClusterList));
 
     return STATUS_CODE_SUCCESS;
 }

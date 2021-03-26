@@ -15,8 +15,10 @@
 namespace lar_content
 {
 
-template<typename, unsigned int> class KDTreeLinkerAlgo;
-template<typename, unsigned int> class KDTreeNodeInfoT;
+template <typename, unsigned int>
+class KDTreeLinkerAlgo;
+template <typename, unsigned int>
+class KDTreeNodeInfoT;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -82,21 +84,21 @@ private:
         const pandora::CartesianVector &GetDirection() const;
 
     private:
-        const pandora::Cluster     *m_pSeedCluster;
-        pandora::ClusterVector      m_associatedClusters;
-        pandora::CartesianVector    m_innerVertex;
-        pandora::CartesianVector    m_outerVertex;
-        pandora::CartesianVector    m_direction;
+        const pandora::Cluster *m_pSeedCluster;
+        pandora::ClusterVector m_associatedClusters;
+        pandora::CartesianVector m_innerVertex;
+        pandora::CartesianVector m_outerVertex;
+        pandora::CartesianVector m_direction;
     };
 
-    typedef std::vector<LArTransverseCluster*> TransverseClusterList;
+    typedef std::vector<LArTransverseCluster *> TransverseClusterList;
 
-    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
-    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterSet> ClusterToClustersMap;
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterSet> ClusterToClustersMap;
+    typedef std::unordered_map<const pandora::CaloHit *, const pandora::Cluster *> HitToClusterMap;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
@@ -120,9 +122,8 @@ private:
      *  @param  longitudinalMediumClusters the output vector of longitudinal medium clusters
      *  @param  longClusters the output vector of all long clusters
      */
-    void SortInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &shortClusters,
-        pandora::ClusterVector &transverseMediumClusters, pandora::ClusterVector &longitudinalMediumClusters,
-        pandora::ClusterVector &longClusters) const;
+    void SortInputClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &shortClusters, pandora::ClusterVector &transverseMediumClusters,
+        pandora::ClusterVector &longitudinalMediumClusters, pandora::ClusterVector &longClusters) const;
 
     /**
      *  @brief  Form a reduced set of associations between two input lists of clusters
@@ -145,8 +146,7 @@ private:
      *  @param  secondAssociationMap the reversed map of associations between first and cluster vectors
      */
     void FillAssociationMap(const ClusterToClustersMap &nearbyClusters, const pandora::ClusterVector &firstVector,
-        const pandora::ClusterVector &secondVector, ClusterAssociationMap &firstAssociationMap,
-        ClusterAssociationMap &secondAssociationMap) const;
+        const pandora::ClusterVector &secondVector, ClusterAssociationMap &firstAssociationMap, ClusterAssociationMap &secondAssociationMap) const;
 
     /**
      *  @brief  Create transverse cluster objects, these are protoclusters with a direction and inner/outer vertices
@@ -156,7 +156,7 @@ private:
      *  @param  inputAssociationMap the map of associations between input clusters
      *  @param  transverseClusterList the output vector of transverse cluster objects
      */
-    void FillTransverseClusterList(const ClusterToClustersMap &nearbyClusters, const  pandora::ClusterVector &inputClusters,
+    void FillTransverseClusterList(const ClusterToClustersMap &nearbyClusters, const pandora::ClusterVector &inputClusters,
         const ClusterAssociationMap &inputAssociationMap, TransverseClusterList &transverseClusterList) const;
 
     /**
@@ -203,8 +203,8 @@ private:
      *
      *  @return boolean
      */
-    bool IsTransverseAssociated(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        const ClusterToClustersMap &nearbyClusters) const;
+    bool IsTransverseAssociated(
+        const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const ClusterToClustersMap &nearbyClusters) const;
 
     /**
      *  @brief  Determine whether two transverse clusters are associated
@@ -215,8 +215,8 @@ private:
      *
      *  @return boolean
      */
-    bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster1, const LArTransverseCluster *const pTransverseCluster2,
-        const ClusterToClustersMap &nearbyClusters) const;
+    bool IsTransverseAssociated(const LArTransverseCluster *const pTransverseCluster1,
+        const LArTransverseCluster *const pTransverseCluster2, const ClusterToClustersMap &nearbyClusters) const;
 
     /**
      *  @brief  Determine whether one transverse cluster is associated with the vertex from a second transverse cluster
@@ -295,8 +295,8 @@ private:
      *  @param  innerCoordinate the inner coordinate
      *  @param  outerCoordinate the outer coordinate
      */
-    void GetExtremalCoordinatesX(const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate,
-        pandora::CartesianVector &outerCoordinate) const;
+    void GetExtremalCoordinatesX(
+        const pandora::Cluster *const pCluster, pandora::CartesianVector &innerCoordinate, pandora::CartesianVector &outerCoordinate) const;
 
     /**
      *  @brief Remove double-counting from association map
@@ -333,24 +333,24 @@ private:
      */
     void FinalizeClusterAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const;
 
-    float        m_firstLengthCut;                   ///<
-    float        m_secondLengthCut;                  ///<
+    float m_firstLengthCut;  ///<
+    float m_secondLengthCut; ///<
 
-    float        m_clusterWindow;                    ///<
-    float        m_clusterAngle;                     ///<
-    float        m_clusterCosAngle;                  ///<
-    float        m_clusterTanAngle;                  ///<
+    float m_clusterWindow;   ///<
+    float m_clusterAngle;    ///<
+    float m_clusterCosAngle; ///<
+    float m_clusterTanAngle; ///<
 
-    float        m_maxTransverseOverlap;             ///<
-    float        m_maxProjectedOverlap;              ///<
-    float        m_maxLongitudinalOverlap;           ///<
+    float m_maxTransverseOverlap;   ///<
+    float m_maxProjectedOverlap;    ///<
+    float m_maxLongitudinalOverlap; ///<
 
-    float        m_transverseClusterMinCosTheta;     ///<
-    float        m_transverseClusterMinLength;       ///<
-    float        m_transverseClusterMaxDisplacement; ///<
+    float m_transverseClusterMinCosTheta;     ///<
+    float m_transverseClusterMinLength;       ///<
+    float m_transverseClusterMaxDisplacement; ///<
 
-    float        m_searchRegionX;                    ///< Search region, applied to x dimension, for look-up from kd-trees
-    float        m_searchRegionZ;                    ///< Search region, applied to u/v/w dimension, for look-up from kd-trees
+    float m_searchRegionX; ///< Search region, applied to x dimension, for look-up from kd-trees
+    float m_searchRegionZ; ///< Search region, applied to u/v/w dimension, for look-up from kd-trees
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

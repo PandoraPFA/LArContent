@@ -29,9 +29,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string m_inputCaloHitListName;     ///< Input calo hit list name
-    std::string m_outputCaloHitListName;    ///< Output calo hit list name
-    std::string m_mcParticleListName;       ///< MC Particle list name
+    std::string m_inputCaloHitListName;  ///< Input calo hit list name
+    std::string m_outputCaloHitListName; ///< Output calo hit list name
+    std::string m_mcParticleListName;    ///< MC Particle list name
 };
 
 } // namespace lar_content

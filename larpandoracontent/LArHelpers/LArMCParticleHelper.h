@@ -12,8 +12,8 @@
 
 #include "larpandoracontent/LArObjects/LArMCParticle.h"
 
-#include <unordered_map>
 #include <functional>
+#include <unordered_map>
 
 namespace lar_content
 {
@@ -24,28 +24,28 @@ namespace lar_content
 class LArMCParticleHelper
 {
 public:
-    typedef std::unordered_map<const pandora::MCParticle*, const pandora::MCParticle*> MCRelationMap;
-    typedef std::unordered_map<const pandora::MCParticle*, int> MCParticleIntMap;
+    typedef std::unordered_map<const pandora::MCParticle *, const pandora::MCParticle *> MCRelationMap;
+    typedef std::unordered_map<const pandora::MCParticle *, int> MCParticleIntMap;
 
-    typedef std::unordered_map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCToPfoMap;
+    typedef std::unordered_map<const pandora::MCParticle *, const pandora::ParticleFlowObject *> MCToPfoMap;
 
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::MCParticle*> CaloHitToMCMap;
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::ParticleFlowObject*> CaloHitToPfoMap;
+    typedef std::unordered_map<const pandora::CaloHit *, const pandora::MCParticle *> CaloHitToMCMap;
+    typedef std::unordered_map<const pandora::CaloHit *, const pandora::ParticleFlowObject *> CaloHitToPfoMap;
 
-    typedef std::unordered_map<const pandora::MCParticle*, pandora::CaloHitList> MCContributionMap;
+    typedef std::unordered_map<const pandora::MCParticle *, pandora::CaloHitList> MCContributionMap;
     typedef std::vector<MCContributionMap> MCContributionMapVector;
 
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, pandora::CaloHitList> PfoContributionMap;
-    typedef std::unordered_map<const pandora::MCParticle*, PfoContributionMap> MCToPfoMatchingMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, pandora::CaloHitList> PfoContributionMap;
+    typedef std::unordered_map<const pandora::MCParticle *, PfoContributionMap> MCToPfoMatchingMap;
 
-    typedef std::pair<const pandora::MCParticle*, pandora::CaloHitList > MCParticleCaloHitListPair;
-    typedef std::pair<const pandora::ParticleFlowObject*, pandora::CaloHitList > PfoCaloHitListPair;
+    typedef std::pair<const pandora::MCParticle *, pandora::CaloHitList> MCParticleCaloHitListPair;
+    typedef std::pair<const pandora::ParticleFlowObject *, pandora::CaloHitList> PfoCaloHitListPair;
 
     typedef std::vector<MCParticleCaloHitListPair> MCParticleToSharedHitsVector;
     typedef std::vector<PfoCaloHitListPair> PfoToSharedHitsVector;
 
-    typedef std::map<const pandora::ParticleFlowObject*, MCParticleToSharedHitsVector> PfoToMCParticleHitSharingMap;
-    typedef std::map<const pandora::MCParticle*, PfoToSharedHitsVector> MCParticleToPfoHitSharingMap;
+    typedef std::map<const pandora::ParticleFlowObject *, MCParticleToSharedHitsVector> PfoToMCParticleHitSharingMap;
+    typedef std::map<const pandora::MCParticle *, PfoToSharedHitsVector> MCParticleToPfoHitSharingMap;
 
     /**
      *  @brief   PrimaryParameters class
@@ -58,13 +58,13 @@ public:
          */
         PrimaryParameters();
 
-        unsigned int  m_minPrimaryGoodHits;       ///< the minimum number of primary good Hits
-        unsigned int  m_minHitsForGoodView;       ///< the minimum number of Hits for a good view
-        unsigned int  m_minPrimaryGoodViews;      ///< the minimum number of primary good views
-        bool          m_selectInputHits;          ///< whether to select input hits
-        float         m_maxPhotonPropagation;     ///< the maximum photon propagation length
-        float         m_minHitSharingFraction;    ///< the minimum Hit sharing fraction
-        bool          m_foldBackHierarchy;        ///< whether to fold the hierarchy back to the primary (neutrino) or leading particles (test beam)
+        unsigned int m_minPrimaryGoodHits;  ///< the minimum number of primary good Hits
+        unsigned int m_minHitsForGoodView;  ///< the minimum number of Hits for a good view
+        unsigned int m_minPrimaryGoodViews; ///< the minimum number of primary good views
+        bool m_selectInputHits;             ///< whether to select input hits
+        float m_maxPhotonPropagation;       ///< the maximum photon propagation length
+        float m_minHitSharingFraction;      ///< the minimum Hit sharing fraction
+        bool m_foldBackHierarchy; ///< whether to fold the hierarchy back to the primary (neutrino) or leading particles (test beam)
     };
 
     /**
@@ -223,8 +223,7 @@ public:
      *  @param  pMCParticle the input mc particle
      *  @param  descendentMCParticleList the output descendent mc particle list
      */
-    static void GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle,
-        pandora::MCParticleList &descendentMCParticleList);
+    static void GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &descendentMCParticleList);
 
     /**
      *  @brief  Get all ancestor mc particles
@@ -232,8 +231,7 @@ public:
      *  @param  pMCParticle the input mc particle
      *  @param  ancestorMCParticleList the output ancestor mc particle list
      */
-    static void GetAllAncestorMCParticles(const pandora::MCParticle *const pMCParticle,
-        pandora::MCParticleList &ancestorMCParticleList);
+    static void GetAllAncestorMCParticles(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &ancestorMCParticleList);
 
     /**
      *  @brief  Get mapping from individual mc particles (in a provided list) and their primary parent mc particles
@@ -297,7 +295,8 @@ public:
      *  @param  selectedMCParticlesToHitsMap the output mapping from selected mcparticles to their hits
      */
     static void SelectReconstructableMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList,
-        const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap);
+        const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria,
+        MCContributionMap &selectedMCParticlesToHitsMap);
 
     /**
      *  @brief  Select target, reconstructable mc particles in the relevant hierarchy that match given criteria.
@@ -308,8 +307,9 @@ public:
      *  @param  fCriteria a function which returns a bool (= shouldSelect) for a given input MCParticle
      *  @param  selectedMCParticlesToHitsMap the output mapping from selected mcparticles to their hits
      */
-    static void SelectReconstructableTestBeamHierarchyMCParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList,
-        const PrimaryParameters &parameters, std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap);
+    static void SelectReconstructableTestBeamHierarchyMCParticles(const pandora::MCParticleList *pMCParticleList,
+        const pandora::CaloHitList *pCaloHitList, const PrimaryParameters &parameters,
+        std::function<bool(const pandora::MCParticle *const)> fCriteria, MCContributionMap &selectedMCParticlesToHitsMap);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
@@ -331,8 +331,8 @@ public:
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
      *  @param  foldBackHierarchy whether to fold the particle hierarchy back to the leading particles
      */
-    static void GetTestBeamHierarchyPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMap &selectedMCParticleToHitsMap,
-        PfoContributionMap &pfoToReconstructable2DHitsMap, const bool foldBackHierarchy);
+    static void GetTestBeamHierarchyPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList,
+        const MCContributionMap &selectedMCParticleToHitsMap, PfoContributionMap &pfoToReconstructable2DHitsMap, const bool foldBackHierarchy);
 
     /**
      *  @brief  Get mapping from Pfo to reconstructable 2D hits (=good hits belonging to a selected reconstructable MCParticle)
@@ -354,8 +354,8 @@ public:
      *  @param  pfoToReconstructable2DHitsMap the output mapping from Pfos to their reconstructable 2D hits
      *  @param  foldBackHierarchy whether to fold the particle hierarchy back to the leading particles
      */
-    static void GetTestBeamHierarchyPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        PfoContributionMap &pfoToReconstructable2DHitsMap, const bool foldBackHierarchy);
+    static void GetTestBeamHierarchyPfoToReconstructable2DHitsMap(const pandora::PfoList &pfoList,
+        const MCContributionMapVector &selectedMCParticleToHitsMaps, PfoContributionMap &pfoToReconstructable2DHitsMap, const bool foldBackHierarchy);
 
     /**
      *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
@@ -366,8 +366,9 @@ public:
      *  @param  pfoToMCParticleHitSharingMap the output mapping from Pfos to selected reconstructable MCParticles and the number hits shared
      *  @param  mcParticleToPfoHitSharingMap the output mapping from selected reconstructable MCParticles to Pfos and the number hits shared
      */
-    static void GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap, MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
+    static void GetPfoMCParticleHitSharingMaps(const PfoContributionMap &pfoToReconstructable2DHitsMap,
+        const MCContributionMapVector &selectedMCParticleToHitsMaps, PfoToMCParticleHitSharingMap &pfoToMCParticleHitSharingMap,
+        MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap);
 
     /**
      *  @brief  Select a subset of calo hits representing those that represent "reconstructable" regions of the event
@@ -423,8 +424,8 @@ private:
      *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
      *  @param  foldBackHierarchy whether to fold the particle hierarchy back to leading particles
      */
-    static void CollectReconstructableTestBeamHierarchy2DHits(const pandora::ParticleFlowObject *const pPfo, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        pandora::CaloHitList &reconstructableCaloHitList2D, const bool foldBackHierarchy);
+    static void CollectReconstructableTestBeamHierarchy2DHits(const pandora::ParticleFlowObject *const pPfo,
+        const MCContributionMapVector &selectedMCParticleToHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D, const bool foldBackHierarchy);
 
     /**
      *  @brief  For a given Pfo list, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)
@@ -458,8 +459,9 @@ private:
      *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
      *  @param  isTestBeam whether the mc particles correspond to the test beam case or the neutrino case
      */
-    static void SelectParticlesMatchingCriteria(const pandora::MCParticleVector &inputMCParticles, std::function<bool(const pandora::MCParticle *const)> fCriteria,
-        pandora::MCParticleVector &selectedParticles, const PrimaryParameters &parameters, const bool isTestBeam);
+    static void SelectParticlesMatchingCriteria(const pandora::MCParticleVector &inputMCParticles,
+        std::function<bool(const pandora::MCParticle *const)> fCriteria, pandora::MCParticleVector &selectedParticles,
+        const PrimaryParameters &parameters, const bool isTestBeam);
 
     /**
      *  @brief  Filter an input vector of MCParticles to ensure they have sufficient good hits to be reconstructable

@@ -67,11 +67,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float           m_minClusterLength;          ///<
-    float           m_maxClusterSeparation;      ///<
-    float           m_minVertexDisplacement;     ///<
-    float           m_maxIntersectDisplacement;
-    float           m_minSplitDisplacement;
+    float m_minClusterLength;      ///<
+    float m_maxClusterSeparation;  ///<
+    float m_minVertexDisplacement; ///<
+    float m_maxIntersectDisplacement;
+    float m_minSplitDisplacement;
 };
 
 } // namespace lar_content

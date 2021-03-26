@@ -76,7 +76,8 @@ void SlidingConeClusterMopUpAlgorithm::GetInteractionVertex(const Vertex *&pVert
     const VertexList *pVertexList = nullptr;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
 
-    pVertex = ((pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
+    pVertex =
+        ((pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -162,11 +163,15 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
 
             const float vertexToMinLayer(!pVertex ? 0.f : (pVertex->GetPosition() - minLayerPosition).GetMagnitude());
             const float vertexToMaxLayer(!pVertex ? 0.f : (pVertex->GetPosition() - maxLayerPosition).GetMagnitude());
-            const ConeSelection coneSelection(!pVertex ? CONE_BOTH_DIRECTIONS : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY : CONE_BACKWARD_ONLY);
+            const ConeSelection coneSelection(
+                !pVertex ? CONE_BOTH_DIRECTIONS : (vertexToMaxLayer > vertexToMinLayer) ? CONE_FORWARD_ONLY : CONE_BACKWARD_ONLY);
 
             slidingConeFitResult3D.GetSimpleConeList(m_nConeFitLayers, m_nConeFits, coneSelection, simpleConeList3D);
         }
-        catch (const StatusCodeException &) {continue;}
+        catch (const StatusCodeException &)
+        {
+            continue;
+        }
 
         for (const Cluster *const pNearbyCluster2D : availableClusters2D)
         {
@@ -181,7 +186,8 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
 
                 const CartesianVector apexToBase2D(coneBaseCentre2D - coneApex2D);
                 const SimpleCone simpleCone2D(coneApex2D, apexToBase2D.GetUnitVector(), apexToBase2D.GetMagnitude(), m_coneTanHalfAngle);
-                const ClusterMerge clusterMerge(pShowerCluster, simpleCone2D.GetBoundedHitFraction(pNearbyCluster2D), simpleCone2D.GetMeanRT(pNearbyCluster2D));
+                const ClusterMerge clusterMerge(
+                    pShowerCluster, simpleCone2D.GetBoundedHitFraction(pNearbyCluster2D), simpleCone2D.GetMeanRT(pNearbyCluster2D));
 
                 if (clusterMerge < bestClusterMerge)
                     bestClusterMerge = clusterMerge;
@@ -201,7 +207,8 @@ void SlidingConeClusterMopUpAlgorithm::GetClusterMergeMap(const Vertex *const pV
 void SlidingConeClusterMopUpAlgorithm::MakeClusterMerges(const ClusterToPfoMap &clusterToPfoMap, const ClusterMergeMap &clusterMergeMap) const
 {
     ClusterVector daughterClusters;
-    for (const ClusterMergeMap::value_type &mapEntry : clusterMergeMap) daughterClusters.push_back(mapEntry.first);
+    for (const ClusterMergeMap::value_type &mapEntry : clusterMergeMap)
+        daughterClusters.push_back(mapEntry.first);
     std::sort(daughterClusters.begin(), daughterClusters.end(), LArClusterHelper::SortByNHits);
 
     for (ClusterVector::const_reverse_iterator rIter = daughterClusters.rbegin(), rIterEnd = daughterClusters.rend(); rIter != rIterEnd; ++rIter)
@@ -215,8 +222,9 @@ void SlidingConeClusterMopUpAlgorithm::MakeClusterMerges(const ClusterToPfoMap &
 
         if (pParentCluster)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
-                this->GetListName(pParentCluster), this->GetListName(pDaughterCluster)));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                PandoraContentApi::MergeAndDeleteClusters(
+                    *this, pParentCluster, pDaughterCluster, this->GetListName(pParentCluster), this->GetListName(pDaughterCluster)));
         }
         else
         {
@@ -253,44 +261,39 @@ bool SlidingConeClusterMopUpAlgorithm::ClusterMerge::operator<(const ClusterMerg
 
 StatusCode SlidingConeClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputPfoListNames", m_inputPfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputPfoListNames", m_inputPfoListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseVertex", m_useVertex));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseVertex", m_useVertex));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxIterations", m_maxIterations));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxIterations", m_maxIterations));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxHitsToConsider3DTrack", m_maxHitsToConsider3DTrack));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxHitsToConsider3DTrack", m_maxHitsToConsider3DTrack));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsToConsider3DShower", m_minHitsToConsider3DShower));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinHitsToConsider3DShower", m_minHitsToConsider3DShower));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxHitsToConsider2DCluster", m_maxHitsToConsider2DCluster));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxHitsToConsider2DCluster", m_maxHitsToConsider2DCluster));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_halfWindowLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_halfWindowLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NConeFitLayers", m_nConeFitLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NConeFitLayers", m_nConeFitLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NConeFits", m_nConeFits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NConeFits", m_nConeFits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ConeLengthMultiplier", m_coneLengthMultiplier));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConeLengthMultiplier", m_coneLengthMultiplier));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxConeLength", m_maxConeLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxConeLength", m_maxConeLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ConeTanHalfAngle", m_coneTanHalfAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConeTanHalfAngle", m_coneTanHalfAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ConeBoundedFraction", m_coneBoundedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConeBoundedFraction", m_coneBoundedFraction));
 
     return PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }

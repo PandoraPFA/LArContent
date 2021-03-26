@@ -72,42 +72,42 @@ private:
 
     typedef std::map<int, float> PdgCodeToEnergyMap;
 
-    bool                    m_showCurrentMCParticles;   ///< Whether to show current mc particles
-    pandora::StringVector   m_mcParticleListNames;      ///< Names of mc particles lists to show
+    bool m_showCurrentMCParticles;               ///< Whether to show current mc particles
+    pandora::StringVector m_mcParticleListNames; ///< Names of mc particles lists to show
 
-    bool                    m_showCurrentCaloHits;      ///< Whether to show current calohitlist
-    pandora::StringVector   m_caloHitListNames;         ///< Names of calo hit lists to show
+    bool m_showCurrentCaloHits;               ///< Whether to show current calohitlist
+    pandora::StringVector m_caloHitListNames; ///< Names of calo hit lists to show
 
-    bool                    m_showCurrentTracks;        ///< Whether to show current tracks
-    pandora::StringVector   m_trackListNames;           ///< Names of track lists to show
+    bool m_showCurrentTracks;               ///< Whether to show current tracks
+    pandora::StringVector m_trackListNames; ///< Names of track lists to show
 
-    bool                    m_showCurrentClusters;      ///< Whether to show current clusters
-    pandora::StringVector   m_clusterListNames;         ///< Names of cluster lists to show
+    bool m_showCurrentClusters;               ///< Whether to show current clusters
+    pandora::StringVector m_clusterListNames; ///< Names of cluster lists to show
 
-    bool                    m_showCurrentPfos;          ///< Whether to show current particle flow object list
-    pandora::StringVector   m_pfoListNames;             ///< Names of pfo lists to show
+    bool m_showCurrentPfos;               ///< Whether to show current particle flow object list
+    pandora::StringVector m_pfoListNames; ///< Names of pfo lists to show
 
-    bool                    m_showCurrentVertices;      ///< Whether to show current vertex list
-    pandora::StringVector   m_vertexListNames;          ///< Names of vertex lists to show
+    bool m_showCurrentVertices;              ///< Whether to show current vertex list
+    pandora::StringVector m_vertexListNames; ///< Names of vertex lists to show
 
-    bool                    m_displayEvent;             ///< Whether to display the event
-    std::string             m_saveEventPath;            ///< The path to save event displays to. m_displayEvent must also be set.
-    bool                    m_showDetector;             ///< Whether to display the detector geometry
-    std::string             m_detectorView;             ///< The detector view, default, xy or xz
+    bool m_displayEvent;         ///< Whether to display the event
+    std::string m_saveEventPath; ///< The path to save event displays to. m_displayEvent must also be set.
+    bool m_showDetector;         ///< Whether to display the detector geometry
+    std::string m_detectorView;  ///< The detector view, default, xy or xz
 
-    bool                    m_showOnlyAvailable;        ///< Whether to show only available  (i.e. non-clustered) calohits and tracks
-    bool                    m_showAssociatedTracks;     ///< Whether to display tracks associated to clusters when viewing cluster lists
-    std::string             m_hitColors;                ///< Define the hit coloring scheme (default: pfo, choices: pfo, particleid)
-    float                   m_thresholdEnergy;          ///< Cell energy threshold for display (em scale)
-    float                   m_transparencyThresholdE;   ///< Cell energy for which transparency is saturated (0%, fully opaque)
-    float                   m_energyScaleThresholdE;    ///< Cell energy for which color is at top end of continous color palette
-    float                   m_scalingFactor;            ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)
+    bool m_showOnlyAvailable;       ///< Whether to show only available  (i.e. non-clustered) calohits and tracks
+    bool m_showAssociatedTracks;    ///< Whether to display tracks associated to clusters when viewing cluster lists
+    std::string m_hitColors;        ///< Define the hit coloring scheme (default: pfo, choices: pfo, particleid)
+    float m_thresholdEnergy;        ///< Cell energy threshold for display (em scale)
+    float m_transparencyThresholdE; ///< Cell energy for which transparency is saturated (0%, fully opaque)
+    float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette
+    float m_scalingFactor;          ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)
 
-    bool                    m_showPfoVertices;          ///< Whether to display pfo vertices
-    bool                    m_showPfoHierarchy;         ///< Whether to display daughter pfos only under parent pfo elements
+    bool m_showPfoVertices;  ///< Whether to display pfo vertices
+    bool m_showPfoHierarchy; ///< Whether to display daughter pfos only under parent pfo elements
 
-    pandora::StringVector   m_suppressMCParticles;      ///< List of PDG numbers and energies for MC particles to be suppressed (e.g. " 22:0.1 2112:1.0 ")
-    PdgCodeToEnergyMap      m_particleSuppressionMap;   ///< Map from pdg-codes to energy for suppression of particles types below specific energies
+    pandora::StringVector m_suppressMCParticles; ///< List of PDG numbers and energies for MC particles to be suppressed (e.g. " 22:0.1 2112:1.0 ")
+    PdgCodeToEnergyMap m_particleSuppressionMap; ///< Map from pdg-codes to energy for suppression of particles types below specific energies
 };
 
 } // namespace lar_content

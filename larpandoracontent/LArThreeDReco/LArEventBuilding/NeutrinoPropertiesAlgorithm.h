@@ -45,9 +45,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_neutrinoPfoListName;      ///< The name of the output neutrino pfo list
+    std::string m_neutrinoPfoListName; ///< The name of the output neutrino pfo list
 
-    bool            m_includeIsolatedHits;      ///< Whether to include isolated hits when counting 2d hits in pfo chain
+    bool m_includeIsolatedHits; ///< Whether to include isolated hits when counting 2d hits in pfo chain
 };
 
 } // namespace lar_content

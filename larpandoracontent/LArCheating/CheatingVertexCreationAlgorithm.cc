@@ -18,9 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingVertexCreationAlgorithm::CheatingVertexCreationAlgorithm() :
-    m_replaceCurrentVertexList(true),
-    m_vertexXCorrection(0.f)
+CheatingVertexCreationAlgorithm::CheatingVertexCreationAlgorithm() : m_replaceCurrentVertexList(true), m_vertexXCorrection(0.f)
 {
 }
 
@@ -31,7 +29,8 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
     const MCParticleList *pMCParticleList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
-    const VertexList *pVertexList(nullptr); std::string temporaryListName;
+    const VertexList *pVertexList(nullptr);
+    std::string temporaryListName;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
     for (const MCParticle *const pMCParticle : *pMCParticleList)
@@ -40,7 +39,8 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
             continue;
 
         PandoraContentApi::Vertex::Parameters parameters;
-        parameters.m_position = CartesianVector(pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), pMCParticle->GetEndpoint().GetZ());
+        parameters.m_position = CartesianVector(
+            pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), pMCParticle->GetEndpoint().GetZ());
         parameters.m_vertexLabel = VERTEX_INTERACTION;
         parameters.m_vertexType = VERTEX_3D;
 
@@ -63,14 +63,13 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
 
 StatusCode CheatingVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputVertexListName", m_outputVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexXCorrection", m_vertexXCorrection));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexXCorrection", m_vertexXCorrection));
 
     return STATUS_CODE_SUCCESS;
 }

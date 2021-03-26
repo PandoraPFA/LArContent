@@ -50,7 +50,8 @@ StatusCode CandidateVertexCreationAlgorithm::Run()
         ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;
         this->SelectClusters(clusterVectorU, clusterVectorV, clusterVectorW);
 
-        const VertexList *pVertexList(NULL); std::string temporaryListName;
+        const VertexList *pVertexList(NULL);
+        std::string temporaryListName;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, temporaryListName));
 
         if (m_enableEndpointCandidates)
@@ -89,7 +90,8 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
     for (const std::string &clusterListName : m_inputClusterListNames)
     {
         const ClusterList *pClusterList(NULL);
-        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+        PANDORA_THROW_RESULT_IF_AND_IF(
+            STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
         if (!pClusterList || pClusterList->empty())
         {
@@ -139,7 +141,8 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
             if (pCluster->GetParticleId() == E_MINUS && m_reducedCandidates)
             {
                 selectionCutFactor = (m_selectionCutFactorMax + 1.f) * 0.5f +
-                    (m_selectionCutFactorMax - 1.f) * 0.5f * std::tanh(static_cast<float>(nClustersPassingMaxCuts) - m_nClustersPassingMaxCutsPar);
+                                     (m_selectionCutFactorMax - 1.f) * 0.5f *
+                                         std::tanh(static_cast<float>(nClustersPassingMaxCuts) - m_nClustersPassingMaxCutsPar);
             }
 
             if (pCluster->GetNCaloHits() < m_minClusterCaloHits * selectionCutFactor)
@@ -192,13 +195,14 @@ void CandidateVertexCreationAlgorithm::CreateEndpointCandidates(const ClusterVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::CreateEndpointVertex(const CartesianVector &position1, const HitType hitType1, const TwoDSlidingFitResult &fitResult2) const
+void CandidateVertexCreationAlgorithm::CreateEndpointVertex(
+    const CartesianVector &position1, const HitType hitType1, const TwoDSlidingFitResult &fitResult2) const
 {
     const CartesianVector minLayerPosition2(fitResult2.GetGlobalMinLayerPosition());
     const CartesianVector maxLayerPosition2(fitResult2.GetGlobalMaxLayerPosition());
 
     if ((((position1.GetX() < minLayerPosition2.GetX()) && (position1.GetX() < maxLayerPosition2.GetX())) ||
-        ((position1.GetX() > minLayerPosition2.GetX()) && (position1.GetX() > maxLayerPosition2.GetX()))) &&
+            ((position1.GetX() > minLayerPosition2.GetX()) && (position1.GetX() > maxLayerPosition2.GetX()))) &&
         (std::fabs(position1.GetX() - minLayerPosition2.GetX()) > m_maxEndpointXDiscrepancy) &&
         (std::fabs(position1.GetX() - maxLayerPosition2.GetX()) > m_maxEndpointXDiscrepancy))
     {
@@ -229,8 +233,8 @@ void CandidateVertexCreationAlgorithm::CreateEndpointVertex(const CartesianVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::CreateCrossingCandidates(const ClusterVector &clusterVectorU, const ClusterVector &clusterVectorV,
-    const ClusterVector &clusterVectorW) const
+void CandidateVertexCreationAlgorithm::CreateCrossingCandidates(
+    const ClusterVector &clusterVectorU, const ClusterVector &clusterVectorV, const ClusterVector &clusterVectorW) const
 {
     CartesianPointVector crossingsU, crossingsV, crossingsW;
     this->FindCrossingPoints(clusterVectorU, crossingsU);
@@ -277,7 +281,7 @@ void CandidateVertexCreationAlgorithm::GetSpacepoints(const Cluster *const pClus
     const float minLayerRL(fitResult.GetL(fitResult.GetMinLayer()));
     const float maxLayerRL(fitResult.GetL(fitResult.GetMaxLayer()));
 
-    for (unsigned int iStep = 0; iStep < m_extrapolationNSteps; ++ iStep)
+    for (unsigned int iStep = 0; iStep < m_extrapolationNSteps; ++iStep)
     {
         const float deltaRL(static_cast<float>(iStep) * m_extrapolationStepSize);
 
@@ -294,16 +298,16 @@ void CandidateVertexCreationAlgorithm::GetSpacepoints(const Cluster *const pClus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointVector &spacepoints1, const CartesianPointVector &spacepoints2,
-    CartesianPointVector &crossingPoints) const
+void CandidateVertexCreationAlgorithm::FindCrossingPoints(
+    const CartesianPointVector &spacepoints1, const CartesianPointVector &spacepoints2, CartesianPointVector &crossingPoints) const
 {
     bool bestCrossingFound(false);
     float bestSeparationSquared(m_maxCrossingSeparationSquared);
     CartesianVector bestPosition1(0.f, 0.f, 0.f), bestPosition2(0.f, 0.f, 0.f);
 
-    for (const CartesianVector &position1: spacepoints1)
+    for (const CartesianVector &position1 : spacepoints1)
     {
-        for (const CartesianVector &position2: spacepoints2)
+        for (const CartesianVector &position2 : spacepoints2)
         {
             const float separationSquared((position1 - position2).GetMagnitudeSquared());
 
@@ -321,7 +325,7 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointVe
     {
         bool alreadyPopulated(false);
 
-        for (const CartesianVector &existingPosition: crossingPoints)
+        for (const CartesianVector &existingPosition : crossingPoints)
         {
             if (((existingPosition - bestPosition1).GetMagnitudeSquared() < m_minNearbyCrossingDistanceSquared) ||
                 ((existingPosition - bestPosition2).GetMagnitudeSquared() < m_minNearbyCrossingDistanceSquared))
@@ -341,13 +345,13 @@ void CandidateVertexCreationAlgorithm::FindCrossingPoints(const CartesianPointVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CandidateVertexCreationAlgorithm::CreateCrossingVertices(const CartesianPointVector &crossingPoints1, const CartesianPointVector &crossingPoints2,
-    const HitType hitType1, const HitType hitType2, unsigned int &nCrossingCandidates) const
+void CandidateVertexCreationAlgorithm::CreateCrossingVertices(const CartesianPointVector &crossingPoints1,
+    const CartesianPointVector &crossingPoints2, const HitType hitType1, const HitType hitType2, unsigned int &nCrossingCandidates) const
 {
 
-    for (const CartesianVector &position1: crossingPoints1)
+    for (const CartesianVector &position1 : crossingPoints1)
     {
-        for (const CartesianVector &position2: crossingPoints2)
+        for (const CartesianVector &position2 : crossingPoints2)
         {
             if (nCrossingCandidates > m_nMaxCrossingCandidates)
                 return;
@@ -408,67 +412,63 @@ void CandidateVertexCreationAlgorithm::TidyUp()
 
 StatusCode CandidateVertexCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNames", m_inputClusterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputVertexListName", m_outputVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterCaloHits", m_minClusterCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterCaloHits", m_minClusterCaloHits));
 
     float minClusterLength = std::sqrt(m_minClusterLengthSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ChiSquaredCut", m_chiSquaredCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ChiSquaredCut", m_chiSquaredCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EnableEndpointCandidates", m_enableEndpointCandidates));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "EnableEndpointCandidates", m_enableEndpointCandidates));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxEndpointXDiscrepancy", m_maxEndpointXDiscrepancy));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxEndpointXDiscrepancy", m_maxEndpointXDiscrepancy));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EnableCrossingCandidates", m_enableCrossingCandidates));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "EnableCrossingCandidates", m_enableCrossingCandidates));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NMaxCrossingCandidates", m_nMaxCrossingCandidates));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NMaxCrossingCandidates", m_nMaxCrossingCandidates));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCrossingXDiscrepancy", m_maxCrossingXDiscrepancy));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxCrossingXDiscrepancy", m_maxCrossingXDiscrepancy));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ExtrapolationNSteps", m_extrapolationNSteps));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationNSteps", m_extrapolationNSteps));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ExtrapolationStepSize", m_extrapolationStepSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ExtrapolationStepSize", m_extrapolationStepSize));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReducedCandidates", m_reducedCandidates));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ReducedCandidates", m_reducedCandidates));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectionCutFactorMax", m_selectionCutFactorMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SelectionCutFactorMax", m_selectionCutFactorMax));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NClustersPassingMaxCutsPar", m_nClustersPassingMaxCutsPar));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "NClustersPassingMaxCutsPar", m_nClustersPassingMaxCutsPar));
 
     float maxCrossingSeparation = std::sqrt(m_maxCrossingSeparationSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCrossingSeparation", maxCrossingSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCrossingSeparation", maxCrossingSeparation));
     m_maxCrossingSeparationSquared = maxCrossingSeparation * maxCrossingSeparation;
 
     float minNearbyCrossingDistance = std::sqrt(m_minNearbyCrossingDistanceSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinNearbyCrossingDistance", minNearbyCrossingDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinNearbyCrossingDistance", minNearbyCrossingDistance));
     m_minNearbyCrossingDistanceSquared = minNearbyCrossingDistance * minNearbyCrossingDistance;
 
     return STATUS_CODE_SUCCESS;

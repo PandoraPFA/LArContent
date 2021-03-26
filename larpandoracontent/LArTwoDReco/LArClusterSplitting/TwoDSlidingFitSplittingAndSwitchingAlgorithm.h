@@ -81,8 +81,7 @@ private:
      *  @param  secondCaloHitList the hits to be added to the second new cluster
      */
     void SplitCluster(const pandora::Cluster *const pCluster, const pandora::CartesianVector &splitPosition,
-        const pandora::CartesianVector &splitDirection, pandora::CaloHitList &firstCaloHitList,
-        pandora::CaloHitList &secondCaloHitList) const;
+        const pandora::CartesianVector &splitDirection, pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 
     /**
      *  @brief  Replace crossed clusters with un-crossed clusters
@@ -97,8 +96,8 @@ private:
         const pandora::CartesianVector &splitPosition, const pandora::CartesianVector &firstDirection,
         const pandora::CartesianVector &secondDirection) const;
 
-    unsigned int  m_halfWindowLayers;     ///< half window layers for sliding linear fot
-    float         m_minClusterLength;     ///< minimum length of clusters
+    unsigned int m_halfWindowLayers; ///< half window layers for sliding linear fot
+    float m_minClusterLength;        ///< minimum length of clusters
 };
 
 } // namespace lar_content

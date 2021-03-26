@@ -23,8 +23,10 @@
 namespace lar_content
 {
 
-template<typename, unsigned int> class KDTreeLinkerAlgo;
-template<typename, unsigned int> class KDTreeNodeInfoT;
+template <typename, unsigned int>
+class KDTreeLinkerAlgo;
+template <typename, unsigned int>
+class KDTreeNodeInfoT;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -51,14 +53,14 @@ public:
          *  @param  showerAsymmetry the shower asymmetry feature
          */
         VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick, const float localAsymmetry,
-                          const float globalAsymmetry, const float showerAsymmetry);
+            const float globalAsymmetry, const float showerAsymmetry);
 
-        float    m_beamDeweighting;    ///< The beam deweighting feature
-        float    m_rPhiFeature;        ///< The r/phi feature
-        float    m_energyKick;         ///< The energy kick feature
-        float    m_localAsymmetry;     ///< The local asymmetry feature
-        float    m_globalAsymmetry;    ///< The global asymmetry feature
-        float    m_showerAsymmetry;    ///< The shower asymmetry feature
+        float m_beamDeweighting; ///< The beam deweighting feature
+        float m_rPhiFeature;     ///< The r/phi feature
+        float m_energyKick;      ///< The energy kick feature
+        float m_localAsymmetry;  ///< The local asymmetry feature
+        float m_globalAsymmetry; ///< The global asymmetry feature
+        float m_showerAsymmetry; ///< The shower asymmetry feature
     };
 
     typedef std::map<const pandora::Vertex *const, VertexFeatureInfo> VertexFeatureInfoMap;
@@ -85,13 +87,13 @@ public:
         EventFeatureInfo(const float eventShoweryness, const float eventEnergy, const float eventVolume, const float longitudinality,
             const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates);
 
-        float           m_eventShoweryness;        ///< The event showeryness feature
-        float           m_eventEnergy;             ///< The event energy
-        float           m_eventVolume;             ///< The volume of the event
-        float           m_longitudinality;         ///< The longitudinality of the event
-        unsigned int    m_nHits;                   ///< The number of hits in the event
-        unsigned int    m_nClusters;               ///< The number of clusters in the event
-        unsigned int    m_nCandidates;             ///< The total number of vertex candidates
+        float m_eventShoweryness;   ///< The event showeryness feature
+        float m_eventEnergy;        ///< The event energy
+        float m_eventVolume;        ///< The volume of the event
+        float m_longitudinality;    ///< The longitudinality of the event
+        unsigned int m_nHits;       ///< The number of hits in the event
+        unsigned int m_nClusters;   ///< The number of clusters in the event
+        unsigned int m_nCandidates; ///< The total number of vertex candidates
     };
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -135,14 +137,14 @@ protected:
      *  @param  showerLikeClusters the list of shower-like clusters to populate
      *  @param  clusterEndPointsMap the map of shower-like cluster endpoints to populate
      */
-    void GetShowerLikeClusterEndPoints(const pandora::ClusterList &clusterList, pandora::ClusterList &showerLikeClusters,
-        ClusterEndPointsMap &clusterEndPointsMap) const;
+    void GetShowerLikeClusterEndPoints(
+        const pandora::ClusterList &clusterList, pandora::ClusterList &showerLikeClusters, ClusterEndPointsMap &clusterEndPointsMap) const;
 
-    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
-    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+    typedef std::unordered_map<const pandora::CaloHit *, const pandora::Cluster *> HitToClusterMap;
 
     /**
      * @brief   Populate kd tree with information about hits in a provided list of clusters
@@ -201,8 +203,7 @@ protected:
      *  @param  nHits the number of hits
      *  @param  eventEnergy the event energy
      */
-    void IncrementShoweryParameters(const pandora::ClusterList &clusterList, unsigned int &nShoweryHits, unsigned int &nHits,
-       float &eventEnergy) const;
+    void IncrementShoweryParameters(const pandora::ClusterList &clusterList, unsigned int &nShoweryHits, unsigned int &nHits, float &eventEnergy) const;
 
     /**
      *  @brief  Find whether a cluster is shower-like
@@ -230,8 +231,8 @@ protected:
      *  @param  minCoord the current min coordinate
      *  @param  maxCoord the current max coordinate
      */
-    void UpdateSpanCoordinate(const float minPositionCoord, const float maxPositionCoord, pandora::InputFloat &minCoord,
-        pandora::InputFloat &maxCoord) const;
+    void UpdateSpanCoordinate(
+        const float minPositionCoord, const float maxPositionCoord, pandora::InputFloat &minCoord, pandora::InputFloat &maxCoord) const;
 
     /**
      *  @brief  Get the coordinate span
@@ -273,8 +274,7 @@ protected:
      *  @param  pVertex the vertex
      *  @param  initialScoreList the score list to populate
      */
-    void PopulateInitialScoreList(VertexFeatureInfoMap &vertexFeatureInfoMap, const pandora::Vertex *const pVertex,
-        VertexScoreList &initialScoreList) const;
+    void PopulateInitialScoreList(VertexFeatureInfoMap &vertexFeatureInfoMap, const pandora::Vertex *const pVertex, VertexScoreList &initialScoreList) const;
 
     /**
      *  @brief  Get the list of top-N separated vertices
@@ -294,7 +294,7 @@ protected:
      *  @param  kdTreeMap
      */
     void ProduceTrainingSets(const pandora::VertexVector &vertexVector, const pandora::VertexVector &bestRegionVertices,
-        VertexFeatureInfoMap &vertexFeatureInfoMap, const LArMvaHelper::MvaFeatureVector &eventFeatureList,const KDTreeMap &kdTreeMap) const;
+        VertexFeatureInfoMap &vertexFeatureInfoMap, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const KDTreeMap &kdTreeMap) const;
 
     /**
      *  @brief  Calculate the r/phi scores for the vertices in a vector, possibly erasing those that fail the fast score test
@@ -327,7 +327,7 @@ protected:
      *
      *  @return address of the vertex used as the 'best' vertex in the classifier
      */
-    const pandora::Vertex * ProduceTrainingExamples(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
+    const pandora::Vertex *ProduceTrainingExamples(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
         std::bernoulli_distribution &coinFlip, std::mt19937 &generator, const std::string &interactionType, const std::string &trainingOutputFile,
         const LArMvaHelper::MvaFeatureVector &eventFeatureList, const float maxRadius, const bool useRPhi) const;
 
@@ -362,41 +362,41 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    VertexFeatureTool::FeatureToolVector m_featureToolVector;     ///< The feature tool vector
-    bool                  m_trainingSetMode;                      ///< Whether to train
-    bool                  m_allowClassifyDuringTraining;          ///< Whether classification is allowed during training
-    float                 m_mcVertexXCorrection;                  ///< The correction to the x-coordinate of the MC vertex position
-    std::string           m_trainingOutputFileRegion;             ///< The training output file for the region mva
-    std::string           m_trainingOutputFileVertex;             ///< The training output file for the vertex mva
-    std::string           m_mcParticleListName;                   ///< The MC particle list for creating training examples
-    std::string           m_caloHitListName;                      ///< The 2D CaloHit list name
+    VertexFeatureTool::FeatureToolVector m_featureToolVector; ///< The feature tool vector
+    bool m_trainingSetMode;                                   ///< Whether to train
+    bool m_allowClassifyDuringTraining;                       ///< Whether classification is allowed during training
+    float m_mcVertexXCorrection;                              ///< The correction to the x-coordinate of the MC vertex position
+    std::string m_trainingOutputFileRegion;                   ///< The training output file for the region mva
+    std::string m_trainingOutputFileVertex;                   ///< The training output file for the vertex mva
+    std::string m_mcParticleListName;                         ///< The MC particle list for creating training examples
+    std::string m_caloHitListName;                            ///< The 2D CaloHit list name
 
-    pandora::StringVector m_inputClusterListNames;                ///< The list of cluster list names
-    unsigned int          m_minClusterCaloHits;                   ///< The min number of hits parameter in the energy score
-    unsigned int          m_slidingFitWindow;                     ///< The layer window for the sliding linear fits
-    float                 m_minShowerSpineLength;                 ///< The minimum length at which all are considered to be tracks
+    pandora::StringVector m_inputClusterListNames; ///< The list of cluster list names
+    unsigned int m_minClusterCaloHits;             ///< The min number of hits parameter in the energy score
+    unsigned int m_slidingFitWindow;               ///< The layer window for the sliding linear fits
+    float m_minShowerSpineLength;                  ///< The minimum length at which all are considered to be tracks
 
-    float                 m_beamDeweightingConstant;              ///< The beam deweighting constant for the initial region score list
-    float                 m_localAsymmetryConstant;               ///< The local asymmetry constant for the initial region score list
-    float                 m_globalAsymmetryConstant;              ///< The global asymmetry constant for the initial region score list
-    float                 m_showerAsymmetryConstant;              ///< The shower asymmetry constant for the initial region score list
-    float                 m_energyKickConstant;                   ///< The energy kick constant for the initial region score list
+    float m_beamDeweightingConstant; ///< The beam deweighting constant for the initial region score list
+    float m_localAsymmetryConstant;  ///< The local asymmetry constant for the initial region score list
+    float m_globalAsymmetryConstant; ///< The global asymmetry constant for the initial region score list
+    float m_showerAsymmetryConstant; ///< The shower asymmetry constant for the initial region score list
+    float m_energyKickConstant;      ///< The energy kick constant for the initial region score list
 
-    float                 m_showerClusteringDistance;             ///< The shower clustering distance
-    unsigned int          m_minShowerClusterHits;                 ///< The minimum number of shower cluster hits
-    bool                  m_useShowerClusteringApproximation;     ///< Whether to use the shower clustering distance approximation
-    float                 m_regionRadius;                         ///< The radius for a vertex region
-    float                 m_rPhiFineTuningRadius;                 ///< The maximum distance the r/phi tune can move a vertex
-    float                 m_maxTrueVertexRadius;                  ///< The maximum distance at which a vertex candidate can be considered the 'true' vertex
-    bool                  m_useRPhiFeatureForRegion;              ///< Whether to use the r/phi feature for the region vertex
-    bool                  m_dropFailedRPhiFastScoreCandidates;    ///< Whether to drop candidates that fail the r/phi fast score test
-    bool                  m_testBeamMode;                         ///< Test beam mode
+    float m_showerClusteringDistance;         ///< The shower clustering distance
+    unsigned int m_minShowerClusterHits;      ///< The minimum number of shower cluster hits
+    bool m_useShowerClusteringApproximation;  ///< Whether to use the shower clustering distance approximation
+    float m_regionRadius;                     ///< The radius for a vertex region
+    float m_rPhiFineTuningRadius;             ///< The maximum distance the r/phi tune can move a vertex
+    float m_maxTrueVertexRadius;              ///< The maximum distance at which a vertex candidate can be considered the 'true' vertex
+    bool m_useRPhiFeatureForRegion;           ///< Whether to use the r/phi feature for the region vertex
+    bool m_dropFailedRPhiFastScoreCandidates; ///< Whether to drop candidates that fail the r/phi fast score test
+    bool m_testBeamMode;                      ///< Test beam mode
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline TrainedVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick,
-    const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry) :
+inline TrainedVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature,
+    const float energyKick, const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
     m_energyKick(energyKick),

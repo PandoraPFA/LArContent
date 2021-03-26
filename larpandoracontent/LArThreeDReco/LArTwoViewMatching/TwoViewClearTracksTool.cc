@@ -17,10 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoViewClearTracksTool::TwoViewClearTracksTool() :
-    m_minXOverlapFraction(0.1f),
-    m_minMatchingScore(0.95f),
-    m_minLocallyMatchedFraction(0.3f)
+TwoViewClearTracksTool::TwoViewClearTracksTool() : m_minXOverlapFraction(0.1f), m_minMatchingScore(0.95f), m_minLocallyMatchedFraction(0.3f)
 {
 }
 
@@ -29,7 +26,7 @@ TwoViewClearTracksTool::TwoViewClearTracksTool() :
 bool TwoViewClearTracksTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     bool particlesMade(false);
 
@@ -42,7 +39,8 @@ bool TwoViewClearTracksTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList, bool &particlesMade) const
+void TwoViewClearTracksTool::CreateThreeDParticles(
+    TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList, bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
 
@@ -72,14 +70,14 @@ void TwoViewClearTracksTool::CreateThreeDParticles(TwoViewTransverseTracksAlgori
 
 StatusCode TwoViewClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchingScore", m_minMatchingScore));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchingScore", m_minMatchingScore));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinLocallyMatchedFraction", m_minLocallyMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinLocallyMatchedFraction", m_minLocallyMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlapFraction", m_minXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction", m_minXOverlapFraction));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -46,7 +46,7 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVec
     {
         const Cluster *const pCluster(*iter);
 
-        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength )
+        if (LArClusterHelper::GetLengthSquared(pCluster) < m_minClusterLength * m_minClusterLength)
             continue;
 
         try
@@ -77,7 +77,8 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVec
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointingCluster &pointingCluster, const Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const
+void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointingCluster &pointingCluster,
+    const Cluster *const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
     const Cluster *const pParentCluster(pointingCluster.GetCluster());
 
@@ -86,8 +87,8 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
 
     for (unsigned int useInner = 0; useInner < 2; ++useInner)
     {
-        const LArPointingCluster::Vertex &pointingVertex(useInner==1 ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
-        const ClusterAssociation::VertexType vertexType(useInner==1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
+        const LArPointingCluster::Vertex &pointingVertex(useInner == 1 ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
+        const ClusterAssociation::VertexType vertexType(useInner == 1 ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
 
         if (pointingVertex.GetRms() > 0.5f)
             continue;
@@ -113,15 +114,15 @@ void TransverseExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointin
         const float outerL(firstL > secondL ? firstL : secondL);
         const float outerT(firstL > secondL ? firstT : secondT);
 
-        if (innerL > 0.f && innerL < 2.5f && outerL < m_maxLongitudinalDisplacement &&
-            innerT < m_maxTransverseDisplacement && outerT < 1.5f * m_maxTransverseDisplacement)
+        if (innerL > 0.f && innerL < 2.5f && outerL < m_maxLongitudinalDisplacement && innerT < m_maxTransverseDisplacement &&
+            outerT < 1.5f * m_maxTransverseDisplacement)
         {
             associationType = ClusterAssociation::STRONG;
             figureOfMerit = outerL;
         }
 
-        (void) clusterAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pDaughterCluster,
-               ClusterAssociation(vertexType, vertexType, associationType, figureOfMerit)));
+        (void)clusterAssociationMatrix[pParentCluster].insert(
+            ClusterAssociationMap::value_type(pDaughterCluster, ClusterAssociation(vertexType, vertexType, associationType, figureOfMerit)));
     }
 }
 
@@ -133,7 +134,8 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
 
     // Loop over parent clusters and select nearby daughter clusters that are closer than another parent cluster
     ClusterVector sortedParentClusters;
-    for (const auto &mapEntry : parentToDaughterMatrix) sortedParentClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : parentToDaughterMatrix)
+        sortedParentClusters.push_back(mapEntry.first);
     std::sort(sortedParentClusters.begin(), sortedParentClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : sortedParentClusters)
@@ -145,7 +147,8 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
 
         // Find the nearest parent cluster
         ClusterVector sortedLocalDaughterClusters;
-        for (const auto &mapEntry : daughterToAssociationMap) sortedLocalDaughterClusters.push_back(mapEntry.first);
+        for (const auto &mapEntry : daughterToAssociationMap)
+            sortedLocalDaughterClusters.push_back(mapEntry.first);
         std::sort(sortedLocalDaughterClusters.begin(), sortedLocalDaughterClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pDaughterCluster : sortedLocalDaughterClusters)
@@ -170,17 +173,18 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
             if (clusterAssociation.GetAssociation() == ClusterAssociation::STRONG)
             {
                 if (clusterAssociation.GetParent() == ClusterAssociation::INNER && clusterAssociation.GetFigureOfMerit() < maxDisplacementInner)
-                    (void) daughterToParentMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster, clusterAssociation));
+                    (void)daughterToParentMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster, clusterAssociation));
 
                 if (clusterAssociation.GetParent() == ClusterAssociation::OUTER && clusterAssociation.GetFigureOfMerit() < maxDisplacementOuter)
-                    (void) daughterToParentMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster, clusterAssociation));
+                    (void)daughterToParentMatrix[pDaughterCluster].insert(ClusterAssociationMap::value_type(pParentCluster, clusterAssociation));
             }
         }
     }
 
     // Loop over daughter clusters and select the nearest parent clusters
     ClusterVector sortedDaughterClusters;
-    for (const auto &mapEntry : daughterToParentMatrix) sortedDaughterClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : daughterToParentMatrix)
+        sortedDaughterClusters.push_back(mapEntry.first);
     std::sort(sortedDaughterClusters.begin(), sortedDaughterClusters.end(), LArClusterHelper::SortByNHits);
 
     // Loop over parent clusters and select nearby daughter clusters that are closer than another parent cluster
@@ -192,7 +196,8 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
         float minDisplacement(std::numeric_limits<float>::max());
 
         ClusterVector sortedLocalParentClusters;
-        for (const auto &mapEntry : parentToAssociationMap) sortedLocalParentClusters.push_back(mapEntry.first);
+        for (const auto &mapEntry : parentToAssociationMap)
+            sortedLocalParentClusters.push_back(mapEntry.first);
         std::sort(sortedLocalParentClusters.begin(), sortedLocalParentClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pCandidateParentCluster : sortedLocalParentClusters)
@@ -225,14 +230,14 @@ void TransverseExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationM
 
 StatusCode TransverseExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-    "MinClusterLength", m_minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", m_minClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-    "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-    "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }

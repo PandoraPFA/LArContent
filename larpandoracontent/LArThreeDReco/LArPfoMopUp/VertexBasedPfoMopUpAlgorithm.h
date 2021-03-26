@@ -46,8 +46,8 @@ protected:
          *  @param  boundedFraction the fraction of daughter hits bounded by the cone defined by the vertex cluster
          *  @param  isConsistentDirection whether clusters have consistent directions
          */
-        ClusterAssociation(const pandora::Cluster *const pVertexCluster, const pandora::Cluster *const pDaughterCluster, const float boundedFraction,
-            const bool isConsistentDirection);
+        ClusterAssociation(const pandora::Cluster *const pVertexCluster, const pandora::Cluster *const pDaughterCluster,
+            const float boundedFraction, const bool isConsistentDirection);
 
         /**
          *  @brief  Get the address of the vertex cluster
@@ -78,10 +78,10 @@ protected:
         bool IsConsistentDirection() const;
 
     private:
-        const pandora::Cluster *m_pVertexCluster;           ///< The address of the vertex cluster
-        const pandora::Cluster *m_pDaughterCluster;         ///< The address of the daughter cluster
-        float                   m_boundedFraction;          ///< The fraction of daughter hits bounded by the cone defined by the vertex cluster
-        bool                    m_isConsistentDirection;    ///< Whether the vertex and daughter clusters have consistent directions
+        const pandora::Cluster *m_pVertexCluster;   ///< The address of the vertex cluster
+        const pandora::Cluster *m_pDaughterCluster; ///< The address of the daughter cluster
+        float m_boundedFraction;                    ///< The fraction of daughter hits bounded by the cone defined by the vertex cluster
+        bool m_isConsistentDirection;               ///< Whether the vertex and daughter clusters have consistent directions
     };
 
     /**
@@ -172,15 +172,15 @@ protected:
          *
          *  @return boolean
          */
-        bool operator< (const PfoAssociation &rhs) const;
+        bool operator<(const PfoAssociation &rhs) const;
 
     private:
-        const pandora::Pfo     *m_pVertexPfo;               ///< The address of the vertex-associated pfo
-        const pandora::Pfo     *m_pDaughterPfo;             ///< The address of the non-vertex-associated candidate daughter pfo
+        const pandora::Pfo *m_pVertexPfo;   ///< The address of the vertex-associated pfo
+        const pandora::Pfo *m_pDaughterPfo; ///< The address of the non-vertex-associated candidate daughter pfo
 
-        ClusterAssociation      m_clusterAssociationU;      ///< The cluster association in the u view
-        ClusterAssociation      m_clusterAssociationV;      ///< The cluster association in the v view
-        ClusterAssociation      m_clusterAssociationW;      ///< The cluster association in the w view
+        ClusterAssociation m_clusterAssociationU; ///< The cluster association in the u view
+        ClusterAssociation m_clusterAssociationV; ///< The cluster association in the v view
+        ClusterAssociation m_clusterAssociationW; ///< The cluster association in the w view
     };
 
     typedef std::vector<PfoAssociation> PfoAssociationList;
@@ -199,8 +199,8 @@ protected:
          *  @param  coneAngleCentile the cone angle centile
          *  @param  maxConeCosHalfAngle the maximum value for cosine of cone half angle
          */
-        ConeParameters(const pandora::Cluster *const pCluster, const pandora::CartesianVector &vertexPosition2D, const float coneAngleCentile,
-            const float maxConeCosHalfAngle);
+        ConeParameters(const pandora::Cluster *const pCluster, const pandora::CartesianVector &vertexPosition2D,
+            const float coneAngleCentile, const float maxConeCosHalfAngle);
 
         /**
          *  @brief  Get the fraction of hits in a candidate daughter cluster bounded by the cone
@@ -236,11 +236,11 @@ protected:
          */
         float GetCosHalfAngleEstimate(const float coneAngleCentile) const;
 
-        const pandora::Cluster     *m_pCluster;             ///< The parent cluster
-        pandora::CartesianVector    m_apex;                 ///< The cone apex
-        pandora::CartesianVector    m_direction;            ///< The cone direction
-        float                       m_coneLength;           ///< The cone length
-        float                       m_coneCosHalfAngle;     ///< The cone cos half angle
+        const pandora::Cluster *m_pCluster;   ///< The parent cluster
+        pandora::CartesianVector m_apex;      ///< The cone apex
+        pandora::CartesianVector m_direction; ///< The cone direction
+        float m_coneLength;                   ///< The cone length
+        float m_coneCosHalfAngle;             ///< The cone cos half angle
     };
 
     pandora::StatusCode Run();
@@ -308,7 +308,8 @@ protected:
      *
      *  @return the pfo association details
      */
-    PfoAssociation GetPfoAssociation(const pandora::Vertex *const pVertex, const pandora::Pfo *const pVertexPfo, const pandora::Pfo *const pDaughterPfo) const;
+    PfoAssociation GetPfoAssociation(
+        const pandora::Vertex *const pVertex, const pandora::Pfo *const pVertexPfo, const pandora::Pfo *const pDaughterPfo) const;
 
     /**
      *  @brief  Get cluster association details between a vertex-associated cluster and a non-vertex associated daughter candidate cluster
@@ -341,28 +342,28 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     typedef std::set<pandora::HitType> HitTypeSet;
-    typedef std::map<pandora::HitType, const pandora::Cluster*> HitTypeToClusterMap;
+    typedef std::map<pandora::HitType, const pandora::Cluster *> HitTypeToClusterMap;
 
-    std::string             m_trackPfoListName;                 ///< The input track pfo list name
-    std::string             m_showerPfoListName;                ///< The input shower pfo list name
+    std::string m_trackPfoListName;  ///< The input track pfo list name
+    std::string m_showerPfoListName; ///< The input shower pfo list name
 
-    float                   m_minVertexLongitudinalDistance;    ///< Vertex association check: min longitudinal distance cut
-    float                   m_maxVertexTransverseDistance;      ///< Vertex association check: max transverse distance cut
-    unsigned int            m_minVertexAssociatedHitTypes;      ///< The min number of vertex associated hit types for a vertex associated pfo
+    float m_minVertexLongitudinalDistance;      ///< Vertex association check: min longitudinal distance cut
+    float m_maxVertexTransverseDistance;        ///< Vertex association check: max transverse distance cut
+    unsigned int m_minVertexAssociatedHitTypes; ///< The min number of vertex associated hit types for a vertex associated pfo
 
-    float                   m_coneAngleCentile;                 ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
-    float                   m_maxConeCosHalfAngle;              ///< Maximum value for cosine of cone half angle
-    float                   m_maxConeLengthMultiplier;          ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
+    float m_coneAngleCentile;        ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
+    float m_maxConeCosHalfAngle;     ///< Maximum value for cosine of cone half angle
+    float m_maxConeLengthMultiplier; ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
 
-    float                   m_directionTanAngle;                ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
-    float                   m_directionApexShift;               ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
+    float m_directionTanAngle;  ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
+    float m_directionApexShift; ///< Direction determination, look for vertex inside triangle with apex shifted along the cluster length
 
-    float                   m_meanBoundedFractionCut;           ///< Cut on association info (mean bounded fraction) for determining pfo merges
-    float                   m_maxBoundedFractionCut;            ///< Cut on association info (max bounded fraction) for determining pfo merges
-    float                   m_minBoundedFractionCut;            ///< Cut on association info (min bounded fraction) for determining pfo merges
+    float m_meanBoundedFractionCut; ///< Cut on association info (mean bounded fraction) for determining pfo merges
+    float m_maxBoundedFractionCut;  ///< Cut on association info (max bounded fraction) for determining pfo merges
+    float m_minBoundedFractionCut;  ///< Cut on association info (min bounded fraction) for determining pfo merges
 
-    unsigned int            m_minConsistentDirections;          ///< The minimum number of consistent cluster directions to allow a pfo merge
-    unsigned int            m_minConsistentDirectionsTrack;     ///< The minimum number of consistent cluster directions to allow a merge involving a track pfo
+    unsigned int m_minConsistentDirections;      ///< The minimum number of consistent cluster directions to allow a pfo merge
+    unsigned int m_minConsistentDirectionsTrack; ///< The minimum number of consistent cluster directions to allow a merge involving a track pfo
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

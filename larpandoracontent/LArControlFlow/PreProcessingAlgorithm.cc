@@ -66,7 +66,8 @@ StatusCode PreProcessingAlgorithm::Run()
         if (STATUS_CODE_SUCCESS != PandoraContentApi::ReplaceCurrentList<CaloHit>(*this, m_currentCaloHitListReplacement))
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                std::cout << "PreProcessingAlgorithm: could not replace current calo hit list with list named: " << m_currentCaloHitListReplacement << std::endl;
+                std::cout << "PreProcessingAlgorithm: could not replace current calo hit list with list named: " << m_currentCaloHitListReplacement
+                          << std::endl;
         }
     }
 
@@ -93,7 +94,7 @@ void PreProcessingAlgorithm::ProcessCaloHits()
         if (m_processedHits.count(pCaloHit))
             continue;
 
-        (void) m_processedHits.insert(pCaloHit);
+        (void)m_processedHits.insert(pCaloHit);
 
         if (m_onlyAvailableCaloHits && !PandoraContentApi::IsAvailable(*this, pCaloHit))
             continue;
@@ -113,8 +114,8 @@ void PreProcessingAlgorithm::ProcessCaloHits()
         {
             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
             {
-                std::cout << "PreProcessingAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale()
-                          << ", require (" << m_minCellLengthScale << " - " << m_maxCellLengthScale << "), will remove it" << std::endl;
+                std::cout << "PreProcessingAlgorithm: found a hit with extent " << pCaloHit->GetCellLengthScale() << ", require ("
+                          << m_minCellLengthScale << " - " << m_maxCellLengthScale << "), will remove it" << std::endl;
             }
 
             continue;
@@ -216,7 +217,8 @@ void PreProcessingAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputList
                 const float deltaMip(pCaloHit2->GetMipEquivalentEnergy() > pCaloHit1->GetMipEquivalentEnergy());
 
                 if ((deltaMip > std::numeric_limits<float>::epsilon()) ||
-                    ((std::fabs(deltaMip) < std::numeric_limits<float>::epsilon()) && (outputList.end() != std::find(outputList.begin(), outputList.end(), pCaloHit2))))
+                    ((std::fabs(deltaMip) < std::numeric_limits<float>::epsilon()) &&
+                        (outputList.end() != std::find(outputList.begin(), outputList.end(), pCaloHit2))))
                 {
                     isUnique = false;
                     break;
@@ -240,41 +242,34 @@ void PreProcessingAlgorithm::GetFilteredCaloHitList(const CaloHitList &inputList
 
 StatusCode PreProcessingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MipEquivalentCut", m_mipEquivalentCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MipEquivalentCut", m_mipEquivalentCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCellLengthScale", m_minCellLengthScale));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCellLengthScale", m_minCellLengthScale));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCellLengthScale", m_maxCellLengthScale));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCellLengthScale", m_maxCellLengthScale));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SearchRegion1D", m_searchRegion1D));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SearchRegion1D", m_searchRegion1D));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxEventHits", m_maxEventHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxEventHits", m_maxEventHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "OnlyAvailableCaloHits", m_onlyAvailableCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "OnlyAvailableCaloHits", m_onlyAvailableCaloHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputCaloHitListName", m_inputCaloHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListName", m_inputCaloHitListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputCaloHitListNameU", m_outputCaloHitListNameU));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameU", m_outputCaloHitListNameU));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputCaloHitListNameV", m_outputCaloHitListNameV));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameV", m_outputCaloHitListNameV));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputCaloHitListNameW", m_outputCaloHitListNameW));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListNameW", m_outputCaloHitListNameW));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "FilteredCaloHitListName", m_filteredCaloHitListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FilteredCaloHitListName", m_filteredCaloHitListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "CurrentCaloHitListReplacement", m_currentCaloHitListReplacement));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CurrentCaloHitListReplacement", m_currentCaloHitListReplacement));
 
     return STATUS_CODE_SUCCESS;
 }

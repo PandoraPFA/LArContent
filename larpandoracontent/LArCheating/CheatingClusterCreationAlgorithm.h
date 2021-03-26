@@ -32,7 +32,7 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::MCParticle*, pandora::CaloHitList> MCParticleToHitListMap;
+    typedef std::unordered_map<const pandora::MCParticle *, pandora::CaloHitList> MCParticleToHitListMap;
 
     /**
      *  @brief  Create map between each (primary) MC particle and associated calo hits
@@ -67,10 +67,10 @@ private:
      */
     void CreateClusters(const MCParticleToHitListMap &mcParticleToHitListMap) const;
 
-    bool                m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
-    std::string         m_mcParticleListName;           ///< The mc particle list name, required if want to collapse mc particle hierarchy
+    bool m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
+    std::string m_mcParticleListName;    ///< The mc particle list name, required if want to collapse mc particle hierarchy
 
-    pandora::IntVector  m_particleIdList;               ///< list of particle ids of MCPFOs to be selected
+    pandora::IntVector m_particleIdList; ///< list of particle ids of MCPFOs to be selected
 };
 
 } // namespace lar_content

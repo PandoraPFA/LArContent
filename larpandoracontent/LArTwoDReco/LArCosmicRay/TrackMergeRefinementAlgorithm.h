@@ -15,10 +15,10 @@ namespace lar_content
 /**
  *  @brief TrackMergeRefinementAlgorithm class
  */
-class TrackMergeRefinementAlgorithm :  public TrackRefinementBaseAlgorithm
+class TrackMergeRefinementAlgorithm : public TrackRefinementBaseAlgorithm
 {
 public:
-   /**
+    /**
      *  @brief  Default constructor
      */
     TrackMergeRefinementAlgorithm();
@@ -59,8 +59,8 @@ private:
      *  @param  createdMainTrackClusters the list of main track clusters that have hitherto collected
      *  @param  unavailableProtectedClusters the output list of protected clusters
      */
-    void GetUnavailableProtectedClusters(const ClusterPairAssociation &clusterAssociation, const pandora::ClusterList &createdMainTrackClusters,
-        pandora::ClusterList &unavailableProtectedClusters) const;
+    void GetUnavailableProtectedClusters(const ClusterPairAssociation &clusterAssociation,
+        const pandora::ClusterList &createdMainTrackClusters, pandora::ClusterList &unavailableProtectedClusters) const;
 
     /**
      *  @brief  Check the separation of the extremal extrapolated hits with the cluster merge points or, in the case of no hits, the cluster merge point separation
@@ -96,13 +96,13 @@ private:
     const pandora::Cluster *CreateMainTrack(const ClusterPairAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
         const pandora::ClusterList *pClusterList, pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const;
 
-    unsigned int m_maxLoopIterations;         ///< The maximum number of main loop iterations
-    float m_minClusterLengthSum;              ///< The threshold cluster and associated cluster length sum
-    float m_minSeparationDistance;            ///< The threshold separation distance between associated clusters
-    float m_minDirectionDeviationCosAngle;    ///< The threshold cos opening angle of the associated cluster directions
-    float m_maxPredictedMergePointOffset;     ///< The threshold separation distance between the predicted and true cluster merge points
-    float m_distanceToLine;                   ///< The threshold hit distance of an extrapolated hit from the segment connecting line
-    float m_boundaryTolerance;                ///< The maximum allowed distance of an extremal extrapolate hit to a cluster merge point
+    unsigned int m_maxLoopIterations;      ///< The maximum number of main loop iterations
+    float m_minClusterLengthSum;           ///< The threshold cluster and associated cluster length sum
+    float m_minSeparationDistance;         ///< The threshold separation distance between associated clusters
+    float m_minDirectionDeviationCosAngle; ///< The threshold cos opening angle of the associated cluster directions
+    float m_maxPredictedMergePointOffset;  ///< The threshold separation distance between the predicted and true cluster merge points
+    float m_distanceToLine;                ///< The threshold hit distance of an extrapolated hit from the segment connecting line
+    float m_boundaryTolerance;             ///< The maximum allowed distance of an extremal extrapolate hit to a cluster merge point
 };
 
 } // namespace lar_content

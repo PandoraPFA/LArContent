@@ -32,7 +32,7 @@ public:
          *
          *  @return the associated position
          */
-        template<typename T>
+        template <typename T>
         static pandora::CartesianVector GetPosition(const T &t);
 
         /**
@@ -42,7 +42,7 @@ public:
          *
          *  @return the associated calo hit, or nullptr if none
          */
-        template<typename T>
+        template <typename T>
         static const pandora::CaloHit *GetCaloHit(const T &t);
     };
 };

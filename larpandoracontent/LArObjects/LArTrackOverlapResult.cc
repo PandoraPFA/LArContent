@@ -117,16 +117,14 @@ TrackOverlapResult &TrackOverlapResult::operator=(const TrackOverlapResult &rhs)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TransverseOverlapResult::TransverseOverlapResult() :
-    TrackOverlapResult(),
-    m_xOverlap(XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
+TransverseOverlapResult::TransverseOverlapResult() : TrackOverlapResult(), m_xOverlap(XOverlap(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f))
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TransverseOverlapResult::TransverseOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
-        const float chi2, const XOverlap &xOverlap) :
+TransverseOverlapResult::TransverseOverlapResult(
+    const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2, const XOverlap &xOverlap) :
     TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
     m_xOverlap(xOverlap)
 {
@@ -185,10 +183,7 @@ TransverseOverlapResult operator+(const TransverseOverlapResult &lhs, const Tran
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LongitudinalOverlapResult::LongitudinalOverlapResult() :
-    TrackOverlapResult(),
-    m_innerChi2(0.f),
-    m_outerChi2(0.f)
+LongitudinalOverlapResult::LongitudinalOverlapResult() : TrackOverlapResult(), m_innerChi2(0.f), m_outerChi2(0.f)
 {
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -198,13 +193,12 @@ LongitudinalOverlapResult::LongitudinalOverlapResult(const TrackOverlapResult tr
     m_innerChi2(innerChi2),
     m_outerChi2(outerChi2)
 {
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LongitudinalOverlapResult::LongitudinalOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
-        const float chi2, const float innerChi2, const float outerChi2) :
+    const float chi2, const float innerChi2, const float outerChi2) :
     TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
     m_innerChi2(innerChi2),
     m_outerChi2(outerChi2)
@@ -240,27 +234,23 @@ LongitudinalOverlapResult &LongitudinalOverlapResult::operator=(const Longitudin
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FragmentOverlapResult::FragmentOverlapResult() :
-    TrackOverlapResult(),
-    m_caloHitList(),
-    m_clusterList()
+FragmentOverlapResult::FragmentOverlapResult() : TrackOverlapResult(), m_caloHitList(), m_clusterList()
 {
 }
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-FragmentOverlapResult::FragmentOverlapResult(const TrackOverlapResult trackOverlapResult, const pandora::CaloHitList &caloHitList,
-        const pandora::ClusterList &clusterList) :
+FragmentOverlapResult::FragmentOverlapResult(
+    const TrackOverlapResult trackOverlapResult, const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList) :
     TrackOverlapResult(trackOverlapResult),
     m_caloHitList(caloHitList),
     m_clusterList(clusterList)
 {
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 FragmentOverlapResult::FragmentOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
-        const float chi2, const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList) :
+    const float chi2, const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList) :
     TrackOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2),
     m_caloHitList(caloHitList),
     m_clusterList(clusterList)

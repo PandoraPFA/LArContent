@@ -50,7 +50,7 @@ void TwoViewShowerHitsTool::GetShowerHit3D(const CaloHitVector &caloHitVector, P
     {
         Sqx += pCaloHit->GetMipEquivalentEnergy() * pCaloHit->GetPositionVector().GetX();
         Sqz += pCaloHit->GetMipEquivalentEnergy() * pCaloHit->GetPositionVector().GetZ();
-        Sq  += pCaloHit->GetMipEquivalentEnergy();
+        Sq += pCaloHit->GetMipEquivalentEnergy();
     }
 
     if (Sq < std::numeric_limits<double>::epsilon())

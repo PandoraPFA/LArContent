@@ -21,7 +21,7 @@ TrackClusterCreationAlgorithm::TrackClusterCreationAlgorithm() :
     m_mergeBackFilteredHits(true),
     m_maxGapLayers(2),
     m_maxCaloHitSeparationSquared(1.3f * 1.3f),
-    m_minCaloHitSeparationSquared(0.4f *  0.4f),
+    m_minCaloHitSeparationSquared(0.4f * 0.4f),
     m_closeSeparationSquared(0.9f * 0.9f)
 {
 }
@@ -45,7 +45,7 @@ StatusCode TrackClusterCreationAlgorithm::Run()
     this->IdentifyJoins(selectedCaloHitList, forwardHitAssociationMap, backwardHitAssociationMap, hitJoinMap);
     this->CreateClusters(selectedCaloHitList, hitJoinMap, hitToClusterMap);
 
-    if( !m_mergeBackFilteredHits )
+    if (!m_mergeBackFilteredHits)
         this->CreateClusters(rejectedCaloHitList, hitJoinMap, hitToClusterMap);
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->AddFilteredCaloHits(selectedCaloHitList, rejectedCaloHitList, hitToClusterMap));
@@ -55,7 +55,8 @@ StatusCode TrackClusterCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *const pCaloHitList, OrderedCaloHitList &selectedCaloHitList, OrderedCaloHitList& rejectedCaloHitList) const
+StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(
+    const CaloHitList *const pCaloHitList, OrderedCaloHitList &selectedCaloHitList, OrderedCaloHitList &rejectedCaloHitList) const
 {
     CaloHitList availableHitList;
 
@@ -103,8 +104,8 @@ StatusCode TrackClusterCreationAlgorithm::FilterCaloHits(const CaloHitList *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloHitList &selectedCaloHitList, const OrderedCaloHitList& rejectedCaloHitList,
-    HitToClusterMap &hitToClusterMap) const
+StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(
+    const OrderedCaloHitList &selectedCaloHitList, const OrderedCaloHitList &rejectedCaloHitList, HitToClusterMap &hitToClusterMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = rejectedCaloHitList.begin(), iterEnd = rejectedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -161,7 +162,7 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloH
 
                 const Cluster *const pCluster = mapIter->second;
                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, pCluster, pCaloHitI));
-                (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHitI, pCluster));
+                (void)hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHitI, pCluster));
 
                 newClusteredHits.push_back(pCaloHitI);
                 carryOn = true;
@@ -180,8 +181,8 @@ StatusCode TrackClusterCreationAlgorithm::AddFilteredCaloHits(const OrderedCaloH
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHitList &orderedCaloHitList, HitAssociationMap &forwardHitAssociationMap,
-    HitAssociationMap &backwardHitAssociationMap) const
+void TrackClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHitList &orderedCaloHitList,
+    HitAssociationMap &forwardHitAssociationMap, HitAssociationMap &backwardHitAssociationMap) const
 {
     for (OrderedCaloHitList::const_iterator iterI = orderedCaloHitList.begin(), iterIEnd = orderedCaloHitList.end(); iterI != iterIEnd; ++iterI)
     {
@@ -190,7 +191,8 @@ void TrackClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHit
         CaloHitVector caloHitsI(iterI->second->begin(), iterI->second->end());
         std::sort(caloHitsI.begin(), caloHitsI.end(), LArClusterHelper::SortHitsByPosition);
 
-        for (OrderedCaloHitList::const_iterator iterJ = iterI, iterJEnd = orderedCaloHitList.end(); (nLayersConsidered++ <= m_maxGapLayers + 1) && (iterJ != iterJEnd); ++iterJ)
+        for (OrderedCaloHitList::const_iterator iterJ = iterI, iterJEnd = orderedCaloHitList.end();
+             (nLayersConsidered++ <= m_maxGapLayers + 1) && (iterJ != iterJEnd); ++iterJ)
         {
             if (iterJ->first == iterI->first || iterJ->first > iterI->first + m_maxGapLayers + 1)
                 continue;
@@ -209,8 +211,8 @@ void TrackClusterCreationAlgorithm::MakePrimaryAssociations(const OrderedCaloHit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackClusterCreationAlgorithm::MakeSecondaryAssociations(const OrderedCaloHitList &orderedCaloHitList, HitAssociationMap &forwardHitAssociationMap,
-    HitAssociationMap &backwardHitAssociationMap) const
+void TrackClusterCreationAlgorithm::MakeSecondaryAssociations(const OrderedCaloHitList &orderedCaloHitList,
+    HitAssociationMap &forwardHitAssociationMap, HitAssociationMap &backwardHitAssociationMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -242,8 +244,8 @@ void TrackClusterCreationAlgorithm::MakeSecondaryAssociations(const OrderedCaloH
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orderedCaloHitList, const HitAssociationMap &forwardHitAssociationMap,
-    const HitAssociationMap &backwardHitAssociationMap, HitJoinMap &hitJoinMap) const
+void TrackClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orderedCaloHitList,
+    const HitAssociationMap &forwardHitAssociationMap, const HitAssociationMap &backwardHitAssociationMap, HitJoinMap &hitJoinMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -271,7 +273,8 @@ void TrackClusterCreationAlgorithm::IdentifyJoins(const OrderedCaloHitList &orde
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &orderedCaloHitList, const HitJoinMap &hitJoinMap, HitToClusterMap& hitToClusterMap) const
+void TrackClusterCreationAlgorithm::CreateClusters(
+    const OrderedCaloHitList &orderedCaloHitList, const HitJoinMap &hitJoinMap, HitToClusterMap &hitToClusterMap) const
 {
     for (OrderedCaloHitList::const_iterator iter = orderedCaloHitList.begin(), iterEnd = orderedCaloHitList.end(); iter != iterEnd; ++iter)
     {
@@ -312,8 +315,8 @@ void TrackClusterCreationAlgorithm::CreateClusters(const OrderedCaloHitList &ord
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(const CaloHit *const pCaloHitI, const CaloHit *const pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
-    HitAssociationMap &backwardHitAssociationMap) const
+void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(const CaloHit *const pCaloHitI, const CaloHit *const pCaloHitJ,
+    HitAssociationMap &forwardHitAssociationMap, HitAssociationMap &backwardHitAssociationMap) const
 {
     const float distanceSquared((pCaloHitJ->GetPositionVector() - pCaloHitI->GetPositionVector()).GetMagnitudeSquared());
 
@@ -345,8 +348,8 @@ void TrackClusterCreationAlgorithm::CreatePrimaryAssociation(const CaloHit *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(const CaloHit *const pCaloHitI, const CaloHit *const pCaloHitJ, HitAssociationMap &forwardHitAssociationMap,
-    HitAssociationMap &backwardHitAssociationMap) const
+void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(const CaloHit *const pCaloHitI, const CaloHit *const pCaloHitJ,
+    HitAssociationMap &forwardHitAssociationMap, HitAssociationMap &backwardHitAssociationMap) const
 {
     HitAssociationMap::iterator forwardIter = forwardHitAssociationMap.find(pCaloHitI);
     HitAssociationMap::iterator backwardIter = backwardHitAssociationMap.find(pCaloHitJ);
@@ -378,8 +381,8 @@ void TrackClusterCreationAlgorithm::CreateSecondaryAssociation(const CaloHit *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const CaloHit *TrackClusterCreationAlgorithm::GetJoinHit(const CaloHit *const pCaloHit, const HitAssociationMap &hitAssociationMapI,
-    const HitAssociationMap &hitAssociationMapJ) const
+const CaloHit *TrackClusterCreationAlgorithm::GetJoinHit(
+    const CaloHit *const pCaloHit, const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ) const
 {
     HitAssociationMap::const_iterator iterI = hitAssociationMapI.find(pCaloHit);
 
@@ -404,8 +407,8 @@ const CaloHit *TrackClusterCreationAlgorithm::GetJoinHit(const CaloHit *const pC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const CaloHit *TrackClusterCreationAlgorithm::TraceHitAssociation(const CaloHit *const pCaloHit, const HitAssociationMap &hitAssociationMapI,
-    const HitAssociationMap &hitAssociationMapJ, unsigned int &nSteps) const
+const CaloHit *TrackClusterCreationAlgorithm::TraceHitAssociation(const CaloHit *const pCaloHit,
+    const HitAssociationMap &hitAssociationMapI, const HitAssociationMap &hitAssociationMapJ, unsigned int &nSteps) const
 {
     nSteps = 0;
     const CaloHit *pThisHit = pCaloHit;
@@ -437,25 +440,23 @@ const CaloHit *TrackClusterCreationAlgorithm::TraceHitAssociation(const CaloHit 
 
 StatusCode TrackClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MergeBackFilteredHits", m_mergeBackFilteredHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MergeBackFilteredHits", m_mergeBackFilteredHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxGapLayers", m_maxGapLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGapLayers", m_maxGapLayers));
 
     float maxCaloHitSeparation = std::sqrt(m_maxCaloHitSeparationSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCaloHitSeparation", maxCaloHitSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCaloHitSeparation", maxCaloHitSeparation));
     m_maxCaloHitSeparationSquared = maxCaloHitSeparation * maxCaloHitSeparation;
 
     float minCaloHitSeparation = std::sqrt(m_minCaloHitSeparationSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCaloHitSeparation", minCaloHitSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCaloHitSeparation", minCaloHitSeparation));
     m_minCaloHitSeparationSquared = minCaloHitSeparation * minCaloHitSeparation;
 
     float closeSeparation = std::sqrt(m_closeSeparationSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CloseSeparation", closeSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CloseSeparation", closeSeparation));
     m_closeSeparationSquared = closeSeparation * closeSeparation;
 
     return STATUS_CODE_SUCCESS;

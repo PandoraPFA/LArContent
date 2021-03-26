@@ -43,8 +43,8 @@ public:
      *  @param  showerEdgeMultiplier artificially tune width of shower envelope so as to make it more/less inclusive
      */
     template <typename T>
-    TwoDSlidingShowerFitResult(const T *const pT, const unsigned int slidingFitWindow, const float slidingFitLayerPitch,
-        const float showerEdgeMultiplier = 1.f);
+    TwoDSlidingShowerFitResult(
+        const T *const pT, const unsigned int slidingFitWindow, const float slidingFitLayerPitch, const float showerEdgeMultiplier = 1.f);
 
     /**
      *  @brief  Get the sliding fit result for the full shower cluster
@@ -100,20 +100,20 @@ private:
      *
      *  @return the shower edge fit result
      */
-    static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const pandora::CartesianPointVector *const pPointVector, const TwoDSlidingFitResult &fullShowerFit,
-        const ShowerEdge showerEdge, const float showerEdgeMultiplier);
+    static TwoDSlidingFitResult LArTwoDShowerEdgeFit(const pandora::CartesianPointVector *const pPointVector,
+        const TwoDSlidingFitResult &fullShowerFit, const ShowerEdge showerEdge, const float showerEdgeMultiplier);
 
     typedef std::pair<float, float> FitCoordinate;
     typedef std::vector<FitCoordinate> FitCoordinateList;
     typedef std::map<int, FitCoordinateList> FitCoordinateMap;
 
-    TwoDSlidingFitResult    m_showerFitResult;              ///< The sliding fit result for the full shower cluster
-    TwoDSlidingFitResult    m_negativeEdgeFitResult;        ///< The sliding fit result for the negative shower edge
-    TwoDSlidingFitResult    m_positiveEdgeFitResult;        ///< The sliding fit result for the positive shower edge
+    TwoDSlidingFitResult m_showerFitResult;       ///< The sliding fit result for the full shower cluster
+    TwoDSlidingFitResult m_negativeEdgeFitResult; ///< The sliding fit result for the negative shower edge
+    TwoDSlidingFitResult m_positiveEdgeFitResult; ///< The sliding fit result for the positive shower edge
 };
 
 typedef std::vector<TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultList;
-typedef std::unordered_map<const pandora::Cluster*, TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultMap;
+typedef std::unordered_map<const pandora::Cluster *, TwoDSlidingShowerFitResult> TwoDSlidingShowerFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -154,9 +154,9 @@ public:
     float GetLowEdgeZ() const;
 
 private:
-    float   m_xCoordinate;      ///< The x coordinate
-    float   m_highEdgeZ;        ///< The shower high edge z coordinate
-    float   m_lowEdgeZ;         ///< The shower low edge z coordinate
+    float m_xCoordinate; ///< The x coordinate
+    float m_highEdgeZ;   ///< The shower high edge z coordinate
+    float m_lowEdgeZ;    ///< The shower low edge z coordinate
 };
 
 typedef std::map<int, ShowerExtent> ShowerPositionMap;

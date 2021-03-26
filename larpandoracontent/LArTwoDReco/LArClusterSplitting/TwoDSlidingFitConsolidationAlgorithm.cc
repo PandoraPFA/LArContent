@@ -55,8 +55,8 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitConsolidationAlgorithm::SortInputClusters(const ClusterList *const pClusterList, ClusterVector &trackClusters,
-    ClusterVector &showerClusters) const
+void TwoDSlidingFitConsolidationAlgorithm::SortInputClusters(
+    const ClusterList *const pClusterList, ClusterVector &trackClusters, ClusterVector &showerClusters) const
 {
     for (ClusterList::const_iterator iter = pClusterList->begin(), iterEnd = pClusterList->end(); iter != iterEnd; ++iter)
     {
@@ -101,7 +101,8 @@ void TwoDSlidingFitConsolidationAlgorithm::BuildSlidingLinearFits(const ClusterV
 StatusCode TwoDSlidingFitConsolidationAlgorithm::RemoveHitsFromClusters(const ClusterToHitMap &clustersToContract, ClusterSet &unavailableClusters) const
 {
     ClusterList clusterList;
-    for (const auto &mapEntry : clustersToContract) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : clustersToContract)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)
@@ -205,8 +206,8 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterTo
 
         const ClusterList *pClusterList = NULL;
         std::string newClusterListName;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*this, m_reclusteringAlgorithmName,
-            pClusterList, newClusterListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+            PandoraContentApi::RunClusteringAlgorithm(*this, m_reclusteringAlgorithmName, pClusterList, newClusterListName));
 
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*this, newClusterListName, currentClusterListName));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, currentClusterListName));
@@ -219,17 +220,15 @@ StatusCode TwoDSlidingFitConsolidationAlgorithm::RebuildClusters(const ClusterTo
 
 StatusCode TwoDSlidingFitConsolidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ClusterRebuilding", m_reclusteringAlgorithmName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle, "ClusterRebuilding", m_reclusteringAlgorithmName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinTrackLength", m_minTrackLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinTrackLength", m_minTrackLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterLength", m_maxClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxClusterLength", m_maxClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_halfWindowLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_halfWindowLayers));
 
     return STATUS_CODE_SUCCESS;
 }

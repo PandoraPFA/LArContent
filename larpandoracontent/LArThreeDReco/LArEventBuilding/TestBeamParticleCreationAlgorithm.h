@@ -30,7 +30,8 @@ private:
      *
      *  @return status code
      */
-    pandora::StatusCode SetupTestBeamPfo(const pandora::Pfo *const pNuPfo, const pandora::Pfo *&pTestBeamPfo, pandora::CartesianVector &testBeamStartVertex) const;
+    pandora::StatusCode SetupTestBeamPfo(
+        const pandora::Pfo *const pNuPfo, const pandora::Pfo *&pTestBeamPfo, pandora::CartesianVector &testBeamStartVertex) const;
 
     /**
      *  @brief  Set up the test beam vertex
@@ -41,16 +42,17 @@ private:
      *
      *  @return status code
      */
-    pandora::StatusCode SetupTestBeamVertex(const pandora::Pfo *const pNuPfo, const pandora::Pfo *const pTestBeamPfo, const pandora::CartesianVector &testBeamStartVertex) const;
+    pandora::StatusCode SetupTestBeamVertex(
+        const pandora::Pfo *const pNuPfo, const pandora::Pfo *const pTestBeamPfo, const pandora::CartesianVector &testBeamStartVertex) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string    m_parentPfoListName;         ///< The parent pfo list name
-    std::string    m_trackPfoListName;          ///< The track pfo list name
-    std::string    m_showerPfoListName;         ///< The shower pfo list name
+    std::string m_parentPfoListName; ///< The parent pfo list name
+    std::string m_trackPfoListName;  ///< The track pfo list name
+    std::string m_showerPfoListName; ///< The shower pfo list name
 
-    std::string    m_parentVertexListName;      ///< The parent vertex list name
-    std::string    m_daughterVertexListName;    ///< The daughter vertex list name
+    std::string m_parentVertexListName;   ///< The parent vertex list name
+    std::string m_daughterVertexListName; ///< The daughter vertex list name
 };
 
 } // namespace lar_content

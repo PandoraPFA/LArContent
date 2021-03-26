@@ -29,7 +29,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float     m_zTolerance;          ///< The z tolerance to use when looking for associated calo hits between views
+    float m_zTolerance; ///< The z tolerance to use when looking for associated calo hits between views
 };
 
 } // namespace lar_content

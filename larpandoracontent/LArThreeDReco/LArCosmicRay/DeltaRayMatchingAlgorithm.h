@@ -15,8 +15,10 @@
 namespace lar_content
 {
 
-template<typename, unsigned int> class KDTreeLinkerAlgo;
-template<typename, unsigned int> class KDTreeNodeInfoT;
+template <typename, unsigned int>
+class KDTreeLinkerAlgo;
+template <typename, unsigned int>
+class KDTreeNodeInfoT;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -82,20 +84,20 @@ private:
         unsigned int GetNCaloHits() const;
 
     private:
-        const pandora::Cluster             *m_pClusterU;    ///< Address of cluster in U view
-        const pandora::Cluster             *m_pClusterV;    ///< Address of cluster in V view
-        const pandora::Cluster             *m_pClusterW;    ///< Address of cluster in W view
-        const pandora::ParticleFlowObject  *m_pParentPfo;   ///< Address of parent Pfo
+        const pandora::Cluster *m_pClusterU;             ///< Address of cluster in U view
+        const pandora::Cluster *m_pClusterV;             ///< Address of cluster in V view
+        const pandora::Cluster *m_pClusterW;             ///< Address of cluster in W view
+        const pandora::ParticleFlowObject *m_pParentPfo; ///< Address of parent Pfo
     };
 
     typedef std::vector<Particle> ParticleList;
 
-    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
-    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterToClustersMap;
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterToClustersMap;
+    typedef std::unordered_map<const pandora::CaloHit *, const pandora::Cluster *> HitToClusterMap;
 
     /**
      *  @brief  Initialize nearby cluster maps
@@ -140,8 +142,8 @@ private:
      */
     void GetClusters(const std::string &clusterListName, pandora::ClusterVector &clusterVector) const;
 
-    typedef std::unordered_map<const pandora::Cluster*, float> ClusterLengthMap;
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, float> PfoLengthMap;
+    typedef std::unordered_map<const pandora::Cluster *, float> ClusterLengthMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, float> PfoLengthMap;
 
     /**
      *  @brief  Match clusters using all three views
@@ -174,8 +176,8 @@ private:
      *  @param  pfoLengthMap the pfo length map
      *  @param  particleList the output list of particles
      */
-    void ThreeViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2, const pandora::ClusterVector &clusters3,
-        ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const;
+    void ThreeViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
+        const pandora::ClusterVector &clusters3, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const;
 
     /**
      *  @brief  Match clusters using a pair of views
@@ -186,8 +188,8 @@ private:
      *  @param  pfoLengthMap the pfo length map
      *  @param  particleList the output list of particles
      */
-    void TwoViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2, ClusterLengthMap &clusterLengthMap,
-        PfoLengthMap &pfoLengthMap, ParticleList &particleList) const;
+    void TwoViewMatching(const pandora::ClusterVector &clusters1, const pandora::ClusterVector &clusters2,
+        ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const;
 
     /**
      *  @brief  Match clusters using a single view
@@ -197,7 +199,8 @@ private:
      *  @param  pfoLengthMap the pfo length map
      *  @param  particleList the output list of particles
      */
-    void OneViewMatching(const pandora::ClusterVector &clusters, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap, ParticleList &particleList) const;
+    void OneViewMatching(const pandora::ClusterVector &clusters, ClusterLengthMap &clusterLengthMap, PfoLengthMap &pfoLengthMap,
+        ParticleList &particleList) const;
 
     /**
      *  @brief Resolve any ambiguities between candidate particles
@@ -265,8 +268,7 @@ private:
      *  @param  pCluster2 pointer to second cluster
      *  @param  pCluster3 pointer to third cluster
      */
-    bool AreClustersMatched(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        const pandora::Cluster *const pCluster3) const;
+    bool AreClustersMatched(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3) const;
 
     /**
      *  @brief Get displacementr between cluster and particle flow object
@@ -294,22 +296,22 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_parentPfoListName;          ///< The parent pfo list name
-    std::string             m_daughterPfoListName;        ///< The daughter pfo list name for new daughter particles
+    std::string m_parentPfoListName;   ///< The parent pfo list name
+    std::string m_daughterPfoListName; ///< The daughter pfo list name for new daughter particles
 
-    std::string             m_inputClusterListNameU;      ///< The input cluster list name for the u view
-    std::string             m_inputClusterListNameV;      ///< The input cluster list name for the v view
-    std::string             m_inputClusterListNameW;      ///< The input cluster list name for the w view
+    std::string m_inputClusterListNameU; ///< The input cluster list name for the u view
+    std::string m_inputClusterListNameV; ///< The input cluster list name for the v view
+    std::string m_inputClusterListNameW; ///< The input cluster list name for the w view
 
-    unsigned int            m_minCaloHitsPerCluster;      ///< The min number of calo hits per candidate cluster
-    float                   m_xOverlapWindow;             ///< The maximum allowed displacement in x position
-    float                   m_distanceForMatching;        ///< The maximum allowed distance between tracks and delta rays
-    float                   m_pseudoChi2Cut;              ///< Pseudo chi2 cut for three view matching
+    unsigned int m_minCaloHitsPerCluster; ///< The min number of calo hits per candidate cluster
+    float m_xOverlapWindow;               ///< The maximum allowed displacement in x position
+    float m_distanceForMatching;          ///< The maximum allowed distance between tracks and delta rays
+    float m_pseudoChi2Cut;                ///< Pseudo chi2 cut for three view matching
 
-    float                   m_searchRegion1D;             ///< Search region, applied to each dimension, for look-up from kd-trees
-    ClusterToClustersMap    m_nearbyClustersU;            ///< The nearby clusters map for the u view
-    ClusterToClustersMap    m_nearbyClustersV;            ///< The nearby clusters map for the v view
-    ClusterToClustersMap    m_nearbyClustersW;            ///< The nearby clusters map for the w view
+    float m_searchRegion1D;                 ///< Search region, applied to each dimension, for look-up from kd-trees
+    ClusterToClustersMap m_nearbyClustersU; ///< The nearby clusters map for the u view
+    ClusterToClustersMap m_nearbyClustersV; ///< The nearby clusters map for the v view
+    ClusterToClustersMap m_nearbyClustersW; ///< The nearby clusters map for the w view
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

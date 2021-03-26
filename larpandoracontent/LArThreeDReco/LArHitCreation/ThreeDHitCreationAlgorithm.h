@@ -60,9 +60,9 @@ public:
         double GetSigma() const;
 
     private:
-        pandora::CartesianVector    m_position;             ///< The sampling position
-        pandora::HitType            m_hitType;              ///< The sampling hit type
-        double                      m_sigma;                ///< The sampling sigma
+        pandora::CartesianVector m_position; ///< The sampling position
+        pandora::HitType m_hitType;          ///< The sampling hit type
+        double m_sigma;                      ///< The sampling sigma
     };
 
     typedef std::vector<TrajectorySample> TrajectorySampleVector;
@@ -153,11 +153,11 @@ public:
         void AddTrajectorySample(const TrajectorySample &trajectorySample);
 
     private:
-        const pandora::CaloHit     *m_pParentCaloHit2D;         ///< The address of the parent 2D calo hit
-        bool                        m_isPositionSet;            ///< Whether the output 3D position has been set
-        pandora::CartesianVector    m_position3D;               ///< The output 3D position
-        double                      m_chi2;                     ///< The output chi squared value
-        TrajectorySampleVector      m_trajectorySampleVector;   ///< The trajectory sample vector
+        const pandora::CaloHit *m_pParentCaloHit2D;      ///< The address of the parent 2D calo hit
+        bool m_isPositionSet;                            ///< Whether the output 3D position has been set
+        pandora::CartesianVector m_position3D;           ///< The output 3D position
+        double m_chi2;                                   ///< The output chi squared value
+        TrajectorySampleVector m_trajectorySampleVector; ///< The trajectory sample vector
     };
 
     typedef std::vector<ProtoHit> ProtoHitVector;
@@ -174,8 +174,8 @@ public:
      *  @param  hitType the hit type to filter upon
      *  @param  outputCaloHitVector to receive the output calo hit vector
      */
-    void FilterCaloHitsByType(const pandora::CaloHitVector &inputCaloHitVector, const pandora::HitType hitType,
-        pandora::CaloHitVector &outputCaloHitVector) const;
+    void FilterCaloHitsByType(
+        const pandora::CaloHitVector &inputCaloHitVector, const pandora::HitType hitType, pandora::CaloHitVector &outputCaloHitVector) const;
 
 private:
     pandora::StatusCode Run();
@@ -268,24 +268,25 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<HitCreationBaseTool*> HitCreationToolVector;
-    HitCreationToolVector   m_algorithmToolVector;      ///< The algorithm tool vector
+    typedef std::vector<HitCreationBaseTool *> HitCreationToolVector;
+    HitCreationToolVector m_algorithmToolVector; ///< The algorithm tool vector
 
-    std::string             m_inputPfoListName;         ///< The name of the input pfo list
-    std::string             m_outputCaloHitListName;    ///< The name of the output calo hit list
-    std::string             m_outputClusterListName;    ///< The name of the output cluster list
+    std::string m_inputPfoListName;      ///< The name of the input pfo list
+    std::string m_outputCaloHitListName; ///< The name of the output calo hit list
+    std::string m_outputClusterListName; ///< The name of the output cluster list
 
-    bool                    m_iterateTrackHits;         ///< Whether to enable iterative improvement of 3D hits for track trajectories
-    bool                    m_iterateShowerHits;        ///< Whether to enable iterative improvement of 3D hits for showers
-    unsigned int            m_slidingFitHalfWindow;     ///< The sliding linear fit half window
-    unsigned int            m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
-    double                  m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
-    double                  m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
+    bool m_iterateTrackHits;                 ///< Whether to enable iterative improvement of 3D hits for track trajectories
+    bool m_iterateShowerHits;                ///< Whether to enable iterative improvement of 3D hits for showers
+    unsigned int m_slidingFitHalfWindow;     ///< The sliding linear fit half window
+    unsigned int m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
+    double m_sigma3DFitMultiplier;           ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
+    double m_iterationMaxChi2Ratio;          ///< Max ratio between current and previous chi2 values to cease iterations
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ThreeDHitCreationAlgorithm::TrajectorySample::TrajectorySample(const pandora::CartesianVector &position, const pandora::HitType hitType, const double sigma) :
+inline ThreeDHitCreationAlgorithm::TrajectorySample::TrajectorySample(
+    const pandora::CartesianVector &position, const pandora::HitType hitType, const double sigma) :
     m_position(position),
     m_hitType(hitType),
     m_sigma(sigma)

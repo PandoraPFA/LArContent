@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
@@ -49,8 +49,7 @@ void OvershootSplittingAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OvershootSplittingAlgorithm::FindBestSplitPositions(const TwoDSlidingFitResultMap &slidingFitResultMap,
-    ClusterPositionMap &clusterSplittingMap) const
+void OvershootSplittingAlgorithm::FindBestSplitPositions(const TwoDSlidingFitResultMap &slidingFitResultMap, ClusterPositionMap &clusterSplittingMap) const
 {
     // Use sliding fit results to build a list of intersection points
     ClusterPositionMap clusterIntersectionMap;
@@ -66,11 +65,11 @@ void OvershootSplittingAlgorithm::FindBestSplitPositions(const TwoDSlidingFitRes
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResultMap &slidingFitResultMap,
-    ClusterPositionMap &clusterIntersectionMap) const
+void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResultMap &slidingFitResultMap, ClusterPositionMap &clusterIntersectionMap) const
 {
     ClusterList clusterList;
-    for (const auto &mapEntry : slidingFitResultMap) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : slidingFitResultMap)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster1 : clusterList)
@@ -95,8 +94,7 @@ void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResul
                 const float outerDisplacement(LArClusterHelper::GetClosestDistance(outerPosition, pCluster1));
                 const bool useInner((innerDisplacement < outerDisplacement) ? true : false);
 
-                const LArPointingCluster::Vertex &clusterVertex = (useInner ? pointingCluster.GetInnerVertex() :
-                    pointingCluster.GetOuterVertex());
+                const LArPointingCluster::Vertex &clusterVertex = (useInner ? pointingCluster.GetInnerVertex() : pointingCluster.GetOuterVertex());
 
                 float rL2(0.f), rT2(0.f);
                 CartesianVector intersectPosition2(0.f, 0.f, 0.f);
@@ -135,8 +133,8 @@ void OvershootSplittingAlgorithm::BuildIntersectionMap(const TwoDSlidingFitResul
 
                 try
                 {
-                    LArPointingClusterHelper::GetIntersection(projectedPosition1, projectedDirection1, projectedPosition2, projectedDirection2,
-                        intersectPosition1, firstDisplacement, secondDisplacement);
+                    LArPointingClusterHelper::GetIntersection(projectedPosition1, projectedDirection1, projectedPosition2,
+                        projectedDirection2, intersectPosition1, firstDisplacement, secondDisplacement);
                 }
                 catch (const StatusCodeException &)
                 {
@@ -178,7 +176,8 @@ void OvershootSplittingAlgorithm::BuildSortedIntersectionMap(const TwoDSlidingFi
     const ClusterPositionMap &clusterIntersectionMap, ClusterPositionMap &sortedIntersectionMap) const
 {
     ClusterList clusterList;
-    for (const auto &mapEntry : clusterIntersectionMap) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterIntersectionMap)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)
@@ -195,8 +194,7 @@ void OvershootSplittingAlgorithm::BuildSortedIntersectionMap(const TwoDSlidingFi
         const TwoDSlidingFitResult &slidingFitResult = sIter->second;
 
         MyTrajectoryPointList trajectoryPointList;
-        for (CartesianPointVector::const_iterator pIter = inputPositionVector.begin(), pIterEnd = inputPositionVector.end();
-            pIter != pIterEnd; ++pIter)
+        for (CartesianPointVector::const_iterator pIter = inputPositionVector.begin(), pIterEnd = inputPositionVector.end(); pIter != pIterEnd; ++pIter)
         {
             const CartesianVector &position = *pIter;
             float rL(0.f), rT(0.f);
@@ -209,8 +207,7 @@ void OvershootSplittingAlgorithm::BuildSortedIntersectionMap(const TwoDSlidingFi
         if (trajectoryPointList.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
-        for (MyTrajectoryPointList::const_iterator qIter = trajectoryPointList.begin(), qIterEnd = trajectoryPointList.end();
-            qIter != qIterEnd; ++qIter)
+        for (MyTrajectoryPointList::const_iterator qIter = trajectoryPointList.begin(), qIterEnd = trajectoryPointList.end(); qIter != qIterEnd; ++qIter)
         {
             const CartesianVector &clusterPosition = qIter->second;
             sortedIntersectionMap[pCluster].push_back(clusterPosition);
@@ -220,11 +217,11 @@ void OvershootSplittingAlgorithm::BuildSortedIntersectionMap(const TwoDSlidingFi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OvershootSplittingAlgorithm::PopulateSplitPositionMap(const ClusterPositionMap &clusterIntersectionMap,
-    ClusterPositionMap &clusterSplittingMap) const
+void OvershootSplittingAlgorithm::PopulateSplitPositionMap(const ClusterPositionMap &clusterIntersectionMap, ClusterPositionMap &clusterSplittingMap) const
 {
     ClusterList clusterList;
-    for (const auto &mapEntry : clusterIntersectionMap) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterIntersectionMap)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)
@@ -240,8 +237,7 @@ void OvershootSplittingAlgorithm::PopulateSplitPositionMap(const ClusterPosition
         bool foundPrevPosition(false);
         CartesianVector prevPosition(0.f, 0.f, 0.f);
 
-        for (CartesianPointVector::const_iterator pIter = inputPositionVector.begin(), pIterEnd = inputPositionVector.end();
-             pIter != pIterEnd; ++pIter)
+        for (CartesianPointVector::const_iterator pIter = inputPositionVector.begin(), pIterEnd = inputPositionVector.end(); pIter != pIterEnd; ++pIter)
         {
             const CartesianVector &nextPosition = *pIter;
 
@@ -274,7 +270,7 @@ void OvershootSplittingAlgorithm::PopulateSplitPositionMap(const ClusterPosition
 
             if (foundPrevCandidate)
             {
-                if((nextCandidate - prevCandidate).GetMagnitudeSquared() < m_minSplitDisplacement * m_minSplitDisplacement)
+                if ((nextCandidate - prevCandidate).GetMagnitudeSquared() < m_minSplitDisplacement * m_minSplitDisplacement)
                     continue;
             }
 
@@ -299,20 +295,20 @@ bool OvershootSplittingAlgorithm::SortByHitProjection(const MyTrajectoryPoint &l
 
 StatusCode OvershootSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", m_minClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterSeparation", m_maxClusterSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxClusterSeparation", m_maxClusterSeparation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexDisplacement", m_minVertexDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinVertexDisplacement", m_minVertexDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxIntersectDisplacement", m_maxIntersectDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxIntersectDisplacement", m_maxIntersectDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSplitDisplacement", m_minSplitDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinSplitDisplacement", m_minSplitDisplacement));
 
     return TwoDSlidingFitMultiSplitAlgorithm::ReadSettings(xmlHandle);
 }

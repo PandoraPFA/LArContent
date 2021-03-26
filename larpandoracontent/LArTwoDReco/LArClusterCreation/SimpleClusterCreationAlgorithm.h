@@ -29,7 +29,7 @@ public:
 private:
     pandora::StatusCode Run();
 
-    typedef std::unordered_map<const pandora::CaloHit*, pandora::CaloHitList> HitAssociationMap;
+    typedef std::unordered_map<const pandora::CaloHit *, pandora::CaloHitList> HitAssociationMap;
 
     /**
      *  @brief Select calo hits for clustering
@@ -69,7 +69,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float   m_clusteringWindowSquared;      ///< Maximum distance (squared) for two hits to be joined
+    float m_clusteringWindowSquared; ///< Maximum distance (squared) for two hits to be joined
 };
 
 } // namespace lar_content

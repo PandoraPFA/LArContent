@@ -6,8 +6,8 @@
  *  $Log: $
  */
 
-#include "Pandora/AlgorithmHeaders.h"
 #include "Helpers/MCParticleHelper.h"
+#include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
@@ -38,7 +38,8 @@ StatusCode CheatingCosmicRayRemovalAlgorithm::Run()
         }
         catch (const StatusCodeException &)
         {
-            std::cout << "CheatingCosmicRayRemovalAlgorithm::Run - Unable to determine MCParticle origin for an input CaloHit, which will be skipped." << std::endl;
+            std::cout << "CheatingCosmicRayRemovalAlgorithm::Run - Unable to determine MCParticle origin for an input CaloHit, which will be skipped."
+                      << std::endl;
             continue;
         }
     }
