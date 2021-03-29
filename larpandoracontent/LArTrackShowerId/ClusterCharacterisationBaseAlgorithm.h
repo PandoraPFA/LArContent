@@ -42,12 +42,12 @@ protected:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_inputClusterListNames;        ///< The names of the input cluster lists
+    pandora::StringVector m_inputClusterListNames; ///< The names of the input cluster lists
 
-    bool                    m_zeroMode;                     ///< Whether to zero all existing cluster particle id, overrides all other parameters
+    bool m_zeroMode; ///< Whether to zero all existing cluster particle id, overrides all other parameters
 
-    bool                    m_overwriteExistingId;          ///< Whether to consider any clusters that already have an assigned particle id
-    bool                    m_useUnavailableClusters;       ///< Whether to consider clusters that are already constituents of a pfo
+    bool m_overwriteExistingId;    ///< Whether to consider any clusters that already have an assigned particle id
+    bool m_useUnavailableClusters; ///< Whether to consider clusters that are already constituents of a pfo
 };
 
 } // namespace lar_content

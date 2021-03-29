@@ -29,10 +29,10 @@ class TransverseMatrixTool;
 /**
  *  @brief  TwoViewTransverseTracksAlgorithm class
  */
-class TwoViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> >
+class TwoViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult>>
 {
 public:
-    typedef NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> > BaseAlgorithm;
+    typedef NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult>> BaseAlgorithm;
     typedef std::set<unsigned int> UIntSet;
 
     /**
@@ -41,8 +41,7 @@ public:
     TwoViewTransverseTracksAlgorithm();
 
 private:
-    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        const pandora::Cluster *const);
+    void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const);
 
     /**
      *  @brief  Calculates the two view overlap result
@@ -51,8 +50,8 @@ private:
      *  @param  pCluster2 the view 1 cluster
      *  @param  overlapResult the two view overlap result
      */
-    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        TwoViewTransverseOverlapResult &overlapResult);
+    pandora::StatusCode CalculateOverlapResult(
+        const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, TwoViewTransverseOverlapResult &overlapResult);
 
     /**
      *  @brief  Calculates the number of the sliding windows that contains charge bins that locally match
@@ -78,18 +77,18 @@ private:
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<TransverseMatrixTool*> MatrixToolVector;
-    MatrixToolVector            m_algorithmToolVector;                   ///< The algorithm tool vector
+    typedef std::vector<TransverseMatrixTool *> MatrixToolVector;
+    MatrixToolVector m_algorithmToolVector; ///< The algorithm tool vector
 
-    unsigned int                m_nMaxMatrixToolRepeats;                 ///< The maximum number of repeat loops over matrix tools
-    unsigned int                m_downsampleFactor;                      ///< The downsampling (hit merging) applied to hits in the overlap region
-    unsigned int                m_minSamples;                            ///< The minimum number of samples needed for comparing charges
-    unsigned int                m_nPermutations;                         ///< The number of permutations for calculating p-values
-    float                       m_localMatchingScoreThreshold;           ///< The minimum score to classify a local region as matching
-    float                       m_maxDotProduct;                         ///M The maximum allowed cluster primary qxis Dot drift axis to fill the overlap result
-    float                       m_minOverallMatchingScore;               ///< The minimum required global matching score to fill the overlap result
-    float                       m_minOverallLocallyMatchedFraction;      ///< The minimum required lcoally matched fraction to fill the overlap result
-    std::mt19937                m_randomNumberGenerator;                 ///< The random number generator
+    unsigned int m_nMaxMatrixToolRepeats;     ///< The maximum number of repeat loops over matrix tools
+    unsigned int m_downsampleFactor;          ///< The downsampling (hit merging) applied to hits in the overlap region
+    unsigned int m_minSamples;                ///< The minimum number of samples needed for comparing charges
+    unsigned int m_nPermutations;             ///< The number of permutations for calculating p-values
+    float m_localMatchingScoreThreshold;      ///< The minimum score to classify a local region as matching
+    float m_maxDotProduct;                    ///M The maximum allowed cluster primary qxis Dot drift axis to fill the overlap result
+    float m_minOverallMatchingScore;          ///< The minimum required global matching score to fill the overlap result
+    float m_minOverallLocallyMatchedFraction; ///< The minimum required lcoally matched fraction to fill the overlap result
+    std::mt19937 m_randomNumberGenerator;     ///< The random number generator
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

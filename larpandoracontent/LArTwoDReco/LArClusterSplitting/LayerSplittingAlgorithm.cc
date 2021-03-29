@@ -48,7 +48,7 @@ StatusCode LayerSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pClu
     bool foundSplit(false);
 
     float bestCosTheta(1.f);
-    CartesianVector bestPosition(0.f,0.f,0.f);
+    CartesianVector bestPosition(0.f, 0.f, 0.f);
 
     for (unsigned int iLayer = pCluster->GetInnerPseudoLayer() + 4; iLayer + 4 <= pCluster->GetOuterPseudoLayer(); ++iLayer)
     {
@@ -58,13 +58,13 @@ StatusCode LayerSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pClu
         unsigned int innerLayer((pCluster->GetInnerPseudoLayer() + m_layerWindow > iLayer) ? pCluster->GetInnerPseudoLayer() : iLayer - m_layerWindow);
         unsigned int outerLayer((iLayer + m_layerWindow > pCluster->GetOuterPseudoLayer()) ? pCluster->GetOuterPseudoLayer() : iLayer + m_layerWindow);
 
-        for ( ; innerLayer >= pCluster->GetInnerPseudoLayer(); --innerLayer)
+        for (; innerLayer >= pCluster->GetInnerPseudoLayer(); --innerLayer)
         {
             if (orderedCaloHitList.find(innerLayer) != orderedCaloHitList.end())
                 break;
         }
 
-        for ( ; outerLayer <= pCluster->GetOuterPseudoLayer(); ++outerLayer)
+        for (; outerLayer <= pCluster->GetOuterPseudoLayer(); ++outerLayer)
         {
             if (orderedCaloHitList.find(outerLayer) != orderedCaloHitList.end())
                 break;
@@ -92,8 +92,7 @@ StatusCode LayerSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pClu
 
             if (cosTheta > m_maxScatterCosTheta)
             {
-            rmsCut *= ((m_maxSlidingCosTheta > cosTheta) ? (m_maxSlidingCosTheta - cosTheta) /
-                    (m_maxSlidingCosTheta - m_maxScatterCosTheta) : 0.f);
+                rmsCut *= ((m_maxSlidingCosTheta > cosTheta) ? (m_maxSlidingCosTheta - cosTheta) / (m_maxSlidingCosTheta - m_maxScatterCosTheta) : 0.f);
             }
         }
 
@@ -115,7 +114,7 @@ StatusCode LayerSplittingAlgorithm::FindBestSplitLayer(const Cluster *const pClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LayerSplittingAlgorithm::CalculateRms(const Cluster *const pCluster, const unsigned int &firstLayer, const unsigned int& secondLayer) const
+float LayerSplittingAlgorithm::CalculateRms(const Cluster *const pCluster, const unsigned int &firstLayer, const unsigned int &secondLayer) const
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
@@ -142,14 +141,15 @@ float LayerSplittingAlgorithm::CalculateRms(const Cluster *const pCluster, const
     }
 
     if (totalLayers > 0.f)
-        return std::sqrt(totalChi2/totalLayers);
+        return std::sqrt(totalChi2 / totalLayers);
 
     return 0.f;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LayerSplittingAlgorithm::DivideCaloHits(const Cluster *const pCluster, const unsigned int &splitLayer, CaloHitList &firstHitList, CaloHitList &secondHitList) const
+StatusCode LayerSplittingAlgorithm::DivideCaloHits(
+    const Cluster *const pCluster, const unsigned int &splitLayer, CaloHitList &firstHitList, CaloHitList &secondHitList) const
 {
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
@@ -182,20 +182,18 @@ StatusCode LayerSplittingAlgorithm::DivideCaloHits(const Cluster *const pCluster
 
 StatusCode LayerSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLayers", m_minClusterLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLayers", m_minClusterLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "LayerWindow", m_layerWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LayerWindow", m_layerWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxScatterRms", m_maxScatterRms));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxScatterRms", m_maxScatterRms));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxScatterCosTheta", m_maxScatterCosTheta));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxScatterCosTheta", m_maxScatterCosTheta));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxSlidingCosTheta", m_maxSlidingCosTheta));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSlidingCosTheta", m_maxSlidingCosTheta));
 
     return ClusterSplittingAlgorithm::ReadSettings(xmlHandle);
 }

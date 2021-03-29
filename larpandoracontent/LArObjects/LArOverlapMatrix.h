@@ -69,9 +69,9 @@ public:
         bool operator<(const Element &rhs) const;
 
     private:
-        const pandora::Cluster *m_pCluster1;                    ///< The address of cluster 1
-        const pandora::Cluster *m_pCluster2;                    ///< The address of cluster 2
-        OverlapResult           m_overlapResult;                ///< The overlap result
+        const pandora::Cluster *m_pCluster1; ///< The address of cluster 1
+        const pandora::Cluster *m_pCluster2; ///< The address of cluster 2
+        OverlapResult m_overlapResult;       ///< The overlap result
     };
 
     typedef std::vector<Element> ElementList;
@@ -125,12 +125,12 @@ public:
      *  @param  n1 to receive the number of view 1 connections
      *  @param  n2 to receive the number of view 2 connections
      */
-    void GetConnectedElements(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList, unsigned int &n1,
-        unsigned int &n2) const;
+    void GetConnectedElements(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
+        unsigned int &n1, unsigned int &n2) const;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
-    typedef std::unordered_map<const pandora::Cluster*, OverlapResult> OverlapList;
-    typedef std::unordered_map<const pandora::Cluster*, OverlapList> TheMatrix;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterNavigationMap;
+    typedef std::unordered_map<const pandora::Cluster *, OverlapResult> OverlapList;
+    typedef std::unordered_map<const pandora::Cluster *, OverlapList> TheMatrix;
 
     typedef typename TheMatrix::const_iterator const_iterator;
 
@@ -236,9 +236,9 @@ private:
     void ExploreConnections(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterList &clusterList1,
         pandora::ClusterList &clusterList2) const;
 
-    TheMatrix               m_overlapMatrix;                ///< The overlap matrix
-    ClusterNavigationMap    m_clusterNavigationMap12;       ///< The cluster navigation map 1->2
-    ClusterNavigationMap    m_clusterNavigationMap21;       ///< The cluster navigation map 2->1
+    TheMatrix m_overlapMatrix;                     ///< The overlap matrix
+    ClusterNavigationMap m_clusterNavigationMap12; ///< The cluster navigation map 1->2
+    ClusterNavigationMap m_clusterNavigationMap21; ///< The cluster navigation map 2->1
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -278,8 +278,8 @@ inline typename OverlapMatrix<T>::const_iterator OverlapMatrix<T>::end() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline const typename OverlapMatrix<T>::OverlapResult &OverlapMatrix<T>::GetOverlapResult(const pandora::Cluster *const pCluster1,
-    const pandora::Cluster *const pCluster2) const
+inline const typename OverlapMatrix<T>::OverlapResult &OverlapMatrix<T>::GetOverlapResult(
+    const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const
 {
     const OverlapList &overlapList(this->GetOverlapList(pCluster1));
     typename OverlapList::const_iterator iter = overlapList.find(pCluster2);
@@ -333,7 +333,8 @@ inline void OverlapMatrix<T>::Clear()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-inline OverlapMatrix<T>::Element::Element(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const OverlapResult &overlapResult) :
+inline OverlapMatrix<T>::Element::Element(
+    const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const OverlapResult &overlapResult) :
     m_pCluster1(pCluster1),
     m_pCluster2(pCluster2),
     m_overlapResult(overlapResult)

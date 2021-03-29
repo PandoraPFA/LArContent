@@ -83,8 +83,8 @@ public:
     TrackTwoViewOverlapResult &operator=(const TrackTwoViewOverlapResult &rhs);
 
 protected:
-    bool            m_isInitialized;                ///< Whether the track overlap result has been initialized
-    float           m_matchingScore;                ///< The compatability score for the two objects associated with the overlap result
+    bool m_isInitialized;  ///< Whether the track overlap result has been initialized
+    float m_matchingScore; ///< The compatability score for the two objects associated with the overlap result
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -189,11 +189,11 @@ public:
     TwoViewTransverseOverlapResult &operator=(const TwoViewTransverseOverlapResult &rhs);
 
 private:
-    float                  m_downsamplingFactor;                  ///< The downsampling factor
-    unsigned int           m_nSamplingPoints;                     ///< The number of sampling points
-    unsigned int           m_nMatchedSamplingPoints;              ///< The number of matched sampling points
-    float                  m_correlationCoefficient;              ///< The correlation coefficient
-    TwoViewXOverlap        m_twoViewXOverlap;                     ///< The two view x overlap object
+    float m_downsamplingFactor;            ///< The downsampling factor
+    unsigned int m_nSamplingPoints;        ///< The number of sampling points
+    unsigned int m_nMatchedSamplingPoints; ///< The number of matched sampling points
+    float m_correlationCoefficient;        ///< The correlation coefficient
+    TwoViewXOverlap m_twoViewXOverlap;     ///< The two view x overlap object
 };
 
 typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResultVector;

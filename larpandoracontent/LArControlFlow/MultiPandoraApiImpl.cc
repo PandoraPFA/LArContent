@@ -30,7 +30,9 @@ const pandora::Pandora *MultiPandoraApiImpl::GetPandoraInstance(const pandora::P
             if (volumeId == this->GetVolumeId(pPandora))
                 return pPandora;
         }
-        catch (const pandora::StatusCodeException &) {}
+        catch (const pandora::StatusCodeException &)
+        {
+        }
     }
 
     throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
@@ -135,7 +137,8 @@ void MultiPandoraApiImpl::DeletePandoraInstances(const pandora::Pandora *const p
     }
     catch (const pandora::StatusCodeException &)
     {
-        std::cout << "MultiPandoraApiImpl::DeletePandoraInstances - unable to find daughter instances associated with primary " << pPrimaryPandora << std::endl;
+        std::cout << "MultiPandoraApiImpl::DeletePandoraInstances - unable to find daughter instances associated with primary "
+                  << pPrimaryPandora << std::endl;
     }
 
     pandoraInstanceList.push_back(pPrimaryPandora);

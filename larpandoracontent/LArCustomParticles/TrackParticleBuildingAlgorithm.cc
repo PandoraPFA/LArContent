@@ -22,15 +22,13 @@ using namespace pandora;
 namespace lar_content
 {
 
-TrackParticleBuildingAlgorithm::TrackParticleBuildingAlgorithm() :
-    m_slidingFitHalfWindow(20)
+TrackParticleBuildingAlgorithm::TrackParticleBuildingAlgorithm() : m_slidingFitHalfWindow(20)
 {
-
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject*& pOutputPfo) const
+void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject *&pOutputPfo) const
 {
     try
     {
@@ -74,10 +72,9 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
         pfoParameters.m_propertiesToAdd = pInputPfo->GetPropertiesMap();
         pfoParameters.m_trackStateVector = trackStateVector;
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pOutputPfo,
-            trackFactory));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pOutputPfo, trackFactory));
 
-        const LArTrackPfo *const pLArPfo = dynamic_cast<const LArTrackPfo*>(pOutputPfo);
+        const LArTrackPfo *const pLArPfo = dynamic_cast<const LArTrackPfo *>(pOutputPfo);
         if (NULL == pLArPfo)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
@@ -107,8 +104,8 @@ void TrackParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const p
 
 StatusCode TrackParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_slidingFitHalfWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
     return CustomParticleCreationAlgorithm::ReadSettings(xmlHandle);
 }

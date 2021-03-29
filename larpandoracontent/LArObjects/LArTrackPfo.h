@@ -8,16 +8,19 @@
 #ifndef LAR_TRACK_PFO_H
 #define LAR_TRACK_PFO_H 1
 
-#include "Objects/TrackState.h"
 #include "Objects/CartesianVector.h"
 #include "Objects/ParticleFlowObject.h"
+#include "Objects/TrackState.h"
 
 #include "Pandora/ObjectCreation.h"
 #include "Pandora/ObjectFactory.h"
 
 #include "larpandoracontent/LArObjects/LArPfoObjects.h"
 
-namespace pandora {class CaloHit;}
+namespace pandora
+{
+class CaloHit;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -30,7 +33,7 @@ namespace lar_content
 class LArTrackPfoParameters : public object_creation::ParticleFlowObject::Parameters
 {
 public:
-    LArTrackStateVector   m_trackStateVector;
+    LArTrackStateVector m_trackStateVector;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -67,7 +70,7 @@ public:
     const pandora::CartesianVector &GetEndDirection() const;
 
 public:
-    const LArTrackStateVector   m_trackStateVector;      ///< The vector of track states
+    const LArTrackStateVector m_trackStateVector; ///< The vector of track states
 
 private:
     // OTHER MEMBER VARIABLES GO HERE
@@ -125,7 +128,7 @@ inline LArTrackPfoFactory::Parameters *LArTrackPfoFactory::NewParameters() const
 
 inline pandora::StatusCode LArTrackPfoFactory::Create(const Parameters &parameters, const pandora::ParticleFlowObject *&pObject) const
 {
-    const LArTrackPfoParameters &larPfoParameters(dynamic_cast<const LArTrackPfoParameters&>(parameters));
+    const LArTrackPfoParameters &larPfoParameters(dynamic_cast<const LArTrackPfoParameters &>(parameters));
     pObject = new LArTrackPfo(larPfoParameters);
 
     return pandora::STATUS_CODE_SUCCESS;
@@ -133,7 +136,7 @@ inline pandora::StatusCode LArTrackPfoFactory::Create(const Parameters &paramete
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArTrackPfoFactory::Read(Parameters&, pandora::FileReader&) const
+inline pandora::StatusCode LArTrackPfoFactory::Read(Parameters &, pandora::FileReader &) const
 {
     // TODO: Provide this functionality when necessary
 
@@ -142,7 +145,7 @@ inline pandora::StatusCode LArTrackPfoFactory::Read(Parameters&, pandora::FileRe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArTrackPfoFactory::Write(const pandora::ParticleFlowObject*, pandora::FileWriter&) const
+inline pandora::StatusCode LArTrackPfoFactory::Write(const pandora::ParticleFlowObject *, pandora::FileWriter &) const
 {
     // TODO: Provide this functionality when necessary
 

@@ -6,10 +6,10 @@
  *  $Log: $
  */
 
-#include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
@@ -35,13 +35,13 @@ RPhiFeatureTool::RPhiFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void RPhiFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &, const VertexSelectionBaseAlgorithm::ClusterListMap &,
-    const VertexSelectionBaseAlgorithm::KDTreeMap &kdTreeMap, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &,
-    const float beamDeweightingScore, float &bestFastScore)
+void RPhiFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm,
+    const Vertex *const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &,
+    const VertexSelectionBaseAlgorithm::ClusterListMap &, const VertexSelectionBaseAlgorithm::KDTreeMap &kdTreeMap,
+    const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float beamDeweightingScore, float &bestFastScore)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     KernelEstimate kernelEstimateU(m_kernelEstimateSigma);
     KernelEstimate kernelEstimateV(m_kernelEstimateSigma);
@@ -73,14 +73,13 @@ void RPhiFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const V
             bestFastScore = expBeamDeweightingScore * fastScore;
     }
 
-    featureVector.push_back(m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW) :
-        this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
+    featureVector.push_back(m_fullScore ? this->GetFullScore(kernelEstimateU, kernelEstimateV, kernelEstimateW)
+                                        : this->GetMidwayScore(kernelEstimateU, kernelEstimateV, kernelEstimateW));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float RPhiFeatureTool::GetFastScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
-    const KernelEstimate &kernelEstimateW) const
+float RPhiFeatureTool::GetFastScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const
 {
     Histogram histogramU(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
     Histogram histogramV(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
@@ -96,9 +95,9 @@ float RPhiFeatureTool::GetFastScore(const KernelEstimate &kernelEstimateU, const
         histogramW.Fill(contribution.first, contribution.second);
 
     // Is the below correct?
-    histogramU.Scale(1.f/histogramU.GetCumulativeSum());
-    histogramV.Scale(1.f/histogramV.GetCumulativeSum());
-    histogramW.Scale(1.f/histogramW.GetCumulativeSum());
+    histogramU.Scale(1.f / histogramU.GetCumulativeSum());
+    histogramV.Scale(1.f / histogramV.GetCumulativeSum());
+    histogramW.Scale(1.f / histogramW.GetCumulativeSum());
 
     // ATTN Need to renormalise histograms if ever want to directly compare fast and full scores
     float figureOfMerit(0.f);
@@ -116,8 +115,7 @@ float RPhiFeatureTool::GetFastScore(const KernelEstimate &kernelEstimateU, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float RPhiFeatureTool::GetMidwayScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
-    const KernelEstimate &kernelEstimateW) const
+float RPhiFeatureTool::GetMidwayScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const
 {
     Histogram histogramU(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
     Histogram histogramV(m_fastHistogramNPhiBins, m_fastHistogramPhiMin, m_fastHistogramPhiMax);
@@ -147,8 +145,7 @@ float RPhiFeatureTool::GetMidwayScore(const KernelEstimate &kernelEstimateU, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float RPhiFeatureTool::GetFullScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV,
-    const KernelEstimate &kernelEstimateW) const
+float RPhiFeatureTool::GetFullScore(const KernelEstimate &kernelEstimateU, const KernelEstimate &kernelEstimateV, const KernelEstimate &kernelEstimateW) const
 {
     float figureOfMerit(0.f);
 
@@ -166,8 +163,8 @@ float RPhiFeatureTool::GetFullScore(const KernelEstimate &kernelEstimateU, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void RPhiFeatureTool::FillKernelEstimate(const Vertex *const pVertex, const HitType hitType, VertexSelectionBaseAlgorithm::HitKDTree2D &kdTree,
-    KernelEstimate &kernelEstimate) const
+void RPhiFeatureTool::FillKernelEstimate(const Vertex *const pVertex, const HitType hitType,
+    VertexSelectionBaseAlgorithm::HitKDTree2D &kdTree, KernelEstimate &kernelEstimate) const
 {
     const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
     KDTreeBox searchRegionHits = build_2d_kd_search_region(vertexPosition2D, m_maxHitVertexDisplacement1D, m_maxHitVertexDisplacement1D);
@@ -245,38 +242,33 @@ void RPhiFeatureTool::KernelEstimate::AddContribution(const float x, const float
 
 StatusCode RPhiFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FastScoreCheck", m_fastScoreCheck));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FastScoreCheck", m_fastScoreCheck));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FastScoreOnly", m_fastScoreOnly));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FastScoreOnly", m_fastScoreOnly));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FullScore", m_fullScore));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FullScore", m_fullScore));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "KernelEstimateSigma", m_kernelEstimateSigma));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "KernelEstimateSigma", m_kernelEstimateSigma));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "Kappa", m_kappa));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Kappa", m_kappa));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxHitVertexDisplacement1D", m_maxHitVertexDisplacement1D));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxHitVertexDisplacement1D", m_maxHitVertexDisplacement1D));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinFastScoreFraction", m_minFastScoreFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinFastScoreFraction", m_minFastScoreFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FastHistogramNPhiBins", m_fastHistogramNPhiBins));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FastHistogramNPhiBins", m_fastHistogramNPhiBins));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FastHistogramPhiMin", m_fastHistogramPhiMin));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FastHistogramPhiMin", m_fastHistogramPhiMin));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FastHistogramPhiMax", m_fastHistogramPhiMax));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FastHistogramPhiMax", m_fastHistogramPhiMax));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EnableFolding", m_enableFolding));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EnableFolding", m_enableFolding));
 
     return STATUS_CODE_SUCCESS;
 }

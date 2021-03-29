@@ -88,8 +88,9 @@ private:
      *  @param  badClusters the set of clusters that should not be dereferenced
      *  @param  pFragmentCluster to receive the address of the new fragment cluster
      */
-    void Recluster(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster, const pandora::CaloHitList &daughterHits,
-        const pandora::CaloHitList &separateHits, pandora::ClusterSet &deletedClusters, pandora::ClusterSet &badClusters, const pandora::Cluster *&pFragmentCluster) const;
+    void Recluster(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const pandora::Cluster *const pCluster,
+        const pandora::CaloHitList &daughterHits, const pandora::CaloHitList &separateHits, pandora::ClusterSet &deletedClusters,
+        pandora::ClusterSet &badClusters, const pandora::Cluster *&pFragmentCluster) const;
 
     /**
      *  @brief  Rebuild clusters after fragmentation
@@ -98,7 +99,8 @@ private:
      *  @param  modifiedClusters the list of clusters to rebuild
      *  @param  newClusters the list of new clusters
      */
-    void RebuildClusters(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const pandora::ClusterList &modifiedClusters, pandora::ClusterList &newClusters) const;
+    void RebuildClusters(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, const pandora::ClusterList &modifiedClusters,
+        pandora::ClusterList &newClusters) const;
 
     /**
      *  @brief  Get a list of the tensor key clusters for which tensor elements have been impacted by fragmentation operations
@@ -112,8 +114,8 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float               m_minMatchedSamplingPointFraction;  ///< The minimum fraction of matched sampling points
-    unsigned int        m_minMatchedHits;                   ///< The minimum number of matched calo hits
+    float m_minMatchedSamplingPointFraction; ///< The minimum fraction of matched sampling points
+    unsigned int m_minMatchedHits;           ///< The minimum number of matched calo hits
 };
 
 } // namespace lar_content

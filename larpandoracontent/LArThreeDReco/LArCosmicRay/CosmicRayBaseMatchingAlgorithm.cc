@@ -52,8 +52,8 @@ StatusCode CosmicRayBaseMatchingAlgorithm::Run()
 StatusCode CosmicRayBaseMatchingAlgorithm::GetAvailableClusters(const std::string inputClusterListName, ClusterVector &clusterVector) const
 {
     const ClusterList *pClusterList = NULL;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        inputClusterListName, pClusterList))
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, inputClusterListName, pClusterList))
 
     if (!pClusterList || pClusterList->empty())
     {
@@ -78,8 +78,8 @@ StatusCode CosmicRayBaseMatchingAlgorithm::GetAvailableClusters(const std::strin
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBaseMatchingAlgorithm::MatchClusters(const ClusterVector &clusterVector1, const ClusterVector &clusterVector2,
-    ClusterAssociationMap &matchedClusters12) const
+void CosmicRayBaseMatchingAlgorithm::MatchClusters(
+    const ClusterVector &clusterVector1, const ClusterVector &clusterVector2, ClusterAssociationMap &matchedClusters12) const
 {
     // Check that there are input clusters from both views
     if (clusterVector1.empty() || clusterVector2.empty())
@@ -109,8 +109,8 @@ void CosmicRayBaseMatchingAlgorithm::MatchClusters(const ClusterVector &clusterV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap &matchedClusters12, const ClusterAssociationMap &matchedClusters23,
-    const ClusterAssociationMap &matchedClusters31, ParticleList &matchedParticles) const
+void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap &matchedClusters12,
+    const ClusterAssociationMap &matchedClusters23, const ClusterAssociationMap &matchedClusters31, ParticleList &matchedParticles) const
 {
     if (matchedClusters12.empty() || matchedClusters23.empty() || matchedClusters31.empty())
         return;
@@ -118,7 +118,8 @@ void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap
     ParticleList candidateParticles;
 
     ClusterList clusterList1;
-    for (const auto &mapEntry : matchedClusters12) clusterList1.push_back(mapEntry.first);
+    for (const auto &mapEntry : matchedClusters12)
+        clusterList1.push_back(mapEntry.first);
     clusterList1.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster1 : clusterList1)
@@ -151,9 +152,12 @@ void CosmicRayBaseMatchingAlgorithm::MatchThreeViews(const ClusterAssociationMap
                 if (!this->CheckMatchedClusters3D(pCluster1, pCluster2, pCluster3))
                     continue;
 
-                const Cluster *const pClusterU((TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
-                const Cluster *const pClusterV((TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
-                const Cluster *const pClusterW((TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
+                const Cluster *const pClusterU(
+                    (TPC_VIEW_U == hitType1) ? pCluster1 : (TPC_VIEW_U == hitType2) ? pCluster2 : (TPC_VIEW_U == hitType3) ? pCluster3 : NULL);
+                const Cluster *const pClusterV(
+                    (TPC_VIEW_V == hitType1) ? pCluster1 : (TPC_VIEW_V == hitType2) ? pCluster2 : (TPC_VIEW_V == hitType3) ? pCluster3 : NULL);
+                const Cluster *const pClusterW(
+                    (TPC_VIEW_W == hitType1) ? pCluster1 : (TPC_VIEW_W == hitType2) ? pCluster2 : (TPC_VIEW_W == hitType3) ? pCluster3 : NULL);
 
                 candidateParticles.push_back(Particle(pClusterU, pClusterV, pClusterW));
             }
@@ -184,7 +188,8 @@ void CosmicRayBaseMatchingAlgorithm::MatchTwoViews(const ClusterAssociationMap &
         return;
 
     ClusterList clusterList1;
-    for (const auto &mapEntry : matchedClusters12) clusterList1.push_back(mapEntry.first);
+    for (const auto &mapEntry : matchedClusters12)
+        clusterList1.push_back(mapEntry.first);
     clusterList1.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster1 : clusterList1)
@@ -245,7 +250,8 @@ void CosmicRayBaseMatchingAlgorithm::BuildParticles(const ParticleList &particle
     if (particleList.empty())
         return;
 
-    const PfoList *pPfoList = NULL; std::string pfoListName;
+    const PfoList *pPfoList = NULL;
+    std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
     for (const Particle &particle : particleList)
@@ -258,7 +264,7 @@ void CosmicRayBaseMatchingAlgorithm::BuildParticles(const ParticleList &particle
         const bool isAvailableV((NULL != pClusterV) ? pClusterV->IsAvailable() : true);
         const bool isAvailableW((NULL != pClusterW) ? pClusterW->IsAvailable() : true);
 
-        if(!(isAvailableU && isAvailableV && isAvailableW))
+        if (!(isAvailableU && isAvailableV && isAvailableW))
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;

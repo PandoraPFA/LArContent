@@ -38,14 +38,14 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_pfoListNames;                 ///< The list of pfo list names
-    pandora::StringVector   m_clusterListNames;             ///< The list of cluster list names
-    pandora::StringVector   m_vertexListNames;              ///< The list of vertex list names
-    pandora::StringVector   m_caloHitListNames;             ///< The list of calo hit list names
+    pandora::StringVector m_pfoListNames;     ///< The list of pfo list names
+    pandora::StringVector m_clusterListNames; ///< The list of cluster list names
+    pandora::StringVector m_vertexListNames;  ///< The list of vertex list names
+    pandora::StringVector m_caloHitListNames; ///< The list of calo hit list names
 
-    std::string             m_currentPfoListReplacement;    ///< The name of the pfo list to replace the current list
+    std::string m_currentPfoListReplacement; ///< The name of the pfo list to replace the current list
 
-    unsigned int            m_listCounter;                  ///< The counter appended to output (and replacement current) list names and reset each event
+    unsigned int m_listCounter; ///< The counter appended to output (and replacement current) list names and reset each event
 };
 
 } // namespace lar_content

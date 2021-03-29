@@ -101,13 +101,13 @@ public:
     float GetXOverlapSpan() const;
 
 private:
-    float       m_uMinX;                        ///< The min x value in the u view
-    float       m_uMaxX;                        ///< The max x value in the u view
-    float       m_vMinX;                        ///< The min x value in the v view
-    float       m_vMaxX;                        ///< The max x value in the v view
-    float       m_wMinX;                        ///< The min x value in the w view
-    float       m_wMaxX;                        ///< The max x value in the w view
-    float       m_xOverlapSpan;                 ///< The x overlap span
+    float m_uMinX;        ///< The min x value in the u view
+    float m_uMaxX;        ///< The max x value in the u view
+    float m_vMinX;        ///< The min x value in the v view
+    float m_vMaxX;        ///< The max x value in the v view
+    float m_wMinX;        ///< The min x value in the w view
+    float m_wMaxX;        ///< The max x value in the w view
+    float m_xOverlapSpan; ///< The x overlap span
 };
 
 /**
@@ -120,8 +120,8 @@ XOverlap operator+(const XOverlap &lhs, const XOverlap &rhs);
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline XOverlap::XOverlap(const float uMinX, const float uMaxX, const float vMinX, const float vMaxX,
-        const float wMinX, const float wMaxX, const float xOverlapSpan) :
+inline XOverlap::XOverlap(const float uMinX, const float uMaxX, const float vMinX, const float vMaxX, const float wMinX, const float wMaxX,
+    const float xOverlapSpan) :
     m_uMinX(uMinX),
     m_uMaxX(uMaxX),
     m_vMinX(vMinX),

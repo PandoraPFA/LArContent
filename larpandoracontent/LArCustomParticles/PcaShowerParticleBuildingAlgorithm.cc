@@ -23,14 +23,13 @@ using namespace pandora;
 namespace lar_content
 {
 
-PcaShowerParticleBuildingAlgorithm::PcaShowerParticleBuildingAlgorithm() :
-    m_layerFitHalfWindow(20)
+PcaShowerParticleBuildingAlgorithm::PcaShowerParticleBuildingAlgorithm() : m_layerFitHalfWindow(20)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject*& pOutputPfo) const
+void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *const pInputPfo, const ParticleFlowObject *&pOutputPfo) const
 {
     try
     {
@@ -71,12 +70,12 @@ void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
         pfoParameters.m_showerTertiaryVector = showerPCA.GetTertiaryAxis();
         pfoParameters.m_showerEigenValues = showerPCA.GetEigenValues();
         pfoParameters.m_showerLength = showerPCA.GetAxisLengths();
-        pfoParameters.m_showerOpeningAngle = (showerPCA.GetPrimaryLength() > 0.f ? std::atan(showerPCA.GetSecondaryLength() / showerPCA.GetPrimaryLength()) : 0.f);
+        pfoParameters.m_showerOpeningAngle =
+            (showerPCA.GetPrimaryLength() > 0.f ? std::atan(showerPCA.GetSecondaryLength() / showerPCA.GetPrimaryLength()) : 0.f);
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pOutputPfo,
-            pfoFactory));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pOutputPfo, pfoFactory));
 
-        const LArShowerPfo *const pLArPfo = dynamic_cast<const LArShowerPfo*>(pOutputPfo);
+        const LArShowerPfo *const pLArPfo = dynamic_cast<const LArShowerPfo *>(pOutputPfo);
 
         if (!pLArPfo)
             throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -103,8 +102,8 @@ void PcaShowerParticleBuildingAlgorithm::CreatePfo(const ParticleFlowObject *con
 
 StatusCode PcaShowerParticleBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "LayerFitHalfWindow", m_layerFitHalfWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LayerFitHalfWindow", m_layerFitHalfWindow));
 
     return CustomParticleCreationAlgorithm::ReadSettings(xmlHandle);
 }

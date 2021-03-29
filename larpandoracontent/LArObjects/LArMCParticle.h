@@ -27,7 +27,7 @@ namespace lar_content
 class LArMCParticleParameters : public object_creation::MCParticle::Parameters
 {
 public:
-    pandora::InputInt   m_nuanceCode;               ///< The nuance code
+    pandora::InputInt m_nuanceCode; ///< The nuance code
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ public:
     int GetNuanceCode() const;
 
 private:
-    int                 m_nuanceCode;               ///< The nuance code
+    int m_nuanceCode; ///< The nuance code
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -124,7 +124,7 @@ inline LArMCParticleFactory::Parameters *LArMCParticleFactory::NewParameters() c
 
 inline pandora::StatusCode LArMCParticleFactory::Create(const Parameters &parameters, const Object *&pObject) const
 {
-    const LArMCParticleParameters &larMCParticleParameters(dynamic_cast<const LArMCParticleParameters&>(parameters));
+    const LArMCParticleParameters &larMCParticleParameters(dynamic_cast<const LArMCParticleParameters &>(parameters));
     pObject = new LArMCParticle(larMCParticleParameters);
 
     return pandora::STATUS_CODE_SUCCESS;
@@ -139,12 +139,12 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 
     if (pandora::BINARY == fileReader.GetFileType())
     {
-        pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader&>(fileReader));
+        pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nuanceCode));
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
-        pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader&>(fileReader));
+        pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NuanceCode", nuanceCode));
     }
     else
@@ -152,7 +152,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         return pandora::STATUS_CODE_INVALID_PARAMETER;
     }
 
-    LArMCParticleParameters &larMCParticleParameters(dynamic_cast<LArMCParticleParameters&>(parameters));
+    LArMCParticleParameters &larMCParticleParameters(dynamic_cast<LArMCParticleParameters &>(parameters));
     larMCParticleParameters.m_nuanceCode = nuanceCode;
 
     return pandora::STATUS_CODE_SUCCESS;
@@ -163,19 +163,19 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObject, pandora::FileWriter &fileWriter) const
 {
     // ATTN: To receive this call-back must have already set file writer mc particle factory to this factory
-    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pObject));
+    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pObject));
 
     if (!pLArMCParticle)
         return pandora::STATUS_CODE_INVALID_PARAMETER;
 
     if (pandora::BINARY == fileWriter.GetFileType())
     {
-        pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter&>(fileWriter));
+        pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter &>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArMCParticle->GetNuanceCode()));
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
-        pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter&>(fileWriter));
+        pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter &>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NuanceCode", pLArMCParticle->GetNuanceCode()));
     }
     else

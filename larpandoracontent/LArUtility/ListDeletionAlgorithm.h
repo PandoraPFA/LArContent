@@ -22,9 +22,9 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_pfoListNames;         ///< The list of pfo list names
-    pandora::StringVector   m_clusterListNames;     ///< The list of cluster list names
-    pandora::StringVector   m_vertexListNames;      ///< The list of vertex list names
+    pandora::StringVector m_pfoListNames;     ///< The list of pfo list names
+    pandora::StringVector m_clusterListNames; ///< The list of cluster list names
+    pandora::StringVector m_vertexListNames;  ///< The list of vertex list names
 };
 
 } // namespace lar_content

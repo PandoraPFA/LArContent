@@ -17,8 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingNeutrinoDaughterVerticesAlgorithm::CheatingNeutrinoDaughterVerticesAlgorithm() :
-    m_collapseToPrimaryMCParticles(false)
+CheatingNeutrinoDaughterVerticesAlgorithm::CheatingNeutrinoDaughterVerticesAlgorithm() : m_collapseToPrimaryMCParticles(false)
 {
 }
 
@@ -63,8 +62,7 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::GetMCPrimaryMap(LArMCParticleHel
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessRecoNeutrinos(const PfoList &neutrinoPfos,
-    const LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const
+void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessRecoNeutrinos(const PfoList &neutrinoPfos, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const
 {
     for (const ParticleFlowObject *const pNeutrinoPfo : neutrinoPfos)
     {
@@ -82,15 +80,17 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessRecoNeutrinos(const PfoLi
             {
                 this->ProcessDaughterPfo(pDaughterPfo, mcPrimaryMap);
             }
-            catch (const StatusCodeException &) {}
+            catch (const StatusCodeException &)
+            {
+            }
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessDaughterPfo(const ParticleFlowObject *const pDaughterPfo,
-    const LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const
+void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessDaughterPfo(
+    const ParticleFlowObject *const pDaughterPfo, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap) const
 {
     const MCParticle *pMCParticle(LArMCParticleHelper::GetMainMCParticle(pDaughterPfo));
 
@@ -104,7 +104,8 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessDaughterPfo(const Particl
         pMCParticle = primaryIter->second;
     }
 
-    const VertexList *pVertexList(nullptr); std::string vertexListName;
+    const VertexList *pVertexList(nullptr);
+    std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
 
     PandoraContentApi::Vertex::Parameters parameters;
@@ -126,20 +127,17 @@ void CheatingNeutrinoDaughterVerticesAlgorithm::ProcessDaughterPfo(const Particl
 
 StatusCode CheatingNeutrinoDaughterVerticesAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
 
     if (m_collapseToPrimaryMCParticles)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "MCParticleListName", m_mcParticleListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "NeutrinoPfoListName", m_neutrinoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputVertexListName", m_vertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
 
     return STATUS_CODE_SUCCESS;
 }

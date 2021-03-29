@@ -26,7 +26,7 @@ namespace lar_content
 /**
  *  @brief  TestBeamEventValidationAlgorithm class
  */
-class TestBeamEventValidationAlgorithm: public EventValidationBaseAlgorithm
+class TestBeamEventValidationAlgorithm : public EventValidationBaseAlgorithm
 {
 public:
     /**
@@ -51,7 +51,7 @@ private:
     void FillValidationInfo(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
         const pandora::PfoList *const pPfoList, ValidationInfo &validationInfo) const;
 
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, unsigned int> PfoToIdMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, unsigned int> PfoToIdMap;
 
     /**
      *  @brief  Print matching information in a provided validation info object, and write information to tree if configured to do so

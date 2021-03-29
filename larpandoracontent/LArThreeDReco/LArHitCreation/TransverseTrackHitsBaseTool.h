@@ -27,8 +27,8 @@ protected:
      */
     virtual void GetTransverseTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHit &protoHit) const = 0;
 
-    virtual void GetTrackHits3D(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        ProtoHitVector &protoHitVector) const;
+    virtual void GetTrackHits3D(
+        const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHitVector &protoHitVector) const;
 
     /**
      *  @brief  Calculate an additional contribution to the chi-squared based on the steepness of the track

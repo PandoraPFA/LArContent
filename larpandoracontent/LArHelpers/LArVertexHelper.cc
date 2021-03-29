@@ -6,10 +6,10 @@
  *  $Log: $
  */
 
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
 #include <limits>
 
@@ -18,8 +18,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-LArVertexHelper::ClusterDirection LArVertexHelper::GetClusterDirectionInZ(const Pandora &pandora, const Vertex *const pVertex,
-    const Cluster *const pCluster, const float tanAngle, const float apexShift)
+LArVertexHelper::ClusterDirection LArVertexHelper::GetClusterDirectionInZ(
+    const Pandora &pandora, const Vertex *const pVertex, const Cluster *const pCluster, const float tanAngle, const float apexShift)
 {
     if ((VERTEX_3D != pVertex->GetVertexType()) || (tanAngle < std::numeric_limits<float>::epsilon()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

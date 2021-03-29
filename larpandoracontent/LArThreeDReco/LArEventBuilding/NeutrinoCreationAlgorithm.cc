@@ -19,8 +19,7 @@ namespace lar_content
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-NeutrinoCreationAlgorithm::NeutrinoCreationAlgorithm() :
-    m_forceSingleEmptyNeutrino(false)
+NeutrinoCreationAlgorithm::NeutrinoCreationAlgorithm() : m_forceSingleEmptyNeutrino(false)
 {
 }
 
@@ -32,8 +31,8 @@ StatusCode NeutrinoCreationAlgorithm::Run()
         return this->ForceSingleEmptyNeutrino();
 
     const VertexList *pVertexList(nullptr);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_vertexListName,
-        pVertexList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_vertexListName, pVertexList));
 
     if (!pVertexList || pVertexList->empty())
     {
@@ -45,8 +44,7 @@ StatusCode NeutrinoCreationAlgorithm::Run()
 
     std::string neutrinoPfoListName;
     const PfoList *pNeutrinoPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNeutrinoPfoList,
-        neutrinoPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNeutrinoPfoList, neutrinoPfoListName));
 
     for (VertexList::const_iterator vIter = pVertexList->begin(), vIterEnd = pVertexList->end(); vIter != vIterEnd; ++vIter)
     {
@@ -79,8 +77,7 @@ StatusCode NeutrinoCreationAlgorithm::ForceSingleEmptyNeutrino() const
 {
     std::string neutrinoPfoListName;
     const PfoList *pNeutrinoPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNeutrinoPfoList,
-        neutrinoPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pNeutrinoPfoList, neutrinoPfoListName));
 
     PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
     this->FillDefaultNeutrinoParameters(pfoParameters);
@@ -113,14 +110,12 @@ void NeutrinoCreationAlgorithm::FillDefaultNeutrinoParameters(PandoraContentApi:
 
 StatusCode NeutrinoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputVertexListName", m_vertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_vertexListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "NeutrinoPfoListName", m_neutrinoPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ForceSingleEmptyNeutrino", m_forceSingleEmptyNeutrino));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ForceSingleEmptyNeutrino", m_forceSingleEmptyNeutrino));
 
     return STATUS_CODE_SUCCESS;
 }

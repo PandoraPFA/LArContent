@@ -24,7 +24,7 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, c
     const CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     try
     {
@@ -51,8 +51,8 @@ void DeltaRayShowerHitsTool::Run(ThreeDHitCreationAlgorithm *const pAlgorithm, c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayShowerHitsTool::CreateDeltaRayShowerHits3D(const CaloHitVector &inputTwoDHits, const CaloHitVector &parentHits3D,
-    ProtoHitVector &protoHitVector) const
+void DeltaRayShowerHitsTool::CreateDeltaRayShowerHits3D(
+    const CaloHitVector &inputTwoDHits, const CaloHitVector &parentHits3D, ProtoHitVector &protoHitVector) const
 {
     for (const CaloHit *const pCaloHit2D : inputTwoDHits)
     {
@@ -72,7 +72,7 @@ void DeltaRayShowerHitsTool::CreateDeltaRayShowerHits3D(const CaloHitVector &inp
                 const CartesianVector thisPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), thisPosition3D, hitType));
                 const float thisDistanceSquared((pCaloHit2D->GetPositionVector() - thisPosition2D).GetMagnitudeSquared());
 
-                if (thisDistanceSquared <  closestDistanceSquared)
+                if (thisDistanceSquared < closestDistanceSquared)
                 {
                     foundClosestPosition = true;
                     closestDistanceSquared = thisDistanceSquared;

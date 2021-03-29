@@ -15,14 +15,14 @@
 namespace lar_content
 {
 
-typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointVector> SplitPositionMap;
+typedef std::unordered_map<const pandora::Cluster *, pandora::CartesianPointVector> SplitPositionMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  NViewTrackMatchingAlgorithm class
  */
-template<typename T>
+template <typename T>
 class NViewTrackMatchingAlgorithm : public NViewMatchingAlgorithm<T>
 {
 public:
@@ -105,16 +105,16 @@ protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 private:
-    unsigned int                m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    TwoDSlidingFitResultMap     m_slidingFitResultMap;          ///< The sliding fit result map
+    unsigned int m_slidingFitWindow;               ///< The layer window for the sliding linear fits
+    TwoDSlidingFitResultMap m_slidingFitResultMap; ///< The sliding fit result map
 
-    unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
-    float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
+    unsigned int m_minClusterCaloHits; ///< The min number of hits in base cluster selection method
+    float m_minClusterLengthSquared;   ///< The min length (squared) in base cluster selection method
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 inline unsigned int NViewTrackMatchingAlgorithm<T>::GetSlidingFitWindow() const
 {
     return m_slidingFitWindow;

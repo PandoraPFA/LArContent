@@ -13,17 +13,13 @@ using namespace pandora;
 namespace lar_content
 {
 
-TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() :
-    m_isInitialized(false),
-    m_matchingScore(0)
+TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() : m_isInitialized(false), m_matchingScore(0)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) :
-    m_isInitialized(true),
-    m_matchingScore(matchingScore)
+TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) : m_isInitialized(true), m_matchingScore(matchingScore)
 {
 }
 
@@ -98,9 +94,8 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor,
-        const unsigned int nSamplingPoints, const unsigned int nMatchedSamplingPoints, const float correlationCoefficient,
-        const TwoViewXOverlap &twoViewXOverlap) :
+TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor, const unsigned int nSamplingPoints,
+    const unsigned int nMatchedSamplingPoints, const float correlationCoefficient, const TwoViewXOverlap &twoViewXOverlap) :
     TrackTwoViewOverlapResult(matchingScore),
     m_downsamplingFactor(downsamplingFactor),
     m_nSamplingPoints(nSamplingPoints),
@@ -148,16 +143,16 @@ bool TwoViewTransverseOverlapResult::operator<(const TwoViewTransverseOverlapRes
         return (m_matchingScore < rhs.m_matchingScore);
 
     if (std::fabs(m_correlationCoefficient - rhs.m_correlationCoefficient) > std::numeric_limits<float>::epsilon())
-	return (m_correlationCoefficient < rhs.m_correlationCoefficient);
+        return (m_correlationCoefficient < rhs.m_correlationCoefficient);
 
     if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
-	return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
 
     if (m_nSamplingPoints != rhs.m_nSamplingPoints)
-	return (m_nSamplingPoints < rhs.m_nSamplingPoints);
+        return (m_nSamplingPoints < rhs.m_nSamplingPoints);
 
     if (std::fabs(this->GetLocallyMatchedFraction() - rhs.GetLocallyMatchedFraction()) > std::numeric_limits<float>::epsilon())
-	return (this->GetLocallyMatchedFraction() < rhs.GetLocallyMatchedFraction());
+        return (this->GetLocallyMatchedFraction() < rhs.GetLocallyMatchedFraction());
 
     if (std::fabs(m_twoViewXOverlap.GetTwoViewXOverlapSpan() - rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan()) > std::numeric_limits<float>::epsilon())
         return (m_twoViewXOverlap.GetTwoViewXOverlapSpan() < rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan());

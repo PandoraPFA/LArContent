@@ -98,7 +98,7 @@ void TwoViewMatchingControl<T>::UpdateUponDeletion(const Cluster *const pDeleted
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const std::string &TwoViewMatchingControl<T>::GetClusterListName(const HitType hitType) const
 {
     HitTypeToIndexMap::const_iterator iter = m_hitTypeToIndexMap.find(hitType);
@@ -113,7 +113,7 @@ const std::string &TwoViewMatchingControl<T>::GetClusterListName(const HitType h
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const pandora::ClusterList &TwoViewMatchingControl<T>::GetInputClusterList(const HitType hitType) const
 {
     HitTypeToIndexMap::const_iterator iter = m_hitTypeToIndexMap.find(hitType);
@@ -131,7 +131,7 @@ const pandora::ClusterList &TwoViewMatchingControl<T>::GetInputClusterList(const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const pandora::ClusterList &TwoViewMatchingControl<T>::GetSelectedClusterList(const HitType hitType) const
 {
     HitTypeToIndexMap::const_iterator iter = m_hitTypeToIndexMap.find(hitType);
@@ -149,10 +149,10 @@ const pandora::ClusterList &TwoViewMatchingControl<T>::GetSelectedClusterList(co
 template <typename T>
 void TwoViewMatchingControl<T>::SelectAllInputClusters()
 {
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
-        m_inputClusterListName1, m_pInputClusterList1));
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
-        m_inputClusterListName2, m_pInputClusterList2));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
+        PandoraContentApi::GetList(*m_pAlgorithm, m_inputClusterListName1, m_pInputClusterList1));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
+        PandoraContentApi::GetList(*m_pAlgorithm, m_inputClusterListName2, m_pInputClusterList2));
 
     if (!m_pInputClusterList1 || !m_pInputClusterList2)
     {

@@ -38,12 +38,12 @@ private:
      *
      *  @return boolean
      */
-    bool IsAssociated(const pandora::Cluster* const pClusterI, const pandora::Cluster* const pClusterJ) const;
+    bool IsAssociated(const pandora::Cluster *const pClusterI, const pandora::Cluster *const pClusterJ) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int m_minCaloHitsPerCluster;    ///< The min number of calo hits per candidate cluster
-    float        m_maxClusterSeparation;     ///< Maximum distance at which clusters can be joined
+    unsigned int m_minCaloHitsPerCluster; ///< The min number of calo hits per candidate cluster
+    float m_maxClusterSeparation;         ///< Maximum distance at which clusters can be joined
 };
 
 } // namespace lar_content

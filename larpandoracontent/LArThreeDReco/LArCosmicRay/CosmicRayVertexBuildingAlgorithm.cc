@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
@@ -31,8 +31,8 @@ CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
 StatusCode CosmicRayVertexBuildingAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_parentPfoListName,
-        pPfoList));
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_parentPfoListName, pPfoList));
 
     if (NULL == pPfoList)
     {
@@ -158,8 +158,8 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
 
         try
         {
-            CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f,0.f,0.f);
-            CartesianVector minDirection(0.f, 0.f, 0.f), maxDirection(0.f,0.f,0.f);
+            CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f, 0.f, 0.f);
+            CartesianVector minDirection(0.f, 0.f, 0.f), maxDirection(0.f, 0.f, 0.f);
 
             LArPointingClusterMap::const_iterator cIter2 = pointingClusterMap.find(pCluster);
 
@@ -216,7 +216,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
                 endDirection = maxDirection;
             }
         }
-        catch(StatusCodeException &statusCodeException)
+        catch (StatusCodeException &statusCodeException)
         {
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
@@ -281,8 +281,8 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const ParticleFlow
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
-    const ParticleFlowObject *const pPfo) const
+void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(
+    const CartesianVector &vtxPosition, const CartesianVector &vtxDirection, const ParticleFlowObject *const pPfo) const
 {
     if (!pPfo->GetVertexList().empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -291,7 +291,8 @@ void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVect
     metadata.m_momentum = vtxDirection;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
 
-    const VertexList *pVertexList = NULL; std::string vertexListName;
+    const VertexList *pVertexList = NULL;
+    std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
 
     PandoraContentApi::Vertex::Parameters parameters;
@@ -317,14 +318,13 @@ StatusCode CosmicRayVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseParentForShowerVertex", m_useParentShowerVertex));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseParentForShowerVertex", m_useParentShowerVertex));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_halfWindowLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_halfWindowLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"IsDualPhase", m_isDualPhase));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IsDualPhase", m_isDualPhase));
 
     return STATUS_CODE_SUCCESS;
 }

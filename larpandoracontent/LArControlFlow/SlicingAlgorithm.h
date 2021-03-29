@@ -8,8 +8,8 @@
 #ifndef LAR_SLICING_ALGORITHM_H
 #define LAR_SLICING_ALGORITHM_H 1
 
-#include "Pandora/AlgorithmTool.h"
 #include "Pandora/Algorithm.h"
+#include "Pandora/AlgorithmTool.h"
 
 namespace lar_content
 {
@@ -30,9 +30,9 @@ public:
     class Slice
     {
     public:
-        pandora::CaloHitList    m_caloHitListU;                     ///< The u calo hit list
-        pandora::CaloHitList    m_caloHitListV;                     ///< The v calo hit list
-        pandora::CaloHitList    m_caloHitListW;                     ///< The w calo hit list
+        pandora::CaloHitList m_caloHitListU; ///< The u calo hit list
+        pandora::CaloHitList m_caloHitListV; ///< The v calo hit list
+        pandora::CaloHitList m_caloHitListW; ///< The w calo hit list
     };
 
     typedef std::vector<Slice> SliceList;
@@ -47,14 +47,14 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    EventSlicingBaseTool       *m_pEventSlicingTool;                ///< The address of the event slicing tool
-    std::string                 m_slicingListDeletionAlgorithm;     ///< The name of the slicing list deletion algorithm
+    EventSlicingBaseTool *m_pEventSlicingTool;  ///< The address of the event slicing tool
+    std::string m_slicingListDeletionAlgorithm; ///< The name of the slicing list deletion algorithm
 
-    HitTypeToNameMap            m_caloHitListNames;                 ///< The hit type to calo hit list name map
-    HitTypeToNameMap            m_clusterListNames;                 ///< The hit type to cluster list name map
+    HitTypeToNameMap m_caloHitListNames; ///< The hit type to calo hit list name map
+    HitTypeToNameMap m_clusterListNames; ///< The hit type to cluster list name map
 
-    std::string                 m_sliceClusterListName;             ///< The name of the output slice cluster list
-    std::string                 m_slicePfoListName;                 ///< The name of the output slice pfo list
+    std::string m_sliceClusterListName; ///< The name of the output slice cluster list
+    std::string m_slicePfoListName;     ///< The name of the output slice pfo list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

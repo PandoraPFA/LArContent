@@ -40,13 +40,14 @@ private:
      *  @param  pDaughterCluster the address of the daughter cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
-    void FillClusterAssociationMatrix(const LArPointingCluster &parentCluster, const pandora::Cluster* const pDaughterCluster, ClusterAssociationMatrix &clusterAssociationMatrix) const;
+    void FillClusterAssociationMatrix(const LArPointingCluster &parentCluster, const pandora::Cluster *const pDaughterCluster,
+        ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float m_minClusterLength;              ///<
-    float m_maxLongitudinalDisplacement;   ///<
-    float m_maxTransverseDisplacement;     ///<
+    float m_minClusterLength;            ///<
+    float m_maxLongitudinalDisplacement; ///<
+    float m_maxTransverseDisplacement;   ///<
 };
 
 } // namespace lar_content

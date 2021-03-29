@@ -29,7 +29,7 @@ public:
     using InputDatum = std::pair<TX, TY>;
 
     template <typename TX, typename TY>
-    using InputData = std::vector<InputDatum<TX, TY> >;
+    using InputData = std::vector<InputDatum<TX, TY>>;
 
     typedef InputData<float, float> AllFloatInputData;
 
@@ -179,10 +179,10 @@ private:
         float GetWidth() const;
 
     private:
-        float m_x;                     ///< The x coordinate
-        float m_densityDatum;          ///< The probability density value
-        float m_cumulativeDatum;       ///< The cumulative probability value
-        float m_width;                 ///< The width of the probability bin
+        float m_x;               ///< The x coordinate
+        float m_densityDatum;    ///< The probability density value
+        float m_cumulativeDatum; ///< The cumulative probability value
+        float m_width;           ///< The width of the probability bin
     };
 
     typedef std::vector<DiscreteProbabilityDatum> DiscreteProbabilityData;
@@ -194,7 +194,7 @@ private:
      *
      *  @return a fully-initialised discrete probability data vector
      */
-    template<typename TX, typename TY>
+    template <typename TX, typename TY>
     DiscreteProbabilityData InitialiseDiscreteProbabilityData(InputData<TX, TY> inputData) const;
 
     /**
@@ -205,8 +205,8 @@ private:
      *
      *  @return a resampled probability data vector
      */
-    DiscreteProbabilityData ResampleDiscreteProbabilityData(const DiscreteProbabilityVector &discreteProbabilityVector, 
-        const ResamplingPoints &resamplingPoints) const;
+    DiscreteProbabilityData ResampleDiscreteProbabilityData(
+        const DiscreteProbabilityVector &discreteProbabilityVector, const ResamplingPoints &resamplingPoints) const;
 
     /**
      *  @brief  Get a randomised probability data vector in which the x values are unchanged, the probability density is 
@@ -217,8 +217,8 @@ private:
      *
      *  @return a resampled probability data vector
      */
-    DiscreteProbabilityData RandomiseDiscreteProbabilityData(const DiscreteProbabilityVector &discreteProbabilityVector, 
-        std::mt19937 &randomNumberGenerator) const;
+    DiscreteProbabilityData RandomiseDiscreteProbabilityData(
+        const DiscreteProbabilityVector &discreteProbabilityVector, std::mt19937 &randomNumberGenerator) const;
 
     /**
      *  @brief  Sort the input data according to their x value
@@ -253,9 +253,9 @@ private:
      */
     void VerifyElementRequest(const unsigned int index) const;
 
-    float                   m_xUpperBound;                            ///< the upper bound of the probability vector
-    bool                    m_useWidths;                              ///< controls whether bin widths are used in calculations
-    DiscreteProbabilityData m_discreteProbabilityData;                ///< the probability data
+    float m_xUpperBound;                               ///< the upper bound of the probability vector
+    bool m_useWidths;                                  ///< controls whether bin widths are used in calculations
+    DiscreteProbabilityData m_discreteProbabilityData; ///< the probability data
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -312,8 +312,8 @@ inline float DiscreteProbabilityVector::GetWidth(const unsigned int index) const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void DiscreteProbabilityVector::GetAllAtIndex(const unsigned int index, float &x, float &probabilityDensity,
-    float &cumulativeProbability, float &width) const
+inline void DiscreteProbabilityVector::GetAllAtIndex(
+    const unsigned int index, float &x, float &probabilityDensity, float &cumulativeProbability, float &width) const
 {
     this->VerifyElementRequest(index);
 
@@ -326,8 +326,8 @@ inline void DiscreteProbabilityVector::GetAllAtIndex(const unsigned int index, f
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(const float x,
-        const float densityDatum, const float cumulativeDatum, const float width) :
+inline DiscreteProbabilityVector::DiscreteProbabilityDatum::DiscreteProbabilityDatum(
+    const float x, const float densityDatum, const float cumulativeDatum, const float width) :
     m_x(x),
     m_densityDatum(densityDatum),
     m_cumulativeDatum(cumulativeDatum),
@@ -389,4 +389,3 @@ inline void DiscreteProbabilityVector::VerifyElementRequest(const unsigned int i
 } // namespace lar_content
 
 #endif // #ifndef  LAR_DISCRETE_PROBABILITY_VECTOR_H
-

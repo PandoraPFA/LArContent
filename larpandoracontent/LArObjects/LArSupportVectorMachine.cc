@@ -165,32 +165,26 @@ StatusCode SupportVectorMachine::ReadComponent(TiXmlElement *pCurrentXmlElement)
 StatusCode SupportVectorMachine::ReadMachine(const TiXmlHandle &currentHandle)
 {
     int kernelType(0);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
-        "KernelType", kernelType));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle, "KernelType", kernelType));
 
     double bias(0.);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
-        "Bias", bias));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle, "Bias", bias));
 
     double scaleFactor(0.);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
-        "ScaleFactor", scaleFactor));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle, "ScaleFactor", scaleFactor));
 
     bool standardize(true);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
-        "Standardize", standardize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle, "Standardize", standardize));
 
     bool enableProbability(false);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
-        "EnableProbability", enableProbability));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle, "EnableProbability", enableProbability));
 
     double probAParameter(0.);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
-        "ProbAParameter", probAParameter));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle, "ProbAParameter", probAParameter));
 
     double probBParameter(0.);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
-        "ProbBParameter", probBParameter));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle, "ProbBParameter", probBParameter));
 
     m_kernelType = static_cast<KernelType>(kernelType);
     m_bias = bias;
@@ -210,17 +204,18 @@ StatusCode SupportVectorMachine::ReadMachine(const TiXmlHandle &currentHandle)
 StatusCode SupportVectorMachine::ReadFeatures(const TiXmlHandle &currentHandle)
 {
     std::vector<double> muValues;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(currentHandle,
-        "MuValues", muValues));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(currentHandle, "MuValues", muValues));
 
     std::vector<double> sigmaValues;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(currentHandle,
-        "SigmaValues", sigmaValues));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(currentHandle, "SigmaValues", sigmaValues));
 
     if (muValues.size() != sigmaValues.size())
     {
-        std::cout << "SupportVectorMachine: could not add feature info because the size of mu (" << muValues.size() << ") did not match "
-                     "the size of sigma (" << sigmaValues.size() << ")" << std::endl;
+        std::cout << "SupportVectorMachine: could not add feature info because the size of mu (" << muValues.size()
+                  << ") did not match "
+                     "the size of sigma ("
+                  << sigmaValues.size() << ")" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
@@ -237,12 +232,10 @@ StatusCode SupportVectorMachine::ReadFeatures(const TiXmlHandle &currentHandle)
 StatusCode SupportVectorMachine::ReadSupportVector(const TiXmlHandle &currentHandle)
 {
     double yAlpha(0.0);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle,
-        "AlphaY", yAlpha));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(currentHandle, "AlphaY", yAlpha));
 
     std::vector<double> values;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(currentHandle,
-        "Values", values));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(currentHandle, "Values", values));
 
     LArMvaHelper::MvaFeatureVector valuesFeatureVector;
     for (const double &value : values)
@@ -264,7 +257,8 @@ double SupportVectorMachine::CalculateClassificationScoreImpl(const LArMvaHelper
 
     if (m_svInfoList.empty())
     {
-        std::cout << "SupportVectorMachine: could not perform classification because the initialized svm had no support vectors in the model" << std::endl;
+        std::cout << "SupportVectorMachine: could not perform classification because the initialized svm had no support vectors in the model"
+                  << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
     }
 
@@ -280,8 +274,8 @@ double SupportVectorMachine::CalculateClassificationScoreImpl(const LArMvaHelper
     double classScore(0.);
     for (const SupportVectorInfo &supportVectorInfo : m_svInfoList)
     {
-        classScore += supportVectorInfo.m_yAlpha *
-            m_kernelFunction(supportVectorInfo.m_supportVector, (m_standardizeFeatures ? standardizedFeatures : features), m_scaleFactor);
+        classScore += supportVectorInfo.m_yAlpha * m_kernelFunction(supportVectorInfo.m_supportVector,
+                                                       (m_standardizeFeatures ? standardizedFeatures : features), m_scaleFactor);
     }
 
     return classScore + m_bias;

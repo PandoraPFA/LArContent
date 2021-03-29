@@ -14,7 +14,6 @@
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/LongTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/TracksCrossingGapsTool.h"
 
-
 using namespace pandora;
 
 namespace lar_content
@@ -50,7 +49,8 @@ bool TracksCrossingGapsTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TracksCrossingGapsTool::FindTracks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
+void TracksCrossingGapsTool::FindTracks(
+    ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector) const
 {
     ClusterSet usedClusters;
     ClusterVector sortedKeyClusters;
@@ -92,8 +92,8 @@ void TracksCrossingGapsTool::FindTracks(ThreeViewTransverseTracksAlgorithm *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TracksCrossingGapsTool::SelectElements(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
-    const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const
+void TracksCrossingGapsTool::SelectElements(ThreeViewTransverseTracksAlgorithm *const pAlgorithm,
+    const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
     {
@@ -126,8 +126,8 @@ void TracksCrossingGapsTool::SelectElements(ThreeViewTransverseTracksAlgorithm *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TracksCrossingGapsTool::CalculateEffectiveOverlapFractions(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
-    float &xOverlapFractionU, float &xOverlapFractionV, float &xOverlapFractionW) const
+void TracksCrossingGapsTool::CalculateEffectiveOverlapFractions(ThreeViewTransverseTracksAlgorithm *const pAlgorithm,
+    const TensorType::Element &element, float &xOverlapFractionU, float &xOverlapFractionV, float &xOverlapFractionW) const
 {
     float xMinEffU(element.GetOverlapResult().GetXOverlap().GetUMinX()), xMaxEffU(element.GetOverlapResult().GetXOverlap().GetUMaxX());
     float xMinEffV(element.GetOverlapResult().GetXOverlap().GetVMinX()), xMaxEffV(element.GetOverlapResult().GetXOverlap().GetVMaxX());
@@ -147,8 +147,8 @@ void TracksCrossingGapsTool::CalculateEffectiveOverlapFractions(ThreeViewTransve
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TracksCrossingGapsTool::CalculateEffectiveOverlapSpan(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
-    float &xMinEffU, float &xMaxEffU, float &xMinEffV, float &xMaxEffV, float &xMinEffW, float &xMaxEffW) const
+void TracksCrossingGapsTool::CalculateEffectiveOverlapSpan(ThreeViewTransverseTracksAlgorithm *const pAlgorithm,
+    const TensorType::Element &element, float &xMinEffU, float &xMaxEffU, float &xMinEffV, float &xMaxEffV, float &xMinEffW, float &xMaxEffW) const
 {
     const float xMinAll(std::min(xMinEffU, std::min(xMinEffV, xMinEffW)));
     const float xMaxAll(std::max(xMaxEffU, std::max(xMaxEffV, xMaxEffW)));
@@ -170,9 +170,12 @@ void TracksCrossingGapsTool::CalculateEffectiveOverlapSpan(ThreeViewTransverseTr
         if (!this->PassesGapChecks(pAlgorithm, element, xSample, gapInU, gapInV, gapInW))
             break;
 
-        if (gapInU) dxUmin = xMinEffU - xSample;
-        if (gapInV) dxVmin = xMinEffV - xSample;
-        if (gapInW) dxWmin = xMinEffW - xSample;
+        if (gapInU)
+            dxUmin = xMinEffU - xSample;
+        if (gapInV)
+            dxVmin = xMinEffV - xSample;
+        if (gapInW)
+            dxWmin = xMinEffW - xSample;
     }
 
     for (int iSample = 1; iSample <= nSamplingPointsRight; ++iSample)
@@ -183,9 +186,12 @@ void TracksCrossingGapsTool::CalculateEffectiveOverlapSpan(ThreeViewTransverseTr
         if (!this->PassesGapChecks(pAlgorithm, element, xSample, gapInU, gapInV, gapInW))
             break;
 
-        if (gapInU) dxUmax = xSample - xMaxEffU;
-        if (gapInV) dxVmax = xSample - xMaxEffV;
-        if (gapInW) dxWmax = xSample - xMaxEffW;
+        if (gapInU)
+            dxUmax = xSample - xMaxEffU;
+        if (gapInV)
+            dxVmax = xSample - xMaxEffV;
+        if (gapInW)
+            dxWmax = xSample - xMaxEffW;
     }
 
     xMinEffU -= dxUmin;
@@ -198,8 +204,8 @@ void TracksCrossingGapsTool::CalculateEffectiveOverlapSpan(ThreeViewTransverseTr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TracksCrossingGapsTool::PassesGapChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, const float xSample,
-    bool &gapInU, bool &gapInV, bool &gapInW) const
+bool TracksCrossingGapsTool::PassesGapChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
+    const float xSample, bool &gapInU, bool &gapInV, bool &gapInW) const
 {
     const TwoDSlidingFitResult &slidingFitResultU(pAlgorithm->GetCachedSlidingFitResult(element.GetClusterU()));
     const TwoDSlidingFitResult &slidingFitResultV(pAlgorithm->GetCachedSlidingFitResult(element.GetClusterV()));
@@ -226,15 +232,17 @@ bool TracksCrossingGapsTool::PassesGapChecks(ThreeViewTransverseTracksAlgorithm 
         if ((STATUS_CODE_SUCCESS != statusCodeW) && (!this->IsEndOfCluster(xSample, slidingFitResultW)))
             return this->CheckXPositionInGap(xSample, slidingFitResultW, slidingFitResultU, slidingFitResultV, gapInW, gapInU, gapInV);
     }
-    catch (const StatusCodeException &statusCodeException) {}
+    catch (const StatusCodeException &statusCodeException)
+    {
+    }
 
     return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TracksCrossingGapsTool::CheckXPositionInGap(const float xSample, const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
-    const TwoDSlidingFitResult &slidingFitResult3, bool &gapIn1, bool &gapIn2, bool &gapIn3) const
+bool TracksCrossingGapsTool::CheckXPositionInGap(const float xSample, const TwoDSlidingFitResult &slidingFitResult1,
+    const TwoDSlidingFitResult &slidingFitResult2, const TwoDSlidingFitResult &slidingFitResult3, bool &gapIn1, bool &gapIn2, bool &gapIn3) const
 {
     CartesianVector fitPosition2(0.f, 0.f, 0.f), fitPosition3(0.f, 0.f, 0.f);
 
@@ -291,30 +299,28 @@ bool TracksCrossingGapsTool::CheckXPositionInGap(const float xSample, const TwoD
 bool TracksCrossingGapsTool::IsEndOfCluster(const float xSample, const TwoDSlidingFitResult &slidingFitResult) const
 {
     return ((std::fabs(slidingFitResult.GetGlobalMinLayerPosition().GetX() - xSample) < slidingFitResult.GetLayerPitch()) ||
-        (std::fabs(slidingFitResult.GetGlobalMaxLayerPosition().GetX() - xSample) < slidingFitResult.GetLayerPitch()));
+            (std::fabs(slidingFitResult.GetGlobalMaxLayerPosition().GetX() - xSample) < slidingFitResult.GetLayerPitch()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TracksCrossingGapsTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchedFraction", m_minMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlapFraction", m_minXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction", m_minXOverlapFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-         "MaxGapTolerance", m_maxGapTolerance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGapTolerance", m_maxGapTolerance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SampleStepSize", m_sampleStepSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SampleStepSize", m_sampleStepSize));
 
     if (m_sampleStepSize < std::numeric_limits<float>::epsilon())
     {
@@ -322,8 +328,7 @@ StatusCode TracksCrossingGapsTool::ReadSettings(const TiXmlHandle xmlHandle)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAngleRatio", m_maxAngleRatio));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAngleRatio", m_maxAngleRatio));
 
     return STATUS_CODE_SUCCESS;
 }

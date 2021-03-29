@@ -30,7 +30,7 @@ protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterMergeMap;
 
     /**
      *  @brief  Populate cluster vector with the subset of clusters judged to be clean
@@ -49,7 +49,6 @@ protected:
     virtual void GetListOfSeedClusters(const pandora::ClusterVector &cleanClusters, pandora::ClusterVector &seedClusters) const = 0;
 
 private:
-
     /**
      *  @brief Get List of non-seed clusters
      *
@@ -67,8 +66,8 @@ private:
      *  @param nonSeedClusters the input vector of non-seed clusters
      *  @param clusterMergeMap the output map of cluster merges
      */
-    void PopulateClusterMergeMap(const pandora::ClusterVector &seedClusters, const pandora::ClusterVector &nonSeedClusters,
-        ClusterMergeMap &clusterMergeMap) const;
+    void PopulateClusterMergeMap(
+        const pandora::ClusterVector &seedClusters, const pandora::ClusterVector &nonSeedClusters, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief Merge clusters
@@ -77,9 +76,9 @@ private:
      */
     void MergeClusters(const ClusterMergeMap &clusterMergeMap) const;
 
-    std::string     m_inputClusterListName;  ///< The name of the input cluster list. If not specified, will access current list.
+    std::string m_inputClusterListName; ///< The name of the input cluster list. If not specified, will access current list.
 
-    float           m_maxClusterSeparation;  ///< Maximum distance at which clusters can be joined
+    float m_maxClusterSeparation; ///< Maximum distance at which clusters can be joined
 };
 
 } // namespace lar_content

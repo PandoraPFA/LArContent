@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/ThreeViewTransverseTracksAlgorithm.h"
 
@@ -35,7 +35,8 @@ ThreeViewTransverseTracksAlgorithm::ThreeViewTransverseTracksAlgorithm() :
 void ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     TransverseOverlapResult overlapResult;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
     if (overlapResult.IsInitialized())
         this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
@@ -43,8 +44,8 @@ void ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
-    TransverseOverlapResult &overlapResult)
+StatusCode ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(
+    const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW, TransverseOverlapResult &overlapResult)
 {
     const TwoDSlidingFitResult &slidingFitResultU(this->GetCachedSlidingFitResult(pClusterU));
     const TwoDSlidingFitResult &slidingFitResultV(this->GetCachedSlidingFitResult(pClusterV));
@@ -59,13 +60,15 @@ StatusCode ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(const Clus
     if (!transverseOverlapResult.IsInitialized())
         return STATUS_CODE_NOT_FOUND;
 
-    if ((transverseOverlapResult.GetMatchedFraction() < m_minOverallMatchedFraction) || (transverseOverlapResult.GetNMatchedSamplingPoints() < m_minOverallMatchedPoints))
+    if ((transverseOverlapResult.GetMatchedFraction() < m_minOverallMatchedFraction) ||
+        (transverseOverlapResult.GetNMatchedSamplingPoints() < m_minOverallMatchedPoints))
         return STATUS_CODE_NOT_FOUND;
 
     const int nLayersSpannedU(slidingFitResultU.GetMaxLayer() - slidingFitResultU.GetMinLayer());
     const int nLayersSpannedV(slidingFitResultV.GetMaxLayer() - slidingFitResultV.GetMinLayer());
     const int nLayersSpannedW(slidingFitResultW.GetMaxLayer() - slidingFitResultW.GetMinLayer());
-    const unsigned int meanLayersSpanned(static_cast<unsigned int>((1.f / 3.f) * static_cast<float>(nLayersSpannedU + nLayersSpannedV + nLayersSpannedW)));
+    const unsigned int meanLayersSpanned(
+        static_cast<unsigned int>((1.f / 3.f) * static_cast<float>(nLayersSpannedU + nLayersSpannedV + nLayersSpannedW)));
 
     if (0 == meanLayersSpanned)
         return STATUS_CODE_FAILURE;
@@ -81,8 +84,8 @@ StatusCode ThreeViewTransverseTracksAlgorithm::CalculateOverlapResult(const Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
-    const TwoDSlidingFitResult &slidingFitResultW, FitSegmentTensor &fitSegmentTensor) const
+void ThreeViewTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFitResult &slidingFitResultU,
+    const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW, FitSegmentTensor &fitSegmentTensor) const
 {
     FitSegmentList fitSegmentListU(slidingFitResultU.GetFitSegmentList());
     FitSegmentList fitSegmentListV(slidingFitResultV.GetFitSegmentList());
@@ -101,10 +104,12 @@ void ThreeViewTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFi
                 const FitSegment &fitSegmentW(fitSegmentListW.at(indexW));
 
                 TransverseOverlapResult segmentOverlap;
-                if (STATUS_CODE_SUCCESS != this->GetSegmentOverlap(fitSegmentU, fitSegmentV, fitSegmentW, slidingFitResultU, slidingFitResultV, slidingFitResultW, segmentOverlap))
+                if (STATUS_CODE_SUCCESS != this->GetSegmentOverlap(fitSegmentU, fitSegmentV, fitSegmentW, slidingFitResultU,
+                                               slidingFitResultV, slidingFitResultW, segmentOverlap))
                     continue;
 
-                if ((segmentOverlap.GetMatchedFraction() < m_minSegmentMatchedFraction) || (segmentOverlap.GetNMatchedSamplingPoints() < m_minSegmentMatchedPoints))
+                if ((segmentOverlap.GetMatchedFraction() < m_minSegmentMatchedFraction) ||
+                    (segmentOverlap.GetNMatchedSamplingPoints() < m_minSegmentMatchedPoints))
                     continue;
 
                 fitSegmentTensor[indexU][indexV][indexW] = segmentOverlap;
@@ -115,9 +120,9 @@ void ThreeViewTransverseTracksAlgorithm::GetFitSegmentTensor(const TwoDSlidingFi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeViewTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
-    const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW,
-    TransverseOverlapResult &transverseOverlapResult) const
+StatusCode ThreeViewTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV,
+    const FitSegment &fitSegmentW, const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
+    const TwoDSlidingFitResult &slidingFitResultW, TransverseOverlapResult &transverseOverlapResult) const
 {
     // Assess x-overlap
     const float xSpanU(fitSegmentU.GetMaxX() - fitSegmentU.GetMinX());
@@ -176,8 +181,8 @@ StatusCode ThreeViewTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegmen
     if (0 == nSamplingPoints)
         return STATUS_CODE_NOT_FOUND;
 
-    const XOverlap xOverlapObject(fitSegmentU.GetMinX(), fitSegmentU.GetMaxX(), fitSegmentV.GetMinX(),
-        fitSegmentV.GetMaxX(), fitSegmentW.GetMinX(), fitSegmentW.GetMaxX(), xOverlap);
+    const XOverlap xOverlapObject(fitSegmentU.GetMinX(), fitSegmentU.GetMaxX(), fitSegmentV.GetMinX(), fitSegmentV.GetMaxX(),
+        fitSegmentW.GetMinX(), fitSegmentW.GetMaxX(), xOverlap);
 
     transverseOverlapResult = TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, pseudoChi2Sum, xOverlapObject);
     return STATUS_CODE_SUCCESS;
@@ -185,7 +190,8 @@ StatusCode ThreeViewTransverseTracksAlgorithm::GetSegmentOverlap(const FitSegmen
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTensor &fitSegmentTensor, TransverseOverlapResult &bestTransverseOverlapResult) const
+void ThreeViewTransverseTracksAlgorithm::GetBestOverlapResult(
+    const FitSegmentTensor &fitSegmentTensor, TransverseOverlapResult &bestTransverseOverlapResult) const
 {
     if (fitSegmentTensor.empty())
     {
@@ -222,11 +228,14 @@ void ThreeViewTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTe
                 TransverseOverlapResultVector transverseOverlapResultVector;
                 this->GetPreviousOverlapResults(indexU, indexV, indexW, fitSegmentSumTensor, transverseOverlapResultVector);
 
-                TransverseOverlapResultVector::const_iterator maxElement = std::max_element(transverseOverlapResultVector.begin(), transverseOverlapResultVector.end());
-                TransverseOverlapResult maxTransverseOverlapResult((transverseOverlapResultVector.end() != maxElement) ? *maxElement : TransverseOverlapResult());
+                TransverseOverlapResultVector::const_iterator maxElement =
+                    std::max_element(transverseOverlapResultVector.begin(), transverseOverlapResultVector.end());
+                TransverseOverlapResult maxTransverseOverlapResult(
+                    (transverseOverlapResultVector.end() != maxElement) ? *maxElement : TransverseOverlapResult());
 
                 TransverseOverlapResult thisOverlapResult;
-                if (fitSegmentTensor.count(indexU) && (fitSegmentTensor.find(indexU))->second.count(indexV) && ((fitSegmentTensor.find(indexU))->second.find(indexV))->second.count(indexW))
+                if (fitSegmentTensor.count(indexU) && (fitSegmentTensor.find(indexU))->second.count(indexV) &&
+                    ((fitSegmentTensor.find(indexU))->second.find(indexV))->second.count(indexW))
                     thisOverlapResult = (((fitSegmentTensor.find(indexU))->second.find(indexV))->second.find(indexW))->second;
 
                 if (!thisOverlapResult.IsInitialized() && !maxTransverseOverlapResult.IsInitialized())
@@ -257,8 +266,8 @@ void ThreeViewTransverseTracksAlgorithm::GetBestOverlapResult(const FitSegmentTe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
-    FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const
+void ThreeViewTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV,
+    const unsigned int indexW, FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const
 {
     for (unsigned int iPermutation = 1; iPermutation < 8; ++iPermutation)
     {
@@ -289,7 +298,7 @@ void ThreeViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 
-    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
+    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd;)
     {
         if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
@@ -311,12 +320,11 @@ void ThreeViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 StatusCode ThreeViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", algorithmToolVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "TrackTools", algorithmToolVector));
 
     for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
-        TransverseTensorTool *const pTransverseTensorTool(dynamic_cast<TransverseTensorTool*>(*iter));
+        TransverseTensorTool *const pTransverseTensorTool(dynamic_cast<TransverseTensorTool *>(*iter));
 
         if (!pTransverseTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
@@ -324,29 +332,28 @@ StatusCode ThreeViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xm
         m_algorithmToolVector.push_back(pTransverseTensorTool);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxFitSegmentIndex", m_maxFitSegmentIndex));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxFitSegmentIndex", m_maxFitSegmentIndex));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "PseudoChi2Cut", m_pseudoChi2Cut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSegmentMatchedFraction", m_minSegmentMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinSegmentMatchedFraction", m_minSegmentMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSegmentMatchedPoints", m_minSegmentMatchedPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinSegmentMatchedPoints", m_minSegmentMatchedPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinOverallMatchedFraction", m_minOverallMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinOverallMatchedFraction", m_minOverallMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinOverallMatchedPoints", m_minOverallMatchedPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinOverallMatchedPoints", m_minOverallMatchedPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSamplingPointsPerLayer", m_minSamplingPointsPerLayer));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinSamplingPointsPerLayer", m_minSamplingPointsPerLayer));
 
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }

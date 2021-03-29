@@ -55,8 +55,8 @@ protected:
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int    m_minViews;                 ///< The minimum number of views required for building hits
-    unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
+    unsigned int m_minViews;         ///< The minimum number of views required for building hits
+    unsigned int m_slidingFitWindow; ///< The layer window for the sliding linear fits
 };
 
 } // namespace lar_content

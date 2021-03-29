@@ -36,8 +36,8 @@ protected:
     virtual void GetLongitudinalTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, const pandora::CartesianVector &vtx3D,
         const pandora::CartesianVector &end3D, ProtoHit &protoHit) const = 0;
 
-    virtual void GetTrackHits3D(const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap,
-        ProtoHitVector &protoHitVector) const;
+    virtual void GetTrackHits3D(
+        const pandora::CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &matchedSlidingFitMap, ProtoHitVector &protoHitVector) const;
 
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -66,8 +66,8 @@ private:
     void UpdateBestPosition(const pandora::HitType hitType1, const pandora::HitType hitType2, const pandora::CartesianVector &vtx1,
         const pandora::CartesianVector &vtx2, pandora::CartesianVector &bestVtx, float &bestChi2) const;
 
-    float  m_vtxDisplacementCutSquared;   ///<
-    float  m_minTrackLengthSquared;       ///<
+    float m_vtxDisplacementCutSquared; ///<
+    float m_minTrackLengthSquared;     ///<
 };
 
 } // namespace lar_content

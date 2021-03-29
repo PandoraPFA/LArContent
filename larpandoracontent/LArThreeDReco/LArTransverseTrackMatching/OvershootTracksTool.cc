@@ -29,8 +29,8 @@ OvershootTracksTool::OvershootTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OvershootTracksTool::GetIteratorListModifications(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
-    ModificationList &modificationList) const
+void OvershootTracksTool::GetIteratorListModifications(
+    ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ModificationList &modificationList) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
     {
@@ -155,15 +155,19 @@ void OvershootTracksTool::SetSplitPosition(const LArPointingCluster::Vertex &ver
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool OvershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const bool isA1LowestInX,
-    const bool isA2LowestInX) const
+bool OvershootTracksTool::IsThreeDKink(
+    ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const bool isA1LowestInX, const bool isA2LowestInX) const
 {
     try
     {
-        const TwoDSlidingFitResult &lowXFitResult1(isA1LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1));
-        const TwoDSlidingFitResult &highXFitResult1(isA1LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1));
-        const TwoDSlidingFitResult &lowXFitResult2(isA2LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2));
-        const TwoDSlidingFitResult &highXFitResult2(isA2LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2));
+        const TwoDSlidingFitResult &lowXFitResult1(isA1LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1)
+                                                                 : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1));
+        const TwoDSlidingFitResult &highXFitResult1(isA1LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1)
+                                                                  : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1));
+        const TwoDSlidingFitResult &lowXFitResult2(isA2LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2)
+                                                                 : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2));
+        const TwoDSlidingFitResult &highXFitResult2(isA2LowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2)
+                                                                  : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2));
         const TwoDSlidingFitResult &fitResultCommon3(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster));
 
         const float minusX(this->GetXSamplingPoint(particle.m_splitPosition, false, fitResultCommon3, lowXFitResult1, lowXFitResult2));
@@ -189,7 +193,8 @@ bool OvershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *const
         const HitType hitType3(LArClusterHelper::GetClusterHitType(particle.m_pCommonCluster));
 
         CartesianVector minus(0.f, 0.f, 0.f), split(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
-        float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()), chi2Plus(std::numeric_limits<float>::max());
+        float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()),
+            chi2Plus(std::numeric_limits<float>::max());
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, minus1, minus2, minus3, minus, chi2Minus);
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, split1, split2, split3, split, chi2Split);
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, plus1, plus2, plus3, plus, chi2Plus);
@@ -217,14 +222,17 @@ OvershootTracksTool::Particle::Particle(const TensorType::Element &elementA, con
     m_splitPosition1(0.f, 0.f, 0.f),
     m_splitPosition2(0.f, 0.f, 0.f)
 {
-    const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU()) ? TPC_VIEW_U :
-        (elementA.GetClusterV() == elementB.GetClusterV()) ? TPC_VIEW_V :
-        (elementA.GetClusterW() == elementB.GetClusterW()) ? TPC_VIEW_W : HIT_CUSTOM);
+    const HitType commonView((elementA.GetClusterU() == elementB.GetClusterU())
+                                 ? TPC_VIEW_U
+                                 : (elementA.GetClusterV() == elementB.GetClusterV())
+                                       ? TPC_VIEW_V
+                                       : (elementA.GetClusterW() == elementB.GetClusterW()) ? TPC_VIEW_W : HIT_CUSTOM);
 
     if (HIT_CUSTOM == commonView)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    m_pCommonCluster = (TPC_VIEW_U == commonView) ? elementA.GetClusterU() : (TPC_VIEW_V == commonView) ? elementA.GetClusterV() : elementA.GetClusterW();
+    m_pCommonCluster =
+        (TPC_VIEW_U == commonView) ? elementA.GetClusterU() : (TPC_VIEW_V == commonView) ? elementA.GetClusterV() : elementA.GetClusterW();
     m_pClusterA1 = (TPC_VIEW_U == commonView) ? elementA.GetClusterV() : elementA.GetClusterU();
     m_pClusterA2 = (TPC_VIEW_U == commonView) ? elementA.GetClusterW() : (TPC_VIEW_V == commonView) ? elementA.GetClusterW() : elementA.GetClusterV();
     m_pClusterB1 = (TPC_VIEW_U == commonView) ? elementB.GetClusterV() : elementB.GetClusterU();
@@ -239,14 +247,13 @@ OvershootTracksTool::Particle::Particle(const TensorType::Element &elementA, con
 
 StatusCode OvershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SplitMode", m_splitMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SplitMode", m_splitMode));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxVertexXSeparation", m_maxVertexXSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxVertexXSeparation", m_maxVertexXSeparation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CosThetaCutForKinkSearch", m_cosThetaCutForKinkSearch));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CosThetaCutForKinkSearch", m_cosThetaCutForKinkSearch));
 
     return ThreeDKinkBaseTool::ReadSettings(xmlHandle);
 }

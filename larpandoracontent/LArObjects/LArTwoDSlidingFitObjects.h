@@ -75,10 +75,10 @@ public:
     double GetRms() const;
 
 private:
-    double          m_l;                                    ///< The l coordinate
-    double          m_fitT;                                 ///< The fitted t coordinate
-    double          m_gradient;                             ///< The fitted gradient dt/dl
-    double          m_rms;                                  ///< The rms of the fit residuals
+    double m_l;        ///< The l coordinate
+    double m_fitT;     ///< The fitted t coordinate
+    double m_gradient; ///< The fitted gradient dt/dl
+    double m_rms;      ///< The rms of the fit residuals
 };
 
 typedef std::map<int, LayerFitResult> LayerFitResultMap;
@@ -147,12 +147,12 @@ public:
     unsigned int GetNPoints() const;
 
 private:
-    double          m_sumT;                                 ///< The sum t
-    double          m_sumL;                                 ///< The sum l
-    double          m_sumTT;                                ///< The sum t * t
-    double          m_sumLT;                                ///< The sum l * t
-    double          m_sumLL;                                ///< The sum l * l
-    unsigned int    m_nPoints;                              ///< The number of points used
+    double m_sumT;          ///< The sum t
+    double m_sumL;          ///< The sum l
+    double m_sumTT;         ///< The sum t * t
+    double m_sumLT;         ///< The sum l * t
+    double m_sumLL;         ///< The sum l * l
+    unsigned int m_nPoints; ///< The number of points used
 };
 
 typedef std::map<int, LayerFitContribution> LayerFitContributionMap;
@@ -217,11 +217,11 @@ public:
     double GetEndLayerWeight() const;
 
 private:
-    bool                                m_isInitialized;    ///< Whether the object is initialized
-    LayerFitResultMap::const_iterator   m_startLayerIter;   ///< The start layer iterator
-    LayerFitResultMap::const_iterator   m_endLayerIter;     ///< The end layer iterator
-    double                              m_startLayerWeight; ///< The start layer weight
-    double                              m_endLayerWeight;   ///< The end layer weight
+    bool m_isInitialized;                               ///< Whether the object is initialized
+    LayerFitResultMap::const_iterator m_startLayerIter; ///< The start layer iterator
+    LayerFitResultMap::const_iterator m_endLayerIter;   ///< The end layer iterator
+    double m_startLayerWeight;                          ///< The start layer weight
+    double m_endLayerWeight;                            ///< The end layer weight
 };
 
 typedef std::vector<LayerInterpolation> LayerInterpolationList;
@@ -233,7 +233,7 @@ typedef std::vector<LayerInterpolation> LayerInterpolationList;
  */
 class FitSegment
 {
-    public:
+public:
     /**
      *  @brief Constructor
      *
@@ -280,11 +280,11 @@ class FitSegment
     bool IsIncreasingX() const;
 
 private:
-    int             m_startLayer;                           ///< The start layer
-    int             m_endLayer;                             ///< The end layer
-    double          m_minX;                                 ///< The minimum x value
-    double          m_maxX;                                 ///< The maximum x value
-    bool            m_isIncreasingX;                        ///< Whether the x coordinate increases between the start and end layers
+    int m_startLayer;     ///< The start layer
+    int m_endLayer;       ///< The end layer
+    double m_minX;        ///< The minimum x value
+    double m_maxX;        ///< The maximum x value
+    bool m_isIncreasingX; ///< Whether the x coordinate increases between the start and end layers
 };
 
 typedef std::vector<FitSegment> FitSegmentList;
@@ -331,13 +331,7 @@ inline double LayerFitResult::GetRms() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LayerFitContribution::LayerFitContribution() :
-    m_sumT(0.),
-    m_sumL(0.),
-    m_sumTT(0.),
-    m_sumLT(0.),
-    m_sumLL(0.),
-    m_nPoints(0)
+inline LayerFitContribution::LayerFitContribution() : m_sumT(0.), m_sumL(0.), m_sumTT(0.), m_sumLT(0.), m_sumLL(0.), m_nPoints(0)
 {
 }
 
@@ -401,17 +395,14 @@ inline unsigned int LayerFitContribution::GetNPoints() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LayerInterpolation::LayerInterpolation() :
-    m_isInitialized(false),
-    m_startLayerWeight(0.f),
-    m_endLayerWeight(0.f)
+inline LayerInterpolation::LayerInterpolation() : m_isInitialized(false), m_startLayerWeight(0.f), m_endLayerWeight(0.f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LayerInterpolation::LayerInterpolation(const LayerFitResultMap::const_iterator &startLayerIter,
-        const LayerFitResultMap::const_iterator &endLayerIter, const double startLayerWeight, const double endLayerWeight) :
+    const LayerFitResultMap::const_iterator &endLayerIter, const double startLayerWeight, const double endLayerWeight) :
     m_isInitialized(true),
     m_startLayerIter(startLayerIter),
     m_endLayerIter(endLayerIter),

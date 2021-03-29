@@ -29,7 +29,7 @@ public:
 private:
     pandora::StatusCode Run();
 
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, const pandora::ParticleFlowObject*> PfoAssociationMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, const pandora::ParticleFlowObject *> PfoAssociationMap;
 
     /**
      *  @brief Get the vector of Pfos, given the input list name
@@ -46,8 +46,7 @@ private:
      *  @param outputPfos the input vector of current daughter Pfos
      *  @param pfoAssociationMap the output map of parent/daughter associations
      */
-    void BuildAssociationMap(const pandora::PfoVector &inputPfos, const pandora::PfoVector &outputPfos,
-        PfoAssociationMap &pfoAssociationMap) const;
+    void BuildAssociationMap(const pandora::PfoVector &inputPfos, const pandora::PfoVector &outputPfos, PfoAssociationMap &pfoAssociationMap) const;
 
     /**
      *  @brief Determine if a given pair of Pfos have a parent/daughter association
@@ -58,8 +57,7 @@ private:
      *
      *  @return boolean
      */
-    bool IsAssociated(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo,
-        float &displacement) const;
+    bool IsAssociated(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::ParticleFlowObject *const pParentPfo, float &displacement) const;
 
     /**
      *  @brief Calculate 2D separation between two Pfos
@@ -78,8 +76,7 @@ private:
      *  @param hitType the hit type
      *  @param vertexVector the vector of possible vertex positions
      */
-    void GetTwoDVertices(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType,
-        pandora::CartesianPointVector &vertexVector) const;
+    void GetTwoDVertices(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::CartesianPointVector &vertexVector) const;
 
     /**
      *  @brief Calculate closest 2D separation between a set of vertices and a set of clusters
@@ -109,12 +106,12 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string  m_parentPfoListName;          ///< The parent pfo list name
-    std::string  m_daughterPfoListName;        ///< The daughter pfo list name
+    std::string m_parentPfoListName;   ///< The parent pfo list name
+    std::string m_daughterPfoListName; ///< The daughter pfo list name
 
-    float        m_distanceForMatching;        ///< Maximum allowed distance of delta ray from parent cosmic ray
-    float        m_minParentLengthSquared;     ///< Minimum allowed length of parent cosmic ray
-    float        m_maxDaughterLengthSquared;   ///< Maximum allowed length of daughter delta ray
+    float m_distanceForMatching;      ///< Maximum allowed distance of delta ray from parent cosmic ray
+    float m_minParentLengthSquared;   ///< Minimum allowed length of parent cosmic ray
+    float m_maxDaughterLengthSquared; ///< Maximum allowed length of daughter delta ray
 };
 
 } // namespace lar_content

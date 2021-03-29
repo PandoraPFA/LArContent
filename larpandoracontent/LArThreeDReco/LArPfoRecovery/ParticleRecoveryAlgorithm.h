@@ -61,12 +61,12 @@ private:
         const pandora::ClusterList &GetKeyClusters() const;
 
     private:
-        typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterNavigationMap;
+        typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterNavigationMap;
 
-        pandora::ClusterList    m_keyClusters;                  ///< The list of key clusters
-        ClusterNavigationMap    m_clusterNavigationMapUV;       ///< The cluster navigation map U->V
-        ClusterNavigationMap    m_clusterNavigationMapVW;       ///< The cluster navigation map V->W
-        ClusterNavigationMap    m_clusterNavigationMapWU;       ///< The cluster navigation map W->U
+        pandora::ClusterList m_keyClusters;            ///< The list of key clusters
+        ClusterNavigationMap m_clusterNavigationMapUV; ///< The cluster navigation map U->V
+        ClusterNavigationMap m_clusterNavigationMapVW; ///< The cluster navigation map V->W
+        ClusterNavigationMap m_clusterNavigationMapWU; ///< The cluster navigation map W->U
     };
 
     pandora::StatusCode Run();
@@ -174,24 +174,24 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector       m_inputClusterListNames;        ///< The list of cluster list names
-    std::string                 m_outputPfoListName;            ///< The output pfo list name
+    pandora::StringVector m_inputClusterListNames; ///< The list of cluster list names
+    std::string m_outputPfoListName;               ///< The output pfo list name
 
-    bool                        m_checkGaps;                    ///< Whether to check for gaps in the calculation of the overlap
+    bool m_checkGaps; ///< Whether to check for gaps in the calculation of the overlap
 
-    unsigned int                m_minClusterCaloHits;           ///< The min number of hits in base cluster selection method
-    float                       m_minClusterLengthSquared;      ///< The min length (squared) in base cluster selection method
-    float                       m_minClusterXSpan;              ///< The min x span required in order to consider a cluster
+    unsigned int m_minClusterCaloHits; ///< The min number of hits in base cluster selection method
+    float m_minClusterLengthSquared;   ///< The min length (squared) in base cluster selection method
+    float m_minClusterXSpan;           ///< The min x span required in order to consider a cluster
 
-    bool                        m_vertexClusterMode;            ///< Whether to demand clusters are associated with vertices of existing particles
-    float                       m_minVertexLongitudinalDistance;///< Vertex association check: min longitudinal distance cut
-    float                       m_maxVertexTransverseDistance;  ///< Vertex association check: max transverse distance cut
+    bool m_vertexClusterMode;              ///< Whether to demand clusters are associated with vertices of existing particles
+    float m_minVertexLongitudinalDistance; ///< Vertex association check: min longitudinal distance cut
+    float m_maxVertexTransverseDistance;   ///< Vertex association check: max transverse distance cut
 
-    float                       m_minXOverlapFraction;          ///< The min x overlap fraction required in order to id overlapping clusters
-    float                       m_minXOverlapFractionGaps;      ///< The min x overlap fraction when there are gaps involved
-    float                       m_sampleStepSize;               ///< The sampling step size used in association checks, units cm
-    unsigned int                m_slidingFitHalfWindow;         ///< The half window for the fit sliding result constructor
-    float                       m_pseudoChi2Cut;                ///< The selection cut on the matched chi2
+    float m_minXOverlapFraction;         ///< The min x overlap fraction required in order to id overlapping clusters
+    float m_minXOverlapFractionGaps;     ///< The min x overlap fraction when there are gaps involved
+    float m_sampleStepSize;              ///< The sampling step size used in association checks, units cm
+    unsigned int m_slidingFitHalfWindow; ///< The half window for the fit sliding result constructor
+    float m_pseudoChi2Cut;               ///< The selection cut on the matched chi2
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

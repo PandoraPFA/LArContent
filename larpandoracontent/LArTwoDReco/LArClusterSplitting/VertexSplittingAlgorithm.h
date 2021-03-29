@@ -30,8 +30,8 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult, pandora::CartesianVector &splitPosition) const;
 
-    float           m_splitDisplacementSquared;     ///< Maximum displacement squared
-    float           m_vertexDisplacementSquared;    ///< Maximum displacement squared
+    float m_splitDisplacementSquared;  ///< Maximum displacement squared
+    float m_vertexDisplacementSquared; ///< Maximum displacement squared
 };
 
 } // namespace lar_content

@@ -41,10 +41,10 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_vertexListName;               ///< The name of the neutrino vertex list
-    std::string     m_neutrinoPfoListName;          ///< The name of the neutrino pfo list
+    std::string m_vertexListName;      ///< The name of the neutrino vertex list
+    std::string m_neutrinoPfoListName; ///< The name of the neutrino pfo list
 
-    bool            m_forceSingleEmptyNeutrino;     ///< Whether to force creation of a single neutrino, with no vertex, regardless of number of input vertices
+    bool m_forceSingleEmptyNeutrino; ///< Whether to force creation of a single neutrino, with no vertex, regardless of number of input vertices
 };
 
 } // namespace lar_content

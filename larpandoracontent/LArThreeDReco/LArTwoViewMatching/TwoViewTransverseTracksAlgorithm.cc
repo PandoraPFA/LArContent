@@ -35,10 +35,10 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2,
-    const Cluster *const)
+void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const)
 {
-    m_randomNumberGenerator.seed(static_cast<std::mt19937::result_type>(pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
+    m_randomNumberGenerator.seed(
+        static_cast<std::mt19937::result_type>(pCluster1->GetOrderedCaloHitList().size() + pCluster2->GetOrderedCaloHitList().size()));
 
     TwoViewTransverseOverlapResult overlapResult;
     PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pCluster1, pCluster2, overlapResult));
@@ -49,15 +49,15 @@ void TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(const Cluster *const pCluster1,
-    const Cluster *const pCluster2, TwoViewTransverseOverlapResult &overlapResult)
+pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(
+    const Cluster *const pCluster1, const Cluster *const pCluster2, TwoViewTransverseOverlapResult &overlapResult)
 {
     UIntSet daughterVolumeIntersection;
     LArGeometryHelper::GetCommonDaughterVolumes(pCluster1, pCluster2, daughterVolumeIntersection);
 
     if (daughterVolumeIntersection.empty())
         return STATUS_CODE_NOT_FOUND;
-    
+
     if (this->GetPrimaryAxisDotDriftAxis(pCluster1) > m_maxDotProduct || this->GetPrimaryAxisDotDriftAxis(pCluster2) > m_maxDotProduct)
         return STATUS_CODE_NOT_FOUND;
 
@@ -90,15 +90,15 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
 
     if (1 > m_downsampleFactor)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
-    const unsigned int nSamples(std::max(m_minSamples, static_cast<unsigned int>(std::min(overlapHits1.size(), overlapHits2.size())) /
-        m_downsampleFactor));
+    const unsigned int nSamples(
+        std::max(m_minSamples, static_cast<unsigned int>(std::min(overlapHits1.size(), overlapHits2.size())) / m_downsampleFactor));
 
     DiscreteProbabilityVector::AllFloatInputData inputData1;
-    for (const pandora::CaloHit *const pCaloHit: overlapHits1)
+    for (const pandora::CaloHit *const pCaloHit : overlapHits1)
         inputData1.emplace_back(pCaloHit->GetPositionVector().GetX(), pCaloHit->GetInputEnergy());
 
     DiscreteProbabilityVector::AllFloatInputData inputData2;
-    for (const pandora::CaloHit *const pCaloHit: overlapHits2)
+    for (const pandora::CaloHit *const pCaloHit : overlapHits2)
         inputData2.emplace_back(pCaloHit->GetPositionVector().GetX(), pCaloHit->GetInputEnergy());
 
     const DiscreteProbabilityVector discreteProbabilityVector1(inputData1, xOverlapMax, false);
@@ -107,15 +107,15 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     DiscreteProbabilityVector::ResamplingPoints resamplingPointsX;
     for (unsigned int iSample = 0; iSample < nSamples; ++iSample)
     {
-        resamplingPointsX.emplace_back((xOverlapMin + (xOverlapMax - xOverlapMin) *
-            static_cast<float>(iSample + 1) / static_cast<float>(nSamples + 1)));
+        resamplingPointsX.emplace_back(
+            (xOverlapMin + (xOverlapMax - xOverlapMin) * static_cast<float>(iSample + 1) / static_cast<float>(nSamples + 1)));
     }
 
     const DiscreteProbabilityVector resampledDiscreteProbabilityVector1(discreteProbabilityVector1, resamplingPointsX);
     const DiscreteProbabilityVector resampledDiscreteProbabilityVector2(discreteProbabilityVector2, resamplingPointsX);
 
-    const float correlation(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(
-        resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2));
+    const float correlation(
+        LArDiscreteProbabilityHelper::CalculateCorrelationCoefficient(resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2));
 
     const float pvalue(LArDiscreteProbabilityHelper::CalculateCorrelationCoefficientPValueFromPermutationTest(
         resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator, m_nPermutations));
@@ -124,8 +124,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     if (matchingScore < m_minOverallMatchingScore)
         return STATUS_CODE_NOT_FOUND;
 
-    const unsigned int nLocallyMatchedSamplingPoints(this->CalculateNumberOfLocallyMatchingSamplingPoints(resampledDiscreteProbabilityVector1,
-        resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
+    const unsigned int nLocallyMatchedSamplingPoints(this->CalculateNumberOfLocallyMatchingSamplingPoints(
+        resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, m_randomNumberGenerator));
     const int nComparisons(static_cast<int>(resampledDiscreteProbabilityVector1.GetSize()) - (static_cast<int>(m_minSamples) - 1));
     if (1 > nComparisons)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -134,20 +134,19 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     if (locallyMatchedFraction < m_minOverallLocallyMatchedFraction)
         return STATUS_CODE_NOT_FOUND;
 
-    overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,
-        correlation, twoViewXOverlap);
+    overlapResult = TwoViewTransverseOverlapResult(
+        matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints, correlation, twoViewXOverlap);
 
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingSamplingPoints(
-    const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2,
-    std::mt19937 &randomNumberGenerator)
+unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingSamplingPoints(const DiscreteProbabilityVector &discreteProbabilityVector1,
+    const DiscreteProbabilityVector &discreteProbabilityVector2, std::mt19937 &randomNumberGenerator)
 {
     if (discreteProbabilityVector1.GetSize() != discreteProbabilityVector2.GetSize() ||
-        0 == discreteProbabilityVector1.GetSize()*discreteProbabilityVector2.GetSize())
+        0 == discreteProbabilityVector1.GetSize() * discreteProbabilityVector2.GetSize())
         throw STATUS_CODE_INVALID_PARAMETER;
 
     if (m_minSamples > discreteProbabilityVector1.GetSize())
@@ -170,14 +169,15 @@ unsigned int TwoViewTransverseTracksAlgorithm::CalculateNumberOfLocallyMatchingS
             }
             catch (const StatusCodeException &)
             {
-                std::cout << "TwoViewTransverseTracksAlgorithm: failed to calculate correlation coefficient p-value for these numbers" << std::endl;;
+                std::cout << "TwoViewTransverseTracksAlgorithm: failed to calculate correlation coefficient p-value for these numbers" << std::endl;
+                ;
                 std::cout << "----view 0: ";
                 for (unsigned int iElement = 0; iElement < localValues1.size(); ++iElement)
-                    std::cout<<localValues1.at(iElement) << " ";
+                    std::cout << localValues1.at(iElement) << " ";
                 std::cout << std::endl;
                 std::cout << "----view 1: ";
                 for (unsigned int iElement = 0; iElement < localValues2.size(); ++iElement)
-                    std::cout<<localValues2.at(iElement) << " ";
+                    std::cout << localValues2.at(iElement) << " ";
                 std::cout << std::endl;
             }
 
@@ -213,7 +213,7 @@ float TwoViewTransverseTracksAlgorithm::GetPrimaryAxisDotDriftAxis(const pandora
 void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
-    for (MatrixToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
+    for (MatrixToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd;)
     {
         if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapMatrix()))
         {
@@ -234,12 +234,11 @@ void TwoViewTransverseTracksAlgorithm::ExamineOverlapContainer()
 StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", algorithmToolVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "TrackTools", algorithmToolVector));
 
     for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
-        TransverseMatrixTool *const pTransverseMatrixTool(dynamic_cast<TransverseMatrixTool*>(*iter));
+        TransverseMatrixTool *const pTransverseMatrixTool(dynamic_cast<TransverseMatrixTool *>(*iter));
 
         if (!pTransverseMatrixTool)
             return STATUS_CODE_INVALID_PARAMETER;
@@ -247,29 +246,26 @@ StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlH
         m_algorithmToolVector.push_back(pTransverseMatrixTool);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NMaxMatrixToolRepeats", m_nMaxMatrixToolRepeats));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NMaxMatrixToolRepeats", m_nMaxMatrixToolRepeats));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DownsampleFactor", m_downsampleFactor));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DownsampleFactor", m_downsampleFactor));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSamples", m_minSamples));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinSamples", m_minSamples));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NPermutations", m_nPermutations));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NPermutations", m_nPermutations));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "LocalMatchingScoreThreshold", m_localMatchingScoreThreshold));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "LocalMatchingScoreThreshold", m_localMatchingScoreThreshold));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxDotProduct", m_maxDotProduct));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxDotProduct", m_maxDotProduct));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinOverallMatchingScore", m_minOverallMatchingScore));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinOverallMatchingScore", m_minOverallMatchingScore));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinOverallLocallyMatchedFraction", m_minOverallLocallyMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinOverallLocallyMatchedFraction", m_minOverallLocallyMatchedFraction));
 
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }

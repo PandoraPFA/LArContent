@@ -20,8 +20,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-PfoValidationAlgorithm::PfoValidationAlgorithm() :
-    m_nMatchesToShow(3)
+PfoValidationAlgorithm::PfoValidationAlgorithm() : m_nMatchesToShow(3)
 {
 }
 
@@ -43,11 +42,15 @@ StatusCode PfoValidationAlgorithm::Run()
     LArMCParticleHelper::MCContributionMap beamMCParticlesToGoodHitsMap;
     LArMCParticleHelper::MCContributionMap crMCParticlesToGoodHitsMap;
 
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamParticle, beamMCParticlesToGoodHitsMap);
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsCosmicRay, crMCParticlesToGoodHitsMap);
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamParticle, beamMCParticlesToGoodHitsMap);
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsCosmicRay, crMCParticlesToGoodHitsMap);
 
-    const LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps{nuMCParticlesToGoodHitsMap, beamMCParticlesToGoodHitsMap, crMCParticlesToGoodHitsMap};
+    const LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps{
+        nuMCParticlesToGoodHitsMap, beamMCParticlesToGoodHitsMap, crMCParticlesToGoodHitsMap};
 
     // Get the mappings detailing the hits shared between Pfos and reconstructable MCParticles
     PfoList finalStatePfos;
@@ -59,11 +62,13 @@ StatusCode PfoValidationAlgorithm::Run()
     }
 
     LArMCParticleHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_parameters.m_foldBackHierarchy);
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(
+        finalStatePfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_parameters.m_foldBackHierarchy);
 
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
     LArMCParticleHelper::MCParticleToPfoHitSharingMap mcParticleToPfoHitSharingMap;
-    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(pfoToReconstructable2DHitsMap, mcParticlesToGoodHitsMaps, pfoToMCParticleHitSharingMap, mcParticleToPfoHitSharingMap);
+    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(
+        pfoToReconstructable2DHitsMap, mcParticlesToGoodHitsMaps, pfoToMCParticleHitSharingMap, mcParticleToPfoHitSharingMap);
 
     // Print the monte-carlo information for this event
     MCParticleVector orderedMCParticleVector;
@@ -99,26 +104,25 @@ StatusCode PfoValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_pfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodHits", m_parameters.m_minPrimaryGoodHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinPrimaryGoodHits", m_parameters.m_minPrimaryGoodHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsForGoodView", m_parameters.m_minHitsForGoodView));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinHitsForGoodView", m_parameters.m_minHitsForGoodView));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodViews", m_parameters.m_minPrimaryGoodViews));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinPrimaryGoodViews", m_parameters.m_minPrimaryGoodViews));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectInputHits", m_parameters.m_selectInputHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SelectInputHits", m_parameters.m_selectInputHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPhotonPropagation", m_parameters.m_maxPhotonPropagation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxPhotonPropagation", m_parameters.m_maxPhotonPropagation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitSharingFraction", m_parameters.m_minHitSharingFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinHitSharingFraction", m_parameters.m_minHitSharingFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NumMatchesToShow", m_nMatchesToShow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NumMatchesToShow", m_nMatchesToShow));
 
     return STATUS_CODE_SUCCESS;
 }

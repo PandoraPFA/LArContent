@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  PfoValidationAlgorithm class
  */
-class PfoValidationAlgorithm: public pandora::Algorithm
+class PfoValidationAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -28,10 +28,10 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string                                 m_caloHitListName;          ///< Name of input calo hit list
-    std::string                                 m_pfoListName;              ///< Name of input pfo list
-    LArMCParticleHelper::PrimaryParameters      m_parameters;               ///< Parameters used to decide when an MCParticle is reconstructable
-    unsigned int                                m_nMatchesToShow;           ///< The maximum number of MCParticle to Pfo matches to show
+    std::string m_caloHitListName;                       ///< Name of input calo hit list
+    std::string m_pfoListName;                           ///< Name of input pfo list
+    LArMCParticleHelper::PrimaryParameters m_parameters; ///< Parameters used to decide when an MCParticle is reconstructable
+    unsigned int m_nMatchesToShow;                       ///< The maximum number of MCParticle to Pfo matches to show
 };
 
 } // namespace lar_content

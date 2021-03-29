@@ -33,4 +33,3 @@ private:
 } // namespace lar_content
 
 #endif // #ifndef LAR_CHEATING_NEUTRINO_SLICE_SELECTION_TOOL_H
-

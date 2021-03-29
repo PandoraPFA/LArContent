@@ -64,8 +64,8 @@ void LArPointingCluster::BuildPointingCluster(const TwoDSlidingFitResult &slidin
     const Vertex maxVertex(m_pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
         slidingFitResult.GetMaxLayerRms(), !isInner);
 
-    m_innerVertex = ( isInner ? minVertex : maxVertex);
-    m_outerVertex = ( isInner ? maxVertex : minVertex);
+    m_innerVertex = (isInner ? minVertex : maxVertex);
+    m_outerVertex = (isInner ? maxVertex : minVertex);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -79,7 +79,7 @@ void LArPointingCluster::BuildPointingCluster(const ThreeDSlidingFitResult &slid
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const bool isInner((slidingFitResult.GetGlobalMinLayerPosition().GetZ() < slidingFitResult.GetGlobalMaxLayerPosition().GetZ()) &&
-        (slidingFitResult.GetMinLayer() < slidingFitResult.GetMaxLayer()));
+                       (slidingFitResult.GetMinLayer() < slidingFitResult.GetMaxLayer()));
 
     m_pCluster = slidingFitResult.GetCluster();
 
@@ -88,8 +88,8 @@ void LArPointingCluster::BuildPointingCluster(const ThreeDSlidingFitResult &slid
     const Vertex maxVertex(m_pCluster, slidingFitResult.GetGlobalMaxLayerPosition(), slidingFitResult.GetGlobalMaxLayerDirection() * -1.f,
         slidingFitResult.GetMaxLayerRms(), !isInner);
 
-    m_innerVertex = ( isInner ? minVertex : maxVertex);
-    m_outerVertex = ( isInner ? maxVertex : minVertex);
+    m_innerVertex = (isInner ? minVertex : maxVertex);
+    m_outerVertex = (isInner ? maxVertex : minVertex);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,8 +106,8 @@ LArPointingCluster::Vertex::Vertex() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArPointingCluster::Vertex::Vertex(const Cluster *const pCluster, const CartesianVector &position, const CartesianVector &direction,
-        const float rms, const bool isInner) :
+LArPointingCluster::Vertex::Vertex(
+    const Cluster *const pCluster, const CartesianVector &position, const CartesianVector &direction, const float rms, const bool isInner) :
     m_pCluster(pCluster),
     m_position(position),
     m_direction(direction),

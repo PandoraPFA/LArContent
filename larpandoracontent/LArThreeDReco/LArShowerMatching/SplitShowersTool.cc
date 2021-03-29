@@ -44,7 +44,7 @@ SplitShowersTool::SplitShowersTool() :
 bool SplitShowersTool::Run(ThreeViewShowersAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ClusterMergeMap clusterMergeMap;
     this->FindSplitShowers(pAlgorithm, overlapTensor, clusterMergeMap);
@@ -146,8 +146,8 @@ void SplitShowersTool::SelectTensorElements(TensorType::ElementList::const_itera
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::FindShowerMerges(ThreeViewShowersAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ClusterSet &usedClusters,
-    ClusterMergeMap &clusterMergeMap) const
+void SplitShowersTool::FindShowerMerges(ThreeViewShowersAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
+    ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
     {
@@ -182,16 +182,16 @@ void SplitShowersTool::FindShowerMerges(ThreeViewShowersAlgorithm *const pAlgori
                 if ((1 == m_nCommonClusters) && !((2 == nClustersU) || (2 == nClustersV) || (2 == nClustersW)))
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
-                if (m_checkClusterProximities && (!this->CheckClusterProximities(pAlgorithm, clusterListU) ||
-                    !this->CheckClusterProximities(pAlgorithm, clusterListV) ||
-                    !this->CheckClusterProximities(pAlgorithm, clusterListW)))
+                if (m_checkClusterProximities &&
+                    (!this->CheckClusterProximities(pAlgorithm, clusterListU) || !this->CheckClusterProximities(pAlgorithm, clusterListV) ||
+                        !this->CheckClusterProximities(pAlgorithm, clusterListW)))
                 {
                     continue;
                 }
 
                 if (m_checkClusterVertexRelations && (!this->CheckClusterVertexRelations(pAlgorithm, clusterListU) ||
-                    !this->CheckClusterVertexRelations(pAlgorithm, clusterListV) ||
-                    !this->CheckClusterVertexRelations(pAlgorithm, clusterListW)))
+                                                         !this->CheckClusterVertexRelations(pAlgorithm, clusterListV) ||
+                                                         !this->CheckClusterVertexRelations(pAlgorithm, clusterListW)))
                 {
                     continue;
                 }
@@ -218,7 +218,7 @@ void SplitShowersTool::FindShowerMerges(ThreeViewShowersAlgorithm *const pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SplitShowersTool::CheckClusterProximities(ThreeViewShowersAlgorithm */*const pAlgorithm*/, const ClusterList &clusterList) const
+bool SplitShowersTool::CheckClusterProximities(ThreeViewShowersAlgorithm * /*const pAlgorithm*/, const ClusterList &clusterList) const
 {
     if (1 == clusterList.size())
         return true;
@@ -246,7 +246,8 @@ bool SplitShowersTool::CheckClusterVertexRelations(ThreeViewShowersAlgorithm *co
 {
     const VertexList *pVertexList(NULL);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+    const Vertex *const pVertex(
+        ((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
 
     if (NULL == pVertex)
         return true;
@@ -263,13 +264,17 @@ bool SplitShowersTool::CheckClusterVertexRelations(ThreeViewShowersAlgorithm *co
 
             if (LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
                 LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-                LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
-                LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance))
+                LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance,
+                    m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+                LArPointingClusterHelper::IsEmission(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance,
+                    m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance))
             {
                 ++nVertexAssociations;
             }
         }
-        catch (StatusCodeException &) {}
+        catch (StatusCodeException &)
+        {
+        }
     }
 
     if (nVertexAssociations > m_maxVertexAssociations)
@@ -309,8 +314,8 @@ bool SplitShowersTool::CheckClusterSplitPositions(ThreeViewShowersAlgorithm *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void SplitShowersTool::GetSplitXDetails(ThreeViewShowersAlgorithm *const pAlgorithm, const Cluster *const pClusterA, const Cluster *const pClusterB,
-    float &splitXPosition, float &overlapX) const
+void SplitShowersTool::GetSplitXDetails(ThreeViewShowersAlgorithm *const pAlgorithm, const Cluster *const pClusterA,
+    const Cluster *const pClusterB, float &splitXPosition, float &overlapX) const
 {
     const TwoDSlidingFitResult &fitResultA(pAlgorithm->GetCachedSlidingFitResult(pClusterA).GetShowerFitResult());
     const TwoDSlidingFitResult &fitResultB(pAlgorithm->GetCachedSlidingFitResult(pClusterB).GetShowerFitResult());
@@ -363,7 +368,8 @@ bool SplitShowersTool::ApplyChanges(ThreeViewShowersAlgorithm *const pAlgorithm,
     ClusterMergeMap consolidatedMergeMap;
 
     ClusterList clusterList;
-    for (const auto &mapEntry : clusterMergeMap) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterMergeMap)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : clusterList)
@@ -387,8 +393,7 @@ bool SplitShowersTool::ApplyChanges(ThreeViewShowersAlgorithm *const pAlgorithm,
 
 StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NCommonClusters", m_nCommonClusters));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NCommonClusters", m_nCommonClusters));
 
     if ((1 != m_nCommonClusters) && (2 != m_nCommonClusters))
     {
@@ -396,44 +401,44 @@ StatusCode SplitShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchedFraction", m_minMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CheckClusterProximities", m_checkClusterProximities));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CheckClusterProximities", m_checkClusterProximities));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterSeparation", m_maxClusterSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxClusterSeparation", m_maxClusterSeparation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CheckClusterVertexRelations", m_checkClusterVertexRelations));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CheckClusterVertexRelations", m_checkClusterVertexRelations));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxVertexLongitudinalDistance", m_maxVertexLongitudinalDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxVertexLongitudinalDistance", m_maxVertexLongitudinalDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexAngularAllowance", m_vertexAngularAllowance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexAngularAllowance", m_vertexAngularAllowance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxVertexAssociations", m_maxVertexAssociations));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxVertexAssociations", m_maxVertexAssociations));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CheckClusterSplitPositions", m_checkClusterSplitPositions));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CheckClusterSplitPositions", m_checkClusterSplitPositions));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VetoMergeXDifference", m_vetoMergeXDifference));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VetoMergeXDifference", m_vetoMergeXDifference));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VetoMergeXOverlap", m_vetoMergeXOverlap));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VetoMergeXOverlap", m_vetoMergeXOverlap));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -22,7 +22,7 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_pfoListName;                ///< The pfo list name
+    std::string m_pfoListName; ///< The pfo list name
 };
 
 } // namespace lar_content

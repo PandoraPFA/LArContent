@@ -24,11 +24,11 @@ namespace lar_content
 class ProtoParticle
 {
 public:
-    pandora::ClusterList    m_clusterList;                  ///< List of 2D clusters in a 3D proto particle
+    pandora::ClusterList m_clusterList; ///< List of 2D clusters in a 3D proto particle
 };
 
 typedef std::vector<ProtoParticle> ProtoParticleVector;
-typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterMergeMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -96,7 +96,8 @@ public:
      *  @param  pCluster2 address of cluster2
      *  @param  pCluster3 address of cluster3
      */
-    virtual void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3 = nullptr) = 0;
+    virtual void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+        const pandora::Cluster *const pCluster3 = nullptr) = 0;
 
     /**
      *  @brief  Select a subset of input clusters for processing in this algorithm
@@ -177,7 +178,7 @@ protected:
 private:
     pandora::StatusCode Run();
 
-    std::string                 m_outputPfoListName;            ///< The output pfo list name
+    std::string m_outputPfoListName; ///< The output pfo list name
 };
 
 } // namespace lar_content

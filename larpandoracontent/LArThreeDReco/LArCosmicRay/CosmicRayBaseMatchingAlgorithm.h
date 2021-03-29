@@ -40,13 +40,13 @@ protected:
          */
         Particle(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 
-        const pandora::Cluster  *m_pClusterU;    ///< Address of cluster in U view
-        const pandora::Cluster  *m_pClusterV;    ///< Address of cluster in V view
-        const pandora::Cluster  *m_pClusterW;    ///< Address of cluster in W view
+        const pandora::Cluster *m_pClusterU; ///< Address of cluster in U view
+        const pandora::Cluster *m_pClusterV; ///< Address of cluster in V view
+        const pandora::Cluster *m_pClusterW; ///< Address of cluster in W view
     };
 
     typedef std::vector<Particle> ParticleList;
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterAssociationMap;
     typedef std::set<unsigned int> UIntSet;
 
     /**
@@ -76,8 +76,8 @@ protected:
      *
      *  @return boolean
      */
-    virtual bool CheckMatchedClusters3D(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-        const pandora::Cluster *const pCluster3) const = 0;
+    virtual bool CheckMatchedClusters3D(
+        const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3) const = 0;
 
     /**
      *  @brief  Calculate Pfo properties from proto particle
@@ -116,8 +116,7 @@ private:
      */
     void MatchThreeViews(const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters12,
         const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters23,
-        const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters31,
-        ParticleList &particleList) const;
+        const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters31, ParticleList &particleList) const;
 
     /**
      *  @brief Match clusters from two views and form into particles
@@ -129,8 +128,7 @@ private:
      */
     void MatchTwoViews(const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters12,
         const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters23,
-        const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters31,
-        ParticleList &particleList) const;
+        const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters31, ParticleList &particleList) const;
 
     /**
      *  @brief Match clusters from two views and form into particles
@@ -138,8 +136,7 @@ private:
      *  @param matchedClusters12 the map of matches between the first and second views
      *  @param particleList the output list of particles
      */
-    void MatchTwoViews(const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters12,
-        ParticleList &particleList) const;
+    void MatchTwoViews(const CosmicRayBaseMatchingAlgorithm::ClusterAssociationMap &matchedClusters12, ParticleList &particleList) const;
 
     /**
      *  @brief Remove ambiguities between candidate particles
@@ -156,10 +153,10 @@ private:
      */
     void BuildParticles(const ParticleList &particleList);
 
-    std::string    m_inputClusterListNameU;        ///< The name of the view U cluster list
-    std::string    m_inputClusterListNameV;        ///< The name of the view V cluster list
-    std::string    m_inputClusterListNameW;        ///< The name of the view W cluster list
-    std::string    m_outputPfoListName;            ///< The name of the output PFO list
+    std::string m_inputClusterListNameU; ///< The name of the view U cluster list
+    std::string m_inputClusterListNameV; ///< The name of the view V cluster list
+    std::string m_inputClusterListNameW; ///< The name of the view W cluster list
+    std::string m_outputPfoListName;     ///< The name of the output PFO list
 };
 
 } // namespace lar_content

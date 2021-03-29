@@ -15,8 +15,8 @@
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
-#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
@@ -74,9 +74,12 @@ StatusCode DlHitTrackShowerIdAlgorithm::Train()
 
         std::string trainingOutputFileName(m_trainingOutputFile);
 
-        if (view == TPC_VIEW_U) trainingOutputFileName += "_CaloHitListU.csv";
-        else if (view == TPC_VIEW_V) trainingOutputFileName += "_CaloHitListV.csv";
-        else if (view == TPC_VIEW_W) trainingOutputFileName += "_CaloHitListW.csv";
+        if (view == TPC_VIEW_U)
+            trainingOutputFileName += "_CaloHitListU.csv";
+        else if (view == TPC_VIEW_V)
+            trainingOutputFileName += "_CaloHitListV.csv";
+        else if (view == TPC_VIEW_W)
+            trainingOutputFileName += "_CaloHitListW.csv";
 
         LArMCParticleHelper::PrimaryParameters parameters;
         // Only care about reconstructability with respect to the current view, so skip good view check
@@ -84,8 +87,8 @@ StatusCode DlHitTrackShowerIdAlgorithm::Train()
         // Turn off max photo propagation for now, only care about killing off daughters of neutrons
         parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters,
-            LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(
+            pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
 
         LArMvaHelper::MvaFeatureVector featureVector;
         for (const CaloHit *pCaloHit : *pCaloHitList)
@@ -111,7 +114,7 @@ StatusCode DlHitTrackShowerIdAlgorithm::Train()
                 else
                     tag = TRACK;
             }
-            catch (const StatusCodeException&)
+            catch (const StatusCodeException &)
             {
                 continue;
             }
@@ -125,8 +128,7 @@ StatusCode DlHitTrackShowerIdAlgorithm::Train()
         featureVector.push_back(static_cast<double>(featureVector.size() / 4));
         std::rotate(featureVector.rbegin(), featureVector.rbegin() + 1, featureVector.rend());
 
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProduceTrainingExample(trainingOutputFileName, true,
-            featureVector));
+        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProduceTrainingExample(trainingOutputFileName, true, featureVector));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -136,7 +138,7 @@ StatusCode DlHitTrackShowerIdAlgorithm::Train()
 
 StatusCode DlHitTrackShowerIdAlgorithm::Infer()
 {
-    const float eps{1.1920929e-7};  // Python float epsilon, used in image padding
+    const float eps{1.1920929e-7}; // Python float epsilon, used in image padding
 
     if (m_visualize)
     {
@@ -153,10 +155,13 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
         if (!(view == TPC_VIEW_U || view == TPC_VIEW_V || view == TPC_VIEW_W))
             return STATUS_CODE_NOT_ALLOWED;
 
-        LArDLHelper::TorchModel &model{view == TPC_VIEW_U ? m_modelU : ( view == TPC_VIEW_V ? m_modelV : m_modelW )};
+        LArDLHelper::TorchModel &model{view == TPC_VIEW_U ? m_modelU : (view == TPC_VIEW_V ? m_modelV : m_modelW)};
 
         // Get bounds of hit region
-        float xMin{}; float xMax{}; float zMin{}; float zMax{};
+        float xMin{};
+        float xMax{};
+        float zMin{};
+        float zMax{};
         this->GetHitRegion(*pCaloHitList, xMin, xMax, zMin, zMax);
         const float xRange = (xMax + eps) - (xMin - eps);
         int nTilesX = static_cast<int>(std::ceil(xRange / m_tileSize));
@@ -168,9 +173,9 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
         CaloHitList trackHits, showerHits, otherHits;
         // Process tile
         // ATTN: Be sure to reset all values to zero after each tile has been processed
-        float **weights = new float*[m_imageHeight];
+        float **weights = new float *[m_imageHeight];
         for (int r = 0; r < m_imageHeight; ++r)
-            weights[r] = new float[m_imageWidth] ();
+            weights[r] = new float[m_imageWidth]();
         for (int i = 0; i < nTiles; ++i)
         {
             for (const CaloHit *pCaloHit : *pCaloHitList)
@@ -256,7 +261,7 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
                 const int tileX(std::get<1>(pixelMap));
                 const int tile = sparseMap.at(tileZ * nTilesX + tileX);
                 if (tile == i)
-                {   // Make sure we're looking at a hit in the correct tile
+                { // Make sure we're looking at a hit in the correct tile
                     const int pixelZ(std::get<2>(pixelMap));
                     const int pixelX(std::get<3>(pixelMap));
 
@@ -307,23 +312,29 @@ StatusCode DlHitTrackShowerIdAlgorithm::Infer()
 
 void DlHitTrackShowerIdAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &xMin, float &xMax, float &zMin, float &zMax)
 {
-    xMin = std::numeric_limits<float>::max(); xMax = -std::numeric_limits<float>::max();
-    zMin = std::numeric_limits<float>::max(); zMax = -std::numeric_limits<float>::max();
+    xMin = std::numeric_limits<float>::max();
+    xMax = -std::numeric_limits<float>::max();
+    zMin = std::numeric_limits<float>::max();
+    zMax = -std::numeric_limits<float>::max();
     for (const CaloHit *pCaloHit : caloHitList)
     {
         const float x(pCaloHit->GetPositionVector().GetX());
         const float z(pCaloHit->GetPositionVector().GetZ());
-        if (x < xMin) xMin = x;
-        if (x > xMax) xMax = x;
-        if (z < zMin) zMin = z;
-        if (z > zMax) zMax = z;
+        if (x < xMin)
+            xMin = x;
+        if (x > xMax)
+            xMax = x;
+        if (z < zMin)
+            zMin = z;
+        if (z > zMax)
+            zMax = z;
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DlHitTrackShowerIdAlgorithm::GetSparseTileMap(const CaloHitList &caloHitList, const float xMin, const float zMin,
-    const int nTilesX, PixelToTileMap &sparseMap)
+void DlHitTrackShowerIdAlgorithm::GetSparseTileMap(
+    const CaloHitList &caloHitList, const float xMin, const float zMin, const int nTilesX, PixelToTileMap &sparseMap)
 {
     // Identify the tiles that actually contain hits
     std::map<int, bool> tilePopulationMap;
@@ -353,13 +364,11 @@ void DlHitTrackShowerIdAlgorithm::GetSparseTileMap(const CaloHitList &caloHitLis
 
 StatusCode DlHitTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseTrainingMode",
-        m_useTrainingMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseTrainingMode", m_useTrainingMode));
 
     if (m_useTrainingMode)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "TrainingOutputFileName", m_trainingOutputFile));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingOutputFileName", m_trainingOutputFile));
     }
     else
     {
@@ -374,8 +383,8 @@ StatusCode DlHitTrackShowerIdAlgorithm::ReadSettings(const TiXmlHandle xmlHandle
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArDLHelper::LoadModel(m_modelFileNameW, m_modelW));
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "CaloHitListNames", m_caloHitListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageHeight", m_imageHeight));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth", m_imageWidth));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TileSize", m_tileSize));

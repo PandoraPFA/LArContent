@@ -18,7 +18,7 @@ namespace lar_content
 /**
  *  @brief  VisualParticleMonitoringAlgorithm class
  */
-class VisualParticleMonitoringAlgorithm: public pandora::Algorithm
+class VisualParticleMonitoringAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -90,17 +90,17 @@ private:
         LArMCParticleHelper::MCContributionMap &mcMap) const;
 #endif // MONITORING
 
-    std::string     m_caloHitListName;          ///< Name of input calo hit list
-    std::string     m_pfoListName;              ///< Name of input PFO list
-    bool            m_visualizeMC;              ///< Whether or not to visualize MC particles
-    bool            m_visualizePfo;             ///< Whether or not to visualize PFOs
-    bool            m_groupMCByPdg;             ///< Whether or not to group MC particles by particle id
-    bool            m_showPfoByPid;             ///< Whether or not to colour PFOs by particle id
-    bool            m_showPfoMatchedMC;         ///< Whether or not to display the best matched MC particle for a PFO
-    bool            m_isTestBeam;               ///< Whether or not this is a test beam experiment
-    float           m_transparencyThresholdE;   ///< Cell energy for which transparency is saturated (0%, fully opaque)
-    float           m_energyScaleThresholdE;    ///< Cell energy for which color is at top end of continous color palette
-    float           m_scalingFactor;            ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)
+    std::string m_caloHitListName;  ///< Name of input calo hit list
+    std::string m_pfoListName;      ///< Name of input PFO list
+    bool m_visualizeMC;             ///< Whether or not to visualize MC particles
+    bool m_visualizePfo;            ///< Whether or not to visualize PFOs
+    bool m_groupMCByPdg;            ///< Whether or not to group MC particles by particle id
+    bool m_showPfoByPid;            ///< Whether or not to colour PFOs by particle id
+    bool m_showPfoMatchedMC;        ///< Whether or not to display the best matched MC particle for a PFO
+    bool m_isTestBeam;              ///< Whether or not this is a test beam experiment
+    float m_transparencyThresholdE; ///< Cell energy for which transparency is saturated (0%, fully opaque)
+    float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette
+    float m_scalingFactor;          ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)
 };
 
 } // namespace lar_content

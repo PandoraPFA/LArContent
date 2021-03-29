@@ -62,9 +62,9 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
         const TwoDSlidingFitResult &branchSlidingFitResult(bFitIter->second);
 
         // Find best split position for candidate branch cluster
-        CartesianVector splitPosition(0.f,0.f,0.f);
-        CartesianVector splitDirection1(0.f,0.f,0.f);
-        CartesianVector splitDirection2(0.f,0.f,0.f);
+        CartesianVector splitPosition(0.f, 0.f, 0.f);
+        CartesianVector splitDirection1(0.f, 0.f, 0.f);
+        CartesianVector splitDirection2(0.f, 0.f, 0.f);
 
         if (STATUS_CODE_SUCCESS != this->FindBestSplitPosition(branchSlidingFitResult, splitPosition, splitDirection1, splitDirection2))
             continue;
@@ -94,8 +94,8 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
             float lengthSquared1(std::numeric_limits<float>::max());
             float lengthSquared2(std::numeric_limits<float>::max());
 
-            if (STATUS_CODE_SUCCESS != this->ConfirmSplitPosition(branchSlidingFitResult, replacementSlidingFitResult,
-                splitPosition, splitDirection1, splitDirection2, lengthSquared1, lengthSquared2))
+            if (STATUS_CODE_SUCCESS != this->ConfirmSplitPosition(branchSlidingFitResult, replacementSlidingFitResult, splitPosition,
+                                           splitDirection1, splitDirection2, lengthSquared1, lengthSquared2))
                 continue;
 
             if (lengthSquared1 < bestLengthSquared1)
@@ -131,19 +131,19 @@ StatusCode CosmicRaySplittingAlgorithm::Run()
             if (!(this->IdentifyCrossedTracks(pBranchCluster, pReplacementCluster1, pReplacementCluster2, splitPosition)))
                 continue;
 
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->PerformDoubleSplit(pBranchCluster, pReplacementCluster1,
-                pReplacementCluster2, splitPosition, splitDirection1, splitDirection2));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                this->PerformDoubleSplit(pBranchCluster, pReplacementCluster1, pReplacementCluster2, splitPosition, splitDirection1, splitDirection2));
         }
         // Single scatter
         else if (pReplacementCluster1)
         {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->PerformSingleSplit(pBranchCluster, pReplacementCluster1,
-                splitPosition, splitDirection1, splitDirection2));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                this->PerformSingleSplit(pBranchCluster, pReplacementCluster1, splitPosition, splitDirection1, splitDirection2));
         }
         else if (pReplacementCluster2)
         {
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->PerformSingleSplit(pBranchCluster, pReplacementCluster2,
-                splitPosition, splitDirection2, splitDirection1));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                this->PerformSingleSplit(pBranchCluster, pReplacementCluster2, splitPosition, splitDirection2, splitDirection1));
         }
 
         // Choose not to re-use clusters (for now)
@@ -178,8 +178,7 @@ void CosmicRaySplittingAlgorithm::GetListOfCleanClusters(const ClusterList *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRaySplittingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector,
-    TwoDSlidingFitResultMap &slidingFitResultMap) const
+void CosmicRaySplittingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -205,8 +204,8 @@ void CosmicRaySplittingAlgorithm::BuildSlidingFitResultMap(const ClusterVector &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFitResult, CartesianVector &splitPosition,
-    CartesianVector &splitDirection1, CartesianVector &splitDirection2) const
+StatusCode CosmicRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &branchSlidingFitResult,
+    CartesianVector &splitPosition, CartesianVector &splitDirection1, CartesianVector &splitDirection2) const
 {
     // Find position of greatest scatter for this cluster
     float splitCosTheta(m_maxCosSplittingAngle);
@@ -220,14 +219,14 @@ StatusCode CosmicRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingF
     branchSlidingFitResult.GetLocalPosition(minPosition, minL, minT);
     branchSlidingFitResult.GetLocalPosition(maxPosition, maxL, maxT);
 
-    const unsigned int nSamplingPoints = static_cast<unsigned int>((maxL - minL)/ m_samplingPitch);
+    const unsigned int nSamplingPoints = static_cast<unsigned int>((maxL - minL) / m_samplingPitch);
 
     for (unsigned int n = 0; n < nSamplingPoints; ++n)
     {
         const float alpha((0.5f + static_cast<float>(n)) / static_cast<float>(nSamplingPoints));
         const float rL(minL + (maxL - minL) * alpha);
 
-        CartesianVector centralPosition(0.f,0.f,0.f), forwardDirection(0.f,0.f,0.f), backwardDirection(0.f,0.f,0.f);
+        CartesianVector centralPosition(0.f, 0.f, 0.f), forwardDirection(0.f, 0.f, 0.f), backwardDirection(0.f, 0.f, 0.f);
 
         if ((STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitPosition(rL, centralPosition)) ||
             (STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitDirection(rL + halfWindowLength, forwardDirection)) ||
@@ -240,8 +239,8 @@ StatusCode CosmicRaySplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingF
 
         if (cosTheta < splitCosTheta)
         {
-            CartesianVector forwardPosition(0.f,0.f,0.f);
-            CartesianVector backwardPosition(0.f,0.f,0.f);
+            CartesianVector forwardPosition(0.f, 0.f, 0.f);
+            CartesianVector backwardPosition(0.f, 0.f, 0.f);
 
             if ((STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitPosition(rL + halfWindowLength, forwardPosition)) ||
                 (STATUS_CODE_SUCCESS != branchSlidingFitResult.GetGlobalFitPosition(rL - halfWindowLength, backwardPosition)))
@@ -298,8 +297,8 @@ StatusCode CosmicRaySplittingAlgorithm::ConfirmSplitPosition(const TwoDSlidingFi
         const CartesianVector pAxis((0 == iFwd) ? (maxPosition - minPosition) : (minPosition - maxPosition));
         const CartesianVector vtxPosition((0 == iFwd) ? minPosition : maxPosition);
         const CartesianVector endPosition((0 == iFwd) ? maxPosition : minPosition);
-        const CartesianVector vtxDirection((0 == iFwd) ? (pAxis.GetDotProduct(minDirection) > 0 ? minDirection : minDirection * -1.f) :
-            (pAxis.GetDotProduct(maxDirection) > 0 ? maxDirection : maxDirection * -1.f));
+        const CartesianVector vtxDirection((0 == iFwd) ? (pAxis.GetDotProduct(minDirection) > 0 ? minDirection : minDirection * -1.f)
+                                                       : (pAxis.GetDotProduct(maxDirection) > 0 ? maxDirection : maxDirection * -1.f));
 
         // Choose the correct end of the replacement cluster and require proximity to the branch cluster
         const float vtxDisplacement(LArClusterHelper::GetClosestDistance(vtxPosition, branchSlidingFitResult.GetCluster()));
@@ -312,19 +311,19 @@ StatusCode CosmicRaySplittingAlgorithm::ConfirmSplitPosition(const TwoDSlidingFi
         if (vtxDisplacement > endDisplacement)
             continue;
 
-        if (std::min(lengthSquared,std::min(lengthSquared1,lengthSquared2)) > std::min(branchLengthSquared, replacementLengthSquared))
+        if (std::min(lengthSquared, std::min(lengthSquared1, lengthSquared2)) > std::min(branchLengthSquared, replacementLengthSquared))
             continue;
 
         // Require good pointing information between replacement cluster and candidate split position
         float impactL(0.f), impactT(0.f);
         LArPointingClusterHelper::GetImpactParameters(vtxPosition, vtxDirection, splitPosition, impactL, impactT);
 
-        if (impactT > m_maxTransverseDisplacement || impactL > m_maxLongitudinalDisplacement ||
-            impactL < -1.f || impactT > std::max(1.5f, 0.577f * (1.f + impactL)))
+        if (impactT > m_maxTransverseDisplacement || impactL > m_maxLongitudinalDisplacement || impactL < -1.f ||
+            impactT > std::max(1.5f, 0.577f * (1.f + impactL)))
             continue;
 
         // Check the segment of the branch cluster above the split position
-        if (vtxDirection.GetDotProduct(branchDirection1) > std::max(m_minCosMergingAngle,cosSplittingAngle))
+        if (vtxDirection.GetDotProduct(branchDirection1) > std::max(m_minCosMergingAngle, cosSplittingAngle))
         {
             if (lengthSquared < bestLengthSquared1)
             {
@@ -334,7 +333,7 @@ StatusCode CosmicRaySplittingAlgorithm::ConfirmSplitPosition(const TwoDSlidingFi
         }
 
         // Check the segment of the branch cluster below the split position
-        if (vtxDirection.GetDotProduct(branchDirection2) > std::max(m_minCosMergingAngle,cosSplittingAngle))
+        if (vtxDirection.GetDotProduct(branchDirection2) > std::max(m_minCosMergingAngle, cosSplittingAngle))
         {
             if (lengthSquared < bestLengthSquared2)
             {
@@ -369,8 +368,9 @@ StatusCode CosmicRaySplittingAlgorithm::PerformSingleSplit(const Cluster *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRaySplittingAlgorithm::PerformDoubleSplit(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster1, const Cluster *const pReplacementCluster2,
-    const CartesianVector &splitPosition, const CartesianVector &splitDirection1, const CartesianVector &splitDirection2) const
+StatusCode CosmicRaySplittingAlgorithm::PerformDoubleSplit(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster1,
+    const Cluster *const pReplacementCluster2, const CartesianVector &splitPosition, const CartesianVector &splitDirection1,
+    const CartesianVector &splitDirection2) const
 {
     CaloHitList caloHitListToMove1, caloHitListToMove2;
     this->GetCaloHitListsToMove(pBranchCluster, splitPosition, splitDirection1, splitDirection2, caloHitListToMove1, caloHitListToMove2);
@@ -398,8 +398,8 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBra
     const CartesianVector &splitPosition, const CartesianVector &forwardDirection, const CartesianVector &backwardDirection,
     CaloHitList &caloHitListToMove) const
 {
-    const CartesianVector forwardPosition(LArClusterHelper::GetClosestPosition(splitPosition,pBranchCluster));
-    const CartesianVector vtxPosition(LArClusterHelper::GetClosestPosition(splitPosition,pReplacementCluster));
+    const CartesianVector forwardPosition(LArClusterHelper::GetClosestPosition(splitPosition, pBranchCluster));
+    const CartesianVector vtxPosition(LArClusterHelper::GetClosestPosition(splitPosition, pReplacementCluster));
     const CartesianVector vtxDirection((forwardPosition - vtxPosition).GetUnitVector());
 
     CaloHitList caloHitListToSort, caloHitListToCheck;
@@ -413,7 +413,7 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListToMove(const Cluster *const pBra
         {
             caloHitListToMove.push_back(pCaloHit);
         }
-        else if(forwardDirection.GetDotProduct(pCaloHit->GetPositionVector() - vtxPosition) > -1.25f)
+        else if (forwardDirection.GetDotProduct(pCaloHit->GetPositionVector() - vtxPosition) > -1.25f)
         {
             caloHitListToCheck.push_back(pCaloHit);
         }
@@ -474,11 +474,11 @@ void CosmicRaySplittingAlgorithm::GetCaloHitListsToMove(const Cluster *const pBr
 bool CosmicRaySplittingAlgorithm::IdentifyCrossedTracks(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster1,
     const Cluster *const pReplacementCluster2, const pandora::CartesianVector &splitPosition) const
 {
-    CartesianVector branchVertex1(0.f,0.f,0.f), branchVertex2(0.f,0.f,0.f);
-    LArClusterHelper::GetExtremalCoordinates(pBranchCluster,branchVertex1,branchVertex2);
+    CartesianVector branchVertex1(0.f, 0.f, 0.f), branchVertex2(0.f, 0.f, 0.f);
+    LArClusterHelper::GetExtremalCoordinates(pBranchCluster, branchVertex1, branchVertex2);
 
-    const CartesianVector replacementVertex1(LArClusterHelper::GetClosestPosition(splitPosition,pReplacementCluster1));
-    const CartesianVector replacementVertex2(LArClusterHelper::GetClosestPosition(splitPosition,pReplacementCluster2));
+    const CartesianVector replacementVertex1(LArClusterHelper::GetClosestPosition(splitPosition, pReplacementCluster1));
+    const CartesianVector replacementVertex2(LArClusterHelper::GetClosestPosition(splitPosition, pReplacementCluster2));
 
     if ((replacementVertex2 - replacementVertex1).GetMagnitudeSquared() > (branchVertex2 - branchVertex1).GetMagnitudeSquared())
         return false;
@@ -488,8 +488,8 @@ bool CosmicRaySplittingAlgorithm::IdentifyCrossedTracks(const Cluster *const pBr
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRaySplittingAlgorithm::GetCaloHitListToKeep(const Cluster *const pBranchCluster, const CaloHitList &caloHitListToMove,
-    CaloHitList &caloHitListToKeep) const
+StatusCode CosmicRaySplittingAlgorithm::GetCaloHitListToKeep(
+    const Cluster *const pBranchCluster, const CaloHitList &caloHitListToMove, CaloHitList &caloHitListToKeep) const
 {
     if (caloHitListToMove.empty())
         return STATUS_CODE_FAILURE;
@@ -510,7 +510,8 @@ StatusCode CosmicRaySplittingAlgorithm::GetCaloHitListToKeep(const Cluster *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CosmicRaySplittingAlgorithm::SplitCluster(const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster, const CaloHitList &caloHitListToMove) const
+StatusCode CosmicRaySplittingAlgorithm::SplitCluster(
+    const Cluster *const pBranchCluster, const Cluster *const pReplacementCluster, const CaloHitList &caloHitListToMove) const
 {
     if (caloHitListToMove.empty())
         return STATUS_CODE_FAILURE;
@@ -529,29 +530,28 @@ StatusCode CosmicRaySplittingAlgorithm::SplitCluster(const Cluster *const pBranc
 
 StatusCode CosmicRaySplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterMinLength", m_clusterMinLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ClusterMinLength", m_clusterMinLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_halfWindowLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_halfWindowLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SamplingPitch", m_samplingPitch));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SamplingPitch", m_samplingPitch));
 
     if (m_samplingPitch < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_INVALID_PARAMETER;
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCosSplittingAngle", m_maxCosSplittingAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCosSplittingAngle", m_maxCosSplittingAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCosMergingAngle", m_minCosMergingAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosMergingAngle", m_minCosMergingAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
     m_maxLongitudinalDisplacementSquared = m_maxLongitudinalDisplacement * m_maxLongitudinalDisplacement;
 
     return STATUS_CODE_SUCCESS;

@@ -44,11 +44,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int    m_slidingFitWindow;         ///< The layer window for the sliding linear fits
-    float           m_showerEdgeMultiplier;     ///< Artificially tune width of shower envelope so as to make it more/less inclusive
-    float           m_coneAngleCentile;         ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
-    float           m_maxConeLengthMultiplier;  ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
-    float           m_minBoundedFraction;       ///< The minimum cluster bounded fraction for merging
+    unsigned int m_slidingFitWindow; ///< The layer window for the sliding linear fits
+    float m_showerEdgeMultiplier;    ///< Artificially tune width of shower envelope so as to make it more/less inclusive
+    float m_coneAngleCentile;        ///< Cluster cone angle is defined using specified centile of distribution of hit half angles
+    float m_maxConeLengthMultiplier; ///< Consider hits as bound if inside cone, with projected distance less than N times cone length
+    float m_minBoundedFraction;      ///< The minimum cluster bounded fraction for merging
 };
 
 } // namespace lar_content

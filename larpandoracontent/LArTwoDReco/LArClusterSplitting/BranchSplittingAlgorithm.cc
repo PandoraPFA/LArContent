@@ -38,18 +38,24 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
     //     possible assignments of vertex and end position until a split is found
     for (unsigned int principalForward = 0; principalForward < 2; ++principalForward)
     {
-        const CartesianVector principalVertexPosition(1==principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
-        const CartesianVector principalEndPosition(1!=principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
-        const CartesianVector principalVertexDirection(1==principalForward ? principalSlidingFit.GetGlobalMinLayerDirection() : principalSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
+        const CartesianVector principalVertexPosition(
+            1 == principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
+        const CartesianVector principalEndPosition(
+            1 != principalForward ? principalSlidingFit.GetGlobalMinLayerPosition() : principalSlidingFit.GetGlobalMaxLayerPosition());
+        const CartesianVector principalVertexDirection(1 == principalForward ? principalSlidingFit.GetGlobalMinLayerDirection()
+                                                                             : principalSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
 
-        CartesianVector projectedBranchPosition(0.f,0.f,0.f);
+        CartesianVector projectedBranchPosition(0.f, 0.f, 0.f);
         bool projectedPositionFound(false), projectedPositionFail(false);
 
         for (unsigned int branchForward = 0; branchForward < 2; ++branchForward)
         {
-            const CartesianVector branchVertexPosition(1==branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
-            const CartesianVector branchEndPosition(1!=branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
-            const CartesianVector branchEndDirection(1!=branchForward ? branchSlidingFit.GetGlobalMinLayerDirection() : branchSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
+            const CartesianVector branchVertexPosition(
+                1 == branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
+            const CartesianVector branchEndPosition(
+                1 != branchForward ? branchSlidingFit.GetGlobalMinLayerPosition() : branchSlidingFit.GetGlobalMaxLayerPosition());
+            const CartesianVector branchEndDirection(
+                1 != branchForward ? branchSlidingFit.GetGlobalMinLayerDirection() : branchSlidingFit.GetGlobalMaxLayerDirection() * -1.f);
 
             if (principalVertexDirection.GetDotProduct(branchEndDirection) < 0.5f)
                 continue;
@@ -62,7 +68,8 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
             {
                 if (!projectedPositionFound && !projectedPositionFail)
                 {
-                    projectedBranchPosition = LArPointingClusterHelper::GetProjectedPosition(principalVertexPosition, principalVertexDirection, branchSlidingFit.GetCluster(), m_projectionAngularAllowance);
+                    projectedBranchPosition = LArPointingClusterHelper::GetProjectedPosition(
+                        principalVertexPosition, principalVertexDirection, branchSlidingFit.GetCluster(), m_projectionAngularAllowance);
                     projectedPositionFound = true;
                 }
             }
@@ -98,16 +105,16 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
             bool foundSplit(false);
 
             const float halfWindowLength(branchSlidingFit.GetLayerFitHalfWindowLength());
-            const float deltaL(1==branchForward ? +halfWindowLength : -halfWindowLength);
+            const float deltaL(1 == branchForward ? +halfWindowLength : -halfWindowLength);
 
             float localL(0.f), localT(0.f);
-            CartesianVector forwardDirection(0.f,0.f,0.f);
+            CartesianVector forwardDirection(0.f, 0.f, 0.f);
             branchSlidingFit.GetLocalPosition(projectedBranchPosition, localL, localT);
 
             if (STATUS_CODE_SUCCESS != branchSlidingFit.GetGlobalFitDirection(localL + deltaL, forwardDirection))
                 continue;
 
-            CartesianVector projectedBranchDirection(1==branchForward ? forwardDirection : forwardDirection * -1.f);
+            CartesianVector projectedBranchDirection(1 == branchForward ? forwardDirection : forwardDirection * -1.f);
             const float cosTheta(-projectedBranchDirection.GetDotProduct(principalVertexDirection));
 
             try
@@ -145,20 +152,20 @@ void BranchSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult 
 
 StatusCode BranchSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinLongitudinalExtension", m_minLongitudinalExtension));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinLongitudinalExtension", m_minLongitudinalExtension));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCosRelativeAngle", m_minCosRelativeAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosRelativeAngle", m_minCosRelativeAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ProjectionAngularAllowance", m_projectionAngularAllowance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ProjectionAngularAllowance", m_projectionAngularAllowance));
 
     return TwoDSlidingFitSplittingAndSplicingAlgorithm::ReadSettings(xmlHandle);
 }

@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
 
@@ -27,31 +27,32 @@ LocalAsymmetryFeatureTool::LocalAsymmetryFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LocalAsymmetryFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
-    const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &)
+void LocalAsymmetryFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm,
+    const Vertex *const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap,
+    const VertexSelectionBaseAlgorithm::ClusterListMap &, const VertexSelectionBaseAlgorithm::KDTreeMap &,
+    const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     float localAsymmetry(0.f);
 
-    localAsymmetry += this->GetLocalAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U),
-        slidingFitDataListMap.at(TPC_VIEW_U));
+    localAsymmetry += this->GetLocalAsymmetryForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U), slidingFitDataListMap.at(TPC_VIEW_U));
 
-    localAsymmetry += this->GetLocalAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V),
-        slidingFitDataListMap.at(TPC_VIEW_V));
+    localAsymmetry += this->GetLocalAsymmetryForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V), slidingFitDataListMap.at(TPC_VIEW_V));
 
-    localAsymmetry += this->GetLocalAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W),
-        slidingFitDataListMap.at(TPC_VIEW_W));
+    localAsymmetry += this->GetLocalAsymmetryForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W), slidingFitDataListMap.at(TPC_VIEW_W));
 
     featureVector.push_back(localAsymmetry);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LocalAsymmetryFeatureTool::GetLocalAsymmetryForView(const CartesianVector &vertexPosition2D,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const
+float LocalAsymmetryFeatureTool::GetLocalAsymmetryForView(
+    const CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const
 {
     bool useEnergy(true), useAsymmetry(true);
     CartesianVector energyWeightedDirectionSum(0.f, 0.f, 0.f), hitWeightedDirectionSum(0.f, 0.f, 0.f);
@@ -82,7 +83,8 @@ float LocalAsymmetryFeatureTool::GetLocalAsymmetryForView(const CartesianVector 
     }
 
     // Default: maximum asymmetry (i.e. not suppressed), zero for energy kick (i.e. not suppressed)
-    if ((useEnergy && energyWeightedDirectionSum == CartesianVector(0.f, 0.f, 0.f)) || (!useEnergy && hitWeightedDirectionSum == CartesianVector(0.f, 0.f, 0.f)))
+    if ((useEnergy && energyWeightedDirectionSum == CartesianVector(0.f, 0.f, 0.f)) ||
+        (!useEnergy && hitWeightedDirectionSum == CartesianVector(0.f, 0.f, 0.f)))
         return 1.f;
 
     const CartesianVector &localWeightedDirectionSum(useEnergy ? energyWeightedDirectionSum : hitWeightedDirectionSum);
@@ -91,8 +93,8 @@ float LocalAsymmetryFeatureTool::GetLocalAsymmetryForView(const CartesianVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LocalAsymmetryFeatureTool::IncrementAsymmetryParameters(const float weight, const CartesianVector &clusterDirection,
-    CartesianVector &localWeightedDirectionSum) const
+bool LocalAsymmetryFeatureTool::IncrementAsymmetryParameters(
+    const float weight, const CartesianVector &clusterDirection, CartesianVector &localWeightedDirectionSum) const
 {
     // If the new axis direction is at an angle of greater than 90 deg to the current axis direction, flip it 180 degs.
     CartesianVector newDirection(clusterDirection);
@@ -171,14 +173,14 @@ float LocalAsymmetryFeatureTool::CalculateLocalAsymmetry(const bool useEnergyMet
 
 StatusCode LocalAsymmetryFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAsymmetryDistance", m_maxAsymmetryDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAsymmetryDistance", m_maxAsymmetryDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinAsymmetryCosAngle", m_minAsymmetryCosAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinAsymmetryCosAngle", m_minAsymmetryCosAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAsymmetryNClusters", m_maxAsymmetryNClusters));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAsymmetryNClusters", m_maxAsymmetryNClusters));
 
     return STATUS_CODE_SUCCESS;
 }

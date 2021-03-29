@@ -31,8 +31,7 @@ public:
      *  @param  inputSliceVector the initial slice vector
      *  @param  outputSliceVector the output slice vector
      */
-    void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector,
-        SliceVector &outputSliceVector);
+    void SelectSlices(const pandora::Algorithm *const pAlgorithm, const SliceVector &inputSliceVector, SliceVector &outputSliceVector);
 
     typedef std::map<float, int, std::greater<float>> MetricSliceIndexMap;
 
@@ -47,12 +46,11 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 protected:
-    int             m_maxSlices;                ///< The maximum number of slices to retain (0 to retain all) - default 0
-    float           m_threshold;                ///< The minimum cut threshold to retain a slice (< 0 for no threshold) - default -1
-    std::string     m_cutVariable;              ///< The variable to cut on ("purity" or "completeness") - default "completeness"
+    int m_maxSlices;           ///< The maximum number of slices to retain (0 to retain all) - default 0
+    float m_threshold;         ///< The minimum cut threshold to retain a slice (< 0 for no threshold) - default -1
+    std::string m_cutVariable; ///< The variable to cut on ("purity" or "completeness") - default "completeness"
 };
 
 } // namespace lar_content
 
 #endif // #ifndef LAR_CHEATING_SLICE_SELECTION_TOOL_H
-

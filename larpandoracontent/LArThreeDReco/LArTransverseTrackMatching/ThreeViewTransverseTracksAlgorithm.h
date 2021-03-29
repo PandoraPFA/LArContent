@@ -26,10 +26,10 @@ class TransverseTensorTool;
 /**
  *  @brief  ThreeViewTransverseTracksAlgorithm class
  */
-class ThreeViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> >
+class ThreeViewTransverseTracksAlgorithm : public NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult>>
 {
 public:
-    typedef NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> > BaseAlgorithm;
+    typedef NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult>> BaseAlgorithm;
 
     /**
      *  @brief  Default constructor
@@ -53,8 +53,8 @@ private:
      *
      *  @return statusCode, faster than throwing in regular use-cases
      */
-    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
-        TransverseOverlapResult &overlapResult);
+    pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV,
+        const pandora::Cluster *const pClusterW, TransverseOverlapResult &overlapResult);
 
     /**
      *  @brief  Get the number of matched points for three fit segments and accompanying sliding fit results
@@ -81,8 +81,8 @@ private:
      *  @return statusCode, faster than throwing in regular use-cases
      */
     pandora::StatusCode GetSegmentOverlap(const FitSegment &fitSegmentU, const FitSegment &fitSegmentV, const FitSegment &fitSegmentW,
-        const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW,
-        TransverseOverlapResult &transverseOverlapResult) const;
+        const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
+        const TwoDSlidingFitResult &slidingFitResultW, TransverseOverlapResult &transverseOverlapResult) const;
 
     /**
      *  @brief  Get the best overlap result, by examining the fit segment tensor
@@ -106,17 +106,17 @@ private:
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<TransverseTensorTool*> TensorToolVector;
-    TensorToolVector            m_algorithmToolVector;      ///< The algorithm tool vector
+    typedef std::vector<TransverseTensorTool *> TensorToolVector;
+    TensorToolVector m_algorithmToolVector; ///< The algorithm tool vector
 
-    unsigned int                m_nMaxTensorToolRepeats;    ///< The maximum number of repeat loops over tensor tools
-    unsigned int                m_maxFitSegmentIndex;       ///< The maximum number of fit segments used when identifying best overlap result
-    float                       m_pseudoChi2Cut;            ///< The pseudo chi2 cut to identify matched sampling points
-    float                       m_minSegmentMatchedFraction;///< The minimum segment matched sampling fraction to allow segment grouping
-    unsigned int                m_minSegmentMatchedPoints;  ///< The minimum number of matched segment sampling points to allow segment grouping
-    float                       m_minOverallMatchedFraction;///< The minimum matched sampling fraction to allow particle creation
-    unsigned int                m_minOverallMatchedPoints;  ///< The minimum number of matched segment sampling points to allow particle creation
-    float                       m_minSamplingPointsPerLayer;///< The minimum number of sampling points per layer to allow particle creation
+    unsigned int m_nMaxTensorToolRepeats;   ///< The maximum number of repeat loops over tensor tools
+    unsigned int m_maxFitSegmentIndex;      ///< The maximum number of fit segments used when identifying best overlap result
+    float m_pseudoChi2Cut;                  ///< The pseudo chi2 cut to identify matched sampling points
+    float m_minSegmentMatchedFraction;      ///< The minimum segment matched sampling fraction to allow segment grouping
+    unsigned int m_minSegmentMatchedPoints; ///< The minimum number of matched segment sampling points to allow segment grouping
+    float m_minOverallMatchedFraction;      ///< The minimum matched sampling fraction to allow particle creation
+    unsigned int m_minOverallMatchedPoints; ///< The minimum number of matched segment sampling points to allow particle creation
+    float m_minSamplingPointsPerLayer;      ///< The minimum number of sampling points per layer to allow particle creation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

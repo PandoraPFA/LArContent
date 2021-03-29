@@ -15,8 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-AdaBoostDecisionTree::AdaBoostDecisionTree() :
-    m_pStrongClassifier(nullptr)
+AdaBoostDecisionTree::AdaBoostDecisionTree() : m_pStrongClassifier(nullptr)
 {
 }
 
@@ -161,7 +160,8 @@ double AdaBoostDecisionTree::CalculateScore(const LArMvaHelper::MvaFeatureVector
         }
         else if (STATUS_CODE_INVALID_PARAMETER == statusCodeException.GetStatusCode())
         {
-            std::cout << "AdaBoostDecisionTree: Caught exception thrown when classifier weights sum to zero indicating defunct classifier." << std::endl;
+            std::cout << "AdaBoostDecisionTree: Caught exception thrown when classifier weights sum to zero indicating defunct classifier."
+                      << std::endl;
         }
         else if (STATUS_CODE_OUT_OF_RANGE == statusCodeException.GetStatusCode())
         {
@@ -260,11 +260,10 @@ AdaBoostDecisionTree::Node::~Node()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const TiXmlHandle *const pXmlHandle) :
-    m_weight(0.),
-    m_treeId(0)
+AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const TiXmlHandle *const pXmlHandle) : m_weight(0.), m_treeId(0)
 {
-    for (TiXmlElement *pHeadTiXmlElement = pXmlHandle->FirstChildElement().ToElement(); pHeadTiXmlElement != NULL; pHeadTiXmlElement = pHeadTiXmlElement->NextSiblingElement())
+    for (TiXmlElement *pHeadTiXmlElement = pXmlHandle->FirstChildElement().ToElement(); pHeadTiXmlElement != NULL;
+         pHeadTiXmlElement = pHeadTiXmlElement->NextSiblingElement())
     {
         if ("TreeIndex" == pHeadTiXmlElement->ValueStr())
         {
@@ -285,9 +284,7 @@ AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const TiXmlHandle *const pX
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const WeakClassifier &rhs) :
-    m_weight(rhs.m_weight),
-    m_treeId(rhs.m_treeId)
+AdaBoostDecisionTree::WeakClassifier::WeakClassifier(const WeakClassifier &rhs) : m_weight(rhs.m_weight), m_treeId(rhs.m_treeId)
 {
     for (const auto &mapEntry : rhs.m_idToNodeMap)
     {

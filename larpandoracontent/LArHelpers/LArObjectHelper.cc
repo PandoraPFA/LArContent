@@ -36,7 +36,7 @@ const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CartesianVector &)
 template <>
 const CaloHit *LArObjectHelper::TypeAdaptor::GetCaloHit(const CaloHit *const &pCaloHit3D)
 {
-    const CaloHit *const pCaloHit2D = static_cast<const CaloHit*>(pCaloHit3D->GetParentAddress());
+    const CaloHit *const pCaloHit2D = static_cast<const CaloHit *>(pCaloHit3D->GetParentAddress());
     return pCaloHit2D;
 }
 

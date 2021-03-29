@@ -14,9 +14,9 @@
 
 #include "Helpers/MCParticleHelper.h"
 
+#include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-#include "larpandoracontent/LArHelpers/LArFormattingHelper.h"
 
 #include <algorithm>
 
@@ -40,7 +40,8 @@ unsigned int LArMonitoringHelper::CountHitsByType(const HitType hitType, const C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, MCParticleVector &orderedMCParticleVector)
+void LArMonitoringHelper::GetOrderedMCParticleVector(
+    const LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, MCParticleVector &orderedMCParticleVector)
 {
     for (const LArMCParticleHelper::MCContributionMap &mcParticleToGoodHitsMap : selectedMCParticleToGoodHitsMaps)
     {
@@ -52,26 +53,28 @@ void LArMonitoringHelper::GetOrderedMCParticleVector(const LArMCParticleHelper::
         std::copy(mcParticleToGoodHitsMap.begin(), mcParticleToGoodHitsMap.end(), std::back_inserter(mcParticleToGoodHitsVect));
 
         // Sort by number of hits descending
-        std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(), [] (const LArMCParticleHelper::MCParticleCaloHitListPair &a, const LArMCParticleHelper::MCParticleCaloHitListPair &b) -> bool
-        {
-            // Neutrinos, then beam particles, then cosmic rays
-            const bool isANuFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(a.first)), isBNuFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(b.first));
+        std::sort(mcParticleToGoodHitsVect.begin(), mcParticleToGoodHitsVect.end(),
+            [](const LArMCParticleHelper::MCParticleCaloHitListPair &a, const LArMCParticleHelper::MCParticleCaloHitListPair &b) -> bool {
+                // Neutrinos, then beam particles, then cosmic rays
+                const bool isANuFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(a.first)),
+                    isBNuFinalState(LArMCParticleHelper::IsBeamNeutrinoFinalState(b.first));
 
-            if (isANuFinalState != isBNuFinalState)
-                return isANuFinalState;
+                if (isANuFinalState != isBNuFinalState)
+                    return isANuFinalState;
 
-            const bool isABeamParticle(LArMCParticleHelper::IsBeamParticle(a.first)), isBBeamParticle(LArMCParticleHelper::IsBeamParticle(b.first));
+                const bool isABeamParticle(LArMCParticleHelper::IsBeamParticle(a.first)),
+                    isBBeamParticle(LArMCParticleHelper::IsBeamParticle(b.first));
 
-            if (isABeamParticle != isBBeamParticle)
-                return isABeamParticle;
+                if (isABeamParticle != isBBeamParticle)
+                    return isABeamParticle;
 
-            // Then sort by numbers of true hits
-            if (a.second.size() != b.second.size())
-                return (a.second.size() > b.second.size());
+                // Then sort by numbers of true hits
+                if (a.second.size() != b.second.size())
+                    return (a.second.size() > b.second.size());
 
-            // Default to normal MCParticle sorting
-            return LArMCParticleHelper::SortByMomentum(a.first, b.first);
-        });
+                // Default to normal MCParticle sorting
+                return LArMCParticleHelper::SortByMomentum(a.first, b.first);
+            });
 
         for (const LArMCParticleHelper::MCParticleCaloHitListPair &mcParticleCaloHitPair : mcParticleToGoodHitsVect)
             orderedMCParticleVector.push_back(mcParticleCaloHitPair.first);
@@ -92,20 +95,20 @@ void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoCont
     std::copy(pfoToReconstructable2DHitsMap.begin(), pfoToReconstructable2DHitsMap.end(), std::back_inserter(pfoToReconstructable2DHitsVect));
 
     // Sort by number of hits descending putting neutrino final states first
-    std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(), [] (const LArMCParticleHelper::PfoCaloHitListPair &a, const LArMCParticleHelper::PfoCaloHitListPair &b) -> bool
-    {
-        // Neutrinos before cosmic rays
-        const bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first)), isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
+    std::sort(pfoToReconstructable2DHitsVect.begin(), pfoToReconstructable2DHitsVect.end(),
+        [](const LArMCParticleHelper::PfoCaloHitListPair &a, const LArMCParticleHelper::PfoCaloHitListPair &b) -> bool {
+            // Neutrinos before cosmic rays
+            const bool isANuFinalState(LArPfoHelper::IsNeutrinoFinalState(a.first)), isBNuFinalState(LArPfoHelper::IsNeutrinoFinalState(b.first));
 
-        if (isANuFinalState != isBNuFinalState)
-            return isANuFinalState;
+            if (isANuFinalState != isBNuFinalState)
+                return isANuFinalState;
 
-        if (a.second.size() != b.second.size())
-            return (a.second.size() > b.second.size());
+            if (a.second.size() != b.second.size())
+                return (a.second.size() > b.second.size());
 
-        // Default to normal pfo sorting
-        return LArPfoHelper::SortByNHits(a.first, b.first);
-    });
+            // Default to normal pfo sorting
+            return LArPfoHelper::SortByNHits(a.first, b.first);
+        });
 
     for (const LArMCParticleHelper::PfoCaloHitListPair &pfoCaloHitPair : pfoToReconstructable2DHitsVect)
         orderedPfoVector.push_back(pfoCaloHitPair.first);
@@ -118,7 +121,8 @@ void LArMonitoringHelper::GetOrderedPfoVector(const LArMCParticleHelper::PfoCont
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::PrintMCParticleTable(const LArMCParticleHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, const MCParticleVector &orderedMCParticleVector)
+void LArMonitoringHelper::PrintMCParticleTable(
+    const LArMCParticleHelper::MCContributionMap &selectedMCParticleToGoodHitsMap, const MCParticleVector &orderedMCParticleVector)
 {
     if (selectedMCParticleToGoodHitsMap.empty())
     {
@@ -135,7 +139,7 @@ void LArMonitoringHelper::PrintMCParticleTable(const LArMCParticleHelper::MCCont
 
         LArMCParticleHelper::MCContributionMap::const_iterator it = selectedMCParticleToGoodHitsMap.find(pMCParticle);
         if (selectedMCParticleToGoodHitsMap.end() == it)
-            continue;  // ATTN MCParticles in selectedMCParticleToGoodHitsMap may be a subset of orderedMCParticleVector
+            continue; // ATTN MCParticles in selectedMCParticleToGoodHitsMap may be a subset of orderedMCParticleVector
 
         // ATTN enumerate from 1 to match event validation algorithm
         table.AddElement(id + 1);
@@ -196,7 +200,8 @@ void LArMonitoringHelper::PrintPfoTable(const LArMCParticleHelper::PfoContributi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, const MCParticleVector &orderedMCParticleVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const unsigned int nMatches)
+void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, const MCParticleVector &orderedMCParticleVector,
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const unsigned int nMatches)
 {
     if (orderedPfoVector.empty())
     {
@@ -219,7 +224,7 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
     const unsigned int nMatchesToShow(std::min(maxMatches, nMatches));
 
     // Set up the table headers
-    std::vector<std::string> tableHeaders({"MCParticle",""});
+    std::vector<std::string> tableHeaders({"MCParticle", ""});
     for (unsigned int i = 0; i < nMatchesToShow; ++i)
     {
         tableHeaders.push_back("");
@@ -248,11 +253,9 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
             pfoToSharedHitsVector = it->second;
 
         const LArFormattingHelper::Color mcCol(
-            LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle) ?
-                LArFormattingHelper::LIGHT_GREEN : (LArMCParticleHelper::IsBeamParticle(pMCParticle) ?
-                    LArFormattingHelper::LIGHT_BLUE : LArFormattingHelper::LIGHT_RED
-                )
-            );
+            LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCParticle)
+                ? LArFormattingHelper::LIGHT_GREEN
+                : (LArMCParticleHelper::IsBeamParticle(pMCParticle) ? LArFormattingHelper::LIGHT_BLUE : LArFormattingHelper::LIGHT_RED));
 
         // ATTN enumerate from 1 to match event validation algorithm
         table.AddElement(mcParticleId + 1, LArFormattingHelper::REGULAR, mcCol);
@@ -264,12 +267,14 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
         {
             for (unsigned int pfoId = 0; pfoId < orderedPfoVector.size(); ++pfoId)
             {
-                if (pfoNSharedHitsPair.first != orderedPfoVector.at(pfoId)) continue;
+                if (pfoNSharedHitsPair.first != orderedPfoVector.at(pfoId))
+                    continue;
 
                 if (nPfosShown < nMatchesToShow)
                 {
                     // ATTN enumerate from 1 to match event validation algorithm
-                    const LArFormattingHelper::Color pfoCol(LArPfoHelper::IsNeutrinoFinalState(pfoNSharedHitsPair.first) ? LArFormattingHelper::LIGHT_GREEN : LArFormattingHelper::LIGHT_RED);
+                    const LArFormattingHelper::Color pfoCol(
+                        LArPfoHelper::IsNeutrinoFinalState(pfoNSharedHitsPair.first) ? LArFormattingHelper::LIGHT_GREEN : LArFormattingHelper::LIGHT_RED);
                     table.AddElement(pfoId + 1, LArFormattingHelper::REGULAR, pfoCol);
                     table.AddElement(pfoNSharedHitsPair.second.size(), LArFormattingHelper::REGULAR, pfoCol);
                     nPfosShown++;
@@ -290,7 +295,8 @@ void LArMonitoringHelper::PrintMatchingTable(const PfoVector &orderedPfoVector, 
         }
 
         // Print any remaining matches
-        if (!showOthersColumn) continue;
+        if (!showOthersColumn)
+            continue;
 
         if (nOtherHits != 0)
         {

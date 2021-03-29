@@ -16,10 +16,10 @@
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
-#include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
-#include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
+#include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
+#include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
 
 #include "larpandoracontent/LArVertex/TrainedVertexSelectionAlgorithm.h"
 
@@ -113,8 +113,8 @@ void TrainedVertexSelectionAlgorithm::CalculateShowerClusterList(const ClusterLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrainedVertexSelectionAlgorithm::GetShowerLikeClusterEndPoints(const ClusterList &clusterList, ClusterList &showerLikeClusters,
-    ClusterEndPointsMap &clusterEndPointsMap) const
+void TrainedVertexSelectionAlgorithm::GetShowerLikeClusterEndPoints(
+    const ClusterList &clusterList, ClusterList &showerLikeClusters, ClusterEndPointsMap &clusterEndPointsMap) const
 {
     for (const Cluster *const pCluster : clusterList)
     {
@@ -151,7 +151,7 @@ void TrainedVertexSelectionAlgorithm::PopulateKdTree(const ClusterList &clusterL
         allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
-            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+            (void)hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
     }
 
     HitKDNode2DList hitKDNode2DList;
@@ -161,8 +161,8 @@ void TrainedVertexSelectionAlgorithm::PopulateKdTree(const ClusterList &clusterL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrainedVertexSelectionAlgorithm::AddClusterToShower(const ClusterEndPointsMap &clusterEndPointsMap, ClusterList &availableShowerLikeClusters,
-    const Cluster *const pCluster, ClusterList &showerCluster) const
+bool TrainedVertexSelectionAlgorithm::AddClusterToShower(const ClusterEndPointsMap &clusterEndPointsMap,
+    ClusterList &availableShowerLikeClusters, const Cluster *const pCluster, ClusterList &showerCluster) const
 {
     const auto existingEndPointsIter(clusterEndPointsMap.find(pCluster));
     if (existingEndPointsIter == clusterEndPointsMap.end())
@@ -214,7 +214,7 @@ bool TrainedVertexSelectionAlgorithm::AddClusterToShower(HitKDTree2D &kdTree, co
         kdTree.search(searchRegionHits, found);
 
         for (const auto &hit : found)
-            (void) nearbyClusters.insert(hitToClusterMap.at(hit.data));
+            (void)nearbyClusters.insert(hitToClusterMap.at(hit.data));
     }
 
     for (auto iter = availableShowerLikeClusters.begin(); iter != availableShowerLikeClusters.end(); ++iter)
@@ -234,8 +234,8 @@ bool TrainedVertexSelectionAlgorithm::AddClusterToShower(HitKDTree2D &kdTree, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-typename TrainedVertexSelectionAlgorithm::EventFeatureInfo TrainedVertexSelectionAlgorithm::CalculateEventFeatures(const ClusterList &clusterListU,
-    const ClusterList &clusterListV, const ClusterList &clusterListW, const VertexVector &vertexVector) const
+typename TrainedVertexSelectionAlgorithm::EventFeatureInfo TrainedVertexSelectionAlgorithm::CalculateEventFeatures(
+    const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW, const VertexVector &vertexVector) const
 {
     float eventEnergy(0.f);
     unsigned int nShoweryHits(0), nHits(0);
@@ -259,8 +259,8 @@ typename TrainedVertexSelectionAlgorithm::EventFeatureInfo TrainedVertexSelectio
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrainedVertexSelectionAlgorithm::IncrementShoweryParameters(const ClusterList &clusterList, unsigned int &nShoweryHits, unsigned int &nHits,
-    float &eventEnergy) const
+void TrainedVertexSelectionAlgorithm::IncrementShoweryParameters(
+    const ClusterList &clusterList, unsigned int &nShoweryHits, unsigned int &nHits, float &eventEnergy) const
 {
     for (const Cluster *const pCluster : clusterList)
     {
@@ -302,27 +302,27 @@ void TrainedVertexSelectionAlgorithm::GetEventShapeFeatures(const ClusterList &c
     // Calculate the volume and longitudinality of the event (ySpan often 0 - to be investigated).
     if ((xSpan > std::numeric_limits<float>::epsilon()) && (ySpan > std::numeric_limits<float>::epsilon()))
     {
-        eventVolume     = xSpan * ySpan * zSpan;
+        eventVolume = xSpan * ySpan * zSpan;
         longitudinality = zSpan / (xSpan + ySpan);
     }
 
     else if (ySpan > std::numeric_limits<float>::epsilon())
     {
-        eventVolume     = ySpan * ySpan * zSpan;
+        eventVolume = ySpan * ySpan * zSpan;
         longitudinality = zSpan / (ySpan + ySpan);
     }
 
     else if (xSpan > std::numeric_limits<float>::epsilon())
     {
-        eventVolume     = xSpan * xSpan * zSpan;
+        eventVolume = xSpan * xSpan * zSpan;
         longitudinality = zSpan / (xSpan + xSpan);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void TrainedVertexSelectionAlgorithm::UpdateSpanCoordinate(const float minPositionCoord, const float maxPositionCoord, InputFloat &minCoord,
-    InputFloat &maxCoord) const
+inline void TrainedVertexSelectionAlgorithm::UpdateSpanCoordinate(
+    const float minPositionCoord, const float maxPositionCoord, InputFloat &minCoord, InputFloat &maxCoord) const
 {
     if (!minCoord.IsInitialized() || minPositionCoord < minCoord.Get())
         minCoord = minPositionCoord;
@@ -335,7 +335,7 @@ inline void TrainedVertexSelectionAlgorithm::UpdateSpanCoordinate(const float mi
 
 inline float TrainedVertexSelectionAlgorithm::GetCoordinateSpan(const InputFloat &minCoord, const InputFloat &maxCoord) const
 {
-   if (minCoord.IsInitialized() && maxCoord.IsInitialized())
+    if (minCoord.IsInitialized() && maxCoord.IsInitialized())
         return std::fabs(maxCoord.Get() - minCoord.Get());
 
     return 0.f;
@@ -343,8 +343,7 @@ inline float TrainedVertexSelectionAlgorithm::GetCoordinateSpan(const InputFloat
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrainedVertexSelectionAlgorithm::AddEventFeaturesToVector(const EventFeatureInfo &eventFeatureInfo,
-    LArMvaHelper::MvaFeatureVector &featureVector) const
+void TrainedVertexSelectionAlgorithm::AddEventFeaturesToVector(const EventFeatureInfo &eventFeatureInfo, LArMvaHelper::MvaFeatureVector &featureVector) const
 {
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventShoweryness));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventEnergy));
@@ -366,16 +365,24 @@ void TrainedVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamCon
     const double beamDeweighting(this->GetBeamDeweightingScore(beamConstants, pVertex));
 
     const double energyKick(LArMvaHelper::CalculateFeaturesOfType<EnergyKickFeatureTool>(m_featureToolVector, this, pVertex,
-        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
+        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore)
+                                .at(0)
+                                .Get());
 
     const double localAsymmetry(LArMvaHelper::CalculateFeaturesOfType<LocalAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
-        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
+        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore)
+                                    .at(0)
+                                    .Get());
 
     const double globalAsymmetry(LArMvaHelper::CalculateFeaturesOfType<GlobalAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
-        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
+        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore)
+                                     .at(0)
+                                     .Get());
 
     const double showerAsymmetry(LArMvaHelper::CalculateFeaturesOfType<ShowerAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
-        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
+        slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore)
+                                     .at(0)
+                                     .Get());
 
     //const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
     //    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
@@ -386,8 +393,8 @@ void TrainedVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamCon
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrainedVertexSelectionAlgorithm::PopulateInitialScoreList(VertexFeatureInfoMap &vertexFeatureInfoMap, const Vertex *const pVertex,
-                                                           VertexScoreList &initialScoreList) const
+void TrainedVertexSelectionAlgorithm::PopulateInitialScoreList(
+    VertexFeatureInfoMap &vertexFeatureInfoMap, const Vertex *const pVertex, VertexScoreList &initialScoreList) const
 {
     VertexFeatureInfo vertexFeatureInfo = vertexFeatureInfoMap.at(pVertex);
 
@@ -411,7 +418,7 @@ void TrainedVertexSelectionAlgorithm::GetBestRegionVertices(VertexScoreList &ini
         const Vertex *const pVertex(vertexScore.GetVertex());
         bool farEnoughAway(true);
 
-        for (const Vertex *const pRegionVertex: bestRegionVertices)
+        for (const Vertex *const pRegionVertex : bestRegionVertices)
         {
             if (pRegionVertex == pVertex)
             {
@@ -468,24 +475,25 @@ void TrainedVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &ve
     // Produce training examples for the final vertices within the best region.
     if (!regionalVertices.empty())
     {
-        this->ProduceTrainingExamples(regionalVertices, vertexFeatureInfoMap, coinFlip, generator, interactionType, m_trainingOutputFileVertex,
-            eventFeatureList, m_maxTrueVertexRadius, true);
+        this->ProduceTrainingExamples(regionalVertices, vertexFeatureInfoMap, coinFlip, generator, interactionType,
+            m_trainingOutputFileVertex, eventFeatureList, m_maxTrueVertexRadius, true);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrainedVertexSelectionAlgorithm::CalculateRPhiScores(VertexVector &vertexVector, VertexFeatureInfoMap &vertexFeatureInfoMap,
-    const KDTreeMap &kdTreeMap) const
+void TrainedVertexSelectionAlgorithm::CalculateRPhiScores(
+    VertexVector &vertexVector, VertexFeatureInfoMap &vertexFeatureInfoMap, const KDTreeMap &kdTreeMap) const
 {
     float bestFastScore(-std::numeric_limits<float>::max());
 
     for (auto iter = vertexVector.begin(); iter != vertexVector.end(); /* no increment */)
     {
         VertexFeatureInfo &vertexFeatureInfo = vertexFeatureInfoMap.at(*iter);
-        vertexFeatureInfo.m_rPhiFeature = static_cast<float>(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, *iter,
-            SlidingFitDataListMap(), ClusterListMap(), kdTreeMap, ShowerClusterListMap(), vertexFeatureInfo.m_beamDeweighting,
-            bestFastScore).at(0).Get());
+        vertexFeatureInfo.m_rPhiFeature = static_cast<float>(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this,
+            *iter, SlidingFitDataListMap(), ClusterListMap(), kdTreeMap, ShowerClusterListMap(), vertexFeatureInfo.m_beamDeweighting, bestFastScore)
+                                                                 .at(0)
+                                                                 .Get());
 
         if (m_dropFailedRPhiFastScoreCandidates && (vertexFeatureInfo.m_rPhiFeature <= std::numeric_limits<float>::epsilon()))
             iter = vertexVector.erase(iter);
@@ -521,7 +529,8 @@ std::string TrainedVertexSelectionAlgorithm::GetInteractionType() const
     }
 
     MCParticleList mcPrimaryList;
-    for (const auto &mapEntry : targetMCParticlesToGoodHitsMap) mcPrimaryList.push_back(mapEntry.first);
+    for (const auto &mapEntry : targetMCParticlesToGoodHitsMap)
+        mcPrimaryList.push_back(mapEntry.first);
     mcPrimaryList.sort(LArMCParticleHelper::SortByMomentum);
 
     const LArInteractionTypeHelper::InteractionType interactionType(LArInteractionTypeHelper::GetInteractionType(mcPrimaryList));
@@ -530,10 +539,9 @@ std::string TrainedVertexSelectionAlgorithm::GetInteractionType() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const pandora::Vertex * TrainedVertexSelectionAlgorithm::ProduceTrainingExamples(const VertexVector &vertexVector,
-    const VertexFeatureInfoMap &vertexFeatureInfoMap, std::bernoulli_distribution &coinFlip, std::mt19937 &generator,
-    const std::string &interactionType, const std::string &trainingOutputFile, const LArMvaHelper::MvaFeatureVector &eventFeatureList,
-    const float maxRadius, const bool useRPhi) const
+const pandora::Vertex *TrainedVertexSelectionAlgorithm::ProduceTrainingExamples(const VertexVector &vertexVector,
+    const VertexFeatureInfoMap &vertexFeatureInfoMap, std::bernoulli_distribution &coinFlip, std::mt19937 &generator, const std::string &interactionType,
+    const std::string &trainingOutputFile, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const float maxRadius, const bool useRPhi) const
 {
     const Vertex *pBestVertex(nullptr);
     float bestVertexDr(std::numeric_limits<float>::max());
@@ -557,14 +565,14 @@ const pandora::Vertex * TrainedVertexSelectionAlgorithm::ProduceTrainingExamples
         {
             if (coinFlip(generator))
             {
-                LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList,
-                    bestVertexFeatureList, featureList);
+                LArMvaHelper::ProduceTrainingExample(
+                    trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList, bestVertexFeatureList, featureList);
             }
 
             else
             {
-                LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList, featureList,
-                    bestVertexFeatureList);
+                LArMvaHelper::ProduceTrainingExample(
+                    trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList, featureList, bestVertexFeatureList);
             }
         }
     }
@@ -597,10 +605,10 @@ void TrainedVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVe
         float mcVertexDr(std::numeric_limits<float>::max());
         for (const MCParticle *const pMCTarget : mcTargetVector)
         {
-            const CartesianVector &mcTargetPosition((m_testBeamMode && std::fabs(pMCTarget->GetParticleId()) == 11) ? pMCTarget->GetVertex() :
-                pMCTarget->GetEndpoint());
-            const CartesianVector mcTargetCorrectedPosition(mcTargetPosition.GetX() + m_mcVertexXCorrection, mcTargetPosition.GetY(),
-                mcTargetPosition.GetZ());
+            const CartesianVector &mcTargetPosition(
+                (m_testBeamMode && std::fabs(pMCTarget->GetParticleId()) == 11) ? pMCTarget->GetVertex() : pMCTarget->GetEndpoint());
+            const CartesianVector mcTargetCorrectedPosition(
+                mcTargetPosition.GetX() + m_mcVertexXCorrection, mcTargetPosition.GetY(), mcTargetPosition.GetZ());
             const float dr = (mcTargetCorrectedPosition - pVertex->GetPosition()).GetMagnitude();
 
             if (dr < mcVertexDr)
@@ -617,8 +625,8 @@ void TrainedVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrainedVertexSelectionAlgorithm::AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo,
-    LArMvaHelper::MvaFeatureVector &featureVector, const bool useRPhi) const
+void TrainedVertexSelectionAlgorithm::AddVertexFeaturesToVector(
+    const VertexFeatureInfo &vertexFeatureInfo, LArMvaHelper::MvaFeatureVector &featureVector, const bool useRPhi) const
 {
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_beamDeweighting));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_energyKick));
@@ -632,8 +640,8 @@ void TrainedVertexSelectionAlgorithm::AddVertexFeaturesToVector(const VertexFeat
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrainedVertexSelectionAlgorithm::PopulateFinalVertexScoreList(const VertexFeatureInfoMap &vertexFeatureInfoMap, const Vertex *const pFavouriteVertex,
-    const VertexVector &vertexVector, VertexScoreList &finalVertexScoreList) const
+void TrainedVertexSelectionAlgorithm::PopulateFinalVertexScoreList(const VertexFeatureInfoMap &vertexFeatureInfoMap,
+    const Vertex *const pFavouriteVertex, const VertexVector &vertexVector, VertexScoreList &finalVertexScoreList) const
 {
     if (pFavouriteVertex)
     {
@@ -661,33 +669,31 @@ StatusCode TrainedVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVector));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TrainingSetMode", m_trainingSetMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingSetMode", m_trainingSetMode));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AllowClassifyDuringTraining", m_allowClassifyDuringTraining));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "AllowClassifyDuringTraining", m_allowClassifyDuringTraining));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MCVertexXCorrection", m_mcVertexXCorrection));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCVertexXCorrection", m_mcVertexXCorrection));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TrainingOutputFileRegion", m_trainingOutputFileRegion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "TrainingOutputFileRegion", m_trainingOutputFileRegion));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TrainingOutputFileVertex", m_trainingOutputFileVertex));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "TrainingOutputFileVertex", m_trainingOutputFileVertex));
 
     if (m_trainingSetMode && (m_trainingOutputFileRegion.empty() || m_trainingOutputFileVertex.empty()))
     {
-        std::cout << "TrainedVertexSelectionAlgorithm: TrainingOutputFileRegion and TrainingOutputFileVertex are required for training set " <<
-                     "mode" << std::endl;
+        std::cout << "TrainedVertexSelectionAlgorithm: TrainingOutputFileRegion and TrainingOutputFileVertex are required for training set "
+                  << "mode" << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MCParticleListName", m_mcParticleListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CaloHitListName", m_caloHitListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
 
     if (m_trainingSetMode && (m_mcParticleListName.empty() || m_caloHitListName.empty()))
     {
@@ -695,59 +701,56 @@ StatusCode TrainedVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHa
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNames", m_inputClusterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterCaloHits", m_minClusterCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterCaloHits", m_minClusterCaloHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinShowerSpineLength", m_minShowerSpineLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinShowerSpineLength", m_minShowerSpineLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BeamDeweightingConstant", m_beamDeweightingConstant));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "BeamDeweightingConstant", m_beamDeweightingConstant));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "LocalAsymmetryConstant", m_localAsymmetryConstant));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LocalAsymmetryConstant", m_localAsymmetryConstant));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "GlobalAsymmetryConstant", m_globalAsymmetryConstant));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "GlobalAsymmetryConstant", m_globalAsymmetryConstant));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerAsymmetryConstant", m_showerAsymmetryConstant));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShowerAsymmetryConstant", m_showerAsymmetryConstant));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EnergyKickConstant", m_energyKickConstant));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EnergyKickConstant", m_energyKickConstant));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerClusteringDistance", m_showerClusteringDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShowerClusteringDistance", m_showerClusteringDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinShowerClusterHits", m_minShowerClusterHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinShowerClusterHits", m_minShowerClusterHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseShowerClusteringApproximation", m_useShowerClusteringApproximation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseShowerClusteringApproximation", m_useShowerClusteringApproximation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RegionRadius", m_regionRadius));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RegionRadius", m_regionRadius));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RPhiFineTuningRadius", m_rPhiFineTuningRadius));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RPhiFineTuningRadius", m_rPhiFineTuningRadius));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTrueVertexRadius", m_maxTrueVertexRadius));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxTrueVertexRadius", m_maxTrueVertexRadius));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseRPhiFeatureForRegion", m_useRPhiFeatureForRegion));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseRPhiFeatureForRegion", m_useRPhiFeatureForRegion));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DropFailedRPhiFastScoreCandidates", m_dropFailedRPhiFastScoreCandidates));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "DropFailedRPhiFastScoreCandidates", m_dropFailedRPhiFastScoreCandidates));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TestBeamMode", m_testBeamMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TestBeamMode", m_testBeamMode));
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
