@@ -43,6 +43,15 @@ public:
             const OverlapResult &overlapResult);
 
         /**
+         *  @brief  Get the address of the given hit type cluster
+         *
+         *  @param  hitType hit type of the required cluster
+         *
+         *  @return address of the required cluster
+         */
+        const pandora::Cluster *GetCluster(const pandora::HitType &hitType) const;
+
+        /**
          *  @brief  Get the address of the u cluster
          *
          *  @return address of the u cluster
@@ -63,21 +72,12 @@ public:
          */
         const pandora::Cluster *GetClusterW() const;
 
-        const pandora::Cluster *GetCluster(const pandora::HitType &hitType) const;
-
         /**
          *  @brief  Get the overlap result
          *
          *  @return the overlap result
          */
         const OverlapResult &GetOverlapResult() const;
-
-        /**
-         *  @brief  Get the overlap result
-         *
-         *  @return the overlap result
-         */
-        OverlapResult &GetOverlapResultToModify();
 
         /**
          *  @brief  Element less than operator
@@ -175,11 +175,6 @@ public:
      *  @param sortedKeyClusters to receive the sorted vector of key clusters
      */
     void GetSortedKeyClusters(pandora::ClusterVector &sortedKeyClusters) const;
-
-    void GetClustersInTensor(pandora::ClusterSet &clusterSetU, pandora::ClusterSet &clusterSetV, pandora::ClusterSet &clusterSetW) const;
-
-    bool IsInTensor(const pandora::Cluster *const pCluster, const pandora::ClusterSet &clusterSetU, const pandora::ClusterSet &clusterSetV,
-        const pandora::ClusterSet &clusterSetW) const;
 
     /**
      *  @brief  Get the overlap result for a specified trio of clusters
@@ -451,14 +446,6 @@ inline const pandora::Cluster *OverlapTensor<T>::Element::GetClusterW() const
 
 template <typename T>
 inline const typename OverlapTensor<T>::OverlapResult &OverlapTensor<T>::Element::GetOverlapResult() const
-{
-    return m_overlapResult;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template <typename T>
-inline typename OverlapTensor<T>::OverlapResult &OverlapTensor<T>::Element::GetOverlapResultToModify()
 {
     return m_overlapResult;
 }

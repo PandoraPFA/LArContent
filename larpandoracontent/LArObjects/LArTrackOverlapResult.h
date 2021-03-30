@@ -363,6 +363,7 @@ public:
      *  @param  nSamplingPoints
      *  @param  chi2
      *  @param  xOverlap
+     *  @param  commonMuonPfoList the list of cosmic ray pfos that, in each view, lie close to the clusters of the tensor element   
      */
     DeltaRayOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
         const XOverlap &xOverlap, const pandora::PfoList &commonMuonPfoList);
@@ -379,17 +380,12 @@ public:
      */
     ~DeltaRayOverlapResult();
 
+    /**
+     *  @brief  Get the common muon pfo list
+     *
+     *  @return the common muon pfo list
+     */
     const pandora::PfoList &GetCommonMuonPfoList() const;
-
-    float GetViewXSpan(const pandora::HitType &hitType) const;
-
-    float GetViewMinX(const pandora::HitType &hitType) const;
-
-    float GetViewMaxX(const pandora::HitType &hitType) const;
-
-    bool GetViewStatus(const pandora::HitType &hitType) const;
-
-    void SetViewStatus(const pandora::HitType &hitType, bool newSpanStatus);
 
     /**
      *  @brief  Track overlap result assigment operator
@@ -399,14 +395,7 @@ public:
     DeltaRayOverlapResult &operator=(const DeltaRayOverlapResult &rhs);
 
 private:
-    float m_uSpan;
-    float m_vSpan;
-    float m_wSpan;
-    bool m_uSpanPass;
-    bool m_vSpanPass;
-    bool m_wSpanPass;
-
-    pandora::PfoList m_commonMuonPfoList;
+    pandora::PfoList m_commonMuonPfoList; ///< The list of cosmic ray pfos that, in each view, lie close to the clusters of the tensor element
 };
 
 typedef std::vector<DeltaRayOverlapResult> DeltaRayOverlapResultVector;

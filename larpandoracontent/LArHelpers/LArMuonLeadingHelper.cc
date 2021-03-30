@@ -14,8 +14,6 @@
 
 #include "Pandora/PdgTable.h"
 
-#include "PandoraMonitoringApi.h"
-
 #include "Objects/ParticleFlowObject.h"
 #include "Objects/CaloHit.h"
 
@@ -40,7 +38,7 @@ bool LArMuonLeadingHelper::IsDeltaRay(const MCParticle *const pMCParticle)
     if(parentList.empty())
         return false;
 
-    if (1 != parentList.size())
+    if (parentList.size() != 1)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     if (!LArMCParticleHelper::IsCosmicRay(parentList.front()))
@@ -55,15 +53,12 @@ bool LArMuonLeadingHelper::IsDeltaRay(const MCParticle *const pMCParticle)
 
 bool LArMuonLeadingHelper::IsMichel(const MCParticle *const pMCParticle)
 {
-    if (std::abs(pMCParticle->GetParticleId()) != 11)
-        return false;
-    
     const MCParticleList parentList(pMCParticle->GetParentList());
 
     if(parentList.empty())
         return false;
     
-    if (1 != parentList.size())
+    if (parentList.size() != 1)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     
     if (!LArMCParticleHelper::IsCosmicRay(parentList.front()))
@@ -76,7 +71,7 @@ bool LArMuonLeadingHelper::IsMichel(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
 
-bool LArMuonLeadingHelper::IsLeading(const MCParticle *const pMCParticle)
+bool LArMuonLeadingHelper::IsMuonLeading(const MCParticle *const pMCParticle)
 {
     const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
     
@@ -87,7 +82,6 @@ bool LArMuonLeadingHelper::IsLeading(const MCParticle *const pMCParticle)
 
 const MCParticle *LArMuonLeadingHelper::GetLeadingParticle(const MCParticle *const pMCParticle)
 {
-    // Navigate upward through MC daughter/parent links - collect this particle and all its parents
     MCParticleVector mcParticleVector;
 
     const MCParticle *pParentMCParticle = pMCParticle;
@@ -95,12 +89,15 @@ const MCParticle *LArMuonLeadingHelper::GetLeadingParticle(const MCParticle *con
 
     while (!pParentMCParticle->GetParentList().empty())
     {
-        if (1 != pParentMCParticle->GetParentList().size())
+        if (pParentMCParticle->GetParentList().size() != 1)
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
         pParentMCParticle = *(pParentMCParticle->GetParentList().begin());
         mcParticleVector.push_back(pParentMCParticle);
     }
+
+    if (mcParticleVector.size() < 2)
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     return *(mcParticleVector.end() - 2);
 }    
@@ -116,7 +113,7 @@ void LArMuonLeadingHelper::GetMCToLeadingMap(const MCParticleList *const pMCPart
         if (!LArMCParticleHelper::IsCosmicRay(pParentMCParticle))
             continue;
 
-        // For the CRs: fold hits to themselves, for the DRs: fold hits to the leading non-muon MC
+        // For the CRs: fold hits to themselves, for the DRs: fold hits to the leading MCParticle
         if (pMCParticle == pParentMCParticle)
         {
             mcToLeadingMap[pMCParticle] = pMCParticle;
@@ -132,26 +129,25 @@ void LArMuonLeadingHelper::GetMCToLeadingMap(const MCParticleList *const pMCPart
 //------------------------------------------------------------------------------------------------------------------------------------------    
 
 void LArMuonLeadingHelper::SelectReconstructableLeadingParticles(const MCParticleList *pMCParticleList, const CaloHitList *pCaloHitList, const ValidationParameters &parameters,
-    const CaloHitList &recoMuonHitList, LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap, const Pandora &pandora)
+    const CaloHitList &recoMuonHitList, LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap)
 {
-    // Obtain map: [mc particle -> leading muon child mc]
+    // Obtain hierarchy folding map:
     LArMCParticleHelper::MCRelationMap mcToLeadingMCMap;
     LArMuonLeadingHelper::GetMCToLeadingMap(pMCParticleList, mcToLeadingMCMap);
 
-    // Select reconstructable hits, e.g. remove those downstream of a neutron
-    // Unless selectInputHits == false
+    // Select reconstructable hits, e.g. remove delta ray hits 'stolen' by the cosmic rays
     CaloHitList selectedCaloHitList;
-    LeadingMCParticleToPostPhotonHitLists leadingMCParticleToPostPhotonHitLists;
+    LeadingMCParticleToPostBremsstrahlungHitList leadingMCParticleToPostBremsstrahlungHitList;
     LArMuonLeadingHelper::SelectCaloHits(pCaloHitList, mcToLeadingMCMap, selectedCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction,
-        recoMuonHitList, leadingMCParticleToPostPhotonHitLists);
+        recoMuonHitList, leadingMCParticleToPostBremsstrahlungHitList);
 
-    // Obtain maps: [hit -> leading muon child mc], [leading muon child mc -> list of hits]
+    // Obtain maps: [hit -> leading MCParticle], [leading MCParticle -> list of hits]
     LArMCParticleHelper::CaloHitToMCMap trueHitToLeadingMCMap;
     LArMCParticleHelper::MCContributionMap leadingMCToTrueHitListMap;
     LArMCParticleHelper::GetMCParticleToCaloHitMatches(&selectedCaloHitList, mcToLeadingMCMap, trueHitToLeadingMCMap, leadingMCToTrueHitListMap);
 
-    // Add back in post bremsstrahlung hits that are close to the non-muon leading
-    LArMuonLeadingHelper::AddInReconstructablePostPhotonHits(leadingMCParticleToPostPhotonHitLists, parameters.m_maxBremsstrahlungSeparation, leadingMCToTrueHitListMap, pandora);
+    // Add in close post bremsstrahlung hits
+    LArMuonLeadingHelper::AddInPostBremsstrahlungHits(leadingMCParticleToPostBremsstrahlungHitList, parameters.m_maxBremsstrahlungSeparation, leadingMCToTrueHitListMap);
 
     // Obtain vector: all mc particles
     MCParticleVector leadingMCVector;
@@ -165,7 +161,7 @@ void LArMuonLeadingHelper::SelectReconstructableLeadingParticles(const MCParticl
 
 void LArMuonLeadingHelper::SelectCaloHits(const CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap,
     CaloHitList &selectedCaloHitList, const bool selectInputHits, const float minHitSharingFraction, const CaloHitList &recoMuonHitList,
-    LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists)
+    LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList)
 {
     if (!selectInputHits)
     {
@@ -182,7 +178,7 @@ void LArMuonLeadingHelper::SelectCaloHits(const CaloHitList *const pCaloHitList,
             if (mcToTargetMCMap.find(pHitParticle) == mcToTargetMCMap.end())
                 continue;
 
-            // Remove hits from metrics that have been taken by the muon
+            // Remove delta ray hits that have been 'stolen' by the muon
             if (!LArMCParticleHelper::IsCosmicRay(mcToTargetMCMap.at(pHitParticle)))
             {
                 if (std::find(recoMuonHitList.begin(), recoMuonHitList.end(), pCaloHit) != recoMuonHitList.end())
@@ -224,8 +220,9 @@ void LArMuonLeadingHelper::SelectCaloHits(const CaloHitList *const pCaloHitList,
 
             if ((targetWeightSum < std::numeric_limits<float>::epsilon()) || ((bestTargetWeight / targetWeightSum) < minHitSharingFraction))
                 continue;
-            
-            if(RejectBremsstrahlungHits(pCaloHit, leadingMCParticleToPostPhotonHitLists))
+
+            // Remove and record post bremsstrahlung hits
+            if (RejectBremsstrahlungHits(pCaloHit, leadingMCParticleToPostBremsstrahlungHitList))
                 continue;
 
             selectedCaloHitList.push_back(pCaloHit);
@@ -238,159 +235,135 @@ void LArMuonLeadingHelper::SelectCaloHits(const CaloHitList *const pCaloHitList,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMuonLeadingHelper::RejectBremsstrahlungHits(const CaloHit *const pCaloHit, LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists)
+bool LArMuonLeadingHelper::RejectBremsstrahlungHits(const CaloHit *const pCaloHit, LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList)
 {
     const MCParticle *const pHitMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
     
     MCParticleList ancestorMCParticleList;
     LArMCParticleHelper::GetAllAncestorMCParticles(pHitMCParticle, ancestorMCParticleList);
 
-    int highestTier(0);
-    const MCParticle *leadingMCParticle(nullptr), *highestTierPhoton(nullptr);
+    bool isPostBremsstrahlung(false);
+    const MCParticle *leadingMCParticle(nullptr);
 
     for (const MCParticle *const pAncestorMCParticle : ancestorMCParticleList)
     {
         if (LArMCParticleHelper::GetHierarchyTier(pAncestorMCParticle) == 1)
         {
-            if (LArMuonLeadingHelper::IsLeading(pAncestorMCParticle))
+            if (LArMuonLeadingHelper::IsMuonLeading(pAncestorMCParticle))
                 leadingMCParticle = pAncestorMCParticle;
         }
 
         if (pAncestorMCParticle->GetParticleId() == PHOTON)
-        {
-            if (LArMCParticleHelper::GetHierarchyTier(pAncestorMCParticle) > highestTier)
-            {
-                highestTier = LArMCParticleHelper::GetHierarchyTier(pAncestorMCParticle);
-                highestTierPhoton = pAncestorMCParticle;
-            }
-        }
+            isPostBremsstrahlung = true;
     }
    
-    if (leadingMCParticle && highestTierPhoton)
+    if (isPostBremsstrahlung && leadingMCParticle)
     {
-        leadingMCParticleToPostPhotonHitLists[leadingMCParticle][pHitMCParticle].push_back(pCaloHit);        
+        leadingMCParticleToPostBremsstrahlungHitList[leadingMCParticle].push_back(pCaloHit);
         return true;
     }
-    else
-    {
-        return false;
-    }
+
+    return false;
 }    
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMuonLeadingHelper::AddInReconstructablePostPhotonHits(const LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists, const float maxBremsstrahlungSeparation,
-    LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const Pandora &pandora)
+void LArMuonLeadingHelper::AddInPostBremsstrahlungHits(const LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList, 
+    const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap)
 {
     MCParticleVector leadingMCParticleVector;
-    for (auto &entry : leadingMCParticleToPostPhotonHitLists)
+    for (auto &entry : leadingMCParticleToPostBremsstrahlungHitList)
         leadingMCParticleVector.push_back(entry.first);
-    std::sort(leadingMCParticleVector.begin(), leadingMCParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
     for (const MCParticle *const pLeadingMCParticle : leadingMCParticleVector)
     {
-        // DO NOT ADD IN HITS FOR WHICH THERE IS NO MAIN PARTICLE HITS
-        if(leadingMCToTrueHitListMap.find(pLeadingMCParticle) == leadingMCToTrueHitListMap.end())
-        {
-            ////////////////////////////////
-            /*
-            std::cout << "ISOBEL - CASE WHERE THERE IS NO INITIAL DR TO ADD HITS ON TO" << std::endl;
-            for (auto &entry : leadingMCParticleToPostPhotonHitLists.at(pLeadingMCParticle))
-            {
-                for (const CaloHit *const pCaloHit : entry.second)
-                {
-                    const CartesianVector &pos(pCaloHit->GetPositionVector());
-                    PandoraMonitoringApi::AddMarkerToVisualization(pandora, &pos, "POSITION", BLACK, 2);
-                }
-            }
-            */
-            ////////////////////////////////            
+        // Do not add in hits for which there are no main particle hits
+        if (leadingMCToTrueHitListMap.find(pLeadingMCParticle) == leadingMCToTrueHitListMap.end())
             continue;
-        }
 
-        LArMuonLeadingHelper::AddHits(pLeadingMCParticle, leadingMCParticleToPostPhotonHitLists, maxBremsstrahlungSeparation, leadingMCToTrueHitListMap, TPC_VIEW_U, pandora);
-        LArMuonLeadingHelper::AddHits(pLeadingMCParticle, leadingMCParticleToPostPhotonHitLists, maxBremsstrahlungSeparation, leadingMCToTrueHitListMap, TPC_VIEW_V, pandora);
-        LArMuonLeadingHelper::AddHits(pLeadingMCParticle, leadingMCParticleToPostPhotonHitLists, maxBremsstrahlungSeparation, leadingMCToTrueHitListMap, TPC_VIEW_W, pandora);        
+        LArMuonLeadingHelper::AddInPostBremsstrahlungHits(pLeadingMCParticle, leadingMCParticleToPostBremsstrahlungHitList, maxBremsstrahlungSeparation, leadingMCToTrueHitListMap, TPC_VIEW_U);
+        LArMuonLeadingHelper::AddInPostBremsstrahlungHits(pLeadingMCParticle, leadingMCParticleToPostBremsstrahlungHitList, maxBremsstrahlungSeparation, leadingMCToTrueHitListMap, TPC_VIEW_V);
+        LArMuonLeadingHelper::AddInPostBremsstrahlungHits(pLeadingMCParticle, leadingMCParticleToPostBremsstrahlungHitList, maxBremsstrahlungSeparation, leadingMCToTrueHitListMap, TPC_VIEW_W);        
     }    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMuonLeadingHelper::AddHits(const MCParticle *const pLeadingMCParticle, const LeadingMCParticleToPostPhotonHitLists &leadingMCParticleToPostPhotonHitLists,
-    const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const HitType &tpcView, const Pandora &/*pandora*/)
+void LArMuonLeadingHelper::AddInPostBremsstrahlungHits(const MCParticle *const pLeadingMCParticle, const LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList,
+    const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const HitType &tpcView)
 {
-    CaloHitList leadingHitList;
+    CaloHitList leadingViewHitList;
     for (const CaloHit *const pCaloHit : leadingMCToTrueHitListMap.at(pLeadingMCParticle))
     {
         if (pCaloHit->GetHitType() == tpcView)
-            leadingHitList.push_back(pCaloHit);
+            leadingViewHitList.push_back(pCaloHit);
     }
 
-    if (leadingHitList.empty())
+    if (leadingViewHitList.empty())
         return;
     
-    CaloHitList postBremsstrahlungHits;
-    for (auto &entry : leadingMCParticleToPostPhotonHitLists.at(pLeadingMCParticle))
+    CaloHitList postBremsstrahlungViewHitList;
+    for (const CaloHit *const pCaloHit : leadingMCParticleToPostBremsstrahlungHitList.at(pLeadingMCParticle))
     {
-        for (const CaloHit *const pCaloHit : entry.second)
-        {
-            if (pCaloHit->GetHitType() == tpcView)
-                postBremsstrahlungHits.push_back(pCaloHit);
-        }
+        if (pCaloHit->GetHitType() == tpcView)
+            postBremsstrahlungViewHitList.push_back(pCaloHit);
     }
 
-    if (postBremsstrahlungHits.empty())
+    if (postBremsstrahlungViewHitList.empty())
         return;
 
-    //////////////////////////////
-    /*
-    for (const CaloHit *const pCaloHit : leadingHitList)
-    {
-        const CartesianVector shiftedPosition(pCaloHit->GetPositionVector().GetX() - pCaloHit->GetX0(), pCaloHit->GetPositionVector().GetY(), pCaloHit->GetPositionVector().GetZ());
-        PandoraMonitoringApi::AddMarkerToVisualization(pandora, &shiftedPosition, "Main Delta Ray Hit", BLACK, 2);
-    }
-
-    PandoraMonitoringApi::ViewEvent(pandora);
-    for (const CaloHit *const pCaloHit : postBremsstrahlungHits)
-    {
-        const CartesianVector shiftedPosition(pCaloHit->GetPositionVector().GetX() - pCaloHit->GetX0(), pCaloHit->GetPositionVector().GetY(), pCaloHit->GetPositionVector().GetZ());
-        PandoraMonitoringApi::AddMarkerToVisualization(pandora, &shiftedPosition, "Post Bremsstrahlung Hit", BLUE, 2);
-    }
-        
-    PandoraMonitoringApi::ViewEvent(pandora);
-    */
-    //////////////////////////////    
-
-
-    //std::cout << "maxBremsstrahlungSeparation: " << maxBremsstrahlungSeparation << std::endl;
-    
     bool hitsAdded(true);
     while (hitsAdded)
     {
         hitsAdded = false;
 
-        for (const CaloHit *const pPostBremsstrahlungHit : postBremsstrahlungHits)
+        for (const CaloHit *const pPostBremsstrahlungHit : postBremsstrahlungViewHitList)
         {
-            if (std::find(leadingHitList.begin(), leadingHitList.end(), pPostBremsstrahlungHit) != leadingHitList.end())
+            if (std::find(leadingViewHitList.begin(), leadingViewHitList.end(), pPostBremsstrahlungHit) != leadingViewHitList.end())
                 continue;
             
-            const float separationDistance(LArClusterHelper::GetClosestDistance(pPostBremsstrahlungHit->GetPositionVector(), leadingHitList));
+            const float separationDistance(LArClusterHelper::GetClosestDistance(pPostBremsstrahlungHit->GetPositionVector(), leadingViewHitList));
 
             if (separationDistance < maxBremsstrahlungSeparation)
             {
-                leadingHitList.push_back(pPostBremsstrahlungHit);
+                leadingViewHitList.push_back(pPostBremsstrahlungHit);
                 hitsAdded = true;
                 break;
             }
         }
     }
 
-    CaloHitList &hits(leadingMCToTrueHitListMap.at(pLeadingMCParticle));
-    for (const CaloHit *const pCaloHit : leadingHitList)
+    CaloHitList &leadingHitList(leadingMCToTrueHitListMap.at(pLeadingMCParticle));
+    for (const CaloHit *const pCaloHit : leadingViewHitList)
     {
-        if (std::find(hits.begin(), hits.end(), pCaloHit) == hits.end())
-            hits.push_back(pCaloHit);
+        if (std::find(leadingHitList.begin(), leadingHitList.end(), pCaloHit) == leadingHitList.end())
+            leadingHitList.push_back(pCaloHit);
     }  
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArMuonLeadingHelper::SelectLeadingMCParticles(const MCParticleList *pMCParticleList, MCParticleVector &selectedParticles)
+{
+    for (const MCParticle *const pMCParticle : *pMCParticleList)
+    {
+        const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
+
+        if (!LArMCParticleHelper::IsCosmicRay(pParentMCParticle))
+            continue;
+
+        if (pMCParticle == pParentMCParticle)
+        {
+            selectedParticles.push_back(pMCParticle);
+        }
+        else
+        {
+            if (LArMuonLeadingHelper::IsMuonLeading(pMCParticle))
+                selectedParticles.push_back(pMCParticle);
+        }
+    }
+
+    std::sort(selectedParticles.begin(), selectedParticles.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------ 
@@ -406,14 +379,7 @@ void LArMuonLeadingHelper::GetPfoMatchContamination(const MCParticle *const pLea
 
         if (LArMCParticleHelper::IsCosmicRay(pHitParticle))
         {
-            if (pHitParticle == pParentCosmicRay)
-            {
-                parentTrackHits.push_back(pCaloHit);
-            }
-            else
-            {
-                otherTrackHits.push_back(pCaloHit);
-            }
+            (pHitParticle == pParentCosmicRay) ? parentTrackHits.push_back(pCaloHit) : otherTrackHits.push_back(pCaloHit);
         }
         else
         {
@@ -435,31 +401,6 @@ void LArMuonLeadingHelper::GetMuonPfoContaminationContribution(const CaloHitList
         if (std::find(leadingMCHitList.begin(), leadingMCHitList.end(), pCaloHit) != leadingMCHitList.end())
             leadingHitsInParentCosmicRay.push_back(pCaloHit);
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMuonLeadingHelper::SelectLeadingMCParticles(const MCParticleList *pMCParticleList, MCParticleVector &selectedParticles)
-{
-    for (const MCParticle *const pMCParticle : *pMCParticleList)
-    {
-        const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetParentMCParticle(pMCParticle));
-
-        if (!LArMCParticleHelper::IsCosmicRay(pParentMCParticle))
-            continue;
-
-        if (pMCParticle == pParentMCParticle)
-        {
-            selectedParticles.push_back(pMCParticle);
-        }
-        else
-        {
-            if (LArMuonLeadingHelper::IsLeading(pMCParticle))
-                selectedParticles.push_back(pMCParticle);
-        }
-    }
-
-    std::sort(selectedParticles.begin(), selectedParticles.end(), LArMCParticleHelper::SortByMomentum);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
