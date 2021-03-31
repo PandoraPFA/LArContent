@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayParentAlgorithm.cc
  *
- *  @brief  Implementation of the delta ray parent algorithm
+ *  @brief  Implementation of the delta ray parent algorithm class.
  *
  *  $Log: $
  */
@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayParentAlgorithm.h"
 
 using namespace pandora;
@@ -86,8 +87,8 @@ void DeltaRayParentAlgorithm::FindParentPfo(const PfoLengthMap &pfoLengthMap, co
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const float lengthSquared(currentIter->second);    
-
     float bestDistance(m_distanceForMatching);    
+
     for (const ParticleFlowObject *const pTestParent : allPfoVector)
     {
         if (pTestParent == pPfo)
@@ -101,23 +102,15 @@ void DeltaRayParentAlgorithm::FindParentPfo(const PfoLengthMap &pfoLengthMap, co
         if (testIter->second < lengthSquared)
             continue;
 
-        try
-        {
-	  //const float distance(LArPfoHelper::GetTwoDSeparation(pPfo, pTestParent));
+        float distance(std::numeric_limits<float>::max());
 
-            float distance(std::numeric_limits<float>::max());
 	    if (LArPfoHelper::GetTwoDSeparation(pPfo, pTestParent, distance) == STATUS_CODE_NOT_FOUND)
-	      continue;
-
-            if (distance < bestDistance)
-            {
-                pParentPfo = pTestParent;
-                bestDistance = distance;
-            }
-        }
-        catch (StatusCodeException &)
-        {
             continue;
+
+        if (distance < bestDistance)
+        {
+            pParentPfo = pTestParent;
+            bestDistance = distance;
         }
     }
 }
