@@ -20,10 +20,9 @@ namespace lar_content
 {
 
 DeltaRayMergeTool::DeltaRayMergeTool() :
-    m_maxUnambiguousClusterSeparation(1.f),
     m_maxDRSeparationFromTrack(1.5f),
-    m_maxVertexSeparation(10.f),
     m_maxClusterSeparation(3.f),
+    m_maxVertexSeparation(10.f),
     m_maxGoodMatchReducedChiSquared(1.f)
 {
 }
@@ -156,10 +155,7 @@ bool DeltaRayMergeTool::AreAssociated(const TensorType::Element &element1, const
     this->GetConnectedMuons(element2.GetOverlapResult().GetCommonMuonPfoList(), pCluster2, connectedMuonPfoList2);
 
     if (connectedMuonPfoList1.empty() || connectedMuonPfoList2.empty())
-    {
-        if (this->IsBrokenCluster(pCluster1, pCluster2))                                                                                                                               
-            return true;
-    }
+        return (this->IsBrokenCluster(pCluster1, pCluster2));
 
     for (const ParticleFlowObject *const pConnectedMuon1 : connectedMuonPfoList1)
     {
@@ -192,11 +188,11 @@ void DeltaRayMergeTool::CombineCommonMuonPfoLists(const PfoList &commonMuonPfoLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMergeTool::GetConnectedMuons(const PfoList &commonMuonPfoList, const Cluster *const pClusterToEnlarge, PfoList &connectedMuonPfoList) const 
+void DeltaRayMergeTool::GetConnectedMuons(const PfoList &commonMuonPfoList, const Cluster *const pDeltaRayCluster, PfoList &connectedMuonPfoList) const 
 {
     for (const ParticleFlowObject *const pCommonMuonPfo : commonMuonPfoList)
     {
-        if (this->IsConnected(pCommonMuonPfo, pClusterToEnlarge))
+        if (this->IsConnected(pCommonMuonPfo, pDeltaRayCluster))
             connectedMuonPfoList.push_back(pCommonMuonPfo);
     }
 }
@@ -357,13 +353,10 @@ StatusCode DeltaRayMergeTool::ReadSettings(const TiXmlHandle xmlHandle)
         "MaxDRSeparationFromTrack", m_maxDRSeparationFromTrack));
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxClusterSeparation", m_maxClusterSeparation));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxVertexSeparation", m_maxVertexSeparation));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterSeparation", m_maxClusterSeparation));    
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxUnambiguousClusterSeparation", m_maxUnambiguousClusterSeparation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxGoodMatchReducedChiSquared", m_maxGoodMatchReducedChiSquared));     
