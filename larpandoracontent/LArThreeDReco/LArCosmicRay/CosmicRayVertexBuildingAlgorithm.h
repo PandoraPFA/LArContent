@@ -68,11 +68,6 @@ private:
      */
     void BuildCosmicRayDaughter(const pandora::ParticleFlowObject *const pPfo) const;
 
-    void BuildCosmicRayDaughter(const LArPointingClusterMap &pointingClusterMap, const pandora::ParticleFlowObject *const pDaughterPfo) const;
-
-    pandora::CartesianVector ProjectPosition(
-        const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineEnd, const pandora::CartesianVector &position) const;
-
     /**
      *  @brief  Set the vertex and direction of the Pfos
      *
@@ -83,12 +78,12 @@ private:
     void SetParticleParameters(const pandora::CartesianVector &vtxPosition, const pandora::CartesianVector &vtxDirection,
         const pandora::ParticleFlowObject *const pPfo) const;
 
-    bool m_useParentShowerVertex;    ///< use the parent pfo for the shower vertices
-    bool m_isDualPhase;              ///< type of geometry
-    unsigned int m_halfWindowLayers; ///< number of layers to use for half-window of sliding fit
-    std::string m_parentPfoListName; ///< The name of the input pfo list
-    std::string m_vertexListName;    ///< The name of the output vertex list
-    float m_maxVertexDisplacementFromTrack;
+    bool m_useParentShowerVertex;           ///< use the parent pfo for the shower vertices
+    bool m_isDualPhase;                     ///< type of geometry
+    unsigned int m_halfWindowLayers;        ///< number of layers to use for half-window of sliding fit
+    std::string m_parentPfoListName;        ///< The name of the input pfo list
+    std::string m_vertexListName;           ///< The name of the output vertex list
+    float m_maxVertexDisplacementFromTrack; ///< The maximum separation of a close vertex from the cosmic ray track
 };
 
 } // namespace lar_content

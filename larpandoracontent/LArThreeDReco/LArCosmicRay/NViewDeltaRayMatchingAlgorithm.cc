@@ -537,15 +537,14 @@ template<typename T>
 StatusCode NViewDeltaRayMatchingAlgorithm<T>::ProjectMuonPositions(const HitType &thirdViewHitType, const ParticleFlowObject *const pParentMuon,
     CartesianPointVector &projectedPositions) const
 {
-    const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
-
     ClusterList muonClusterList1, muonClusterList2;    
-    for (const HitType &hitType1 : hitTypeVector)
+
+    for (const HitType &hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         if (hitType1 == thirdViewHitType)
             continue;
         
-        for (const HitType &hitType2 : hitTypeVector)
+        for (const HitType &hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             if ((hitType2 == thirdViewHitType) || (hitType1 == hitType2))
                 continue;

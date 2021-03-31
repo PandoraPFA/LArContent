@@ -41,6 +41,7 @@ private:
     /**
      *  @brief  Determine whether element satifies simple checks
      *
+     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *
@@ -51,6 +52,7 @@ private:
     /**
      *  @brief  Determine whether the cluster under investigation has muon contamination
      *
+     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *
@@ -61,6 +63,7 @@ private:
     /**
      *  @brief  Collect hits in the delta ray cluster that lie close to calculated projected positions forming a seed to later grow
      *
+     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the output list of identified delta ray hits
@@ -71,6 +74,7 @@ private:
     /**
      *  @brief  Examine remaining hits in the delta ray cluster adding them to the delta ray seed or parent muon if appropriate and a separate list if not
      *
+     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
@@ -81,11 +85,22 @@ private:
     pandora::StatusCode GrowSeed(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
         pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemantHits) const;
 
+    /**
+     *  @brief  Collect hits from the delta ray cluster to either keep (demandCloserToCollected == true) or separate into a new shower (demandCloserToCollected == false)
+     *
+     *  @param  positionOnMuon the parameterised muon position
+     *  @param  muonDirection the parameterised muon direction
+     *  @param  pDeltaRayCluster the delta ray cluster under investigation
+     *  @param  minDistanceFromMuon the minimum distance of a hit from the muon track for it to not belong to the muon
+     *  @param  demandCloserToCollected whether to demand a hit be closer to the collected hits than to the muon hits for it to be collected
+     *  @param  protectedHits the hits that are protected from being collected
+     *  @param  collectedHits the output list of collected hits
+     */   
     void CollectHitsFromDeltaRay(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection, const pandora::Cluster *const pDeltaRayCluster,
         const float &minDistanceFromMuon, const bool demandCloserToCollected, const pandora::CaloHitList &protectedHits, pandora::CaloHitList &collectedHits) const;
 
     /**
-     *  @brief  Fragment the delta ray cluster, refining the matched delta ray cluster perhaps creating significant remnants in the process
+     *  @brief  Fragment the delta ray cluster adding hits to the muon track and perhaps creating significant remnants in the process
      *
      *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
@@ -97,7 +112,7 @@ private:
         pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemnantHits) const;
 
     /**
-     *  @brief  Reculster the remnant cluster, merging insignificant created clusters into the parent muon (if proximity checks pass)
+     *  @brief  Reculster a given remnant cluster, merging insignificant created clusters into the parent muon (if proximity checks pass)
      *
      *  @param  pAlgorithm address of the calling algorithm 
      *  @param  hitType the hit type of the cluster under investigation
@@ -109,12 +124,12 @@ private:
     void FragmentRemnant(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const pandora::HitType &hitType, const pandora::Cluster *const pMuonCluster,
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
     
-    float m_minSeparation;    ///< The minimum delta ray - parent muon cluster separation
-    unsigned int m_slidingFitWindow;
-    float m_minContaminationLength;
-    float m_maxDistanceToHit;
-    unsigned int m_minRemnantClusterSize;
-    float m_maxDistanceToTrack;
+    float m_minSeparation;                    ///< The minimum delta ray - parent muon cluster separation required to investigate delta ray cluster
+    unsigned int m_slidingFitWindow;          ///< The sliding fit window used in cosmic ray parameterisations
+    float m_minContaminationLength;           ///< The minimum projected length of a delta ray cluster onto the muon track for it to be considered contaminated
+    float m_maxDistanceToHit;                 ///< The maximum distance of a hit from the cosmic ray track for it to be added into the CR
+    unsigned int m_minRemnantClusterSize;     ///< The minimum hit number of a remnant cluster for it to be considered significant
+    float m_maxDistanceToTrack;               ///< The minimum distance of an insignificant remnant cluster from the cosmic ray track for it to be merged into the CR
 };
 
 } // namespace lar_content

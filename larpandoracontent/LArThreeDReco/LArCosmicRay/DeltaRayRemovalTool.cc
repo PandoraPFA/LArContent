@@ -83,7 +83,7 @@ void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgo
             if (!this->IsContaminated(pAlgorithm, element, hitType))
                 continue;            
 
-            if (!this->IsBestElement(element, hitType, elementList))
+            if (!this->IsBestElement(pAlgorithm, element, hitType, elementList))
                 continue;
             
             checkedClusters.insert(pDeltaRayCluster);

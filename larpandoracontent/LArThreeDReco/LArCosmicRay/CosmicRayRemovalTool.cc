@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/CosmicRayRemovalTool.cc
  *
- *  @brief  Implementation of the clear tracks tool class.
+ *  @brief  Implementation of the cosmic ray removal tool class.
  *
  *  $Log: $
  */
@@ -85,7 +85,7 @@ void CosmicRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlg
             if (!this->IsContaminated(pAlgorithm, element, hitType))
                 continue;
 
-            if (!this->IsBestElement(element, hitType, elementList))
+            if (!this->IsBestElement(pAlgorithm, element, hitType, elementList))
                 continue;
 
             checkedClusters.insert(pDeltaRayCluster);
@@ -195,13 +195,16 @@ bool CosmicRayRemovalTool::IsContaminated(ThreeViewDeltaRayMatchingAlgorithm *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-//LEAVING THIS HERE BECAUSE I THINK THIS MAY CAUSE ISSUES IN THE SLIDING FITS OF PFOS
 void CosmicRayRemovalTool::CreateSeed(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
     const HitType &hitType, CaloHitList &collectedHits) const
 {
-    CartesianPointVector muonProjectedPositions;
-    if (pAlgorithm->ProjectMuonPositions(hitType, element.GetOverlapResult().GetCommonMuonPfoList().front(), muonProjectedPositions) != STATUS_CODE_SUCCESS)
+    // To avoid fluctuations, parameterise the muon track
+    CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
+    if (pAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), element.GetCluster(hitType), hitType, positionOnMuon, muonDirection) !=
+        STATUS_CODE_SUCCESS)
+    {
         return;
+    }
 
     CartesianPointVector deltaRayProjectedPositions;   
     if (this->ProjectDeltaRayPositions(pAlgorithm, element, hitType, deltaRayProjectedPositions) != STATUS_CODE_SUCCESS)
@@ -209,8 +212,11 @@ void CosmicRayRemovalTool::CreateSeed(ThreeViewDeltaRayMatchingAlgorithm *const 
 
     CaloHitList deltaRayHitList;
     element.GetCluster(hitType)->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
+
+    CaloHitVector deltaRayHitVector(deltaRayHitList.begin(), deltaRayHitList.end());
+    std::sort(deltaRayHitVector.begin(), deltaRayHitVector.end(), LArClusterHelper::SortHitsByPosition);
     
-    for (const CaloHit *const pCaloHit : deltaRayHitList)
+    for (const CaloHit *const pCaloHit : deltaRayHitVector)
     {
         const CartesianVector &position(pCaloHit->GetPositionVector());
 
@@ -220,9 +226,13 @@ void CosmicRayRemovalTool::CreateSeed(ThreeViewDeltaRayMatchingAlgorithm *const 
 
             if (distanceToProjectionSquared < m_maxDistanceToHit * m_maxDistanceToHit)
 	        {
-                const float distanceToMuonHits(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, muonProjectedPositions));
+                // To prevent gappy seeds
+                if ((!collectedHits.empty()) && (LArClusterHelper::GetClosestDistance(position, collectedHits) > m_maxDistanceToHit))
+                    continue;
+
+                const float distanceToMuonHitsSquared(muonDirection.GetCrossProduct(position - positionOnMuon).GetMagnitudeSquared());
         
-                if (distanceToMuonHits < m_maxDistanceToHit)
+                if (distanceToMuonHitsSquared < m_maxDistanceToHit * m_maxDistanceToHit)
                     continue;
         
                 collectedHits.push_back(pCaloHit);
@@ -245,7 +255,11 @@ StatusCode CosmicRayRemovalTool::GrowSeed(ThreeViewDeltaRayMatchingAlgorithm *co
 
     // To avoid fluctuatuions, parameterise the muon track
     CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
-    pAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), pDeltaRayCluster, hitType, positionOnMuon, muonDirection);
+    if (pAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), pDeltaRayCluster, hitType, positionOnMuon, muonDirection) !=
+        STATUS_CODE_SUCCESS)
+    {
+        return STATUS_CODE_NOT_FOUND;
+    }
 
     // Identify delta ray hits
     this->CollectHitsFromDeltaRay(positionOnMuon, muonDirection, pDeltaRayCluster, m_maxDistanceToHit, true, deltaRayHits, deltaRayHits);

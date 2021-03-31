@@ -31,9 +31,7 @@ RemovalBaseTool::RemovalBaseTool() :
 bool RemovalBaseTool::IsMuonEndpoint(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
     const bool ignoreHitType, const HitType &hitTypeToIgnore) const
 {
-    const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
-
-    for (const HitType &hitType : hitTypeVector)
+    for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         if (ignoreHitType && (hitType == hitTypeToIgnore))
             continue;
@@ -67,7 +65,8 @@ bool RemovalBaseTool::IsMuonEndpoint(ThreeViewDeltaRayMatchingAlgorithm *const p
     
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType &hitType, const TensorType::ElementList &elementList) const
+bool RemovalBaseTool::IsBestElement(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const HitType &hitType, 
+    const TensorType::ElementList &elementList) const
 {
     const float chiSquared(element.GetOverlapResult().GetReducedChi2());
     const unsigned int hitSum(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
@@ -80,12 +79,13 @@ bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const Hi
         if ((testElement.GetClusterU() == element.GetClusterU()) && (testElement.GetClusterV() == element.GetClusterV()) && (testElement.GetClusterW() == element.GetClusterW()))
             continue;
 
-        //DOES IT PASS THE ELEMENT CHECKS??
-
         const unsigned int testHitSum(testElement.GetClusterU()->GetNCaloHits() + testElement.GetClusterV()->GetNCaloHits() + testElement.GetClusterW()->GetNCaloHits());
         const float testChiSquared(testElement.GetOverlapResult().GetReducedChi2());
         
-        if ((testHitSum > hitSum) || ((testHitSum == hitSum) && (testChiSquared < chiSquared)))
+        if ((testHitSum < hitSum) || ((testHitSum == hitSum) && (testChiSquared > chiSquared)))
+            continue;
+
+        if (this->PassElementChecks(pAlgorithm, testElement, hitType))
             return false;
     }
 
@@ -155,16 +155,14 @@ void RemovalBaseTool::FindExtrapolatedHits(const Cluster *const pCluster, const 
 StatusCode RemovalBaseTool::ProjectDeltaRayPositions(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
     const HitType &hitType, CartesianPointVector &projectedPositions) const
 {
-    const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
-
     const Cluster *pCluster1(nullptr), *pCluster2(nullptr);
     
-    for (const HitType &hitType1 : hitTypeVector)
+    for (const HitType &hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         if (hitType1 == hitType)
             continue;
         
-        for (const HitType &hitType2 : hitTypeVector)
+        for (const HitType &hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             if ((hitType2 == hitType) || (hitType1 == hitType2))
                 continue;

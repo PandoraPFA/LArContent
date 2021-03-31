@@ -8,9 +8,6 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
 
 using namespace pandora;
@@ -32,6 +29,7 @@ bool AmbiguousDeltaRayTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgor
 
     this->ExamineConnectedElements(pAlgorithm, overlapTensor);
 
+    // ATTN: Prevent tensor tool loop running again
     return false;
 }
 
@@ -76,11 +74,9 @@ void AmbiguousDeltaRayTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAl
 
 bool AmbiguousDeltaRayTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const
 {
-    ProtoParticleVector protoParticleVector;
-    
     bool found(true);
-
     ClusterSet usedClusters;
+    ProtoParticleVector protoParticleVector;
     
     while (found)
     {

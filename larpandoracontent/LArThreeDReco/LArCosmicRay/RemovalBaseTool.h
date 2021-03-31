@@ -39,8 +39,11 @@ protected:
      *
      *  @return  whether the input element is the best element
      */
-    bool IsBestElement(const TensorType::Element &element, const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
+    bool IsBestElement(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, 
+        const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
     
+    virtual bool PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const = 0;
+
     bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineEnd,
         const float distanceToLine) const;
 
