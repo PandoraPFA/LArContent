@@ -24,6 +24,7 @@ DeltaRayRemovalTool::DeltaRayRemovalTool() :
     m_minSeparation(1.f),
     m_slidingFitWindow(10000),
     m_minDeviationFromTransverse(0.35f),
+    m_contaminationWindow(5.f),
     m_significantHitThreshold(3)
 {
 }
@@ -92,12 +93,6 @@ void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgo
             if (pAlgorithm->CollectHitsFromMuon(nullptr, nullptr, pDeltaRayCluster, element.GetOverlapResult().GetCommonMuonPfoList().front(), deltaRayHits) != STATUS_CODE_SUCCESS)
                 continue;
             
-            if (deltaRayHits.empty())
-            {
-                std::cout << "ISOBEL THIS SHOULDN'T HAPPEN" << std::endl;
-                throw;
-            }
-
             modifiedClusters.insert(pDeltaRayCluster);
 
             this->SplitMuonCluster(pAlgorithm, element, hitType, deltaRayHits);
@@ -154,14 +149,14 @@ bool DeltaRayRemovalTool::IsContaminated(ThreeViewDeltaRayMatchingAlgorithm *con
     LArClusterHelper::GetClosestPositions(pDeltaRayCluster, pMuonCluster, deltaRayVertex, muonVertex);
 
     CaloHitList minusMuonHits, minusDeltaRayHits, plusMuonHits, plusDeltaRayHits;    
-    const CartesianVector minusPosition(muonVertex - (muonDirection * 5.f)), plusPosition(muonVertex + (muonDirection * 5.f));
+    const CartesianVector minusPosition(muonVertex - (muonDirection * m_contaminationWindow)); 
+    const CartesianVector plusPosition(muonVertex + (muonDirection * m_contaminationWindow));
 
     this->FindExtrapolatedHits(pMuonCluster, muonVertex, minusPosition, minusMuonHits);
     this->FindExtrapolatedHits(pMuonCluster, muonVertex, plusPosition, plusMuonHits);
     this->FindExtrapolatedHits(pDeltaRayCluster, muonVertex, minusPosition, minusDeltaRayHits);
     this->FindExtrapolatedHits(pDeltaRayCluster, muonVertex, plusPosition, plusDeltaRayHits);
 
-    // Search for asymmetry
     if ((minusMuonHits.size() < m_significantHitThreshold) && (plusMuonHits.size() < m_significantHitThreshold))
         return true;
 
@@ -212,6 +207,9 @@ StatusCode DeltaRayRemovalTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinDeviationFromTransverse", m_minDeviationFromTransverse));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "ContaminationWindow", m_contaminationWindow));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SignificantHitThreshold", m_significantHitThreshold));      

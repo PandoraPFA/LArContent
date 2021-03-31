@@ -674,7 +674,8 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster 
 
     // To avoid fluctuatuions, parameterise the muon track
     CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
-    this->ParameteriseMuon(pParentMuon, deltaRayProjectedPositions, thirdViewHitType, positionOnMuon, muonDirection);
+    if (this->ParameteriseMuon(pParentMuon, deltaRayProjectedPositions, thirdViewHitType, positionOnMuon, muonDirection) != STATUS_CODE_SUCCESS)
+        return STATUS_CODE_NOT_FOUND;
     
     this->CollectHitsFromMuon(positionOnMuon, muonDirection, pMuonCluster, deltaRayProjectedPositions, 1.f, 1.f, collectedHits);
 
