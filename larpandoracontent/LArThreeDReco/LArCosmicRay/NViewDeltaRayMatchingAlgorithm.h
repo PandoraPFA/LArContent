@@ -33,15 +33,6 @@ public:
      *  @brief  Default constructor
      */
     NViewDeltaRayMatchingAlgorithm();
-    
-    /**
-     *  @brief  To check whether a given cluster meets the requirements to be added into the matching container (tensor/matrix)
-     *
-     *  @param  pCluster the address of the input cluster
-     *
-     *  @return  whether the checks were met
-     */
-    virtual bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const = 0;
 
     /**
      *  @brief  Return the cluster of the common cosmic ray pfo in a given view (function demands there to be only one common CR pfo) 
@@ -223,6 +214,15 @@ public:
     void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
 
 protected:
+    /**
+     *  @brief  To check whether a given cluster meets the requirements to be added into the matching container (tensor/matrix)
+     *
+     *  @param  pCluster the address of the input cluster
+     *
+     *  @return  whether the checks were met
+     */
+    virtual bool DoesClusterPassTensorThreshold(const pandora::Cluster *const pCluster) const = 0;
+
     /**
      *  @brief  Populate the hit to cluster map  
      *

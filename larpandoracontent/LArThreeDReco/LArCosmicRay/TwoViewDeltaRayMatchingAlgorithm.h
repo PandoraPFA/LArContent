@@ -44,8 +44,6 @@ public:
 
     const pandora::Cluster *GetCluster(const MatrixType::Element &element, const pandora::HitType &hitType);
 
-    bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;
-
     void RemoveThirdViewCluster(const pandora::Cluster *const pCluster);
 
 
@@ -56,6 +54,8 @@ public:
     std::string GetClusteringAlgName() const;
     
 private:
+    virtual bool DoesClusterPassTensorThreshold(const pandora::Cluster *const pCluster) const;
+
     void CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3);
 
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::Cluster *const pCluster3,

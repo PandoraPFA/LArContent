@@ -29,7 +29,7 @@ ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ThreeViewDeltaRayMatchingAlgorithm::DoesClusterPassTesorThreshold(const Cluster *const pCluster) const
+bool ThreeViewDeltaRayMatchingAlgorithm::DoesClusterPassTensorThreshold(const Cluster *const pCluster) const
 {
     return (pCluster->GetNCaloHits() >= m_minClusterCaloHits);
 }    
@@ -97,10 +97,13 @@ void ThreeViewDeltaRayMatchingAlgorithm::FindCommonMuonParents(const Cluster *co
     {
         for (const ParticleFlowObject *const pNearbyMuonV : nearbyMuonPfosV)
         {
+            if (pNearbyMuonV != pNearbyMuonU)
+                continue;
+
             for (const ParticleFlowObject *const pNearbyMuonW : nearbyMuonPfosW)
             {
-                if ((pNearbyMuonU == pNearbyMuonV) && (pNearbyMuonV == pNearbyMuonW))
-                    commonMuonPfoList.push_back(pNearbyMuonU);
+                if (pNearbyMuonW == pNearbyMuonV)
+                    commonMuonPfoList.emplace_back(pNearbyMuonU);
             }
         }
     }
@@ -110,21 +113,19 @@ void ThreeViewDeltaRayMatchingAlgorithm::FindCommonMuonParents(const Cluster *co
 
 void ThreeViewDeltaRayMatchingAlgorithm::ExamineOverlapContainer()
 {
+    // Apply tools sequentially restarting if a change is made and ending if the tools finish or the restart limit is reached
     unsigned int repeatCounter(0);
 
-    for (TensorToolVector::const_iterator toolIter = m_algorithmToolVector.begin(); toolIter != m_algorithmToolVector.end(); )
+    for (auto toolIter = m_algorithmToolVector.begin(); toolIter != m_algorithmToolVector.end();)
     {
-        if ((*toolIter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
-        {
-            toolIter = m_algorithmToolVector.begin();
+        DeltaRayTensorTool *const pTool(*toolIter);
+        const bool repeatTools(pTool->Run(this, this->GetMatchingControl().GetOverlapTensor()));
 
-            if (++repeatCounter > m_nMaxTensorToolRepeats)
-                break;
-        }
-        else
-        {
-            ++toolIter;
-        }
+        toolIter = repeatTools ? m_algorithmToolVector.begin() : toolIter + 1;
+        repeatCounter = repeatTools ? repeatCounter + 1 : repeatCounter;
+
+        if (repeatCounter > m_nMaxTensorToolRepeats)
+            break;
     }
 }
 
@@ -138,9 +139,9 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xm
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
         "DeltaRayTools", algorithmToolVector));
 
-    for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
+    for (auto algorithmTool : algorithmToolVector)
     {
-        DeltaRayTensorTool *const pDeltaRayTensorTool(dynamic_cast<DeltaRayTensorTool*>(*iter));
+        DeltaRayTensorTool *const pDeltaRayTensorTool(dynamic_cast<DeltaRayTensorTool*>(algorithmTool));
 
         if (!pDeltaRayTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;

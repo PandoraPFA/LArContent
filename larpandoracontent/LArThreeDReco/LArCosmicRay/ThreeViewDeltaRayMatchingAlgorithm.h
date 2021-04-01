@@ -39,12 +39,12 @@ public:
      */
     ThreeViewDeltaRayMatchingAlgorithm();
 
-    bool DoesClusterPassTesorThreshold(const pandora::Cluster *const pCluster) const;    
-
     std::string GetClusteringAlgName() const;
     
 private:
     typedef std::vector<DeltaRayTensorTool*> TensorToolVector;
+
+    virtual bool DoesClusterPassTensorThreshold(const pandora::Cluster *const pCluster) const; 
     
     void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
 

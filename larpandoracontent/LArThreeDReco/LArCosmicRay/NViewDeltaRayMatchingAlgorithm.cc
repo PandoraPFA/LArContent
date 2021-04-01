@@ -49,7 +49,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::SelectInputClusters(const ClusterList *c
 {
     for (const Cluster *const pCluster : *pInputClusterList)
     {
-        if ((pCluster->IsAvailable()) && (this->DoesClusterPassTesorThreshold(pCluster)))
+        if ((pCluster->IsAvailable()) && (this->DoesClusterPassTensorThreshold(pCluster)))
             selectedClusterList.push_back(pCluster);
     }
 }
@@ -203,7 +203,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::FillStrayClusterList(const HitType &hitT
 
     for (const Cluster *const pCluster : inputClusterList)
     {
-        if ((pCluster->IsAvailable()) && (!this->DoesClusterPassTesorThreshold(pCluster)))
+        if ((pCluster->IsAvailable()) && (!this->DoesClusterPassTensorThreshold(pCluster)))
             strayClusterList.push_back(pCluster);
     }
 }    

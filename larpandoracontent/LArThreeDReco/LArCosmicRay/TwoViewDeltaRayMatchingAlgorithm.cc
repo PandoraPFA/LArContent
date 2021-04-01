@@ -67,7 +67,7 @@ const Cluster *TwoViewDeltaRayMatchingAlgorithm::GetCluster(const MatrixType::El
     
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewDeltaRayMatchingAlgorithm::DoesClusterPassTesorThreshold(const Cluster *const pCluster) const
+bool TwoViewDeltaRayMatchingAlgorithm::DoesClusterPassTensorThreshold(const Cluster *const pCluster) const
 {
     return (pCluster->GetNCaloHits() >= m_minClusterCaloHits);
 }    
