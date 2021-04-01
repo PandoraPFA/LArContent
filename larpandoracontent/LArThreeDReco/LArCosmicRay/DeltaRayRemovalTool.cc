@@ -25,7 +25,9 @@ DeltaRayRemovalTool::DeltaRayRemovalTool() :
     m_slidingFitWindow(10000),
     m_minDeviationFromTransverse(0.35f),
     m_contaminationWindow(5.f),
-    m_significantHitThreshold(3)
+    m_significantHitThreshold(3),
+    m_minDistanceFromMuon(1.f),
+    m_maxDistanceToCollected(1.f)
 {
 }
 
@@ -71,7 +73,8 @@ void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgo
         for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
 	    {
             const Cluster *pDeltaRayCluster(element.GetCluster(hitType));
-            
+            const ParticleFlowObject *const pMuonPfo(element.GetOverlapResult().GetCommonMuonPfoList().front());
+
             if (checkedClusters.count(pDeltaRayCluster))
                 continue;
             
@@ -90,7 +93,7 @@ void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgo
             checkedClusters.insert(pDeltaRayCluster);
 
             CaloHitList deltaRayHits;
-            if (pAlgorithm->CollectHitsFromMuon(nullptr, nullptr, pDeltaRayCluster, element.GetOverlapResult().GetCommonMuonPfoList().front(), deltaRayHits) != STATUS_CODE_SUCCESS)
+            if (pAlgorithm->CollectHitsFromMuon(nullptr, nullptr, pDeltaRayCluster, pMuonPfo, m_minDistanceFromMuon, m_maxDistanceToCollected, deltaRayHits) != STATUS_CODE_SUCCESS)
                 continue;
             
             modifiedClusters.insert(pDeltaRayCluster);
@@ -213,6 +216,12 @@ StatusCode DeltaRayRemovalTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SignificantHitThreshold", m_significantHitThreshold));      
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinDistanceFromMuon", m_minDistanceFromMuon));      
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxDistanceToCollected", m_maxDistanceToCollected));      
 
     return STATUS_CODE_SUCCESS;
 }

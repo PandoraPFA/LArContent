@@ -90,7 +90,8 @@ private:
     unsigned int                      m_minClusterCaloHits;
     float                             m_maxDistanceFromPrediction;
     float m_maxGoodMatchReducedChiSquared;
-
+    float m_minDistanceFromMuon; ///< The minimum distance of a hit from the cosmic ray track required for removal
+    float m_maxDistanceToCollected; ///< The maximim distance of a hit from the projected delta ray hits required for removal
     std::string  m_reclusteringAlgorithmName;
 };
 

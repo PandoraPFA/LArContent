@@ -76,6 +76,8 @@ private:
     float m_minDeviationFromTransverse;       ///< The minimum deviation from transverse required to avoid mistakes
     float m_contaminationWindow;              ///< The distance in which to search for delta ray contamination in the cosmic ray track
     unsigned int m_significantHitThreshold;   ///< The threshold number of hits which define significant contimination
+    float m_minDistanceFromMuon; ///< The minimum distance of a hit from the cosmic ray track required for removal
+    float m_maxDistanceToCollected; ///< The maximim distance of a hit from the projected delta ray hits required for removal
 };
 
 } // namespace lar_content

@@ -25,7 +25,9 @@ TwoViewDeltaRayMatchingAlgorithm::TwoViewDeltaRayMatchingAlgorithm() :
     m_nMaxMatrixToolRepeats(10),
     m_minClusterCaloHits(3),
     m_maxDistanceFromPrediction(2.f),
-    m_maxGoodMatchReducedChiSquared(1.f)
+    m_maxGoodMatchReducedChiSquared(1.f),
+    m_minDistanceFromMuon(1.f),
+    m_maxDistanceToCollected(1.f)
 {
 }
 
@@ -328,7 +330,8 @@ void TwoViewDeltaRayMatchingAlgorithm::GrowThirdView(const MatrixType::Element &
     {
         CaloHitList deltaRayHitList;
         
-        if (this->CollectHitsFromMuon(element.GetCluster1(), element.GetCluster2(), nullptr, pMatchedMuonPfo, deltaRayHitList) == STATUS_CODE_SUCCESS)
+        if (this->CollectHitsFromMuon(element.GetCluster1(), element.GetCluster2(), nullptr, pMatchedMuonPfo, 
+            m_minDistanceFromMuon, m_maxDistanceToCollected, deltaRayHitList) == STATUS_CODE_SUCCESS)
         {
             this->SplitMuonCluster(this->GetThirdViewClusterListName(), pBestMatchedCluster, deltaRayHitList, pThirdViewCluster);    
         }
@@ -481,6 +484,12 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MaxGoodMatchReducedChiSquared", m_maxGoodMatchReducedChiSquared)); 
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinDistanceFromMuon", m_minDistanceFromMuon));      
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxDistanceToCollected", m_maxDistanceToCollected));
 
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }

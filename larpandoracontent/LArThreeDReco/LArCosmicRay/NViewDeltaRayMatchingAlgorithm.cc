@@ -22,8 +22,6 @@
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 
-#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
-
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 using namespace pandora;
@@ -38,7 +36,9 @@ NViewDeltaRayMatchingAlgorithm<T>::NViewDeltaRayMatchingAlgorithm() :
     m_xOverlapWindow(1.f),
     m_minMatchedFraction(0.5),
     m_minMatchedPoints(3),
-    m_minProjectedPositions(3)    
+    m_minProjectedPositions(3),
+    m_maxCosmicRayHitFraction(0.05f),
+    m_strayClusterSeparation(2.f)
 {
 }
 
@@ -118,6 +118,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::BuildKDTree(const HitType &hitType)
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
 
     CaloHitList allCaloHits;
+
     for (auto &entry : hitToClusterMap)
         allCaloHits.push_back(entry.first);
     
@@ -133,7 +134,6 @@ template<typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::AddToClusterProximityMap(const Cluster *const pCluster)
 {
     const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
-
     const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
     ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
@@ -153,9 +153,6 @@ void NViewDeltaRayMatchingAlgorithm<T>::AddToClusterProximityMap(const Cluster *
             const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
             
             if (pNearbyCluster == pCluster)
-                continue;
-                
-            if (std::find(caloHitList.begin(), caloHitList.end(), hit.data) != caloHitList.end())
                 continue;
                 
             ClusterList  &nearbyClusterList(clusterProximityMap[pCluster]);
@@ -190,6 +187,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::FillClusterToPfoMap(const HitType &hitTy
     {
         ClusterList pfoClusters;
         LArPfoHelper::GetClusters(pPfo, hitType, pfoClusters);
+
         for (const Cluster *const pCluster : pfoClusters)
             clusterToPfoMap[pCluster] = pPfo;
     }
@@ -205,7 +203,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::FillStrayClusterList(const HitType &hitT
 
     for (const Cluster *const pCluster : inputClusterList)
     {
-        if ((!this->DoesClusterPassTesorThreshold(pCluster)) && (pCluster->IsAvailable()))
+        if ((pCluster->IsAvailable()) && (!this->DoesClusterPassTesorThreshold(pCluster)))
             strayClusterList.push_back(pCluster);
     }
 }    
@@ -507,7 +505,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::GetClusterSpanZ(const CaloHitList 
     zMax = -std::numeric_limits<float>::max();
 
     bool found(false);
-    for(const CaloHit *const pCaloHit : caloHitList)
+    for (const CaloHit *const pCaloHit : caloHitList)
     {
         const float xCoordinate(pCaloHit->GetPositionVector().GetX());
         const float zCoordinate(pCaloHit->GetPositionVector().GetZ());
@@ -632,7 +630,8 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::GetProjectedPositions(const Cluste
 
 template<typename T>
 StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster *const pCluster1, const Cluster *const pCluster2,
-    const Cluster *const pThirdViewCluster, const ParticleFlowObject *const pParentMuon, CaloHitList &collectedHits) const
+    const Cluster *const pThirdViewCluster, const ParticleFlowObject *const pParentMuon, const float minDistanceFromMuon, const float maxDistanceToCollected,
+    CaloHitList &collectedHits) const
 {
     HitType thirdViewHitType(TPC_VIEW_U);
     CartesianPointVector deltaRayProjectedPositions;
@@ -642,9 +641,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster 
         if (this->GetProjectedPositions(pCluster1, pCluster2, deltaRayProjectedPositions) != STATUS_CODE_SUCCESS)
             return STATUS_CODE_NOT_FOUND;
 
-        const HitTypeVector hitTypeVector({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
-
-        for (const HitType &hitType : hitTypeVector)
+        for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             if ((LArClusterHelper::GetClusterHitType(pCluster1) != hitType) && (LArClusterHelper::GetClusterHitType(pCluster2) != hitType))
             {
@@ -677,13 +674,13 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster 
     if (this->ParameteriseMuon(pParentMuon, deltaRayProjectedPositions, thirdViewHitType, positionOnMuon, muonDirection) != STATUS_CODE_SUCCESS)
         return STATUS_CODE_NOT_FOUND;
     
-    this->CollectHitsFromMuon(positionOnMuon, muonDirection, pMuonCluster, deltaRayProjectedPositions, 1.f, 1.f, collectedHits);
+    this->CollectHitsFromMuon(positionOnMuon, muonDirection, pMuonCluster, deltaRayProjectedPositions, minDistanceFromMuon, maxDistanceToCollected, collectedHits);
 
     if (collectedHits.empty())
         return STATUS_CODE_NOT_FOUND;
 
     // Catch if delta ray has travelled along muon
-    if ((static_cast<float>(collectedHits.size()) / pMuonCluster->GetNCaloHits()) > 0.05f)
+    if ((static_cast<float>(collectedHits.size()) / pMuonCluster->GetNCaloHits()) > m_maxCosmicRayHitFraction)
         return STATUS_CODE_NOT_FOUND;
 
     return STATUS_CODE_SUCCESS;
@@ -693,16 +690,17 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster 
 
 template<typename T>
 StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlowObject *const pParentMuon, const Cluster *const pDeltaRayCluster,
-    const HitType &hitType, CartesianVector &positionOnMuon, CartesianVector &muonDirection) const
+    CartesianVector &positionOnMuon, CartesianVector &muonDirection) const
 {
     CaloHitList deltaRayHitList;
     pDeltaRayCluster->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
 
     CartesianPointVector deltaRayProjectedPositions;
+
     for (const CaloHit *const pCaloHit : deltaRayHitList)
         deltaRayProjectedPositions.push_back(pCaloHit->GetPositionVector());
 
-    return this->ParameteriseMuon(pParentMuon, deltaRayProjectedPositions, hitType, positionOnMuon, muonDirection);
+    return this->ParameteriseMuon(pParentMuon, deltaRayProjectedPositions, LArClusterHelper::GetClusterHitType(pDeltaRayCluster), positionOnMuon, muonDirection);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -716,13 +714,12 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlo
             
     if (muonClusterList.size() != 1)
         return STATUS_CODE_NOT_FOUND;
-
-    const Cluster *const pMuonCluster(muonClusterList.front());
     
     CartesianPointVector muonProjectedPositions;
     if (this->ProjectMuonPositions(hitType, pParentMuon, muonProjectedPositions) != STATUS_CODE_SUCCESS)
         return STATUS_CODE_NOT_FOUND;
 
+    const Cluster *const pMuonCluster(muonClusterList.front());
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
     const TwoDSlidingFitResult slidingFitResult(pMuonCluster, 40, slidingFitPitch);
 
@@ -745,7 +742,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlo
 
 template<typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const CartesianVector &positionOnMuon, const CartesianVector &muonDirection,
-    const Cluster *const pMuonCluster, const CartesianPointVector &projectedPositions, const float &minDistanceFromMuon, const float maxDistanceToCollected,
+    const Cluster *const pMuonCluster, const CartesianPointVector &deltaRayProjectedPositions, const float &minDistanceFromMuon, const float maxDistanceToCollected,
      CaloHitList &collectedHits) const
 {
     CaloHitList cosmicRayHitList;
@@ -761,7 +758,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const CartesianVecto
             if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
                 continue;
 
-            const float distanceToCollectedHits(std::min(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, projectedPositions),
+            const float distanceToCollectedHits(std::min(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, deltaRayProjectedPositions),
                 LArMuonLeadingHelper::GetClosestDistance(pCaloHit, collectedHits)));
             const float distanceToMuonHits(muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude());
 
@@ -854,7 +851,7 @@ bool NViewDeltaRayMatchingAlgorithm<T>::CreatePfos(ProtoParticleVector &protoPar
 	    for (const Cluster *const pCluster : protoParticle.m_clusterList)
 	    {            
             ClusterList collectedClusters;
-            this->CollectStrayHits(pCluster, spanMinX, spanMaxX, collectedClusters);
+            this->CollectStrayClusters(pCluster, spanMinX, spanMaxX, collectedClusters);
 
 	         if (!collectedClusters.empty())
                  this->AddInStrayClusters(pCluster, collectedClusters);
@@ -863,6 +860,119 @@ bool NViewDeltaRayMatchingAlgorithm<T>::CreatePfos(ProtoParticleVector &protoPar
 
     return (this->CreateThreeDParticles(protoParticleVector));
 }      
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void NViewDeltaRayMatchingAlgorithm<T>::CollectStrayClusters(const Cluster *const pClusterToEnlarge, const float rangeMinX, const float rangeMaxX, ClusterList &collectedClusters)
+{
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pClusterToEnlarge));
+    const ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
+    const ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+    const ClusterProximityMap::const_iterator clusterProximityIter(clusterProximityMap.find(pClusterToEnlarge));
+
+    if (clusterProximityIter == clusterProximityMap.end())
+        return;
+
+    for (const Cluster *const pNearbyCluster : clusterProximityIter->second)
+    {
+        if (std::find(strayClusterList.begin(), strayClusterList.end(), pNearbyCluster) == strayClusterList.end())
+            continue;
+
+        float xMin(-std::numeric_limits<float>::max()), xMax(+std::numeric_limits<float>::max());
+        pNearbyCluster->GetClusterSpanX(xMin, xMax);
+
+        if (!(((xMin > rangeMinX) && (xMin < rangeMaxX)) || ((xMax > rangeMinX) && (xMax < rangeMaxX))))
+            continue;
+        
+        if (LArClusterHelper::GetClosestDistance(pClusterToEnlarge, pNearbyCluster) > m_strayClusterSeparation)
+            continue;
+
+        if (std::find(collectedClusters.begin(), collectedClusters.end(), pNearbyCluster) == collectedClusters.end())
+            collectedClusters.push_back(pNearbyCluster);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------    
+
+template<typename T>
+void NViewDeltaRayMatchingAlgorithm<T>::AddInStrayClusters(const Cluster *const pClusterToEnlarge, const ClusterList &collectedClusters)
+{
+    this->UpdateUponDeletion(pClusterToEnlarge);
+
+    for(const Cluster *const pCollectedCluster : collectedClusters)
+    {
+        this->UpdateUponDeletion(pCollectedCluster);
+        
+        std::string clusterListName(this->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pCollectedCluster, clusterListName, clusterListName));
+    }
+
+    this->UpdateContainers({pClusterToEnlarge}, {nullptr});
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void NViewDeltaRayMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
+{
+    const HitType &hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
+    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);    
+    ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
+    ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
+    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+
+    CaloHitList caloHitList;
+    pDeletedCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        const HitToClusterMap::const_iterator iter(hitToClusterMap.find(pCaloHit));
+
+        if (iter == hitToClusterMap.end())
+            throw StatusCodeException(STATUS_CODE_FAILURE);
+        
+        hitToClusterMap.erase(iter);
+    }
+
+    const ClusterList::const_iterator strayClusterIter(std::find(strayClusterList.begin(), strayClusterList.end(), pDeletedCluster));
+
+    if (strayClusterIter != strayClusterList.end())
+        strayClusterList.erase(strayClusterIter);    
+
+    const ClusterProximityMap::const_iterator clusterProximityIter(clusterProximityMap.find(pDeletedCluster));
+
+    if (clusterProximityIter != clusterProximityMap.end())
+    {
+        const ClusterList &nearbyClusterList(clusterProximityIter->second);
+
+        for (const Cluster *const pNearbyCluster : nearbyClusterList)
+        {
+            const ClusterProximityMap::iterator iter(clusterProximityMap.find(pNearbyCluster));
+
+            if (iter == clusterProximityMap.end())
+                continue;
+        
+            ClusterList &invertedCloseClusters(iter->second);
+
+            ClusterList::iterator invertedIter(std::find(invertedCloseClusters.begin(), invertedCloseClusters.end(), pDeletedCluster));
+            invertedCloseClusters.erase(invertedIter);
+        }
+        
+        clusterProximityMap.erase(clusterProximityIter);
+    }
+
+    const ClusterToPfoMap::const_iterator clusterToPfoIter(clusterToPfoMap.find(pDeletedCluster));
+
+    if (clusterToPfoIter != clusterToPfoMap.end())
+    {
+        clusterToPfoMap.erase(clusterToPfoIter);
+    }
+    else
+    {
+        NViewMatchingAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
+    }
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -904,124 +1014,6 @@ void NViewDeltaRayMatchingAlgorithm<T>::UpdateContainers(const ClusterVector &ne
             clusterToPfoMap[pNewCluster] = pMuonPfo;
         }
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void NViewDeltaRayMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
-{
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
-    HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);    
-    ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
-
-    CaloHitList caloHitList;
-    pDeletedCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-
-    for (const CaloHit *const pCaloHit : caloHitList)
-    {
-        const HitToClusterMap::const_iterator iter(hitToClusterMap.find(pCaloHit));
-
-        if (iter == hitToClusterMap.end())
-            throw StatusCodeException(STATUS_CODE_FAILURE);
-        
-        hitToClusterMap.erase(iter);
-    }
-
-    ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
-    const ClusterList::const_iterator strayClusterIter(std::find(strayClusterList.begin(), strayClusterList.end(), pDeletedCluster));
-
-    if (strayClusterIter != strayClusterList.end())
-        strayClusterList.erase(strayClusterIter);
-    
-    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
-    const ClusterProximityMap::const_iterator clusterProximityIter(clusterProximityMap.find(pDeletedCluster));
-
-    if (clusterProximityIter != clusterProximityMap.end())
-    {
-        const ClusterList &nearbyClusterList(clusterProximityIter->second);
-
-        for (const Cluster *const pNearbyCluster : nearbyClusterList)
-        {
-            const ClusterProximityMap::iterator iter(clusterProximityMap.find(pNearbyCluster));
-
-            // ATTN: May have already been deleted (TEST REMOVAL)
-            if (iter == clusterProximityMap.end())
-                continue;
-        
-            ClusterList &invertedCloseClusters(iter->second);
-
-            ClusterList::iterator invertedIter(std::find(invertedCloseClusters.begin(), invertedCloseClusters.end(), pDeletedCluster));
-            invertedCloseClusters.erase(invertedIter);
-        }
-        
-        clusterProximityMap.erase(clusterProximityIter);
-    }
-
-    const ClusterToPfoMap::const_iterator clusterToPfoIter(clusterToPfoMap.find(pDeletedCluster));
-
-    if (clusterToPfoIter != clusterToPfoMap.end())
-    {
-        clusterToPfoMap.erase(clusterToPfoIter);
-    }
-    else
-    {
-        NViewMatchingAlgorithm<T>::UpdateUponDeletion(pDeletedCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-const ClusterList &NViewDeltaRayMatchingAlgorithm<T>::GetStrayClusterList(const HitType &hitType) const
-{
-    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
-        throw STATUS_CODE_NOT_ALLOWED;
-
-    return ((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void NViewDeltaRayMatchingAlgorithm<T>::CollectStrayHits(const Cluster *const pClusterToEnlarge, const float spanMinX, const float spanMaxX, ClusterList &collectedClusters)
-{
-    const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterToEnlarge));
-    const ClusterList &strayClusterList(this->GetStrayClusterList(hitType));
-
-    for (const Cluster *const pCluster : strayClusterList)
-    {
-        float xMin(-std::numeric_limits<float>::max()), xMax(+std::numeric_limits<float>::max());
-
-        pCluster->GetClusterSpanX(xMin, xMax);
-
-        if (!(((xMin > spanMinX) && (xMin < spanMaxX)) || ((xMax > spanMinX) && (xMax < spanMaxX))))
-            continue;
-        
-        if (LArClusterHelper::GetClosestDistance(pClusterToEnlarge, pCluster) > 2.f)
-            continue;
-
-        if (std::find(collectedClusters.begin(), collectedClusters.end(), pCluster) == collectedClusters.end())
-            collectedClusters.push_back(pCluster);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------    
-
-template<typename T>
-void NViewDeltaRayMatchingAlgorithm<T>::AddInStrayClusters(const Cluster *const pClusterToEnlarge, const ClusterList &collectedClusters)
-{
-    this->UpdateUponDeletion(pClusterToEnlarge);
-
-    for(const Cluster *const pCollectedCluster : collectedClusters)
-    {
-        this->UpdateUponDeletion(pCollectedCluster);
-        
-        std::string clusterListName(this->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge)));
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pClusterToEnlarge, pCollectedCluster, clusterListName, clusterListName));
-    }
-
-    this->UpdateContainers({pClusterToEnlarge}, {nullptr});
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1076,14 +1068,20 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xml
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinProjectedPositions", m_minProjectedPositions));    
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxCosmicRayHitFraction", m_maxCosmicRayHitFraction));    
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "StrayClusterSeparation", m_strayClusterSeparation));    
     
     return NViewMatchingAlgorithm<T>::ReadSettings(xmlHandle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template class NViewDeltaRayMatchingAlgorithm<ThreeViewMatchingControl<DeltaRayOverlapResult> >;
-template class NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult> >;
+template class NViewDeltaRayMatchingAlgorithm<ThreeViewMatchingControl<DeltaRayOverlapResult>>;
+template class NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult>>;
 
 } // namespace lar_content
 
