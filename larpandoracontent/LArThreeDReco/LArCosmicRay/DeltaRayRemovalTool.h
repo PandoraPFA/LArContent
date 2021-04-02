@@ -47,7 +47,7 @@ private:
      *
      *  @return  whether the checks pass
      */
-    bool PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const;
+    virtual bool PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
      *  @brief  Determine whether the cosmic ray cluster under investigation has delta ray contamination

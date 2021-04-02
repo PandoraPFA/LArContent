@@ -1,18 +1,12 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArTransverseTrackMatching/RemovalBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmic ray/RemovalBaseTool.cc
  *
- *  @brief  Implementation of the removal base class
+ *  @brief  Implementation of the removal base class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
-
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-
-#include "larpandoracontent/LArObjects/LArCaloHit.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/RemovalBaseTool.h"
 
