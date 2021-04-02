@@ -8,13 +8,7 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
-
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/ThreeViewDeltaRayMatchingAlgorithm.h"
-
-#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 using namespace pandora;
 

@@ -16,8 +16,6 @@
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/NViewDeltaRayMatchingAlgorithm.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
 
-#include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
-
 namespace lar_content
 {
     
@@ -39,29 +37,56 @@ public:
      */
     ThreeViewDeltaRayMatchingAlgorithm();
 
+    /**
+     *  @brief  Get the name of the clustering algorithm to be used to recluster created delta ray remnants
+     *
+     *  @return the clustering algorithm name
+     */
     std::string GetClusteringAlgName() const;
     
 private:
     typedef std::vector<DeltaRayTensorTool*> TensorToolVector;
 
+    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
+    void ExamineOverlapContainer();
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);    
+
+    /**
+     *  @brief  To check whether a given cluster meets the requirements to be added into the matching container (tensor/matrix)
+     *
+     *  @param  pCluster the address of the input cluster
+     *
+     *  @return  whether the checks were met
+     */
     virtual bool DoesClusterPassTensorThreshold(const pandora::Cluster *const pCluster) const; 
     
-    void CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW);
-
+    /**
+     *  @brief  Calculate the overlap result for given group of clusters
+     *
+     *  @param  pClusterU the cluster from the U view
+     *  @param  pClusterV the cluster from the V view
+     *  @param  pClusterW the cluster from the W view
+     *  @param  overlapResult to receive the overlap result
+     *
+     *  @return statusCode, faster than throwing in regular use-cases
+     */
     pandora::StatusCode CalculateOverlapResult(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW,
         DeltaRayOverlapResult &overlapResult) const;
 
+    /**
+     *  @brief  Find the cosmic ray pfos that, in each view, lie close to the clusters of the tensor element   
+     *
+     *  @param  pClusterU the cluster from the U view
+     *  @param  pClusterV the cluster from the V view
+     *  @param  pClusterW the cluster from the W view
+     *  @param  commonMuonPfoList the output list of common cosmic ray pfos 
+     */
     void FindCommonMuonParents(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV, const pandora::Cluster *const pClusterW, pandora::PfoList &commonMuonPfoList) const;
 
-    void ExamineOverlapContainer();
-
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);    
-
-    TensorToolVector                  m_algorithmToolVector;          ///< The algorithm tool vector
-    std::string                       m_reclusteringAlgorithmName;
-    unsigned int                      m_minClusterCaloHits;    
-    unsigned int                      m_nMaxTensorToolRepeats;
-
+    TensorToolVector m_algorithmToolVector; ///< The algorithm tool vector
+    std::string m_reclusteringAlgorithmName; ///< The name of the clustering algorithm to be used to recluster created delta ray remnants
+    unsigned int m_minClusterCaloHits; ///< The threshold number of hits for a cluster to be considered
+    unsigned int m_nMaxTensorToolRepeats; ///< The maximum number of repeat loops over tensor tools
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
