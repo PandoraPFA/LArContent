@@ -247,7 +247,7 @@ protected:
     /**
      *  @brief  Build the KD tree
      *
-     *  @param  hitType the hit type of the tree to build
+     *  @param  hitType the hit type of the KD tree to build
      */
     void BuildKDTree(const pandora::HitType &hitType);
 
