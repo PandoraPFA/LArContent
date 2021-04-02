@@ -19,7 +19,7 @@ namespace lar_content
 {
 
 UnambiguousDeltaRayTool::UnambiguousDeltaRayTool() :
-    m_minSeparation(2.f),
+    m_maxSeparation(2.f),
     m_minNConnectedClusters(1)
 {
 }
@@ -79,7 +79,7 @@ bool UnambiguousDeltaRayTool::IsConnected(const TensorType::Element &element) co
 
             const float separation(LArClusterHelper::GetClosestDistance(element.GetCluster(hitType), muonClusterList));
 
-            if (separation < m_minSeparation)
+            if (separation < m_maxSeparation)
                 ++connectedClusterCount;
         }
 
@@ -95,7 +95,7 @@ bool UnambiguousDeltaRayTool::IsConnected(const TensorType::Element &element) co
 StatusCode UnambiguousDeltaRayTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSeparation", m_minSeparation));
+        "MinSeparation", m_maxSeparation));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "MinNConnectedClusters", m_minNConnectedClusters));
