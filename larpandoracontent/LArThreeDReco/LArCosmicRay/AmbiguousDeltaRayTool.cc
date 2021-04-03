@@ -37,46 +37,39 @@ bool AmbiguousDeltaRayTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgor
 
 void AmbiguousDeltaRayTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor) const
 {
-    bool mergeMade(true);
+    ClusterVector sortedKeyClusters;
+    overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
-    while (mergeMade)
+    ClusterSet usedClusters;
+    ClusterSet usedKeyClusters;
+    ProtoParticleVector protoParticleVector;
+
+    for (const Cluster *const pKeyCluster : sortedKeyClusters)
     {
-        mergeMade = false;
+        if (usedKeyClusters.count(pKeyCluster))
+            continue;
 
-        ClusterVector sortedKeyClusters;
-        overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
+        TensorType::ElementList elementList;
+        overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);
 
-        ClusterSet usedKeyClusters;
-        for (const Cluster *const pKeyCluster : sortedKeyClusters)
-        {
-            if (usedKeyClusters.count(pKeyCluster))
-                continue;
+        for (const TensorType::Element &element : elementList)
+            usedKeyClusters.insert(element.GetClusterU());
 
-            TensorType::ElementList elementList;
-            overlapTensor.GetConnectedElements(pKeyCluster, true, elementList);            
+        if (elementList.size() < 2)
+            continue;
 
-            for (const TensorType::Element &element : elementList)
-                usedKeyClusters.insert(element.GetClusterU());
-
-            if (elementList.size() < 2)
-                continue;
-
-            if (this->PickOutGoodMatches(pAlgorithm, elementList))
-            {
-                mergeMade = true;
-                break;
-            }
-        }
+        this->PickOutGoodMatches(elementList, usedClusters, protoParticleVector);
     }
+
+    if (!protoParticleVector.empty())
+        pAlgorithm->CreatePfos(protoParticleVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool AmbiguousDeltaRayTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const
+void AmbiguousDeltaRayTool::PickOutGoodMatches(const TensorType::ElementList &elementList, ClusterSet &usedClusters, ProtoParticleVector &protoParticleVector) const
 {
     bool found(true);
-    ClusterSet usedClusters;
-    ProtoParticleVector protoParticleVector;
     
     while (found)
     {
@@ -120,14 +113,6 @@ bool AmbiguousDeltaRayTool::PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorith
             protoParticleVector.push_back(protoParticle);
         }
     }        
-
-    if (!protoParticleVector.empty())
-    {
-        pAlgorithm->CreatePfos(protoParticleVector);
-        return true;
-    }
-
-    return false;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

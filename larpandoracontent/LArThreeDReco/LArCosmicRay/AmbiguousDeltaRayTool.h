@@ -38,12 +38,12 @@ private:
     /**
      *  @brief  Identify the best 1:1:1 match in a group of connected elements and from it create a pfo
      *
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  elementList the tensor element list
-     *
-     *  @return whether any particles were created
+     *  @param  usedClusters the output list of clusters contained within to be created pfos
+     *  @param  protoParticleVector the output vector of ProtoParticles
      */
-    bool PickOutGoodMatches(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const;
+    void PickOutGoodMatches(const TensorType::ElementList &elementList, pandora::ClusterSet &usedClusters, 
+        ProtoParticleVector &protoParticleVector) const;
 
     float m_maxGoodMatchReducedChiSquared; ///< The maximum reduced chi squared value of a good 1:1:1 match
 };

@@ -239,17 +239,17 @@ void TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedCluster(const Cluster *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewDeltaRayMatchingAlgorithm::CreatePfo(const MatrixType::Element &element)
+bool TwoViewDeltaRayMatchingAlgorithm::CreatePfo(const MatrixType::Element &protoParticleElement)
 {
     ProtoParticle protoParticle;
     
-    protoParticle.m_clusterList.push_back(element.GetCluster1());
-    protoParticle.m_clusterList.push_back(element.GetCluster2());
+    protoParticle.m_clusterList.push_back(protoParticleElement.GetCluster1());
+    protoParticle.m_clusterList.push_back(protoParticleElement.GetCluster2());
 
-    const Cluster *const pBestMatchedCluster(element.GetOverlapResult().GetBestMatchedCluster());
+    const Cluster *const pBestMatchedCluster(protoParticleElement.GetOverlapResult().GetBestMatchedCluster());
 
     if (pBestMatchedCluster)
-        this->FormThirdViewCluster(element, protoParticle);
+        this->FormThirdViewCluster(protoParticleElement, protoParticle);
 
     ProtoParticleVector protoParticleVector({protoParticle});
 
@@ -283,8 +283,8 @@ void TwoViewDeltaRayMatchingAlgorithm::FormThirdViewCluster(const MatrixType::El
         if (this->CollectHitsFromMuon(element.GetCluster1(), element.GetCluster2(), nullptr, pMatchedMuonPfo, 
             m_minDistanceFromMuon, m_maxDistanceToCollected, deltaRayHitList) == STATUS_CODE_SUCCESS)
         {
-            this->UpdateForThirdViewClusterModification(pThirdViewCluster, true);
             this->SplitMuonCluster(this->GetThirdViewClusterListName(), pBestMatchedCluster, deltaRayHitList, pThirdViewCluster);
+            this->UpdateForThirdViewClusterModification(pBestMatchedCluster, true);
         }
         else
         {
