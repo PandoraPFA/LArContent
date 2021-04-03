@@ -75,6 +75,19 @@ public:
         float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints, XOverlap &XOverlap) const;
 
     /**
+     *  @brief  To determine how well three CaloHitLists (one in each view) map onto one another expressing this in terms of a chi-squared like parameter
+     *
+     *  @param  pCluster1 the first CaloHitList
+     *  @param  pCluster2 the second CaloHitList
+     *  @param  pCluster3 the third CaloHitList
+     *  @param  reducedChiSquared the reduced chi squared
+     *
+     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good 
+     */
+    pandora::StatusCode PerformThreeViewMatching(const pandora::CaloHitList &pCluster1, const pandora::CaloHitList &pCluster2, const pandora::CaloHitList &pCluster3,
+        float &reducedChiSquared) const;
+
+    /**
      *  @brief  To determine how well three CaloHitLists (one for each view) map onto one another expressing this in terms of a chi-squared like parameter
      *
      *  @param  clusterU the U CaloHitList (if the xOverlap object is to be retained this must be the u cluster - for labels to make sense)

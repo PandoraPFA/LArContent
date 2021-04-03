@@ -304,16 +304,11 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                     pClusterToDelete2->GetOrderedCaloHitList().FillCaloHitList(caloHitList2);
                     element1.GetCluster(hitType)->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
 
-                    XOverlap xOverlapObject(0.f,0.f,0.f,0.f,0.f, 0.f,0.f);
-                    float chiSquaredSum(0.f);
-                    unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
-                        
-                    StatusCode status(pAlgorithm->PerformThreeViewMatching(caloHitList1, caloHitList2, caloHitList3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xOverlapObject));
+                    float reducedChiSquared(std::numeric_limits<float>::max());
+                    StatusCode status(pAlgorithm->PerformThreeViewMatching(caloHitList1, caloHitList2, caloHitList3, reducedChiSquared));
                         
                     if (status == STATUS_CODE_NOT_FOUND)
                         continue;
-
-                    const float reducedChiSquared(chiSquaredSum / nSamplingPoints);
                         
                     if (reducedChiSquared < m_maxGoodMatchReducedChiSquared)
                     {

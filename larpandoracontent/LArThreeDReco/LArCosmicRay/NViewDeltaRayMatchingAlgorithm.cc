@@ -377,6 +377,24 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const Clu
 
     return STATUS_CODE_SUCCESS;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(const CaloHitList &pCluster1, const CaloHitList &pCluster2, const CaloHitList &pCluster3,
+    float &reducedChiSquared) const
+{
+    float chiSquaredSum(0.f);
+    unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
+    XOverlap xThreeViewOverlapObject(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+
+    if (this->PerformThreeViewMatching(pCluster1, pCluster2, pCluster3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xThreeViewOverlapObject) == STATUS_CODE_NOT_FOUND)
+        return STATUS_CODE_NOT_FOUND;
+
+    reducedChiSquared = chiSquaredSum / nSamplingPoints;
+
+    return STATUS_CODE_SUCCESS;
+}
    
 //------------------------------------------------------------------------------------------------------------------------------------------
 
