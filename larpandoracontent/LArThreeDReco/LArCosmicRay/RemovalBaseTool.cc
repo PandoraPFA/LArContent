@@ -16,7 +16,7 @@ namespace lar_content
 {
 
 RemovalBaseTool::RemovalBaseTool() :
-    m_distanceToLine(0.5)
+    m_distanceToLine(0.5f)
 {
 }
 
