@@ -68,7 +68,7 @@ public:
      *
      *  @return address of the required cluster
      */
-    const pandora::Cluster *GetCluster(const MatrixType::Element &element, const pandora::HitType &hitType);
+    const pandora::Cluster *GetCluster(const MatrixType::Element &element, const pandora::HitType hitType);
 
     /**
      *  @brief  Create delta ray pfos out of a given element, merging the third view clusters together and adding in any stray clusters
@@ -138,11 +138,12 @@ private:
      *  @param  pCluster2 the cluster from the second input view
      *  @param  commonMuonPfoList the list of common cosmic ray pfos
      *  @param  matchedClusters the list of third view matched clusters
-     *  @param  pBestMatchedCluster to receive the address of the best matched third view cluster
      *  @param  reducedChiSquared to receive the calculated reduced chi-squared value
+     *
+     *  @return  the address of the best matched third view cluster    
      */    
-    void GetBestMatchedCluster(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const pandora::PfoList &commonMuonPfoList,
-        const pandora::ClusterList &matchedClusters, const pandora::Cluster *&pBestMatchedCluster, float &reducedChiSquared) const;
+    const pandora::Cluster *GetBestMatchedCluster(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
+        const pandora::PfoList &commonMuonPfoList, const pandora::ClusterList &matchedClusters, float &reducedChiSquared) const;
 
     /**
      *  @brief  Form the third view cluster by removing hits from cosmic ray clusters and merging the matched clusters where appropriate  
@@ -164,18 +165,17 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
 
-    std::string m_inputClusterListName;    
-
     typedef std::vector<DeltaRayMatrixTool*> MatrixToolVector;
-    MatrixToolVector                  m_algorithmToolVector;          ///< The algorithm tool vector
     
-    unsigned int                      m_nMaxMatrixToolRepeats;
-    unsigned int                      m_minClusterCaloHits;
-    float                             m_maxDistanceFromPrediction;
-    float m_maxGoodMatchReducedChiSquared;
+    std::string m_inputClusterListName; ///< The name of the cluster list in the view in which to project into 
+    std::string  m_reclusteringAlgorithmName; ///< The name of the clustering algorithm to be used to recluster created delta ray remnants    
+    MatrixToolVector m_algorithmToolVector; ///< The algorithm tool vector
+    unsigned int m_nMaxMatrixToolRepeats; ///< The maximum number of repeat loops over matrix tools
+    unsigned int m_minClusterCaloHits; ///< The threshold number of hits for a cluster to be considered
+    float m_maxDistanceFromPrediction; ///< The maximum distance of a matched cluster from the third view projection points
+    float m_maxGoodMatchReducedChiSquared; ///< The maximum reduced chi squared value of a good 1:1:1 match
     float m_minDistanceFromMuon; ///< The minimum distance of a hit from the cosmic ray track required for removal
     float m_maxDistanceToCollected; ///< The maximim distance of a hit from the projected delta ray hits required for removal
-    std::string  m_reclusteringAlgorithmName;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -213,7 +213,7 @@ public:
      *  @return whether changes have been made by the tool
      */
     virtual bool Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &matrixTensor) = 0;
-    };
+};
     
 } // namespace lar_content
 

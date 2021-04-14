@@ -46,6 +46,19 @@ typename TwoViewMatchingControl<T>::MatrixType &TwoViewMatchingControl<T>::GetOv
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
+unsigned int TwoViewMatchingControl<T>::GetHitTypeIndex(const pandora::HitType hitType)
+{
+    HitTypeToIndexMap::const_iterator iter = m_hitTypeToIndexMap.find(hitType);
+
+    if ((iter != m_hitTypeToIndexMap.end()) && (iter->second != 1) && (iter->second != 2))
+        throw StatusCodeException(STATUS_CODE_FAILURE);
+
+    return iter == m_hitTypeToIndexMap.end() ? 0 : iter->second;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
 void TwoViewMatchingControl<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pNewCluster));

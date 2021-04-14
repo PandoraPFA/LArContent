@@ -37,12 +37,14 @@ TwoViewDeltaRayMatchingAlgorithm::HitTypeVector TwoViewDeltaRayMatchingAlgorithm
 {
     HitTypeVector hitTypeVector;
 
-    auto &hitTypeToIndexMap(this->GetMatchingControl().m_hitTypeToIndexMap);
-
-    for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
-        if (hitTypeToIndexMap.find(hitType) != hitTypeToIndexMap.end())
-            hitTypeVector.push_back(hitType);
+        const unsigned int hitTypeIndex(this->GetMatchingControl().GetHitTypeIndex(hitType));
+        
+        if ((hitTypeIndex != 1) && (hitTypeIndex != 2))
+            continue;
+        
+        hitTypeVector.push_back(hitType);
     }
     
     return hitTypeVector;    
@@ -50,19 +52,14 @@ TwoViewDeltaRayMatchingAlgorithm::HitTypeVector TwoViewDeltaRayMatchingAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *TwoViewDeltaRayMatchingAlgorithm::GetCluster(const MatrixType::Element &element, const HitType &hitType)
+const Cluster *TwoViewDeltaRayMatchingAlgorithm::GetCluster(const MatrixType::Element &element, const HitType hitType)
 {
-    auto hitTypeToIndexMap(this->GetMatchingControl().m_hitTypeToIndexMap);
+    const unsigned int hitTypeIndex(this->GetMatchingControl().GetHitTypeIndex(hitType));
+    
+    if ((hitTypeIndex != 1) && (hitTypeIndex != 2))
+        return element.GetOverlapResult().GetBestMatchedAvailableCluster();
 
-    auto iter(hitTypeToIndexMap.find(hitType));
-
-    if (iter == hitTypeToIndexMap.end())
-      return element.GetOverlapResult().GetBestMatchedAvailableCluster(); 
-
-    if (iter->second == 1)
-        return element.GetCluster1();
-
-    return element.GetCluster2();
+    return hitTypeIndex == 1 ? element.GetCluster1() : element.GetCluster2();
 }
     
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -115,10 +112,8 @@ StatusCode TwoViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluste
     if (matchedClusterList.empty())
         return STATUS_CODE_NOT_FOUND;
     
-    const Cluster *pBestMatchedCluster(nullptr); 
     float reducedChiSquared(std::numeric_limits<float>::max());
-
-    this->GetBestMatchedCluster(pCluster1, pCluster2, commonMuonPfoList, matchedClusterList, pBestMatchedCluster, reducedChiSquared);
+    const Cluster *const pBestMatchedCluster = this->GetBestMatchedCluster(pCluster1, pCluster2, commonMuonPfoList, matchedClusterList, reducedChiSquared);    
 
     //ATTN: Ignore if other clusters matches have more hits
     if (pBestMatchedCluster && (pBestMatchedCluster->IsAvailable()))
@@ -173,8 +168,11 @@ void TwoViewDeltaRayMatchingAlgorithm::FindCommonMuonParents(const Cluster *cons
 void TwoViewDeltaRayMatchingAlgorithm::CollectThirdViewClusters(const Cluster *const pCluster1, const Cluster *const pCluster2, const CartesianPointVector &projectedPositions,
     ClusterList &matchedClusters) const
 {
-    const ClusterList *pInputClusterList;
+    const ClusterList *pInputClusterList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pInputClusterList));
+
+    if (!pInputClusterList || pInputClusterList->empty())
+        return;
     
     for (const Cluster *const pCluster : *pInputClusterList)
     {        
@@ -196,16 +194,19 @@ void TwoViewDeltaRayMatchingAlgorithm::CollectThirdViewClusters(const Cluster *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedCluster(const Cluster *const pCluster1, const Cluster *const pCluster2, const PfoList &commonMuonPfoList,
-    const ClusterList &matchedClusters, const Cluster *&pBestMatchedCluster, float &reducedChiSquared) const
+const Cluster *TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedCluster(const Cluster *const pCluster1, const Cluster *const pCluster2, const PfoList &commonMuonPfoList,
+    const ClusterList &matchedClusters, float &reducedChiSquared) const
 {
+    const Cluster *pBestMatchedCluster(nullptr);
+    
     if (matchedClusters.empty())
-        return;
+        return pBestMatchedCluster;
 
+    const HitType thirdViewHitType(LArClusterHelper::GetClusterHitType(matchedClusters.front()));
     ClusterList muonClusterList;
     
     for (const ParticleFlowObject *const pMuonPfo : commonMuonPfoList)
-        LArPfoHelper::GetClusters(pMuonPfo, LArClusterHelper::GetClusterHitType(matchedClusters.front()), muonClusterList);
+        LArPfoHelper::GetClusters(pMuonPfo, thirdViewHitType, muonClusterList);
 
     unsigned int highestNHits(0);
 
@@ -225,16 +226,12 @@ void TwoViewDeltaRayMatchingAlgorithm::GetBestMatchedCluster(const Cluster *cons
     }
 
     if (!pBestMatchedCluster)
-        return;
+        return pBestMatchedCluster;
 
-    float tempReducedChiSquared(0.f);
-
-    if (this->PerformThreeViewMatching(pCluster1, pCluster2, pBestMatchedCluster, tempReducedChiSquared) == STATUS_CODE_NOT_FOUND)
+    if (this->PerformThreeViewMatching(pCluster1, pCluster2, pBestMatchedCluster, reducedChiSquared) == STATUS_CODE_NOT_FOUND)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    reducedChiSquared = tempReducedChiSquared;
-
-    return;
+    return pBestMatchedCluster;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -365,14 +362,10 @@ void TwoViewDeltaRayMatchingAlgorithm::UpdateForThirdViewClusterModification(con
 {
     auto &theMatrix(this->GetMatchingControl().GetOverlapMatrix());
 
-    for (auto iter1 = theMatrix.begin(); iter1 != theMatrix.end(); ++iter1)
+    for (auto [ pCluster1, overlapList] : theMatrix)
     {
-        auto iter2(iter1->second);
-        
-        for (auto &entry : iter2)
+        for (auto [ pCluster2, overlapResult] : overlapList)
         {
-            TwoViewDeltaRayOverlapResult &overlapResult(entry.second);
-
             ClusterList matchedClusters(overlapResult.GetMatchedClusterList());
 
             auto matchedClustersIter(std::find(matchedClusters.begin(), matchedClusters.end(), pModifiedCluster));
@@ -383,18 +376,16 @@ void TwoViewDeltaRayMatchingAlgorithm::UpdateForThirdViewClusterModification(con
             float tempReducedChiSquared(std::numeric_limits<float>::max());
 
             if (isMuon) 
-                this->PerformThreeViewMatching(iter1->first, entry.first, pModifiedCluster, tempReducedChiSquared);
+                this->PerformThreeViewMatching(pCluster1, pCluster2, pModifiedCluster, tempReducedChiSquared);
 
             if (tempReducedChiSquared > m_maxGoodMatchReducedChiSquared)
                 matchedClusters.erase(matchedClustersIter);
 
-            const Cluster *pBestMatchedCluster(nullptr); 
             float reducedChiSquared(std::numeric_limits<float>::max());
+            const Cluster *const pBestMatchedCluster = this->GetBestMatchedCluster(pCluster1, pCluster2, overlapResult.GetCommonMuonPfoList(), matchedClusters, reducedChiSquared);
 
-            this->GetBestMatchedCluster(iter1->first, entry.first, overlapResult.GetCommonMuonPfoList(), matchedClusters, pBestMatchedCluster, reducedChiSquared);
-
-            overlapResult = TwoViewDeltaRayOverlapResult(overlapResult.GetXOverlap(), overlapResult.GetCommonMuonPfoList(), pBestMatchedCluster, matchedClusters, reducedChiSquared);
-            theMatrix.ReplaceOverlapResult(iter1->first, entry.first, overlapResult);
+            TwoViewDeltaRayOverlapResult newOverlapResult(overlapResult.GetXOverlap(), overlapResult.GetCommonMuonPfoList(), pBestMatchedCluster, matchedClusters, reducedChiSquared);
+            theMatrix.ReplaceOverlapResult(pCluster1, pCluster2, newOverlapResult);
         }
     }
 }
@@ -422,11 +413,11 @@ void TwoViewDeltaRayMatchingAlgorithm::ExamineOverlapContainer()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TwoViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{
+{   
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
+
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
         "ClusterRebuilding", m_reclusteringAlgorithmName));
-    
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
 
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,

@@ -499,8 +499,6 @@ void TwoViewCosmicRayRemovalTool::FragmentRemnant(TwoViewDeltaRayMatchingAlgorit
 StatusCode TwoViewCosmicRayRemovalTool::ProjectDeltaRayPositions(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element,
     const HitType &hitType, CartesianPointVector &projectedPositions) const
 {
-    const HitTypeVector hitTypeVector();
-
     const Cluster *pCluster1(nullptr), *pCluster2(nullptr);
     
     for (const HitType &hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})

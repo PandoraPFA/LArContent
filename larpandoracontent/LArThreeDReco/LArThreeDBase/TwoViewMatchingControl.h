@@ -45,6 +45,13 @@ public:
      */
     MatrixType &GetOverlapMatrix();
 
+    /**
+     *  @brief  Get the index of an input hit type returning 0 if not found in map
+     *
+     *  @return the hit type index
+     */
+    unsigned int GetHitTypeIndex(const pandora::HitType hitType);
+
 private:
     void UpdateForNewCluster(const pandora::Cluster *const pNewCluster);
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
@@ -73,7 +80,6 @@ private:
 
     template <typename U>
     friend class NViewMatchingAlgorithm;
-    friend class TwoViewDeltaRayMatchingAlgorithm;
 };
 
 } // namespace lar_content

@@ -106,6 +106,13 @@ class LArMCParticleFactory : public pandora::ObjectFactory<object_creation::MCPa
 {
 public:
     /**
+     *  @brief  Constructor
+     *
+     *  @param  version the LArMCParticle version
+     */
+    LArMCParticleFactory(const unsigned int version = 2);
+
+    /**
      *  @brief  Create new parameters instance on the heap (memory-management to be controlled by user)
      *
      *  @return the address of the new parameters instance
@@ -135,6 +142,9 @@ public:
      *  @param  pObject to receive the address of the object created
      */
     pandora::StatusCode Create(const Parameters &parameters, const Object *&pObject) const;
+
+private:
+    unsigned int m_version; ///< The LArMCParticle version
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -159,6 +169,13 @@ inline int LArMCParticle::GetNuanceCode() const
 inline MCProcess LArMCParticle::GetProcess() const
 {
     return MCProcess(m_process);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) : m_version(version)
+{
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -190,13 +207,17 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
     {
         pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nuanceCode));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(process));
+
+        if (m_version > 1)
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(process));
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
         pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NuanceCode", nuanceCode));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("Process", process));
+
+        if (m_version > 1)
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("Process", process));
     }
     else
     {
