@@ -46,7 +46,7 @@ bool LArMuonLeadingHelper::IsDeltaRay(const MCParticle *const pMCParticle)
 
     const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pMCParticle));
     
-    return pLArMCParticle->GetIsDR();
+    return (pLArMCParticle->GetProcess() == MC_PROC_MU_IONI);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
@@ -66,7 +66,7 @@ bool LArMuonLeadingHelper::IsMichel(const MCParticle *const pMCParticle)
     
     const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pMCParticle));
 
-    return pLArMCParticle->GetIsDecay();
+    return (pLArMCParticle->GetProcess() == MC_PROC_DECAY);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
