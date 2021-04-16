@@ -19,8 +19,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() :
-    m_maxCosmicRayFraction(0.25f)
+CheatingCosmicRayTaggingTool::CheatingCosmicRayTaggingTool() : m_maxCosmicRayFraction(0.25f)
 {
 }
 
@@ -52,8 +51,8 @@ void CheatingCosmicRayTaggingTool::FindAmbiguousPfos(const PfoList &parentCosmic
 
 StatusCode CheatingCosmicRayTaggingTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCosmicRayFraction", m_maxCosmicRayFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCosmicRayFraction", m_maxCosmicRayFraction));
 
     return STATUS_CODE_SUCCESS;
 }

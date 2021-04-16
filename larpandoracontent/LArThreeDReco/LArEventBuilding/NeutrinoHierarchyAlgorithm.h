@@ -156,18 +156,18 @@ public:
         void RemoveDaughterPfo(const pandora::ParticleFlowObject *const pDaughterPfo);
 
     private:
-        const pandora::ParticleFlowObject  *m_pThisPfo;                     ///< The address of the pfo
-        const pandora::Cluster             *m_pCluster3D;                   ///< The address of the three dimensional cluster
-        const pandora::Vertex              *m_pVertex3D;                    ///< The address of the three dimensional vertex
-        ThreeDSlidingFitResult             *m_pSlidingFitResult3D;          ///< The three dimensional sliding fit result
+        const pandora::ParticleFlowObject *m_pThisPfo; ///< The address of the pfo
+        const pandora::Cluster *m_pCluster3D;          ///< The address of the three dimensional cluster
+        const pandora::Vertex *m_pVertex3D;            ///< The address of the three dimensional vertex
+        ThreeDSlidingFitResult *m_pSlidingFitResult3D; ///< The three dimensional sliding fit result
 
-        bool                                m_isNeutrinoVertexAssociated;   ///< Whether the pfo is associated with the neutrino vertex
-        bool                                m_isInnerLayerAssociated;       ///< If associated, whether association to parent (vtx or pfo) is at sliding fit inner layer
-        const pandora::ParticleFlowObject  *m_pParentPfo;                   ///< The address of the parent pfo
-        pandora::PfoList                    m_daughterPfoList;              ///< The daughter pfo list
+        bool m_isNeutrinoVertexAssociated; ///< Whether the pfo is associated with the neutrino vertex
+        bool m_isInnerLayerAssociated;     ///< If associated, whether association to parent (vtx or pfo) is at sliding fit inner layer
+        const pandora::ParticleFlowObject *m_pParentPfo; ///< The address of the parent pfo
+        pandora::PfoList m_daughterPfoList;              ///< The daughter pfo list
     };
 
-    typedef std::unordered_map<const pandora::ParticleFlowObject*, PfoInfo*> PfoInfoMap;
+    typedef std::unordered_map<const pandora::ParticleFlowObject *, PfoInfo *> PfoInfoMap;
 
     /**
      *  @brief  Query the pfo info map and separate/extract pfos currently either acting as parents or associated with the neutrino vertex
@@ -234,16 +234,16 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<PfoRelationTool*> PfoRelationToolVector;
-    PfoRelationToolVector           m_algorithmToolVector;      ///< The algorithm tool vector
+    typedef std::vector<PfoRelationTool *> PfoRelationToolVector;
+    PfoRelationToolVector m_algorithmToolVector; ///< The algorithm tool vector
 
-    std::string                     m_neutrinoPfoListName;      ///< The neutrino pfo list name
-    pandora::StringVector           m_daughterPfoListNames;     ///< The list of daughter pfo list names
+    std::string m_neutrinoPfoListName;            ///< The neutrino pfo list name
+    pandora::StringVector m_daughterPfoListNames; ///< The list of daughter pfo list names
 
-    std::string                     m_neutrinoVertexListName;   ///< The neutrino vertex list name - if not specified will assume current list
+    std::string m_neutrinoVertexListName; ///< The neutrino vertex list name - if not specified will assume current list
 
-    unsigned int                    m_halfWindowLayers;         ///< The number of layers to use for half-window of sliding fit
-    bool                            m_displayPfoInfoMap;        ///< Whether to display the pfo info map (if monitoring is enabled)
+    unsigned int m_halfWindowLayers; ///< The number of layers to use for half-window of sliding fit
+    bool m_displayPfoInfoMap;        ///< Whether to display the pfo info map (if monitoring is enabled)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -261,7 +261,8 @@ public:
      *  @param  pNeutrinoVertex the address of the three dimensional neutrino interaction vertex
      *  @param  pfoInfoMap mapping from pfos to three dimensional clusters, sliding fits, vertices, etc.
      */
-    virtual void Run(const NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap) = 0;
+    virtual void Run(const NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex,
+        NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

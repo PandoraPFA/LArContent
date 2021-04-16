@@ -27,7 +27,7 @@ public:
     TwoDSlidingFitMultiSplitAlgorithm();
 
 protected:
-    typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointVector> ClusterPositionMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::CartesianPointVector> ClusterPositionMap;
 
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
@@ -76,8 +76,8 @@ private:
      */
     pandora::StatusCode SplitCluster(const TwoDSlidingFitResult &slidingFitResult, const pandora::CartesianPointVector &splitPositionList) const;
 
-    unsigned int    m_slidingFitHalfWindow;      ///<
-    std::string     m_inputClusterList;          ///<
+    unsigned int m_slidingFitHalfWindow; ///<
+    std::string m_inputClusterList;      ///<
 };
 
 } // namespace lar_content

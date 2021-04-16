@@ -211,24 +211,24 @@ private:
      */
     static pandora::CartesianVector GetSeedDirection(const pandora::CartesianVector &axisDirection);
 
-    const pandora::TrackState         m_primaryAxis;            ///< The primary axis position and direction
-    const pandora::CartesianVector    m_axisIntercept;          ///< The axis intercept position
-    const pandora::CartesianVector    m_axisDirection;          ///< The axis direction vector
-    const pandora::CartesianVector    m_firstOrthoDirection;    ///< The orthogonal direction vector
-    const pandora::CartesianVector    m_secondOrthoDirection;   ///< The orthogonal direction vector
-    const TwoDSlidingFitResult        m_firstFitResult;         ///< The first sliding fit result
-    const TwoDSlidingFitResult        m_secondFitResult;        ///< The second sliding fit result
-    const int                         m_minLayer;               ///< The minimum combined layer
-    const int                         m_maxLayer;               ///< The maximum combined layer
+    const pandora::TrackState m_primaryAxis;               ///< The primary axis position and direction
+    const pandora::CartesianVector m_axisIntercept;        ///< The axis intercept position
+    const pandora::CartesianVector m_axisDirection;        ///< The axis direction vector
+    const pandora::CartesianVector m_firstOrthoDirection;  ///< The orthogonal direction vector
+    const pandora::CartesianVector m_secondOrthoDirection; ///< The orthogonal direction vector
+    const TwoDSlidingFitResult m_firstFitResult;           ///< The first sliding fit result
+    const TwoDSlidingFitResult m_secondFitResult;          ///< The second sliding fit result
+    const int m_minLayer;                                  ///< The minimum combined layer
+    const int m_maxLayer;                                  ///< The maximum combined layer
 
-    pandora::CartesianVector          m_minLayerPosition;       ///< The global position at the minimum combined layer
-    pandora::CartesianVector          m_maxLayerPosition;       ///< The global position at the maximum combined layer
-    pandora::CartesianVector          m_minLayerDirection;      ///< The global direction at the minimum combined layer
-    pandora::CartesianVector          m_maxLayerDirection;      ///< The global direction at the maximum combined layer
+    pandora::CartesianVector m_minLayerPosition;  ///< The global position at the minimum combined layer
+    pandora::CartesianVector m_maxLayerPosition;  ///< The global position at the maximum combined layer
+    pandora::CartesianVector m_minLayerDirection; ///< The global direction at the minimum combined layer
+    pandora::CartesianVector m_maxLayerDirection; ///< The global direction at the maximum combined layer
 };
 
 typedef std::vector<ThreeDSlidingFitResult> ThreeDSlidingFitResultList;
-typedef std::unordered_map<const pandora::Cluster*, ThreeDSlidingFitResult> ThreeDSlidingFitResultMap;
+typedef std::unordered_map<const pandora::Cluster *, ThreeDSlidingFitResult> ThreeDSlidingFitResultMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------

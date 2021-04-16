@@ -42,16 +42,16 @@ private:
          */
         Particle(const TensorType::Element &element);
 
-        const pandora::Cluster *m_pShortCluster;            ///< Address of the short cluster
-        const pandora::Cluster *m_pCluster1;                ///< Address of long cluster in view 1
-        const pandora::Cluster *m_pCluster2;                ///< Address of long cluster in view 2
-        pandora::HitType        m_shortHitType;             ///< The hit type of the short cluster
-        pandora::HitType        m_hitType1;                 ///< The hit type of the long cluster in view 1
-        pandora::HitType        m_hitType2;                 ///< The hit type of the long cluster in view 2
-        float                   m_shortMinX;                ///< The min x coordinate of the short cluster
-        float                   m_shortMaxX;                ///< The max x coordinate of the short cluster
-        float                   m_longMinX;                 ///< The min x coordinate of the long clusters
-        float                   m_longMaxX;                 ///< The max x coordinate of the long clusters
+        const pandora::Cluster *m_pShortCluster; ///< Address of the short cluster
+        const pandora::Cluster *m_pCluster1;     ///< Address of long cluster in view 1
+        const pandora::Cluster *m_pCluster2;     ///< Address of long cluster in view 2
+        pandora::HitType m_shortHitType;         ///< The hit type of the short cluster
+        pandora::HitType m_hitType1;             ///< The hit type of the long cluster in view 1
+        pandora::HitType m_hitType2;             ///< The hit type of the long cluster in view 2
+        float m_shortMinX;                       ///< The min x coordinate of the short cluster
+        float m_shortMaxX;                       ///< The max x coordinate of the short cluster
+        float m_longMinX;                        ///< The min x coordinate of the long clusters
+        float m_longMaxX;                        ///< The max x coordinate of the long clusters
     };
 
     /**
@@ -65,17 +65,17 @@ private:
          */
         SegmentOverlap();
 
-        unsigned int            m_nSamplingPoints;          ///< The number of sampling points
-        unsigned int            m_nMatchedSamplingPoints;   ///< The number of matched sampling points
-        float                   m_pseudoChi2Sum;            ///< The pseudo chi2 sum
-        float                   m_matchedSamplingMinX;      ///< The min matched sampling point x coordinate
-        float                   m_matchedSamplingMaxX;      ///< The max matched sampling point x coordinate
+        unsigned int m_nSamplingPoints;        ///< The number of sampling points
+        unsigned int m_nMatchedSamplingPoints; ///< The number of matched sampling points
+        float m_pseudoChi2Sum;                 ///< The pseudo chi2 sum
+        float m_matchedSamplingMinX;           ///< The min matched sampling point x coordinate
+        float m_matchedSamplingMaxX;           ///< The max matched sampling point x coordinate
     };
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, SegmentOverlap> SegmentOverlapMap;
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+    typedef std::unordered_map<const pandora::Cluster *, SegmentOverlap> SegmentOverlapMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterMergeMap;
 
     /**
      *  @brief  Find remaining tracks, hidden by missing track segments (and maybe other ambiguities) in the tensor
@@ -85,8 +85,8 @@ private:
      *  @param  protoParticleVector to receive the list of proto particles
      *  @param  clusterMergeMap to receive the cluster merge map
      */
-    void FindTracks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor, ProtoParticleVector &protoParticleVector,
-        ClusterMergeMap &clusterMergeMap) const;
+    void FindTracks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType &overlapTensor,
+        ProtoParticleVector &protoParticleVector, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Select a list of the relevant elements from a set of connected tensor elements
@@ -105,8 +105,8 @@ private:
      *  @param  usedClusters the list of used clusters
      *  @param  clusterMergeMap to receive the cluster merge map
      */
-    bool PassesParticleChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element, pandora::ClusterSet &usedClusters,
-        ClusterMergeMap &clusterMergeMap) const;
+    bool PassesParticleChecks(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::Element &element,
+        pandora::ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Get a list of candidate clusters, which may represent missing track segments for a provided particle
@@ -149,8 +149,8 @@ private:
      *
      *  @return whether to make the particle
      */
-    bool MakeDecisions(const Particle &particle, const TwoDSlidingFitResultMap &slidingFitResultMap, const SegmentOverlapMap &segmentOverlapMap,
-        pandora::ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const;
+    bool MakeDecisions(const Particle &particle, const TwoDSlidingFitResultMap &slidingFitResultMap,
+        const SegmentOverlapMap &segmentOverlapMap, pandora::ClusterSet &usedClusters, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Whether the segment overlap object passes cuts on matched sampling points, etc.
@@ -174,23 +174,23 @@ private:
     bool IsPossibleMerge(const pandora::Cluster *const pCluster, const Particle &particle, const SegmentOverlap &segmentOverlap,
         const TwoDSlidingFitResultMap &slidingFitResultMap) const;
 
-    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
-    unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
-    unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
+    float m_minMatchedFraction;                  ///< The min matched sampling point fraction for particle creation
+    unsigned int m_minMatchedSamplingPoints;     ///< The min number of matched sampling points for particle creation
+    unsigned int m_minMatchedSamplingPointRatio; ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
 
-    float           m_minInitialXOverlapFraction;       ///< The min x overlap fraction (between long clusters and short cluster vs. shared overlap)
-    float           m_minFinalXOverlapFraction;         ///< The min x overlap fraction between extended short cluster and the long clusters
+    float m_minInitialXOverlapFraction; ///< The min x overlap fraction (between long clusters and short cluster vs. shared overlap)
+    float m_minFinalXOverlapFraction;   ///< The min x overlap fraction between extended short cluster and the long clusters
 
-    unsigned int    m_minCaloHitsInCandidateCluster;    ///< The min no. of calo hits in a candidate cluster, for matching with long clusters
-    float           m_pseudoChi2Cut;                    ///< The pseudo chi2 cut to determine whether a sampling point is matched
+    unsigned int m_minCaloHitsInCandidateCluster; ///< The min no. of calo hits in a candidate cluster, for matching with long clusters
+    float m_pseudoChi2Cut;                        ///< The pseudo chi2 cut to determine whether a sampling point is matched
 
-    unsigned int    m_makePfoMinSamplingPoints;         ///< The min number of sampling points in order to be able to make pfo
-    unsigned int    m_makePfoMinMatchedSamplingPoints;  ///< The min number of matched sampling points in order to be able to make pfo
-    float           m_makePfoMinMatchedFraction;        ///< The min matched sampling point fraction in order to be able to make pfo
-    float           m_makePfoMaxImpactParameter;        ///< The max transverse impact parameter in order to be able to make pfo
+    unsigned int m_makePfoMinSamplingPoints;        ///< The min number of sampling points in order to be able to make pfo
+    unsigned int m_makePfoMinMatchedSamplingPoints; ///< The min number of matched sampling points in order to be able to make pfo
+    float m_makePfoMinMatchedFraction;              ///< The min matched sampling point fraction in order to be able to make pfo
+    float m_makePfoMaxImpactParameter;              ///< The max transverse impact parameter in order to be able to make pfo
 
-    float           m_mergeMaxChi2PerSamplingPoint;     ///< The max value of chi2 per sampling point in order to merge cluster with parent
-    float           m_mergeXContainmentTolerance;       ///< The tolerance in determining whether candidate cluster is contained in x window
+    float m_mergeMaxChi2PerSamplingPoint; ///< The max value of chi2 per sampling point in order to merge cluster with parent
+    float m_mergeXContainmentTolerance;   ///< The tolerance in determining whether candidate cluster is contained in x window
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -24,10 +24,7 @@ namespace lar_content
 
 using namespace pandora;
 
-LArPseudoLayerPlugin::LArPseudoLayerPlugin() :
-    m_zPitch(std::numeric_limits<float>::max()),
-    m_zOffset(0.01f),
-    m_zerothLayer(5000)
+LArPseudoLayerPlugin::LArPseudoLayerPlugin() : m_zPitch(std::numeric_limits<float>::max()), m_zOffset(0.01f), m_zerothLayer(5000)
 {
 }
 

@@ -68,9 +68,9 @@ public:
         double GetSigma() const;
 
     private:
-        pandora::CartesianVector    m_position;             ///< The sampling position
-        pandora::HitType            m_hitType;              ///< The sampling hit type
-        double                      m_sigma;                ///< The sampling sigma
+        pandora::CartesianVector m_position; ///< The sampling position
+        pandora::HitType m_hitType;          ///< The sampling hit type
+        double m_sigma;                      ///< The sampling sigma
     };
 
     typedef std::vector<TrajectorySample> TrajectorySampleVector;
@@ -206,8 +206,8 @@ public:
      *  @param  hitType the hit type to filter upon
      *  @param  outputCaloHitVector to receive the output calo hit vector
      */
-    void FilterCaloHitsByType(const pandora::CaloHitVector &inputCaloHitVector, const pandora::HitType hitType,
-        pandora::CaloHitVector &outputCaloHitVector) const;
+    void FilterCaloHitsByType(
+        const pandora::CaloHitVector &inputCaloHitVector, const pandora::HitType hitType, pandora::CaloHitVector &outputCaloHitVector) const;
 
 private:
     pandora::StatusCode Run();
@@ -360,7 +360,8 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ThreeDHitCreationAlgorithm::TrajectorySample::TrajectorySample(const pandora::CartesianVector &position, const pandora::HitType hitType, const double sigma) :
+inline ThreeDHitCreationAlgorithm::TrajectorySample::TrajectorySample(
+    const pandora::CartesianVector &position, const pandora::HitType hitType, const double sigma) :
     m_position(position),
     m_hitType(hitType),
     m_sigma(sigma)

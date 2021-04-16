@@ -47,8 +47,8 @@ private:
         UNCLASSIFIED
     };
 
-    typedef std::map<const pandora::ParticleFlowObject*, float > PfoToFloatMap;
-    typedef std::map<const pandora::ParticleFlowObject*, Classification > PfoClassificationMap;
+    typedef std::map<const pandora::ParticleFlowObject *, float> PfoToFloatMap;
+    typedef std::map<const pandora::ParticleFlowObject *, Classification> PfoClassificationMap;
 
     /**
      *  @brief  Calculate metrics to classify Pfos based on the target reconstructable MCParticles with which they share hits
@@ -60,8 +60,9 @@ private:
      *  @param  pfoPurityMap output mapping from Pfos to their target purities
      *  @param  pfoClassificationMap output mapping from Pfos to their classification
      */
-    void CalculatePfoMetrics(const LArMCParticleHelper::PfoToMCParticleHitSharingMap &hitSharingMap, const LArMCParticleHelper::PfoContributionMap &pfoToCaloHitListMap,
-        const LArMCParticleHelper::MCContributionMapVector &targetsToGoodHitsMaps, PfoToFloatMap &pfoSignificanceMap, PfoToFloatMap &pfoPurityMap, PfoClassificationMap &pfoClassificationMap) const;
+    void CalculatePfoMetrics(const LArMCParticleHelper::PfoToMCParticleHitSharingMap &hitSharingMap,
+        const LArMCParticleHelper::PfoContributionMap &pfoToCaloHitListMap, const LArMCParticleHelper::MCContributionMapVector &targetsToGoodHitsMaps,
+        PfoToFloatMap &pfoSignificanceMap, PfoToFloatMap &pfoPurityMap, PfoClassificationMap &pfoClassificationMap) const;
 
     /**
      *  @brief  Returns true if the main MCParticle of the supplied Pfo is a muon
@@ -98,20 +99,21 @@ private:
      *  @param  pfoClassificationMap input mapping from Pfos to their classification
      *  @param  ambiguousPfos input list of ambiguous Pfos as (not) tagged by a previous CR tagging module
      */
-    void PrintPfoTable(const pandora::PfoVector &orderedPfoVector, const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap,
-        const PfoToFloatMap &pfoPurityMap, const PfoToFloatMap &pfoSignificanceMap, const PfoClassificationMap &pfoClassificationMap, const pandora::PfoList &ambiguousPfos) const;
+    void PrintPfoTable(const pandora::PfoVector &orderedPfoVector,
+        const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const PfoToFloatMap &pfoPurityMap,
+        const PfoToFloatMap &pfoSignificanceMap, const PfoClassificationMap &pfoClassificationMap, const pandora::PfoList &ambiguousPfos) const;
 
     /**
      *  @brief  Read settings
      */
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    LArMCParticleHelper::PrimaryParameters      m_parameters;                 ///< Parameters used to decide when an MCParticle is reconstructable
-    unsigned int                                m_minHitsToConsiderTagging;   ///< The minimum number of hits to consider a Pfo for tagging
-    float                                       m_minPurity;                  ///< The minimum purity to consider a Pfo as "pure"
-    float                                       m_minImpurity;                ///< The minimum impurity to consider a Pfo as "impure"
-    float                                       m_minSignificance;            ///< The minimum significance to consider a Pfo as "significant"
-    std::string                                 m_caloHitList2D;              ///< The 2D calo hit list
+    LArMCParticleHelper::PrimaryParameters m_parameters; ///< Parameters used to decide when an MCParticle is reconstructable
+    unsigned int m_minHitsToConsiderTagging;             ///< The minimum number of hits to consider a Pfo for tagging
+    float m_minPurity;                                   ///< The minimum purity to consider a Pfo as "pure"
+    float m_minImpurity;                                 ///< The minimum impurity to consider a Pfo as "impure"
+    float m_minSignificance;                             ///< The minimum significance to consider a Pfo as "significant"
+    std::string m_caloHitList2D;                         ///< The 2D calo hit list
 };
 
 } // namespace lar_content

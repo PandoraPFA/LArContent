@@ -66,14 +66,13 @@ private:
      *  @param  usedClusters the list of clusters already marked as to be added to a pfo
      *  @param  iteratorList to receive a list of iterators to large shower-like elements
      */
-    void SelectLargeShowerElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters,
-        IteratorList &iteratorList) const;
+    void SelectLargeShowerElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const;
 
-    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
-    unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for particle creation
-    float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
-    unsigned int    m_minMatchedSamplingPointRatio;     ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
-    float           m_minXOverlapSpanRatio;             ///< The min ratio between 1st and 2nd highest x-overlap spans for simple ambiguity resolution
+    float m_minMatchedFraction;                  ///< The min matched sampling point fraction for particle creation
+    unsigned int m_minMatchedSamplingPoints;     ///< The min number of matched sampling points for particle creation
+    float m_minXOverlapFraction;                 ///< The min x overlap fraction (in each view) for particle creation
+    unsigned int m_minMatchedSamplingPointRatio; ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
+    float m_minXOverlapSpanRatio; ///< The min ratio between 1st and 2nd highest x-overlap spans for simple ambiguity resolution
 };
 
 } // namespace lar_content

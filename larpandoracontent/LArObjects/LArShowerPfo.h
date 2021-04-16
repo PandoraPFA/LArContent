@@ -24,14 +24,14 @@ namespace lar_content
 class LArShowerPfoParameters : public object_creation::ParticleFlowObject::Parameters
 {
 public:
-    pandora::InputCartesianVector   m_showerLength;             ///< Shower length and widths from 3d shower fit
-    pandora::InputCartesianVector   m_showerCentroid;           ///< Shower centroid from 3d shower fit
-    pandora::InputFloat             m_showerOpeningAngle;       ///< Shower opening angle
-    pandora::InputCartesianVector   m_showerDirection;          ///< Shower direction, also the primary eigen vector
-    pandora::InputCartesianVector   m_showerSecondaryVector;    ///< Shower secondary eigen vector
-    pandora::InputCartesianVector   m_showerTertiaryVector;     ///< Shower teriary eigen vector
-    pandora::InputCartesianVector   m_showerEigenValues;        ///< Shower eigenvalues from 3d PCA
-    pandora::InputCartesianVector   m_showerVertex;             ///< Shower starting point
+    pandora::InputCartesianVector m_showerLength;          ///< Shower length and widths from 3d shower fit
+    pandora::InputCartesianVector m_showerCentroid;        ///< Shower centroid from 3d shower fit
+    pandora::InputFloat m_showerOpeningAngle;              ///< Shower opening angle
+    pandora::InputCartesianVector m_showerDirection;       ///< Shower direction, also the primary eigen vector
+    pandora::InputCartesianVector m_showerSecondaryVector; ///< Shower secondary eigen vector
+    pandora::InputCartesianVector m_showerTertiaryVector;  ///< Shower teriary eigen vector
+    pandora::InputCartesianVector m_showerEigenValues;     ///< Shower eigenvalues from 3d PCA
+    pandora::InputCartesianVector m_showerVertex;          ///< Shower starting point
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -106,14 +106,14 @@ public:
     const pandora::CartesianVector &GetShowerVertex() const;
 
 private:
-    pandora::CartesianVector    m_showerLength;             ///< Shower length and widths from 3d shower fit
-    pandora::CartesianVector    m_showerCentroid;           ///< Shower centroid from 3d shower fit
-    float                       m_showerOpeningAngle;       ///< Shower opening angle
-    pandora::CartesianVector    m_showerDirection;          ///< Shower direction, primary eigen vector
-    pandora::CartesianVector    m_showerSecondaryVector;    ///< Shower secondary eigen vector
-    pandora::CartesianVector    m_showerTertiaryVector;     ///< Shower tertiary eigen vector
-    pandora::CartesianVector    m_showerEigenValues;        ///< Shower eigenvalues from 3d PCA
-    pandora::CartesianVector    m_showerVertex;             ///< Shower starting point
+    pandora::CartesianVector m_showerLength;          ///< Shower length and widths from 3d shower fit
+    pandora::CartesianVector m_showerCentroid;        ///< Shower centroid from 3d shower fit
+    float m_showerOpeningAngle;                       ///< Shower opening angle
+    pandora::CartesianVector m_showerDirection;       ///< Shower direction, primary eigen vector
+    pandora::CartesianVector m_showerSecondaryVector; ///< Shower secondary eigen vector
+    pandora::CartesianVector m_showerTertiaryVector;  ///< Shower tertiary eigen vector
+    pandora::CartesianVector m_showerEigenValues;     ///< Shower eigenvalues from 3d PCA
+    pandora::CartesianVector m_showerVertex;          ///< Shower starting point
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,7 +239,7 @@ inline LArShowerPfoFactory::Parameters *LArShowerPfoFactory::NewParameters() con
 
 inline pandora::StatusCode LArShowerPfoFactory::Create(const Parameters &parameters, const Object *&pObject) const
 {
-    const LArShowerPfoParameters &larPfoParameters(dynamic_cast<const LArShowerPfoParameters&>(parameters));
+    const LArShowerPfoParameters &larPfoParameters(dynamic_cast<const LArShowerPfoParameters &>(parameters));
     pObject = new LArShowerPfo(larPfoParameters);
 
     return pandora::STATUS_CODE_SUCCESS;
@@ -247,7 +247,7 @@ inline pandora::StatusCode LArShowerPfoFactory::Create(const Parameters &paramet
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArShowerPfoFactory::Read(Parameters&, pandora::FileReader&) const
+inline pandora::StatusCode LArShowerPfoFactory::Read(Parameters &, pandora::FileReader &) const
 {
     // TODO: Provide this functionality if necessary
 
@@ -256,7 +256,7 @@ inline pandora::StatusCode LArShowerPfoFactory::Read(Parameters&, pandora::FileR
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArShowerPfoFactory::Write(const pandora::ParticleFlowObject*, pandora::FileWriter&) const
+inline pandora::StatusCode LArShowerPfoFactory::Write(const pandora::ParticleFlowObject *, pandora::FileWriter &) const
 {
     // TODO: Provide this functionality if necessary
 

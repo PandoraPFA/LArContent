@@ -68,10 +68,9 @@ private:
      *  @param  lengthSquared1 figure of merit for association with first track direction
      *  @param  lengthSquared2 figure of merit for association with second track direction
      */
-    pandora::StatusCode ConfirmSplitPosition(const TwoDSlidingFitResult &branchSlidingFitResult,
-        const TwoDSlidingFitResult &replacementSlidingFitResult, const pandora::CartesianVector &splitPosition,
-        const pandora::CartesianVector &splitDirection1, const pandora::CartesianVector &splitDirection2,
-        float &lengthSquared1, float &lengthSquared2) const;
+    pandora::StatusCode ConfirmSplitPosition(const TwoDSlidingFitResult &branchSlidingFitResult, const TwoDSlidingFitResult &replacementSlidingFitResult,
+        const pandora::CartesianVector &splitPosition, const pandora::CartesianVector &splitDirection1,
+        const pandora::CartesianVector &splitDirection2, float &lengthSquared1, float &lengthSquared2) const;
 
     /**
      *  @brief  Split a branch cluster for case of one replacement cluster
@@ -83,7 +82,7 @@ private:
      *  @param  backwardDirection the direction of the branch cluster just below the split position
      */
     pandora::StatusCode PerformSingleSplit(const pandora::Cluster *const pBranchCluster, const pandora::Cluster *const pReplacementCluster,
-        const pandora::CartesianVector &splitPosition, const  pandora::CartesianVector &forwardDirection,
+        const pandora::CartesianVector &splitPosition, const pandora::CartesianVector &forwardDirection,
         const pandora::CartesianVector &backwardDirection) const;
 
     /**
@@ -159,14 +158,14 @@ private:
     pandora::StatusCode SplitCluster(const pandora::Cluster *const pBranchCluster, const pandora::Cluster *const pReplacementCluster,
         const pandora::CaloHitList &caloHitListToMove) const;
 
-    float          m_clusterMinLength;                     ///< minimum length of clusters for this algorithm
-    unsigned int   m_halfWindowLayers;                     ///< number of layers to use for half-window of sliding fit
-    float          m_samplingPitch;                        ///< sampling pitch for walking along sliding linear fit
-    float          m_maxCosSplittingAngle;                 ///< smallest scatter angle allowed when splitting cluster
-    float          m_minCosMergingAngle;                   ///< largest relative angle allowed when merging clusters
-    float          m_maxTransverseDisplacement;            ///< maximum transverse displacement of associated clusters
-    float          m_maxLongitudinalDisplacement;          ///< maximum longitudinal displacement of associated clusters
-    float          m_maxLongitudinalDisplacementSquared;   ///< longitudinal displacement squared
+    float m_clusterMinLength;                   ///< minimum length of clusters for this algorithm
+    unsigned int m_halfWindowLayers;            ///< number of layers to use for half-window of sliding fit
+    float m_samplingPitch;                      ///< sampling pitch for walking along sliding linear fit
+    float m_maxCosSplittingAngle;               ///< smallest scatter angle allowed when splitting cluster
+    float m_minCosMergingAngle;                 ///< largest relative angle allowed when merging clusters
+    float m_maxTransverseDisplacement;          ///< maximum transverse displacement of associated clusters
+    float m_maxLongitudinalDisplacement;        ///< maximum longitudinal displacement of associated clusters
+    float m_maxLongitudinalDisplacementSquared; ///< longitudinal displacement squared
 };
 
 } // namespace lar_content

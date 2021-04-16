@@ -33,8 +33,8 @@ public:
      *
      *  @return the energy kick feature
      */
-    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm * const pAlgorithm, const pandora::Vertex * const pVertex,
-        const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap,const VertexSelectionBaseAlgorithm::ClusterListMap &,
+    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const pandora::Vertex *const pVertex,
+        const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
         const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &);
 
 private:
@@ -48,7 +48,8 @@ private:
      *
      *  @return the local asymmetry feature
      */
-    float GetLocalAsymmetryForView(const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const;
+    float GetLocalAsymmetryForView(
+        const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const;
 
     /**
      *  @brief  Increment the asymmetry parameters
@@ -59,8 +60,8 @@ private:
      *
      *  @return whether the energy asymmetry score is still viable
      */
-    bool IncrementAsymmetryParameters(const float weight, const pandora::CartesianVector &clusterDirection,
-        pandora::CartesianVector &localWeightedDirectionSum) const;
+    bool IncrementAsymmetryParameters(
+        const float weight, const pandora::CartesianVector &clusterDirection, pandora::CartesianVector &localWeightedDirectionSum) const;
 
     /**
      *  @brief  Calculate the local asymmetry feature
@@ -75,9 +76,9 @@ private:
     float CalculateLocalAsymmetry(const bool useEnergyMetrics, const pandora::CartesianVector &vertexPosition2D,
         const pandora::ClusterVector &asymmetryClusters, const pandora::CartesianVector &localWeightedDirectionSum) const;
 
-    float           m_maxAsymmetryDistance;     ///< The max distance between cluster (any hit) and vertex to calculate asymmetry score
-    float           m_minAsymmetryCosAngle;     ///< The min opening angle cosine used to determine viability of asymmetry score
-    unsigned int    m_maxAsymmetryNClusters;    ///< The max number of associated clusters to calculate the asymmetry
+    float m_maxAsymmetryDistance;         ///< The max distance between cluster (any hit) and vertex to calculate asymmetry score
+    float m_minAsymmetryCosAngle;         ///< The min opening angle cosine used to determine viability of asymmetry score
+    unsigned int m_maxAsymmetryNClusters; ///< The max number of associated clusters to calculate the asymmetry
 };
 
 } // namespace lar_content

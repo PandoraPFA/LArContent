@@ -18,9 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingNeutrinoCreationAlgorithm::CheatingNeutrinoCreationAlgorithm() :
-    m_collapseToPrimaryMCParticles(false),
-    m_vertexTolerance(0.5f)
+CheatingNeutrinoCreationAlgorithm::CheatingNeutrinoCreationAlgorithm() : m_collapseToPrimaryMCParticles(false), m_vertexTolerance(0.5f)
 {
 }
 
@@ -112,7 +110,8 @@ void CheatingNeutrinoCreationAlgorithm::AddNeutrinoVertex(const MCParticle *cons
         }
     }
 
-    if (!pNeutrinoVertex || (VERTEX_3D != pNeutrinoVertex->GetVertexType()) || ((pNeutrinoVertex->GetPosition() - pMCNeutrino->GetEndpoint()).GetMagnitude() > m_vertexTolerance))
+    if (!pNeutrinoVertex || (VERTEX_3D != pNeutrinoVertex->GetVertexType()) ||
+        ((pNeutrinoVertex->GetPosition() - pMCNeutrino->GetEndpoint()).GetMagnitude() > m_vertexTolerance))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pNeutrinoPfo, pNeutrinoVertex));
@@ -166,8 +165,8 @@ void CheatingNeutrinoCreationAlgorithm::GetMCParticleToDaughterPfoMap(MCParticle
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingNeutrinoCreationAlgorithm::CreatePfoHierarchy(const MCParticle *const pParentMCParticle, const ParticleFlowObject *const pParentPfo,
-    const MCParticleToPfoMap &mcParticleToPfoMap) const
+void CheatingNeutrinoCreationAlgorithm::CreatePfoHierarchy(const MCParticle *const pParentMCParticle,
+    const ParticleFlowObject *const pParentPfo, const MCParticleToPfoMap &mcParticleToPfoMap) const
 {
     for (const MCParticle *const pDaughterMCParticle : pParentMCParticle->GetDaughterList())
     {
@@ -189,23 +188,18 @@ void CheatingNeutrinoCreationAlgorithm::CreatePfoHierarchy(const MCParticle *con
 
 StatusCode CheatingNeutrinoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "MCParticleListName", m_mcParticleListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "NeutrinoPfoListName", m_neutrinoPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoPfoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexListName", m_vertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "DaughterPfoListNames", m_daughterPfoListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "DaughterPfoListNames", m_daughterPfoListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexTolerance", m_vertexTolerance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexTolerance", m_vertexTolerance));
 
     return STATUS_CODE_SUCCESS;
 }

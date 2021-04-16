@@ -8,8 +8,8 @@
 #ifndef LAR_POINTING_CLUSTER_H
 #define LAR_POINTING_CLUSTER_H 1
 
-#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
 namespace lar_content
 {
@@ -77,7 +77,7 @@ public:
          */
         const pandora::CartesianVector &GetDirection() const;
 
-         /**
+        /**
          *  @brief  Get rms from vertex fit
          *
          *  @return the rms
@@ -106,12 +106,12 @@ public:
         Vertex &operator=(const Vertex &rhs);
 
     private:
-        const pandora::Cluster     *m_pCluster;             ///< The address of the cluster
-        pandora::CartesianVector    m_position;             ///< The vertex position
-        pandora::CartesianVector    m_direction;            ///< The vertex direction
-        float                       m_rms;                  ///< Rms from vertex fit
-        bool                        m_isInner;              ///< Whether this is the inner vertex
-        bool                        m_isInitialized;        ///< Whether the vertex has been initialized
+        const pandora::Cluster *m_pCluster;   ///< The address of the cluster
+        pandora::CartesianVector m_position;  ///< The vertex position
+        pandora::CartesianVector m_direction; ///< The vertex direction
+        float m_rms;                          ///< Rms from vertex fit
+        bool m_isInner;                       ///< Whether this is the inner vertex
+        bool m_isInitialized;                 ///< Whether the vertex has been initialized
     };
 
     /**
@@ -187,14 +187,14 @@ private:
      */
     void BuildPointingCluster(const ThreeDSlidingFitResult &slidingFitResult);
 
-    const pandora::Cluster         *m_pCluster;             ///< The address of the cluster
-    Vertex                          m_innerVertex;          ///< The inner vertex
-    Vertex                          m_outerVertex;          ///< The outer vertex
+    const pandora::Cluster *m_pCluster; ///< The address of the cluster
+    Vertex m_innerVertex;               ///< The inner vertex
+    Vertex m_outerVertex;               ///< The outer vertex
 };
 
 typedef std::vector<LArPointingCluster> LArPointingClusterList;
 typedef std::vector<LArPointingCluster::Vertex> LArPointingClusterVertexList;
-typedef std::unordered_map<const pandora::Cluster*, LArPointingCluster> LArPointingClusterMap;
+typedef std::unordered_map<const pandora::Cluster *, LArPointingCluster> LArPointingClusterMap;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

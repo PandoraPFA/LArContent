@@ -68,8 +68,7 @@ float SimpleCone::GetBoundedHitFraction(const Cluster *const pCluster, const flo
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const T *const pT, const unsigned int slidingFitWindow,
-        const float slidingFitLayerPitch) :
+ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const T *const pT, const unsigned int slidingFitWindow, const float slidingFitLayerPitch) :
     m_slidingFitResult(ThreeDSlidingFitResult(pT, slidingFitWindow, slidingFitLayerPitch))
 {
     const CartesianVector &minLayerPosition3D(m_slidingFitResult.GetGlobalMinLayerPosition());
@@ -100,7 +99,7 @@ ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const T *const pT, const 
             if (!contributionMap1.count(fitResult1.GetLayer(rL)) && !contributionMap2.count(fitResult2.GetLayer(rL)))
                 continue;
 
-            (void) m_trackStateMap.insert(TrackStateMap::value_type(iStep, TrackState(fitPosition3D, fitDirection3D)));
+            (void)m_trackStateMap.insert(TrackStateMap::value_type(iStep, TrackState(fitPosition3D, fitDirection3D)));
         }
         catch (const StatusCodeException &)
         {
@@ -111,8 +110,8 @@ ThreeDSlidingConeFitResult::ThreeDSlidingConeFitResult(const T *const pT, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDSlidingConeFitResult::GetSimpleConeList(const unsigned int nLayersForConeFit, const unsigned int nCones, const ConeSelection coneSelection,
-    SimpleConeList &simpleConeList) const
+void ThreeDSlidingConeFitResult::GetSimpleConeList(
+    const unsigned int nLayersForConeFit, const unsigned int nCones, const ConeSelection coneSelection, SimpleConeList &simpleConeList) const
 {
     const TrackStateMap &trackStateMap(this->GetTrackStateMap());
     const unsigned int nLayers(trackStateMap.size());

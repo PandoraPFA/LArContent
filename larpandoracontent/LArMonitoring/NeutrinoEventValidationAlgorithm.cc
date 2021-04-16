@@ -21,8 +21,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoEventValidationAlgorithm::NeutrinoEventValidationAlgorithm() :
-    m_useTrueNeutrinosOnly(false)
+NeutrinoEventValidationAlgorithm::NeutrinoEventValidationAlgorithm() : m_useTrueNeutrinosOnly(false)
 {
 }
 
@@ -34,22 +33,28 @@ NeutrinoEventValidationAlgorithm::~NeutrinoEventValidationAlgorithm()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoEventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pMCParticleList, const CaloHitList *const pCaloHitList,
-    const PfoList *const pPfoList, ValidationInfo &validationInfo) const
+void NeutrinoEventValidationAlgorithm::FillValidationInfo(const MCParticleList *const pMCParticleList,
+    const CaloHitList *const pCaloHitList, const PfoList *const pPfoList, ValidationInfo &validationInfo) const
 {
     if (pMCParticleList && pCaloHitList)
     {
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
-        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(
+            pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+        if (!m_useTrueNeutrinosOnly)
+            LArMCParticleHelper::SelectReconstructableMCParticles(
+                pMCParticleList, pCaloHitList, m_primaryParameters, LArMCParticleHelper::IsCosmicRay, targetMCParticleToHitsMap);
 
         LArMCParticleHelper::PrimaryParameters parameters(m_primaryParameters);
         parameters.m_minPrimaryGoodHits = 0;
         parameters.m_minHitsForGoodView = 0;
         parameters.m_minHitSharingFraction = 0.f;
         LArMCParticleHelper::MCContributionMap allMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, allMCParticleToHitsMap);
-        if (!m_useTrueNeutrinosOnly) LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, allMCParticleToHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(
+            pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, allMCParticleToHitsMap);
+        if (!m_useTrueNeutrinosOnly)
+            LArMCParticleHelper::SelectReconstructableMCParticles(
+                pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, allMCParticleToHitsMap);
 
         validationInfo.SetTargetMCParticleToHitsMap(targetMCParticleToHitsMap);
         validationInfo.SetAllMCParticleToHitsMap(allMCParticleToHitsMap);
@@ -68,14 +73,16 @@ void NeutrinoEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
         }
 
         LArMCParticleHelper::PfoContributionMap pfoToHitsMap;
-        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, m_primaryParameters.m_foldBackHierarchy);
+        LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(
+            finalStatePfos, validationInfo.GetAllMCParticleToHitsMap(), pfoToHitsMap, m_primaryParameters.m_foldBackHierarchy);
 
         validationInfo.SetPfoToHitsMap(pfoToHitsMap);
     }
 
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCHitSharingMap;
     LArMCParticleHelper::MCParticleToPfoHitSharingMap mcToPfoHitSharingMap;
-    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(validationInfo.GetPfoToHitsMap(), {validationInfo.GetAllMCParticleToHitsMap()}, pfoToMCHitSharingMap, mcToPfoHitSharingMap);
+    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(
+        validationInfo.GetPfoToHitsMap(), {validationInfo.GetAllMCParticleToHitsMap()}, pfoToMCHitSharingMap, mcToPfoHitSharingMap);
 
     // ATTN : Ensure all mc primaries have an entry in mcToPfoHitSharingMap, even if no associated pfos.
     MCParticleVector mcPrimaryVector;
@@ -98,13 +105,16 @@ void NeutrinoEventValidationAlgorithm::FillValidationInfo(const MCParticleList *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const
+void NeutrinoEventValidationAlgorithm::ProcessOutput(
+    const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const
 {
-    if (printToScreen && useInterpretedMatching) std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
-    else if (printToScreen) std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
+    if (printToScreen && useInterpretedMatching)
+        std::cout << "---INTERPRETED-MATCHING-OUTPUT------------------------------------------------------------------" << std::endl;
+    else if (printToScreen)
+        std::cout << "---RAW-MATCHING-OUTPUT--------------------------------------------------------------------------" << std::endl;
 
-    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(useInterpretedMatching ?
-        validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcToPfoHitSharingMap(
+        useInterpretedMatching ? validationInfo.GetInterpretedMCToPfoHitSharingMap() : validationInfo.GetMCToPfoHitSharingMap());
 
     MCParticleVector mcPrimaryVector;
     LArMonitoringHelper::GetOrderedMCParticleVector({validationInfo.GetTargetMCParticleToHitsMap()}, mcPrimaryVector);
@@ -112,7 +122,8 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
     // Neutrino Validation Bookkeeping
     int nNeutrinoPrimaries(0);
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
-        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) && validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary)) ++nNeutrinoPrimaries;
+        if (LArMCParticleHelper::IsBeamNeutrinoFinalState(pMCPrimary) && validationInfo.GetTargetMCParticleToHitsMap().count(pMCPrimary))
+            ++nNeutrinoPrimaries;
 
     PfoVector primaryPfoVector;
     LArMonitoringHelper::GetOrderedPfoVector(validationInfo.GetPfoToHitsMap(), primaryPfoVector);
@@ -169,17 +180,12 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
         const float targetVertexX(targetVertex.GetX()), targetVertexY(targetVertex.GetY()), targetVertexZ(targetVertex.GetZ());
 #endif
 
-        targetSS << (!isTargetPrimary ? "(Non target) " : "")
-                 << "PrimaryId " << mcPrimaryIndex
-                 << ", Nu " << isBeamNeutrinoFinalState
-                 << ", CR " << isCosmicRay
-                 << ", MCPDG " << pMCPrimary->GetParticleId()
-                 << ", Energy " << pMCPrimary->GetEnergy()
-                 << ", Dist. " << (pMCPrimary->GetEndpoint() - pMCPrimary->GetVertex()).GetMagnitude()
-                 << ", nMCHits " << mcPrimaryHitList.size()
-                 << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, mcPrimaryHitList)
-                 << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList)
-                 << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList) << ")" << std::endl;
+        targetSS << (!isTargetPrimary ? "(Non target) " : "") << "PrimaryId " << mcPrimaryIndex << ", Nu " << isBeamNeutrinoFinalState
+                 << ", CR " << isCosmicRay << ", MCPDG " << pMCPrimary->GetParticleId() << ", Energy " << pMCPrimary->GetEnergy()
+                 << ", Dist. " << (pMCPrimary->GetEndpoint() - pMCPrimary->GetVertex()).GetMagnitude() << ", nMCHits "
+                 << mcPrimaryHitList.size() << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, mcPrimaryHitList) << ", "
+                 << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, mcPrimaryHitList) << ", "
+                 << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, mcPrimaryHitList) << ")" << std::endl;
 
         mcPrimaryId.push_back(mcPrimaryIndex);
         mcPrimaryPdg.push_back(pMCPrimary->GetParticleId());
@@ -200,7 +206,8 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
 
         int matchIndex(0), nPrimaryMatches(0), nPrimaryNuMatches(0), nPrimaryCRMatches(0), nPrimaryGoodNuMatches(0), nPrimaryNuSplits(0);
 #ifdef MONITORING
-        float recoVertexX(std::numeric_limits<float>::max()), recoVertexY(std::numeric_limits<float>::max()), recoVertexZ(std::numeric_limits<float>::max());
+        float recoVertexX(std::numeric_limits<float>::max()), recoVertexY(std::numeric_limits<float>::max()),
+            recoVertexZ(std::numeric_limits<float>::max());
 #endif
         for (const LArMCParticleHelper::PfoCaloHitListPair &pfoToSharedHits : mcToPfoHitSharingMap.at(pMCPrimary))
         {
@@ -230,51 +237,64 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
 #ifdef MONITORING
                 try
                 {
-                    const Vertex *const pRecoVertex(LArPfoHelper::GetVertex(isRecoNeutrinoFinalState ? LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first) : pfoToSharedHits.first));
+                    const Vertex *const pRecoVertex(LArPfoHelper::GetVertex(
+                        isRecoNeutrinoFinalState ? LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first) : pfoToSharedHits.first));
                     recoVertexX = pRecoVertex->GetPosition().GetX();
                     recoVertexY = pRecoVertex->GetPosition().GetY();
                     recoVertexZ = pRecoVertex->GetPosition().GetZ();
                 }
-                catch (const StatusCodeException &) {}
+                catch (const StatusCodeException &)
+                {
+                }
 #endif
             }
 
-            if (isGoodMatch) ++nPrimaryMatches;
+            if (isGoodMatch)
+                ++nPrimaryMatches;
 
             if (isRecoNeutrinoFinalState)
             {
                 const Pfo *const pRecoNeutrino(LArPfoHelper::GetParentNeutrino(pfoToSharedHits.first));
                 const bool isSplitRecoNeutrino(!recoNeutrinos.empty() && !recoNeutrinos.count(pRecoNeutrino));
-                if (!isSplitRecoNeutrino && isGoodMatch) ++nPrimaryGoodNuMatches;
-                if (isSplitRecoNeutrino && isBeamNeutrinoFinalState && isGoodMatch) ++nPrimaryNuSplits;
+                if (!isSplitRecoNeutrino && isGoodMatch)
+                    ++nPrimaryGoodNuMatches;
+                if (isSplitRecoNeutrino && isBeamNeutrinoFinalState && isGoodMatch)
+                    ++nPrimaryNuSplits;
                 recoNeutrinos.insert(pRecoNeutrino);
             }
 
-            if (isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryNuMatches;
-            if (!isRecoNeutrinoFinalState && isGoodMatch) ++nPrimaryCRMatches;
+            if (isRecoNeutrinoFinalState && isGoodMatch)
+                ++nPrimaryNuMatches;
+            if (!isRecoNeutrinoFinalState && isGoodMatch)
+                ++nPrimaryCRMatches;
 
-            targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "")
-                     << "MatchedPfoId " << pfoId
-                     << ", Nu " << isRecoNeutrinoFinalState;
-            if (isRecoNeutrinoFinalState) targetSS << " [NuId: " << recoNuId << "]";
-            targetSS << ", CR " << (!isRecoNeutrinoFinalState)
-                     << ", PDG " << pfoToSharedHits.first->GetParticleId()
-                     << ", nMatchedHits " << sharedHitList.size()
-                     << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList)
-                     << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList)
-                     << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList) << ")"
-                     << ", nPfoHits " << pfoHitList.size()
-                     << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoHitList)
-                     << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoHitList)
-                     << ", " << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoHitList) << ")" << std::endl;
+            targetSS << "-" << (!isGoodMatch ? "(Below threshold) " : "") << "MatchedPfoId " << pfoId << ", Nu " << isRecoNeutrinoFinalState;
+            if (isRecoNeutrinoFinalState)
+                targetSS << " [NuId: " << recoNuId << "]";
+            targetSS << ", CR " << (!isRecoNeutrinoFinalState) << ", PDG " << pfoToSharedHits.first->GetParticleId() << ", nMatchedHits "
+                     << sharedHitList.size() << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, sharedHitList) << ", "
+                     << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, sharedHitList) << ", "
+                     << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, sharedHitList) << ")"
+                     << ", nPfoHits " << pfoHitList.size() << " (" << LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, pfoHitList) << ", "
+                     << LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, pfoHitList) << ", "
+                     << LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, pfoHitList) << ")" << std::endl;
         }
 
         if (mcToPfoHitSharingMap.at(pMCPrimary).empty())
         {
             targetSS << "-No matched Pfo" << std::endl;
-            bestMatchPfoId.push_back(-1); bestMatchPfoPdg.push_back(0); bestMatchPfoIsRecoNu.push_back(0); bestMatchPfoRecoNuId.push_back(-1);
-            bestMatchPfoNHitsTotal.push_back(0); bestMatchPfoNHitsU.push_back(0); bestMatchPfoNHitsV.push_back(0); bestMatchPfoNHitsW.push_back(0);
-            bestMatchPfoNSharedHitsTotal.push_back(0); bestMatchPfoNSharedHitsU.push_back(0); bestMatchPfoNSharedHitsV.push_back(0); bestMatchPfoNSharedHitsW.push_back(0);
+            bestMatchPfoId.push_back(-1);
+            bestMatchPfoPdg.push_back(0);
+            bestMatchPfoIsRecoNu.push_back(0);
+            bestMatchPfoRecoNuId.push_back(-1);
+            bestMatchPfoNHitsTotal.push_back(0);
+            bestMatchPfoNHitsU.push_back(0);
+            bestMatchPfoNHitsV.push_back(0);
+            bestMatchPfoNHitsW.push_back(0);
+            bestMatchPfoNSharedHitsTotal.push_back(0);
+            bestMatchPfoNSharedHitsU.push_back(0);
+            bestMatchPfoNSharedHitsV.push_back(0);
+            bestMatchPfoNSharedHitsW.push_back(0);
         }
 
         nPrimaryMatchedPfos.push_back(nPrimaryMatches);
@@ -285,9 +305,10 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
         nTargetCRMatches += nPrimaryCRMatches;
         nTargetGoodNuMatches += nPrimaryGoodNuMatches;
         nTargetNuSplits += nPrimaryNuSplits;
-        if (0 == nPrimaryMatches) ++nTargetNuLosses;
+        if (0 == nPrimaryMatches)
+            ++nTargetNuLosses;
 
-	if (fillTree)
+        if (fillTree)
         {
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "fileIdentifier", m_fileIdentifier));
             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treeName.c_str(), "eventNumber", m_eventNumber - 1));
@@ -347,7 +368,8 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             const int interactionTypeInt(static_cast<int>(interactionType));
 #endif
             // ATTN Some redundancy introduced to contributing variables
-            const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) && (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
+            const int isCorrectNu(isBeamNeutrinoFinalState && (nTargetGoodNuMatches == nTargetNuMatches) && (nTargetGoodNuMatches == nTargetPrimaries) &&
+                                  (nTargetCRMatches == 0) && (nTargetNuSplits == 0) && (nTargetNuLosses == 0));
             const int isCorrectCR(isCosmicRay && (nTargetNuMatches == 0) && (nTargetCRMatches == 1));
             const int isFakeNu(isCosmicRay && (nTargetNuMatches > 0));
             const int isFakeCR(!isCosmicRay && (nTargetCRMatches > 0));
@@ -356,30 +378,52 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
             const int isLost(nTargetMatches == 0);
 
             std::stringstream outcomeSS;
-            outcomeSS << LArInteractionTypeHelper::ToString(interactionType) << " (Nuance " << mcNuanceCode << ", Nu " << isBeamNeutrinoFinalState << ", CR " << isCosmicRay << ")" << std::endl;
+            outcomeSS << LArInteractionTypeHelper::ToString(interactionType) << " (Nuance " << mcNuanceCode << ", Nu "
+                      << isBeamNeutrinoFinalState << ", CR " << isCosmicRay << ")" << std::endl;
 
-            if (isLastNeutrinoPrimary) ++nTotalNu;
-            if (isCosmicRay) ++nTotalCR;
-            if (isCorrectNu) ++nCorrectNu;
-            if (isCorrectCR) ++nCorrectCR;
-            if (isFakeNu) ++nFakeNu;
-            if (isFakeCR) ++nFakeCR;
-            if (isSplitNu) ++nSplitNu;
-            if (isSplitCR) ++nSplitCR;
-            if (isLost) ++nLost;
+            if (isLastNeutrinoPrimary)
+                ++nTotalNu;
+            if (isCosmicRay)
+                ++nTotalCR;
+            if (isCorrectNu)
+                ++nCorrectNu;
+            if (isCorrectCR)
+                ++nCorrectCR;
+            if (isFakeNu)
+                ++nFakeNu;
+            if (isFakeCR)
+                ++nFakeCR;
+            if (isSplitNu)
+                ++nSplitNu;
+            if (isSplitCR)
+                ++nSplitCR;
+            if (isLost)
+                ++nLost;
 
-            if (isCorrectNu) outcomeSS << "IsCorrectNu ";
-            if (isCorrectCR) outcomeSS << "IsCorrectCR ";
-            if (isFakeNu) outcomeSS << "IsFake" << name << " ";
-            if (isFakeCR) outcomeSS << "IsFakeCR ";
-            if (isSplitNu) outcomeSS << "isSplit" << name << " ";
-            if (isSplitCR) outcomeSS << "IsSplitCR ";
-            if (isLost) outcomeSS << "IsLost ";
-            if (nTargetNuMatches > 0) outcomeSS << "(N" << name << "Matches: " << nTargetNuMatches << ") ";
-            if (nTargetNuLosses > 0) outcomeSS << "(N" << name << "Losses: " << nTargetNuLosses << ") ";
-            if (nTargetNuSplits > 0) outcomeSS << "(N" << name << "Splits: " << nTargetNuSplits << ") ";
-            if (nTargetCRMatches > 0) outcomeSS << "(NCRMatches: " << nTargetCRMatches << ") ";
-            if (printToScreen) std::cout << outcomeSS.str() << std::endl << targetSS.str() << std::endl;
+            if (isCorrectNu)
+                outcomeSS << "IsCorrectNu ";
+            if (isCorrectCR)
+                outcomeSS << "IsCorrectCR ";
+            if (isFakeNu)
+                outcomeSS << "IsFake" << name << " ";
+            if (isFakeCR)
+                outcomeSS << "IsFakeCR ";
+            if (isSplitNu)
+                outcomeSS << "isSplit" << name << " ";
+            if (isSplitCR)
+                outcomeSS << "IsSplitCR ";
+            if (isLost)
+                outcomeSS << "IsLost ";
+            if (nTargetNuMatches > 0)
+                outcomeSS << "(N" << name << "Matches: " << nTargetNuMatches << ") ";
+            if (nTargetNuLosses > 0)
+                outcomeSS << "(N" << name << "Losses: " << nTargetNuLosses << ") ";
+            if (nTargetNuSplits > 0)
+                outcomeSS << "(N" << name << "Splits: " << nTargetNuSplits << ") ";
+            if (nTargetCRMatches > 0)
+                outcomeSS << "(NCRMatches: " << nTargetCRMatches << ") ";
+            if (printToScreen)
+                std::cout << outcomeSS.str() << std::endl << targetSS.str() << std::endl;
 
             if (fillTree)
             {
@@ -394,16 +438,47 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
                 PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treeName.c_str()));
             }
 
-            targetSS.str(std::string()); targetSS.clear();
-            recoNeutrinos.clear(); associatedMCPrimaries.clear();
-            nTargetMatches = 0; nTargetNuMatches = 0; nTargetCRMatches = 0; nTargetGoodNuMatches = 0; nTargetNuSplits = 0; nTargetNuLosses = 0;
-            mcPrimaryId.clear(); mcPrimaryPdg.clear(); nMCHitsTotal.clear(); nMCHitsU.clear(); nMCHitsV.clear(); nMCHitsW.clear();
-            mcPrimaryE.clear(); mcPrimaryPX.clear(); mcPrimaryPY.clear(); mcPrimaryPZ.clear();
-            mcPrimaryVtxX.clear(); mcPrimaryVtxY.clear(); mcPrimaryVtxZ.clear(); mcPrimaryEndX.clear(); mcPrimaryEndY.clear(); mcPrimaryEndZ.clear();
-            nPrimaryMatchedPfos.clear(); nPrimaryMatchedNuPfos.clear(); nPrimaryMatchedCRPfos.clear();
-            bestMatchPfoId.clear(); bestMatchPfoPdg.clear(); bestMatchPfoIsRecoNu.clear(); bestMatchPfoRecoNuId.clear();
-            bestMatchPfoNHitsTotal.clear(); bestMatchPfoNHitsU.clear(); bestMatchPfoNHitsV.clear(); bestMatchPfoNHitsW.clear();
-            bestMatchPfoNSharedHitsTotal.clear(); bestMatchPfoNSharedHitsU.clear(); bestMatchPfoNSharedHitsV.clear(); bestMatchPfoNSharedHitsW.clear();
+            targetSS.str(std::string());
+            targetSS.clear();
+            recoNeutrinos.clear();
+            associatedMCPrimaries.clear();
+            nTargetMatches = 0;
+            nTargetNuMatches = 0;
+            nTargetCRMatches = 0;
+            nTargetGoodNuMatches = 0;
+            nTargetNuSplits = 0;
+            nTargetNuLosses = 0;
+            mcPrimaryId.clear();
+            mcPrimaryPdg.clear();
+            nMCHitsTotal.clear();
+            nMCHitsU.clear();
+            nMCHitsV.clear();
+            nMCHitsW.clear();
+            mcPrimaryE.clear();
+            mcPrimaryPX.clear();
+            mcPrimaryPY.clear();
+            mcPrimaryPZ.clear();
+            mcPrimaryVtxX.clear();
+            mcPrimaryVtxY.clear();
+            mcPrimaryVtxZ.clear();
+            mcPrimaryEndX.clear();
+            mcPrimaryEndY.clear();
+            mcPrimaryEndZ.clear();
+            nPrimaryMatchedPfos.clear();
+            nPrimaryMatchedNuPfos.clear();
+            nPrimaryMatchedCRPfos.clear();
+            bestMatchPfoId.clear();
+            bestMatchPfoPdg.clear();
+            bestMatchPfoIsRecoNu.clear();
+            bestMatchPfoRecoNuId.clear();
+            bestMatchPfoNHitsTotal.clear();
+            bestMatchPfoNHitsU.clear();
+            bestMatchPfoNHitsV.clear();
+            bestMatchPfoNHitsW.clear();
+            bestMatchPfoNSharedHitsTotal.clear();
+            bestMatchPfoNSharedHitsU.clear();
+            bestMatchPfoNSharedHitsV.clear();
+            bestMatchPfoNSharedHitsW.clear();
         }
     }
 
@@ -411,26 +486,39 @@ void NeutrinoEventValidationAlgorithm::ProcessOutput(const ValidationInfo &valid
     {
         std::stringstream summarySS;
         summarySS << "---SUMMARY--------------------------------------------------------------------------------------" << std::endl;
-        if (nTotalNu > 0) summarySS << "#CorrectNu: " << nCorrectNu << "/" << nTotalNu << ", Fraction: " << (nTotalNu > 0 ? static_cast<float>(nCorrectNu) / static_cast<float>(nTotalNu) : 0.f) << std::endl;
-        if (nTotalCR > 0) summarySS << "#CorrectCR: " << nCorrectCR << "/" << nTotalCR << ", Fraction: " << (nTotalCR > 0 ? static_cast<float>(nCorrectCR) / static_cast<float>(nTotalCR) : 0.f) << std::endl;
-        if (nFakeNu > 0) summarySS << "#Fake" << name << ": " << nFakeNu << " ";
-        if (nFakeCR > 0) summarySS << "#FakeCR: " << nFakeCR << " ";
-        if (nSplitNu > 0) summarySS << "#Split" << name << ": " << nSplitNu << " ";
-        if (nSplitCR > 0) summarySS << "#SplitCR: " << nSplitCR << " ";
-        if (nLost > 0) summarySS << "#Lost: " << nLost << " ";
-        if (nFakeNu || nFakeCR || nSplitNu || nSplitCR || nLost) summarySS << std::endl;
-        if (printToScreen) std::cout << summarySS.str();
+        if (nTotalNu > 0)
+            summarySS << "#CorrectNu: " << nCorrectNu << "/" << nTotalNu
+                      << ", Fraction: " << (nTotalNu > 0 ? static_cast<float>(nCorrectNu) / static_cast<float>(nTotalNu) : 0.f) << std::endl;
+        if (nTotalCR > 0)
+            summarySS << "#CorrectCR: " << nCorrectCR << "/" << nTotalCR
+                      << ", Fraction: " << (nTotalCR > 0 ? static_cast<float>(nCorrectCR) / static_cast<float>(nTotalCR) : 0.f) << std::endl;
+        if (nFakeNu > 0)
+            summarySS << "#Fake" << name << ": " << nFakeNu << " ";
+        if (nFakeCR > 0)
+            summarySS << "#FakeCR: " << nFakeCR << " ";
+        if (nSplitNu > 0)
+            summarySS << "#Split" << name << ": " << nSplitNu << " ";
+        if (nSplitCR > 0)
+            summarySS << "#SplitCR: " << nSplitCR << " ";
+        if (nLost > 0)
+            summarySS << "#Lost: " << nLost << " ";
+        if (nFakeNu || nFakeCR || nSplitNu || nSplitCR || nLost)
+            summarySS << std::endl;
+        if (printToScreen)
+            std::cout << summarySS.str();
     }
 
-    if (printToScreen) std::cout << "------------------------------------------------------------------------------------------------" << std::endl << std::endl;
+    if (printToScreen)
+        std::cout << "------------------------------------------------------------------------------------------------" << std::endl
+                  << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode NeutrinoEventValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseTrueNeutrinosOnly", m_useTrueNeutrinosOnly));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseTrueNeutrinosOnly", m_useTrueNeutrinosOnly));
 
     return EventValidationBaseAlgorithm::ReadSettings(xmlHandle);
 }

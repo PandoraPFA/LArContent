@@ -18,9 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-VertexSplittingAlgorithm::VertexSplittingAlgorithm() :
-    m_splitDisplacementSquared(4.f * 4.f),
-    m_vertexDisplacementSquared(1.f * 1.f)
+VertexSplittingAlgorithm::VertexSplittingAlgorithm() : m_splitDisplacementSquared(4.f * 4.f), m_vertexDisplacementSquared(1.f * 1.f)
 {
     // ATTN Some default values differ from base class
     m_minClusterLength = 1.f;
@@ -63,7 +61,8 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
         return statusCode;
 
     const float splitDisplacementSquared((splitPosition - theVertex2D).GetMagnitudeSquared());
-    const float vertexDisplacementSquared(std::min((splitPosition - innerVertex2D).GetMagnitudeSquared(), (splitPosition - outerVertex2D).GetMagnitudeSquared()));
+    const float vertexDisplacementSquared(
+        std::min((splitPosition - innerVertex2D).GetMagnitudeSquared(), (splitPosition - outerVertex2D).GetMagnitudeSquared()));
 
     if ((splitDisplacementSquared < m_splitDisplacementSquared) && (vertexDisplacementSquared > m_vertexDisplacementSquared) &&
         (splitDisplacementSquared < vertexDisplacementSquared))
@@ -82,13 +81,13 @@ StatusCode VertexSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitR
 StatusCode VertexSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     float splitDisplacement = std::sqrt(m_splitDisplacementSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SplitDisplacement", splitDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SplitDisplacement", splitDisplacement));
     m_splitDisplacementSquared = splitDisplacement * splitDisplacement;
 
     float vertexDisplacement = std::sqrt(m_vertexDisplacementSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexDisplacement", vertexDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexDisplacement", vertexDisplacement));
     m_vertexDisplacementSquared = vertexDisplacement * vertexDisplacement;
 
     return TwoDSlidingFitSplittingAlgorithm::ReadSettings(xmlHandle);

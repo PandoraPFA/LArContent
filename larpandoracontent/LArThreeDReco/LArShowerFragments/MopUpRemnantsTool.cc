@@ -24,7 +24,7 @@ MopUpRemnantsTool::MopUpRemnantsTool()
 bool MopUpRemnantsTool::Run(ThreeViewRemnantsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector;
     this->FindBestShowers(overlapTensor, protoParticleVector);
@@ -78,8 +78,8 @@ void MopUpRemnantsTool::GetUsedClusters(const TensorType::ElementList &elementLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MopUpRemnantsTool::SelectBestElement(const TensorType::ElementList &elementList, const ClusterSet &usedClusters,
-    TensorType::ElementList::const_iterator &bestIter) const
+void MopUpRemnantsTool::SelectBestElement(
+    const TensorType::ElementList &elementList, const ClusterSet &usedClusters, TensorType::ElementList::const_iterator &bestIter) const
 {
     float bestFigureOfMerit(0.f);
 

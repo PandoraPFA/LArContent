@@ -18,8 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClusterMopUpBaseAlgorithm::ClusterMopUpBaseAlgorithm() :
-    m_excludePfosContainingTracks(true)
+ClusterMopUpBaseAlgorithm::ClusterMopUpBaseAlgorithm() : m_excludePfosContainingTracks(true)
 {
 }
 
@@ -104,7 +103,8 @@ void ClusterMopUpBaseAlgorithm::GetClusterLists(const ClusterList &inputClusterL
 void ClusterMopUpBaseAlgorithm::MakeClusterMerges(const ClusterAssociationMap &clusterAssociationMap) const
 {
     ClusterVector sortedRemnantClusters;
-    for (const auto &remnantMapEntry : clusterAssociationMap) sortedRemnantClusters.push_back(remnantMapEntry.first);
+    for (const auto &remnantMapEntry : clusterAssociationMap)
+        sortedRemnantClusters.push_back(remnantMapEntry.first);
     std::sort(sortedRemnantClusters.begin(), sortedRemnantClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pRemnantCluster : sortedRemnantClusters)
@@ -114,7 +114,8 @@ void ClusterMopUpBaseAlgorithm::MakeClusterMerges(const ClusterAssociationMap &c
         float bestFigureOfMerit(-std::numeric_limits<float>::max());
 
         ClusterVector sortedPfoClusters;
-        for (const auto &pfoMapEntry : associationDetails) sortedPfoClusters.push_back(pfoMapEntry.first);
+        for (const auto &pfoMapEntry : associationDetails)
+            sortedPfoClusters.push_back(pfoMapEntry.first);
         std::sort(sortedPfoClusters.begin(), sortedPfoClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pPfoCluster : sortedPfoClusters)
@@ -131,8 +132,9 @@ void ClusterMopUpBaseAlgorithm::MakeClusterMerges(const ClusterAssociationMap &c
         if (!pBestPfoCluster)
             continue;
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pBestPfoCluster, pRemnantCluster,
-            this->GetListName(pBestPfoCluster), this->GetListName(pRemnantCluster)));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+            PandoraContentApi::MergeAndDeleteClusters(
+                *this, pBestPfoCluster, pRemnantCluster, this->GetListName(pBestPfoCluster), this->GetListName(pRemnantCluster)));
     }
 }
 
@@ -140,11 +142,10 @@ void ClusterMopUpBaseAlgorithm::MakeClusterMerges(const ClusterAssociationMap &c
 
 StatusCode ClusterMopUpBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "PfoListNames", m_pfoListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ExcludePfosContainingTracks", m_excludePfosContainingTracks));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ExcludePfosContainingTracks", m_excludePfosContainingTracks));
 
     return MopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }

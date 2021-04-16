@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  NViewMatchingAlgorithm class
  */
-template<typename T>
+template <typename T>
 class NViewMatchingAlgorithm : public MatchingBaseAlgorithm
 {
 public:
@@ -50,12 +50,12 @@ protected:
     virtual void TidyUp();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    MatchingType    m_matchingControl;     ///< The matching control
+    MatchingType m_matchingControl; ///< The matching control
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 inline T &NViewMatchingAlgorithm<T>::GetMatchingControl()
 {
     return m_matchingControl;

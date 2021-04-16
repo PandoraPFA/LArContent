@@ -27,7 +27,7 @@ StatusCode CheatingCosmicRayShowerMatchingAlg::Run()
     const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
-    for (const ParticleFlowObject *const pPfo  : *pPfoList)
+    for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
         ClusterList twoDClusters;
         LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusters);
@@ -59,8 +59,8 @@ void CheatingCosmicRayShowerMatchingAlg::GetCandidateClusters(ClusterList &candi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const ParticleFlowObject *const pPfo, const Cluster *const pPfoCluster,
-    const ClusterList &candidateClusterList) const
+void CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(
+    const ParticleFlowObject *const pPfo, const Cluster *const pPfoCluster, const ClusterList &candidateClusterList) const
 {
     try
     {
@@ -87,21 +87,23 @@ void CheatingCosmicRayShowerMatchingAlg::CosmicRayShowerMatching(const ParticleF
                 if (!LArMCParticleHelper::IsNeutrino(pParentMCParticle) && (pPfoParentMCParticle == pParentMCParticle))
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo(*this, pPfo, pCandidateCluster));
             }
-            catch (const StatusCodeException &) {}
+            catch (const StatusCodeException &)
+            {
+            }
         }
     }
-    catch (const StatusCodeException &) {}
+    catch (const StatusCodeException &)
+    {
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode CheatingCosmicRayShowerMatchingAlg::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputPfoListName", m_inputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputPfoListName", m_inputPfoListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNames", m_inputClusterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
     return STATUS_CODE_SUCCESS;
 }

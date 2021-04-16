@@ -24,10 +24,10 @@ typedef SlicingAlgorithm::Slice Slice;
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CheatingEventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
-    const HitTypeToNameMap &/*clusterListNames*/, SliceList &sliceList)
+    const HitTypeToNameMap & /*clusterListNames*/, SliceList &sliceList)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     MCParticleToSliceMap mcParticleToSliceMap;
     this->InitializeMCParticleToSliceMap(pAlgorithm, caloHitListNames, mcParticleToSliceMap);
@@ -37,7 +37,8 @@ void CheatingEventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, con
     this->FillSlices(pAlgorithm, TPC_VIEW_W, caloHitListNames, mcParticleToSliceMap);
 
     MCParticleVector mcParticleVector;
-    for (const auto &mapEntry : mcParticleToSliceMap) mcParticleVector.push_back(mapEntry.first);
+    for (const auto &mapEntry : mcParticleToSliceMap)
+        mcParticleVector.push_back(mapEntry.first);
     std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
     for (const MCParticle *const pMCParticle : mcParticleVector)
@@ -51,8 +52,8 @@ void CheatingEventSlicingTool::RunSlicing(const Algorithm *const pAlgorithm, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingEventSlicingTool::InitializeMCParticleToSliceMap(const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames,
-    MCParticleToSliceMap &mcParticleToSliceMap) const
+void CheatingEventSlicingTool::InitializeMCParticleToSliceMap(
+    const Algorithm *const pAlgorithm, const HitTypeToNameMap &caloHitListNames, MCParticleToSliceMap &mcParticleToSliceMap) const
 {
     for (const auto &mapEntry : caloHitListNames)
     {
@@ -62,7 +63,8 @@ void CheatingEventSlicingTool::InitializeMCParticleToSliceMap(const Algorithm *c
         for (const CaloHit *const pCaloHit : *pCaloHitList)
         {
             MCParticleVector mcParticleVector;
-            for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap()) mcParticleVector.push_back(weightMapEntry.first);
+            for (const auto &weightMapEntry : pCaloHit->GetMCParticleWeightMap())
+                mcParticleVector.push_back(weightMapEntry.first);
             std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
             for (const MCParticle *const pMCParticle : mcParticleVector)
@@ -81,8 +83,8 @@ void CheatingEventSlicingTool::InitializeMCParticleToSliceMap(const Algorithm *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingEventSlicingTool::FillSlices(const Algorithm *const pAlgorithm, const HitType hitType, const HitTypeToNameMap &caloHitListNames,
-    MCParticleToSliceMap &mcParticleToSliceMap) const
+void CheatingEventSlicingTool::FillSlices(const Algorithm *const pAlgorithm, const HitType hitType,
+    const HitTypeToNameMap &caloHitListNames, MCParticleToSliceMap &mcParticleToSliceMap) const
 {
     if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);

@@ -28,10 +28,10 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_pfoListNames;                 ///< The pfo list names
-    pandora::StringVector   m_clusterListNames;             ///< The cluster list names
-    pandora::StringVector   m_vertexListNames;              ///< The vertex list names
-    bool                    m_warnIfObjectsUnavailable;     ///< Whether to print warning if attempt made to delete unavailable objects
+    pandora::StringVector m_pfoListNames;     ///< The pfo list names
+    pandora::StringVector m_clusterListNames; ///< The cluster list names
+    pandora::StringVector m_vertexListNames;  ///< The vertex list names
+    bool m_warnIfObjectsUnavailable;          ///< Whether to print warning if attempt made to delete unavailable objects
 };
 
 } // namespace lar_content

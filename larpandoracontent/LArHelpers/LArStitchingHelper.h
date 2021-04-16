@@ -23,7 +23,7 @@ namespace lar_content
 class LArStitchingHelper
 {
 public:
-   /**
+    /**
      *  @brief  Find closest tpc to a specified input tpc
      *
      *  @param  pandora the pandora stitching instance
@@ -105,9 +105,8 @@ public:
      *  @param  closestVertex1 to receive the relevant vertex from the first pointing cluster
      *  @param  closestVertex2 to receive the relevant vertex from the second pointing cluster
      */
-    static void GetClosestVertices(const pandora::LArTPC &larTPC1, const pandora::LArTPC &larTPC2,
-        const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
-        LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
+    static void GetClosestVertices(const pandora::LArTPC &larTPC1, const pandora::LArTPC &larTPC2, const LArPointingCluster &pointingCluster1,
+        const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2);
 
     /**
      *  @brief  Calculate X0 for a pair of vertices

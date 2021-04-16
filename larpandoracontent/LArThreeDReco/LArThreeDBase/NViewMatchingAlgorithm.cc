@@ -15,8 +15,8 @@
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 
 using namespace pandora;
 
@@ -24,8 +24,7 @@ namespace lar_content
 {
 
 template <typename T>
-NViewMatchingAlgorithm<T>::NViewMatchingAlgorithm() :
-    m_matchingControl(this)
+NViewMatchingAlgorithm<T>::NViewMatchingAlgorithm() : m_matchingControl(this)
 {
 }
 
@@ -54,7 +53,7 @@ void NViewMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeleted
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const std::string &NViewMatchingAlgorithm<T>::GetClusterListName(const HitType hitType) const
 {
     return m_matchingControl.GetClusterListName(hitType);
@@ -62,7 +61,7 @@ const std::string &NViewMatchingAlgorithm<T>::GetClusterListName(const HitType h
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const pandora::ClusterList &NViewMatchingAlgorithm<T>::GetInputClusterList(const HitType hitType) const
 {
     return m_matchingControl.GetInputClusterList(hitType);
@@ -70,7 +69,7 @@ const pandora::ClusterList &NViewMatchingAlgorithm<T>::GetInputClusterList(const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const pandora::ClusterList &NViewMatchingAlgorithm<T>::GetSelectedClusterList(const HitType hitType) const
 {
     return m_matchingControl.GetSelectedClusterList(hitType);
@@ -120,12 +119,12 @@ StatusCode NViewMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template class NViewMatchingAlgorithm<TwoViewMatchingControl<float> >;
-template class NViewMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingControl<float> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult> >;
-template class NViewMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult> >;
+template class NViewMatchingAlgorithm<TwoViewMatchingControl<float>>;
+template class NViewMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult>>;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<float>>;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<ShowerOverlapResult>>;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult>>;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult>>;
+template class NViewMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult>>;
 
 } // namespace lar_content

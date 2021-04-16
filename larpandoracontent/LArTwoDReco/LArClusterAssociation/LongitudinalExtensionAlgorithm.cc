@@ -86,8 +86,8 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterV
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ,
-    ClusterAssociationMatrix &clusterAssociationMatrix) const
+void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(
+    const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
     const Cluster *const pClusterI(clusterI.GetCluster());
     const Cluster *const pClusterJ(clusterJ.GetCluster());
@@ -164,9 +164,8 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const LArPoint
         LArPointingClusterHelper::GetImpactParameters(vertexPositionJ, vertexDirectionJ, vertexPositionI, rL2, rT2);
 
         if ((rL1 > -2.5f && rL1 < std::min(0.66f * clusterLengthJ, m_emissionMaxLongitudinalDisplacement)) &&
-            (rL2 > -2.5f && rL2 < std::min(0.66f * clusterLengthI, m_emissionMaxLongitudinalDisplacement)) &&
-            (rT1 < m_emissionMaxTransverseDisplacement) && (rT2 < m_emissionMaxTransverseDisplacement) &&
-            (targetVertexI.GetRms() < 0.5f && targetVertexJ.GetRms() < 0.5f) &&
+            (rL2 > -2.5f && rL2 < std::min(0.66f * clusterLengthI, m_emissionMaxLongitudinalDisplacement)) && (rT1 < m_emissionMaxTransverseDisplacement) &&
+            (rT2 < m_emissionMaxTransverseDisplacement) && (targetVertexI.GetRms() < 0.5f && targetVertexJ.GetRms() < 0.5f) &&
             (cosTheta > m_emissionMaxCosRelativeAngle) && (std::fabs(cosThetaI) > 0.25f) && (std::fabs(cosThetaJ) > 0.25f))
         {
             associationType = ClusterAssociation::STRONG;
@@ -178,8 +177,10 @@ void LongitudinalExtensionAlgorithm::FillClusterAssociationMatrix(const LArPoint
     {
         const ClusterAssociation::VertexType vertexTypeI(targetVertexI.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
         const ClusterAssociation::VertexType vertexTypeJ(targetVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
-        (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
-        (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
+        (void)clusterAssociationMatrix[pClusterI].insert(
+            ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, clusterLengthJ)));
+        (void)clusterAssociationMatrix[pClusterJ].insert(
+            ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, clusterLengthI)));
         return;
     }
 }
@@ -197,7 +198,8 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
     ClusterAssociationMatrix clusterAssociationMatrix;
 
     ClusterVector sortedInputClusters;
-    for (const auto &mapEntry : inputAssociationMatrix) sortedInputClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : inputAssociationMatrix)
+        sortedInputClusters.push_back(mapEntry.first);
     std::sort(sortedInputClusters.begin(), sortedInputClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster1 : sortedInputClusters)
@@ -225,7 +227,8 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
             bool isAssociated(true);
 
             ClusterVector sortedAssociationClusters;
-            for (const auto &mapEntry : associationMap1) sortedAssociationClusters.push_back(mapEntry.first);
+            for (const auto &mapEntry : associationMap1)
+                sortedAssociationClusters.push_back(mapEntry.first);
             std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
             for (const Cluster *const pCluster3 : sortedAssociationClusters)
@@ -238,8 +241,7 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
 
                 const ClusterAssociation &association23(iter23->second);
 
-                if (association12.GetParent() == association13.GetParent() &&
-                    association23.GetParent() == association21.GetParent() &&
+                if (association12.GetParent() == association13.GetParent() && association23.GetParent() == association21.GetParent() &&
                     association13.GetDaughter() != association23.GetDaughter())
                 {
                     isAssociated = false;
@@ -249,18 +251,18 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
 
             if (isAssociated)
             {
-                (void) clusterAssociationMatrix[pCluster1].insert(ClusterAssociationMap::value_type(pCluster2, association12));
-                (void) clusterAssociationMatrix[pCluster2].insert(ClusterAssociationMap::value_type(pCluster1, association21));
+                (void)clusterAssociationMatrix[pCluster1].insert(ClusterAssociationMap::value_type(pCluster2, association12));
+                (void)clusterAssociationMatrix[pCluster2].insert(ClusterAssociationMap::value_type(pCluster1, association21));
             }
         }
     }
-
 
     // Second step: find the best associations A -> X and B -> Y
     ClusterAssociationMatrix intermediateAssociationMatrix;
 
     ClusterVector sortedClusters;
-    for (const auto &mapEntry : clusterAssociationMatrix) sortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterAssociationMatrix)
+        sortedClusters.push_back(mapEntry.first);
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : sortedClusters)
@@ -274,7 +276,8 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
         ClusterAssociation bestAssociationOuter(ClusterAssociation::UNDEFINED, ClusterAssociation::UNDEFINED, ClusterAssociation::NONE, 0.f);
 
         ClusterVector sortedAssociationClusters;
-        for (const auto &mapEntry : clusterAssociationMap) sortedAssociationClusters.push_back(mapEntry.first);
+        for (const auto &mapEntry : clusterAssociationMap)
+            sortedAssociationClusters.push_back(mapEntry.first);
         std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pDaughterCluster : sortedAssociationClusters)
@@ -311,16 +314,16 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
         }
 
         if (pBestClusterInner)
-            (void) intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterInner, bestAssociationInner));
+            (void)intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterInner, bestAssociationInner));
 
         if (pBestClusterOuter)
-            (void) intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterOuter, bestAssociationOuter));
+            (void)intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterOuter, bestAssociationOuter));
     }
-
 
     // Third step: make the merge if A -> X and B -> Y is in fact A -> B and B -> A
     ClusterVector intermediateSortedClusters;
-    for (const auto &mapEntry : intermediateAssociationMatrix) intermediateSortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : intermediateAssociationMatrix)
+        intermediateSortedClusters.push_back(mapEntry.first);
     std::sort(intermediateSortedClusters.begin(), intermediateSortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : intermediateSortedClusters)
@@ -328,7 +331,8 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
         const ClusterAssociationMap &parentAssociationMap(intermediateAssociationMatrix.at(pParentCluster));
 
         ClusterVector sortedAssociationClusters;
-        for (const auto &mapEntry : parentAssociationMap) sortedAssociationClusters.push_back(mapEntry.first);
+        for (const auto &mapEntry : parentAssociationMap)
+            sortedAssociationClusters.push_back(mapEntry.first);
         std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pDaughterCluster : sortedAssociationClusters)
@@ -365,26 +369,26 @@ void LongitudinalExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociatio
 
 StatusCode LongitudinalExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterMinLength", m_clusterMinLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ClusterMinLength", m_clusterMinLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterMinLayerOccupancy", m_clusterMinLayerOccupancy));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ClusterMinLayerOccupancy", m_clusterMinLayerOccupancy));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NodeMaxDisplacement", m_nodeMaxDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NodeMaxDisplacement", m_nodeMaxDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NodeMaxCosRelativeAngle", m_nodeMaxCosRelativeAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "NodeMaxCosRelativeAngle", m_nodeMaxCosRelativeAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EmissionMaxLongitudinalDisplacement", m_emissionMaxLongitudinalDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "EmissionMaxLongitudinalDisplacement", m_emissionMaxLongitudinalDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EmissionMaxTransverseDisplacement", m_emissionMaxTransverseDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "EmissionMaxTransverseDisplacement", m_emissionMaxTransverseDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EmissionMaxCosRelativeAngle", m_emissionMaxCosRelativeAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "EmissionMaxCosRelativeAngle", m_emissionMaxCosRelativeAngle));
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }

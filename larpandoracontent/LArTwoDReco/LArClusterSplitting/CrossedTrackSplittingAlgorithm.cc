@@ -43,7 +43,7 @@ StatusCode CrossedTrackSplittingAlgorithm::PreparationStep(const ClusterVector &
         allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
-            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+            (void)hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
     }
 
     HitKDTree2D kdTree;
@@ -65,7 +65,7 @@ StatusCode CrossedTrackSplittingAlgorithm::PreparationStep(const ClusterVector &
             kdTree.search(searchRegionHits, found);
 
             for (const auto &hit : found)
-                (void) m_nearbyClusters[pCluster].insert(hitToClusterMap.at(hit.data));
+                (void)m_nearbyClusters[pCluster].insert(hitToClusterMap.at(hit.data));
         }
     }
 
@@ -83,12 +83,11 @@ StatusCode CrossedTrackSplittingAlgorithm::TidyUpStep()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult1, const TwoDSlidingFitResult &slidingFitResult2,
-    CartesianVector &splitPosition, CartesianVector &firstDirection, CartesianVector &secondDirection) const
+StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidingFitResult &slidingFitResult1,
+    const TwoDSlidingFitResult &slidingFitResult2, CartesianVector &splitPosition, CartesianVector &firstDirection, CartesianVector &secondDirection) const
 {
     // Use cached results from kd-tree to avoid expensive calculations
-    if (!m_nearbyClusters.count(slidingFitResult1.GetCluster()) ||
-        !m_nearbyClusters.count(slidingFitResult2.GetCluster()) ||
+    if (!m_nearbyClusters.count(slidingFitResult1.GetCluster()) || !m_nearbyClusters.count(slidingFitResult2.GetCluster()) ||
         !m_nearbyClusters.at(slidingFitResult1.GetCluster()).count(slidingFitResult2.GetCluster()) ||
         !m_nearbyClusters.at(slidingFitResult2.GetCluster()).count(slidingFitResult1.GetCluster()))
     {
@@ -96,11 +95,11 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
     }
 
     // Identify crossed-track topology and find candidate intersection positions
-    const CartesianVector& minPosition1(slidingFitResult1.GetGlobalMinLayerPosition());
-    const CartesianVector& maxPosition1(slidingFitResult1.GetGlobalMaxLayerPosition());
+    const CartesianVector &minPosition1(slidingFitResult1.GetGlobalMinLayerPosition());
+    const CartesianVector &maxPosition1(slidingFitResult1.GetGlobalMaxLayerPosition());
 
-    const CartesianVector& minPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
-    const CartesianVector& maxPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
+    const CartesianVector &minPosition2(slidingFitResult2.GetGlobalMinLayerPosition());
+    const CartesianVector &maxPosition2(slidingFitResult2.GetGlobalMaxLayerPosition());
 
     if (LArClusterHelper::GetClosestDistance(minPosition1, slidingFitResult2.GetCluster()) < 2.f * m_maxClusterSeparation ||
         LArClusterHelper::GetClosestDistance(maxPosition1, slidingFitResult2.GetCluster()) < 2.f * m_maxClusterSeparation ||
@@ -118,7 +117,6 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
 
     if (candidateVector.empty())
         return STATUS_CODE_NOT_FOUND;
-
 
     // Loop over candidate positions and find best split position
     bool foundSplit(false);
@@ -187,7 +185,7 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
         const CartesianVector a1(B1);
         const CartesianVector a2(F1);
 
-        for (unsigned int iForward = 0; iForward<2; ++iForward)
+        for (unsigned int iForward = 0; iForward < 2; ++iForward)
         {
             const CartesianVector b1((0 == iForward) ? F2 : B2);
             const CartesianVector b2((0 == iForward) ? B2 : F2);
@@ -197,15 +195,15 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
             const CartesianVector s2((b2 - R2).GetUnitVector());
             const CartesianVector t2((R1 - a2).GetUnitVector());
 
-            if (s1.GetDotProduct(t1) < std::max(m_minCosRelativeAngle,-s1.GetDotProduct(s2)) ||
-                s2.GetDotProduct(t2) < std::max(m_minCosRelativeAngle,-t1.GetDotProduct(t2)))
+            if (s1.GetDotProduct(t1) < std::max(m_minCosRelativeAngle, -s1.GetDotProduct(s2)) ||
+                s2.GetDotProduct(t2) < std::max(m_minCosRelativeAngle, -t1.GetDotProduct(t2)))
                 continue;
 
             const CartesianVector p1((b1 - a1).GetUnitVector());
             const CartesianVector p2((b2 - a2).GetUnitVector());
 
             float mu1(0.f), mu2(0.f);
-            CartesianVector C1(0.f,0.f,0.f);
+            CartesianVector C1(0.f, 0.f, 0.f);
 
             try
             {
@@ -240,8 +238,8 @@ StatusCode CrossedTrackSplittingAlgorithm::FindBestSplitPosition(const TwoDSlidi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *const pCluster1, const Cluster *const pCluster2,
-    CartesianPointVector &candidateVector) const
+void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(
+    const Cluster *const pCluster1, const Cluster *const pCluster2, CartesianPointVector &candidateVector) const
 {
     // ATTN The following is double-double counting
     CaloHitList caloHitList1, caloHitList2;
@@ -275,15 +273,14 @@ void CrossedTrackSplittingAlgorithm::FindCandidateSplitPositions(const Cluster *
 
 StatusCode CrossedTrackSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterSeparation", m_maxClusterSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxClusterSeparation", m_maxClusterSeparation));
     m_maxClusterSeparationSquared = m_maxClusterSeparation * m_maxClusterSeparation;
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCosRelativeAngle", m_minCosRelativeAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosRelativeAngle", m_minCosRelativeAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SearchRegion1D", m_searchRegion1D));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SearchRegion1D", m_searchRegion1D));
 
     return TwoDSlidingFitSplittingAndSwitchingAlgorithm::ReadSettings(xmlHandle);
 }

@@ -19,8 +19,10 @@
 namespace lar_content
 {
 
-template<typename, unsigned int> class KDTreeLinkerAlgo;
-template<typename, unsigned int> class KDTreeNodeInfoT;
+template <typename, unsigned int>
+class KDTreeLinkerAlgo;
+template <typename, unsigned int>
+class KDTreeNodeInfoT;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -70,11 +72,11 @@ public:
          *
          *  @return boolean
          */
-        bool operator< (const VertexScore &rhs) const;
+        bool operator<(const VertexScore &rhs) const;
 
     private:
-        const pandora::Vertex  *m_pVertex;          ///< The address of the vertex
-        float                   m_score;            ///< The score
+        const pandora::Vertex *m_pVertex; ///< The address of the vertex
+        float m_score;                    ///< The score
     };
 
     typedef std::vector<VertexScore> VertexScoreList;
@@ -108,8 +110,8 @@ public:
         void SetConstants(const float minZCoordinate, const float decayConstant);
 
     private:
-        pandora::InputFloat     m_minZCoordinate;   ///< The min z coordinate
-        pandora::InputFloat     m_decayConstant;    ///< The decay constant
+        pandora::InputFloat m_minZCoordinate; ///< The min z coordinate
+        pandora::InputFloat m_decayConstant;  ///< The decay constant
     };
 
     /**
@@ -163,11 +165,11 @@ public:
         const pandora::Cluster *GetCluster() const;
 
     private:
-        pandora::CartesianVector    m_minLayerDirection;    ///< The direction of the fit at the min layer
-        pandora::CartesianVector    m_maxLayerDirection;    ///< The direction of the fit at the min layer
-        pandora::CartesianVector    m_minLayerPosition;     ///< The position of the fit at the max layer
-        pandora::CartesianVector    m_maxLayerPosition;     ///< The position of the fit at the max layer
-        const pandora::Cluster     *m_pCluster;             ///< Pointer to the corresponding cluster
+        pandora::CartesianVector m_minLayerDirection; ///< The direction of the fit at the min layer
+        pandora::CartesianVector m_maxLayerDirection; ///< The direction of the fit at the min layer
+        pandora::CartesianVector m_minLayerPosition;  ///< The position of the fit at the max layer
+        pandora::CartesianVector m_maxLayerPosition;  ///< The position of the fit at the max layer
+        const pandora::Cluster *m_pCluster;           ///< Pointer to the corresponding cluster
     };
 
     typedef std::vector<SlidingFitData> SlidingFitDataList;
@@ -211,24 +213,25 @@ public:
         pandora::CartesianPointVector GetClusterListCoordinateVector(const pandora::ClusterList &clusterList) const;
 
     private:
-        pandora::ClusterList             m_clusterList;             ///< The list of clusters
-        pandora::CartesianPointVector    m_coordinateVector;        ///< The coordinate vector
-        TwoDSlidingFitResult             m_twoDSlidingFitResult;    ///< The fit to the hits of the cluster list
+        pandora::ClusterList m_clusterList;               ///< The list of clusters
+        pandora::CartesianPointVector m_coordinateVector; ///< The coordinate vector
+        TwoDSlidingFitResult m_twoDSlidingFitResult;      ///< The fit to the hits of the cluster list
     };
 
     typedef std::vector<ShowerCluster> ShowerClusterList;
 
-    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
-    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
 
-    typedef std::map<pandora::HitType, const pandora::ClusterList &>              ClusterListMap;        ///< Map array of cluster lists for passing to tools
-    typedef std::map<pandora::HitType, const SlidingFitDataList>                  SlidingFitDataListMap; ///< Map of sliding fit data lists for passing to tools
-    typedef std::map<pandora::HitType, const ShowerClusterList>                   ShowerClusterListMap;  ///< Map of shower cluster lists for passing to tools
-    typedef std::map<pandora::HitType, const std::reference_wrapper<HitKDTree2D> > KDTreeMap;             ///< Map array of hit kd trees for passing to tools
+    typedef std::map<pandora::HitType, const pandora::ClusterList &> ClusterListMap;    ///< Map array of cluster lists for passing to tools
+    typedef std::map<pandora::HitType, const SlidingFitDataList> SlidingFitDataListMap; ///< Map of sliding fit data lists for passing to tools
+    typedef std::map<pandora::HitType, const ShowerClusterList> ShowerClusterListMap; ///< Map of shower cluster lists for passing to tools
+    typedef std::map<pandora::HitType, const std::reference_wrapper<HitKDTree2D>> KDTreeMap; ///< Map array of hit kd trees for passing to tools
 
-    typedef MvaFeatureTool<const VertexSelectionBaseAlgorithm *const, const pandora::Vertex * const, const SlidingFitDataListMap &,
-        const ClusterListMap &, const KDTreeMap &, const ShowerClusterListMap &, const float, float &>  VertexFeatureTool; ///< The base type for the vertex feature tools
+    typedef MvaFeatureTool<const VertexSelectionBaseAlgorithm *const, const pandora::Vertex *const, const SlidingFitDataListMap &,
+        const ClusterListMap &, const KDTreeMap &, const ShowerClusterListMap &, const float, float &>
+        VertexFeatureTool; ///< The base type for the vertex feature tools
 
 protected:
     /**
@@ -272,8 +275,8 @@ protected:
      *  @param  clusterListV the V-view cluster list to populate
      *  @param  clusterListW the W-view cluster list to populate
      */
-    void GetClusterLists(const pandora::StringVector &inputClusterListNames, pandora::ClusterList &clusterListU, pandora::ClusterList &clusterListV,
-        pandora::ClusterList &clusterListW) const;
+    void GetClusterLists(const pandora::StringVector &inputClusterListNames, pandora::ClusterList &clusterListU,
+        pandora::ClusterList &clusterListV, pandora::ClusterList &clusterListW) const;
 
     /**
      *  @brief  Calculate the cluster sliding fits
@@ -294,7 +297,7 @@ protected:
      *
      *  @return the score
      */
-    float GetBeamDeweightingScore(const BeamConstants &beamConstants, const pandora::Vertex * const pVertex) const;
+    float GetBeamDeweightingScore(const BeamConstants &beamConstants, const pandora::Vertex *const pVertex) const;
 
     /**
      *  @brief  Whether algorithm is running in beam mode, assuming neutrinos travel in positive z-direction
@@ -367,32 +370,32 @@ private:
     static bool SortByVertexZPosition(const pandora::Vertex *const pLhs, const pandora::Vertex *const pRhs);
 
 private:
-    pandora::StringVector   m_inputCaloHitListNames;        ///< The list of calo hit list names
-    std::string             m_outputVertexListName;         ///< The name under which to save the output vertex list
+    pandora::StringVector m_inputCaloHitListNames; ///< The list of calo hit list names
+    std::string m_outputVertexListName;            ///< The name under which to save the output vertex list
 
-    bool                    m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
+    bool m_replaceCurrentVertexList; ///< Whether to replace the current vertex list with the output list
 
-    bool                    m_beamMode;                     ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
-    float                   m_nDecayLengthsInZSpan;         ///< The number of score decay lengths to use over the course of the vertex z-span
+    bool m_beamMode;              ///< Whether to run in beam mode, assuming neutrinos travel in positive z-direction
+    float m_nDecayLengthsInZSpan; ///< The number of score decay lengths to use over the course of the vertex z-span
 
-    bool                    m_selectSingleVertex;           ///< Whether to make a final decision and select just one vertex candidate
-    unsigned int            m_maxTopScoreSelections;        ///< Max number of top-scoring vertex candidate to select for output
+    bool m_selectSingleVertex;            ///< Whether to make a final decision and select just one vertex candidate
+    unsigned int m_maxTopScoreSelections; ///< Max number of top-scoring vertex candidate to select for output
 
-    float                   m_maxOnHitDisplacement;         ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
+    float m_maxOnHitDisplacement; ///< Max hit-vertex displacement for declaring vertex to lie on a hit in each view
 
-    float                   m_minCandidateDisplacement;     ///< Ignore other top-scoring candidates located in close proximity to original
-    float                   m_minCandidateScoreFraction;    ///< Ignore other top-scoring candidates with score less than a fraction of original
+    float m_minCandidateDisplacement;  ///< Ignore other top-scoring candidates located in close proximity to original
+    float m_minCandidateScoreFraction; ///< Ignore other top-scoring candidates with score less than a fraction of original
 
-    bool                    m_useDetectorGaps;              ///< Whether to account for registered detector gaps in vertex selection
-    float                   m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
+    bool m_useDetectorGaps; ///< Whether to account for registered detector gaps in vertex selection
+    float m_gapTolerance;   ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
 
-    bool                    m_isEmptyViewAcceptable;        ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
-    unsigned int            m_minVertexAcceptableViews;     ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
+    bool m_isEmptyViewAcceptable; ///< Whether views entirely empty of hits are classed as 'acceptable' for candidate filtration
+    unsigned int m_minVertexAcceptableViews; ///< The minimum number of views in which a candidate must sit on/near a hit or in a gap (or view can be empty)
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline float VertexSelectionBaseAlgorithm::GetBeamDeweightingScore(const BeamConstants &beamConstants, const pandora::Vertex * const pVertex) const
+inline float VertexSelectionBaseAlgorithm::GetBeamDeweightingScore(const BeamConstants &beamConstants, const pandora::Vertex *const pVertex) const
 {
     const float vertexMinZ(std::max(pVertex->GetPosition().GetZ(), beamConstants.GetMinZCoordinate()));
     return (beamConstants.GetMinZCoordinate() - vertexMinZ) * beamConstants.GetDecayConstant();
@@ -430,7 +433,7 @@ inline float VertexSelectionBaseAlgorithm::VertexScore::GetScore() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool VertexSelectionBaseAlgorithm::VertexScore::operator< (const VertexScore &rhs) const
+inline bool VertexSelectionBaseAlgorithm::VertexScore::operator<(const VertexScore &rhs) const
 {
     return (this->GetScore() > rhs.GetScore());
 }

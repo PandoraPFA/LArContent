@@ -23,15 +23,15 @@ public:
         const pandora::CaloHitVector &inputTwoDHits, ProtoHitVector &protoHitVector);
 
 private:
-     /**
+    /**
      *  @brief  Create three dimensional hits, using a list of input two dimensional hits and the 3D hits from the parent particle
      *
      *  @param  inputTwoDHits the vector of input two dimensional hits
      *  @param  parentHits3D the vector of 3D hits from the parent particle
      *  @param  protoHitVector to receive the new three dimensional proto hits
      */
-    void CreateDeltaRayShowerHits3D(const pandora::CaloHitVector &inputTwoDHits, const pandora::CaloHitVector &parentHits3D,
-        ProtoHitVector &protoHitVector) const;
+    void CreateDeltaRayShowerHits3D(
+        const pandora::CaloHitVector &inputTwoDHits, const pandora::CaloHitVector &parentHits3D, ProtoHitVector &protoHitVector) const;
 };
 
 } // namespace lar_content

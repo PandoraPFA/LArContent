@@ -64,7 +64,8 @@ private:
      *  @param  clusterVectorV the clusters in the v view
      *  @param  clusterVectorW the clusters in the w view
      */
-    void CreateCrossingCandidates(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV, const pandora::ClusterVector &clusterVectorW) const;
+    void CreateCrossingCandidates(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
+        const pandora::ClusterVector &clusterVectorW) const;
 
     /**
      *  @brief  Identify where (extrapolated) clusters plausibly cross in 2D
@@ -125,33 +126,33 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianPointVector> ClusterToSpacepointsMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::CartesianPointVector> ClusterToSpacepointsMap;
 
-    pandora::StringVector   m_inputClusterListNames;            ///< The list of cluster list names
-    std::string             m_outputVertexListName;             ///< The name under which to save the output vertex list
-    bool                    m_replaceCurrentVertexList;         ///< Whether to replace the current vertex list with the output list
+    pandora::StringVector m_inputClusterListNames; ///< The list of cluster list names
+    std::string m_outputVertexListName;            ///< The name under which to save the output vertex list
+    bool m_replaceCurrentVertexList;               ///< Whether to replace the current vertex list with the output list
 
-    unsigned int            m_slidingFitWindow;                 ///< The layer window for the sliding linear fits
-    TwoDSlidingFitResultMap m_slidingFitResultMap;              ///< The sliding fit result map
+    unsigned int m_slidingFitWindow;               ///< The layer window for the sliding linear fits
+    TwoDSlidingFitResultMap m_slidingFitResultMap; ///< The sliding fit result map
 
-    unsigned int            m_minClusterCaloHits;               ///< The min number of hits in base cluster selection method
-    float                   m_minClusterLengthSquared;          ///< The min length (squared) in base cluster selection method
-    float                   m_chiSquaredCut;                    ///< The chi squared cut (accept only 3D vertex positions with values below cut)
+    unsigned int m_minClusterCaloHits; ///< The min number of hits in base cluster selection method
+    float m_minClusterLengthSquared;   ///< The min length (squared) in base cluster selection method
+    float m_chiSquaredCut;             ///< The chi squared cut (accept only 3D vertex positions with values below cut)
 
-    bool                    m_enableEndpointCandidates;         ///< Whether to create endpoint-based candidates
-    float                   m_maxEndpointXDiscrepancy;          ///< The max cluster endpoint discrepancy
+    bool m_enableEndpointCandidates; ///< Whether to create endpoint-based candidates
+    float m_maxEndpointXDiscrepancy; ///< The max cluster endpoint discrepancy
 
-    bool                    m_enableCrossingCandidates;         ///< Whether to create crossing vertex candidates
-    unsigned int            m_nMaxCrossingCandidates;           ///< The max number of crossing candidates to create
-    float                   m_maxCrossingXDiscrepancy;          ///< The max cluster endpoint discrepancy
-    unsigned int            m_extrapolationNSteps;              ///< Number of extrapolation steps, at each end of cluster, of specified size
-    float                   m_extrapolationStepSize;            ///< The extrapolation step size in cm
-    float                   m_maxCrossingSeparationSquared;     ///< The separation (squared) between spacepoints below which a crossing can be identified
-    float                   m_minNearbyCrossingDistanceSquared; ///< The minimum allowed distance between identified crossing positions
+    bool m_enableCrossingCandidates;          ///< Whether to create crossing vertex candidates
+    unsigned int m_nMaxCrossingCandidates;    ///< The max number of crossing candidates to create
+    float m_maxCrossingXDiscrepancy;          ///< The max cluster endpoint discrepancy
+    unsigned int m_extrapolationNSteps;       ///< Number of extrapolation steps, at each end of cluster, of specified size
+    float m_extrapolationStepSize;            ///< The extrapolation step size in cm
+    float m_maxCrossingSeparationSquared;     ///< The separation (squared) between spacepoints below which a crossing can be identified
+    float m_minNearbyCrossingDistanceSquared; ///< The minimum allowed distance between identified crossing positions
 
-    bool                    m_reducedCandidates;                ///< Whether to reduce the number of candidates
-    float                   m_selectionCutFactorMax;            ///< Maximum factor to multiply the base cluster selection cuts
-    float                   m_nClustersPassingMaxCutsPar;       ///< Parameter for number of clusters passing the max base cluster selection cuts
+    bool m_reducedCandidates;           ///< Whether to reduce the number of candidates
+    float m_selectionCutFactorMax;      ///< Maximum factor to multiply the base cluster selection cuts
+    float m_nClustersPassingMaxCutsPar; ///< Parameter for number of clusters passing the max base cluster selection cuts
 };
 
 } // namespace lar_content

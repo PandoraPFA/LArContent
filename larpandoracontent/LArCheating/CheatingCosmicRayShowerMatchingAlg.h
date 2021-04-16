@@ -40,8 +40,8 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_inputPfoListName;           ///< The input pfo list name
-    pandora::StringVector   m_inputClusterListNames;      ///< The input cluster list names
+    std::string m_inputPfoListName;                ///< The input pfo list name
+    pandora::StringVector m_inputClusterListNames; ///< The input cluster list names
 };
 
 } // namespace lar_content

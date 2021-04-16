@@ -89,8 +89,8 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(const Cluster *const pCluster
     const ClusterList clusterList(1, pCluster);
     std::string clusterListToSaveName, clusterListToDeleteName;
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName,
-        clusterListToSaveName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDeleteName, clusterListToSaveName));
 
     // Create new clusters
     const Cluster *pFirstCluster(NULL), *pSecondCluster(NULL);
@@ -110,8 +110,8 @@ StatusCode ClusterSplittingAlgorithm::SplitCluster(const Cluster *const pCluster
 
 StatusCode ClusterSplittingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNames", m_inputClusterListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
     return STATUS_CODE_SUCCESS;
 }

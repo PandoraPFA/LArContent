@@ -70,7 +70,8 @@ void ConeClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
 
             const HitType hitType(LArClusterHelper::GetClusterHitType(pPfoCluster));
             const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
-            const bool vertexAtMinL((vertexPosition2D - minLayerPositionOnAxis).GetMagnitudeSquared() < (vertexPosition2D - maxLayerPositionOnAxis).GetMagnitudeSquared());
+            const bool vertexAtMinL((vertexPosition2D - minLayerPositionOnAxis).GetMagnitudeSquared() <
+                                    (vertexPosition2D - maxLayerPositionOnAxis).GetMagnitudeSquared());
 
             // Cone edges
             CoordinateList coordinateListP, coordinateListN;
@@ -94,12 +95,14 @@ void ConeClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, con
             std::sort(coordinateListN.begin(), coordinateListN.end(), ConeClusterMopUpAlgorithm::SortCoordinates);
 
             const Coordinate maxP(coordinateListP.at(m_coneAngleCentile * coordinateListP.size()));
-            const Coordinate minP(vertexAtMinL ? Coordinate(layerFitResultMapP.begin()->second.GetL(), layerFitResultMapP.begin()->second.GetFitT()) :
-                Coordinate(layerFitResultMapP.rbegin()->second.GetL(), layerFitResultMapP.rbegin()->second.GetFitT()));
+            const Coordinate minP(vertexAtMinL
+                                      ? Coordinate(layerFitResultMapP.begin()->second.GetL(), layerFitResultMapP.begin()->second.GetFitT())
+                                      : Coordinate(layerFitResultMapP.rbegin()->second.GetL(), layerFitResultMapP.rbegin()->second.GetFitT()));
 
             const Coordinate maxN(coordinateListN.at((1.f - m_coneAngleCentile) * coordinateListN.size()));
-            const Coordinate minN(vertexAtMinL ? Coordinate(layerFitResultMapN.begin()->second.GetL(), layerFitResultMapN.begin()->second.GetFitT()) :
-                Coordinate(layerFitResultMapN.rbegin()->second.GetL(), layerFitResultMapN.rbegin()->second.GetFitT()));
+            const Coordinate minN(vertexAtMinL
+                                      ? Coordinate(layerFitResultMapN.begin()->second.GetL(), layerFitResultMapN.begin()->second.GetFitT())
+                                      : Coordinate(layerFitResultMapN.rbegin()->second.GetL(), layerFitResultMapN.rbegin()->second.GetFitT()));
 
             const float minL(layerFitResultMapS.begin()->second.GetL());
             const float maxL(minL + m_maxConeLengthMultiplier * std::fabs(layerFitResultMapS.rbegin()->second.GetL() - minL));
@@ -171,20 +174,20 @@ bool ConeClusterMopUpAlgorithm::SortCoordinates(const Coordinate &lhs, const Coo
 
 StatusCode ConeClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerEdgeMultiplier", m_showerEdgeMultiplier));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowerEdgeMultiplier", m_showerEdgeMultiplier));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ConeAngleCentile", m_coneAngleCentile));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConeAngleCentile", m_coneAngleCentile));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinBoundedFraction", m_minBoundedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinBoundedFraction", m_minBoundedFraction));
 
     return ClusterMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }

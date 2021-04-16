@@ -50,9 +50,9 @@ private:
          */
         int GetBin(const float x) const;
 
-        float     m_minX;          ///< The min x value
-        float     m_maxX;          ///< The max x value
-        int       m_nPoints;       ///< The number of sampling points to be used
+        float m_minX;  ///< The min x value
+        float m_maxX;  ///< The max x value
+        int m_nPoints; ///< The number of sampling points to be used
     };
 
     void ClusterMopUp(const pandora::ClusterList &pfoClusters, const pandora::ClusterList &remnantClusters) const;
@@ -79,9 +79,9 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int    m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    float           m_showerEdgeMultiplier;         ///< Artificially tune width of shower envelope so as to make it more/less inclusive
-    float           m_minBoundedFraction;           ///< The minimum cluster bounded fraction for merging
+    unsigned int m_slidingFitWindow; ///< The layer window for the sliding linear fits
+    float m_showerEdgeMultiplier;    ///< Artificially tune width of shower envelope so as to make it more/less inclusive
+    float m_minBoundedFraction;      ///< The minimum cluster bounded fraction for merging
 };
 
 } // namespace lar_content

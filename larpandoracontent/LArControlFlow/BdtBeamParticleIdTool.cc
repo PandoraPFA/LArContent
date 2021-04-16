@@ -73,13 +73,15 @@ StatusCode BdtBeamParticleIdTool::Initialize()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
+void BdtBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses,
+    const SliceHypotheses &crSliceHypotheses, PfoList &selectedPfos)
 {
     if (nuSliceHypotheses.size() != crSliceHypotheses.size())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
     const unsigned int nSlices(nuSliceHypotheses.size());
-    if (nSlices == 0) return;
+    if (nSlices == 0)
+        return;
 
     SliceFeaturesVector sliceFeaturesVector;
     this->GetSliceFeatures(nuSliceHypotheses, crSliceHypotheses, sliceFeaturesVector);
@@ -95,7 +97,8 @@ void BdtBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const pAl
         for (unsigned int sliceIndex = 0; sliceIndex < nSlices; ++sliceIndex)
         {
             const SliceFeatures &features(sliceFeaturesVector.at(sliceIndex));
-            if (!features.IsFeatureVectorAvailable()) continue;
+            if (!features.IsFeatureVectorAvailable())
+                continue;
 
             LArMvaHelper::MvaFeatureVector featureVector;
 
@@ -124,7 +127,8 @@ void BdtBeamParticleIdTool::SelectOutputPfos(const pandora::Algorithm *const pAl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::GetSliceFeatures(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const
+void BdtBeamParticleIdTool::GetSliceFeatures(
+    const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, SliceFeaturesVector &sliceFeaturesVector) const
 {
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
         sliceFeaturesVector.push_back(SliceFeatures(nuSliceHypotheses.at(sliceIndex), crSliceHypotheses.at(sliceIndex), m_sliceFeatureParameters));
@@ -156,7 +160,8 @@ void BdtBeamParticleIdTool::SelectPfos(const PfoList &pfos, PfoList &selectedPfo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::GetBestMCSliceIndices(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::IntVector &bestSliceIndices) const
+void BdtBeamParticleIdTool::GetBestMCSliceIndices(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses,
+    const SliceHypotheses &crSliceHypotheses, pandora::IntVector &bestSliceIndices) const
 {
     // Get all hits in all slices to find true number of mc hits
     const CaloHitList *pAllReconstructedCaloHitList(nullptr);
@@ -172,7 +177,8 @@ void BdtBeamParticleIdTool::GetBestMCSliceIndices(const pandora::Algorithm *cons
     // Remove non-reconstructable hits, e.g. those downstream of a neutron
     CaloHitList reconstructableCaloHitList;
     LArMCParticleHelper::PrimaryParameters parameters;
-    LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList, parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
+    LArMCParticleHelper::SelectCaloHits(pAllReconstructedCaloHitList, mcToPrimaryMCMap, reconstructableCaloHitList,
+        parameters.m_selectInputHits, parameters.m_maxPhotonPropagation);
 
     MCParticleToIntMap mcParticleToReconstructableHitsMap;
     this->PopulateMCParticleToHitsMap(mcParticleToReconstructableHitsMap, reconstructableCaloHitList);
@@ -282,14 +288,16 @@ void BdtBeamParticleIdTool::Collect2DHits(const PfoList &pfos, CaloHitList &reco
 
 bool BdtBeamParticleIdTool::PassesQualityCuts(const float purity, const float completeness) const
 {
-    if ((purity < m_minPurity) || (completeness < m_minCompleteness)) return false;
+    if ((purity < m_minPurity) || (completeness < m_minCompleteness))
+        return false;
 
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::SelectPfosByAdaBDTScore(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos) const
+void BdtBeamParticleIdTool::SelectPfosByAdaBDTScore(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses,
+    const SliceHypotheses &crSliceHypotheses, const SliceFeaturesVector &sliceFeaturesVector, PfoList &selectedPfos) const
 {
     // Calculate the probability of each slice that passes the minimum probability cut
     std::vector<UintFloatPair> sliceIndexAdaBDTScorePairs;
@@ -321,10 +329,8 @@ void BdtBeamParticleIdTool::SelectPfosByAdaBDTScore(const pandora::Algorithm *co
     }
 
     // Sort the slices by probability
-    std::sort(sliceIndexAdaBDTScorePairs.begin(), sliceIndexAdaBDTScorePairs.end(), [] (const UintFloatPair &a, const UintFloatPair &b)
-    {
-        return (a.second > b.second);
-    });
+    std::sort(sliceIndexAdaBDTScorePairs.begin(), sliceIndexAdaBDTScorePairs.end(),
+        [](const UintFloatPair &a, const UintFloatPair &b) { return (a.second > b.second); });
 
     // Select the first m_maxNeutrinos as neutrinos, and the rest as cosmic
     unsigned int nNuSlices(0);
@@ -396,7 +402,8 @@ BdtBeamParticleIdTool::SliceFeatureParameters::SliceFeatureParameters() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::SliceFeatureParameters::Initialize(const float larTPCMinX, const float larTPCMaxX, const float larTPCMinY, const float larTPCMaxY, const float larTPCMinZ, const float larTPCMaxZ)
+void BdtBeamParticleIdTool::SliceFeatureParameters::Initialize(const float larTPCMinX, const float larTPCMaxX, const float larTPCMinY,
+    const float larTPCMaxY, const float larTPCMinZ, const float larTPCMaxZ)
 {
     m_larTPCMinX = larTPCMinX;
     m_larTPCMaxX = larTPCMaxX;
@@ -429,8 +436,10 @@ BdtBeamParticleIdTool::SliceFeatures::SliceFeatures(const PfoList &pfosNu, const
 {
     try
     {
-        double closestDistanceNu(std::numeric_limits<double>::max()), closestDistanceCr(std::numeric_limits<double>::max()), supplementaryAngleToBeamNu(std::numeric_limits<double>::max()),
-               supplementaryAngleToBeamCr(std::numeric_limits<double>::max()), separationNu(std::numeric_limits<double>::max()), separationCr(std::numeric_limits<double>::max());;
+        double closestDistanceNu(std::numeric_limits<double>::max()), closestDistanceCr(std::numeric_limits<double>::max()),
+            supplementaryAngleToBeamNu(std::numeric_limits<double>::max()), supplementaryAngleToBeamCr(std::numeric_limits<double>::max()),
+            separationNu(std::numeric_limits<double>::max()), separationCr(std::numeric_limits<double>::max());
+        ;
         CaloHitList caloHitList3DNu, caloHitList3DCr, selectedCaloHitListNu, selectedCaloHitListCr;
         PfoList allConnectedPfoListNu, allConnectedPfoListCr;
         LArPcaHelper::EigenValues eigenValuesNu(0.f, 0.f, 0.f);
@@ -447,7 +456,8 @@ BdtBeamParticleIdTool::SliceFeatures::SliceFeatures(const PfoList &pfosNu, const
         if (!selectedCaloHitListNu.empty() && !selectedCaloHitListCr.empty())
         {
             float maxYNu(-std::numeric_limits<float>::max()), maxYCr(-std::numeric_limits<float>::max());
-            CartesianVector centroidNu(0.f, 0.f, 0.f), interceptOneNu(0.f, 0.f, 0.f), interceptTwoNu(0.f, 0.f, 0.f), centroidCr(0.f, 0.f, 0.f), interceptOneCr(0.f, 0.f, 0.f), interceptTwoCr(0.f, 0.f, 0.f);
+            CartesianVector centroidNu(0.f, 0.f, 0.f), interceptOneNu(0.f, 0.f, 0.f), interceptTwoNu(0.f, 0.f, 0.f),
+                centroidCr(0.f, 0.f, 0.f), interceptOneCr(0.f, 0.f, 0.f), interceptTwoCr(0.f, 0.f, 0.f);
 
             // Beam
             LArPcaHelper::EigenVectors eigenVecsNu;
@@ -512,8 +522,8 @@ BdtBeamParticleIdTool::SliceFeatures::SliceFeatures(const PfoList &pfosNu, const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::SliceFeatures::GetLeadingCaloHits(const CaloHitList &inputCaloHitList, CaloHitList &outputCaloHitList,
-    double &closestHitToFaceDistance) const
+void BdtBeamParticleIdTool::SliceFeatures::GetLeadingCaloHits(
+    const CaloHitList &inputCaloHitList, CaloHitList &outputCaloHitList, double &closestHitToFaceDistance) const
 {
     if (inputCaloHitList.empty())
     {
@@ -521,14 +531,16 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLeadingCaloHits(const CaloHitList 
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
     }
 
-    typedef std::pair<const CaloHit*, float> HitDistancePair;
+    typedef std::pair<const CaloHit *, float> HitDistancePair;
     typedef std::vector<HitDistancePair> HitDistanceVector;
     HitDistanceVector hitDistanceVector;
 
     for (const CaloHit *const pCaloHit : inputCaloHitList)
-        hitDistanceVector.emplace_back(pCaloHit, (pCaloHit->GetPositionVector() - m_sliceFeatureParameters.GetBeamLArTPCIntersection()).GetMagnitudeSquared());
+        hitDistanceVector.emplace_back(
+            pCaloHit, (pCaloHit->GetPositionVector() - m_sliceFeatureParameters.GetBeamLArTPCIntersection()).GetMagnitudeSquared());
 
-    std::sort(hitDistanceVector.begin(), hitDistanceVector.end(), [](const HitDistancePair &lhs, const HitDistancePair &rhs) -> bool {return (lhs.second < rhs.second);});
+    std::sort(hitDistanceVector.begin(), hitDistanceVector.end(),
+        [](const HitDistancePair &lhs, const HitDistancePair &rhs) -> bool { return (lhs.second < rhs.second); });
 
     if (hitDistanceVector.front().second < 0.f)
     {
@@ -539,8 +551,10 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLeadingCaloHits(const CaloHitList 
     closestHitToFaceDistance = std::sqrt(hitDistanceVector.front().second);
 
     const unsigned int nInputHits(inputCaloHitList.size());
-    const unsigned int nSelectedCaloHits(nInputHits < m_sliceFeatureParameters.GetNSelectedHits() ? nInputHits :
-        static_cast<unsigned int>(std::ceil(static_cast<float>(nInputHits) * m_sliceFeatureParameters.GetSelectedFraction() / 100.f)));
+    const unsigned int nSelectedCaloHits(
+        nInputHits < m_sliceFeatureParameters.GetNSelectedHits()
+            ? nInputHits
+            : static_cast<unsigned int>(std::ceil(static_cast<float>(nInputHits) * m_sliceFeatureParameters.GetSelectedFraction() / 100.f)));
 
     for (const HitDistancePair &hitDistancePair : hitDistanceVector)
     {
@@ -553,8 +567,8 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLeadingCaloHits(const CaloHitList 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(const CartesianVector &a0, const CartesianVector &lineDirection,
-    CartesianVector &interceptOne, CartesianVector &interceptTwo) const
+void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(
+    const CartesianVector &a0, const CartesianVector &lineDirection, CartesianVector &interceptOne, CartesianVector &interceptTwo) const
 {
     CartesianPointVector intercepts;
     CartesianVector lineUnitVector(0.f, 0.f, 0.f);
@@ -602,13 +616,15 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(const CartesianVe
 
         if (!interceptsSet)
         {
-            std::cout << "BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts - unable to set the intercepts between a line and the LArTPC" << std::endl;
+            std::cout << "BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts - unable to set the intercepts between a line and the LArTPC"
+                      << std::endl;
             throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
         }
     }
     else
     {
-        std::cout << "BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts - inconsistent number of intercepts between a line and the LArTPC" << std::endl;
+        std::cout << "BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts - inconsistent number of intercepts between a line and the LArTPC"
+                  << std::endl;
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
     }
 }
@@ -617,9 +633,12 @@ void BdtBeamParticleIdTool::SliceFeatures::GetLArTPCIntercepts(const CartesianVe
 
 bool BdtBeamParticleIdTool::SliceFeatures::IsContained(const CartesianVector &spacePoint, const float limit) const
 {
-    if ((m_sliceFeatureParameters.GetLArTPCMinX() - spacePoint.GetX() > limit) || (spacePoint.GetX() - m_sliceFeatureParameters.GetLArTPCMaxX() > limit) ||
-        (m_sliceFeatureParameters.GetLArTPCMinY() - spacePoint.GetY() > limit) || (spacePoint.GetY() - m_sliceFeatureParameters.GetLArTPCMaxY() > limit) ||
-        (m_sliceFeatureParameters.GetLArTPCMinZ() - spacePoint.GetZ() > limit) || (spacePoint.GetZ() - m_sliceFeatureParameters.GetLArTPCMaxZ() > limit))
+    if ((m_sliceFeatureParameters.GetLArTPCMinX() - spacePoint.GetX() > limit) ||
+        (spacePoint.GetX() - m_sliceFeatureParameters.GetLArTPCMaxX() > limit) ||
+        (m_sliceFeatureParameters.GetLArTPCMinY() - spacePoint.GetY() > limit) ||
+        (spacePoint.GetY() - m_sliceFeatureParameters.GetLArTPCMaxY() > limit) ||
+        (m_sliceFeatureParameters.GetLArTPCMinZ() - spacePoint.GetZ() > limit) ||
+        (spacePoint.GetZ() - m_sliceFeatureParameters.GetLArTPCMaxZ() > limit))
     {
         return false;
     }
@@ -649,7 +668,8 @@ float BdtBeamParticleIdTool::SliceFeatures::GetAdaBoostDecisionTreeScore(const A
 {
     // ATTN if one or more of the features can not be calculated, then default to calling the slice a cosmic ray.  -1.f is the minimum score
     // possible for a weighted bdt.
-    if (!this->IsFeatureVectorAvailable()) return -1.f;
+    if (!this->IsFeatureVectorAvailable())
+        return -1.f;
 
     LArMvaHelper::MvaFeatureVector featureVector;
 
@@ -672,32 +692,25 @@ float BdtBeamParticleIdTool::SliceFeatures::GetAdaBoostDecisionTreeScore(const A
 StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     // BDT Settings
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseTrainingMode", m_useTrainingMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseTrainingMode", m_useTrainingMode));
 
     if (m_useTrainingMode)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "TrainingOutputFileName", m_trainingOutputFile));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrainingOutputFileName", m_trainingOutputFile));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "CaloHitListName", m_caloHitListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "MCParticleListName", m_mcParticleListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     }
     else
     {
         std::string bdtName;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "BdtName", bdtName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "BdtName", bdtName));
 
         std::string bdtFileName;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "BdtFileName", bdtFileName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "BdtFileName", bdtFileName));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "MinAdaBDTScore", m_minAdaBDTScore));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MinAdaBDTScore", m_minAdaBDTScore));
 
         const std::string fullBdtFileName(LArFileHelper::FindFileInPath(bdtFileName, m_filePathEnvironmentVariable));
         const StatusCode statusCode(m_adaBoostDecisionTree.Initialize(fullBdtFileName, bdtName));
@@ -709,26 +722,25 @@ StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
         }
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinimumPurity", m_minPurity));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumPurity", m_minPurity));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinimumCompleteness", m_minCompleteness));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumCompleteness", m_minCompleteness));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaximumNeutrinos", m_maxNeutrinos));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximumNeutrinos", m_maxNeutrinos));
 
     // Geometry Information for training
     FloatVector beamLArTPCIntersection;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "BeamTPCIntersection", beamLArTPCIntersection));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "BeamTPCIntersection", beamLArTPCIntersection));
 
     if (3 == beamLArTPCIntersection.size())
     {
-        pandora::CartesianVector beamLArTPCIntersectionCartesianVector(beamLArTPCIntersection.at(0), beamLArTPCIntersection.at(1), beamLArTPCIntersection.at(2));
+        pandora::CartesianVector beamLArTPCIntersectionCartesianVector(
+            beamLArTPCIntersection.at(0), beamLArTPCIntersection.at(1), beamLArTPCIntersection.at(2));
         m_sliceFeatureParameters.SetBeamLArTPCIntersection(beamLArTPCIntersectionCartesianVector);
     }
     else if (!beamLArTPCIntersection.empty())
@@ -744,8 +756,8 @@ StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
     }
 
     FloatVector beamDirection;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "BeamDirection", beamDirection));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "BeamDirection", beamDirection));
 
     if (3 == beamDirection.size())
     {
@@ -767,24 +779,21 @@ StatusCode BdtBeamParticleIdTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     float selectedFraction(0.f);
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectedFraction", selectedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SelectedFraction", selectedFraction));
 
     if (selectedFraction > std::numeric_limits<float>::epsilon())
         m_sliceFeatureParameters.SetSelectedFraction(selectedFraction);
 
     unsigned int nSelectedHits(0);
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NSelectedHits", nSelectedHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NSelectedHits", nSelectedHits));
 
     if (nSelectedHits > 0)
         m_sliceFeatureParameters.SetNSelectedHits(nSelectedHits);
 
     float containmentLimit(0.f);
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ContainmentLimit", containmentLimit));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ContainmentLimit", containmentLimit));
 
     if (containmentLimit < 0.f)
     {

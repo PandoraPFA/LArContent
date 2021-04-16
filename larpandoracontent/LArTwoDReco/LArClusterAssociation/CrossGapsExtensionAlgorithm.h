@@ -70,11 +70,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float   m_minClusterLength;               ///<
-    float   m_minGapFraction;                 ///<
-    float   m_maxGapTolerance;                ///<
-    float   m_maxTransverseDisplacement;      ///<
-    float   m_maxRelativeAngle;               ///<
+    float m_minClusterLength;          ///<
+    float m_minGapFraction;            ///<
+    float m_maxGapTolerance;           ///<
+    float m_maxTransverseDisplacement; ///<
+    float m_maxRelativeAngle;          ///<
 };
 
 } // namespace lar_content

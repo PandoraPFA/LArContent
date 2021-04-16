@@ -65,10 +65,10 @@ void BoundedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void BoundedClusterMopUpAlgorithm::GetShowerPositionMap(const TwoDSlidingShowerFitResult &fitResult, const XSampling &xSampling,
-    ShowerPositionMap &showerPositionMap) const
+void BoundedClusterMopUpAlgorithm::GetShowerPositionMap(
+    const TwoDSlidingShowerFitResult &fitResult, const XSampling &xSampling, ShowerPositionMap &showerPositionMap) const
 {
-    for (int n=0; n <= xSampling.m_nPoints; ++n)
+    for (int n = 0; n <= xSampling.m_nPoints; ++n)
     {
         const float x(xSampling.m_minX + (xSampling.m_maxX - xSampling.m_minX) * static_cast<float>(n) / static_cast<float>(xSampling.m_nPoints));
 
@@ -93,10 +93,10 @@ void BoundedClusterMopUpAlgorithm::GetShowerPositionMap(const TwoDSlidingShowerF
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float BoundedClusterMopUpAlgorithm::GetBoundedFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &showerPositionMap) const
+float BoundedClusterMopUpAlgorithm::GetBoundedFraction(
+    const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMap &showerPositionMap) const
 {
-  if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) || (0 >= xSampling.m_nPoints) ||
-      (0 == pCluster->GetNCaloHits()))
+    if (((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon()) || (0 >= xSampling.m_nPoints) || (0 == pCluster->GetNCaloHits()))
     {
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
@@ -158,14 +158,14 @@ int BoundedClusterMopUpAlgorithm::XSampling::GetBin(const float x) const
 
 StatusCode BoundedClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerEdgeMultiplier", m_showerEdgeMultiplier));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowerEdgeMultiplier", m_showerEdgeMultiplier));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinBoundedFraction", m_minBoundedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinBoundedFraction", m_minBoundedFraction));
 
     return ClusterMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }

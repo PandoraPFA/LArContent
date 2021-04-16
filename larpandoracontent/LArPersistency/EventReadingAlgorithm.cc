@@ -26,6 +26,7 @@ namespace lar_content
 EventReadingAlgorithm::EventReadingAlgorithm() :
     m_skipToEvent(0),
     m_useLArCaloHits(true),
+    m_larCaloHitVersion(1),
     m_useLArMCParticles(true),
     m_pEventFileReader(nullptr)
 {
@@ -137,7 +138,7 @@ StatusCode EventReadingAlgorithm::ReplaceEventFileReader(const std::string &file
     }
 
     if (m_useLArCaloHits)
-        m_pEventFileReader->SetFactory(new LArCaloHitFactory);
+        m_pEventFileReader->SetFactory(new LArCaloHitFactory(m_larCaloHitVersion));
 
     if (m_useLArMCParticles)
         m_pEventFileReader->SetFactory(new LArMCParticleFactory);
@@ -175,7 +176,7 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     if (this->ExternalParametersPresent())
     {
-        pExternalParameters = dynamic_cast<ExternalEventReadingParameters*>(this->GetExternalParameters());
+        pExternalParameters = dynamic_cast<ExternalEventReadingParameters *>(this->GetExternalParameters());
 
         if (!pExternalParameters)
             return STATUS_CODE_FAILURE;
@@ -187,7 +188,8 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
     else
     {
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GeometryFileName", m_geometryFileName));
+        PANDORA_RETURN_RESULT_IF_AND_IF(
+            STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GeometryFileName", m_geometryFileName));
     }
 
     if (pExternalParameters && !pExternalParameters->m_eventFileNameList.empty())
@@ -196,7 +198,8 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     }
     else
     {
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "EventFileNameList", m_eventFileNameVector));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+            XmlHelper::ReadVectorOfValues(xmlHandle, "EventFileNameList", m_eventFileNameVector));
     }
 
     if (!m_eventFileNameVector.empty())
@@ -221,11 +224,13 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         return STATUS_CODE_NOT_INITIALIZED;
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseLArCaloHits", m_useLArCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArCaloHits", m_useLArCaloHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseLArMCParticles", m_useLArMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArMCParticles", m_useLArMCParticles));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -131,27 +131,29 @@ double LArRotationalTransformationPlugin::YZtoW(const double y, const double z) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU, const double sigmaV,
-    const double sigmaW, double &y, double &z, double &chiSquared) const
+void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const double v, const double w, const double sigmaU,
+    const double sigmaV, const double sigmaW, double &y, double &z, double &chiSquared) const
 {
     const double sigmaU2(sigmaU * sigmaU), sigmaV2(sigmaV * sigmaV), sigmaW2(sigmaW * sigmaW);
 
     // Obtain expression for chi2, differentiate wrt y and z, set both results to zero and solve simultaneously. Here just paste-in result.
     y = (sigmaW2 * v * m_cosU * m_cosV * m_sinU - sigmaW2 * u * m_cosV * m_cosV * m_sinU + sigmaV2 * w * m_cosU * m_cosW * m_sinU -
-         sigmaV2 * u * m_cosW * m_cosW * m_sinU - sigmaW2 * v * m_cosU * m_cosU * m_sinV + sigmaW2 * u * m_cosU * m_cosV * m_sinV +
-         sigmaU2 * w * m_cosV * m_cosW * m_sinV - sigmaU2 * v * m_cosW * m_cosW * m_sinV - sigmaV2 * w * m_cosU * m_cosU * m_sinW -
-         sigmaU2 * w * m_cosV * m_cosV * m_sinW + sigmaV2 * u * m_cosU * m_cosW * m_sinW + sigmaU2 * v * m_cosV * m_cosW * m_sinW) /
+            sigmaV2 * u * m_cosW * m_cosW * m_sinU - sigmaW2 * v * m_cosU * m_cosU * m_sinV + sigmaW2 * u * m_cosU * m_cosV * m_sinV +
+            sigmaU2 * w * m_cosV * m_cosW * m_sinV - sigmaU2 * v * m_cosW * m_cosW * m_sinV - sigmaV2 * w * m_cosU * m_cosU * m_sinW -
+            sigmaU2 * w * m_cosV * m_cosV * m_sinW + sigmaV2 * u * m_cosU * m_cosW * m_sinW + sigmaU2 * v * m_cosV * m_cosW * m_sinW) /
         (sigmaW2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaV2 * m_cosW * m_cosW * m_sinU * m_sinU - 2. * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV +
-         sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * m_cosW * m_cosW * m_sinV * m_sinV - 2. * sigmaV2 * m_cosU * m_cosW * m_sinU * m_sinW -
-         2. * sigmaU2 * m_cosV * m_cosW * m_sinV * m_sinW + sigmaV2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaU2 * m_cosV * m_cosV * m_sinW * m_sinW);
+            sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * m_cosW * m_cosW * m_sinV * m_sinV -
+            2. * sigmaV2 * m_cosU * m_cosW * m_sinU * m_sinW - 2. * sigmaU2 * m_cosV * m_cosW * m_sinV * m_sinW +
+            sigmaV2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaU2 * m_cosV * m_cosV * m_sinW * m_sinW);
 
     z = (sigmaW2 * v * m_cosV * m_sinU * m_sinU + sigmaV2 * w * m_cosW * m_sinU * m_sinU - sigmaW2 * v * m_cosU * m_sinU * m_sinV -
-         sigmaW2 * u * m_cosV * m_sinU * m_sinV + sigmaW2 * u * m_cosU * m_sinV * m_sinV + sigmaU2 * w * m_cosW * m_sinV * m_sinV -
-         sigmaV2 * w * m_cosU * m_sinU * m_sinW - sigmaV2 * u * m_cosW * m_sinU * m_sinW - sigmaU2 * w * m_cosV * m_sinV * m_sinW -
-         sigmaU2 * v * m_cosW * m_sinV * m_sinW + sigmaV2 * u * m_cosU * m_sinW * m_sinW + sigmaU2 * v * m_cosV * m_sinW * m_sinW) /
+            sigmaW2 * u * m_cosV * m_sinU * m_sinV + sigmaW2 * u * m_cosU * m_sinV * m_sinV + sigmaU2 * w * m_cosW * m_sinV * m_sinV -
+            sigmaV2 * w * m_cosU * m_sinU * m_sinW - sigmaV2 * u * m_cosW * m_sinU * m_sinW - sigmaU2 * w * m_cosV * m_sinV * m_sinW -
+            sigmaU2 * v * m_cosW * m_sinV * m_sinW + sigmaV2 * u * m_cosU * m_sinW * m_sinW + sigmaU2 * v * m_cosV * m_sinW * m_sinW) /
         (sigmaW2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaV2 * m_cosW * m_cosW * m_sinU * m_sinU - 2. * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV +
-         sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * m_cosW * m_cosW * m_sinV * m_sinV - 2. * sigmaV2 * m_cosU * m_cosW * m_sinU * m_sinW -
-         2. * sigmaU2 * m_cosV * m_cosW * m_sinV * m_sinW + sigmaV2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaU2 * m_cosV * m_cosV * m_sinW * m_sinW);
+            sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * m_cosW * m_cosW * m_sinV * m_sinV -
+            2. * sigmaV2 * m_cosU * m_cosW * m_sinU * m_sinW - 2. * sigmaU2 * m_cosV * m_cosW * m_sinV * m_sinW +
+            sigmaV2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaU2 * m_cosV * m_cosV * m_sinW * m_sinW);
 
     const double deltaU(u - LArRotationalTransformationPlugin::YZtoU(y, z));
     const double deltaV(v - LArRotationalTransformationPlugin::YZtoV(y, z));
@@ -168,90 +170,94 @@ void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const
 
     // Obtain expression for chi2, differentiate wrt y and z, set both results to zero and solve simultaneously. Here just paste-in result.
     y = (vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinU + vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU +
-         sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_cosV * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_cosV * m_sinU -
-         uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinU - uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU -
-         sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosV * m_cosV * m_sinU - sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosV * m_cosV * m_sinU +
-         wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosW * m_sinU + wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosW * m_sinU +
-         sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosU * m_cosW * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosU * m_cosW * m_sinU -
-         uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinU - uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinU -
-         sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosW * m_cosW * m_sinU - sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_cosW * m_cosW * m_sinU -
-         vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV - vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV -
-         sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_cosU * m_sinV - sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_cosU * m_sinV +
-         uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinV + uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinV +
-         sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_cosV * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_cosV * m_sinV +
-         wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosW * m_sinV + wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosW * m_sinV +
-         sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosV * m_cosW * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosV * m_cosW * m_sinV -
-         vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinV - vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinV -
-         sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosW * m_cosW * m_sinV - sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_cosW * m_cosW * m_sinV -
-         wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinW - wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinW -
-         sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosU * m_cosU * m_sinW - sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosU * m_cosU * m_sinW -
-         wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinW - wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinW -
-         sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosV * m_cosV * m_sinW - sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosV * m_cosV * m_sinW +
-         uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosW * m_sinW + uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosW * m_sinW +
-         sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_cosW * m_sinW + sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_cosW * m_sinW +
-         vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosW * m_sinW + vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosW * m_sinW +
-         sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosV * m_cosW * m_sinW + sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_cosV * m_cosW * m_sinW) /
+            sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_cosV * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_cosV * m_sinU -
+            uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinU - uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU -
+            sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosV * m_cosV * m_sinU - sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosV * m_cosV * m_sinU +
+            wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosW * m_sinU + wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosW * m_sinU +
+            sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosU * m_cosW * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosU * m_cosW * m_sinU -
+            uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinU - uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinU -
+            sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosW * m_cosW * m_sinU - sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_cosW * m_cosW * m_sinU -
+            vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV - vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV -
+            sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_cosU * m_sinV - sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_cosU * m_sinV +
+            uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinV + uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinV +
+            sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_cosV * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_cosV * m_sinV +
+            wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosW * m_sinV + wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosW * m_sinV +
+            sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosV * m_cosW * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosV * m_cosW * m_sinV -
+            vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinV - vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinV -
+            sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosW * m_cosW * m_sinV - sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_cosW * m_cosW * m_sinV -
+            wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinW - wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinW -
+            sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosU * m_cosU * m_sinW - sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosU * m_cosU * m_sinW -
+            wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinW - wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinW -
+            sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosV * m_cosV * m_sinW - sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosV * m_cosV * m_sinW +
+            uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosW * m_sinW + uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosW * m_sinW +
+            sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_cosW * m_sinW + sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_cosW * m_sinW +
+            vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosW * m_sinW + vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosW * m_sinW +
+            sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosV * m_cosW * m_sinW + sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_cosV * m_cosW * m_sinW) /
         (sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
-         sigmaV2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinU * m_sinU + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU +
-         sigmaV2 * sigmaW2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU -
-         2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV - 2. * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV -
-         2. * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV - 2. * sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV +
-         sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinV * m_sinV + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV +
-         sigmaU2 * sigmaW2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV -
-         2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosW * m_sinU * m_sinW - 2. * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW -
-         2. * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW - 2. * sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW -
-         2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosW * m_sinV * m_sinW - 2. * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW -
-         2. * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW - 2. * sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW +
-         sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW +
-         sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW+sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW);
+            sigmaV2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
+            sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinU * m_sinU + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU +
+            sigmaV2 * sigmaW2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU -
+            2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV - 2. * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV -
+            2. * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV -
+            2. * sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV + sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV +
+            sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV +
+            sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinV * m_sinV +
+            sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV +
+            sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV - 2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosW * m_sinU * m_sinW -
+            2. * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW - 2. * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW -
+            2. * sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW -
+            2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosW * m_sinV * m_sinW - 2. * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW -
+            2. * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW -
+            2. * sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW +
+            sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW +
+            sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW +
+            sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW +
+            sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW);
 
     z = (vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinU * m_sinU + vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosV * m_sinU * m_sinU +
-         sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosV * m_sinU * m_sinU +
-         wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_sinU * m_sinU + wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosW * m_sinU * m_sinU +
-         sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosW * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosW * m_sinU * m_sinU -
-         vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinU * m_sinV - vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinU * m_sinV -
-         sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_sinU * m_sinV - sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_sinU * m_sinV -
-         uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinU * m_sinV - uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_sinU * m_sinV -
-         sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosV * m_sinU * m_sinV - sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosV * m_sinU * m_sinV +
-         uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinV * m_sinV + uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinV * m_sinV +
-         sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_sinV * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_sinV * m_sinV +
-         wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_sinV * m_sinV + wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosW * m_sinV * m_sinV +
-         sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosW * m_sinV * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosW * m_sinV * m_sinV -
-         wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinU * m_sinW - wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinU * m_sinW -
-         sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosU * m_sinU * m_sinW - sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosU * m_sinU * m_sinW -
-         uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_sinU * m_sinW - uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_sinU * m_sinW -
-         sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosW * m_sinU * m_sinW - sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_cosW * m_sinU * m_sinW -
-         wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinV * m_sinW - wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_sinV * m_sinW -
-         sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosV * m_sinV * m_sinW - sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosV * m_sinV * m_sinW -
-         vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_sinV * m_sinW - vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_sinV * m_sinW -
-         sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosW * m_sinV * m_sinW - sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_cosW * m_sinV * m_sinW +
-         uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinW * m_sinW + uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_sinW * m_sinW +
-         sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_sinW * m_sinW + sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_sinW * m_sinW +
-         vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinW * m_sinW + vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_sinW * m_sinW +
-         sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_cosV * m_sinW * m_sinW) /
+            sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosV * m_sinU * m_sinU +
+            wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_sinU * m_sinU + wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosW * m_sinU * m_sinU +
+            sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosW * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosW * m_sinU * m_sinU -
+            vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinU * m_sinV - vFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinU * m_sinV -
+            sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosU * m_sinU * m_sinV - sigmaW2 * sigmaFit2 * sigmaFit2 * v * m_cosU * m_sinU * m_sinV -
+            uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinU * m_sinV - uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_sinU * m_sinV -
+            sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosV * m_sinU * m_sinV - sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosV * m_sinU * m_sinV +
+            uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinV * m_sinV + uFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinV * m_sinV +
+            sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_sinV * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_sinV * m_sinV +
+            wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_sinV * m_sinV + wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosW * m_sinV * m_sinV +
+            sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosW * m_sinV * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosW * m_sinV * m_sinV -
+            wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinU * m_sinW - wFit * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_sinU * m_sinW -
+            sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosU * m_sinU * m_sinW - sigmaV2 * sigmaFit2 * sigmaFit2 * w * m_cosU * m_sinU * m_sinW -
+            uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_sinU * m_sinW - uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_sinU * m_sinW -
+            sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosW * m_sinU * m_sinW - sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_cosW * m_sinU * m_sinW -
+            wFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinV * m_sinW - wFit * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_sinV * m_sinW -
+            sigmaU2 * sigmaV2 * sigmaFit2 * w * m_cosV * m_sinV * m_sinW - sigmaU2 * sigmaFit2 * sigmaFit2 * w * m_cosV * m_sinV * m_sinW -
+            vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_sinV * m_sinW - vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_sinV * m_sinW -
+            sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosW * m_sinV * m_sinW - sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_cosW * m_sinV * m_sinW +
+            uFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_sinW * m_sinW + uFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_sinW * m_sinW +
+            sigmaV2 * sigmaW2 * sigmaFit2 * u * m_cosU * m_sinW * m_sinW + sigmaV2 * sigmaFit2 * sigmaFit2 * u * m_cosU * m_sinW * m_sinW +
+            vFit * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_sinW * m_sinW + vFit * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_sinW * m_sinW +
+            sigmaU2 * sigmaW2 * sigmaFit2 * v * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaFit2 * sigmaFit2 * v * m_cosV * m_sinW * m_sinW) /
         (sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
-         sigmaV2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinU * m_sinU + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU +
-         sigmaV2 * sigmaW2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU -
-         2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV-2. * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV -
-         2. * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV-2. * sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV +
-         sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinV * m_sinV + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV +
-         sigmaU2 * sigmaW2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV + sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV -
-         2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosW * m_sinU * m_sinW - 2. * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW -
-         2. * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW - 2. * sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW -
-         2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosW * m_sinV * m_sinW - 2. * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW -
-         2. * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW - 2. * sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW +
-         sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW +
-         sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW +
-         sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW);
+            sigmaV2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU + sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinU * m_sinU +
+            sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinU * m_sinU + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU +
+            sigmaV2 * sigmaW2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU + sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosW * m_cosW * m_sinU * m_sinU -
+            2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosV * m_sinU * m_sinV - 2. * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV -
+            2. * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV -
+            2. * sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosV * m_sinU * m_sinV + sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinV * m_sinV +
+            sigmaU2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV +
+            sigmaW2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinV * m_sinV + sigmaU2 * sigmaV2 * sigmaW2 * m_cosW * m_cosW * m_sinV * m_sinV +
+            sigmaU2 * sigmaV2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV + sigmaU2 * sigmaW2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV +
+            sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosW * m_cosW * m_sinV * m_sinV - 2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosW * m_sinU * m_sinW -
+            2. * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW - 2. * sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW -
+            2. * sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosW * m_sinU * m_sinW -
+            2. * sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosW * m_sinV * m_sinW - 2. * sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW -
+            2. * sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW -
+            2. * sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosW * m_sinV * m_sinW +
+            sigmaU2 * sigmaV2 * sigmaW2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW +
+            sigmaV2 * sigmaW2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW + sigmaV2 * sigmaFit2 * sigmaFit2 * m_cosU * m_cosU * m_sinW * m_sinW +
+            sigmaU2 * sigmaV2 * sigmaW2 * m_cosV * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaV2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW +
+            sigmaU2 * sigmaW2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW + sigmaU2 * sigmaFit2 * sigmaFit2 * m_cosV * m_cosV * m_sinW * m_sinW);
 
     const double outputU(LArRotationalTransformationPlugin::YZtoU(y, z));
     const double outputV(LArRotationalTransformationPlugin::YZtoV(y, z));
@@ -261,9 +267,8 @@ void LArRotationalTransformationPlugin::GetMinChiSquaredYZ(const double u, const
     const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
 
     chiSquared = ((deltaU * deltaU) / sigmaU2) + ((deltaV * deltaV) / sigmaV2) + ((deltaW * deltaW) / sigmaW2) +
-        ((deltaUFit * deltaUFit) / sigmaFit2) + ((deltaVFit * deltaVFit) / sigmaFit2) + ((deltaWFit * deltaWFit) / sigmaFit2);
+                 ((deltaUFit * deltaUFit) / sigmaFit2) + ((deltaVFit * deltaVFit) / sigmaFit2) + ((deltaWFit * deltaWFit) / sigmaFit2);
 }
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -294,10 +299,11 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
     m_sinWminusV = std::sin(m_thetaW - m_thetaV);
     m_sinUminusW = std::sin(m_thetaU - m_thetaW);
 
-    if ((std::fabs(m_sinVminusU) < std::numeric_limits<double>::epsilon()) || (std::fabs(m_sinWminusV) < std::numeric_limits<double>::epsilon()) ||
-        (std::fabs(m_sinUminusW) < std::numeric_limits<double>::epsilon()))
+    if ((std::fabs(m_sinVminusU) < std::numeric_limits<double>::epsilon()) ||
+        (std::fabs(m_sinWminusV) < std::numeric_limits<double>::epsilon()) || (std::fabs(m_sinUminusW) < std::numeric_limits<double>::epsilon()))
     {
-        std::cout << "LArRotationalTransformationPlugin::Initialize - Equal wire angles; Plugin does not support provided LArTPC configurations. " << std::endl;
+        std::cout << "LArRotationalTransformationPlugin::Initialize - Equal wire angles; Plugin does not support provided LArTPC configurations. "
+                  << std::endl;
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
@@ -310,7 +316,8 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
             (std::fabs(m_thetaW - pLArTPC->GetWireAngleW()) > m_maxAngularDiscrepancyW) ||
             (std::fabs(sigmaUVW - pLArTPC->GetSigmaUVW()) > m_maxSigmaDiscrepancy))
         {
-            std::cout << "LArRotationalTransformationPlugin::Initialize - Dissimilar drift volumes; Plugin does not support provided LArTPC configurations. " << std::endl;
+            std::cout << "LArRotationalTransformationPlugin::Initialize - Dissimilar drift volumes; Plugin does not support provided LArTPC configurations. "
+                      << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
         }
     }
@@ -322,17 +329,17 @@ StatusCode LArRotationalTransformationPlugin::Initialize()
 
 pandora::StatusCode LArRotationalTransformationPlugin::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAngularDiscrepancyU", m_maxAngularDiscrepancyU));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAngularDiscrepancyU", m_maxAngularDiscrepancyU));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAngularDiscrepancyV", m_maxAngularDiscrepancyV));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAngularDiscrepancyV", m_maxAngularDiscrepancyV));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAngularDiscrepancyW", m_maxAngularDiscrepancyW));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAngularDiscrepancyW", m_maxAngularDiscrepancyW));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxSigmaDiscrepancy", m_maxSigmaDiscrepancy));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxSigmaDiscrepancy", m_maxSigmaDiscrepancy));
 
     return STATUS_CODE_SUCCESS;
 }

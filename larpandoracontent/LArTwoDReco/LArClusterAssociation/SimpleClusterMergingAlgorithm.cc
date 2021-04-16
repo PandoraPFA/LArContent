@@ -17,9 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-SimpleClusterMergingAlgorithm::SimpleClusterMergingAlgorithm() :
-    m_minCaloHitsPerCluster(5),
-    m_maxClusterSeparation(2.5f)
+SimpleClusterMergingAlgorithm::SimpleClusterMergingAlgorithm() : m_minCaloHitsPerCluster(5), m_maxClusterSeparation(2.5f)
 {
 }
 
@@ -69,9 +67,9 @@ void SimpleClusterMergingAlgorithm::PopulateClusterMergeMap(const ClusterVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool SimpleClusterMergingAlgorithm::IsAssociated(const Cluster* const pClusterI, const Cluster* const pClusterJ) const
+bool SimpleClusterMergingAlgorithm::IsAssociated(const Cluster *const pClusterI, const Cluster *const pClusterJ) const
 {
-    if (LArClusterHelper::GetClosestDistance(pClusterI,pClusterJ) > m_maxClusterSeparation)
+    if (LArClusterHelper::GetClosestDistance(pClusterI, pClusterJ) > m_maxClusterSeparation)
         return false;
 
     return true;
@@ -81,11 +79,11 @@ bool SimpleClusterMergingAlgorithm::IsAssociated(const Cluster* const pClusterI,
 
 StatusCode SimpleClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxClusterSeparation", m_maxClusterSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxClusterSeparation", m_maxClusterSeparation));
 
     return ClusterMergingAlgorithm::ReadSettings(xmlHandle);
 }

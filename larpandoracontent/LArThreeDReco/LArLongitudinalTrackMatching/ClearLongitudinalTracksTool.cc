@@ -15,8 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClearLongitudinalTracksTool::ClearLongitudinalTracksTool() :
-    m_minMatchedFraction(0.8f)
+ClearLongitudinalTracksTool::ClearLongitudinalTracksTool() : m_minMatchedFraction(0.8f)
 {
 }
 
@@ -25,7 +24,7 @@ ClearLongitudinalTracksTool::ClearLongitudinalTracksTool() :
 bool ClearLongitudinalTracksTool::Run(ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     bool particlesMade(false);
 
@@ -38,8 +37,8 @@ bool ClearLongitudinalTracksTool::Run(ThreeViewLongitudinalTracksAlgorithm *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClearLongitudinalTracksTool::CreateThreeDParticles(ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
-    bool &particlesMade) const
+void ClearLongitudinalTracksTool::CreateThreeDParticles(
+    ThreeViewLongitudinalTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const
 {
     ProtoParticleVector protoParticleVector;
 
@@ -62,8 +61,8 @@ void ClearLongitudinalTracksTool::CreateThreeDParticles(ThreeViewLongitudinalTra
 
 StatusCode ClearLongitudinalTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchedFraction", m_minMatchedFraction));
 
     return STATUS_CODE_SUCCESS;
 }

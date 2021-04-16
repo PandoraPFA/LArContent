@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterSplitting/TwoDSlidingFitMultiSplitAlgorithm.h"
 
@@ -18,9 +18,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-TwoDSlidingFitMultiSplitAlgorithm::TwoDSlidingFitMultiSplitAlgorithm() :
-    m_slidingFitHalfWindow(15),
-    m_inputClusterList("")
+TwoDSlidingFitMultiSplitAlgorithm::TwoDSlidingFitMultiSplitAlgorithm() : m_slidingFitHalfWindow(15), m_inputClusterList("")
 {
 }
 
@@ -71,8 +69,8 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitMultiSplitAlgorithm::BuildSlidingFitResultMap(const ClusterVector &clusterVector, const unsigned int halfWindowLayers,
-    TwoDSlidingFitResultMap &slidingFitResultMap) const
+void TwoDSlidingFitMultiSplitAlgorithm::BuildSlidingFitResultMap(
+    const ClusterVector &clusterVector, const unsigned int halfWindowLayers, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -98,11 +96,12 @@ void TwoDSlidingFitMultiSplitAlgorithm::BuildSlidingFitResultMap(const ClusterVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitClusters(const TwoDSlidingFitResultMap &slidingFitResultMap,
-    const ClusterPositionMap &clusterSplittingMap) const
+StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitClusters(
+    const TwoDSlidingFitResultMap &slidingFitResultMap, const ClusterPositionMap &clusterSplittingMap) const
 {
     ClusterList clusterList;
-    for (const auto &mapEntry : clusterSplittingMap) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterSplittingMap)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : clusterList)
@@ -129,16 +128,14 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitClusters(const TwoDSlidingFit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitResult &slidingFitResult,
-    const CartesianPointVector &splitPositionVector) const
+StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitResult &slidingFitResult, const CartesianPointVector &splitPositionVector) const
 {
     const Cluster *const pCluster = slidingFitResult.GetCluster();
 
     // Get split positions for this cluster
     FloatVector displacementVector;
 
-    for (CartesianPointVector::const_iterator pIter = splitPositionVector.begin(), pIterEnd = splitPositionVector.end();
-        pIter != pIterEnd; ++pIter)
+    for (CartesianPointVector::const_iterator pIter = splitPositionVector.begin(), pIterEnd = splitPositionVector.end(); pIter != pIterEnd; ++pIter)
     {
         const CartesianVector &splitPosition = *pIter;
 
@@ -157,8 +154,8 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitR
     const ClusterList clusterList(1, pCluster);
     std::string clusterListToSave, clusterListToDelete;
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList,
-        clusterListToDelete, clusterListToSave));
+    PANDORA_RETURN_RESULT_IF(
+        STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*this, clusterList, clusterListToDelete, clusterListToSave));
 
     CaloHitList oldCaloHitList;
     pCluster->GetOrderedCaloHitList().FillCaloHitList(oldCaloHitList);
@@ -211,11 +208,11 @@ StatusCode TwoDSlidingFitMultiSplitAlgorithm::SplitCluster(const TwoDSlidingFitR
 
 StatusCode TwoDSlidingFitMultiSplitAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputClusterListName", m_inputClusterList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterList));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_slidingFitHalfWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
     return STATUS_CODE_SUCCESS;
 }

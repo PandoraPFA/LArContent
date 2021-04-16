@@ -57,7 +57,8 @@ void ThreeDHitCreationAlgorithm::FilterCaloHitsByType(const CaloHitVector &input
 StatusCode ThreeDHitCreationAlgorithm::Run()
 {
     const PfoList *pPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputPfoListName, pPfoList));
 
     if (!pPfoList || pPfoList->empty())
     {
@@ -139,7 +140,8 @@ StatusCode ThreeDHitCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeDHitCreationAlgorithm::SeparateTwoDHits(const ParticleFlowObject *const pPfo, const ProtoHitVector &protoHitVector, CaloHitVector &remainingHitVector) const
+void ThreeDHitCreationAlgorithm::SeparateTwoDHits(
+    const ParticleFlowObject *const pPfo, const ProtoHitVector &protoHitVector, CaloHitVector &remainingHitVector) const
 {
     ClusterList twoDClusterList;
     LArPfoHelper::GetTwoDClusterList(pPfo, twoDClusterList);
@@ -392,12 +394,16 @@ double ThreeDHitCreationAlgorithm::GetChi2WrtFit(const ThreeDSlidingFitResult &s
         const double vFit(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(pointOnFit.GetY(), pointOnFit.GetZ()));
         const double wFit(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(pointOnFit.GetY(), pointOnFit.GetZ()));
 
-        const double outputU(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
-        const double outputV(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
-        const double outputW(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
+        const double outputU(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(
+            protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
+        const double outputV(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(
+            protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
+        const double outputW(PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(
+            protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ()));
 
         const double deltaUFit(uFit - outputU), deltaVFit(vFit - outputV), deltaWFit(wFit - outputW);
-        chi2WrtFit += ((deltaUFit * deltaUFit) / (sigma3DFit * sigma3DFit)) + ((deltaVFit * deltaVFit) / (sigma3DFit * sigma3DFit)) + ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
+        chi2WrtFit += ((deltaUFit * deltaUFit) / (sigma3DFit * sigma3DFit)) + ((deltaVFit * deltaVFit) / (sigma3DFit * sigma3DFit)) +
+                      ((deltaWFit * deltaWFit) / (sigma3DFit * sigma3DFit));
     }
 
     return chi2WrtFit;
@@ -458,15 +464,27 @@ void ThreeDHitCreationAlgorithm::RefineHitPositions(const ThreeDSlidingFitResult
 
         if (protoHit.GetNTrajectorySamples() == 2)
         {
-            u = (TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_U == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
-            v = (TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_V == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
-            w = (TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ() : (TPC_VIEW_W == protoHit.GetFirstTrajectorySample().GetHitType()) ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ() : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+            u = (TPC_VIEW_U == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
+                                        : (TPC_VIEW_U == protoHit.GetFirstTrajectorySample().GetHitType())
+                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+            v = (TPC_VIEW_V == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
+                                        : (TPC_VIEW_V == protoHit.GetFirstTrajectorySample().GetHitType())
+                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
+            w = (TPC_VIEW_W == hitType) ? pCaloHit2D->GetPositionVector().GetZ()
+                                        : (TPC_VIEW_W == protoHit.GetFirstTrajectorySample().GetHitType())
+                                              ? protoHit.GetFirstTrajectorySample().GetPosition().GetZ()
+                                              : protoHit.GetLastTrajectorySample().GetPosition().GetZ();
         }
         else if (protoHit.GetNTrajectorySamples() == 1)
         {
-            u = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
-            v = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
-            w = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
+            u = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoU(
+                protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
+            v = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoV(
+                protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
+            w = PandoraContentApi::GetPlugins(*this)->GetLArTransformationPlugin()->YZtoW(
+                protoHit.GetPosition3D().GetY(), protoHit.GetPosition3D().GetZ());
         }
         else
         {
@@ -515,7 +533,7 @@ void ThreeDHitCreationAlgorithm::CreateThreeDHit(const ProtoHit &protoHit, const
     parameters.m_hitType = TPC_3D;
 
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
-    parameters.m_pParentAddress = static_cast<const void*>(pCaloHit2D);
+    parameters.m_pParentAddress = static_cast<const void *>(pCaloHit2D);
 
     // TODO Check these parameters, especially new cell dimensions
     parameters.m_cellThickness = pCaloHit2D->GetCellThickness();
@@ -545,7 +563,7 @@ bool ThreeDHitCreationAlgorithm::CheckThreeDHit(const ProtoHit &protoHit) const
     try
     {
         // Check that corresponding pseudo layer is within range - TODO use full LArTPC geometry here
-        (void) PandoraContentApi::GetPlugins(*this)->GetPseudoLayerPlugin()->GetPseudoLayer(protoHit.GetPosition3D());
+        (void)PandoraContentApi::GetPlugins(*this)->GetPseudoLayerPlugin()->GetPseudoLayer(protoHit.GetPosition3D());
     }
     catch (StatusCodeException &)
     {
@@ -569,7 +587,8 @@ void ThreeDHitCreationAlgorithm::AddThreeDHitsToPfo(const ParticleFlowObject *co
     if (!threeDClusterList.empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const ClusterList *pClusterList(nullptr); std::string clusterListName;
+    const ClusterList *pClusterList(nullptr);
+    std::string clusterListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pClusterList, clusterListName));
 
     PandoraContentApi::Cluster::Parameters parameters;
@@ -631,8 +650,7 @@ const ThreeDHitCreationAlgorithm::TrajectorySample &ThreeDHitCreationAlgorithm::
 StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "HitCreationTools", algorithmToolVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "HitCreationTools", algorithmToolVector));
 
     for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
@@ -646,7 +664,7 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
             continue;
         }
 
-        HitCreationBaseTool *const pHitCreationTool(dynamic_cast<HitCreationBaseTool*>(*iter));
+        HitCreationBaseTool *const pHitCreationTool(dynamic_cast<HitCreationBaseTool *>(*iter));
 
         if (!pHitCreationTool)
             return STATUS_CODE_INVALID_PARAMETER;
@@ -658,11 +676,11 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputCaloHitListName", m_outputCaloHitListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputClusterListName", m_outputClusterListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IterateTrackHits", m_iterateTrackHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IterateTrackHits", m_iterateTrackHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IterateShowerHits", m_iterateShowerHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IterateShowerHits", m_iterateShowerHits));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "InterpolationCut", m_interpolationCutOff));
@@ -670,14 +688,14 @@ StatusCode ThreeDHitCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitHalfWindow", m_slidingFitHalfWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NHitRefinementIterations", m_nHitRefinementIterations));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "NHitRefinementIterations", m_nHitRefinementIterations));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "Sigma3DFitMultiplier", m_sigma3DFitMultiplier));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Sigma3DFitMultiplier", m_sigma3DFitMultiplier));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IterationMaxChi2Ratio", m_iterationMaxChi2Ratio));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IterationMaxChi2Ratio", m_iterationMaxChi2Ratio));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
         "ToolsToAvoid", m_toolsToAvoid));

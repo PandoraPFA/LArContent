@@ -248,17 +248,17 @@ CartesianVector ThreeDSlidingFitResult::GetSeedDirection(const CartesianVector &
     const float py(std::fabs(axisDirection.GetY()));
     const float pz(std::fabs(axisDirection.GetZ()));
 
-    if (px < std::min(py,pz) + std::numeric_limits<float>::epsilon())
+    if (px < std::min(py, pz) + std::numeric_limits<float>::epsilon())
     {
         return CartesianVector(1.f, 0.f, 0.f);
     }
 
-    if (py < std::min(pz,px) + std::numeric_limits<float>::epsilon())
+    if (py < std::min(pz, px) + std::numeric_limits<float>::epsilon())
     {
         return CartesianVector(0.f, 1.f, 0.f);
     }
 
-    if (pz < std::min(px,py) + std::numeric_limits<float>::epsilon())
+    if (pz < std::min(px, py) + std::numeric_limits<float>::epsilon())
     {
         return CartesianVector(0.f, 0.f, 1.f);
     }

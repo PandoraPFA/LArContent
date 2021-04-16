@@ -24,7 +24,8 @@ public:
      */
     BeamParticleIdTool();
 
-    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &beamSliceHypotheses, const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
+    void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &beamSliceHypotheses,
+        const SliceHypotheses &crSliceHypotheses, pandora::PfoList &selectedPfos);
 
 private:
     /**
@@ -50,9 +51,9 @@ private:
         pandora::CartesianVector GetLineIntersection(const pandora::CartesianVector &a0, const pandora::CartesianVector &a) const;
 
     private:
-        pandora::CartesianVector      m_unitNormal;                         ///< Unit normal to plane
-        pandora::CartesianVector      m_point;                              ///< A point on the plane
-        float                         m_d;                                  ///< Parameter defining a plane
+        pandora::CartesianVector m_unitNormal; ///< Unit normal to plane
+        pandora::CartesianVector m_point;      ///< A point on the plane
+        float m_d;                             ///< Parameter defining a plane
     };
 
     pandora::StatusCode Initialize();
@@ -64,8 +65,7 @@ private:
      *  @param  outputCaloHitList to receive the list of selected calo hits
      *  @param  closestHitToFaceDistance to receive the distance of closest hit to beam spot
      */
-    void GetSelectedCaloHits(const pandora::CaloHitList &inputCaloHitList, pandora::CaloHitList &outputCaloHitList,
-        float &closestHitToFaceDistance) const;
+    void GetSelectedCaloHits(const pandora::CaloHitList &inputCaloHitList, pandora::CaloHitList &outputCaloHitList, float &closestHitToFaceDistance) const;
 
     /**
      *  @brief  Find the intercepts of a line with the protoDUNE detector
@@ -89,23 +89,23 @@ private:
 
     typedef std::vector<Plane> PlaneVector;
 
-    bool                            m_selectAllBeamParticles;               ///< First approach: select all beam particles, as opposed to selecting all cosmics
-    bool                            m_selectOnlyFirstSliceBeamParticles;    ///< First approach: select first slice beam particles, cosmics for all subsequent slices
-    float                           m_tpcMinX;                              ///< Global TPC volume minimum x extent
-    float                           m_tpcMaxX;                              ///< Global TPC volume maximum x extent
-    float                           m_tpcMinY;                              ///< Global TPC volume minimum y extent
-    float                           m_tpcMaxY;                              ///< Global TPC volume maximum y extent
-    float                           m_tpcMinZ;                              ///< Global TPC volume minimum z extent
-    float                           m_tpcMaxZ;                              ///< Global TPC volume maximum z extent
-    pandora::CartesianVector        m_beamTPCIntersection;                  ///< Intersection of beam and global TPC volume
-    pandora::CartesianVector        m_beamDirection;                        ///< Beam direction
-    PlaneVector                     m_tpcPlanes;                            ///< Vector of all planes making up global TPC volume
+    bool m_selectAllBeamParticles;            ///< First approach: select all beam particles, as opposed to selecting all cosmics
+    bool m_selectOnlyFirstSliceBeamParticles; ///< First approach: select first slice beam particles, cosmics for all subsequent slices
+    float m_tpcMinX;                          ///< Global TPC volume minimum x extent
+    float m_tpcMaxX;                          ///< Global TPC volume maximum x extent
+    float m_tpcMinY;                          ///< Global TPC volume minimum y extent
+    float m_tpcMaxY;                          ///< Global TPC volume maximum y extent
+    float m_tpcMinZ;                          ///< Global TPC volume minimum z extent
+    float m_tpcMaxZ;                          ///< Global TPC volume maximum z extent
+    pandora::CartesianVector m_beamTPCIntersection; ///< Intersection of beam and global TPC volume
+    pandora::CartesianVector m_beamDirection;       ///< Beam direction
+    PlaneVector m_tpcPlanes;                        ///< Vector of all planes making up global TPC volume
 
-    float                           m_projectionIntersectionCut;            ///< Projection intersection distance cut, used in beam event selection
-    float                           m_closestDistanceCut;                   ///< Closest distance (of hit to beam spot), used in beam event selection
-    float                           m_angleToBeamCut;                       ///< Angle between major axis and beam direction, used in beam event selection
-    float                           m_selectedFraction;                     ///< Fraction of hits to use in 3D cluster fits
-    unsigned int                    m_nSelectedHits;                        ///< Minimum number of hits to use in 3D cluster fits
+    float m_projectionIntersectionCut; ///< Projection intersection distance cut, used in beam event selection
+    float m_closestDistanceCut;        ///< Closest distance (of hit to beam spot), used in beam event selection
+    float m_angleToBeamCut;            ///< Angle between major axis and beam direction, used in beam event selection
+    float m_selectedFraction;          ///< Fraction of hits to use in 3D cluster fits
+    unsigned int m_nSelectedHits;      ///< Minimum number of hits to use in 3D cluster fits
 };
 
 } // namespace lar_content

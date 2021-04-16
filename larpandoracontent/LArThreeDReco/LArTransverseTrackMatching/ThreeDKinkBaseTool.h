@@ -42,9 +42,9 @@ protected:
     class Modification
     {
     public:
-        SplitPositionMap            m_splitPositionMap;     ///< The split position map
-        ClusterMergeMap             m_clusterMergeMap;      ///< The cluster merge map
-        pandora::ClusterList        m_affectedClusters;     ///< The list of affected clusters
+        SplitPositionMap m_splitPositionMap;     ///< The split position map
+        ClusterMergeMap m_clusterMergeMap;       ///< The cluster merge map
+        pandora::ClusterList m_affectedClusters; ///< The list of affected clusters
     };
 
     typedef std::vector<Modification> ModificationList;
@@ -91,13 +91,13 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int    m_nCommonClusters;                  ///< The number of common clusters
-    bool            m_majorityRulesMode;                ///< Whether to run in majority rules mode (always split overshoots, always merge undershoots)
-    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for use as a key tensor element
-    unsigned int    m_minMatchedSamplingPoints;         ///< The min number of matched sampling points for use as a key tensor element
-    float           m_minLongitudinalImpactParameter;   ///< The min longitudinal impact parameter for connecting accompanying clusters
-    int             m_nLayersForKinkSearch;             ///< The number of sliding fit layers to step in the kink search
-    float           m_additionalXStepForKinkSearch;     ///< An additional (safety) step to tack-on when choosing x sampling points
+    unsigned int m_nCommonClusters;          ///< The number of common clusters
+    bool m_majorityRulesMode;                ///< Whether to run in majority rules mode (always split overshoots, always merge undershoots)
+    float m_minMatchedFraction;              ///< The min matched sampling point fraction for use as a key tensor element
+    unsigned int m_minMatchedSamplingPoints; ///< The min number of matched sampling points for use as a key tensor element
+    float m_minLongitudinalImpactParameter;  ///< The min longitudinal impact parameter for connecting accompanying clusters
+    int m_nLayersForKinkSearch;              ///< The number of sliding fit layers to step in the kink search
+    float m_additionalXStepForKinkSearch;    ///< An additional (safety) step to tack-on when choosing x sampling points
 
 private:
     /**

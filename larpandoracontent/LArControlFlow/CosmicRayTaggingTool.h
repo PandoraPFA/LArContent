@@ -47,14 +47,14 @@ private:
          */
         CRCandidate(const pandora::Pandora &pandora, const pandora::ParticleFlowObject *const pPfo, const unsigned int sliceId);
 
-        const pandora::ParticleFlowObject * const m_pPfo;         ///< Address of the candidate Pfo
-        unsigned int                              m_sliceId;      ///< Slice ID
-        bool                                      m_canFit;       ///< If there are a sufficient number of 3D hits to perform a fitting
-        pandora::CartesianVector                  m_endPoint1;    ///< First fitted end point in 3D
-        pandora::CartesianVector                  m_endPoint2;    ///< Second fitted end point in 3D
-        double                                    m_length;       ///< Straight line length of the linear fit
-        double                                    m_curvature;    ///< Measure of the curvature of the track
-        double                                    m_theta;        ///< Direction made with vertical
+        const pandora::ParticleFlowObject *const m_pPfo; ///< Address of the candidate Pfo
+        unsigned int m_sliceId;                          ///< Slice ID
+        bool m_canFit;                                   ///< If there are a sufficient number of 3D hits to perform a fitting
+        pandora::CartesianVector m_endPoint1;            ///< First fitted end point in 3D
+        pandora::CartesianVector m_endPoint2;            ///< Second fitted end point in 3D
+        double m_length;                                 ///< Straight line length of the linear fit
+        double m_curvature;                              ///< Measure of the curvature of the track
+        double m_theta;                                  ///< Direction made with vertical
 
     private:
         /**
@@ -97,8 +97,8 @@ private:
      *
      *  @return whether the Pfos are associated
      */
-    bool CheckAssociation(const pandora::CartesianVector &endPoint1, const pandora::CartesianVector &endDir1, const pandora::CartesianVector &endPoint2,
-        const pandora::CartesianVector &endDir2) const;
+    bool CheckAssociation(const pandora::CartesianVector &endPoint1, const pandora::CartesianVector &endDir1,
+        const pandora::CartesianVector &endPoint2, const pandora::CartesianVector &endDir2) const;
 
     typedef std::unordered_map<const pandora::ParticleFlowObject *, unsigned int> PfoToSliceIdMap;
 
@@ -192,28 +192,28 @@ private:
      *          "nominal" = optimised to maximise CR removal whilst preserving neutrinos
      *          "aggressive" = remove CR muons and allow more neutrinos to be tagged
      */
-    std::string     m_cutMode;
+    std::string m_cutMode;
 
-    float           m_angularUncertainty;       ///< The uncertainty in degrees for the angle of a Pfo
-    float           m_positionalUncertainty;    ///< The uncertainty in cm for the position of Pfo endpoint in 3D
-    float           m_maxAssociationDist;       ///< The maximum distance from endpoint to point of closest approach, typically a multiple of LAr radiation length
+    float m_angularUncertainty;    ///< The uncertainty in degrees for the angle of a Pfo
+    float m_positionalUncertainty; ///< The uncertainty in cm for the position of Pfo endpoint in 3D
+    float m_maxAssociationDist; ///< The maximum distance from endpoint to point of closest approach, typically a multiple of LAr radiation length
 
-    unsigned int    m_minimumHits;              ///< The minimum number of hits for a Pfo to be considered
+    unsigned int m_minimumHits; ///< The minimum number of hits for a Pfo to be considered
 
-    float           m_inTimeMargin;             ///< The maximum distance outside of the physical detector volume that a Pfo may be to still be considered in time
-    float           m_inTimeMaxX0;              ///< The maximum pfo x0 (determined from shifted vertex) to allow pfo to still be considered in time
-    float           m_marginY;                  ///< The minimum distance from a detector Y-face for a Pfo to be associated
-    float           m_marginZ;                  ///< The minimum distance from a detector Z-face for a Pfo to be associated
-    float           m_maxNeutrinoCosTheta;      ///< The maximum cos(theta) that a Pfo can have to be classified as a likely neutrino
-    float           m_minCosmicCosTheta;        ///< The minimum cos(theta) that a Pfo can have to be classified as a likely CR muon
-    float           m_maxCosmicCurvature;       ///< The maximum curvature that a Pfo can have to be classified as a likely CR muon
+    float m_inTimeMargin; ///< The maximum distance outside of the physical detector volume that a Pfo may be to still be considered in time
+    float m_inTimeMaxX0;  ///< The maximum pfo x0 (determined from shifted vertex) to allow pfo to still be considered in time
+    float m_marginY;      ///< The minimum distance from a detector Y-face for a Pfo to be associated
+    float m_marginZ;      ///< The minimum distance from a detector Z-face for a Pfo to be associated
+    float m_maxNeutrinoCosTheta; ///< The maximum cos(theta) that a Pfo can have to be classified as a likely neutrino
+    float m_minCosmicCosTheta;   ///< The minimum cos(theta) that a Pfo can have to be classified as a likely CR muon
+    float m_maxCosmicCurvature;  ///< The maximum curvature that a Pfo can have to be classified as a likely CR muon
 
-    float           m_face_Xa;                  ///< Anode      X face
-    float           m_face_Xc;                  ///< Cathode    X face
-    float           m_face_Yb;                  ///< Bottom     Y face
-    float           m_face_Yt;                  ///< Top        Y face
-    float           m_face_Zu;                  ///< Upstream   Z face
-    float           m_face_Zd;                  ///< Downstream Z face
+    float m_face_Xa; ///< Anode      X face
+    float m_face_Xc; ///< Cathode    X face
+    float m_face_Yb; ///< Bottom     Y face
+    float m_face_Yt; ///< Top        Y face
+    float m_face_Zu; ///< Upstream   Z face
+    float m_face_Zd; ///< Downstream Z face
 };
 
 } // namespace lar_content

@@ -33,7 +33,7 @@ public:
      *
      *  @return the energy kick feature
      */
-    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm * const pAlgorithm, const pandora::Vertex * const pVertex,
+    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const pandora::Vertex *const pVertex,
         const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
         const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &);
 
@@ -48,7 +48,8 @@ private:
      *
      *  @return the energy kick feature
      */
-    float GetEnergyKickForView(const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const;
+    float GetEnergyKickForView(
+        const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const;
 
     /**
      *  @brief  Increment the energy kick parameters for a given cluster
@@ -64,8 +65,8 @@ private:
     void IncrementEnergyKickParameters(const pandora::Cluster *const pCluster, const pandora::CartesianVector &clusterDisplacement,
         const pandora::CartesianVector &clusterDirection, float &totEnergyKick, float &totEnergy, float &totHitKick, unsigned int &totHits) const;
 
-    float    m_rOffset;    ///< The r offset parameter in the energy score
-    float    m_xOffset;    ///< The x offset parameter in the energy score
+    float m_rOffset; ///< The r offset parameter in the energy score
+    float m_xOffset; ///< The x offset parameter in the energy score
 };
 
 } // namespace lar_content

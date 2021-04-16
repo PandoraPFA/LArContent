@@ -27,7 +27,8 @@ StatusCode ClusterMergingAlgorithm::Run()
     }
     else
     {
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pClusterList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(
+            STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_inputClusterListName, pClusterList));
     }
 
     if (!pClusterList || pClusterList->empty())
@@ -76,7 +77,7 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
             if (!pAssociatedCluster->IsAvailable())
                 throw StatusCodeException(STATUS_CODE_FAILURE);
 
-            (void) clusterVetoList.insert(pAssociatedCluster);
+            (void)clusterVetoList.insert(pAssociatedCluster);
 
             if (m_inputClusterListName.empty())
             {
@@ -84,8 +85,8 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
             }
             else
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster,
-                    m_inputClusterListName, m_inputClusterListName));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                    PandoraContentApi::MergeAndDeleteClusters(*this, pSeedCluster, pAssociatedCluster, m_inputClusterListName, m_inputClusterListName));
             }
         }
     }
@@ -93,7 +94,8 @@ void ClusterMergingAlgorithm::MergeClusters(ClusterVector &clusterVector, Cluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList& associatedClusterList) const
+void ClusterMergingAlgorithm::CollectAssociatedClusters(
+    const Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, ClusterList &associatedClusterList) const
 {
     ClusterSet clusterVetoList;
     this->CollectAssociatedClusters(pSeedCluster, pSeedCluster, clusterMergeMap, clusterVetoList, associatedClusterList);
@@ -101,8 +103,8 @@ void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-    const ClusterSet &clusterVetoList, ClusterList &associatedClusterList) const
+void ClusterMergingAlgorithm::CollectAssociatedClusters(const Cluster *const pSeedCluster, const Cluster *const pCurrentCluster,
+    const ClusterMergeMap &clusterMergeMap, const ClusterSet &clusterVetoList, ClusterList &associatedClusterList) const
 {
     if (clusterVetoList.count(pCurrentCluster))
         return;
@@ -159,8 +161,8 @@ void ClusterMergingAlgorithm::GetSortedListOfCleanClusters(const ClusterVector &
 
 StatusCode ClusterMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "InputClusterListName", m_inputClusterListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputClusterListName", m_inputClusterListName));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -50,8 +50,8 @@ StatusCode DeltaRayIdentificationAlgorithm::Run()
 
     if (!newDaughterPfoList.empty())
     {
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_parentPfoListName, m_daughterPfoListName,
-            newDaughterPfoList));
+        PANDORA_THROW_RESULT_IF(
+            STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList(*this, m_parentPfoListName, m_daughterPfoListName, newDaughterPfoList));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -62,8 +62,7 @@ StatusCode DeltaRayIdentificationAlgorithm::Run()
 void DeltaRayIdentificationAlgorithm::GetPfos(const std::string &inputPfoListName, PfoVector &outputPfoVector) const
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this,
-        inputPfoListName, pPfoList));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, inputPfoListName, pPfoList));
 
     if (NULL == pPfoList)
         return;
@@ -74,8 +73,7 @@ void DeltaRayIdentificationAlgorithm::GetPfos(const std::string &inputPfoListNam
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoVector &parentPfos, const PfoVector &daughterPfos,
-    PfoAssociationMap &pfoAssociationMap) const
+void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoVector &parentPfos, const PfoVector &daughterPfos, PfoAssociationMap &pfoAssociationMap) const
 {
     PfoSet parentPfoList, daughterPfoList;
     parentPfoList.insert(parentPfos.begin(), parentPfos.end());
@@ -148,8 +146,8 @@ void DeltaRayIdentificationAlgorithm::BuildAssociationMap(const PfoVector &paren
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayIdentificationAlgorithm::IsAssociated(const ParticleFlowObject *const pDaughterPfo, const ParticleFlowObject *const pParentPfo,
-    float &displacement) const
+bool DeltaRayIdentificationAlgorithm::IsAssociated(
+    const ParticleFlowObject *const pDaughterPfo, const ParticleFlowObject *const pParentPfo, float &displacement) const
 {
     displacement = std::numeric_limits<float>::max();
 
@@ -159,19 +157,19 @@ bool DeltaRayIdentificationAlgorithm::IsAssociated(const ParticleFlowObject *con
     const float daughterLengthSquared(LArPfoHelper::GetTwoDLengthSquared(pDaughterPfo));
     const float parentLengthSquared(LArPfoHelper::GetTwoDLengthSquared(pParentPfo));
 
-    if (daughterLengthSquared > m_maxDaughterLengthSquared || parentLengthSquared < m_minParentLengthSquared ||
-        daughterLengthSquared > 0.5 * parentLengthSquared)
+    if (daughterLengthSquared > m_maxDaughterLengthSquared || parentLengthSquared < m_minParentLengthSquared || daughterLengthSquared > 0.5 * parentLengthSquared)
         return false;
 
     const float transitionLengthSquared(125.f);
-    const float displacementCut((daughterLengthSquared > transitionLengthSquared) ? m_distanceForMatching :
-        m_distanceForMatching * (2.f - daughterLengthSquared / transitionLengthSquared));
+    const float displacementCut((daughterLengthSquared > transitionLengthSquared)
+                                    ? m_distanceForMatching
+                                    : m_distanceForMatching * (2.f - daughterLengthSquared / transitionLengthSquared));
 
     try
     {
         displacement = this->GetTwoDSeparation(pDaughterPfo, pParentPfo);
     }
-    catch(StatusCodeException &statusCodeException)
+    catch (StatusCodeException &statusCodeException)
     {
         if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
             throw statusCodeException;
@@ -238,7 +236,7 @@ void DeltaRayIdentificationAlgorithm::GetTwoDVertices(const ParticleFlowObject *
     {
         const Cluster *const pCluster = *iter;
 
-        CartesianVector firstCoordinate(0.f,0.f,0.f), secondCoordinate(0.f,0.f,0.f);
+        CartesianVector firstCoordinate(0.f, 0.f, 0.f), secondCoordinate(0.f, 0.f, 0.f);
         LArClusterHelper::GetExtremalCoordinates(pCluster, firstCoordinate, secondCoordinate);
 
         vertexVector.push_back(firstCoordinate);
@@ -277,7 +275,8 @@ float DeltaRayIdentificationAlgorithm::GetClosestDistance(const CartesianPointVe
 void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociationMap &pfoAssociationMap, PfoList &daughterPfoList) const
 {
     PfoList pfoList;
-    for (const auto &mapEntry : pfoAssociationMap) pfoList.push_back(mapEntry.first);
+    for (const auto &mapEntry : pfoAssociationMap)
+        pfoList.push_back(mapEntry.first);
     pfoList.sort(LArPfoHelper::SortByNHits);
 
     for (const ParticleFlowObject *const pDaughterPfo : pfoList)
@@ -302,13 +301,12 @@ void DeltaRayIdentificationAlgorithm::BuildParentDaughterLinks(const PfoAssociat
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const ParticleFlowObject *DeltaRayIdentificationAlgorithm::GetParent(const PfoAssociationMap &pfoAssociationMap,
-    const ParticleFlowObject *const pPfo) const
+const ParticleFlowObject *DeltaRayIdentificationAlgorithm::GetParent(const PfoAssociationMap &pfoAssociationMap, const ParticleFlowObject *const pPfo) const
 {
     const ParticleFlowObject *pParentPfo = nullptr;
     const ParticleFlowObject *pDaughterPfo = pPfo;
 
-    while(1)
+    while (1)
     {
         PfoAssociationMap::const_iterator iter = pfoAssociationMap.find(pDaughterPfo);
         if (pfoAssociationMap.end() == iter)
@@ -328,17 +326,16 @@ StatusCode DeltaRayIdentificationAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ParentPfoListName", m_parentPfoListName));
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "DaughterPfoListName", m_daughterPfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DistanceForMatching", m_distanceForMatching));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DistanceForMatching", m_distanceForMatching));
 
     float minParentLength = std::sqrt(m_minParentLengthSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinParentLength", minParentLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinParentLength", minParentLength));
     m_minParentLengthSquared = minParentLength * minParentLength;
 
     float maxDaughterLength = std::sqrt(m_maxDaughterLengthSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxDaughterLength", maxDaughterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxDaughterLength", maxDaughterLength));
     m_maxDaughterLengthSquared = maxDaughterLength * maxDaughterLength;
 
     return STATUS_CODE_SUCCESS;

@@ -9,8 +9,8 @@
 
 #include "larpandoracontent/LArTwoDReco/LArCosmicRay/TrackMergeRefinementAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArHitWidthHelper.h"
 
 using namespace pandora;
@@ -48,20 +48,20 @@ StatusCode TrackMergeRefinementAlgorithm::Run()
     // ATTN: Keep track of created main track clusters so their hits can be protected in future iterations
     unsigned int loopIterations(0);
     ClusterList createdMainTrackClusters;
-    while(loopIterations < m_maxLoopIterations)
+    while (loopIterations < m_maxLoopIterations)
     {
         ++loopIterations;
 
         ClusterPairAssociation clusterAssociation;
-        if(!this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, clusterAssociation))
+        if (!this->FindBestClusterAssociation(clusterVector, slidingFitResultMapPair, clusterAssociation))
             break;
 
         ClusterList unavailableProtectedClusters;
         this->GetUnavailableProtectedClusters(clusterAssociation, createdMainTrackClusters, unavailableProtectedClusters);
 
         ClusterToCaloHitListMap clusterToCaloHitListMap;
-        this->GetHitsInBoundingBox(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint(), pClusterList, clusterToCaloHitListMap,
-            unavailableProtectedClusters, m_distanceToLine);
+        this->GetHitsInBoundingBox(clusterAssociation.GetUpstreamMergePoint(), clusterAssociation.GetDownstreamMergePoint(), pClusterList,
+            clusterToCaloHitListMap, unavailableProtectedClusters, m_distanceToLine);
 
         if (!this->AreExtrapolatedHitsGood(clusterToCaloHitListMap, clusterAssociation))
         {
@@ -69,15 +69,18 @@ StatusCode TrackMergeRefinementAlgorithm::Run()
             continue;
         }
 
-        const ClusterList::const_iterator upstreamIter(std::find(createdMainTrackClusters.begin(), createdMainTrackClusters.end(), clusterAssociation.GetUpstreamCluster()));
+        const ClusterList::const_iterator upstreamIter(
+            std::find(createdMainTrackClusters.begin(), createdMainTrackClusters.end(), clusterAssociation.GetUpstreamCluster()));
         if (upstreamIter != createdMainTrackClusters.end())
             createdMainTrackClusters.erase(upstreamIter);
 
-        const ClusterList::const_iterator downstreamIter(std::find(createdMainTrackClusters.begin(), createdMainTrackClusters.end(), clusterAssociation.GetDownstreamCluster()));
+        const ClusterList::const_iterator downstreamIter(
+            std::find(createdMainTrackClusters.begin(), createdMainTrackClusters.end(), clusterAssociation.GetDownstreamCluster()));
         if (downstreamIter != createdMainTrackClusters.end())
             createdMainTrackClusters.erase(downstreamIter);
 
-        createdMainTrackClusters.push_back(this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, clusterVector, slidingFitResultMapPair));
+        createdMainTrackClusters.push_back(
+            this->CreateMainTrack(clusterAssociation, clusterToCaloHitListMap, pClusterList, clusterVector, slidingFitResultMapPair));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -85,8 +88,8 @@ StatusCode TrackMergeRefinementAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVector &clusterVector, const SlidingFitResultMapPair &slidingFitResultMapPair,
-    ClusterPairAssociation &clusterAssociation) const
+bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVector &clusterVector,
+    const SlidingFitResultMapPair &slidingFitResultMapPair, ClusterPairAssociation &clusterAssociation) const
 {
     bool foundAssociation(false);
     float maxLength(0.f);
@@ -123,15 +126,21 @@ bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVect
             const bool isCurrentUpstream(LArClusterHelper::SortByPosition(pCurrentCluster, pTestCluster));
 
             // ATTN: Ensure that clusters are not contained within one another
-            const float currentMinLayerZ(currentMacroFitIter->second.GetGlobalMinLayerPosition().GetZ()), currentMaxLayerZ(currentMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ());
-            const float testMinLayerZ(testMacroFitIter->second.GetGlobalMinLayerPosition().GetZ()), testMaxLayerZ(testMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ());
+            const float currentMinLayerZ(currentMacroFitIter->second.GetGlobalMinLayerPosition().GetZ()),
+                currentMaxLayerZ(currentMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ());
+            const float testMinLayerZ(testMacroFitIter->second.GetGlobalMinLayerPosition().GetZ()),
+                testMaxLayerZ(testMacroFitIter->second.GetGlobalMaxLayerPosition().GetZ());
 
-            if (((currentMinLayerZ > testMinLayerZ) && (currentMaxLayerZ < testMaxLayerZ)) || ((testMinLayerZ > currentMinLayerZ) && (testMaxLayerZ < currentMaxLayerZ)))
+            if (((currentMinLayerZ > testMinLayerZ) && (currentMaxLayerZ < testMaxLayerZ)) ||
+                ((testMinLayerZ > currentMinLayerZ) && (testMaxLayerZ < currentMaxLayerZ)))
                 continue;
 
-            CartesianVector currentMergePoint(0.f, 0.f, 0.f), testMergePoint(0.f, 0.f, 0.f), currentMergeDirection(0.f, 0.f, 0.f), testMergeDirection(0.f, 0.f, 0.f);
-            if (!this->GetClusterMergingCoordinates(currentMicroFitIter->second, currentMacroFitIter->second, testMacroFitIter->second, !isCurrentUpstream, currentMergePoint, currentMergeDirection) ||
-                !this->GetClusterMergingCoordinates(testMicroFitIter->second, testMacroFitIter->second, currentMacroFitIter->second, isCurrentUpstream, testMergePoint, testMergeDirection))
+            CartesianVector currentMergePoint(0.f, 0.f, 0.f), testMergePoint(0.f, 0.f, 0.f), currentMergeDirection(0.f, 0.f, 0.f),
+                testMergeDirection(0.f, 0.f, 0.f);
+            if (!this->GetClusterMergingCoordinates(currentMicroFitIter->second, currentMacroFitIter->second, testMacroFitIter->second,
+                    !isCurrentUpstream, currentMergePoint, currentMergeDirection) ||
+                !this->GetClusterMergingCoordinates(testMicroFitIter->second, testMacroFitIter->second, currentMacroFitIter->second,
+                    isCurrentUpstream, testMergePoint, testMergeDirection))
             {
                 continue;
             }
@@ -144,11 +153,13 @@ bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVect
 
             if (isCurrentUpstream)
             {
-                clusterAssociation = ClusterPairAssociation(currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection * (-1.f), pCurrentCluster, pTestCluster);
+                clusterAssociation = ClusterPairAssociation(
+                    currentMergePoint, currentMergeDirection, testMergePoint, testMergeDirection * (-1.f), pCurrentCluster, pTestCluster);
             }
             else
             {
-                clusterAssociation = ClusterPairAssociation(testMergePoint, testMergeDirection, currentMergePoint, currentMergeDirection * (-1.f), pTestCluster, pCurrentCluster);
+                clusterAssociation = ClusterPairAssociation(
+                    testMergePoint, testMergeDirection, currentMergePoint, currentMergeDirection * (-1.f), pTestCluster, pCurrentCluster);
             }
 
             foundAssociation = true;
@@ -161,8 +172,8 @@ bool TrackMergeRefinementAlgorithm::FindBestClusterAssociation(const ClusterVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TrackMergeRefinementAlgorithm::AreClustersAssociated(const CartesianVector &upstreamPoint, const CartesianVector &upstreamDirection, const CartesianVector &downstreamPoint,
-    const CartesianVector &downstreamDirection) const
+bool TrackMergeRefinementAlgorithm::AreClustersAssociated(const CartesianVector &upstreamPoint, const CartesianVector &upstreamDirection,
+    const CartesianVector &downstreamPoint, const CartesianVector &downstreamDirection) const
 {
     if (downstreamPoint.GetZ() < upstreamPoint.GetZ())
         return false;
@@ -191,8 +202,8 @@ bool TrackMergeRefinementAlgorithm::AreClustersAssociated(const CartesianVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackMergeRefinementAlgorithm::GetUnavailableProtectedClusters(const ClusterPairAssociation &clusterAssociation, const ClusterList &createdMainTrackClusters,
-    ClusterList &protectedClusters) const
+void TrackMergeRefinementAlgorithm::GetUnavailableProtectedClusters(
+    const ClusterPairAssociation &clusterAssociation, const ClusterList &createdMainTrackClusters, ClusterList &protectedClusters) const
 {
     for (const Cluster *const pMainTrackCluster : createdMainTrackClusters)
     {
@@ -222,8 +233,8 @@ bool TrackMergeRefinementAlgorithm::AreExtrapolatedHitsNearBoundaries(const Calo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TrackMergeRefinementAlgorithm::ConsiderClusterAssociation(const ClusterPairAssociation &clusterAssociation, pandora::ClusterVector &clusterVector,
-    SlidingFitResultMapPair &slidingFitResultMapPair) const
+void TrackMergeRefinementAlgorithm::ConsiderClusterAssociation(const ClusterPairAssociation &clusterAssociation,
+    pandora::ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
     const Cluster *const upstreamCluster(clusterAssociation.GetUpstreamCluster()), *const downstreamCluster(clusterAssociation.GetDownstreamCluster());
     const Cluster *const pConsideredCluster(upstreamCluster->GetNCaloHits() > downstreamCluster->GetNCaloHits() ? downstreamCluster : upstreamCluster);
@@ -232,8 +243,9 @@ void TrackMergeRefinementAlgorithm::ConsiderClusterAssociation(const ClusterPair
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const Cluster *TrackMergeRefinementAlgorithm::CreateMainTrack(const ClusterPairAssociation &clusterAssociation, const ClusterToCaloHitListMap &clusterToCaloHitListMap,
-    const ClusterList *const pClusterList, ClusterVector &clusterVector, SlidingFitResultMapPair &slidingFitResultMapPair) const
+const Cluster *TrackMergeRefinementAlgorithm::CreateMainTrack(const ClusterPairAssociation &clusterAssociation,
+    const ClusterToCaloHitListMap &clusterToCaloHitListMap, const ClusterList *const pClusterList, ClusterVector &clusterVector,
+    SlidingFitResultMapPair &slidingFitResultMapPair) const
 {
     // Determine the shower clusters which contain hits that belong to the main track
     ClusterVector showerClustersToFragment;
@@ -246,10 +258,12 @@ const Cluster *TrackMergeRefinementAlgorithm::CreateMainTrack(const ClusterPairA
     std::sort(showerClustersToFragment.begin(), showerClustersToFragment.end(), LArClusterHelper::SortByNHits);
 
     ClusterList remnantClusterList;
-    const Cluster *const pMainTrackCluster(this->RemoveOffAxisHitsFromTrack(clusterAssociation.GetUpstreamCluster(), clusterAssociation.GetUpstreamMergePoint(),
-        false, clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second));
-    const Cluster *const pClusterToDelete(this->RemoveOffAxisHitsFromTrack(clusterAssociation.GetDownstreamCluster(), clusterAssociation.GetDownstreamMergePoint(),
-        true, clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second));
+    const Cluster *const pMainTrackCluster(
+        this->RemoveOffAxisHitsFromTrack(clusterAssociation.GetUpstreamCluster(), clusterAssociation.GetUpstreamMergePoint(), false,
+            clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second));
+    const Cluster *const pClusterToDelete(
+        this->RemoveOffAxisHitsFromTrack(clusterAssociation.GetDownstreamCluster(), clusterAssociation.GetDownstreamMergePoint(), true,
+            clusterToCaloHitListMap, remnantClusterList, *slidingFitResultMapPair.first, *slidingFitResultMapPair.second));
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pMainTrackCluster, pClusterToDelete));
 
@@ -264,7 +278,8 @@ const Cluster *TrackMergeRefinementAlgorithm::CreateMainTrack(const ClusterPairA
 
     // ATTN: Cleanup containers - choose to add created clusters back into containers
     ClusterList modifiedClusters(showerClustersToFragment.begin(), showerClustersToFragment.end());
-    modifiedClusters.push_back(clusterAssociation.GetUpstreamCluster()); modifiedClusters.push_back(clusterAssociation.GetDownstreamCluster());
+    modifiedClusters.push_back(clusterAssociation.GetUpstreamCluster());
+    modifiedClusters.push_back(clusterAssociation.GetDownstreamCluster());
     createdClusters.push_back(pMainTrackCluster);
     this->UpdateContainers(createdClusters, modifiedClusters, LArClusterHelper::SortByNHits, clusterVector, slidingFitResultMapPair);
 
@@ -275,28 +290,27 @@ const Cluster *TrackMergeRefinementAlgorithm::CreateMainTrack(const ClusterPairA
 
 StatusCode TrackMergeRefinementAlgorithm::ReadSettings(const pandora::TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLoopIterations", m_maxLoopIterations));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxLoopIterations", m_maxLoopIterations));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLengthSum", m_minClusterLengthSum));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLengthSum", m_minClusterLengthSum));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSeparationDistance", m_minSeparationDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinSeparationDistance", m_minSeparationDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinDirectionDeviationCosAngle", m_minDirectionDeviationCosAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinDirectionDeviationCosAngle", m_minDirectionDeviationCosAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPredictedMergePointOffset", m_maxPredictedMergePointOffset));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxPredictedMergePointOffset", m_maxPredictedMergePointOffset));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DistanceToLine", m_distanceToLine));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DistanceToLine", m_distanceToLine));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BoundaryTolerance", m_boundaryTolerance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BoundaryTolerance", m_boundaryTolerance));
 
     return TrackRefinementBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
-}// namespace lar_content
+} // namespace lar_content

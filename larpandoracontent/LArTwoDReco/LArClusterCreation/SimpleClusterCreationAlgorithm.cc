@@ -17,8 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-SimpleClusterCreationAlgorithm::SimpleClusterCreationAlgorithm() :
-    m_clusteringWindowSquared(1.f)
+SimpleClusterCreationAlgorithm::SimpleClusterCreationAlgorithm() : m_clusteringWindowSquared(1.f)
 {
 }
 
@@ -147,8 +146,7 @@ void SimpleClusterCreationAlgorithm::CollectAssociatedHits(const CaloHit *const 
 StatusCode SimpleClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     float clusteringWindow = std::sqrt(m_clusteringWindowSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusteringWindow", clusteringWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ClusteringWindow", clusteringWindow));
     m_clusteringWindowSquared = clusteringWindow * clusteringWindow;
 
     return STATUS_CODE_SUCCESS;

@@ -13,8 +13,8 @@
 namespace lar_content
 {
 
-typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::Cluster *const>  ClusterCharacterisationFeatureTool;
-typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::ParticleFlowObject *const>  PfoCharacterisationFeatureTool;
+typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::Cluster *const> ClusterCharacterisationFeatureTool;
+typedef MvaFeatureTool<const pandora::Algorithm *const, const pandora::ParticleFlowObject *const> PfoCharacterisationFeatureTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-   /**
+    /**
     *  @brief  Calculation of the shower fit width variable
     *
     *  @param  pAlgorithm address of the calling algorithm
@@ -44,8 +44,8 @@ private:
     */
     float CalculateShowerFitWidth(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster) const;
 
-    unsigned int    m_slidingShowerFitWindow;        ///< The sliding shower fit window
-    unsigned int    m_slidingLinearFitWindow;        ///< The sliding linear fit window
+    unsigned int m_slidingShowerFitWindow; ///< The sliding shower fit window
+    unsigned int m_slidingLinearFitWindow; ///< The sliding linear fit window
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -80,8 +80,8 @@ private:
     void CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge, float &diffWithStraigthLineMean,
         float &diffWithStraightLineSigma, float &dTdLWidth, float &maxFitGapLength, float &rmsSlidingLinearFit) const;
 
-    unsigned int    m_slidingLinearFitWindow;       ///< The sliding linear fit window
-    unsigned int    m_slidingLinearFitWindowLarge;  ///< The sliding linear fit window - should be large, providing a simple linear fit
+    unsigned int m_slidingLinearFitWindow;      ///< The sliding linear fit window
+    unsigned int m_slidingLinearFitWindowLarge; ///< The sliding linear fit window - should be large, providing a simple linear fit
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -111,7 +111,7 @@ private:
      */
     float CalculateVertexDistance(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster) const;
 
-    unsigned int    m_slidingLinearFitWindow;       ///< The sliding linear fit window
+    unsigned int m_slidingLinearFitWindow; ///< The sliding linear fit window
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -162,11 +162,11 @@ private:
      *  @param  maxFitGapLength to receive the max fit gap length variable
      *  @param  rmsSlidingLinearFit to receive the RMS from the linear fit
      */
-    void CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge, float &diffWithStraigthLineMean,
-        float &maxFitGapLength, float &rmsSlidingLinearFit) const;
+    void CalculateVariablesSlidingLinearFit(const pandora::Cluster *const pCluster, float &straightLineLengthLarge,
+        float &diffWithStraigthLineMean, float &maxFitGapLength, float &rmsSlidingLinearFit) const;
 
-    unsigned int    m_slidingLinearFitWindow;       ///< The sliding linear fit window
-    unsigned int    m_slidingLinearFitWindowLarge;  ///< The sliding linear fit window - should be large, providing a simple linear fit
+    unsigned int m_slidingLinearFitWindow;      ///< The sliding linear fit window
+    unsigned int m_slidingLinearFitWindowLarge; ///< The sliding linear fit window - should be large, providing a simple linear fit
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -225,10 +225,11 @@ private:
      *
      *  @return the opening angle
      */
-    float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary, const pandora::CartesianVector &eigenValues) const;
+    float OpeningAngle(const pandora::CartesianVector &principal, const pandora::CartesianVector &secondary,
+        const pandora::CartesianVector &eigenValues) const;
 
-    float   m_hitFraction;          ///< Fraction of hits in start and end of pfo
-    float   m_defaultValue;         ///< Default value to return, in case calculation not feasible
+    float m_hitFraction;  ///< Fraction of hits in start and end of pfo
+    float m_defaultValue; ///< Default value to return, in case calculation not feasible
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -283,8 +284,7 @@ public:
          */
         bool operator()(const pandora::CaloHit *const left, const pandora::CaloHit *const right) const;
 
-        pandora::CartesianVector   m_neutrinoVertex;    //The neutrino vertex used to sort
-
+        pandora::CartesianVector m_neutrinoVertex; //The neutrino vertex used to sort
     };
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
@@ -301,8 +301,8 @@ private:
      *  @param  startCharge, to receive the charge in the initial 10% hits
      *  @param  endCharge, to receive the charge in the last 10% hits
      */
-    void CalculateChargeVariables(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge, float &chargeSigma,
-        float &chargeMean, float &endCharge);
+    void CalculateChargeVariables(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, float &totalCharge,
+        float &chargeSigma, float &chargeMean, float &endCharge);
 
     /**
      *  @brief  Function to order the calo hit list by distance to neutrino vertex
@@ -312,11 +312,12 @@ private:
      *  @param  caloHitList to receive the ordered calo hit list
      *
      */
-    void OrderCaloHitsByDistanceToVertex(const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
+    void OrderCaloHitsByDistanceToVertex(
+        const pandora::Algorithm *const pAlgorithm, const pandora::Cluster *const pCluster, pandora::CaloHitList &caloHitList);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float           m_endChargeFraction;           ///< Fraction of hits that will be considered to calculate end charge (default 10%)
+    float m_endChargeFraction; ///< Fraction of hits that will be considered to calculate end charge (default 10%)
 };
 
 } // namespace lar_content

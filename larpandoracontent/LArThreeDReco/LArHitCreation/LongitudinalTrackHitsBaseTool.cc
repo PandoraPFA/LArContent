@@ -26,8 +26,8 @@ LongitudinalTrackHitsBaseTool::LongitudinalTrackHitsBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LongitudinalTrackHitsBaseTool::GetTrackHits3D(const CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &inputSlidingFitMap,
-    ProtoHitVector &protoHitVector) const
+void LongitudinalTrackHitsBaseTool::GetTrackHits3D(
+    const CaloHitVector &inputTwoDHits, const MatchedSlidingFitMap &inputSlidingFitMap, ProtoHitVector &protoHitVector) const
 {
     MatchedSlidingFitMap matchedSlidingFitMap;
     CartesianVector vtx3D(0.f, 0.f, 0.f), end3D(0.f, 0.f, 0.f);
@@ -127,11 +127,12 @@ void LongitudinalTrackHitsBaseTool::GetVertexAndEndPositions(const MatchedSlidin
             const CartesianVector projVtxU(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtx3D, TPC_VIEW_U));
             const CartesianVector projEndU(LArGeometryHelper::ProjectPosition(this->GetPandora(), end3D, TPC_VIEW_U));
 
-            if((endU - vtxU).GetMagnitudeSquared() > m_minTrackLengthSquared &&
-               (projVtxU - vtxU).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projVtxU - endU).GetMagnitudeSquared()) &&
-               (projEndU - endU).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projEndU - vtxU).GetMagnitudeSquared()))
+            if ((endU - vtxU).GetMagnitudeSquared() > m_minTrackLengthSquared &&
+                (projVtxU - vtxU).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projVtxU - endU).GetMagnitudeSquared()) &&
+                (projEndU - endU).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projEndU - vtxU).GetMagnitudeSquared()))
             {
-                matchedU = true;  ++matchedViews;
+                matchedU = true;
+                ++matchedViews;
             }
         }
 
@@ -140,11 +141,12 @@ void LongitudinalTrackHitsBaseTool::GetVertexAndEndPositions(const MatchedSlidin
             const CartesianVector projVtxV(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtx3D, TPC_VIEW_V));
             const CartesianVector projEndV(LArGeometryHelper::ProjectPosition(this->GetPandora(), end3D, TPC_VIEW_V));
 
-            if((endV - vtxV).GetMagnitudeSquared() > m_minTrackLengthSquared &&
-               (projVtxV - vtxV).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projVtxV - endV).GetMagnitudeSquared()) &&
-               (projEndV - endV).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projEndV - vtxV).GetMagnitudeSquared()))
+            if ((endV - vtxV).GetMagnitudeSquared() > m_minTrackLengthSquared &&
+                (projVtxV - vtxV).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projVtxV - endV).GetMagnitudeSquared()) &&
+                (projEndV - endV).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projEndV - vtxV).GetMagnitudeSquared()))
             {
-                matchedV = true;  ++matchedViews;
+                matchedV = true;
+                ++matchedViews;
             }
         }
 
@@ -153,11 +155,12 @@ void LongitudinalTrackHitsBaseTool::GetVertexAndEndPositions(const MatchedSlidin
             const CartesianVector projVtxW(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtx3D, TPC_VIEW_W));
             const CartesianVector projEndW(LArGeometryHelper::ProjectPosition(this->GetPandora(), end3D, TPC_VIEW_W));
 
-            if((endW - vtxW).GetMagnitudeSquared() > m_minTrackLengthSquared &&
-               (projVtxW - vtxW).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projVtxW - endW).GetMagnitudeSquared()) &&
-               (projEndW - endW).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projEndW - vtxW).GetMagnitudeSquared()))
+            if ((endW - vtxW).GetMagnitudeSquared() > m_minTrackLengthSquared &&
+                (projVtxW - vtxW).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projVtxW - endW).GetMagnitudeSquared()) &&
+                (projEndW - endW).GetMagnitudeSquared() < std::min(m_vtxDisplacementCutSquared, (projEndW - vtxW).GetMagnitudeSquared()))
             {
-                matchedW = true;  ++matchedViews;
+                matchedW = true;
+                ++matchedViews;
             }
         }
 
@@ -211,14 +214,13 @@ void LongitudinalTrackHitsBaseTool::UpdateBestPosition(const HitType hitType1, c
 StatusCode LongitudinalTrackHitsBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     float vtxDisplacementCut = std::sqrt(m_vtxDisplacementCutSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexDisplacementCut", vtxDisplacementCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexDisplacementCut", vtxDisplacementCut));
     m_vtxDisplacementCutSquared = vtxDisplacementCut * vtxDisplacementCut;
 
     float minTrackLength = std::sqrt(m_minTrackLengthSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinTrackLength", minTrackLength));
-    m_minTrackLengthSquared =  minTrackLength * minTrackLength;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinTrackLength", minTrackLength));
+    m_minTrackLengthSquared = minTrackLength * minTrackLength;
 
     return TrackHitsBaseTool::ReadSettings(xmlHandle);
 }

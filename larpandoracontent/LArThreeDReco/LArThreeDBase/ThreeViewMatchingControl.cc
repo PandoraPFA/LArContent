@@ -113,7 +113,7 @@ void ThreeViewMatchingControl<T>::UpdateUponDeletion(const Cluster *const pDelet
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const std::string &ThreeViewMatchingControl<T>::GetClusterListName(const HitType hitType) const
 {
     if (TPC_VIEW_U == hitType)
@@ -130,7 +130,7 @@ const std::string &ThreeViewMatchingControl<T>::GetClusterListName(const HitType
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const pandora::ClusterList &ThreeViewMatchingControl<T>::GetInputClusterList(const HitType hitType) const
 {
     if ((TPC_VIEW_U == hitType) && m_pInputClusterListU)
@@ -147,7 +147,7 @@ const pandora::ClusterList &ThreeViewMatchingControl<T>::GetInputClusterList(con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const pandora::ClusterList &ThreeViewMatchingControl<T>::GetSelectedClusterList(const HitType hitType) const
 {
     if (TPC_VIEW_U == hitType)
@@ -167,12 +167,12 @@ const pandora::ClusterList &ThreeViewMatchingControl<T>::GetSelectedClusterList(
 template <typename T>
 void ThreeViewMatchingControl<T>::SelectAllInputClusters()
 {
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
-        m_inputClusterListNameU, m_pInputClusterListU));
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
-        m_inputClusterListNameV, m_pInputClusterListV));
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*m_pAlgorithm,
-        m_inputClusterListNameW, m_pInputClusterListW));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
+        PandoraContentApi::GetList(*m_pAlgorithm, m_inputClusterListNameU, m_pInputClusterListU));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
+        PandoraContentApi::GetList(*m_pAlgorithm, m_inputClusterListNameV, m_pInputClusterListV));
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=,
+        PandoraContentApi::GetList(*m_pAlgorithm, m_inputClusterListNameW, m_pInputClusterListW));
 
     if (!m_pInputClusterListU || !m_pInputClusterListV || !m_pInputClusterListW)
     {

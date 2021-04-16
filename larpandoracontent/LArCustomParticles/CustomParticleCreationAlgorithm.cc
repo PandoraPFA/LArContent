@@ -42,13 +42,13 @@ StatusCode CustomParticleCreationAlgorithm::Run()
     }
 
     // Create temporary lists
-    const PfoList *pTempPfoList = NULL; std::string tempPfoListName;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTempPfoList,
-        tempPfoListName));
+    const PfoList *pTempPfoList = NULL;
+    std::string tempPfoListName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTempPfoList, tempPfoListName));
 
-    const VertexList *pTempVertexList = NULL; std::string tempVertexListName;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTempVertexList,
-        tempVertexListName));
+    const VertexList *pTempVertexList = NULL;
+    std::string tempVertexListName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pTempVertexList, tempVertexListName));
 
     // Loop over input Pfos
     PfoList pfoList(pPfoList->begin(), pPfoList->end());

@@ -93,7 +93,7 @@ void ThreeViewShowersAlgorithm::SelectInputClusters(const ClusterList *const pIn
 
 void ThreeViewShowersAlgorithm::PrepareInputClusters(ClusterList &preparedClusterList)
 {
-    for (ClusterList::iterator iter = preparedClusterList.begin(), iterEnd = preparedClusterList.end(); iter != iterEnd; )
+    for (ClusterList::iterator iter = preparedClusterList.begin(), iterEnd = preparedClusterList.end(); iter != iterEnd;)
     {
         const Cluster *const pCluster(*iter);
 
@@ -146,7 +146,8 @@ void ThreeViewShowersAlgorithm::RemoveFromSlidingFitCache(const Cluster *const p
 void ThreeViewShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     ShowerOverlapResult overlapResult;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
     if (overlapResult.IsInitialized())
         this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
@@ -154,7 +155,8 @@ void ThreeViewShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClu
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeViewShowersAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW, ShowerOverlapResult &overlapResult)
+StatusCode ThreeViewShowersAlgorithm::CalculateOverlapResult(
+    const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW, ShowerOverlapResult &overlapResult)
 {
     const TwoDSlidingShowerFitResult &fitResultU(this->GetCachedSlidingFitResult(pClusterU));
     const TwoDSlidingShowerFitResult &fitResultV(this->GetCachedSlidingFitResult(pClusterV));
@@ -183,7 +185,8 @@ StatusCode ThreeViewShowersAlgorithm::CalculateOverlapResult(const Cluster *cons
     if (0 == nSampledHits)
         return STATUS_CODE_NOT_FOUND;
 
-    const XOverlap xOverlapObject(xSampling.m_uMinX, xSampling.m_uMaxX, xSampling.m_vMinX, xSampling.m_vMaxX, xSampling.m_wMinX, xSampling.m_wMaxX, xSampling.m_xOverlapSpan);
+    const XOverlap xOverlapObject(xSampling.m_uMinX, xSampling.m_uMaxX, xSampling.m_vMinX, xSampling.m_vMaxX, xSampling.m_wMinX,
+        xSampling.m_wMaxX, xSampling.m_xOverlapSpan);
     const ShowerOverlapResult showerOverlapResult(nMatchedHits, nSampledHits, xOverlapObject);
 
     if ((showerOverlapResult.GetMatchedFraction() < m_minShowerMatchedFraction) || (showerOverlapResult.GetNMatchedSamplingPoints() < m_minShowerMatchedPoints))
@@ -195,9 +198,9 @@ StatusCode ThreeViewShowersAlgorithm::CalculateOverlapResult(const Cluster *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitResult &fitResultU, const TwoDSlidingShowerFitResult &fitResultV,
-    const TwoDSlidingShowerFitResult &fitResultW, const XSampling &xSampling, ShowerPositionMapPair &positionMapsU, ShowerPositionMapPair &positionMapsV,
-    ShowerPositionMapPair &positionMapsW) const
+void ThreeViewShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFitResult &fitResultU,
+    const TwoDSlidingShowerFitResult &fitResultV, const TwoDSlidingShowerFitResult &fitResultW, const XSampling &xSampling,
+    ShowerPositionMapPair &positionMapsU, ShowerPositionMapPair &positionMapsV, ShowerPositionMapPair &positionMapsW) const
 {
     const unsigned int nPoints(static_cast<unsigned int>(xSampling.m_nPoints));
 
@@ -258,13 +261,14 @@ void ThreeViewShowersAlgorithm::GetShowerPositionMaps(const TwoDSlidingShowerFit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const pCluster, const XSampling &xSampling, const ShowerPositionMapPair &positionMaps,
-    unsigned int &nSampledHits, unsigned int &nMatchedHits) const
+void ThreeViewShowersAlgorithm::GetBestHitOverlapFraction(const Cluster *const pCluster, const XSampling &xSampling,
+    const ShowerPositionMapPair &positionMaps, unsigned int &nSampledHits, unsigned int &nMatchedHits) const
 {
     if ((xSampling.m_maxX - xSampling.m_minX) < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    nSampledHits = 0; nMatchedHits = 0;
+    nSampledHits = 0;
+    nMatchedHits = 0;
     unsigned int nMatchedHits1(0), nMatchedHits2(0);
     const OrderedCaloHitList &orderedCaloHitList(pCluster->GetOrderedCaloHitList());
 
@@ -302,7 +306,7 @@ void ThreeViewShowersAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 
-    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
+    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd;)
     {
         if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
@@ -321,8 +325,8 @@ void ThreeViewShowersAlgorithm::ExamineOverlapContainer()
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ThreeViewShowersAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV,
-    const TwoDSlidingFitResult &fitResultW)
+ThreeViewShowersAlgorithm::XSampling::XSampling(
+    const TwoDSlidingFitResult &fitResultU, const TwoDSlidingFitResult &fitResultV, const TwoDSlidingFitResult &fitResultW)
 {
     fitResultU.GetMinAndMaxX(m_uMinX, m_uMaxX);
     fitResultV.GetMinAndMaxX(m_vMinX, m_vMaxX);
@@ -334,9 +338,12 @@ ThreeViewShowersAlgorithm::XSampling::XSampling(const TwoDSlidingFitResult &fitR
 
     if (m_xOverlapSpan > std::numeric_limits<float>::epsilon())
     {
-        const float nPointsU(std::fabs((m_xOverlapSpan / (m_uMaxX - m_uMinX)) * static_cast<float>(fitResultU.GetMaxLayer() - fitResultU.GetMinLayer())));
-        const float nPointsV(std::fabs((m_xOverlapSpan / (m_vMaxX - m_vMinX)) * static_cast<float>(fitResultV.GetMaxLayer() - fitResultV.GetMinLayer())));
-        const float nPointsW(std::fabs((m_xOverlapSpan / (m_wMaxX - m_wMinX)) * static_cast<float>(fitResultW.GetMaxLayer() - fitResultW.GetMinLayer())));
+        const float nPointsU(
+            std::fabs((m_xOverlapSpan / (m_uMaxX - m_uMinX)) * static_cast<float>(fitResultU.GetMaxLayer() - fitResultU.GetMinLayer())));
+        const float nPointsV(
+            std::fabs((m_xOverlapSpan / (m_vMaxX - m_vMinX)) * static_cast<float>(fitResultV.GetMaxLayer() - fitResultV.GetMinLayer())));
+        const float nPointsW(
+            std::fabs((m_xOverlapSpan / (m_wMaxX - m_wMinX)) * static_cast<float>(fitResultW.GetMaxLayer() - fitResultW.GetMinLayer())));
         m_nPoints = 1.f + ((nPointsU + nPointsV + nPointsW) / 3.f);
     }
 }
@@ -358,12 +365,11 @@ StatusCode ThreeViewShowersAlgorithm::XSampling::GetBin(const float x, int &xBin
 StatusCode ThreeViewShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "ShowerTools", algorithmToolVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "ShowerTools", algorithmToolVector));
 
     for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
-        ShowerTensorTool *const pShowerTensorTool(dynamic_cast<ShowerTensorTool*>(*iter));
+        ShowerTensorTool *const pShowerTensorTool(dynamic_cast<ShowerTensorTool *>(*iter));
 
         if (!pShowerTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
@@ -371,28 +377,27 @@ StatusCode ThreeViewShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         m_algorithmToolVector.push_back(pShowerTensorTool);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IgnoreUnavailableClusters", m_ignoreUnavailableClusters));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "IgnoreUnavailableClusters", m_ignoreUnavailableClusters));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterCaloHits", m_minClusterCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterCaloHits", m_minClusterCaloHits));
 
     float minClusterLength = std::sqrt(m_minClusterLengthSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinShowerMatchedFraction", m_minShowerMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinShowerMatchedFraction", m_minShowerMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinShowerMatchedPoints", m_minShowerMatchedPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinShowerMatchedPoints", m_minShowerMatchedPoints));
 
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }

@@ -108,9 +108,9 @@ private:
     typedef std::unordered_map<const pandora::Pandora *, const pandora::Pandora *> PandoraRelationMap;
     typedef std::unordered_map<const pandora::Pandora *, unsigned int> PandoraToVolumeIdMap;
 
-    PandoraInstanceMap              m_primaryToDaughtersMap;    ///< The map from primary pandora instance to list of daughter pandora instances
-    PandoraRelationMap              m_daughterToPrimaryMap;     ///< The map from daughter pandora instance to primary pandora instance
-    PandoraToVolumeIdMap            m_pandoraToVolumeIdMap;     ///< The map from pandora instance to volume id
+    PandoraInstanceMap m_primaryToDaughtersMap;  ///< The map from primary pandora instance to list of daughter pandora instances
+    PandoraRelationMap m_daughterToPrimaryMap;   ///< The map from daughter pandora instance to primary pandora instance
+    PandoraToVolumeIdMap m_pandoraToVolumeIdMap; ///< The map from pandora instance to volume id
 
     friend class MultiPandoraApi;
 };

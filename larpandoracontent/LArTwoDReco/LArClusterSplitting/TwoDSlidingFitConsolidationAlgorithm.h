@@ -32,7 +32,7 @@ protected:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterToHitMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::CaloHitList> ClusterToHitMap;
 
     /**
      *  @brief Get the list of hits to be added or removed from clusters
@@ -53,8 +53,8 @@ private:
      *  @param trackClusters  the output vector of track-like clusters
      *  @param showerClusters  the output vector of shower-like clusters
      */
-    void SortInputClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &trackClusters,
-        pandora::ClusterVector &showerClusters) const;
+    void SortInputClusters(
+        const pandora::ClusterList *const pClusterList, pandora::ClusterVector &trackClusters, pandora::ClusterVector &showerClusters) const;
 
     /**
      *  @brief Apply sliding linear fits to track clusters
@@ -88,10 +88,10 @@ private:
      */
     pandora::StatusCode RebuildClusters(const ClusterToHitMap &clustersAtStart, const pandora::ClusterSet &unavailableClusters) const;
 
-    std::string  m_reclusteringAlgorithmName;  ///< Name of daughter algorithm to use for cluster re-building
-    float        m_minTrackLength;             ///< Minimum length of track clusters to consolidate
-    float        m_maxClusterLength;           ///< Maximum length of shower clusters to use in re-building
-    unsigned int m_halfWindowLayers;           ///< Size of layer window for sliding fit results
+    std::string m_reclusteringAlgorithmName; ///< Name of daughter algorithm to use for cluster re-building
+    float m_minTrackLength;                  ///< Minimum length of track clusters to consolidate
+    float m_maxClusterLength;                ///< Maximum length of shower clusters to use in re-building
+    unsigned int m_halfWindowLayers;         ///< Size of layer window for sliding fit results
 };
 
 } // namespace lar_content

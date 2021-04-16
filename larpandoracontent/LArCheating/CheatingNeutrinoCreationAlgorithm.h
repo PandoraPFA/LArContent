@@ -54,7 +54,7 @@ private:
      */
     void AddNeutrinoVertex(const pandora::MCParticle *const pMCNeutrino, const pandora::ParticleFlowObject *const pNeutrinoPfo) const;
 
-    typedef std::unordered_map<const pandora::MCParticle*, const pandora::ParticleFlowObject*> MCParticleToPfoMap;
+    typedef std::unordered_map<const pandora::MCParticle *, const pandora::ParticleFlowObject *> MCParticleToPfoMap;
 
     /**
      *  @brief  Extract candidate daughter pfos from external lists and populate a map from main mc particle (or primary) to pfo
@@ -75,15 +75,15 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool                    m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
+    bool m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
 
-    std::string             m_mcParticleListName;           ///< The name of the three d mc particle list name
-    std::string             m_neutrinoPfoListName;          ///< The name of the neutrino pfo list
+    std::string m_mcParticleListName;  ///< The name of the three d mc particle list name
+    std::string m_neutrinoPfoListName; ///< The name of the neutrino pfo list
 
-    std::string             m_vertexListName;               ///< The name of the neutrino vertex list
-    pandora::StringVector   m_daughterPfoListNames;         ///< The list of daughter pfo list names
+    std::string m_vertexListName;                 ///< The name of the neutrino vertex list
+    pandora::StringVector m_daughterPfoListNames; ///< The list of daughter pfo list names
 
-    float                   m_vertexTolerance;              ///< Tolerance, 3d displacement, allowed between reco neutrino vertex and mc neutrino endpoint
+    float m_vertexTolerance; ///< Tolerance, 3d displacement, allowed between reco neutrino vertex and mc neutrino endpoint
 };
 
 } // namespace lar_content

@@ -38,7 +38,7 @@ public:
      *  @param  eltList
      *  @param  region
      */
-    void build(std::vector<KDTreeNodeInfoT<DATA, DIM> > &eltList, const KDTreeBoxT<DIM> &region);
+    void build(std::vector<KDTreeNodeInfoT<DATA, DIM>> &eltList, const KDTreeBoxT<DIM> &region);
 
     /**
      *  @brief  Search in the KDTree for all points that would be contained in the given searchbox
@@ -47,7 +47,7 @@ public:
      *  @param  searchBox
      *  @param  resRecHitList
      */
-    void search(const KDTreeBoxT<DIM> &searchBox, std::vector<KDTreeNodeInfoT<DATA, DIM> > &resRecHitList);
+    void search(const KDTreeBoxT<DIM> &searchBox, std::vector<KDTreeNodeInfoT<DATA, DIM>> &resRecHitList);
 
     /**
      *  @brief  findNearestNeighbour
@@ -122,7 +122,7 @@ private:
      *  @param  best_dist
      */
     void recNearestNeighbour(unsigned depth, const KDTreeNodeT<DATA, DIM> *current, const KDTreeNodeInfoT<DATA, DIM> &point,
-          const KDTreeNodeT<DATA, DIM> *&best_match, float &best_dist);
+        const KDTreeNodeT<DATA, DIM> *&best_match, float &best_dist);
 
     /**
      *  @brief  Add all elements of an subtree to the closest elements. Used during the recSearch().
@@ -146,13 +146,13 @@ private:
      */
     void clearTree();
 
-    KDTreeNodeT<DATA, DIM>                     *root_;              ///< The KDTree root
-    KDTreeNodeT<DATA, DIM>                     *nodePool_;          ///< Node pool allows us to do just 1 call to new for each tree building
-    int                                         nodePoolSize_;      ///< The node pool size
-    int                                         nodePoolPos_;       ///< The node pool position
+    KDTreeNodeT<DATA, DIM> *root_;     ///< The KDTree root
+    KDTreeNodeT<DATA, DIM> *nodePool_; ///< Node pool allows us to do just 1 call to new for each tree building
+    int nodePoolSize_;                 ///< The node pool size
+    int nodePoolPos_;                  ///< The node pool position
 
-    std::vector<KDTreeNodeInfoT<DATA, DIM> >   *closestNeighbour;   ///< The closest neighbour
-    std::vector<KDTreeNodeInfoT<DATA, DIM> >   *initialEltList;     ///< The initial element list
+    std::vector<KDTreeNodeInfoT<DATA, DIM>> *closestNeighbour; ///< The closest neighbour
+    std::vector<KDTreeNodeInfoT<DATA, DIM>> *initialEltList;   ///< The initial element list
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -180,7 +180,7 @@ inline KDTreeLinkerAlgo<DATA, DIM>::~KDTreeLinkerAlgo()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename DATA, unsigned DIM>
-inline void KDTreeLinkerAlgo<DATA, DIM>::build(std::vector<KDTreeNodeInfoT<DATA, DIM> > &eltList, const KDTreeBoxT<DIM> &region)
+inline void KDTreeLinkerAlgo<DATA, DIM>::build(std::vector<KDTreeNodeInfoT<DATA, DIM>> &eltList, const KDTreeBoxT<DIM> &region)
 {
     if (eltList.size())
     {
@@ -221,8 +221,10 @@ inline int KDTreeLinkerAlgo<DATA, DIM>::medianSearch(int low, int high, int tree
         {
             // The even depth is associated to dim1 dimension, the odd one to dim2 dimension
             const unsigned thedim = treeDepth % DIM;
-            while ((*initialEltList)[i].dims[thedim] < elt.dims[thedim]) ++i;
-            while ((*initialEltList)[j].dims[thedim] > elt.dims[thedim]) --j;
+            while ((*initialEltList)[i].dims[thedim] < elt.dims[thedim])
+                ++i;
+            while ((*initialEltList)[j].dims[thedim] > elt.dims[thedim])
+                --j;
 
             if (i <= j)
             {
@@ -230,11 +232,12 @@ inline int KDTreeLinkerAlgo<DATA, DIM>::medianSearch(int low, int high, int tree
                 i++;
                 j--;
             }
-        }
-        while (i <= j);
+        } while (i <= j);
 
-        if (j < median) l = i;
-        if (i > median) m = j;
+        if (j < median)
+            l = i;
+        if (i > median)
+            m = j;
     }
 
     return median;
@@ -243,7 +246,7 @@ inline int KDTreeLinkerAlgo<DATA, DIM>::medianSearch(int low, int high, int tree
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename DATA, unsigned DIM>
-inline void KDTreeLinkerAlgo<DATA, DIM>::search(const KDTreeBoxT<DIM> &trackBox, std::vector<KDTreeNodeInfoT<DATA, DIM> > &recHits)
+inline void KDTreeLinkerAlgo<DATA, DIM>::search(const KDTreeBoxT<DIM> &trackBox, std::vector<KDTreeNodeInfoT<DATA, DIM>> &recHits)
 {
     if (root_)
     {
@@ -290,7 +293,7 @@ inline void KDTreeLinkerAlgo<DATA, DIM>::recSearch(const KDTreeNodeT<DATA, DIM> 
             const auto regionmin = current->left->region.dimmin[i];
             const auto regionmax = current->left->region.dimmax[i];
             isFullyContained = isFullyContained && (regionmin >= trackBox.dimmin[i] && regionmax <= trackBox.dimmax[i]);
-            hasIntersection  = hasIntersection  && (regionmin <  trackBox.dimmax[i] && regionmax >  trackBox.dimmin[i]);
+            hasIntersection = hasIntersection && (regionmin < trackBox.dimmax[i] && regionmax > trackBox.dimmin[i]);
         }
 
         if (isFullyContained)
@@ -311,7 +314,7 @@ inline void KDTreeLinkerAlgo<DATA, DIM>::recSearch(const KDTreeNodeT<DATA, DIM> 
             const auto regionmin = current->right->region.dimmin[i];
             const auto regionmax = current->right->region.dimmax[i];
             isFullyContained = isFullyContained && (regionmin >= trackBox.dimmin[i] && regionmax <= trackBox.dimmax[i]);
-            hasIntersection  = hasIntersection  && (regionmin <  trackBox.dimmax[i] && regionmax >  trackBox.dimmin[i]);
+            hasIntersection = hasIntersection && (regionmin < trackBox.dimmax[i] && regionmax > trackBox.dimmin[i]);
         }
 
         if (isFullyContained)
@@ -328,8 +331,8 @@ inline void KDTreeLinkerAlgo<DATA, DIM>::recSearch(const KDTreeNodeT<DATA, DIM> 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename DATA, unsigned DIM>
-inline void KDTreeLinkerAlgo<DATA, DIM>::findNearestNeighbour(const KDTreeNodeInfoT<DATA, DIM> &point, const KDTreeNodeInfoT<DATA, DIM> *&result,
-    float &distance)
+inline void KDTreeLinkerAlgo<DATA, DIM>::findNearestNeighbour(
+    const KDTreeNodeInfoT<DATA, DIM> &point, const KDTreeNodeInfoT<DATA, DIM> *&result, float &distance)
 {
     if (nullptr != result || distance != std::numeric_limits<float>::max())
     {
@@ -414,7 +417,7 @@ inline void KDTreeLinkerAlgo<DATA, DIM>::recNearestNeighbour(unsigned int depth,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template < typename DATA, unsigned DIM >
+template <typename DATA, unsigned DIM>
 inline void KDTreeLinkerAlgo<DATA, DIM>::addSubtree(const KDTreeNodeT<DATA, DIM> *current)
 {
     // By construction, current can't be null
@@ -440,7 +443,7 @@ inline float KDTreeLinkerAlgo<DATA, DIM>::dist2(const KDTreeNodeInfoT<DATA, DIM>
 {
     double d = 0.;
 
-    for (unsigned i = 0 ; i < DIM; ++i)
+    for (unsigned i = 0; i < DIM; ++i)
     {
         const double diff = a.dims[i] - b.dims[i];
         d += diff * diff;

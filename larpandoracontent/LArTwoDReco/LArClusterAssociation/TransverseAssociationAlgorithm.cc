@@ -127,7 +127,7 @@ void TransverseAssociationAlgorithm::GetNearbyClusterMap(const ClusterVector &al
         allCaloHits.insert(allCaloHits.end(), daughterHits.begin(), daughterHits.end());
 
         for (const CaloHit *const pCaloHit : daughterHits)
-            (void) hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
+            (void)hitToClusterMap.insert(HitToClusterMap::value_type(pCaloHit, pCluster));
     }
 
     HitKDTree2D kdTree;
@@ -149,14 +149,15 @@ void TransverseAssociationAlgorithm::GetNearbyClusterMap(const ClusterVector &al
             kdTree.search(searchRegionHits, found);
 
             for (const auto &hit : found)
-                (void) nearbyClusters[pCluster].insert(hitToClusterMap.at(hit.data));
+                (void)nearbyClusters[pCluster].insert(hitToClusterMap.at(hit.data));
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inputVector, ClusterVector &shortVector, ClusterVector &transverseMediumVector, ClusterVector &longitudinalMediumVector, ClusterVector &longVector) const
+void TransverseAssociationAlgorithm::SortInputClusters(const ClusterVector &inputVector, ClusterVector &shortVector,
+    ClusterVector &transverseMediumVector, ClusterVector &longitudinalMediumVector, ClusterVector &longVector) const
 {
     for (ClusterVector::const_iterator iter = inputVector.begin(), iterEnd = inputVector.end(); iter != iterEnd; ++iter)
     {
@@ -258,8 +259,9 @@ void TransverseAssociationAlgorithm::FillTransverseClusterList(const ClusterToCl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterToClustersMap &nearbyClusters, const TransverseClusterList &transverseClusterList,
-    const ClusterAssociationMap &transverseAssociationMap, ClusterAssociationMap &clusterAssociationMap) const
+void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterToClustersMap &nearbyClusters,
+    const TransverseClusterList &transverseClusterList, const ClusterAssociationMap &transverseAssociationMap,
+    ClusterAssociationMap &clusterAssociationMap) const
 {
     for (TransverseClusterList::const_iterator iter1 = transverseClusterList.begin(), iterEnd1 = transverseClusterList.end(); iter1 != iterEnd1; ++iter1)
     {
@@ -270,24 +272,23 @@ void TransverseAssociationAlgorithm::FillTransverseAssociationMap(const ClusterT
         if (transverseAssociationMap.end() == iterInner)
             continue;
 
-        for (TransverseClusterList::const_iterator iter2 = transverseClusterList.begin(), iterEnd2 = transverseClusterList.end(); iter2 != iterEnd2; ++iter2)
+        for (TransverseClusterList::const_iterator iter2 = transverseClusterList.begin(), iterEnd2 = transverseClusterList.end();
+             iter2 != iterEnd2; ++iter2)
         {
             LArTransverseCluster *const pOuterTransverseCluster = *iter2;
             const Cluster *const pOuterCluster(pOuterTransverseCluster->GetSeedCluster());
 
             ClusterAssociationMap::const_iterator iterOuter = transverseAssociationMap.find(pOuterCluster);
-            if(transverseAssociationMap.end() == iterOuter)
+            if (transverseAssociationMap.end() == iterOuter)
                 continue;
 
             if (pInnerCluster == pOuterCluster)
                 continue;
 
-            if (iterInner->second.m_forwardAssociations.count(pOuterCluster) == 0 ||
-                iterOuter->second.m_backwardAssociations.count(pInnerCluster) == 0)
+            if (iterInner->second.m_forwardAssociations.count(pOuterCluster) == 0 || iterOuter->second.m_backwardAssociations.count(pInnerCluster) == 0)
                 continue;
 
-            if (!this->IsExtremalCluster(true, pInnerCluster, pOuterCluster) ||
-                !this->IsExtremalCluster(false, pOuterCluster, pInnerCluster))
+            if (!this->IsExtremalCluster(true, pInnerCluster, pOuterCluster) || !this->IsExtremalCluster(false, pOuterCluster, pInnerCluster))
                 continue;
 
             if (!this->IsTransverseAssociated(pInnerTransverseCluster, pOuterTransverseCluster, nearbyClusters))
@@ -308,7 +309,8 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const ClusterToCluste
     if (associationMap.end() == iterI)
         return;
 
-    for (ClusterSet::const_iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+    for (ClusterSet::const_iterator iterJ = iterI->second.m_forwardAssociations.begin(), iterEndJ = iterI->second.m_forwardAssociations.end();
+         iterJ != iterEndJ; ++iterJ)
     {
         const Cluster *const pClusterJ = *iterJ;
 
@@ -316,7 +318,8 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const ClusterToCluste
             associatedVector.push_back(pClusterJ);
     }
 
-    for (ClusterSet::const_iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end(); iterJ != iterEndJ; ++iterJ)
+    for (ClusterSet::const_iterator iterJ = iterI->second.m_backwardAssociations.begin(), iterEndJ = iterI->second.m_backwardAssociations.end();
+         iterJ != iterEndJ; ++iterJ)
     {
         const Cluster *const pClusterJ = *iterJ;
 
@@ -329,35 +332,34 @@ void TransverseAssociationAlgorithm::GetAssociatedClusters(const ClusterToCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseAssociationAlgorithm::IsAssociated(const bool isForward, const Cluster *const pFirstCluster, const Cluster *const pSecondCluster,
-    const ClusterToClustersMap &nearbyClusters) const
+bool TransverseAssociationAlgorithm::IsAssociated(const bool isForward, const Cluster *const pFirstCluster,
+    const Cluster *const pSecondCluster, const ClusterToClustersMap &nearbyClusters) const
 {
     if ((0 == nearbyClusters.at(pFirstCluster).count(pSecondCluster)) || (0 == nearbyClusters.at(pSecondCluster).count(pFirstCluster)))
         return false;
 
-    CartesianVector firstInner(0.f,0.f,0.f), firstOuter(0.f,0.f,0.f);
-    CartesianVector secondInner(0.f,0.f,0.f), secondOuter(0.f,0.f,0.f);
+    CartesianVector firstInner(0.f, 0.f, 0.f), firstOuter(0.f, 0.f, 0.f);
+    CartesianVector secondInner(0.f, 0.f, 0.f), secondOuter(0.f, 0.f, 0.f);
     this->GetExtremalCoordinatesX(pFirstCluster, firstInner, firstOuter);
     this->GetExtremalCoordinatesX(pSecondCluster, secondInner, secondOuter);
 
     const CartesianVector firstCoordinate(isForward ? firstOuter : firstInner);
     const CartesianVector secondCoordinate(isForward ? secondOuter : secondInner);
 
-    if ((firstCoordinate.GetZ() > std::max(secondInner.GetZ(),secondOuter.GetZ()) + m_maxLongitudinalOverlap) ||
-        (firstCoordinate.GetZ() < std::min(secondInner.GetZ(),secondOuter.GetZ()) - m_maxLongitudinalOverlap))
+    if ((firstCoordinate.GetZ() > std::max(secondInner.GetZ(), secondOuter.GetZ()) + m_maxLongitudinalOverlap) ||
+        (firstCoordinate.GetZ() < std::min(secondInner.GetZ(), secondOuter.GetZ()) - m_maxLongitudinalOverlap))
         return false;
 
-    if ((isForward && secondCoordinate.GetX() < firstCoordinate.GetX()) ||
-        (!isForward && secondCoordinate.GetX() > firstCoordinate.GetX()))
+    if ((isForward && secondCoordinate.GetX() < firstCoordinate.GetX()) || (!isForward && secondCoordinate.GetX() > firstCoordinate.GetX()))
         return false;
 
     const CartesianVector firstProjection(LArClusterHelper::GetClosestPosition(firstCoordinate, pSecondCluster));
 
-    if((isForward && firstProjection.GetX() < firstCoordinate.GetX() - m_maxTransverseOverlap) ||
+    if ((isForward && firstProjection.GetX() < firstCoordinate.GetX() - m_maxTransverseOverlap) ||
         (!isForward && firstProjection.GetX() > firstCoordinate.GetX() + m_maxTransverseOverlap))
         return false;
 
-    if((isForward && firstProjection.GetX() > firstCoordinate.GetX() + m_clusterWindow) ||
+    if ((isForward && firstProjection.GetX() > firstCoordinate.GetX() + m_clusterWindow) ||
         (!isForward && firstProjection.GetX() < firstCoordinate.GetX() - m_clusterWindow))
         return false;
 
@@ -366,14 +368,14 @@ bool TransverseAssociationAlgorithm::IsAssociated(const bool isForward, const Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseAssociationAlgorithm::IsTransverseAssociated(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster,
-    const ClusterToClustersMap &nearbyClusters) const
+bool TransverseAssociationAlgorithm::IsTransverseAssociated(
+    const Cluster *const pInnerCluster, const Cluster *const pOuterCluster, const ClusterToClustersMap &nearbyClusters) const
 {
     if ((0 == nearbyClusters.at(pInnerCluster).count(pOuterCluster)) || (0 == nearbyClusters.at(pOuterCluster).count(pInnerCluster)))
         return false;
 
-    CartesianVector innerInner(0.f,0.f,0.f), innerOuter(0.f,0.f,0.f);
-    CartesianVector outerInner(0.f,0.f,0.f), outerOuter(0.f,0.f,0.f);
+    CartesianVector innerInner(0.f, 0.f, 0.f), innerOuter(0.f, 0.f, 0.f);
+    CartesianVector outerInner(0.f, 0.f, 0.f), outerOuter(0.f, 0.f, 0.f);
     this->GetExtremalCoordinatesX(pInnerCluster, innerInner, innerOuter);
     this->GetExtremalCoordinatesX(pOuterCluster, outerInner, outerOuter);
 
@@ -391,8 +393,7 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const Cluster *const
     const CartesianVector innerProjection(LArClusterHelper::GetClosestPosition(outerInner, pInnerCluster));
     const CartesianVector outerProjection(LArClusterHelper::GetClosestPosition(innerOuter, pOuterCluster));
 
-    if (innerOuter.GetX() > innerProjection.GetX() + m_maxTransverseOverlap ||
-        outerInner.GetX() < outerProjection.GetX() - m_maxTransverseOverlap)
+    if (innerOuter.GetX() > innerProjection.GetX() + m_maxTransverseOverlap || outerInner.GetX() < outerProjection.GetX() - m_maxTransverseOverlap)
         return false;
 
     return true;
@@ -432,7 +433,8 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseC
     if (direction.GetCrossProduct(testVertex - innerVertex).GetMagnitudeSquared() > m_transverseClusterMaxDisplacement * m_transverseClusterMaxDisplacement)
         return false;
 
-    if ((direction.GetDotProduct(testVertex - innerVertex) < -1.f * m_clusterWindow) || (direction.GetDotProduct(testVertex - outerVertex) > +1.f * m_clusterWindow))
+    if ((direction.GetDotProduct(testVertex - innerVertex) < -1.f * m_clusterWindow) ||
+        (direction.GetDotProduct(testVertex - outerVertex) > +1.f * m_clusterWindow))
         return false;
 
     return true;
@@ -442,8 +444,8 @@ bool TransverseAssociationAlgorithm::IsTransverseAssociated(const LArTransverseC
 
 bool TransverseAssociationAlgorithm::IsOverlapping(const Cluster *const pInnerCluster, const Cluster *const pOuterCluster) const
 {
-    CartesianVector innerInner(0.f,0.f,0.f), innerOuter(0.f,0.f,0.f);
-    CartesianVector outerInner(0.f,0.f,0.f), outerOuter(0.f,0.f,0.f);
+    CartesianVector innerInner(0.f, 0.f, 0.f), innerOuter(0.f, 0.f, 0.f);
+    CartesianVector outerInner(0.f, 0.f, 0.f), outerOuter(0.f, 0.f, 0.f);
     this->GetExtremalCoordinatesX(pInnerCluster, innerInner, innerOuter);
     this->GetExtremalCoordinatesX(pOuterCluster, outerInner, outerOuter);
 
@@ -575,9 +577,10 @@ void TransverseAssociationAlgorithm::GetExtremalCoordinatesXZ(const Cluster *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::GetExtremalCoordinatesX(const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate) const
+void TransverseAssociationAlgorithm::GetExtremalCoordinatesX(
+    const Cluster *const pCluster, CartesianVector &innerCoordinate, CartesianVector &outerCoordinate) const
 {
-    CartesianVector firstCoordinate(0.f,0.f,0.f), secondCoordinate(0.f,0.f,0.f);
+    CartesianVector firstCoordinate(0.f, 0.f, 0.f), secondCoordinate(0.f, 0.f, 0.f);
     LArClusterHelper::GetExtremalCoordinates(pCluster, firstCoordinate, secondCoordinate);
 
     innerCoordinate = (firstCoordinate.GetX() < secondCoordinate.GetX() ? firstCoordinate : secondCoordinate);
@@ -586,15 +589,17 @@ void TransverseAssociationAlgorithm::GetExtremalCoordinatesX(const Cluster *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
+void TransverseAssociationAlgorithm::FillReducedAssociationMap(
+    const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
 {
     return this->FillReducedAssociationMap(inputAssociationMap, inputAssociationMap, inputAssociationMap, outputAssociationMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &firstAssociationMap, const ClusterAssociationMap &secondAssociationMap,
-    const ClusterAssociationMap &secondAssociationMapSwapped, ClusterAssociationMap &clusterAssociationMap) const
+void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAssociationMap &firstAssociationMap,
+    const ClusterAssociationMap &secondAssociationMap, const ClusterAssociationMap &secondAssociationMapSwapped,
+    ClusterAssociationMap &clusterAssociationMap) const
 {
     // Remove associations A->B from the first association map
     // if A->C exists in the second map and C->B exists in the reversed second map
@@ -604,7 +609,8 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
     // already exists in the map.
 
     ClusterVector sortedClusters;
-    for (const auto &mapEntry : firstAssociationMap) sortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : firstAssociationMap)
+        sortedClusters.push_back(mapEntry.first);
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : sortedClusters)
@@ -622,8 +628,10 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
         if (secondAssociationMap.end() != iterSecond)
         {
-            sortedMiddleClustersF.insert(sortedMiddleClustersF.end(), iterSecond->second.m_forwardAssociations.begin(), iterSecond->second.m_forwardAssociations.end());
-            sortedMiddleClustersB.insert(sortedMiddleClustersB.end(), iterSecond->second.m_backwardAssociations.begin(), iterSecond->second.m_backwardAssociations.end());
+            sortedMiddleClustersF.insert(sortedMiddleClustersF.end(), iterSecond->second.m_forwardAssociations.begin(),
+                iterSecond->second.m_forwardAssociations.end());
+            sortedMiddleClustersB.insert(sortedMiddleClustersB.end(), iterSecond->second.m_backwardAssociations.begin(),
+                iterSecond->second.m_backwardAssociations.end());
             std::sort(sortedMiddleClustersF.begin(), sortedMiddleClustersF.end(), LArClusterHelper::SortByNHits);
             std::sort(sortedMiddleClustersB.begin(), sortedMiddleClustersB.end(), LArClusterHelper::SortByNHits);
         }
@@ -674,14 +682,16 @@ void TransverseAssociationAlgorithm::FillReducedAssociationMap(const ClusterAsso
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
+void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(
+    const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
 {
     // Generate a symmetrised association map, so that both A--Fwd-->B and B--Bwd-->A both exist.
     // If A is associated to B through both a backward and forward association (very bad!),
     // try to rationalise this through majority voting, otherwise remove the association.
 
     ClusterVector sortedClusters;
-    for (const auto &mapEntry : inputAssociationMap) sortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : inputAssociationMap)
+        sortedClusters.push_back(mapEntry.first);
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : sortedClusters)
@@ -714,8 +724,8 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
 
             if (nCounter > 0)
             {
-                if(!(outputAssociationMap[pCluster].m_backwardAssociations.count(pForwardCluster) == 0 &&
-                     outputAssociationMap[pForwardCluster].m_forwardAssociations.count(pCluster) == 0))
+                if (!(outputAssociationMap[pCluster].m_backwardAssociations.count(pForwardCluster) == 0 &&
+                        outputAssociationMap[pForwardCluster].m_forwardAssociations.count(pCluster) == 0))
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
                 outputAssociationMap[pCluster].m_forwardAssociations.insert(pForwardCluster);
@@ -743,8 +753,8 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
 
             if (nCounter < 0)
             {
-                if(!(outputAssociationMap[pCluster].m_forwardAssociations.count(pBackwardCluster) == 0 &&
-                     outputAssociationMap[pBackwardCluster].m_backwardAssociations.count(pCluster) == 0))
+                if (!(outputAssociationMap[pCluster].m_forwardAssociations.count(pBackwardCluster) == 0 &&
+                        outputAssociationMap[pBackwardCluster].m_backwardAssociations.count(pCluster) == 0))
                     throw StatusCodeException(STATUS_CODE_FAILURE);
 
                 outputAssociationMap[pCluster].m_backwardAssociations.insert(pBackwardCluster);
@@ -756,7 +766,8 @@ void TransverseAssociationAlgorithm::FillSymmetricAssociationMap(const ClusterAs
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TransverseAssociationAlgorithm::FinalizeClusterAssociationMap(const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
+void TransverseAssociationAlgorithm::FinalizeClusterAssociationMap(
+    const ClusterAssociationMap &inputAssociationMap, ClusterAssociationMap &outputAssociationMap) const
 {
     ClusterAssociationMap intermediateAssociationMap;
     this->FillSymmetricAssociationMap(inputAssociationMap, intermediateAssociationMap);
@@ -782,7 +793,9 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
 
     for (ClusterList::const_iterator iterI = clusterList.begin(), iterEndI = clusterList.end(); iterI != iterEndI; ++iterI)
     {
-        for (OrderedCaloHitList::const_iterator iterJ = (*iterI)->GetOrderedCaloHitList().begin(), iterEndJ = (*iterI)->GetOrderedCaloHitList().end(); iterJ != iterEndJ; ++iterJ)
+        for (OrderedCaloHitList::const_iterator iterJ = (*iterI)->GetOrderedCaloHitList().begin(),
+                                                iterEndJ = (*iterI)->GetOrderedCaloHitList().end();
+             iterJ != iterEndJ; ++iterJ)
         {
             for (CaloHitList::const_iterator iterK = iterJ->second->begin(), iterEndK = iterJ->second->end(); iterK != iterEndK; ++iterK)
             {
@@ -797,9 +810,9 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
                 Swzz += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetZ();
                 Swxx += pCaloHit->GetPositionVector().GetX() * pCaloHit->GetPositionVector().GetX();
                 Swzx += pCaloHit->GetPositionVector().GetZ() * pCaloHit->GetPositionVector().GetX();
-                Swz  += pCaloHit->GetPositionVector().GetZ();
-                Swx  += pCaloHit->GetPositionVector().GetX();
-                Sw   += 1.;
+                Swz += pCaloHit->GetPositionVector().GetZ();
+                Swx += pCaloHit->GetPositionVector().GetX();
+                Sw += 1.;
             }
         }
     }
@@ -837,14 +850,11 @@ TransverseAssociationAlgorithm::LArTransverseCluster::LArTransverseCluster(const
 
 StatusCode TransverseAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FirstLengthCut", m_firstLengthCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FirstLengthCut", m_firstLengthCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SecondLengthCut", m_secondLengthCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SecondLengthCut", m_secondLengthCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterWindow", m_clusterWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ClusterWindow", m_clusterWindow));
 
     const StatusCode angleStatusCode(XmlHelper::ReadValue(xmlHandle, "clusterAngle", m_clusterAngle));
 
@@ -858,23 +868,23 @@ StatusCode TransverseAssociationAlgorithm::ReadSettings(const TiXmlHandle xmlHan
         return angleStatusCode;
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseOverlap", m_maxTransverseOverlap));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxTransverseOverlap", m_maxTransverseOverlap));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxProjectedOverlap", m_maxProjectedOverlap));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxProjectedOverlap", m_maxProjectedOverlap));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLongitudinalOverlap", m_maxLongitudinalOverlap));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxLongitudinalOverlap", m_maxLongitudinalOverlap));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TransverseClusterMinCosTheta", m_transverseClusterMinCosTheta));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "TransverseClusterMinCosTheta", m_transverseClusterMinCosTheta));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TransverseClusterMinLength", m_transverseClusterMinLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "TransverseClusterMinLength", m_transverseClusterMinLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TransverseClusterMaxDisplacement", m_transverseClusterMaxDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "TransverseClusterMaxDisplacement", m_transverseClusterMaxDisplacement));
 
     return ClusterAssociationAlgorithm::ReadSettings(xmlHandle);
 }

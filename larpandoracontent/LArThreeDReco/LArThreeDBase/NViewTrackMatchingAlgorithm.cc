@@ -16,15 +16,15 @@
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewTrackMatchingAlgorithm.h"
-#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/ThreeViewMatchingControl.h"
+#include "larpandoracontent/LArThreeDReco/LArThreeDBase/TwoViewMatchingControl.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-template<typename T>
+template <typename T>
 NViewTrackMatchingAlgorithm<T>::NViewTrackMatchingAlgorithm() :
     m_slidingFitWindow(20),
     m_minClusterCaloHits(5),
@@ -41,7 +41,7 @@ NViewTrackMatchingAlgorithm<T>::~NViewTrackMatchingAlgorithm()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 const TwoDSlidingFitResult &NViewTrackMatchingAlgorithm<T>::GetCachedSlidingFitResult(const Cluster *const pCluster) const
 {
     TwoDSlidingFitResultMap::const_iterator iter = m_slidingFitResultMap.find(pCluster);
@@ -52,16 +52,16 @@ const TwoDSlidingFitResult &NViewTrackMatchingAlgorithm<T>::GetCachedSlidingFitR
     return iter->second;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 bool NViewTrackMatchingAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &splitPositionMap)
 {
     bool changesMade(false);
 
     ClusterList splitClusters;
-    for (const auto &mapEntry : splitPositionMap) splitClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : splitPositionMap)
+        splitClusters.push_back(mapEntry.first);
     splitClusters.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *pCurrentCluster : splitClusters)
@@ -101,9 +101,9 @@ bool NViewTrackMatchingAlgorithm<T>::MakeClusterSplits(const SplitPositionMap &s
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
-bool NViewTrackMatchingAlgorithm<T>::MakeClusterSplit(const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster,
-    const Cluster *&pHighXCluster) const
+template <typename T>
+bool NViewTrackMatchingAlgorithm<T>::MakeClusterSplit(
+    const CartesianVector &splitPosition, const Cluster *&pCurrentCluster, const Cluster *&pLowXCluster, const Cluster *&pHighXCluster) const
 {
     CartesianVector lowXEnd(0.f, 0.f, 0.f), highXEnd(0.f, 0.f, 0.f);
 
@@ -114,7 +114,10 @@ bool NViewTrackMatchingAlgorithm<T>::MakeClusterSplit(const CartesianVector &spl
         lowXEnd = (innerIsLowX ? pointingCluster.GetInnerVertex().GetPosition() : pointingCluster.GetOuterVertex().GetPosition());
         highXEnd = (innerIsLowX ? pointingCluster.GetOuterVertex().GetPosition() : pointingCluster.GetInnerVertex().GetPosition());
     }
-    catch (const StatusCodeException &) {return false;}
+    catch (const StatusCodeException &)
+    {
+        return false;
+    }
 
     const CartesianVector lowXUnitVector((lowXEnd - splitPosition).GetUnitVector());
     const CartesianVector highXUnitVector((highXEnd - splitPosition).GetUnitVector());
@@ -161,7 +164,7 @@ bool NViewTrackMatchingAlgorithm<T>::MakeClusterSplit(const CartesianVector &spl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 bool NViewTrackMatchingAlgorithm<T>::SortSplitPositions(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs)
 {
     return (lhs.GetX() < rhs.GetX());
@@ -169,7 +172,7 @@ bool NViewTrackMatchingAlgorithm<T>::SortSplitPositions(const pandora::Cartesian
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 void NViewTrackMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pNewCluster)
 {
     try
@@ -189,7 +192,7 @@ void NViewTrackMatchingAlgorithm<T>::UpdateForNewCluster(const Cluster *const pN
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 void NViewTrackMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
     this->RemoveFromSlidingFitCache(pDeletedCluster);
@@ -218,10 +221,10 @@ void NViewTrackMatchingAlgorithm<T>::SelectInputClusters(const ClusterList *cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 void NViewTrackMatchingAlgorithm<T>::PrepareInputClusters(ClusterList &preparedClusterList)
 {
-    for (ClusterList::iterator iter = preparedClusterList.begin(), iterEnd = preparedClusterList.end(); iter != iterEnd; )
+    for (ClusterList::iterator iter = preparedClusterList.begin(), iterEnd = preparedClusterList.end(); iter != iterEnd;)
     {
         try
         {
@@ -240,7 +243,7 @@ void NViewTrackMatchingAlgorithm<T>::PrepareInputClusters(ClusterList &preparedC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 void NViewTrackMatchingAlgorithm<T>::SetPfoParticleId(PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
     pfoParameters.m_particleId = MU_MINUS; // Track
@@ -248,7 +251,7 @@ void NViewTrackMatchingAlgorithm<T>::SetPfoParticleId(PandoraContentApi::Particl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 void NViewTrackMatchingAlgorithm<T>::AddToSlidingFitCache(const Cluster *const pCluster)
 {
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -260,7 +263,7 @@ void NViewTrackMatchingAlgorithm<T>::AddToSlidingFitCache(const Cluster *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 void NViewTrackMatchingAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *const pCluster)
 {
     TwoDSlidingFitResultMap::iterator iter = m_slidingFitResultMap.find(pCluster);
@@ -271,7 +274,7 @@ void NViewTrackMatchingAlgorithm<T>::RemoveFromSlidingFitCache(const Cluster *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 void NViewTrackMatchingAlgorithm<T>::TidyUp()
 {
     m_slidingFitResultMap.clear();
@@ -280,18 +283,17 @@ void NViewTrackMatchingAlgorithm<T>::TidyUp()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 StatusCode NViewTrackMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterCaloHits", m_minClusterCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterCaloHits", m_minClusterCaloHits));
 
     float minClusterLength = std::sqrt(m_minClusterLengthSquared);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", minClusterLength));
     m_minClusterLengthSquared = minClusterLength * minClusterLength;
 
     return NViewMatchingAlgorithm<T>::ReadSettings(xmlHandle);
@@ -299,11 +301,11 @@ StatusCode NViewTrackMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float> >;
-template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult> >;
-template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<float> >;
-template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult> >;
-template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult> >;
-template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult> >;
+template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<float>>;
+template class NViewTrackMatchingAlgorithm<TwoViewMatchingControl<TwoViewTransverseOverlapResult>>;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<float>>;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult>>;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<LongitudinalOverlapResult>>;
+template class NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<FragmentOverlapResult>>;
 
 } // namespace lar_content

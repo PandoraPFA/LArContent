@@ -15,8 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingClusterCreationAlgorithm::CheatingClusterCreationAlgorithm() :
-    m_collapseToPrimaryMCParticles(false)
+CheatingClusterCreationAlgorithm::CheatingClusterCreationAlgorithm() : m_collapseToPrimaryMCParticles(false)
 {
 }
 
@@ -57,14 +56,16 @@ void CheatingClusterCreationAlgorithm::GetMCParticleToHitListMap(MCParticleToHit
 
             this->SimpleMCParticleCollection(pCaloHit, mcPrimaryMap, mcParticleToHitListMap);
         }
-        catch (const StatusCodeException &) {}
+        catch (const StatusCodeException &)
+        {
+        }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(const CaloHit *const pCaloHit, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
-    MCParticleToHitListMap &mcParticleToHitListMap) const
+void CheatingClusterCreationAlgorithm::SimpleMCParticleCollection(const CaloHit *const pCaloHit,
+    const LArMCParticleHelper::MCRelationMap &mcPrimaryMap, MCParticleToHitListMap &mcParticleToHitListMap) const
 {
     const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
 
@@ -105,7 +106,8 @@ bool CheatingClusterCreationAlgorithm::SelectMCParticlesForClustering(const MCPa
 void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListMap &mcParticleToHitListMap) const
 {
     MCParticleVector mcParticleVector;
-    for (const auto &mapEntry : mcParticleToHitListMap) mcParticleVector.push_back(mapEntry.first);
+    for (const auto &mapEntry : mcParticleToHitListMap)
+        mcParticleVector.push_back(mapEntry.first);
     std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
     for (const MCParticle *const pMCParticle : mcParticleVector)
@@ -124,15 +126,15 @@ void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListM
 
         switch (pMCParticle->GetParticleId())
         {
-        case PHOTON:
-        case E_PLUS:
-        case E_MINUS:
-        case MU_PLUS:
-        case MU_MINUS:
-            metadata.m_particleId = pMCParticle->GetParticleId();
-            break;
-        default:
-            break;
+            case PHOTON:
+            case E_PLUS:
+            case E_MINUS:
+            case MU_PLUS:
+            case MU_MINUS:
+                metadata.m_particleId = pMCParticle->GetParticleId();
+                break;
+            default:
+                break;
         }
 
         if (metadata.m_particleId.IsInitialized())
@@ -144,17 +146,16 @@ void CheatingClusterCreationAlgorithm::CreateClusters(const MCParticleToHitListM
 
 StatusCode CheatingClusterCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
 
     if (m_collapseToPrimaryMCParticles)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "MCParticleListName", m_mcParticleListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "ParticleIdList", m_particleIdList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ParticleIdList", m_particleIdList));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -61,14 +61,14 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string             m_trackPfoListName;             ///< The track pfo list name
-    std::string             m_showerPfoListName;            ///< The shower pfo list name
-    pandora::StringVector   m_inputPfoListNames;            ///< The names of the input pfo lists
+    std::string m_trackPfoListName;            ///< The track pfo list name
+    std::string m_showerPfoListName;           ///< The shower pfo list name
+    pandora::StringVector m_inputPfoListNames; ///< The names of the input pfo lists
 
-    bool                    m_updateClusterIds;             ///< Whether to update daughter cluster particle id labels to match pfo id
-    bool                    m_postBranchAddition;           ///< Whether to use configuration for shower clusters post branch addition
-    bool                    m_useThreeDInformation;         ///< Whether to use PFO and 3D information or clusters for characterisation
-    unsigned int            m_minTrackLikeViews;            ///< The minimum number of track-like views to declare a pfo as track-like
+    bool m_updateClusterIds;          ///< Whether to update daughter cluster particle id labels to match pfo id
+    bool m_postBranchAddition;        ///< Whether to use configuration for shower clusters post branch addition
+    bool m_useThreeDInformation;      ///< Whether to use PFO and 3D information or clusters for characterisation
+    unsigned int m_minTrackLikeViews; ///< The minimum number of track-like views to declare a pfo as track-like
 };
 
 } // namespace lar_content

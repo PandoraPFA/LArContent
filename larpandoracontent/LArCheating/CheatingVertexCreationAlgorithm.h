@@ -28,9 +28,9 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string     m_outputVertexListName;         ///< The name under which to save the output vertex list
-    bool            m_replaceCurrentVertexList;     ///< Whether to replace the current vertex list with the output list
-    float           m_vertexXCorrection;            ///< The vertex x correction, added to reported mc neutrino endpoint x value, in cm
+    std::string m_outputVertexListName; ///< The name under which to save the output vertex list
+    bool m_replaceCurrentVertexList;    ///< Whether to replace the current vertex list with the output list
+    float m_vertexXCorrection;          ///< The vertex x correction, added to reported mc neutrino endpoint x value, in cm
 };
 
 } // namespace lar_content

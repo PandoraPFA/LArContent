@@ -11,8 +11,8 @@
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
 
-#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArCaloHit.h"
 
@@ -47,26 +47,33 @@ void CosmicRayTaggingMonitoringTool::FindAmbiguousPfos(const PfoList &parentCosm
     LArMCParticleHelper::MCContributionMap beamMCParticlesToGoodHitsMap;
     LArMCParticleHelper::MCContributionMap crMCParticlesToGoodHitsMap;
 
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamParticle, beamMCParticlesToGoodHitsMap);
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsCosmicRay, crMCParticlesToGoodHitsMap);
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, nuMCParticlesToGoodHitsMap);
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsBeamParticle, beamMCParticlesToGoodHitsMap);
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList, m_parameters, LArMCParticleHelper::IsCosmicRay, crMCParticlesToGoodHitsMap);
 
     // Get the hit sharing maps between Pfos and reconstructable MCParticles
-    LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps({nuMCParticlesToGoodHitsMap, beamMCParticlesToGoodHitsMap, crMCParticlesToGoodHitsMap});
+    LArMCParticleHelper::MCContributionMapVector mcParticlesToGoodHitsMaps(
+        {nuMCParticlesToGoodHitsMap, beamMCParticlesToGoodHitsMap, crMCParticlesToGoodHitsMap});
 
     LArMCParticleHelper::PfoContributionMap pfoToReconstructable2DHitsMap;
-    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(parentCosmicRayPfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_parameters.m_foldBackHierarchy);
+    LArMCParticleHelper::GetPfoToReconstructable2DHitsMap(
+        parentCosmicRayPfos, mcParticlesToGoodHitsMaps, pfoToReconstructable2DHitsMap, m_parameters.m_foldBackHierarchy);
 
     LArMCParticleHelper::PfoToMCParticleHitSharingMap pfoToMCParticleHitSharingMap;
     LArMCParticleHelper::MCParticleToPfoHitSharingMap mcParticleToPfoHitSharingMap;
-    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(pfoToReconstructable2DHitsMap, mcParticlesToGoodHitsMaps, pfoToMCParticleHitSharingMap, mcParticleToPfoHitSharingMap);
+    LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(
+        pfoToReconstructable2DHitsMap, mcParticlesToGoodHitsMaps, pfoToMCParticleHitSharingMap, mcParticleToPfoHitSharingMap);
 
     // Calculate the purity and significane and classification of each Pfo
     PfoToFloatMap pfoSignificanceMap;
     PfoToFloatMap pfoPurityMap;
     PfoClassificationMap pfoClassificationMap;
     LArMCParticleHelper::MCContributionMapVector targetsToGoodHitsMaps({nuMCParticlesToGoodHitsMap, beamMCParticlesToGoodHitsMap});
-    this->CalculatePfoMetrics(pfoToMCParticleHitSharingMap, pfoToReconstructable2DHitsMap, targetsToGoodHitsMaps, pfoSignificanceMap, pfoPurityMap, pfoClassificationMap);
+    this->CalculatePfoMetrics(pfoToMCParticleHitSharingMap, pfoToReconstructable2DHitsMap, targetsToGoodHitsMaps, pfoSignificanceMap,
+        pfoPurityMap, pfoClassificationMap);
 
     // -------------------------------------------------------------------------------------------------------------------------------------
 
@@ -93,11 +100,13 @@ void CosmicRayTaggingMonitoringTool::FindAmbiguousPfos(const PfoList &parentCosm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTaggingMonitoringTool::CalculatePfoMetrics(const LArMCParticleHelper::PfoToMCParticleHitSharingMap &hitSharingMap, const LArMCParticleHelper::PfoContributionMap &pfoToCaloHitListMap,
-    const LArMCParticleHelper::MCContributionMapVector &targetsToGoodHitsMaps, PfoToFloatMap &pfoSignificanceMap, PfoToFloatMap &pfoPurityMap, PfoClassificationMap &pfoClassificationMap) const
+void CosmicRayTaggingMonitoringTool::CalculatePfoMetrics(const LArMCParticleHelper::PfoToMCParticleHitSharingMap &hitSharingMap,
+    const LArMCParticleHelper::PfoContributionMap &pfoToCaloHitListMap, const LArMCParticleHelper::MCContributionMapVector &targetsToGoodHitsMaps,
+    PfoToFloatMap &pfoSignificanceMap, PfoToFloatMap &pfoPurityMap, PfoClassificationMap &pfoClassificationMap) const
 {
     PfoVector sortedPfos;
-    for (const auto &mapEntry : hitSharingMap) sortedPfos.push_back(mapEntry.first);
+    for (const auto &mapEntry : hitSharingMap)
+        sortedPfos.push_back(mapEntry.first);
     std::sort(sortedPfos.begin(), sortedPfos.end(), LArPfoHelper::SortByNHits);
 
     for (const ParticleFlowObject *const pPfo : sortedPfos)
@@ -155,7 +164,7 @@ bool CosmicRayTaggingMonitoringTool::IsMainMCParticleMuon(const ParticleFlowObje
     bool isMuon(false);
     try
     {
-        isMuon = false;// TODO Local treatment is being developed, specific to this tool (std::abs(LArMCParticleHelper::GetMainMCParticle(pPfo)->GetParticleId()) == MU_MINUS);
+        isMuon = false; // TODO Local treatment is being developed, specific to this tool (std::abs(LArMCParticleHelper::GetMainMCParticle(pPfo)->GetParticleId()) == MU_MINUS);
     }
     catch (const StatusCodeException &)
     {
@@ -166,7 +175,8 @@ bool CosmicRayTaggingMonitoringTool::IsMainMCParticleMuon(const ParticleFlowObje
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-CosmicRayTaggingMonitoringTool::Classification CosmicRayTaggingMonitoringTool::ClassifyPfo(const unsigned int &nHits, const float &significance, const float &purity, const bool isMuon) const
+CosmicRayTaggingMonitoringTool::Classification CosmicRayTaggingMonitoringTool::ClassifyPfo(
+    const unsigned int &nHits, const float &significance, const float &purity, const bool isMuon) const
 {
     if (nHits < m_minHitsToConsiderTagging)
         return SPARSE;
@@ -196,7 +206,9 @@ CosmicRayTaggingMonitoringTool::Classification CosmicRayTaggingMonitoringTool::C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayTaggingMonitoringTool::PrintPfoTable(const PfoVector &orderedPfoVector, const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const PfoToFloatMap &pfoPurityMap, const PfoToFloatMap &pfoSignificanceMap, const PfoClassificationMap &pfoClassificationMap, const PfoList &ambiguousPfos) const
+void CosmicRayTaggingMonitoringTool::PrintPfoTable(const PfoVector &orderedPfoVector,
+    const LArMCParticleHelper::PfoContributionMap &pfoToReconstructable2DHitsMap, const PfoToFloatMap &pfoPurityMap,
+    const PfoToFloatMap &pfoSignificanceMap, const PfoClassificationMap &pfoClassificationMap, const PfoList &ambiguousPfos) const
 {
     if (orderedPfoVector.empty())
     {
@@ -204,7 +216,8 @@ void CosmicRayTaggingMonitoringTool::PrintPfoTable(const PfoVector &orderedPfoVe
         return;
     }
 
-    LArFormattingHelper::Table table({"ID", "PID", "", "nHits", "U", "V", "W", "", "nGoodHits", "U", "V", "W", "", "Purity", "Significance", "Classification", "", "Tagged?"});
+    LArFormattingHelper::Table table(
+        {"ID", "PID", "", "nHits", "U", "V", "W", "", "nGoodHits", "U", "V", "W", "", "Purity", "Significance", "Classification", "", "Tagged?"});
 
     for (unsigned int id = 0; id < orderedPfoVector.size(); ++id)
     {
@@ -250,7 +263,8 @@ void CosmicRayTaggingMonitoringTool::PrintPfoTable(const PfoVector &orderedPfoVe
         const bool isTagged(std::find(ambiguousPfos.begin(), ambiguousPfos.end(), pPfo) == ambiguousPfos.end());
         const bool isGoodTag(isTagged && (classification == CR_MUON || classification == CR_OTHER));
         const bool isBadTag(isTagged && (classification == TARGET));
-        const LArFormattingHelper::Color tagColor(isGoodTag ? LArFormattingHelper::LIGHT_GREEN : (isBadTag ? LArFormattingHelper::LIGHT_RED : LArFormattingHelper::LIGHT_YELLOW));
+        const LArFormattingHelper::Color tagColor(
+            isGoodTag ? LArFormattingHelper::LIGHT_GREEN : (isBadTag ? LArFormattingHelper::LIGHT_RED : LArFormattingHelper::LIGHT_YELLOW));
         table.AddElement(isTagged ? "yes" : "no", LArFormattingHelper::INVERTED, tagColor);
     }
 
@@ -263,13 +277,20 @@ LArFormattingHelper::Color CosmicRayTaggingMonitoringTool::GetClassificationColo
 {
     switch (classification)
     {
-        case TARGET: return LArFormattingHelper::LIGHT_GREEN;
-        case CR_MUON: return LArFormattingHelper::LIGHT_RED;
-        case CR_OTHER: return LArFormattingHelper::LIGHT_YELLOW;
-        case FRAGMENTED: return LArFormattingHelper::LIGHT_BLUE;
-        case ABSORBED: return LArFormattingHelper::LIGHT_MAGENTA;
-        case MIXED: return LArFormattingHelper::LIGHT_CYAN;
-        default: return LArFormattingHelper::LIGHT_GRAY;
+        case TARGET:
+            return LArFormattingHelper::LIGHT_GREEN;
+        case CR_MUON:
+            return LArFormattingHelper::LIGHT_RED;
+        case CR_OTHER:
+            return LArFormattingHelper::LIGHT_YELLOW;
+        case FRAGMENTED:
+            return LArFormattingHelper::LIGHT_BLUE;
+        case ABSORBED:
+            return LArFormattingHelper::LIGHT_MAGENTA;
+        case MIXED:
+            return LArFormattingHelper::LIGHT_CYAN;
+        default:
+            return LArFormattingHelper::LIGHT_GRAY;
     }
 }
 
@@ -279,14 +300,22 @@ std::string CosmicRayTaggingMonitoringTool::GetClassificationName(const Classifi
 {
     switch (classification)
     {
-        case TARGET: return "TARGET";
-        case CR_MUON: return "CR_MUON";
-        case CR_OTHER: return "CR_OTHER";
-        case FRAGMENTED: return "FRAGMENTED";
-        case ABSORBED: return "ABSORBED";
-        case MIXED: return "MIXED";
-        case SPARSE: return "SPARSE";
-        default: return "UNCLASSIFIED";
+        case TARGET:
+            return "TARGET";
+        case CR_MUON:
+            return "CR_MUON";
+        case CR_OTHER:
+            return "CR_OTHER";
+        case FRAGMENTED:
+            return "FRAGMENTED";
+        case ABSORBED:
+            return "ABSORBED";
+        case MIXED:
+            return "MIXED";
+        case SPARSE:
+            return "SPARSE";
+        default:
+            return "UNCLASSIFIED";
     }
 }
 
@@ -294,38 +323,34 @@ std::string CosmicRayTaggingMonitoringTool::GetClassificationName(const Classifi
 
 StatusCode CosmicRayTaggingMonitoringTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "CaloHitList2D", m_caloHitList2D));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitList2D", m_caloHitList2D));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodHits", m_parameters.m_minPrimaryGoodHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinPrimaryGoodHits", m_parameters.m_minPrimaryGoodHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsForGoodView", m_parameters.m_minHitsForGoodView));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinHitsForGoodView", m_parameters.m_minHitsForGoodView));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPrimaryGoodViews", m_parameters.m_minPrimaryGoodViews));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinPrimaryGoodViews", m_parameters.m_minPrimaryGoodViews));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectInputHits", m_parameters.m_selectInputHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SelectInputHits", m_parameters.m_selectInputHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxPhotonPropagation", m_parameters.m_maxPhotonPropagation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxPhotonPropagation", m_parameters.m_maxPhotonPropagation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitSharingFraction", m_parameters.m_minHitSharingFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinHitSharingFraction", m_parameters.m_minHitSharingFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsToConsiderTagging", m_minHitsToConsiderTagging));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinHitsToConsiderTagging", m_minHitsToConsiderTagging));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinPurity", m_minPurity));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinPurity", m_minPurity));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinImpurity", m_minImpurity));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinImpurity", m_minImpurity));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSignificance", m_minSignificance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinSignificance", m_minSignificance));
 
     return STATUS_CODE_SUCCESS;
 }

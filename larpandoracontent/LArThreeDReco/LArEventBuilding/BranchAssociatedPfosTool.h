@@ -24,14 +24,15 @@ public:
      */
     BranchAssociatedPfosTool();
 
-    void Run(const NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex, NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap);
+    void Run(const NeutrinoHierarchyAlgorithm *const pAlgorithm, const pandora::Vertex *const pNeutrinoVertex,
+        NeutrinoHierarchyAlgorithm::PfoInfoMap &pfoInfoMap);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float       m_minNeutrinoVertexDistance;        ///< Branch association: min distance from branch vertex to neutrino vertex
-    float       m_trackBranchAdditionFraction;      ///< Branch association: min fraction of length along parent track before association allowed
-    float       m_maxParentClusterDistance;         ///< Branch association: max distance from branch vertex to a hit in parent 3D cluster
+    float m_minNeutrinoVertexDistance;   ///< Branch association: min distance from branch vertex to neutrino vertex
+    float m_trackBranchAdditionFraction; ///< Branch association: min fraction of length along parent track before association allowed
+    float m_maxParentClusterDistance;    ///< Branch association: max distance from branch vertex to a hit in parent 3D cluster
 };
 
 } // namespace lar_content

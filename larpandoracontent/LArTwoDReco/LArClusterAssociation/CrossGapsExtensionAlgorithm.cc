@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h"
@@ -78,9 +78,9 @@ void CrossGapsExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
             const float lengthSquaredInner(LArClusterHelper::GetLengthSquared(pClusterInner));
             const float lengthSquaredOuter(LArClusterHelper::GetLengthSquared(pClusterOuter));
 
-            (void) clusterAssociationMatrix[pClusterInner].insert(ClusterAssociationMap::value_type(pClusterOuter,
+            (void)clusterAssociationMatrix[pClusterInner].insert(ClusterAssociationMap::value_type(pClusterOuter,
                 ClusterAssociation(ClusterAssociation::INNER, ClusterAssociation::OUTER, ClusterAssociation::STRONG, lengthSquaredOuter)));
-            (void) clusterAssociationMatrix[pClusterOuter].insert(ClusterAssociationMap::value_type(pClusterInner,
+            (void)clusterAssociationMatrix[pClusterOuter].insert(ClusterAssociationMap::value_type(pClusterInner,
                 ClusterAssociation(ClusterAssociation::OUTER, ClusterAssociation::INNER, ClusterAssociation::STRONG, lengthSquaredInner)));
         }
     }
@@ -88,16 +88,21 @@ void CrossGapsExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const ClusterVector &clusterVector, LArPointingClusterList &innerPointingClusterList,
-    LArPointingClusterList &outerPointingClusterList) const
+void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const ClusterVector &clusterVector,
+    LArPointingClusterList &innerPointingClusterList, LArPointingClusterList &outerPointingClusterList) const
 {
     // Convert each input cluster into a pointing cluster
     LArPointingClusterList pointingClusterList;
 
     for (const Cluster *const pCluster : clusterVector)
     {
-        try {pointingClusterList.push_back(LArPointingCluster(pCluster));}
-        catch (StatusCodeException &) {}
+        try
+        {
+            pointingClusterList.push_back(LArPointingCluster(pCluster));
+        }
+        catch (StatusCodeException &)
+        {
+        }
     }
 
     // Identify clusters adjacent to detector gaps
@@ -107,8 +112,8 @@ void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const ClusterVector &
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CrossGapsExtensionAlgorithm::BuildPointingClusterList(const bool useInner, const LArPointingClusterList &inputPointingClusterList,
-    LArPointingClusterList &outputPointingClusterList) const
+void CrossGapsExtensionAlgorithm::BuildPointingClusterList(
+    const bool useInner, const LArPointingClusterList &inputPointingClusterList, LArPointingClusterList &outputPointingClusterList) const
 {
     for (const LArPointingCluster &pointingCluster : inputPointingClusterList)
     {
@@ -162,7 +167,8 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
     ClusterAssociationMatrix clusterAssociationMatrix;
 
     ClusterVector sortedInputClusters;
-    for (const auto &mapEntry : inputAssociationMatrix) sortedInputClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : inputAssociationMatrix)
+        sortedInputClusters.push_back(mapEntry.first);
     std::sort(sortedInputClusters.begin(), sortedInputClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster1 : sortedInputClusters)
@@ -190,7 +196,8 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
             bool isAssociated(true);
 
             ClusterVector sortedAssociationClusters;
-            for (const auto &mapEntry : associationMap1) sortedAssociationClusters.push_back(mapEntry.first);
+            for (const auto &mapEntry : associationMap1)
+                sortedAssociationClusters.push_back(mapEntry.first);
             std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
             for (const Cluster *const pCluster3 : sortedAssociationClusters)
@@ -203,8 +210,7 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
                 const ClusterAssociation &association23(iter23->second);
 
-                if (association12.GetParent() == association13.GetParent() &&
-                    association23.GetParent() == association21.GetParent() &&
+                if (association12.GetParent() == association13.GetParent() && association23.GetParent() == association21.GetParent() &&
                     association13.GetDaughter() != association23.GetDaughter())
                 {
                     isAssociated = false;
@@ -214,18 +220,18 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
             if (isAssociated)
             {
-                (void) clusterAssociationMatrix[pCluster1].insert(ClusterAssociationMap::value_type(pCluster2, association12));
-                (void) clusterAssociationMatrix[pCluster2].insert(ClusterAssociationMap::value_type(pCluster1, association21));
+                (void)clusterAssociationMatrix[pCluster1].insert(ClusterAssociationMap::value_type(pCluster2, association12));
+                (void)clusterAssociationMatrix[pCluster2].insert(ClusterAssociationMap::value_type(pCluster1, association21));
             }
         }
     }
-
 
     // Second step: find the best associations A -> X and B -> Y
     ClusterAssociationMatrix intermediateAssociationMatrix;
 
     ClusterVector sortedClusters;
-    for (const auto &mapEntry : clusterAssociationMatrix) sortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterAssociationMatrix)
+        sortedClusters.push_back(mapEntry.first);
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : sortedClusters)
@@ -239,7 +245,8 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
         ClusterAssociation bestAssociationOuter(ClusterAssociation::UNDEFINED, ClusterAssociation::UNDEFINED, ClusterAssociation::NONE, 0.f);
 
         ClusterVector sortedAssociationClusters;
-        for (const auto &mapEntry : clusterAssociationMap) sortedAssociationClusters.push_back(mapEntry.first);
+        for (const auto &mapEntry : clusterAssociationMap)
+            sortedAssociationClusters.push_back(mapEntry.first);
         std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pDaughterCluster : sortedAssociationClusters)
@@ -268,16 +275,16 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
         }
 
         if (pBestClusterInner)
-            (void) intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterInner, bestAssociationInner));
+            (void)intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterInner, bestAssociationInner));
 
         if (pBestClusterOuter)
-            (void) intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterOuter, bestAssociationOuter));
+            (void)intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterOuter, bestAssociationOuter));
     }
-
 
     // Third step: make the merge if A -> X and B -> Y is in fact A -> B and B -> A
     ClusterVector intermediateSortedClusters;
-    for (const auto &mapEntry : intermediateAssociationMatrix) intermediateSortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : intermediateAssociationMatrix)
+        intermediateSortedClusters.push_back(mapEntry.first);
     std::sort(intermediateSortedClusters.begin(), intermediateSortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : intermediateSortedClusters)
@@ -285,7 +292,8 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
         const ClusterAssociationMap &parentAssociationMap(intermediateAssociationMatrix.at(pParentCluster));
 
         ClusterVector sortedAssociationClusters;
-        for (const auto &mapEntry : parentAssociationMap) sortedAssociationClusters.push_back(mapEntry.first);
+        for (const auto &mapEntry : parentAssociationMap)
+            sortedAssociationClusters.push_back(mapEntry.first);
         std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pDaughterCluster : sortedAssociationClusters)
@@ -322,21 +330,19 @@ void CrossGapsExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
 StatusCode CrossGapsExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", m_minClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinGapFraction", m_minGapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinGapFraction", m_minGapFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxGapTolerance", m_maxGapTolerance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxGapTolerance", m_maxGapTolerance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
     float maxCosRelativeAngle(std::cos(m_maxRelativeAngle * M_PI / 180.0));
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCosRelativeAngle", maxCosRelativeAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxCosRelativeAngle", maxCosRelativeAngle));
     m_maxRelativeAngle = (180.0 / M_PI) * std::acos(maxCosRelativeAngle);
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);

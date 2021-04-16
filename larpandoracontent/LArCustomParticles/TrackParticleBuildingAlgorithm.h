@@ -29,9 +29,9 @@ public:
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject*& pOutputPfo) const;
+    void CreatePfo(const pandora::ParticleFlowObject *const pInputPfo, const pandora::ParticleFlowObject *&pOutputPfo) const;
 
-    unsigned int    m_slidingFitHalfWindow;   ///<
+    unsigned int m_slidingFitHalfWindow; ///<
 };
 
 } // namespace lar_content

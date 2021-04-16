@@ -18,7 +18,7 @@ namespace lar_dl_content
 /**
  *  @brief  DlHitTrackShowerIdAlgorithm class
  */
-class DlHitTrackShowerIdAlgorithm: public pandora::Algorithm
+class DlHitTrackShowerIdAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -29,7 +29,7 @@ public:
     virtual ~DlHitTrackShowerIdAlgorithm();
 
 private:
-    typedef std::map<const pandora::CaloHit*, std::tuple<int, int, int, int>> CaloHitToPixelMap;
+    typedef std::map<const pandora::CaloHit *, std::tuple<int, int, int, int>> CaloHitToPixelMap;
     typedef std::map<int, int> PixelToTileMap;
 
     pandora::StatusCode Run();
@@ -67,19 +67,19 @@ private:
      */
     void GetSparseTileMap(const pandora::CaloHitList &caloHitList, const float xMin, const float zMin, const int nTilesX, PixelToTileMap &sparseMap);
 
-    pandora::StringVector     m_caloHitListNames;    ///< Name of input calo hit list
-    std::string               m_modelFileNameU;      ///< Model file name for U view
-    std::string               m_modelFileNameV;      ///< Model file name for V view
-    std::string               m_modelFileNameW;      ///< Model file name for W view
-    LArDLHelper::TorchModel   m_modelU;              ///< Model for the U view
-    LArDLHelper::TorchModel   m_modelV;              ///< Model for the V view
-    LArDLHelper::TorchModel   m_modelW;              ///< Model for the W view
-    int                       m_imageHeight;         ///< Height of images in pixels
-    int                       m_imageWidth;          ///< Width of images in pixels
-    float                     m_tileSize;            ///< Size of tile in cm
-    bool                      m_visualize;           ///< Whether to visualize the track shower ID scores
-    bool                      m_useTrainingMode;     ///< Training mode
-    std::string               m_trainingOutputFile;  ///< Output file name for training examples
+    pandora::StringVector m_caloHitListNames; ///< Name of input calo hit list
+    std::string m_modelFileNameU;             ///< Model file name for U view
+    std::string m_modelFileNameV;             ///< Model file name for V view
+    std::string m_modelFileNameW;             ///< Model file name for W view
+    LArDLHelper::TorchModel m_modelU;         ///< Model for the U view
+    LArDLHelper::TorchModel m_modelV;         ///< Model for the V view
+    LArDLHelper::TorchModel m_modelW;         ///< Model for the W view
+    int m_imageHeight;                        ///< Height of images in pixels
+    int m_imageWidth;                         ///< Width of images in pixels
+    float m_tileSize;                         ///< Size of tile in cm
+    bool m_visualize;                         ///< Whether to visualize the track shower ID scores
+    bool m_useTrainingMode;                   ///< Training mode
+    std::string m_trainingOutputFile;         ///< Output file name for training examples
 };
 
 } // namespace lar_dl_content

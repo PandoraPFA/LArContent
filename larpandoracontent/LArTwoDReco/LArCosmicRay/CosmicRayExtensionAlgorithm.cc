@@ -73,7 +73,7 @@ void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
             const LArPointingCluster &clusterJ = *iterJ;
 
             if (clusterI.GetCluster() == clusterJ.GetCluster())
-            continue;
+                continue;
 
             this->FillClusterAssociationMatrix(clusterI, clusterJ, clusterAssociationMatrix);
         }
@@ -82,8 +82,8 @@ void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const ClusterVect
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ,
-    ClusterAssociationMatrix &clusterAssociationMatrix) const
+void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(
+    const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const
 {
     const Cluster *const pClusterI(clusterI.GetCluster());
     const Cluster *const pClusterJ(clusterJ.GetCluster());
@@ -162,11 +162,11 @@ void CosmicRayExtensionAlgorithm::FillClusterAssociationMatrix(const LArPointing
     const ClusterAssociation::VertexType vertexTypeJ(clusterVertexJ.IsInnerVertex() ? ClusterAssociation::INNER : ClusterAssociation::OUTER);
     const ClusterAssociation::AssociationType associationType(ClusterAssociation::STRONG);
 
-    (void) clusterAssociationMatrix[pClusterI].insert(ClusterAssociationMap::value_type(pClusterJ,
-        ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, lengthSquaredJ)));
+    (void)clusterAssociationMatrix[pClusterI].insert(
+        ClusterAssociationMap::value_type(pClusterJ, ClusterAssociation(vertexTypeI, vertexTypeJ, associationType, lengthSquaredJ)));
 
-    (void) clusterAssociationMatrix[pClusterJ].insert(ClusterAssociationMap::value_type(pClusterI,
-        ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, lengthSquaredI)));
+    (void)clusterAssociationMatrix[pClusterJ].insert(
+        ClusterAssociationMap::value_type(pClusterI, ClusterAssociation(vertexTypeJ, vertexTypeI, associationType, lengthSquaredI)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -182,7 +182,8 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
     ClusterAssociationMatrix clusterAssociationMatrix;
 
     ClusterVector sortedInputClusters;
-    for (const auto &mapEntry : inputAssociationMatrix) sortedInputClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : inputAssociationMatrix)
+        sortedInputClusters.push_back(mapEntry.first);
     std::sort(sortedInputClusters.begin(), sortedInputClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster1 : sortedInputClusters)
@@ -210,7 +211,8 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
             bool isAssociated(true);
 
             ClusterVector sortedAssociationClusters;
-            for (const auto &mapEntry : associationMap1) sortedAssociationClusters.push_back(mapEntry.first);
+            for (const auto &mapEntry : associationMap1)
+                sortedAssociationClusters.push_back(mapEntry.first);
             std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
             for (const Cluster *const pCluster3 : sortedAssociationClusters)
@@ -223,8 +225,7 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
                 const ClusterAssociation &association23(iter23->second);
 
-                if (association12.GetParent() == association13.GetParent() &&
-                    association23.GetParent() == association21.GetParent() &&
+                if (association12.GetParent() == association13.GetParent() && association23.GetParent() == association21.GetParent() &&
                     association13.GetDaughter() != association23.GetDaughter())
                 {
                     isAssociated = false;
@@ -234,18 +235,18 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
 
             if (isAssociated)
             {
-                (void) clusterAssociationMatrix[pCluster1].insert(ClusterAssociationMap::value_type(pCluster2, association12));
-                (void) clusterAssociationMatrix[pCluster2].insert(ClusterAssociationMap::value_type(pCluster1, association21));
+                (void)clusterAssociationMatrix[pCluster1].insert(ClusterAssociationMap::value_type(pCluster2, association12));
+                (void)clusterAssociationMatrix[pCluster2].insert(ClusterAssociationMap::value_type(pCluster1, association21));
             }
         }
     }
-
 
     // Second step: find the best associations A -> X and B -> Y
     ClusterAssociationMatrix intermediateAssociationMatrix;
 
     ClusterVector sortedClusters;
-    for (const auto &mapEntry : clusterAssociationMatrix) sortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterAssociationMatrix)
+        sortedClusters.push_back(mapEntry.first);
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : sortedClusters)
@@ -259,7 +260,8 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
         ClusterAssociation bestAssociationOuter(ClusterAssociation::UNDEFINED, ClusterAssociation::UNDEFINED, ClusterAssociation::NONE, 0.f);
 
         ClusterVector sortedAssociationClusters;
-        for (const auto &mapEntry : clusterAssociationMap) sortedAssociationClusters.push_back(mapEntry.first);
+        for (const auto &mapEntry : clusterAssociationMap)
+            sortedAssociationClusters.push_back(mapEntry.first);
         std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pDaughterCluster : sortedAssociationClusters)
@@ -288,16 +290,16 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
         }
 
         if (pBestClusterInner)
-            (void) intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterInner, bestAssociationInner));
+            (void)intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterInner, bestAssociationInner));
 
         if (pBestClusterOuter)
-            (void) intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterOuter, bestAssociationOuter));
+            (void)intermediateAssociationMatrix[pParentCluster].insert(ClusterAssociationMap::value_type(pBestClusterOuter, bestAssociationOuter));
     }
-
 
     // Third step: make the merge if A -> X and B -> Y is in fact A -> B and B -> A
     ClusterVector intermediateSortedClusters;
-    for (const auto &mapEntry : intermediateAssociationMatrix) intermediateSortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : intermediateAssociationMatrix)
+        intermediateSortedClusters.push_back(mapEntry.first);
     std::sort(intermediateSortedClusters.begin(), intermediateSortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : intermediateSortedClusters)
@@ -305,7 +307,8 @@ void CosmicRayExtensionAlgorithm::FillClusterMergeMap(const ClusterAssociationMa
         const ClusterAssociationMap &parentAssociationMap(intermediateAssociationMatrix.at(pParentCluster));
 
         ClusterVector sortedAssociationClusters;
-        for (const auto &mapEntry : parentAssociationMap) sortedAssociationClusters.push_back(mapEntry.first);
+        for (const auto &mapEntry : parentAssociationMap)
+            sortedAssociationClusters.push_back(mapEntry.first);
         std::sort(sortedAssociationClusters.begin(), sortedAssociationClusters.end(), LArClusterHelper::SortByNHits);
 
         for (const Cluster *const pDaughterCluster : sortedAssociationClusters)
@@ -360,7 +363,7 @@ float CosmicRayExtensionAlgorithm::CalculateRms(const Cluster *const pCluster, c
     }
 
     if (totalHits > 0.f)
-        return std::sqrt(totalChi2/totalHits);
+        return std::sqrt(totalChi2 / totalHits);
 
     return 0.f;
 }
@@ -369,23 +372,22 @@ float CosmicRayExtensionAlgorithm::CalculateRms(const Cluster *const pCluster, c
 
 StatusCode CosmicRayExtensionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterLength", m_minClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterLength", m_minClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSeedClusterLength", m_minSeedClusterLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinSeedClusterLength", m_minSeedClusterLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxLongitudinalDisplacement", m_maxLongitudinalDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseDisplacement", m_maxTransverseDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseDisplacement", m_maxTransverseDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCosRelativeAngle", m_minCosRelativeAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCosRelativeAngle", m_minCosRelativeAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAverageRms", m_maxAverageRms));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAverageRms", m_maxAverageRms));
 
     return ClusterExtensionAlgorithm::ReadSettings(xmlHandle);
 }
