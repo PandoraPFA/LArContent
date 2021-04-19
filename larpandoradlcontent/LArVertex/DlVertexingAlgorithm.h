@@ -35,30 +35,123 @@ public:
     virtual ~DlVertexingAlgorithm();
 
 private:
-    class CaloHitTuple
+    class VertexTuple
     {
     public:
-        CaloHitTuple(const pandora::Pandora &pandora, const pandora::CaloHit *pCaloHitU, const pandora::CaloHit *pCaloHitV, const pandora::CaloHit *pCaloHitW);
+        VertexTuple(const pandora::Pandora &pandora, const pandora::CartesianVector &vertexU, const pandora::CartesianVector &vertexV,
+            const pandora::CartesianVector &vertexW);
+
+        VertexTuple(const pandora::Pandora &pandora, const pandora::CartesianVector &vertex1, const pandora::CartesianVector &vertex2,
+            const pandora::HitType view1, const pandora::HitType view2);
 
         const pandora::CartesianVector &GetPosition() const;
         float GetChi2() const;
         std::string ToString() const;
-        const pandora::CaloHit *GetCaloHitU() const;
-        const pandora::CaloHit *GetCaloHitV() const;
-        const pandora::CaloHit *GetCaloHitW() const;
 
     private:
-        const pandora::CaloHit *m_pCaloHitU;    ///< The hit in the U view
-        const pandora::CaloHit *m_pCaloHitV;    ///< The hit in the V view
-        const pandora::CaloHit *m_pCaloHitW;    ///< The hit in the W view
         pandora::CartesianVector m_pos;         ///< Calculated 3D position
         float                   m_chi2;         ///< Chi squared of calculated position
     };
+
+    typedef std::pair<int, int> Pixel;          // A Pixel is a row, column pair
+    typedef std::vector<Pixel> PixelVector;
 
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode Train();
     pandora::StatusCode Infer();
+
+    /*
+     *  @brief  Create input for the network from a calo hit list
+     *
+     *  @param  caloHits The CaloHitList from which the input should be made
+     *  @param  networkInput The TorchInput object to populate
+     *  @param  pixelVector The output vector of populated pixels
+     *
+     *  @return The StatusCode resulting from the function
+     **/
+    pandora::StatusCode MakeNetworkInputFromHits(const pandora::CaloHitList &caloHits, LArDLHelper::TorchInput &networkInput,
+        PixelVector &pixelVector) const;
+
+    /*
+     *  @brief  Create a list of wire plane-space coordinates from a list of Pixels
+     *
+     *  @param  caloHits The CaloHitList from which the pixel vector was originally constructed
+     *  @param  pixelVector The input vector of populated pixels
+     *  @param  positionVector The output vector of wire plane positions
+     *
+     *  @return The StatusCode resulting from the function
+     **/
+    pandora::StatusCode MakeWirePlaneCoordinatesFromPixels(const pandora::CaloHitList &caloHits, const PixelVector &pixelVector,
+        pandora::CartesianPointVector &positionVector) const;
+
+    /*
+     *  @brief  Create a list of wire plane-space coordinates from a canvas
+     *
+     *  @param  caloHits The CaloHitList from which the pixel vector was originally constructed
+     *  @param  canvas The input canvas
+     *  @param  canvasWidth The width of the canvas
+     *  @param  canvasHeight The height of the canvas
+     *  @param  columnOffset The column offset used when populating the canvas
+     *  @param  rowOffset The row offset used when populating the canvas
+     *  @param  positionVector The output vector of wire plane positions
+     *
+     *  @return The StatusCode resulting from the function
+     **/
+    pandora::StatusCode MakeWirePlaneCoordinatesFromCanvas(const pandora::CaloHitList &caloHits, float **canvas, const int canvasWidth,
+        const int canvasHeight, const int columnOffset, const int rowOffset, pandora::CartesianPointVector &positionVector) const;
+
+    /**
+     *  @brief  Determines the parameters of the canvas for extracting the vertex location.
+     *          The network predicts the distance that each pixel associated with a hit is located from the vertex, but says nothing about
+     *          the direction. As a result, the ring describing the potential vertices associated with that hit can extend beyond the
+     *          original canvas size. This function returns the size of the required canvas and the offset for the bottom left corner.
+     *
+     *  @param  networkOutput The TorchOutput object populated by the network inference step
+     *  @param  pixelVector The vector of populated pixels
+     *  @param  thresholds The fractional distance thresholds representing the classes predicted by the network
+     *  @param  columnOffset The output column offset for the canvas
+     *  @param  rowOffset The output row offset for the canvas
+     *  @param  width The output width for the canvas
+     *  @param  height The output height for the canvas
+     */
+    void GetCanvasParameters(const LArDLHelper::TorchOutput &networkOutput, const PixelVector &pixelVector, const double *const thresholds,
+        int &columnOffset, int &rowOffset, int &width, int &height) const;
+
+    /**
+     *  @brief  Add a filled ring to the specified canvas.
+     *          The ring has an inner radius based on the minimum predicted distance to the vertex and an outer radius based on the maximum
+     *          predicted distance to the vertex. The centre of the ring is the location of the hit used to predict the distance to the
+     *          vertex. Each pixel to be filled is augmented by the specified weight. In this way, once all hits have been considered, a
+     *          consensus view emerges of the likely vertex location based on the overlap of various rings centred at different locations.
+     *
+     *          The underlying implementation is a variant of the Bresenham midpoint circle algorithm and therefore only computes pixel
+     *          coordinates for one octant of each circle (one of radius 'inner', one of radius 'outer') and interpolates the fill between
+     *          points using integer arithmetic, guaranteeing each pixel of the ring is filled once and only once, and then mirrored to the
+     *          remaining seven octants.
+     *
+     *  @param  networkOutput The TorchOutput object populated by the network inference step
+     *  @param  pixelVector The vector of populated pixels
+     *  @param  thresholds The fractional distance thresholds representing the classes predicted by the network
+     *  @param  columnOffset The output column offset for the canvas
+     *  @param  rowOffset The output row offset for the canvas
+     *  @param  width The output width for the canvas
+     *  @param  height The output height for the canvas
+     */
+    void DrawRing(float **canvas, const int row, const int col, const int inner, const int outer, const float weight) const;
+
+    /**
+     *  @brief  Update the coordinates along the loci of a circle.
+     *          When drawing the ring we need an efficient means to determine the next pixel defining the inner and outer loci of the ring.
+     *          This update function uses the Bresenham midpoint circle update function to determine this location. The row position is
+     *          always incremented by 1 pixel, the column position is left unchanged, or decremented by 1 pixel to best follow the arc of
+     *          the true underlying circle.
+     *
+     *  @param  radius2 The squared radius of the circle under consideration
+     *  @param  col The input/output column position to (potentially) update
+     *  @param  row The input/output row position to update
+     */
+    void Update(const int radius, int &col, int &row) const;
 
     /*
      *  @brief  Retrieve the map from MC to calo hits for reconstructable particles
@@ -103,16 +196,19 @@ private:
      */
     pandora::StatusCode MakeCandidateVertexList(const pandora::CartesianPointVector &positions);
 
-    bool                    m_trainingMode;         ///< Training mode
-    std::string             m_trainingOutputFile;   ///< Output file name for training examples
-    std::string             m_outputVertexListName; ///< Output vertex list name
-    pandora::StringVector   m_caloHitListNames;     ///< Names of input calo hit lists
-    LArDLHelper::TorchModel m_modelU;               ///< The model for the U view
-    LArDLHelper::TorchModel m_modelV;               ///< The model for the V view
-    LArDLHelper::TorchModel m_modelW;               ///< The model for the W view
-    float                   m_pixelShift;           ///< Pixel normalisation shift
-    float                   m_pixelScale;           ///< Pixel normalisation scale
-    bool                    m_visualise;            ///< Whether or not to visualise the candidate vertices
+    bool                    m_trainingMode;             ///< Training mode
+    std::string             m_trainingOutputFile;       ///< Output file name for training examples
+    std::string             m_outputVertexListName;     ///< Output vertex list name
+    pandora::StringVector   m_caloHitListNames;         ///< Names of input calo hit lists
+    LArDLHelper::TorchModel m_modelU;                   ///< The model for the U view
+    LArDLHelper::TorchModel m_modelV;                   ///< The model for the V view
+    LArDLHelper::TorchModel m_modelW;                   ///< The model for the W view
+    int                     m_height;                   ///< The height of the images
+    int                     m_width;                    ///< The width of the images
+    float                   m_pixelShift;               ///< Pixel normalisation shift
+    float                   m_pixelScale;               ///< Pixel normalisation scale
+    bool                    m_visualise;                ///< Whether or not to visualise the candidate vertices
+    const double            PY_EPSILON{1.1920929e-7};   ///< The value of epsilon in Python
 };
 
 } // namespace lar_dl_content
