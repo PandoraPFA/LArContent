@@ -283,16 +283,15 @@ StatusCode TwoViewThreeDKinkBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinMatchingScore",
-            m_minMatchingScore)); // from calo matching - clear tracks tool
+            m_minMatchingScore)); 
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinLocallyMatchedFraction",
-            m_minLocallyMatchedFraction)); // from calo matching
-                                           // - clear tracks tool
+            m_minLocallyMatchedFraction));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction",
-            m_minXOverlapFraction)); // from calo matching - clear tracks tool
+            m_minXOverlapFraction));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinLongitudinalImpactParameter", m_minLongitudinalImpactParameter));
