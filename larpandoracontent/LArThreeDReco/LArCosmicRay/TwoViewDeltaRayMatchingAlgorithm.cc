@@ -310,7 +310,9 @@ void TwoViewDeltaRayMatchingAlgorithm::MergeThirdView(const MatrixType::Element 
     ClusterList matchedClusters(element.GetOverlapResult().GetMatchedClusterList());
         
     ClusterSet checkedClusters;
-    checkedClusters.insert(pSeedCluster);
+
+    if (matchedClusters.count(pSeedCluster))
+        checkedClusters.insert(pSeedCluster);
         
     while (checkedClusters.size() != matchedClusters.size())
     {

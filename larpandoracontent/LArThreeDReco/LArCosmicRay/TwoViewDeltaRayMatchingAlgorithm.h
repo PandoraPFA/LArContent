@@ -52,7 +52,7 @@ public:
      *
      *  @return the clustering algorithm name
      */
-    std::string GetClusteringAlgName() const;
+    const std::string &GetClusteringAlgName() const;
 
     /**
      *  @brief  Obtain the HitTypeVector of input views
@@ -187,7 +187,7 @@ inline const std::string &TwoViewDeltaRayMatchingAlgorithm::GetThirdViewClusterL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline std::string TwoViewDeltaRayMatchingAlgorithm::GetClusteringAlgName() const
+inline const std::string &TwoViewDeltaRayMatchingAlgorithm::GetClusteringAlgName() const
 {
     return m_reclusteringAlgorithmName;
 }
