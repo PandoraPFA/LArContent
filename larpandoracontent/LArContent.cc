@@ -350,7 +350,7 @@
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
-    d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)	                                              	\
+    d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)                                                        \
     d("LArTrackDirectionTool",                  TrackDirectionTool)                                                             \
     d("LArSliceIdMonitoring",                   SliceIdMonitoringTool)
 

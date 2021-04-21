@@ -68,8 +68,8 @@ void SliceIdMonitoringTool::SelectOutputPfos(const Algorithm *const pAlgorithm, 
     std::list<float> compList;
     std::vector<CaloHitList> caloListList;
     std::vector<bool> isSelectedBestList;
-    float completenessTotal = 0.0;
-    float totalSlicesSize = 0;
+    float completenessTotal{0.f};
+    float totalSlicesSize{0};
 
     const unsigned int nSlices(sliceVector.size());
     std::cout << "nSlices " << nSlices << std::endl;
@@ -81,9 +81,7 @@ void SliceIdMonitoringTool::SelectOutputPfos(const Algorithm *const pAlgorithm, 
         totalSlicesSize = nuHypothesis.size() + crHypothesis.size();
 
         if (nuHypothesis.empty() && crHypothesis.empty())
-        {
             continue;
-        }
 
         // Work out if the slice was identified as neutrino or CR
         const auto isSelectedAsNu =
@@ -104,17 +102,17 @@ void SliceIdMonitoringTool::SelectOutputPfos(const Algorithm *const pAlgorithm, 
         std::cout << "total hits in slice " << parentCaloHitList.size() << std::endl;
         std::cout << "nu hits in slice " << nuNHitsHere.size() << std::endl;
 
-        int sharedHits = 0;
+        int sharedHits{0};
 
         for (const CaloHit *const pCaloHit : nuNHitsHere)
         {
             if (std::find(nuNHitsTotal.begin(), nuNHitsTotal.end(), pCaloHit) != nuNHitsTotal.end())
-                sharedHits = sharedHits + 1;
+                ++sharedHits;
         }
         std::cout << "shared hits: " << sharedHits << std::endl;
 
-        float completeness = (float)sharedHits / (float)nuNHitsTotal.size();
-        float purity = (float)sharedHits / (float)nuNHitsHere.size();
+        float completeness = static_cast<float>(sharedHits) / nuNHitsTotal.size();
+        float purity = static_cast<float>(sharedHits) / nuNHitsHere.size();
 
         std::cout << "completeness = " << completeness << std::endl;
         std::cout << "purity = " << purity << std::endl;
@@ -124,12 +122,12 @@ void SliceIdMonitoringTool::SelectOutputPfos(const Algorithm *const pAlgorithm, 
         compList.push_back(completeness);
         caloListList.push_back(caloHitList);
         isSelectedBestList.push_back(isSelectedAsNu);
-        completenessTotal = completenessTotal + completeness;
+        completenessTotal += completeness;
     }
 
     //find max completeness
-    int isBestSelected = 0;
-    int isa0nan = 0;
+    int isBestSelected{0};
+    int isa0nan{0};
     if (totalSlicesSize != 0)
     {
         std::list<float>::iterator maxcomp = std::max_element(compList.begin(), compList.end());

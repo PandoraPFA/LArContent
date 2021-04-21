@@ -11,7 +11,6 @@
 #include "larpandoracontent/LArControlFlow/NeutrinoIdTool.h"
 
 #include "Helpers/MCParticleHelper.h"
-
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
@@ -110,13 +109,6 @@ bool NeutrinoIdTool<T>::GetBestMCSliceIndex(const Algorithm *const pAlgorithm, c
 
     const int nuNHitsTotal(this->CountNeutrinoInducedHits(reconstructableCaloHitList));
     const CaloHitSet reconstructableCaloHitSet(reconstructableCaloHitList.begin(), reconstructableCaloHitList.end());
-
-    CaloHitList parentCaloHitList;
-    for (const CaloHit  *const pCaloHit : reconstructableCaloHitList)
-      {
-	const CaloHit *const pParentHit = static_cast<const CaloHit *>(pCaloHit->GetParentAddress());
-	parentCaloHitList.push_back(pParentHit);
-      }
 
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
@@ -245,43 +237,12 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
     std::vector<UintFloatPair> sliceIndexProbabilityPairs;
     for (unsigned int sliceIndex = 0, nSlices = nuSliceHypotheses.size(); sliceIndex < nSlices; ++sliceIndex)
     {
-	std::vector<float> downProbCr;
-	std::vector<float> downProbNu;
+        FloatVector downProbCr;
+        FloatVector downProbNu;
 
+	this->GetDownProbabilityCrVector(sliceIndex, pfoToProbabilityMap, crSliceHypotheses, downProbCr);
 
-        for (const ParticleFlowObject *const pPfo : crSliceHypotheses.at(sliceIndex))
-	 {
-	     object_creation::ParticleFlowObject::Metadata metadata;
-	     auto search = pfoToProbabilityMap.find(pPfo);
-	     if (search !=  pfoToProbabilityMap.end()) {
-	       metadata.m_propertiesToAdd["downProb"] = search->second;
-	       if(search->second != -1) {
-                  downProbCr.push_back(search->second);
-	       }
-	     }
-	 }
-
-        for (const ParticleFlowObject *const pPfo : nuSliceHypotheses.at(sliceIndex))
-	{
-	    object_creation::ParticleFlowObject::Metadata metadata;
-	    CaloHitList collectedHits;
-	    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, collectedHits);
-	    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, collectedHits);
-	    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, collectedHits);
-
-	    PfoList daughterPfos = pPfo->GetDaughterPfoList();
-
-	    for (const ParticleFlowObject *const pPPfo : daughterPfos) {
-	      auto search = pfoToProbabilityMap.find(pPPfo);
-	      if (search !=  pfoToProbabilityMap.end()) {
-		metadata.m_propertiesToAdd["downProb"] = search->second;
-		if(search->second != -1) {
-		  downProbNu.push_back(search->second);
-		}
-	      }
-	    }
-	}
-
+        this->GetDownProbabilityNuVector(sliceIndex, pfoToProbabilityMap, nuSliceHypotheses, downProbNu);
 
 	const float nuProbability(sliceFeaturesVector.at(sliceIndex).GetNeutrinoProbability(m_mva));
 
@@ -335,6 +296,50 @@ template<typename T>
 void NeutrinoIdTool<T>::SelectPfos(const PfoList &pfos, PfoList &selectedPfos) const
 {
     selectedPfos.insert(selectedPfos.end(), pfos.begin(), pfos.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void NeutrinoIdTool<T>::GetDownProbabilityCrVector(const unsigned int sliceIndex, const PfoToFloatMap pfoToProbabilityMap, const SliceHypotheses &crSliceHypotheses, pandora::FloatVector &downProbCr) const
+{
+    for (const ParticleFlowObject *const pPfo : crSliceHypotheses.at(sliceIndex))
+    {
+        object_creation::ParticleFlowObject::Metadata metadata;
+	auto search(pfoToProbabilityMap.find(pPfo));
+	if (search !=  pfoToProbabilityMap.end())
+	{
+	   metadata.m_propertiesToAdd["downProb"] = search->second;
+	   if(search->second != -1)
+	   {
+              downProbCr.push_back(search->second);
+	   }
+	 }
+     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void NeutrinoIdTool<T>::GetDownProbabilityNuVector(const unsigned int sliceIndex, const PfoToFloatMap pfoToProbabilityMap, const SliceHypotheses &nuSliceHypotheses, pandora::FloatVector &downProbNu) const
+{
+    for (const ParticleFlowObject *const pPfo : nuSliceHypotheses.at(sliceIndex))
+    {
+	object_creation::ParticleFlowObject::Metadata metadata;
+	PfoList daughterPfos = pPfo->GetDaughterPfoList();
+
+	for (const ParticleFlowObject *const pPPfo : daughterPfos) {
+	     auto search = pfoToProbabilityMap.find(pPPfo);
+	     if (search !=  pfoToProbabilityMap.end()) 
+	     {
+	          metadata.m_propertiesToAdd["downProb"] = search->second;
+		  if(search->second != -1) 
+		  {
+		      downProbNu.push_back(search->second);
+		  }
+	      }
+	  }
+      }  
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -392,30 +397,8 @@ NeutrinoIdTool<T>::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const Pfo
         if (eigenValues.GetX() <= std::numeric_limits<float>::epsilon()) return;
         const float nuEigenRatioInSphere(eigenValues.GetY() / eigenValues.GetX());
 
-	std::vector<float> downProbNu;
-	float maxProbNu_f = -1;
-	for (const ParticleFlowObject *const pPfo : nuPfos)
-	  {
-
-	    PfoList daughterPfos = pPfo->GetDaughterPfoList();
-	    for (const ParticleFlowObject *const pPPfo : daughterPfos) {
-	      auto search = pfoToProbabilityMap.find(pPPfo);
-	      if (search !=  pfoToProbabilityMap.end()) {
-		if(search->second != -1) {
-		  downProbNu.push_back(search->second);
-		}
-	      }
-	    }
-
-	  }
-
-
-	if(downProbNu.size() > 0) {
-	  std::vector<float>::iterator maxProbNu = std::max_element(downProbNu.begin(), downProbNu.end());
-	  auto index2n = std::distance(downProbNu.begin(), maxProbNu);
-	  int indexvalue2n = index2n;
-	  maxProbNu_f = downProbNu[indexvalue2n];
-	}
+	float maxProbNu_f(-1);
+	this->GetMaxDownProbabilityNu(nuPfos, pfoToProbabilityMap, maxProbNu_f);
 
         // Cosmic-ray features
         unsigned int nCRHitsMax(0);
@@ -448,24 +431,8 @@ NeutrinoIdTool<T>::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const Pfo
 
         const float crFracHitsInLongestTrack = static_cast<float>(nCRHitsMax)/static_cast<float>(nCRHitsTotal);
 
-	std::vector<float> downProbCr;
-	float maxProbCr_f = -1;
-	for (const ParticleFlowObject *const pPfo : crPfos)
-	  {
-	    auto search = pfoToProbabilityMap.find(pPfo);
-	    if (search !=  pfoToProbabilityMap.end()) {
-	      if(search->second != -1) {
-		downProbCr.push_back(search->second);
-	      }
-	    }
-	  }
-
-	if(downProbCr.size() > 0) {
-	  std::vector<float>::iterator maxProbCr = std::max_element(downProbCr.begin(), downProbCr.end());
-	  auto index2 = std::distance(downProbCr.begin(), maxProbCr);
-	  int indexvalue2 = index2;
-	  maxProbCr_f = downProbCr[indexvalue2];
-	}
+	float maxProbCr_f(-1);
+	this->GetMaxDownProbabilityCr(crPfos, pfoToProbabilityMap, maxProbCr_f);
 
 	// Push the features to the feature vector
 	m_featureVector.push_back(nuNFinalStatePfos);
@@ -620,6 +587,56 @@ void NeutrinoIdTool<T>::SliceFeatures::GetPointsInSphere(const CartesianPointVec
             spacePointsInSphere.push_back(point);
     }
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void NeutrinoIdTool<T>::SliceFeatures::GetMaxDownProbabilityCr(const PfoList crPfos, const PfoToFloatMap pfoToProbabilityMap, float &maxProbCr_f) const
+{
+    FloatVector downProbCr;
+    for (const ParticleFlowObject *const pPfo : crPfos)
+    {
+        auto search = pfoToProbabilityMap.find(pPfo);
+	if (search !=  pfoToProbabilityMap.end()) {
+	    if(search->second != -1) {
+	        downProbCr.push_back(search->second);
+	    }
+	}
+     }
+
+     if(downProbCr.size() > 0) {
+         maxProbCr_f = (*std::max_element(downProbCr.begin(), downProbCr.end()));
+     }  
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
+void NeutrinoIdTool<T>::SliceFeatures::GetMaxDownProbabilityNu(const PfoList nuPfos, const PfoToFloatMap pfoToProbabilityMap, float &maxProbNu_f) const
+{
+    FloatVector downProbNu;
+    for (const ParticleFlowObject *const pPfo : nuPfos)
+        {
+	PfoList daughterPfos(pPfo->GetDaughterPfoList());
+	for (const ParticleFlowObject *const pPPfo : daughterPfos) 
+	{
+	    auto search = pfoToProbabilityMap.find(pPPfo);
+	    if (search !=  pfoToProbabilityMap.end()) 
+	    {
+	        if(search->second != -1) 
+		{
+		    downProbNu.push_back(search->second);
+		}
+	    }
+	  }
+
+      }
+
+      if(downProbNu.size() > 0) {
+          maxProbNu_f = (*std::max_element(downProbNu.begin(), downProbNu.end()));
+      }      
+}
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

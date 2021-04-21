@@ -142,6 +142,24 @@ private:
          */
         void GetPointsInSphere(const pandora::CartesianPointVector &spacePoints, const pandora::CartesianVector &vertex, const float radius, pandora::CartesianPointVector &spacePointsInSphere) const;
 
+	/**
+         *  @brief  Find the maximum probability from the TrackDirectionTool with the CR hypothosis
+         *
+         *  @param  list of pfos from the CR hypothosis
+         *  @param  map of each pfo to probability from the TrackDirectionTool
+         *  @param  maximum probability value in the slice
+         */
+        void GetMaxDownProbabilityCr(const pandora::PfoList crPfos, const PfoToFloatMap pfoToProbabilityMap, float &maxProbCr_f) const;
+
+	/**
+         *  @brief  Find the maximum probability from the TrackDirectionTool with the Nu hypothosis
+         *
+         *  @param  list of pfos from the Nu hypothosis
+         *  @param  map of each pfo to probability from the TrackDirectionTool
+         *  @param  maximum probability value in the slice
+         */
+        void GetMaxDownProbabilityNu(const pandora::PfoList nuPfos, const PfoToFloatMap pfoToProbabilityMap, float &maxProbNu_f) const;
+
         bool                               m_isAvailable;    ///< Is the feature vector available
         LArMvaHelper::MvaFeatureVector     m_featureVector;  ///< The MVA feature vector
         const NeutrinoIdTool *const        m_pTool;          ///< The tool that owns this
@@ -237,6 +255,24 @@ private:
      *  @param  selectedPfos the list of pfos to populate
      */
     void SelectPfos(const pandora::PfoList &pfos, pandora::PfoList &selectedPfos) const;
+
+    /**
+     *  @brief  Find all downProbCr values associated with a given slice
+     *
+     *  @param  slice to be considered
+     *  @param  map of each pfo to probability from the TrackDirectionTool
+     *  @param  vector of downProbCr values
+     */
+    void GetDownProbabilityCrVector(const unsigned int sliceIndex, const PfoToFloatMap pfoToProbabilityMap, const SliceHypotheses &crSliceHypotheses, pandora::FloatVector &downProbCr) const;
+
+    /**
+     *  @brief  Find all downProbNu values associated with a given slice
+     *
+     *  @param  slice to be considered
+     *  @param  map of each pfo to probability from the TrackDirectionTool
+     *  @param  vector of downProbNu values
+     */
+    void GetDownProbabilityNuVector(const unsigned int sliceIndex, const PfoToFloatMap pfoToProbabilityMap, const SliceHypotheses &nuSliceHypotheses, pandora::FloatVector &downProbNu) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

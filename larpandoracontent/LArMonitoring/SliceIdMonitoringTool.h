@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArMonitoring/SliceIdMonitoringTool.h
  *
- *  @brief  Header file for the cosmic-ray tagging monitoring tool class.
+ *  @brief  Header file for the slice ID monitoring tool class.
  *
  *  $Log: $
  */

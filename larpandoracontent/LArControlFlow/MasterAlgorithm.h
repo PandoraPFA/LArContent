@@ -177,6 +177,14 @@ protected:
     pandora::StatusCode SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceVector &sliceVector) const;
 
     /**
+     *  @brief  Run the TrackDirectionTool to add to the SelectBestSliceHypotheses method if needed
+     *
+     *  @param  nuSliceHypotheses the vector of slice neutrino hypotheses
+     *  @param  crSliceHypotheses the vector of slice cosmic-ray hypotheses
+     */
+    pandora::StatusCode RunTrackDirectionTool(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoToFloatMap &pfoToProbabilityMap) const;
+
+    /**
      *  @brief  Reset all worker instances
      */
     pandora::StatusCode Reset();
@@ -317,6 +325,7 @@ protected:
     bool                        m_shouldRunNeutrinoRecoOption;      ///< Whether to run neutrino reconstruction for each slice
     bool                        m_shouldRunCosmicRecoOption;        ///< Whether to run cosmic-ray reconstruction for each slice
     bool                        m_shouldPerformSliceId;             ///< Whether to identify slices and select most appropriate pfos
+    bool                        m_shouldRunTrackDirection;          ///< Whether to use track direction in slice identification
     bool                        m_printOverallRecoStatus;           ///< Whether to print current operation status messages
     bool                        m_visualizeOverallRecoStatus;       ///< Whether to display results of current operations
     bool                        m_shouldRemoveOutOfTimeHits;        ///< Whether to remove out of time hits
@@ -352,10 +361,6 @@ protected:
     std::string                 m_recreatedPfoListName;             ///< The output recreated pfo list name
     std::string                 m_recreatedClusterListName;         ///< The output recreated cluster list name
     std::string                 m_recreatedVertexListName;          ///< The output recreated vertex list name
-
-    std::string                 m_clusterListName;                  ///< The requested calo hit list name
-    std::string                 m_pfoListName;                      ///< The requested calo hit list name
-
 
     float                       m_inTimeMaxX0;                      ///< Cut on X0 to determine whether particle is clear cosmic ray
     LArCaloHitFactory           m_larCaloHitFactory;                ///< Factory for creating LArCaloHits during hit copying
@@ -418,7 +423,7 @@ public:
      *  @param  sliceNuPfos to receive the list of selected pfos
      */
     virtual void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
-       pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap, const SliceVector &sliceVector) = 0;
+        pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap, const SliceVector &sliceVector) = 0;
 };
 //-------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -431,12 +436,11 @@ public:
    /**
     *  @brief  Find direction of a track
     *
-    *  @param  pPfo: cosmic-ray pfos
-    *  @param  downprobability return param
-    *  @param  pAlgorithm the address of this master algorithm
+    *  @param  pAlgorithm the address of this algorithm instance
+    *  @param  pPfo represents a pfo marked as a potential cosmic ray
+    *  @param  downprobability is the return paramater, giving the probability of the slice containing a cosmic ray 
     */
-
-   virtual void  FindDirections(const pandora::ParticleFlowObject *const pPfo, float &downProbability, const MasterAlgorithm *const pAlgorithm) = 0;
+  virtual float  FindDirections(const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pPfo) = 0;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
