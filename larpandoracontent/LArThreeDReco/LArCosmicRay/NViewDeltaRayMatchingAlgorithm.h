@@ -43,7 +43,7 @@ public:
      *
      *  @return  a status code reflecting if one and only one cosmic ray cluster was found
      */
-    pandora::StatusCode GetMuonCluster(const pandora::PfoList &commonMuonPfoList, const pandora::HitType &hitType, const pandora::Cluster *&pMuonCluster) const;
+    pandora::StatusCode GetMuonCluster(const pandora::PfoList &commonMuonPfoList, const pandora::HitType hitType, const pandora::Cluster *&pMuonCluster) const;
 
     /**
      *  @brief  To determine how well three clusters (one in each view) map onto one another expressing this in terms of a chi-squared like parameter
@@ -169,7 +169,7 @@ public:
      *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good 
      */
     pandora::StatusCode ParameteriseMuon(const pandora::ParticleFlowObject *const pParentMuon, const pandora::CartesianPointVector &deltaRayProjectedPositions,
-        const pandora::HitType &hitType, pandora::CartesianVector &positionOnMuon, pandora::CartesianVector &muonDirection) const;
+        const pandora::HitType hitType, pandora::CartesianVector &positionOnMuon, pandora::CartesianVector &muonDirection) const;
 
     /**
      *  @brief  In one view, pull out any hits from a cosmic ray cluster that belong to the child delta ray cluster 
@@ -241,7 +241,7 @@ protected:
      *
      *  @param  hitType the hit type of the map to populate
      */
-    void FillHitToClusterMap(const pandora::HitType &hitType);
+    void FillHitToClusterMap(const pandora::HitType hitType);
 
     /**
      *  @brief  Add the hits of a given cluster to the hit to cluster map
@@ -255,14 +255,14 @@ protected:
      *
      *  @param  hitType the hit type of the map to populate
      */
-    void FillClusterProximityMap(const pandora::HitType &hitType);
+    void FillClusterProximityMap(const pandora::HitType hitType);
 
     /**
      *  @brief  Build the KD tree
      *
      *  @param  hitType the hit type of the KD tree to build
      */
-    void BuildKDTree(const pandora::HitType &hitType);
+    void BuildKDTree(const pandora::HitType hitType);
 
     /**
      *  @brief  Add a cluster to the cluster proximity map
@@ -276,14 +276,14 @@ protected:
      *
      *  @param  hitType the hit type of the map to populate
      */
-    void FillClusterToPfoMap(const pandora::HitType &hitType);
+    void FillClusterToPfoMap(const pandora::HitType hitType);
 
     /**
      *  @brief  Fill the stray cluster list with clusters that do not pass the tensor threshold requirement 
      *
      *  @param  hitType the hit type of the list to fill
      */
-    void FillStrayClusterList(const pandora::HitType &hitType);
+    void FillStrayClusterList(const pandora::HitType hitType);
     
     /**
      *  @brief  Use the cluster proximity map to travel along paths of nearby clusters finding the cosmic ray clusters on which they terminate 

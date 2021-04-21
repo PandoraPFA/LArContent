@@ -74,7 +74,7 @@ bool UnambiguousDeltaRayTool::IsConnected(const TensorType::Element &element) co
     {
         unsigned int connectedClusterCount(0);
         
-        for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             ClusterList muonClusterList;
             LArPfoHelper::GetClusters(pMuonPfo, hitType, muonClusterList);

@@ -153,7 +153,7 @@ private:
      *  @param  hitType the specified TPC view
      *  @param  outputList the output list of hits of the specified list
      */
-    void GetHitsOfType(const pandora::CaloHitList &inputList, const pandora::HitType &hitType, pandora::CaloHitList &outputList) const;
+    void GetHitsOfType(const pandora::CaloHitList &inputList, const pandora::HitType hitType, pandora::CaloHitList &outputList) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

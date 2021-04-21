@@ -259,7 +259,7 @@ void TwoViewDeltaRayMatchingAlgorithm::FormThirdViewCluster(const MatrixType::El
 {
     const PfoList &commonMuonPfoList(element.GetOverlapResult().GetCommonMuonPfoList());
     const Cluster *const pBestMatchedCluster(element.GetOverlapResult().GetBestMatchedCluster());
-    const HitType &thirdViewHitType(LArClusterHelper::GetClusterHitType(pBestMatchedCluster));
+    const HitType thirdViewHitType(LArClusterHelper::GetClusterHitType(pBestMatchedCluster));
     const ParticleFlowObject *pMatchedMuonPfo(nullptr);
     
     for (const ParticleFlowObject *const pMuonPfo : commonMuonPfoList)

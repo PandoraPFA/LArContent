@@ -44,7 +44,7 @@ private:
      *
      *  @return  whether the checks pass
      */    
-    bool PassElementChecks(const MatrixType::Element &element, const pandora::HitType &hitType) const; 
+    bool PassElementChecks(const MatrixType::Element &element, const pandora::HitType hitType) const; 
 
     /**
      *  @brief  Determine whether the matched clusters suggest that the delta ray is at the endpoint of the cosmic ray (and is likely to be a michel)
@@ -55,7 +55,7 @@ private:
      *
      *  @return  whether the delta ray is at the endpoint of the cosmic ray
      */
-    bool IsMuonEndpoint(const MatrixType::Element &element, const pandora::HitType &hitType) const;
+    bool IsMuonEndpoint(const MatrixType::Element &element, const pandora::HitType hitType) const;
 
     /**
      *  @brief  Determine whether the cluster under investigation has muon contamination
@@ -65,7 +65,7 @@ private:
      *
      *  @return  whether the cluster contains muon hits to remove
      */        
-    bool IsContaminated(const MatrixType::Element &element, const pandora::HitType &hitType) const;
+    bool IsContaminated(const MatrixType::Element &element, const pandora::HitType hitType) const;
 
     /**
      *  @brief  Whether a given position is close to a defined line 
@@ -100,7 +100,7 @@ private:
      *
      *  @return  whether the input element is the best element
      */
-    bool IsBestElement(const MatrixType::Element &element, const pandora::HitType &hitType, 
+    bool IsBestElement(const MatrixType::Element &element, const pandora::HitType hitType, 
         const MatrixType::ElementList &elementList) const;
 
     /**
@@ -110,7 +110,7 @@ private:
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the output list of identified delta ray hits
      */
-    void CreateSeed(const MatrixType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits) const;
+    void CreateSeed(const MatrixType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits) const;
 
     /**
      *  @brief  Examine remaining hits in the delta ray cluster adding them to the delta ray seed or parent muon if appropriate and a separate list if not
@@ -122,7 +122,7 @@ private:
      *
      *  @return  whether the muon projection mechanics were successful - abort process if not
      */   
-    pandora::StatusCode GrowSeed(const MatrixType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits,
+    pandora::StatusCode GrowSeed(const MatrixType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits,
         pandora::CaloHitList &deltaRayRemantHits) const;
 
     /**
@@ -147,7 +147,7 @@ private:
      *  @param  collectedHits the list of identified delta ray hits
      *  @param  deltaRayRemantHits the list of remainder hits 
      */       
-    void SplitDeltaRayCluster(const MatrixType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits,
+    void SplitDeltaRayCluster(const MatrixType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits,
         pandora::CaloHitList &deltaRayRemnantHits) const;
 
     /**
@@ -159,7 +159,7 @@ private:
      *  @param  clusterVector a vector containing the address of created/modified clusters for bookeeping purposes
      *  @param  pfoVector a vector containing the address of the pfo to which a modified muon cluster belongs for bookeeping purposes
      */        
-    void FragmentRemnant(const pandora::HitType &hitType, const pandora::Cluster *const pMuonCluster,
+    void FragmentRemnant(const pandora::HitType hitType, const pandora::Cluster *const pMuonCluster,
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
 
     /**
@@ -171,7 +171,7 @@ private:
      *
      *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good
      */
-    pandora::StatusCode ProjectDeltaRayPositions(const MatrixType::Element &element, const pandora::HitType &hitType,
+    pandora::StatusCode ProjectDeltaRayPositions(const MatrixType::Element &element, const pandora::HitType hitType,
         pandora::CartesianPointVector &projectedPositions) const;
 
     float m_minSeparation;                    ///< The minimum delta ray - parent muon cluster separation required to investigate delta ray cluster

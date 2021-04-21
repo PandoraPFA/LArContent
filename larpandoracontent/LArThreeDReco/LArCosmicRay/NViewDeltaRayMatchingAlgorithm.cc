@@ -62,7 +62,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::PrepareInputClusters(ClusterList &prepar
     if (preparedClusterList.empty())
         return;
 
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(preparedClusterList.front()));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(preparedClusterList.front()));
 
     this->FillHitToClusterMap(hitType);
     this->FillClusterProximityMap(hitType);
@@ -73,7 +73,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::PrepareInputClusters(ClusterList &prepar
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>    
-void NViewDeltaRayMatchingAlgorithm<T>::FillHitToClusterMap(const HitType &hitType)
+void NViewDeltaRayMatchingAlgorithm<T>::FillHitToClusterMap(const HitType hitType)
 {
     const ClusterList &inputClusterList(this->GetInputClusterList(hitType));
 
@@ -86,7 +86,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::FillHitToClusterMap(const HitType &hitTy
 template<typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::AddToClusterMap(const Cluster *const pCluster)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
 
     CaloHitList caloHitList;
@@ -99,7 +99,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::AddToClusterMap(const Cluster *const pCl
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>    
-void NViewDeltaRayMatchingAlgorithm<T>::FillClusterProximityMap(const HitType &hitType)
+void NViewDeltaRayMatchingAlgorithm<T>::FillClusterProximityMap(const HitType hitType)
 {
     this->BuildKDTree(hitType);
     
@@ -112,7 +112,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::FillClusterProximityMap(const HitType &h
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>    
-void NViewDeltaRayMatchingAlgorithm<T>::BuildKDTree(const HitType &hitType)
+void NViewDeltaRayMatchingAlgorithm<T>::BuildKDTree(const HitType hitType)
 {
     const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
@@ -133,7 +133,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::BuildKDTree(const HitType &hitType)
 template<typename T>    
 void NViewDeltaRayMatchingAlgorithm<T>::AddToClusterProximityMap(const Cluster *const pCluster)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
     ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
@@ -171,7 +171,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::AddToClusterProximityMap(const Cluster *
 //------------------------------------------------------------------------------------------------------------------------------------------        
 
 template<typename T>    
-void NViewDeltaRayMatchingAlgorithm<T>::FillClusterToPfoMap(const HitType &hitType)
+void NViewDeltaRayMatchingAlgorithm<T>::FillClusterToPfoMap(const HitType hitType)
 {    
     const PfoList *pMuonPfoList(nullptr);
     
@@ -196,7 +196,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::FillClusterToPfoMap(const HitType &hitTy
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-void NViewDeltaRayMatchingAlgorithm<T>::FillStrayClusterList(const HitType &hitType)
+void NViewDeltaRayMatchingAlgorithm<T>::FillStrayClusterList(const HitType hitType)
 {
     const ClusterList &inputClusterList(this->GetInputClusterList(hitType));    
     ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
@@ -211,7 +211,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::FillStrayClusterList(const HitType &hitT
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
-StatusCode NViewDeltaRayMatchingAlgorithm<T>::GetMuonCluster(const PfoList &commonMuonPfoList, const HitType &hitType, const Cluster *&pMuonCluster) const
+StatusCode NViewDeltaRayMatchingAlgorithm<T>::GetMuonCluster(const PfoList &commonMuonPfoList, const HitType hitType, const Cluster *&pMuonCluster) const
 {
     if (commonMuonPfoList.size() != 1)
         return STATUS_CODE_NOT_FOUND;
@@ -232,7 +232,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::GetMuonCluster(const PfoList &comm
 template<typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::GetNearbyMuonPfos(const Cluster *const pCluster, ClusterList &consideredClusters, PfoList &nearbyMuonPfos) const 
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     const ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
     const ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
 
@@ -555,12 +555,12 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ProjectMuonPositions(const HitType
 {
     ClusterList muonClusterList1, muonClusterList2;    
 
-    for (const HitType &hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         if (hitType1 == thirdViewHitType)
             continue;
         
-        for (const HitType &hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        for (const HitType hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             if ((hitType2 == thirdViewHitType) || (hitType1 == hitType2))
                 continue;
@@ -659,7 +659,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster 
         if (this->GetProjectedPositions(pCluster1, pCluster2, deltaRayProjectedPositions) != STATUS_CODE_SUCCESS)
             return STATUS_CODE_NOT_FOUND;
 
-        for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             if ((LArClusterHelper::GetClusterHitType(pCluster1) != hitType) && (LArClusterHelper::GetClusterHitType(pCluster2) != hitType))
             {
@@ -725,7 +725,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlo
 
 template<typename T>
 StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlowObject *const pParentMuon, const CartesianPointVector &deltaRayProjectedPositions,
-    const HitType &hitType, CartesianVector &positionOnMuon, CartesianVector &muonDirection) const
+    const HitType hitType, CartesianVector &positionOnMuon, CartesianVector &muonDirection) const
 {
     ClusterList muonClusterList;
     LArPfoHelper::GetClusters(pParentMuon, hitType, muonClusterList);
@@ -884,7 +884,7 @@ bool NViewDeltaRayMatchingAlgorithm<T>::CreatePfos(ProtoParticleVector &protoPar
 template<typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::CollectStrayClusters(const Cluster *const pClusterToEnlarge, const float rangeMinX, const float rangeMaxX, ClusterList &collectedClusters)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pClusterToEnlarge));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterToEnlarge));
     const ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
     const ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
     const ClusterProximityMap::const_iterator clusterProximityIter(clusterProximityMap.find(pClusterToEnlarge));
@@ -934,7 +934,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::AddInStrayClusters(const Cluster *const 
 template<typename T>
 void NViewDeltaRayMatchingAlgorithm<T>::UpdateUponDeletion(const Cluster *const pDeletedCluster)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);    
     ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
     ClusterList &strayClusterList((hitType == TPC_VIEW_U) ? m_strayClusterListU : (hitType == TPC_VIEW_V) ? m_strayClusterListV : m_strayClusterListW);
@@ -1027,7 +1027,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::UpdateContainers(const ClusterVector &ne
         
         if (pMuonPfo)
         {
-            const HitType &hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
+            const HitType hitType(LArClusterHelper::GetClusterHitType(pNewCluster));
             ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
             clusterToPfoMap[pNewCluster] = pMuonPfo;
         }

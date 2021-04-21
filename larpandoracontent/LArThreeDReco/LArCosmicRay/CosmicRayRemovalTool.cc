@@ -71,7 +71,7 @@ void CosmicRayRemovalTool::ExamineConnectedElements(const TensorType::ElementLis
     
     for (const TensorType::Element &element : elementList)
     {        
-        for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
 	    {
             const Cluster *const pDeltaRayCluster(element.GetCluster(hitType));
             
@@ -119,7 +119,7 @@ void CosmicRayRemovalTool::ExamineConnectedElements(const TensorType::ElementLis
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool CosmicRayRemovalTool::PassElementChecks(const TensorType::Element &element,
-    const HitType &hitType) const
+    const HitType hitType) const
 {
     // ATTN: Avoid endpoints, topological michel reconstruction is very ambiguous
     if (this->IsMuonEndpoint(element, true, hitType))
@@ -140,7 +140,7 @@ bool CosmicRayRemovalTool::PassElementChecks(const TensorType::Element &element,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, const HitType &hitType) const
+bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, const HitType hitType) const
 {
     const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
     
@@ -198,7 +198,7 @@ bool CosmicRayRemovalTool::IsContaminated(const TensorType::Element &element, co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void CosmicRayRemovalTool::CreateSeed(const TensorType::Element &element,
-    const HitType &hitType, CaloHitList &collectedHits) const
+    const HitType hitType, CaloHitList &collectedHits) const
 {
     // To avoid fluctuations, parameterise the muon track
     CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
@@ -248,7 +248,7 @@ void CosmicRayRemovalTool::CreateSeed(const TensorType::Element &element,
 //------------------------------------------------------------------------------------------------------------------------------------------
     
 StatusCode CosmicRayRemovalTool::GrowSeed(const TensorType::Element &element,
-    const HitType &hitType, CaloHitList &deltaRayHits, CaloHitList &remnantHits) const
+    const HitType hitType, CaloHitList &deltaRayHits, CaloHitList &remnantHits) const
 {
     const Cluster *const pDeltaRayCluster(element.GetCluster(hitType)), *pMuonCluster(nullptr);
     
@@ -307,7 +307,7 @@ void CosmicRayRemovalTool::CollectHitsFromDeltaRay(const CartesianVector &positi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayRemovalTool::SplitDeltaRayCluster(const TensorType::Element &element, const HitType &hitType,
+void CosmicRayRemovalTool::SplitDeltaRayCluster(const TensorType::Element &element, const HitType hitType,
     CaloHitList &collectedHits, CaloHitList &deltaRayRemnantHits) const
 {
     const Cluster *const pDeltaRayCluster(element.GetCluster(hitType)), *pMuonCluster(nullptr);    
@@ -361,7 +361,7 @@ void CosmicRayRemovalTool::SplitDeltaRayCluster(const TensorType::Element &eleme
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayRemovalTool::FragmentRemnant(const HitType &hitType, const Cluster *const pMuonCluster,
+void CosmicRayRemovalTool::FragmentRemnant(const HitType hitType, const Cluster *const pMuonCluster,
     const Cluster *const pDeltaRayRemnant, ClusterVector &clusterVector, PfoVector &pfoVector) const
 {
     std::string caloHitListName(hitType == TPC_VIEW_U ? "CaloHitListU" : hitType == TPC_VIEW_V ? "CaloHitListV" : "CaloHitListW");

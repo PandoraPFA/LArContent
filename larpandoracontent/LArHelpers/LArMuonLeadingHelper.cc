@@ -290,7 +290,7 @@ void LArMuonLeadingHelper::AddInPostBremsstrahlungHits(const LeadingMCParticleTo
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMuonLeadingHelper::AddInPostBremsstrahlungHits(const MCParticle *const pLeadingMCParticle, const LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList,
-    const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const HitType &tpcView)
+    const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const HitType tpcView)
 {
     CaloHitList leadingViewHitList;
     for (const CaloHit *const pCaloHit : leadingMCToTrueHitListMap.at(pLeadingMCParticle))

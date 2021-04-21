@@ -164,7 +164,7 @@ public:
      *  @param  tpcView the TPC view of the hits to be collected
      */
     static void AddInPostBremsstrahlungHits(const pandora::MCParticle *const pLeadingParticle, const LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList, 
-        const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const pandora::HitType &tpcView);
+        const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const pandora::HitType tpcView);
 
     /**
      *  @brief  Select all tier 0 and tier 1 MCParticles in cosmic ray hierarchies from an input list

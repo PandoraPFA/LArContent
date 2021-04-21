@@ -31,7 +31,7 @@ OneViewDeltaRayMatchingAlgorithm::OneViewDeltaRayMatchingAlgorithm() :
 
 StatusCode OneViewDeltaRayMatchingAlgorithm::Run()
 {
-    for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         this->FillHitToClusterMap(hitType);
         this->FillClusterProximityMap(hitType);
@@ -39,10 +39,10 @@ StatusCode OneViewDeltaRayMatchingAlgorithm::Run()
     
     this->FillClusterToPfoMaps();
 
-    for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         this->PerformOneViewMatching(hitType);
 
-    for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         this->PerformRecovery(hitType);
 
     this->ClearContainers();
@@ -52,7 +52,7 @@ StatusCode OneViewDeltaRayMatchingAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OneViewDeltaRayMatchingAlgorithm::FillHitToClusterMap(const HitType &hitType)
+void OneViewDeltaRayMatchingAlgorithm::FillHitToClusterMap(const HitType hitType)
 {
     const ClusterList &inputClusterList(this->GetInputClusterList(hitType));
 
@@ -62,7 +62,7 @@ void OneViewDeltaRayMatchingAlgorithm::FillHitToClusterMap(const HitType &hitTyp
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-const ClusterList OneViewDeltaRayMatchingAlgorithm::GetInputClusterList(const HitType &hitType)
+const ClusterList OneViewDeltaRayMatchingAlgorithm::GetInputClusterList(const HitType hitType)
 {
     const std::string inputClusterListName((hitType == TPC_VIEW_U) ? m_inputClusterListNameU : (hitType == TPC_VIEW_V) ? m_inputClusterListNameV : m_inputClusterListNameW);
     
@@ -81,7 +81,7 @@ const ClusterList OneViewDeltaRayMatchingAlgorithm::GetInputClusterList(const Hi
 
 void OneViewDeltaRayMatchingAlgorithm::AddToClusterMap(const Cluster *const pCluster)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));      
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));      
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
 
     CaloHitList caloHitList;
@@ -110,7 +110,7 @@ void OneViewDeltaRayMatchingAlgorithm::FillClusterToPfoMaps()
 
 void OneViewDeltaRayMatchingAlgorithm::AddClustersToPfoMaps(const ParticleFlowObject *const pPfo)
 {
-    for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         ClusterList pfoClusters;
         LArPfoHelper::GetClusters(pPfo, hitType, pfoClusters);
@@ -159,7 +159,7 @@ const PfoList OneViewDeltaRayMatchingAlgorithm::GetDeltaRayPfoList()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OneViewDeltaRayMatchingAlgorithm::FillClusterProximityMap(const HitType &hitType)
+void OneViewDeltaRayMatchingAlgorithm::FillClusterProximityMap(const HitType hitType)
 {
     this->BuildKDTree(hitType);
     
@@ -171,7 +171,7 @@ void OneViewDeltaRayMatchingAlgorithm::FillClusterProximityMap(const HitType &hi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OneViewDeltaRayMatchingAlgorithm::BuildKDTree(const HitType &hitType)
+void OneViewDeltaRayMatchingAlgorithm::BuildKDTree(const HitType hitType)
 {
     const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
@@ -191,7 +191,7 @@ void OneViewDeltaRayMatchingAlgorithm::BuildKDTree(const HitType &hitType)
 
 void OneViewDeltaRayMatchingAlgorithm::AddToClusterProximityMap(const Cluster *const pCluster)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
     ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
@@ -228,7 +228,7 @@ void OneViewDeltaRayMatchingAlgorithm::AddToClusterProximityMap(const Cluster *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OneViewDeltaRayMatchingAlgorithm::PerformOneViewMatching(const HitType &hitType)
+void OneViewDeltaRayMatchingAlgorithm::PerformOneViewMatching(const HitType hitType)
 {
     const ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
     const ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
@@ -303,7 +303,7 @@ void OneViewDeltaRayMatchingAlgorithm::PerformOneViewMatching(const HitType &hit
 
 bool OneViewDeltaRayMatchingAlgorithm::IsMuonPfo(const Cluster *const pCluster)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     const ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
     const ClusterToPfoMap::const_iterator iter(clusterToPfoMap.find(pCluster));
 
@@ -320,7 +320,7 @@ bool OneViewDeltaRayMatchingAlgorithm::IsMuonPfo(const Cluster *const pCluster)
 
 bool OneViewDeltaRayMatchingAlgorithm::AddIntoExistingDeltaRay(const Cluster *const pAvailableCluster, const PfoVector &nearbyMuonPfoVector)
 {
-  const HitType &hitType(LArClusterHelper::GetClusterHitType(pAvailableCluster));
+  const HitType hitType(LArClusterHelper::GetClusterHitType(pAvailableCluster));
   const HitType projectedHitType1((hitType == TPC_VIEW_U) ? TPC_VIEW_V : (hitType == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
   const HitType projectedHitType2((projectedHitType1 == TPC_VIEW_U) ? TPC_VIEW_V : (projectedHitType1 == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
   const ClusterToPfoMap &clusterToPfoMap1((projectedHitType1 == TPC_VIEW_U) ? m_clusterToPfoMapU : (projectedHitType1 == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
@@ -374,7 +374,7 @@ bool OneViewDeltaRayMatchingAlgorithm::AddIntoExistingDeltaRay(const Cluster *co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 const Cluster *OneViewDeltaRayMatchingAlgorithm::GetBestProjectedCluster(const ClusterList &deltaRayClusterGroup, const ParticleFlowObject *const pNearbyMuonPfo,
-    const HitType &hitType, const bool findAvailable)
+    const HitType hitType, const bool findAvailable)
 {
     ClusterList muonClusterList;
     LArPfoHelper::GetClusters(pNearbyMuonPfo, hitType, muonClusterList);
@@ -422,7 +422,7 @@ const Cluster *OneViewDeltaRayMatchingAlgorithm::GetBestProjectedCluster(const C
 
 bool OneViewDeltaRayMatchingAlgorithm::IsDeltaRayPfo(const Cluster *const pCluster)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     const ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
 
     const ClusterToPfoMap::const_iterator iter(clusterToPfoMap.find(pCluster));
@@ -466,7 +466,7 @@ void OneViewDeltaRayMatchingAlgorithm::CreateDeltaRay(const Cluster *const pAvai
     for (const Cluster *const pModifiedCluster : clusterGroup)
         modifiedClusters.insert(pModifiedCluster);
 
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pAvailableCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pAvailableCluster));
     const HitType projectedHitType1((hitType == TPC_VIEW_U) ? TPC_VIEW_V : (hitType == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
     const HitType projectedHitType2((projectedHitType1 == TPC_VIEW_U) ? TPC_VIEW_V : (projectedHitType1 == TPC_VIEW_V) ? TPC_VIEW_W : TPC_VIEW_U);
     ClusterList projectedClusters1, projectedClusters2;
@@ -499,7 +499,7 @@ void OneViewDeltaRayMatchingAlgorithm::CreateDeltaRay(const Cluster *const pAvai
 
 void OneViewDeltaRayMatchingAlgorithm::GetNearbyAvailableClusters(const Cluster *const pCluster, ClusterList &consideredClusters, ClusterList &foundClusters)  
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     const ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
 
     consideredClusters.push_back(pCluster);
@@ -542,7 +542,7 @@ const Cluster *OneViewDeltaRayMatchingAlgorithm::MergeClusterGroup(const Cluster
     if (clusterGroup.size() == 1)
         return pClusterToEnlarge;
 
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pClusterToEnlarge));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterToEnlarge));
     const std::string inputClusterListName((hitType == TPC_VIEW_U) ? m_inputClusterListNameU : (hitType == TPC_VIEW_V) ? m_inputClusterListNameV : m_inputClusterListNameW);
     
     for (const Cluster *const pClusterToDelete : clusterGroup)
@@ -565,7 +565,7 @@ const Cluster *OneViewDeltaRayMatchingAlgorithm::MergeClusterGroup(const Cluster
 
 void OneViewDeltaRayMatchingAlgorithm::RemoveClusterFromHitContainers(const Cluster *const pDeletedCluster)
 {
-    const HitType &hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
 
@@ -650,7 +650,7 @@ void OneViewDeltaRayMatchingAlgorithm::CreatePfos(const Cluster *const pCluster1
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void OneViewDeltaRayMatchingAlgorithm::PerformRecovery(const HitType &hitType)
+void OneViewDeltaRayMatchingAlgorithm::PerformRecovery(const HitType hitType)
 {
     const ClusterList &inputClusterList(this->GetInputClusterList(hitType));    
     

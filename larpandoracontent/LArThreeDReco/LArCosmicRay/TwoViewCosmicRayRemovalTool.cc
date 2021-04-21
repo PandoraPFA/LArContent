@@ -71,7 +71,7 @@ void TwoViewCosmicRayRemovalTool::ExamineConnectedElements(const MatrixType::Ele
     
     for (const MatrixType::Element &element : elementList)
     {
-        for (const HitType &hitType : m_pParentAlgorithm->GetHitTypeVector())
+        for (const HitType hitType : m_pParentAlgorithm->GetHitTypeVector())
 	    {
             const Cluster *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType));
 
@@ -118,7 +118,7 @@ void TwoViewCosmicRayRemovalTool::ExamineConnectedElements(const MatrixType::Ele
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewCosmicRayRemovalTool::PassElementChecks(const MatrixType::Element &element, const HitType &hitType) const
+bool TwoViewCosmicRayRemovalTool::PassElementChecks(const MatrixType::Element &element, const HitType hitType) const
 {
     // ATTN: Avoid endpoints, topological michel reconstruction is very ambiguous
     if (this->IsMuonEndpoint(element, hitType))
@@ -139,7 +139,7 @@ bool TwoViewCosmicRayRemovalTool::PassElementChecks(const MatrixType::Element &e
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewCosmicRayRemovalTool::IsMuonEndpoint(const MatrixType::Element &element, const HitType &hitType) const
+bool TwoViewCosmicRayRemovalTool::IsMuonEndpoint(const MatrixType::Element &element, const HitType hitType) const
 {
     for (const HitType &otherHitType : m_pParentAlgorithm->GetHitTypeVector())
     {
@@ -175,7 +175,7 @@ bool TwoViewCosmicRayRemovalTool::IsMuonEndpoint(const MatrixType::Element &elem
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewCosmicRayRemovalTool::IsContaminated(const MatrixType::Element &element, const HitType &hitType) const
+bool TwoViewCosmicRayRemovalTool::IsContaminated(const MatrixType::Element &element, const HitType hitType) const
 {
     const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType));
     
@@ -271,7 +271,7 @@ bool TwoViewCosmicRayRemovalTool::IsInLineSegment(const CartesianVector &lowerBo
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TwoViewCosmicRayRemovalTool::IsBestElement(const MatrixType::Element &element, 
-    const HitType &hitType, const MatrixType::ElementList &elementList) const
+    const HitType hitType, const MatrixType::ElementList &elementList) const
 {
     const  float chiSquared(element.GetOverlapResult().GetReducedChiSquared());
     const unsigned int hitSum(element.GetCluster1()->GetNCaloHits() + element.GetCluster2()->GetNCaloHits());
@@ -300,7 +300,7 @@ bool TwoViewCosmicRayRemovalTool::IsBestElement(const MatrixType::Element &eleme
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void TwoViewCosmicRayRemovalTool::CreateSeed(const MatrixType::Element &element,
-    const HitType &hitType, CaloHitList &collectedHits) const
+    const HitType hitType, CaloHitList &collectedHits) const
 {
     // To avoid fluctuations, parameterise the muon track
     CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
@@ -350,7 +350,7 @@ void TwoViewCosmicRayRemovalTool::CreateSeed(const MatrixType::Element &element,
 //------------------------------------------------------------------------------------------------------------------------------------------
     
 StatusCode TwoViewCosmicRayRemovalTool::GrowSeed(const MatrixType::Element &element,
-    const HitType &hitType, CaloHitList &deltaRayHits, CaloHitList &remnantHits) const
+    const HitType hitType, CaloHitList &deltaRayHits, CaloHitList &remnantHits) const
 {
     const Cluster *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType)), *pMuonCluster(nullptr);
     
@@ -409,7 +409,7 @@ void TwoViewCosmicRayRemovalTool::CollectHitsFromDeltaRay(const CartesianVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewCosmicRayRemovalTool::SplitDeltaRayCluster(const MatrixType::Element &element, const HitType &hitType,
+void TwoViewCosmicRayRemovalTool::SplitDeltaRayCluster(const MatrixType::Element &element, const HitType hitType,
     CaloHitList &collectedHits, CaloHitList &deltaRayRemnantHits) const
 {
     const Cluster *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType)), *pMuonCluster(nullptr);    
@@ -462,7 +462,7 @@ void TwoViewCosmicRayRemovalTool::SplitDeltaRayCluster(const MatrixType::Element
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewCosmicRayRemovalTool::FragmentRemnant(const HitType &hitType, const Cluster *const pMuonCluster,
+void TwoViewCosmicRayRemovalTool::FragmentRemnant(const HitType hitType, const Cluster *const pMuonCluster,
     const Cluster *const pDeltaRayRemnant, ClusterVector &clusterVector, PfoVector &pfoVector) const
 {
     std::string caloHitListName(hitType == TPC_VIEW_U ? "CaloHitListU" : hitType == TPC_VIEW_V ? "CaloHitListV" : "CaloHitListW");
@@ -499,16 +499,16 @@ void TwoViewCosmicRayRemovalTool::FragmentRemnant(const HitType &hitType, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode TwoViewCosmicRayRemovalTool::ProjectDeltaRayPositions(const MatrixType::Element &element,
-    const HitType &hitType, CartesianPointVector &projectedPositions) const
+    const HitType hitType, CartesianPointVector &projectedPositions) const
 {
     const Cluster *pCluster1(nullptr), *pCluster2(nullptr);
     
-    for (const HitType &hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         if (hitType1 == hitType)
             continue;
         
-        for (const HitType &hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        for (const HitType hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             if ((hitType2 == hitType) || (hitType1 == hitType2))
                 continue;

@@ -102,11 +102,11 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(const TensorType::ElementList &e
                 continue;
             }
 
-            for (const HitType &hitType1 : {TPC_VIEW_U, TPC_VIEW_V})
+            for (const HitType hitType1 : {TPC_VIEW_U, TPC_VIEW_V})
             {
                 if ((element1.GetCluster(hitType1) == element2.GetCluster(hitType1)))
                 {
-                    for(const HitType &hitType2 : {TPC_VIEW_V, TPC_VIEW_W})
+                    for(const HitType hitType2 : {TPC_VIEW_V, TPC_VIEW_W})
                     {
                         if (hitType1 == hitType2)
                             continue;
@@ -280,7 +280,7 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(const TensorType::ElementList &e
                 continue;
             }
 
-            for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+            for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
             {
                 if (element1.GetCluster(hitType) == element2.GetCluster(hitType))
                 {

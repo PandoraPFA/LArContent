@@ -72,7 +72,7 @@ void DeltaRayRemovalTool::ExamineConnectedElements(const TensorType::ElementList
     
     for (const TensorType::Element &element : elementList)
     {
-        for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
 	    {
             const Cluster *pDeltaRayCluster(element.GetCluster(hitType));
             const ParticleFlowObject *const pMuonPfo(element.GetOverlapResult().GetCommonMuonPfoList().front());
@@ -109,7 +109,7 @@ void DeltaRayRemovalTool::ExamineConnectedElements(const TensorType::ElementList
     
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayRemovalTool::PassElementChecks(const TensorType::Element &element, const HitType &hitType) const
+bool DeltaRayRemovalTool::PassElementChecks(const TensorType::Element &element, const HitType hitType) const
 {
     // ATTN: Avoid endpoints, topological michel reconstruction is very ambiguous
     if (this->IsMuonEndpoint(element, false))
@@ -130,7 +130,7 @@ bool DeltaRayRemovalTool::PassElementChecks(const TensorType::Element &element, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayRemovalTool::IsContaminated(const TensorType::Element &element, const HitType &hitType) const
+bool DeltaRayRemovalTool::IsContaminated(const TensorType::Element &element, const HitType hitType) const
 {
     const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
     
@@ -183,7 +183,7 @@ bool DeltaRayRemovalTool::IsContaminated(const TensorType::Element &element, con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayRemovalTool::SplitMuonCluster(const TensorType::Element &element,
-    const HitType &hitType, const CaloHitList &deltaRayHits) const
+    const HitType hitType, const CaloHitList &deltaRayHits) const
 {
     const Cluster *pDeltaRayCluster(element.GetCluster(hitType)), *pMuonCluster(nullptr);
     

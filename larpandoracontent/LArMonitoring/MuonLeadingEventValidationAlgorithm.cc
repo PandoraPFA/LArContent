@@ -823,7 +823,7 @@ void MuonLeadingEventValidationAlgorithm::FillContaminationHitsDistance(const Ca
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MuonLeadingEventValidationAlgorithm::GetHitsOfType(const CaloHitList &inputList, const HitType &hitType, CaloHitList &outputList) const
+void MuonLeadingEventValidationAlgorithm::GetHitsOfType(const CaloHitList &inputList, const HitType hitType, CaloHitList &outputList) const
 {
     for (const CaloHit *const pCaloHit : inputList)
     {

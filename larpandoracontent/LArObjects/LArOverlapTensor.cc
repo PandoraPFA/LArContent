@@ -28,7 +28,7 @@ namespace lar_content
 {
 
 template <typename T>
-const Cluster *OverlapTensor<T>::Element::GetCluster(const HitType &hitType) const
+const Cluster *OverlapTensor<T>::Element::GetCluster(const HitType hitType) const
 {
     if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
         throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);

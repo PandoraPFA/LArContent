@@ -49,7 +49,7 @@ public:
          *
          *  @return address of the required cluster
          */
-        const pandora::Cluster *GetCluster(const pandora::HitType &hitType) const;
+        const pandora::Cluster *GetCluster(const pandora::HitType hitType) const;
 
         /**
          *  @brief  Get the address of the u cluster

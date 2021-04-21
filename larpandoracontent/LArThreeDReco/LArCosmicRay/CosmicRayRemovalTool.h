@@ -45,7 +45,7 @@ private:
      *
      *  @return  whether the checks pass
      */    
-    virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const;
+    virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType hitType) const;
 
     /**
      *  @brief  Determine whether the cluster under investigation has muon contamination
@@ -55,7 +55,7 @@ private:
      *
      *  @return  whether the cluster contains muon hits to remove
      */        
-    bool IsContaminated(const TensorType::Element &element, const pandora::HitType &hitType) const;
+    bool IsContaminated(const TensorType::Element &element, const pandora::HitType hitType) const;
 
     /**
      *  @brief  Collect hits in the delta ray cluster that lie close to calculated projected positions forming a seed to later grow
@@ -64,7 +64,7 @@ private:
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the output list of identified delta ray hits
      */
-    void CreateSeed(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits) const;
+    void CreateSeed(const TensorType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits) const;
 
     /**
      *  @brief  Examine remaining hits in the delta ray cluster adding them to the delta ray seed or parent muon if appropriate and a separate list if not
@@ -76,7 +76,7 @@ private:
      *
      *  @return  whether the muon projection mechanics were successful - abort process if not
      */   
-    pandora::StatusCode GrowSeed(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits,
+    pandora::StatusCode GrowSeed(const TensorType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits,
         pandora::CaloHitList &deltaRayRemantHits) const;
 
     /**
@@ -101,7 +101,7 @@ private:
      *  @param  collectedHits the list of identified delta ray hits
      *  @param  deltaRayRemantHits the list of remainder hits 
      */       
-    void SplitDeltaRayCluster(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits,
+    void SplitDeltaRayCluster(const TensorType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits,
         pandora::CaloHitList &deltaRayRemnantHits) const;
 
     /**
@@ -113,7 +113,7 @@ private:
      *  @param  clusterVector a vector containing the address of created/modified clusters for bookeeping purposes
      *  @param  pfoVector a vector containing the address of the pfo to which a modified muon cluster belongs for bookeeping purposes
      */        
-    void FragmentRemnant(const pandora::HitType &hitType, const pandora::Cluster *const pMuonCluster,
+    void FragmentRemnant(const pandora::HitType hitType, const pandora::Cluster *const pMuonCluster,
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
     
     float m_minSeparation;                    ///< The minimum delta ray - parent muon cluster separation required to investigate delta ray cluster

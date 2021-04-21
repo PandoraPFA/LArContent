@@ -43,7 +43,7 @@ private:
      *
      *  @param  hitType the hit type of the map to populate
      */
-    void FillHitToClusterMap(const pandora::HitType &hitType);
+    void FillHitToClusterMap(const pandora::HitType hitType);
 
     /**
      *  @brief  Get the input cluster list of a given hit type
@@ -52,7 +52,7 @@ private:
      *
      *  @return  the input cluster list of the specified hit type
      */
-    const pandora::ClusterList GetInputClusterList(const pandora::HitType &hitType);
+    const pandora::ClusterList GetInputClusterList(const pandora::HitType hitType);
 
     /**
      *  @brief  Add the hits of a given cluster to the hit to cluster map
@@ -90,14 +90,14 @@ private:
      *
      *  @param  hitType the hit type of the map to populate
      */
-    void FillClusterProximityMap(const pandora::HitType &hitType);
+    void FillClusterProximityMap(const pandora::HitType hitType);
 
     /**
      *  @brief  Build the KD tree
      *
      *  @param  hitType the hit type of the KD tree to build
      */
-    void BuildKDTree(const pandora::HitType &hitType);
+    void BuildKDTree(const pandora::HitType hitType);
 
     /**
      *  @brief  Add a cluster to the cluster proximity map
@@ -111,7 +111,7 @@ private:
      *
      *  @param  hitType the hit type of the input cluster and of the map to add to
      */
-    void PerformOneViewMatching(const pandora::HitType &hitType);
+    void PerformOneViewMatching(const pandora::HitType hitType);
 
     /**
      *  @brief  Determine whether an input cluster belongs to a cosmic ray pfo
@@ -143,7 +143,7 @@ private:
      *  @return whether the best matched cluster of the specified view
      */
     const pandora::Cluster *GetBestProjectedCluster(const pandora::ClusterList &deltaRayClusterGroup, const pandora::ParticleFlowObject *const pNearbyMuonPfo,
-        const pandora::HitType &hitType, const bool findAvailable);
+        const pandora::HitType hitType, const bool findAvailable);
 
     /**
      *  @brief  Determine whether an input cluster belongs to a delta ray pfo
@@ -218,7 +218,7 @@ private:
      *
      *  @param  hitType the view to run in
      */
-    void PerformRecovery(const pandora::HitType &hitType);
+    void PerformRecovery(const pandora::HitType hitType);
 
     /**
      *  @brief  Empty all algorithm containers
