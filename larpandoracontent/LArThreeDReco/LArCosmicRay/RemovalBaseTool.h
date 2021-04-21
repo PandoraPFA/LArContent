@@ -36,7 +36,7 @@ protected:
      *
      *  @return  whether the delta ray is at the endpoint of the cosmic ray
      */
-    bool IsMuonEndpoint(const TensorType::Element &element, const bool ignoreHitType, const pandora::HitType &hitTypeToIgnore = pandora::TPC_VIEW_U) const;
+    bool IsMuonEndpoint(const TensorType::Element &element, const bool ignoreHitType, const pandora::HitType hitTypeToIgnore = pandora::TPC_VIEW_U) const;
 
     /**
      *  @brief  Determine whether the input element is the best to use to modify the contaminated cluster (best is defined by the total hit count)
@@ -47,7 +47,7 @@ protected:
      *
      *  @return  whether the input element is the best element
      */
-    bool IsBestElement(const TensorType::Element &element, const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
+    bool IsBestElement(const TensorType::Element &element, const pandora::HitType hitType, const TensorType::ElementList &elementList) const;
     
     /**
      *  @brief  Determine whether element satifies simple checks
@@ -57,7 +57,7 @@ protected:
      *
      *  @return  whether the checks pass
      */
-    virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const = 0;
+    virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType hitType) const = 0;
 
     /**
      *  @brief  Whether a given position is close to a defined line 
@@ -103,7 +103,7 @@ protected:
      *
      *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good
      */
-    pandora::StatusCode ProjectDeltaRayPositions(const TensorType::Element &element, const pandora::HitType &hitType,
+    pandora::StatusCode ProjectDeltaRayPositions(const TensorType::Element &element, const pandora::HitType hitType,
         pandora::CartesianPointVector &projectedPositions) const;
     
     float m_distanceToLine; ///< The maximum perpendicular distance of a position to a line for it to be considered close 

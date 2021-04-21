@@ -22,9 +22,9 @@ RemovalBaseTool::RemovalBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool RemovalBaseTool::IsMuonEndpoint(const TensorType::Element &element, const bool ignoreHitType, const HitType &hitTypeToIgnore) const
+bool RemovalBaseTool::IsMuonEndpoint(const TensorType::Element &element, const bool ignoreHitType, const HitType hitTypeToIgnore) const
 {
-    for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         if (ignoreHitType && (hitType == hitTypeToIgnore))
             continue;
@@ -58,7 +58,7 @@ bool RemovalBaseTool::IsMuonEndpoint(const TensorType::Element &element, const b
     
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType &hitType, const TensorType::ElementList &elementList) const
+bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType hitType, const TensorType::ElementList &elementList) const
 {
     const float chiSquared(element.GetOverlapResult().GetReducedChi2());
     const unsigned int hitSum(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
@@ -146,16 +146,16 @@ void RemovalBaseTool::FindExtrapolatedHits(const Cluster *const pCluster, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode RemovalBaseTool::ProjectDeltaRayPositions(const TensorType::Element &element,
-    const HitType &hitType, CartesianPointVector &projectedPositions) const
+    const HitType hitType, CartesianPointVector &projectedPositions) const
 {
     const Cluster *pCluster1(nullptr), *pCluster2(nullptr);
     
-    for (const HitType &hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+    for (const HitType hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
         if (hitType1 == hitType)
             continue;
         
-        for (const HitType &hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        for (const HitType hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
         {
             if ((hitType2 == hitType) || (hitType1 == hitType2))
                 continue;
