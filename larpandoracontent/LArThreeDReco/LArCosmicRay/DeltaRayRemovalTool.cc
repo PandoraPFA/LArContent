@@ -35,7 +35,9 @@ DeltaRayRemovalTool::DeltaRayRemovalTool() :
 
 bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    m_pParentAlgorithm = pAlgorithm;
+    
+    if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     bool changesMade(false);
@@ -55,7 +57,7 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
         for (const TensorType::Element &element : elementList)
             usedKeyClusters.insert(element.GetClusterU());
 
-        this->ExamineConnectedElements(pAlgorithm, elementList, changesMade);
+        this->ExamineConnectedElements(elementList, changesMade);
     }
     
     return changesMade;
@@ -63,7 +65,7 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
+void DeltaRayRemovalTool::ExamineConnectedElements(const TensorType::ElementList &elementList,
     bool &changesMade) const
 {
     ClusterSet modifiedClusters, checkedClusters;
@@ -81,24 +83,24 @@ void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgo
             if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
                 continue;
 
-            if (!this->PassElementChecks(pAlgorithm, element, hitType))
+            if (!this->PassElementChecks(element, hitType))
                 continue;
 
-            if (!this->IsContaminated(pAlgorithm, element, hitType))
+            if (!this->IsContaminated(element, hitType))
                 continue;            
 
-            if (!this->IsBestElement(pAlgorithm, element, hitType, elementList))
+            if (!this->IsBestElement(element, hitType, elementList))
                 continue;
             
             checkedClusters.insert(pDeltaRayCluster);
 
             CaloHitList deltaRayHits;
-            if (pAlgorithm->CollectHitsFromMuon(nullptr, nullptr, pDeltaRayCluster, pMuonPfo, m_minDistanceFromMuon, m_maxDistanceToCollected, deltaRayHits) != STATUS_CODE_SUCCESS)
+            if (m_pParentAlgorithm->CollectHitsFromMuon(nullptr, nullptr, pDeltaRayCluster, pMuonPfo, m_minDistanceFromMuon, m_maxDistanceToCollected, deltaRayHits) != STATUS_CODE_SUCCESS)
                 continue;
             
             modifiedClusters.insert(pDeltaRayCluster);
 
-            this->SplitMuonCluster(pAlgorithm, element, hitType, deltaRayHits);
+            this->SplitMuonCluster(element, hitType, deltaRayHits);
          }
     }
 
@@ -107,15 +109,15 @@ void DeltaRayRemovalTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgo
     
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayRemovalTool::PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const HitType &hitType) const
+bool DeltaRayRemovalTool::PassElementChecks(const TensorType::Element &element, const HitType &hitType) const
 {
     // ATTN: Avoid endpoints, topological michel reconstruction is very ambiguous
-    if (this->IsMuonEndpoint(pAlgorithm, element, false))
+    if (this->IsMuonEndpoint(element, false))
         return false;
 
     const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
     
-    if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         return false;    
 
     const float separation(LArClusterHelper::GetClosestDistance(pDeltaRayCluster, pMuonCluster));
@@ -128,11 +130,11 @@ bool DeltaRayRemovalTool::PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayRemovalTool::IsContaminated(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const HitType &hitType) const
+bool DeltaRayRemovalTool::IsContaminated(const TensorType::Element &element, const HitType &hitType) const
 {
     const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
     
-    if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         return false;
     
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -180,22 +182,22 @@ bool DeltaRayRemovalTool::IsContaminated(ThreeViewDeltaRayMatchingAlgorithm *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayRemovalTool::SplitMuonCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
+void DeltaRayRemovalTool::SplitMuonCluster(const TensorType::Element &element,
     const HitType &hitType, const CaloHitList &deltaRayHits) const
 {
     const Cluster *pDeltaRayCluster(element.GetCluster(hitType)), *pMuonCluster(nullptr);
     
-    if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    pAlgorithm->UpdateUponDeletion(pMuonCluster); pAlgorithm->UpdateUponDeletion(pDeltaRayCluster);
+    m_pParentAlgorithm->UpdateUponDeletion(pMuonCluster); m_pParentAlgorithm->UpdateUponDeletion(pDeltaRayCluster);
     
-    pAlgorithm->SplitMuonCluster(pAlgorithm->GetClusterListName(hitType), pMuonCluster, deltaRayHits, pDeltaRayCluster);
+    m_pParentAlgorithm->SplitMuonCluster(m_pParentAlgorithm->GetClusterListName(hitType), pMuonCluster, deltaRayHits, pDeltaRayCluster);
 
     ClusterVector clusterVector; PfoVector pfoVector;
     clusterVector.push_back(pMuonCluster); pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front());
     clusterVector.push_back(pDeltaRayCluster); pfoVector.push_back(nullptr);
-    pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector); 
+    m_pParentAlgorithm->UpdateForNewClusters(clusterVector, pfoVector); 
 }    
 
 //------------------------------------------------------------------------------------------------------------------------------------------

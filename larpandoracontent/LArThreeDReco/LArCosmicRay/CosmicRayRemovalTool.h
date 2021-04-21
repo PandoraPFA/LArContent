@@ -32,49 +32,43 @@ private:
     /**
      *  @brief  Remove hits from delta ray clusters that belong to the parent muon
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  elementList the tensor element list
      *  @param  changesMade receive boolean indicating whether clusters in element have been modified
      */
-    void ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &changesMade) const;
+    void ExamineConnectedElements(const TensorType::ElementList &elementList, bool &changesMade) const;
 
     /**
      *  @brief  Determine whether element satifies simple checks
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *
      *  @return  whether the checks pass
      */    
-    virtual bool PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const;
+    virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
      *  @brief  Determine whether the cluster under investigation has muon contamination
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *
      *  @return  whether the cluster contains muon hits to remove
      */        
-    bool IsContaminated(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const;
+    bool IsContaminated(const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
      *  @brief  Collect hits in the delta ray cluster that lie close to calculated projected positions forming a seed to later grow
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the output list of identified delta ray hits
      */
-    void CreateSeed(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
-        pandora::CaloHitList &collectedHits) const;
+    void CreateSeed(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits) const;
 
     /**
      *  @brief  Examine remaining hits in the delta ray cluster adding them to the delta ray seed or parent muon if appropriate and a separate list if not
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
@@ -82,8 +76,8 @@ private:
      *
      *  @return  whether the muon projection mechanics were successful - abort process if not
      */   
-    pandora::StatusCode GrowSeed(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
-        pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemantHits) const;
+    pandora::StatusCode GrowSeed(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits,
+        pandora::CaloHitList &deltaRayRemantHits) const;
 
     /**
      *  @brief  Collect hits from the delta ray cluster to either keep (demandCloserToCollected == true) or separate into a new shower (demandCloserToCollected == false)
@@ -102,26 +96,24 @@ private:
     /**
      *  @brief  Fragment the delta ray cluster adding hits to the muon track and perhaps creating significant remnants in the process
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
      *  @param  deltaRayRemantHits the list of remainder hits 
      */       
-    void SplitDeltaRayCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType,
-        pandora::CaloHitList &collectedHits, pandora::CaloHitList &deltaRayRemnantHits) const;
+    void SplitDeltaRayCluster(const TensorType::Element &element, const pandora::HitType &hitType, pandora::CaloHitList &collectedHits,
+        pandora::CaloHitList &deltaRayRemnantHits) const;
 
     /**
      *  @brief  Reculster a given remnant cluster, merging insignificant created clusters into the parent muon (if proximity checks pass)
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  pMuonCluster the address of the parent muon cluster
      *  @param  pDeltaRayRemnant the address of the delta ray remnant
      *  @param  clusterVector a vector containing the address of created/modified clusters for bookeeping purposes
      *  @param  pfoVector a vector containing the address of the pfo to which a modified muon cluster belongs for bookeeping purposes
      */        
-    void FragmentRemnant(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const pandora::HitType &hitType, const pandora::Cluster *const pMuonCluster,
+    void FragmentRemnant(const pandora::HitType &hitType, const pandora::Cluster *const pMuonCluster,
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
     
     float m_minSeparation;                    ///< The minimum delta ray - parent muon cluster separation required to investigate delta ray cluster

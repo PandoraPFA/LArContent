@@ -35,9 +35,11 @@ TwoViewCosmicRayRemovalTool::TwoViewCosmicRayRemovalTool() :
 
 bool TwoViewCosmicRayRemovalTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
 {
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    m_pParentAlgorithm = pAlgorithm;
+    
+    if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
+    
     bool changesMade(false);
 
     ClusterVector sortedKeyClusters;
@@ -55,7 +57,7 @@ bool TwoViewCosmicRayRemovalTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pA
         for (const MatrixType::Element &element : elementList)
             usedKeyClusters.insert(element.GetCluster1());
 
-        this->ExamineConnectedElements(pAlgorithm, elementList, changesMade);
+        this->ExamineConnectedElements(elementList, changesMade);
     }
     
     return changesMade;
@@ -63,15 +65,15 @@ bool TwoViewCosmicRayRemovalTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewCosmicRayRemovalTool::ExamineConnectedElements(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList, bool &changesMade) const
+void TwoViewCosmicRayRemovalTool::ExamineConnectedElements(const MatrixType::ElementList &elementList, bool &changesMade) const
 {
     ClusterSet modifiedClusters, checkedClusters;
     
     for (const MatrixType::Element &element : elementList)
     {
-        for (const HitType &hitType : pAlgorithm->GetHitTypeVector())
+        for (const HitType &hitType : m_pParentAlgorithm->GetHitTypeVector())
 	    {
-            const Cluster *const pDeltaRayCluster(pAlgorithm->GetCluster(element, hitType));
+            const Cluster *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType));
 
             if (checkedClusters.count(pDeltaRayCluster))
                 continue;
@@ -79,27 +81,27 @@ void TwoViewCosmicRayRemovalTool::ExamineConnectedElements(TwoViewDeltaRayMatchi
             if ((modifiedClusters.count(element.GetCluster1())) || (modifiedClusters.count(element.GetCluster2())))
                 continue;
 
-            if (!this->PassElementChecks(pAlgorithm, element, hitType))
+            if (!this->PassElementChecks(element, hitType))
                 continue;
 
-            if (!this->IsContaminated(pAlgorithm, element, hitType))
+            if (!this->IsContaminated(element, hitType))
                 continue;
 
-            if (!this->IsBestElement(pAlgorithm, element, hitType, elementList))
+            if (!this->IsBestElement(element, hitType, elementList))
                 continue;
 
             checkedClusters.insert(pDeltaRayCluster);
 
 	        // Attempt to pull delta ray hits out of cluster
             CaloHitList deltaRayHits;
-            this->CreateSeed(pAlgorithm, element, hitType, deltaRayHits);
+            this->CreateSeed(element, hitType, deltaRayHits);
 
             if (deltaRayHits.empty())
                 continue;
 
             // ATTN: If seed cannot be grown, abort
             CaloHitList deltaRayRemnantHits;
-            if (this->GrowSeed(pAlgorithm, element, hitType, deltaRayHits, deltaRayRemnantHits) != STATUS_CODE_SUCCESS)
+            if (this->GrowSeed(element, hitType, deltaRayHits, deltaRayRemnantHits) != STATUS_CODE_SUCCESS)
                 continue;
 
             if (deltaRayHits.size() == pDeltaRayCluster->GetNCaloHits())
@@ -107,7 +109,7 @@ void TwoViewCosmicRayRemovalTool::ExamineConnectedElements(TwoViewDeltaRayMatchi
 
             modifiedClusters.insert(pDeltaRayCluster);
 
-            this->SplitDeltaRayCluster(pAlgorithm, element, hitType, deltaRayHits, deltaRayRemnantHits);
+            this->SplitDeltaRayCluster(element, hitType, deltaRayHits, deltaRayRemnantHits);
         }
     }
 
@@ -116,15 +118,15 @@ void TwoViewCosmicRayRemovalTool::ExamineConnectedElements(TwoViewDeltaRayMatchi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewCosmicRayRemovalTool::PassElementChecks(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element, const HitType &hitType) const
+bool TwoViewCosmicRayRemovalTool::PassElementChecks(const MatrixType::Element &element, const HitType &hitType) const
 {
     // ATTN: Avoid endpoints, topological michel reconstruction is very ambiguous
-    if (this->IsMuonEndpoint(pAlgorithm, element, hitType))
+    if (this->IsMuonEndpoint(element, hitType))
         return false;
 
-    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(pAlgorithm->GetCluster(element, hitType));
+    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType));
     
-    if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         return false;
 
     const float separation(LArClusterHelper::GetClosestDistance(pDeltaRayCluster, pMuonCluster));
@@ -137,16 +139,16 @@ bool TwoViewCosmicRayRemovalTool::PassElementChecks(TwoViewDeltaRayMatchingAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewCosmicRayRemovalTool::IsMuonEndpoint(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element, const HitType &hitType) const
+bool TwoViewCosmicRayRemovalTool::IsMuonEndpoint(const MatrixType::Element &element, const HitType &hitType) const
 {
-    for (const HitType &otherHitType : pAlgorithm->GetHitTypeVector())
+    for (const HitType &otherHitType : m_pParentAlgorithm->GetHitTypeVector())
     {
         if (otherHitType == hitType)
             continue;
 
-        const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(pAlgorithm->GetCluster(element, hitType));
+        const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType));
 
-        if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+        if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
             return false;
 
         float xMinDR(+std::numeric_limits<float>::max()), xMaxDR(-std::numeric_limits<float>::max());
@@ -173,11 +175,11 @@ bool TwoViewCosmicRayRemovalTool::IsMuonEndpoint(TwoViewDeltaRayMatchingAlgorith
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewCosmicRayRemovalTool::IsContaminated(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element, const HitType &hitType) const
+bool TwoViewCosmicRayRemovalTool::IsContaminated(const MatrixType::Element &element, const HitType &hitType) const
 {
-    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(pAlgorithm->GetCluster(element, hitType));
+    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType));
     
-    if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         return false;
 
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
@@ -268,7 +270,7 @@ bool TwoViewCosmicRayRemovalTool::IsInLineSegment(const CartesianVector &lowerBo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewCosmicRayRemovalTool::IsBestElement(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element, 
+bool TwoViewCosmicRayRemovalTool::IsBestElement(const MatrixType::Element &element, 
     const HitType &hitType, const MatrixType::ElementList &elementList) const
 {
     const  float chiSquared(element.GetOverlapResult().GetReducedChiSquared());
@@ -276,7 +278,7 @@ bool TwoViewCosmicRayRemovalTool::IsBestElement(TwoViewDeltaRayMatchingAlgorithm
             
     for (const MatrixType::Element &testElement : elementList)
     {
-        if (pAlgorithm->GetCluster(testElement, hitType) != pAlgorithm->GetCluster(element, hitType))
+        if (m_pParentAlgorithm->GetCluster(testElement, hitType) != m_pParentAlgorithm->GetCluster(element, hitType))
             continue;
 
         if ((testElement.GetCluster1() == element.GetCluster1()) && (testElement.GetCluster2() == element.GetCluster2()))
@@ -288,7 +290,7 @@ bool TwoViewCosmicRayRemovalTool::IsBestElement(TwoViewDeltaRayMatchingAlgorithm
         if ((testHitSum < hitSum) || ((testHitSum == hitSum) && (testChiSquared > chiSquared)))
             continue;
 
-        if (this->PassElementChecks(pAlgorithm, testElement, hitType))
+        if (this->PassElementChecks(testElement, hitType))
             return false;
     }
 
@@ -297,23 +299,23 @@ bool TwoViewCosmicRayRemovalTool::IsBestElement(TwoViewDeltaRayMatchingAlgorithm
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewCosmicRayRemovalTool::CreateSeed(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element,
+void TwoViewCosmicRayRemovalTool::CreateSeed(const MatrixType::Element &element,
     const HitType &hitType, CaloHitList &collectedHits) const
 {
     // To avoid fluctuations, parameterise the muon track
     CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
-    if (pAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), pAlgorithm->GetCluster(element, hitType), 
+    if (m_pParentAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), m_pParentAlgorithm->GetCluster(element, hitType), 
         positionOnMuon, muonDirection) != STATUS_CODE_SUCCESS)
     {
         return;
     }
 
     CartesianPointVector deltaRayProjectedPositions;   
-    if (this->ProjectDeltaRayPositions(pAlgorithm, element, hitType, deltaRayProjectedPositions) != STATUS_CODE_SUCCESS)
+    if (this->ProjectDeltaRayPositions(element, hitType, deltaRayProjectedPositions) != STATUS_CODE_SUCCESS)
         return;
 
     CaloHitList deltaRayHitList;
-    pAlgorithm->GetCluster(element, hitType)->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
+    m_pParentAlgorithm->GetCluster(element, hitType)->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
 
     CaloHitVector deltaRayHitVector(deltaRayHitList.begin(), deltaRayHitList.end());
     std::sort(deltaRayHitVector.begin(), deltaRayHitVector.end(), LArClusterHelper::SortHitsByPosition);
@@ -347,17 +349,17 @@ void TwoViewCosmicRayRemovalTool::CreateSeed(TwoViewDeltaRayMatchingAlgorithm *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-StatusCode TwoViewCosmicRayRemovalTool::GrowSeed(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element,
+StatusCode TwoViewCosmicRayRemovalTool::GrowSeed(const MatrixType::Element &element,
     const HitType &hitType, CaloHitList &deltaRayHits, CaloHitList &remnantHits) const
 {
-    const Cluster *const pDeltaRayCluster(pAlgorithm->GetCluster(element, hitType)), *pMuonCluster(nullptr);
+    const Cluster *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType)), *pMuonCluster(nullptr);
     
-    if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         return STATUS_CODE_NOT_FOUND;
 
     // To avoid fluctuatuions, parameterise the muon track
     CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
-    if (pAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), pDeltaRayCluster, positionOnMuon, muonDirection) !=
+    if (m_pParentAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), pDeltaRayCluster, positionOnMuon, muonDirection) !=
         STATUS_CODE_SUCCESS)
     {
         return STATUS_CODE_NOT_FOUND;
@@ -407,21 +409,21 @@ void TwoViewCosmicRayRemovalTool::CollectHitsFromDeltaRay(const CartesianVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewCosmicRayRemovalTool::SplitDeltaRayCluster(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element, const HitType &hitType,
+void TwoViewCosmicRayRemovalTool::SplitDeltaRayCluster(const MatrixType::Element &element, const HitType &hitType,
     CaloHitList &collectedHits, CaloHitList &deltaRayRemnantHits) const
 {
-    const Cluster *const pDeltaRayCluster(pAlgorithm->GetCluster(element, hitType)), *pMuonCluster(nullptr);    
+    const Cluster *const pDeltaRayCluster(m_pParentAlgorithm->GetCluster(element, hitType)), *pMuonCluster(nullptr);    
     
-    if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
         return;
 
-    pAlgorithm->UpdateUponDeletion(pMuonCluster); pAlgorithm->UpdateUponDeletion(pDeltaRayCluster);
+    m_pParentAlgorithm->UpdateUponDeletion(pMuonCluster); m_pParentAlgorithm->UpdateUponDeletion(pDeltaRayCluster);
 
     std::string originalListName, fragmentListName;
     ClusterList originalClusterList(1, pDeltaRayCluster);
     
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, pAlgorithm->GetClusterListName(hitType)));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*pAlgorithm, originalClusterList, originalListName, fragmentListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*m_pParentAlgorithm, m_pParentAlgorithm->GetClusterListName(hitType)));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::InitializeFragmentation(*m_pParentAlgorithm, originalClusterList, originalListName, fragmentListName));
 
     CaloHitList deltaRayHitList;
     pDeltaRayCluster->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
@@ -438,46 +440,46 @@ void TwoViewCosmicRayRemovalTool::SplitDeltaRayCluster(TwoViewDeltaRayMatchingAl
         {
             PandoraContentApi::Cluster::Parameters parameters;
             parameters.m_caloHitList.push_back(pCaloHit);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*pAlgorithm, parameters, pCluster));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*m_pParentAlgorithm, parameters, pCluster));
         }
         else
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*pAlgorithm, pCluster, pCaloHit));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*m_pParentAlgorithm, pCluster, pCaloHit));
         }
     }
     
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*pAlgorithm, fragmentListName, originalListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::EndFragmentation(*m_pParentAlgorithm, fragmentListName, originalListName));
 
     ClusterVector clusterVector; PfoVector pfoVector;
     if (pDeltaRayRemnant)
-        this->FragmentRemnant(pAlgorithm, hitType, pMuonCluster, pDeltaRayRemnant, clusterVector, pfoVector);
+        this->FragmentRemnant(hitType, pMuonCluster, pDeltaRayRemnant, clusterVector, pfoVector);
 
     clusterVector.push_back(pMuonCluster); pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front());
     clusterVector.push_back(pDeltaRay); pfoVector.push_back(nullptr);
 
-    pAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
+    m_pParentAlgorithm->UpdateForNewClusters(clusterVector, pfoVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewCosmicRayRemovalTool::FragmentRemnant(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const HitType &hitType, const Cluster *const pMuonCluster,
+void TwoViewCosmicRayRemovalTool::FragmentRemnant(const HitType &hitType, const Cluster *const pMuonCluster,
     const Cluster *const pDeltaRayRemnant, ClusterVector &clusterVector, PfoVector &pfoVector) const
 {
     std::string caloHitListName(hitType == TPC_VIEW_U ? "CaloHitListU" : hitType == TPC_VIEW_V ? "CaloHitListV" : "CaloHitListW");
         
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*pAlgorithm, caloHitListName));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, pAlgorithm->GetClusterListName(hitType)));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*pAlgorithm, pDeltaRayRemnant));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<CaloHit>(*m_pParentAlgorithm, caloHitListName));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*m_pParentAlgorithm, m_pParentAlgorithm->GetClusterListName(hitType)));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete<Cluster>(*m_pParentAlgorithm, pDeltaRayRemnant));
 
     const ClusterList *pClusterList(nullptr);
     std::string newClusterListName;
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*pAlgorithm, pAlgorithm->GetClusteringAlgName(),
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RunClusteringAlgorithm(*m_pParentAlgorithm, m_pParentAlgorithm->GetClusteringAlgName(),
         pClusterList, newClusterListName));
 
     const ClusterList remnantClusters(pClusterList->begin(), pClusterList->end());
         
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*pAlgorithm, newClusterListName, pAlgorithm->GetClusterListName(hitType)));
-    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, pAlgorithm->GetClusterListName(hitType)));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Cluster>(*m_pParentAlgorithm, newClusterListName, m_pParentAlgorithm->GetClusterListName(hitType)));
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*m_pParentAlgorithm, m_pParentAlgorithm->GetClusterListName(hitType)));
         
     for (const Cluster *const pRemnant : remnantClusters)
     {
@@ -485,7 +487,7 @@ void TwoViewCosmicRayRemovalTool::FragmentRemnant(TwoViewDeltaRayMatchingAlgorit
         {
             if (LArClusterHelper::GetClosestDistance(pRemnant, pMuonCluster) < m_maxDistanceToTrack)
             {
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pMuonCluster, pRemnant));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*m_pParentAlgorithm, pMuonCluster, pRemnant));
                 continue;
             }
         }
@@ -496,7 +498,7 @@ void TwoViewCosmicRayRemovalTool::FragmentRemnant(TwoViewDeltaRayMatchingAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoViewCosmicRayRemovalTool::ProjectDeltaRayPositions(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::Element &element,
+StatusCode TwoViewCosmicRayRemovalTool::ProjectDeltaRayPositions(const MatrixType::Element &element,
     const HitType &hitType, CartesianPointVector &projectedPositions) const
 {
     const Cluster *pCluster1(nullptr), *pCluster2(nullptr);
@@ -511,8 +513,8 @@ StatusCode TwoViewCosmicRayRemovalTool::ProjectDeltaRayPositions(TwoViewDeltaRay
             if ((hitType2 == hitType) || (hitType1 == hitType2))
                 continue;
 
-            pCluster1 = pAlgorithm->GetCluster(element, hitType1);
-            pCluster2 = pAlgorithm->GetCluster(element, hitType2);
+            pCluster1 = m_pParentAlgorithm->GetCluster(element, hitType1);
+            pCluster2 = m_pParentAlgorithm->GetCluster(element, hitType2);
             
             break;
         }
@@ -523,7 +525,7 @@ StatusCode TwoViewCosmicRayRemovalTool::ProjectDeltaRayPositions(TwoViewDeltaRay
     if (!pCluster1 || !pCluster2)
         return STATUS_CODE_NOT_FOUND;
 
-    return pAlgorithm->GetProjectedPositions(pCluster1, pCluster2, projectedPositions);
+    return m_pParentAlgorithm->GetProjectedPositions(pCluster1, pCluster2, projectedPositions);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

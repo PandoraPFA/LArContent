@@ -31,19 +31,21 @@ DeltaRayMergeTool::DeltaRayMergeTool() :
 
 bool DeltaRayMergeTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    m_pParentAlgorithm = pAlgorithm;
+    
+    if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     bool mergesMade(false);
 
-    this->ExamineConnectedElements(pAlgorithm, overlapTensor, mergesMade);
+    this->ExamineConnectedElements(overlapTensor, mergesMade);
 
     return mergesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMergeTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor, bool &mergesMade) const
+void DeltaRayMergeTool::ExamineConnectedElements(TensorType &overlapTensor, bool &mergesMade) const
 {
     bool mergeMade(true), finishedTwoViewMerges(false);
 
@@ -69,7 +71,7 @@ void DeltaRayMergeTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgori
             if (elementList.size() < 2)
                 continue;
 
-            if (!finishedTwoViewMerges && this->MakeTwoCommonViewMerges(pAlgorithm, elementList))
+            if (!finishedTwoViewMerges && this->MakeTwoCommonViewMerges(elementList))
             {
                 mergeMade = true; mergesMade = true;
                 break;
@@ -77,7 +79,7 @@ void DeltaRayMergeTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgori
 
             finishedTwoViewMerges = true;
 
-            if (this->MakeOneCommonViewMerges(pAlgorithm, elementList))
+            if (this->MakeOneCommonViewMerges(elementList))
             {
                 mergeMade = true; mergesMade = true;
                 break;
@@ -88,7 +90,7 @@ void DeltaRayMergeTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const
+bool DeltaRayMergeTool::MakeTwoCommonViewMerges(const TensorType::ElementList &elementList) const
 {
     for (const TensorType::Element &element1 : elementList)
     {
@@ -116,14 +118,14 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
 
                             if (this->AreAssociated(element1, element2, mergeHitType))
                             {
-                                pAlgorithm->UpdateUponDeletion(pClusterToEnlarge); pAlgorithm->UpdateUponDeletion(pClusterToDelete);
+                                m_pParentAlgorithm->UpdateUponDeletion(pClusterToEnlarge); m_pParentAlgorithm->UpdateUponDeletion(pClusterToDelete);
                                     
-                                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm,
-                                   pAlgorithm->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge))));
+                                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*m_pParentAlgorithm,
+                                   m_pParentAlgorithm->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge))));
                                 
-                                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pClusterToEnlarge, pClusterToDelete));
+                                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*m_pParentAlgorithm, pClusterToEnlarge, pClusterToDelete));
                                     
-                                pAlgorithm->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
+                                m_pParentAlgorithm->UpdateForNewClusters({pClusterToEnlarge}, {nullptr});
 
                                 return true; 
                             }
@@ -266,7 +268,7 @@ void DeltaRayMergeTool::FindVertices(const Pfo *const pCommonMuonPfo, const Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const
+bool DeltaRayMergeTool::MakeOneCommonViewMerges(const TensorType::ElementList &elementList) const
 {
     for (const TensorType::Element &element1 : elementList)
     {
@@ -305,30 +307,30 @@ bool DeltaRayMergeTool::MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorit
                     element1.GetCluster(hitType)->GetOrderedCaloHitList().FillCaloHitList(caloHitList3);
 
                     float reducedChiSquared(std::numeric_limits<float>::max());
-                    StatusCode status(pAlgorithm->PerformThreeViewMatching(caloHitList1, caloHitList2, caloHitList3, reducedChiSquared));
+                    StatusCode status(m_pParentAlgorithm->PerformThreeViewMatching(caloHitList1, caloHitList2, caloHitList3, reducedChiSquared));
                         
                     if (status == STATUS_CODE_NOT_FOUND)
                         continue;
                         
                     if (reducedChiSquared < m_maxGoodMatchReducedChiSquared)
                     {
-                        pAlgorithm->UpdateUponDeletion(pClusterToEnlarge1); pAlgorithm->UpdateUponDeletion(pClusterToDelete1);
+                        m_pParentAlgorithm->UpdateUponDeletion(pClusterToEnlarge1); m_pParentAlgorithm->UpdateUponDeletion(pClusterToDelete1);
 
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm,
-                            pAlgorithm->GetClusterListName(mergeHitType1)));
+                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*m_pParentAlgorithm,
+                            m_pParentAlgorithm->GetClusterListName(mergeHitType1)));
                         
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pClusterToEnlarge1, pClusterToDelete1));
+                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*m_pParentAlgorithm, pClusterToEnlarge1, pClusterToDelete1));
 
-                        pAlgorithm->UpdateForNewClusters({pClusterToEnlarge1}, {nullptr});
+                        m_pParentAlgorithm->UpdateForNewClusters({pClusterToEnlarge1}, {nullptr});
 
-                        pAlgorithm->UpdateUponDeletion(pClusterToEnlarge2); pAlgorithm->UpdateUponDeletion(pClusterToDelete2);
+                        m_pParentAlgorithm->UpdateUponDeletion(pClusterToEnlarge2); m_pParentAlgorithm->UpdateUponDeletion(pClusterToDelete2);
 
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm,
-                            pAlgorithm->GetClusterListName(mergeHitType2)));
+                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*m_pParentAlgorithm,
+                            m_pParentAlgorithm->GetClusterListName(mergeHitType2)));
                         
-                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*pAlgorithm, pClusterToEnlarge2, pClusterToDelete2));
+                        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*m_pParentAlgorithm, pClusterToEnlarge2, pClusterToDelete2));
 			   
-                        pAlgorithm->UpdateForNewClusters({pClusterToEnlarge2}, {nullptr});
+                        m_pParentAlgorithm->UpdateForNewClusters({pClusterToEnlarge2}, {nullptr});
 
                         return true;
                     }

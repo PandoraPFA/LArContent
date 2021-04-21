@@ -22,8 +22,7 @@ RemovalBaseTool::RemovalBaseTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool RemovalBaseTool::IsMuonEndpoint(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
-    const bool ignoreHitType, const HitType &hitTypeToIgnore) const
+bool RemovalBaseTool::IsMuonEndpoint(const TensorType::Element &element, const bool ignoreHitType, const HitType &hitTypeToIgnore) const
 {
     for (const HitType &hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
     {
@@ -32,7 +31,7 @@ bool RemovalBaseTool::IsMuonEndpoint(ThreeViewDeltaRayMatchingAlgorithm *const p
 
         const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
     
-        if (pAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+        if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
             return true;
 
         float xMinDR(-std::numeric_limits<float>::max()), xMaxDR(+std::numeric_limits<float>::max());
@@ -59,8 +58,7 @@ bool RemovalBaseTool::IsMuonEndpoint(ThreeViewDeltaRayMatchingAlgorithm *const p
     
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool RemovalBaseTool::IsBestElement(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const HitType &hitType, 
-    const TensorType::ElementList &elementList) const
+bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType &hitType, const TensorType::ElementList &elementList) const
 {
     const float chiSquared(element.GetOverlapResult().GetReducedChi2());
     const unsigned int hitSum(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
@@ -79,7 +77,7 @@ bool RemovalBaseTool::IsBestElement(ThreeViewDeltaRayMatchingAlgorithm *const pA
         if ((testHitSum < hitSum) || ((testHitSum == hitSum) && (testChiSquared > chiSquared)))
             continue;
 
-        if (this->PassElementChecks(pAlgorithm, testElement, hitType))
+        if (this->PassElementChecks(testElement, hitType))
             return false;
     }
 
@@ -88,7 +86,8 @@ bool RemovalBaseTool::IsBestElement(ThreeViewDeltaRayMatchingAlgorithm *const pA
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool RemovalBaseTool::IsCloseToLine(const CartesianVector &hitPosition, const CartesianVector &lineStart, const CartesianVector &lineEnd, const float distanceToLine) const
+bool RemovalBaseTool::IsCloseToLine(const CartesianVector &hitPosition, const CartesianVector &lineStart, const CartesianVector &lineEnd,
+    const float distanceToLine) const
 {
     CartesianVector lineDirection(lineStart - lineEnd);
     lineDirection = lineDirection.GetUnitVector();
@@ -146,7 +145,7 @@ void RemovalBaseTool::FindExtrapolatedHits(const Cluster *const pCluster, const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode RemovalBaseTool::ProjectDeltaRayPositions(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
+StatusCode RemovalBaseTool::ProjectDeltaRayPositions(const TensorType::Element &element,
     const HitType &hitType, CartesianPointVector &projectedPositions) const
 {
     const Cluster *pCluster1(nullptr), *pCluster2(nullptr);
@@ -169,7 +168,7 @@ StatusCode RemovalBaseTool::ProjectDeltaRayPositions(ThreeViewDeltaRayMatchingAl
         break;
     }
 
-    return pAlgorithm->GetProjectedPositions(pCluster1, pCluster2, projectedPositions);
+    return m_pParentAlgorithm->GetProjectedPositions(pCluster1, pCluster2, projectedPositions);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

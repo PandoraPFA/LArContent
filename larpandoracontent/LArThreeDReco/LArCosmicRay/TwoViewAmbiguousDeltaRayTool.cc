@@ -23,10 +23,12 @@ TwoViewAmbiguousDeltaRayTool::TwoViewAmbiguousDeltaRayTool()
 
 bool TwoViewAmbiguousDeltaRayTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
 {
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    m_pParentAlgorithm = pAlgorithm;
+    
+    if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    this->ExamineConnectedElements(pAlgorithm, overlapMatrix);
+    this->ExamineConnectedElements(overlapMatrix);
 
     // ATTN: Prevent tensor tool loop running again
     return false;
@@ -34,7 +36,7 @@ bool TwoViewAmbiguousDeltaRayTool::Run(TwoViewDeltaRayMatchingAlgorithm *const p
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewAmbiguousDeltaRayTool::ExamineConnectedElements(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix) const
+void TwoViewAmbiguousDeltaRayTool::ExamineConnectedElements(MatrixType &overlapMatrix) const
 {
     bool particleCreated(true);
 
@@ -58,7 +60,7 @@ void TwoViewAmbiguousDeltaRayTool::ExamineConnectedElements(TwoViewDeltaRayMatch
             for (const MatrixType::Element &element : elementList)
                 usedKeyClusters.insert(element.GetCluster1());
 
-            if (this->PickOutGoodMatches(pAlgorithm, elementList))
+            if (this->PickOutGoodMatches(elementList))
             {
                 particleCreated = true;
                 break;
@@ -69,7 +71,7 @@ void TwoViewAmbiguousDeltaRayTool::ExamineConnectedElements(TwoViewDeltaRayMatch
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TwoViewAmbiguousDeltaRayTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList) const
+bool TwoViewAmbiguousDeltaRayTool::PickOutGoodMatches(const MatrixType::ElementList &elementList) const
 {
     unsigned int highestHitCount(0);
     float bestChiSquared(std::numeric_limits<float>::max());
@@ -91,7 +93,7 @@ bool TwoViewAmbiguousDeltaRayTool::PickOutGoodMatches(TwoViewDeltaRayMatchingAlg
 
     if (bestElement.GetCluster1() && bestElement.GetCluster2())
     {
-        pAlgorithm->CreatePfo(bestElement);
+        m_pParentAlgorithm->CreatePfo(bestElement);
         return true;
     }
 

@@ -30,21 +30,19 @@ private:
     /**
      *  @brief  Identify ambiguous matches (e.g. 3:2:1) and attempt to merge clusters together
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  overlapTensor the overlap tensor
      *  @param  mergesMade receive boolean indicating whether clusters in element have been modified
      */
-    void ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor, bool &mergesMade) const;
+    void ExamineConnectedElements(TensorType &overlapTensor, bool &mergesMade) const;
 
     /**
      *  @brief  Search for two matches with two common clusters and attempt to merge the clusters in the third view together
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  elementList the tensor element list
      *
      *  @return  whether a merge was made
      */    
-    bool MakeTwoCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const;
+    bool MakeTwoCommonViewMerges(const TensorType::ElementList &elementList) const;
 
     /**
      *  @brief  Create a list of the shared common muon pfos of two elements
@@ -118,12 +116,11 @@ private:
     /**
      *  @brief  Search for two matches with a single common cluster and attempt to merge the clusters in the other two views together
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  elementList the tensor element list
      *
      *  @return  whether a merge was made
      */    
-    bool MakeOneCommonViewMerges(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList) const;
+    bool MakeOneCommonViewMerges(const TensorType::ElementList &elementList) const;
 
     float m_maxDRSeparationFromTrack; ///< The maximum distance of a connected delta ray from a cosmic ray track
     float m_maxClusterSeparation;  ///< The maximum separation of two broken clusters that should be merged 

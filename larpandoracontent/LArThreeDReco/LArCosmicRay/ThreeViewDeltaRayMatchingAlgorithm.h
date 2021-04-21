@@ -110,6 +110,8 @@ public:
      *  @return whether changes have been made by the tool
      */
     virtual bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor) = 0;
+
+    ThreeViewDeltaRayMatchingAlgorithm *m_pParentAlgorithm; ///< Address of the parent matching algorithm    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

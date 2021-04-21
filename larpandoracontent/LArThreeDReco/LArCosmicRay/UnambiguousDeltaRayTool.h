@@ -30,11 +30,10 @@ private:
     /**
      *  @brief  Create delta ray pfos out of unambiguous (1:1:1) matches that are connected to a parent cosmic ray
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  elementList the tensor element list
      *  @param  changesMade to receive a boolean indicating whether any delta ray pfos were created
      */    
-    void ExamineUnambiguousElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType::ElementList &elementList, bool &changesMade);
+    void ExamineUnambiguousElements(TensorType::ElementList &elementList, bool &changesMade);
 
     /**
      *  @brief  Determine whether the clusters of an element are connected to a cosmic ray pfo

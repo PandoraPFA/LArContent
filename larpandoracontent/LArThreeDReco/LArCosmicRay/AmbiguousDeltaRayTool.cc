@@ -24,10 +24,12 @@ AmbiguousDeltaRayTool::AmbiguousDeltaRayTool() :
 
 bool AmbiguousDeltaRayTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+    m_pParentAlgorithm = pAlgorithm;
+    
+    if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    this->ExamineConnectedElements(pAlgorithm, overlapTensor);
+    this->ExamineConnectedElements(overlapTensor);
 
     // ATTN: Prevent tensor tool loop running again
     return false;
@@ -35,7 +37,7 @@ bool AmbiguousDeltaRayTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgor
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void AmbiguousDeltaRayTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor) const
+void AmbiguousDeltaRayTool::ExamineConnectedElements(TensorType &overlapTensor) const
 {
     ClusterVector sortedKeyClusters;
     overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
@@ -62,7 +64,7 @@ void AmbiguousDeltaRayTool::ExamineConnectedElements(ThreeViewDeltaRayMatchingAl
     }
 
     if (!protoParticleVector.empty())
-        pAlgorithm->CreatePfos(protoParticleVector);
+        m_pParentAlgorithm->CreatePfos(protoParticleVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

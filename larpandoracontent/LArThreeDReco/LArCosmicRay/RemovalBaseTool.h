@@ -30,39 +30,34 @@ protected:
     /**
      *  @brief  Determine whether the matched clusters suggest that the delta ray is at the endpoint of the cosmic ray (and is likely to be a michel)
      *
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the tensor element
      *  @param  ignoreHitType whether to ignore the cluster under investigation
      *  @param  hitTypeToIgnore the hit type to ignore
      *
      *  @return  whether the delta ray is at the endpoint of the cosmic ray
      */
-    bool IsMuonEndpoint(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const bool ignoreHitType,
-        const pandora::HitType &hitTypeToIgnore = pandora::TPC_VIEW_U) const;
+    bool IsMuonEndpoint(const TensorType::Element &element, const bool ignoreHitType, const pandora::HitType &hitTypeToIgnore = pandora::TPC_VIEW_U) const;
 
     /**
      *  @brief  Determine whether the input element is the best to use to modify the contaminated cluster (best is defined by the total hit count)
      *
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  elementList the tensor element list
      *
      *  @return  whether the input element is the best element
      */
-    bool IsBestElement(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, 
-        const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
+    bool IsBestElement(const TensorType::Element &element, const pandora::HitType &hitType, const TensorType::ElementList &elementList) const;
     
     /**
      *  @brief  Determine whether element satifies simple checks
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *
      *  @return  whether the checks pass
      */
-    virtual bool PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const = 0;
+    virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const = 0;
 
     /**
      *  @brief  Whether a given position is close to a defined line 
@@ -102,15 +97,14 @@ protected:
     /**
      *  @brief  Use two views of a delta ray pfo to calculate projected positions in a given the third view
      *
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  element the tensor element
      *  @param  hitType the view to be projected into
      *  @param  projectedPositions the output list of projected positions
      *
      *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good
      */
-    pandora::StatusCode ProjectDeltaRayPositions(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
-        const pandora::HitType &hitType, pandora::CartesianPointVector &projectedPositions) const;
+    pandora::StatusCode ProjectDeltaRayPositions(const TensorType::Element &element, const pandora::HitType &hitType,
+        pandora::CartesianPointVector &projectedPositions) const;
     
     float m_distanceToLine; ///< The maximum perpendicular distance of a position to a line for it to be considered close 
 };

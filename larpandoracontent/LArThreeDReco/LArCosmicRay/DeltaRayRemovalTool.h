@@ -31,45 +31,39 @@ private:
     /**
      *  @brief  Remove hits from cosmic ray clusters that belong to a child delta ray 
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  elementList the tensor element list
      *  @param  changesMade receive boolean indicating whether clusters in element have been modified
      */
-    void ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList,
-        bool &changesMade) const;
+    void ExamineConnectedElements(const TensorType::ElementList &elementList, bool &changesMade) const;
 
     /**
      *  @brief  Determine whether element satifies simple checks
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *
      *  @return  whether the checks pass
      */
-    virtual bool PassElementChecks(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const;
+    virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
      *  @brief  Determine whether the cosmic ray cluster under investigation has delta ray contamination
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the view under investigation
      *
      *  @return  whether the cosmic ray cluster is likely to contain delta ray hits that can be removed
      */
-    bool IsContaminated(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element, const pandora::HitType &hitType) const;
+    bool IsContaminated(const TensorType::Element &element, const pandora::HitType &hitType) const;
 
     /**
      *  @brief  Remove collected delta ray hits from the cosmic ray pfo
      *
-     *  @param  pAlgorithm address of the calling algorithm 
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  deltaRayHits the list of delta ray hits to remove
      */
-    void SplitMuonCluster(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, const TensorType::Element &element,
-        const pandora::HitType &hitType, const pandora::CaloHitList &deltaRayHits) const;
+    void SplitMuonCluster(const TensorType::Element &element, const pandora::HitType &hitType, const pandora::CaloHitList &deltaRayHits) const;
 
     float m_minSeparation;                    ///< The minimum delta ray - parent cosmic ray separation required to investigate cosmic ray cluster
     unsigned int m_slidingFitWindow;          ///< The sliding fit window used in cosmic ray parameterisations

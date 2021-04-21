@@ -29,10 +29,9 @@ private:
     bool Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix);    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void ExamineConnectedElements(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix) const;
+    void ExamineConnectedElements(MatrixType &overlapMatrix) const;
     
-    bool PickOutGoodMatches(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, const MatrixType::ElementList &elementList) const;
-
+    bool PickOutGoodMatches(const MatrixType::ElementList &elementList) const;
 };
 
 } // namespace lar_content

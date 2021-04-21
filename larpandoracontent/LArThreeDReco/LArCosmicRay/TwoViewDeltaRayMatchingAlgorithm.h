@@ -213,6 +213,8 @@ public:
      *  @return whether changes have been made by the tool
      */
     virtual bool Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &matrixTensor) = 0;
+
+    TwoViewDeltaRayMatchingAlgorithm *m_pParentAlgorithm; ///< Address of the parent matching algorithm
 };
     
 } // namespace lar_content

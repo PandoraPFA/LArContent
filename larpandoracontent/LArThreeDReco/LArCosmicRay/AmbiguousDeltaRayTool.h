@@ -30,10 +30,9 @@ private:
     /**
      *  @brief  Identify ambiguous matches (e.g. 3:2:1) and, if possible, create pfos out of the best 1:1:1 cluster match
      *
-     *  @param  pAlgorithm address of the calling algorithm
      *  @param  overlapTensor the overlap tensor
      */
-    void ExamineConnectedElements(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor) const;
+    void ExamineConnectedElements(TensorType &overlapTensor) const;
 
     /**
      *  @brief  Identify the best 1:1:1 match in a group of connected elements and from it create a pfo
