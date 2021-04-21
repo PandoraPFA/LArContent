@@ -32,21 +32,8 @@ StatusCode ShowerHierarchyMopUpAlgorithm::Run()
 
     PfoList parentShowerPfos;
     this->FindParentShowerPfos(pLeadingPfoList, parentShowerPfos);
-if (!parentShowerPfos.empty())
-{
-    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1., -1., 1.);
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &parentShowerPfos, "BeforeMerge", RED, true, false);
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pLeadingPfoList, "Leading", RED, true, true);
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-}
     this->PerformPfoMerges(parentShowerPfos);
-if (!parentShowerPfos.empty())
-{
-    PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1., -1., 1.);
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &parentShowerPfos, "AfterMerge", GREEN, true, false);
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), pLeadingPfoList, "Leading", GREEN, true, true);
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-}
+
     return STATUS_CODE_SUCCESS;
 }
 
