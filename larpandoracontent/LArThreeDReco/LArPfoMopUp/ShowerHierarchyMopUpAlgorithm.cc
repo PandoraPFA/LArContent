@@ -20,7 +20,8 @@ namespace lar_content
 StatusCode ShowerHierarchyMopUpAlgorithm::Run()
 {
     const PfoList *pLeadingPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_leadingPfoListName, pLeadingPfoList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_leadingPfoListName, pLeadingPfoList));
 
     if (!pLeadingPfoList || pLeadingPfoList->empty())
     {
@@ -58,7 +59,7 @@ void ShowerHierarchyMopUpAlgorithm::FindParentShowerPfos(const Pfo *const pPfo, 
 
         if (parentShowerPfos.end() != std::find(parentShowerPfos.begin(), parentShowerPfos.end(), pPfo))
             throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
-        
+
         parentShowerPfos.push_back(pPfo);
     }
     else
@@ -89,8 +90,7 @@ void ShowerHierarchyMopUpAlgorithm::PerformPfoMerges(const PfoList &parentShower
 
 StatusCode ShowerHierarchyMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "LeadingPfoListName", m_leadingPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "LeadingPfoListName", m_leadingPfoListName));
 
     return PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }

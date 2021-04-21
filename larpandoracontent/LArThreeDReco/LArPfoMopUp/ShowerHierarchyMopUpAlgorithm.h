@@ -46,7 +46,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string m_leadingPfoListName;  ///< The input leading pfo list name (e.g. list of neutrino or testbeam pfos)
+    std::string m_leadingPfoListName; ///< The input leading pfo list name (e.g. list of neutrino or testbeam pfos)
 };
 
 } // namespace lar_content
