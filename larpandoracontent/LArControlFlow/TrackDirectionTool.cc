@@ -262,7 +262,7 @@ void TrackDirectionTool::FillHitChargeVector(const Cluster *const pCluster, HitC
             continue;
 
         float calibratedUncertainty(
-            std::sqrt((m_uncertaintyCalibration1 * (caloHitEnergy / hitWidth) * (caloHitEnergy / hitWidth)) + (m_uncertaintyCalibration2 * (caloHitEnergy / hitWidth)))); //70%
+            std::sqrt((m_uncertaintyCalibration1 * (caloHitEnergy / hitWidth) * (caloHitEnergy / hitWidth)) + (m_uncertaintyCalibration2 * (caloHitEnergy / hitWidth))));
         HitCharge hitCharge(pCaloHit, rL, hitWidth, caloHitEnergy, calibratedUncertainty);
         hitChargeVector.push_back(hitCharge);
     }
@@ -290,7 +290,7 @@ void TrackDirectionTool::TrackInnerFilter(HitChargeVector &hitChargeVector, HitC
 
     std::sort(innerHitChargeVector.begin(), innerHitChargeVector.end(), SortByDistanceToNN);
     filteredHitChargeVector.insert(filteredHitChargeVector.begin(), innerHitChargeVector.begin(),
-        innerHitChargeVector.begin() + m_innerHitChargeMultiplier * innerHitChargeVector.size()); //lots of testing has been done to optimise percentage
+        innerHitChargeVector.begin() + m_innerHitChargeMultiplier * innerHitChargeVector.size());
     std::sort(filteredHitChargeVector.begin(), filteredHitChargeVector.end(), SortHitChargeVectorByRL);
 }
 
@@ -344,7 +344,7 @@ void TrackDirectionTool::SimpleTrackEndFilter(HitChargeVector &hitChargeVector)
     }
     
     for (auto iter = hitChargeVector.end(); hitChargeVector.size() > 1; iter = hitChargeVector.end())
-      {
+    {
 	auto prev{std::prev(iter, 1)};
 	auto prev2{std::prev(iter, 2)};
 	const float ratio{prev->GetChargeOverWidth() / prev2->GetChargeOverWidth()};   
@@ -353,7 +353,7 @@ void TrackDirectionTool::SimpleTrackEndFilter(HitChargeVector &hitChargeVector)
 	  hitChargeVector.erase(iter);
 	else
 	  break;
-      }
+    }
 
     for (HitChargeVector::const_iterator iter = hitChargeVector.begin(); iter != hitChargeVector.end();)
     {
@@ -538,8 +538,7 @@ void TrackDirectionTool::ComputeProbability(DirectionFitObject &fitResult)
 
 //---------------------------------------------------------------------------------------------------------------------------------
 
-void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitChargeVector &forwardsFitPoints, HitChargeVector &backwardsFitPoints,
-    int numberHitsToConsider, float &forwardsChiSquared, float &backwardsChiSquared)
+void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitChargeVector &forwardsFitPoints, HitChargeVector &backwardsFitPoints, int numberHitsToConsider, float &forwardsChiSquared, float &backwardsChiSquared)
 {
     const float particleMass(105.7);
     LookupTable lookupTable;
@@ -688,7 +687,7 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
 
 //---------------------------------------------------------------------------------------------------------------------------------
 
-  void TrackDirectionTool::GetFitParameters(bool isForwardsFit, LookupTable lookupTable, HitChargeVector binnedHitChargeVector, const float trackLength, const float totalCharge, const float totalHitWidth, const float maxScale, const float particleMass, float &holdp0Value, float &holdp1Value, float &holdp2Value)
+void TrackDirectionTool::GetFitParameters(bool isForwardsFit, LookupTable lookupTable, HitChargeVector binnedHitChargeVector, const float trackLength, const float totalCharge, const float totalHitWidth, const float maxScale, const float particleMass, float &holdp0Value, float &holdp1Value, float &holdp2Value)
 {
     const int nParameters(3);
     const std::string parName[nParameters] = {"ENDENERGY", "SCALE", "EXTRA"};
@@ -737,8 +736,7 @@ void TrackDirectionTool::PerformFits(HitChargeVector &hitChargeVector, HitCharge
 		}
             }
         }
-    }
-    
+    } 
 }
 
 //---------------------------------------------------------------------------------------------------------------------------------

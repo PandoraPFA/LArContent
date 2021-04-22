@@ -176,11 +176,11 @@ public:
         float m_backwardsChiSquared;           ///< Chi squared value for the backwards hypothosis
         float m_probability;                   ///< The probability of the considered object being a CR
 
-        float m_beginx; //Beginpoint is defined as the track endpoint with the lowest Z coordinate
+        float m_beginx;                        ///< Beginpoint is defined as the track endpoint with the lowest Z coordinate
         float m_beginy;
         float m_beginz;
 
-        float m_endx; //Endpoint is defined as the track endpoint with the highest Z coordinate
+        float m_endx;                          ///< Endpoint is defined as the track endpoint with the highest Z coordinate
         float m_endy;
         float m_endz;
 
@@ -250,30 +250,30 @@ private:
     unsigned int m_slidingFitWindow;               ///< The layer window for the sliding linear fits
     TwoDSlidingFitResultMap m_slidingFitResultMap; ///< The sliding fit result map
 
-    unsigned int m_minClusterCaloHits; ///< The min number of hits in base cluster selection method
-    float m_minClusterLength;          ///< The min length (squared) in base cluster selection method
+    unsigned int m_minClusterCaloHits;             ///< The min number of hits in base cluster selection method
+    float m_minClusterLength;                      ///< The min length (squared) in base cluster selection method
 
-    float m_tableInitialEnergy;
-    float m_tableStepSize;
+    float m_tableInitialEnergy;                    ///< The initial energy used in creating the lookup table
+    float m_tableStepSize;                         ///< The step size used in the lookup table
 
-    std::string m_lookupTableFileName;   ///< If using an external file for the lookup table, this is the file name
-    std::string m_treeName;              ///< Name of the tree in lookup table external file
+    std::string m_lookupTableFileName;             ///< If using an external file for the lookup table, this is the file name
+    std::string m_treeName;                        ///< Name of the tree in lookup table external file
 
-    float m_endpointProtectionRange;     ///< How much of the hit vector to set as the end points
-    int m_nNeighboursToConsider;         ///< How many nearest neighbour values to set in the innerHitChargeVector
-    float m_lowerBound;                 ///< Lower bound for SimpleTrackEndFilter
-    float m_upperBound;                 ///< Upper bound for SimpleTrackEndFilter
-    float m_endFilterMultiplierTrack;   ///< Multiplier for the Track Length in SimpleTrackEndFilter
-    float m_endFilterMultiplierCharge;  ///< Multiplier for the charge in SimpleTrackEndFilter
-    float m_sigmaFitMultiplier;          ///< Multiplier for the sigma values in PerformFits
+    float m_endpointProtectionRange;               ///< How much of the hit vector to set as the end points
+    int m_nNeighboursToConsider;                   ///< How many nearest neighbour values to set in the innerHitChargeVector
+    float m_lowerBound;                            ///< Lower bound for SimpleTrackEndFilter
+    float m_upperBound;                            ///< Upper bound for SimpleTrackEndFilter
+    float m_endFilterMultiplierTrack;              ///< Multiplier for the Track Length in SimpleTrackEndFilter
+    float m_endFilterMultiplierCharge;             ///< Multiplier for the charge in SimpleTrackEndFilter
+    float m_sigmaFitMultiplier;                    ///< Multiplier for the sigma values in PerformFits
 
-    float m_ADCToElectron;              ///< Convert ADC to electron energy for caloHitEnergy
-    float m_ionEPerElectron;            ///< Ionisation Energy per electron in Mev for caloHitEnergy
-    float m_energyScale;                ///< Energy sclae factor for caloHitEnergy
+    float m_ADCToElectron;                         ///< Convert ADC to electron energy for caloHitEnergy
+    float m_ionEPerElectron;                       ///< Ionisation Energy per electron in Mev for caloHitEnergy
+    float m_energyScale;                           ///< Energy sclae factor for caloHitEnergy
 
-    float m_uncertaintyCalibration1;   ///< Parameter 1 for calibratedUncertainty in FillHitChargeVector
-    float m_uncertaintyCalibration2;   ///< Parameter 2 for calibratedUncertainty in FillHitChargeVector
-    float m_innerHitChargeMultiplier;  ///< Multiplier for the inner HitChargeVector
+    float m_uncertaintyCalibration1;               ///< Parameter 1 for calibratedUncertainty in FillHitChargeVector
+    float m_uncertaintyCalibration2;               ///< Parameter 2 for calibratedUncertainty in FillHitChargeVector
+    float m_innerHitChargeMultiplier;              ///< Multiplier for the inner HitChargeVector
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

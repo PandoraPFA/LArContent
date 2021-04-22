@@ -174,13 +174,14 @@ protected:
      *  @param  nuSliceHypotheses the vector of slice neutrino hypotheses
      *  @param  crSliceHypotheses the vector of slice cosmic-ray hypotheses
      */
-    pandora::StatusCode SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceVector &sliceVector) const;
+    pandora::StatusCode SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses) const;
 
     /**
      *  @brief  Run the TrackDirectionTool to add to the SelectBestSliceHypotheses method if needed
      *
      *  @param  nuSliceHypotheses the vector of slice neutrino hypotheses
      *  @param  crSliceHypotheses the vector of slice cosmic-ray hypotheses
+     *  @param  pfoToProbabilityMap the map of Pfos to probability they are  CR
      */
     pandora::StatusCode RunTrackDirectionTool(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, PfoToFloatMap &pfoToProbabilityMap) const;
 
@@ -342,14 +343,13 @@ protected:
     typedef std::vector<CosmicRayTaggingBaseTool*> CosmicRayTaggingToolVector;
     typedef std::vector<SliceIdBaseTool*> SliceIdToolVector;
     typedef std::vector<SliceSelectionBaseTool*> SliceSelectionToolVector;
+    typedef std::vector<TrackDirectionBaseTool*> TrackDirectionToolVector;
 
     StitchingToolVector         m_stitchingToolVector;              ///< The stitching tool vector
     CosmicRayTaggingToolVector  m_cosmicRayTaggingToolVector;       ///< The cosmic-ray tagging tool vector
     SliceIdToolVector           m_sliceIdToolVector;                ///< The slice id tool vector
     SliceSelectionToolVector    m_sliceSelectionToolVector;         ///< The slice selection tool vector
-
-    typedef std::vector<TrackDirectionBaseTool*> TrackDirectionToolVector;
-    TrackDirectionToolVector           m_trackDirectionToolVector;
+    TrackDirectionToolVector    m_trackDirectionToolVector;         ///< The track direction tool vector
 
     std::string                 m_filePathEnvironmentVariable;      ///< The environment variable providing a list of paths to xml files
     std::string                 m_crSettingsFile;                   ///< The cosmic-ray reconstruction settings file
@@ -423,7 +423,7 @@ public:
      *  @param  sliceNuPfos to receive the list of selected pfos
      */
     virtual void SelectOutputPfos(const pandora::Algorithm *const pAlgorithm, const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses,
-        pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap, const SliceVector &sliceVector) = 0;
+        pandora::PfoList &selectedPfos, const PfoToFloatMap &pfoToProbabilityMap) = 0;
 };
 //-------------------------------------------------------------------------------------------------------------------------------------------
 

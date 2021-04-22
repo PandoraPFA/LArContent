@@ -42,7 +42,7 @@ MasterAlgorithm::MasterAlgorithm() :
     m_shouldRunNeutrinoRecoOption(true),
     m_shouldRunCosmicRecoOption(true),
     m_shouldPerformSliceId(true),
-    m_shouldRunTrackDirection(false),
+    m_shouldRunTrackDirection(true),
     m_printOverallRecoStatus(false),
     m_visualizeOverallRecoStatus(false),
     m_shouldRemoveOutOfTimeHits(true),
@@ -190,7 +190,7 @@ StatusCode MasterAlgorithm::Run()
     {
         SliceHypotheses nuSliceHypotheses, crSliceHypotheses;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->RunSliceReconstruction(sliceVector, nuSliceHypotheses, crSliceHypotheses));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses, sliceVector));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->SelectBestSliceHypotheses(nuSliceHypotheses, crSliceHypotheses));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -592,7 +592,7 @@ StatusCode MasterAlgorithm::RunSliceReconstruction(SliceVector &sliceVector, Sli
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses, const SliceVector &sliceVector) const
+StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuSliceHypotheses, const SliceHypotheses &crSliceHypotheses) const
 {
     if (m_printOverallRecoStatus)
         std::cout << "Select best slice hypotheses" << std::endl;
@@ -607,7 +607,7 @@ StatusCode MasterAlgorithm::SelectBestSliceHypotheses(const SliceHypotheses &nuS
     if (m_shouldPerformSliceId)
     {
         for (SliceIdBaseTool *const pSliceIdTool : m_sliceIdToolVector)
-	     pSliceIdTool->SelectOutputPfos(this, nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos, pfoToProbabilityMap, sliceVector);
+	     pSliceIdTool->SelectOutputPfos(this, nuSliceHypotheses, crSliceHypotheses, selectedSlicePfos, pfoToProbabilityMap);
 
     }
     else if (m_shouldRunNeutrinoRecoOption != m_shouldRunCosmicRecoOption)

@@ -57,7 +57,6 @@
 #include "larpandoracontent/LArMonitoring/TestBeamHierarchyEventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/TransverseMatrixVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h"
-#include "larpandoracontent/LArMonitoring/SliceIdMonitoringTool.h"
 
 #include "larpandoracontent/LArPersistency/EventReadingAlgorithm.h"
 #include "larpandoracontent/LArPersistency/EventWritingAlgorithm.h"
@@ -351,8 +350,7 @@
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
     d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)                                                        \
-    d("LArTrackDirectionTool",                  TrackDirectionTool)                                                             \
-    d("LArSliceIdMonitoring",                   SliceIdMonitoringTool)
+    d("LArTrackDirectionTool",                  TrackDirectionTool)
 
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
