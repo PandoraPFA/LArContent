@@ -29,8 +29,21 @@ private:
     bool Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix);    
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    /**
+     *  @brief  Identify ambiguous matches (e.g. 3:2:1) and, if possible, create pfos out of the best 1:1:1 cluster match
+     *
+     *  @param  overlapMatrix the overlap matrix
+     */    
     void ExamineConnectedElements(MatrixType &overlapMatrix) const;
-    
+
+
+    /**
+     *  @brief  Identify the best 1:1:1 match in a group of connected elements and from it create a pfo
+     *
+     *  @param  elementList the tensor element list
+     *
+     *  @return  whether any particles were created
+     */    
     bool PickOutGoodMatches(const MatrixType::ElementList &elementList) const;
 };
 

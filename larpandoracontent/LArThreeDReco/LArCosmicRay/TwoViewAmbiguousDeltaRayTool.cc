@@ -38,9 +38,9 @@ bool TwoViewAmbiguousDeltaRayTool::Run(TwoViewDeltaRayMatchingAlgorithm *const p
 
 void TwoViewAmbiguousDeltaRayTool::ExamineConnectedElements(MatrixType &overlapMatrix) const
 {
-    bool particleCreated(true);
+    bool particleCreated(false);
 
-    while (particleCreated)
+    do
     {
         particleCreated = false;
 
@@ -67,6 +67,7 @@ void TwoViewAmbiguousDeltaRayTool::ExamineConnectedElements(MatrixType &overlapM
             }
         }
     }
+    while (particleCreated);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -75,11 +76,12 @@ bool TwoViewAmbiguousDeltaRayTool::PickOutGoodMatches(const MatrixType::ElementL
 {
     unsigned int highestHitCount(0);
     float bestChiSquared(std::numeric_limits<float>::max());
-    MatrixType::Element bestElement(nullptr, nullptr, TwoViewDeltaRayOverlapResult(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f), PfoList(), nullptr, ClusterList(), 0.f));
+    auto bestElementIter(elementList.end());
     
-    for (const MatrixType::Element &element : elementList)
-    {            
-        const float chiSquared = element.GetOverlapResult().GetReducedChiSquared();
+    for (auto iter = elementList.begin(); iter != elementList.end(); ++iter)
+    {
+        const MatrixType::Element &element(*iter);
+        const float chiSquared(element.GetOverlapResult().GetReducedChiSquared());
         const Cluster *const pCluster1(element.GetCluster1()), *const pCluster2(element.GetCluster2());
         const unsigned int hitSum(pCluster1->GetNCaloHits() + pCluster2->GetNCaloHits());
 
@@ -87,13 +89,13 @@ bool TwoViewAmbiguousDeltaRayTool::PickOutGoodMatches(const MatrixType::ElementL
         {
             bestChiSquared = chiSquared;
             highestHitCount = hitSum;
-            bestElement = element;
+            bestElementIter = iter;
         }
     }
 
-    if (bestElement.GetCluster1() && bestElement.GetCluster2())
+    if (bestElementIter != elementList.end())
     {
-        m_pParentAlgorithm->CreatePfo(bestElement);
+        m_pParentAlgorithm->CreatePfo(*bestElementIter);
         return true;
     }
 
