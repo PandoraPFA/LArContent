@@ -71,9 +71,9 @@ void AmbiguousDeltaRayTool::ExamineConnectedElements(TensorType &overlapTensor) 
 
 void AmbiguousDeltaRayTool::PickOutGoodMatches(const TensorType::ElementList &elementList, ClusterSet &usedClusters, ProtoParticleVector &protoParticleVector) const
 {
-    bool found(true);
+    bool found(false);
     
-    while (found)
+    do
     {
         found = false;
 
@@ -88,7 +88,7 @@ void AmbiguousDeltaRayTool::PickOutGoodMatches(const TensorType::ElementList &el
             if (usedClusters.count(pClusterU) || usedClusters.count(pClusterV) || usedClusters.count(pClusterW))
                 continue;
 
-            const float chiSquared = element.GetOverlapResult().GetReducedChi2();
+            const float chiSquared(element.GetOverlapResult().GetReducedChi2());
 
             if (chiSquared > m_maxGoodMatchReducedChiSquared)
                 continue;
@@ -114,7 +114,8 @@ void AmbiguousDeltaRayTool::PickOutGoodMatches(const TensorType::ElementList &el
             protoParticle.m_clusterList.push_back(pBestClusterW);
             protoParticleVector.push_back(protoParticle);
         }
-    }        
+    }
+    while (found);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
