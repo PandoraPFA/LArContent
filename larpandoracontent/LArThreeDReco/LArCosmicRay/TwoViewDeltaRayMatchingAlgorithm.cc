@@ -311,7 +311,7 @@ void TwoViewDeltaRayMatchingAlgorithm::MergeThirdView(const MatrixType::Element 
         
     ClusterSet checkedClusters;
 
-    if (matchedClusters.count(pSeedCluster))
+    if (std::find(matchedClusters.begin(), matchedClusters.end(), pSeedCluster) != matchedClusters.end())
         checkedClusters.insert(pSeedCluster);
         
     while (checkedClusters.size() != matchedClusters.size())
