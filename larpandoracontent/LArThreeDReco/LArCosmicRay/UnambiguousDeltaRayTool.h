@@ -31,9 +31,10 @@ private:
      *  @brief  Create delta ray pfos out of unambiguous (1:1:1) matches that are connected to a parent cosmic ray
      *
      *  @param  elementList the tensor element list
-     *  @param  changesMade to receive a boolean indicating whether any delta ray pfos were created
+     *
+     *  @return  whether any delta ray pfos were created
      */    
-    void ExamineUnambiguousElements(TensorType::ElementList &elementList, bool &changesMade);
+    bool ExamineUnambiguousElements(TensorType::ElementList &elementList);
 
     /**
      *  @brief  Determine whether the clusters of an element are connected to a cosmic ray pfo
@@ -45,7 +46,7 @@ private:
     bool IsConnected(const TensorType::Element &element) const;
 
     float m_maxSeparation; ///< The maximum separation between a connected delta ray cluster and a cosmic ray cluster
-    unsigned int m_minNConnectedClusters; ///< The threshold number of connected delta ray clusters for an to be connected
+    unsigned int m_minNConnectedClusters; ///< The threshold number of connected delta ray clusters required for particle creation 
 };
 
 } // namespace lar_content

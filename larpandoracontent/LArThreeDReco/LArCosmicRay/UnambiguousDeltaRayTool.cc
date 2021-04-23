@@ -33,19 +33,15 @@ bool UnambiguousDeltaRayTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlg
     if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    bool changesMade(false);
-
     TensorType::ElementList elementList;
     overlapTensor.GetUnambiguousElements(true, elementList);
 
-    this->ExamineUnambiguousElements(elementList, changesMade);
-
-    return changesMade;
+    return this->ExamineUnambiguousElements(elementList);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void UnambiguousDeltaRayTool::ExamineUnambiguousElements(TensorType::ElementList &elementList, bool &changesMade)
+bool UnambiguousDeltaRayTool::ExamineUnambiguousElements(TensorType::ElementList &elementList)
 {
     ProtoParticleVector protoParticleVector;
     
@@ -61,7 +57,7 @@ void UnambiguousDeltaRayTool::ExamineUnambiguousElements(TensorType::ElementList
         protoParticleVector.push_back(protoParticle);
     }
 
-    changesMade |= m_pParentAlgorithm->CreatePfos(protoParticleVector);
+    return m_pParentAlgorithm->CreatePfos(protoParticleVector);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------    
