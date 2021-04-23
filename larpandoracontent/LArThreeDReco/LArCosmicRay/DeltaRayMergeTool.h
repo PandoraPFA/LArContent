@@ -31,9 +31,10 @@ private:
      *  @brief  Identify ambiguous matches (e.g. 3:2:1) and attempt to merge clusters together
      *
      *  @param  overlapTensor the overlap tensor
-     *  @param  mergesMade receive boolean indicating whether clusters in element have been modified
+     *
+     *  @return  whether any merges have been made
      */
-    void ExamineConnectedElements(TensorType &overlapTensor, bool &mergesMade) const;
+    bool ExamineConnectedElements(TensorType &overlapTensor) const;
 
     /**
      *  @brief  Search for two matches with two common clusters and attempt to merge the clusters in the third view together
@@ -67,21 +68,21 @@ private:
     /**
      *  @brief  Return the list of muon pfos that a specified delta ray cluster is directly connected to
      *
-     *  @param  commonMuonPfoList the common muon pfo list of the element to which the DR cluster belongs
      *  @param  pDeltaRayCluster the address of the input delta ray cluster
+     *  @param  commonMuonPfoList the common muon pfo list of the element to which the DR cluster belongs
      *  @param  connectedMuonPfoList the output list of connected muon pfos
      */
-    void GetConnectedMuons(const pandora::PfoList &commonMuonPfoList, const pandora::Cluster *const pDeltaRayCluster, pandora::PfoList &connectedMuonPfoList) const;
+    void GetConnectedMuons(const pandora::Cluster *const pDeltaRayCluster, const pandora::PfoList &commonMuonPfoList, pandora::PfoList &connectedMuonPfoList) const;
 
     /**
      *  @brief  Determine whether a given cluster is connected to a cosmic ray pfo
      *
-     *  @param  pCommonMuonPfo the address of the cosmic ray pfo
      *  @param  pCluster the address of the input cluster
+     *  @param  pCommonMuonPfo the address of the cosmic ray pfo
      *
      *  @return  whether the cluster is connected to the cosmic ray pfo
      */
-    bool IsConnected(const pandora::Pfo *const pCommonMuonPfo, const pandora::Cluster *const pCluster) const;
+    bool IsConnected(const pandora::Cluster *const pCluster, const pandora::Pfo *const pCommonMuonPfo) const;
 
     /**
      *  @brief  Determine whether two delta ray clusters have been split
@@ -102,7 +103,7 @@ private:
      *
      *  @return  whether the delta ray clusters are one delta ray cluster, hidden behind a cosmic ray track
      */
-    bool IsHiddenTrack(const pandora::ParticleFlowObject *const pMuonPfo, const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
+    bool IsHiddenByTrack(const pandora::ParticleFlowObject *const pMuonPfo, const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
     
     /**
      *  @brief  Find all connection points of a delta ray cluster and a cosmic ray pfo

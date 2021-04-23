@@ -36,23 +36,19 @@ bool DeltaRayMergeTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm
     if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    bool mergesMade(false);
-
-    this->ExamineConnectedElements(overlapTensor, mergesMade);
-
-    return mergesMade;
+    return this->ExamineConnectedElements(overlapTensor);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMergeTool::ExamineConnectedElements(TensorType &overlapTensor, bool &mergesMade) const
+bool DeltaRayMergeTool::ExamineConnectedElements(TensorType &overlapTensor) const
 {
-    bool mergeMade(true), finishedTwoViewMerges(false);
+    bool mergeMade(false), mergesMade(false), finishedTwoViewMerges(false);
 
-    while (mergeMade)
+    do 
     {
         mergeMade = false;
-
+        
         ClusterVector sortedKeyClusters;
         overlapTensor.GetSortedKeyClusters(sortedKeyClusters);
 
@@ -86,21 +82,22 @@ void DeltaRayMergeTool::ExamineConnectedElements(TensorType &overlapTensor, bool
             }
         }
     }
+    while (mergeMade);
+
+    return mergesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool DeltaRayMergeTool::MakeTwoCommonViewMerges(const TensorType::ElementList &elementList) const
 {
-    for (const TensorType::Element &element1 : elementList)
+    for (auto iter1 = elementList.begin(); iter1 != elementList.end(); ++iter1)
     {
-        for (const TensorType::Element &element2 : elementList)
+        const TensorType::Element &element1(*iter1);
+        
+        for (auto iter2 = std::next(iter1); iter2 != elementList.end(); ++iter2)
         {
-            if ((element1.GetCluster(TPC_VIEW_U) == element2.GetCluster(TPC_VIEW_U)) && (element1.GetCluster(TPC_VIEW_V) == element2.GetCluster(TPC_VIEW_V)) &&
-                (element1.GetCluster(TPC_VIEW_W) == element2.GetCluster(TPC_VIEW_W)))
-            {
-                continue;
-            }
+            const TensorType::Element &element2(*iter2);
 
             for (const HitType hitType1 : {TPC_VIEW_U, TPC_VIEW_V})
             {
@@ -121,7 +118,7 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(const TensorType::ElementList &e
                                 m_pParentAlgorithm->UpdateUponDeletion(pClusterToEnlarge); m_pParentAlgorithm->UpdateUponDeletion(pClusterToDelete);
                                     
                                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*m_pParentAlgorithm,
-                                   m_pParentAlgorithm->GetClusterListName(LArClusterHelper::GetClusterHitType(pClusterToEnlarge))));
+                                    m_pParentAlgorithm->GetClusterListName(mergeHitType)));
                                 
                                 PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*m_pParentAlgorithm, pClusterToEnlarge, pClusterToDelete));
                                     
@@ -143,9 +140,12 @@ bool DeltaRayMergeTool::MakeTwoCommonViewMerges(const TensorType::ElementList &e
 
 bool DeltaRayMergeTool::AreAssociated(const TensorType::Element &element1, const TensorType::Element &element2, const HitType &mergeHitType) const
 {
+    const PfoList &commonMuonPfoList1(element1.GetOverlapResult().GetCommonMuonPfoList());
+    const PfoList &commonMuonPfoList2(element2.GetOverlapResult().GetCommonMuonPfoList());
+    
     // Demand the elements to have a shared common muon
     PfoList commonMuonPfoList;
-    this->CombineCommonMuonPfoLists(element1.GetOverlapResult().GetCommonMuonPfoList(), element2.GetOverlapResult().GetCommonMuonPfoList(), commonMuonPfoList);
+    this->CombineCommonMuonPfoLists(commonMuonPfoList1, commonMuonPfoList2, commonMuonPfoList);
 
     if (commonMuonPfoList.empty())
         return false;
@@ -153,8 +153,8 @@ bool DeltaRayMergeTool::AreAssociated(const TensorType::Element &element1, const
     const Cluster *const pCluster1(element1.GetCluster(mergeHitType)), *const pCluster2(element2.GetCluster(mergeHitType));
 
     PfoList connectedMuonPfoList1, connectedMuonPfoList2;
-    this->GetConnectedMuons(element1.GetOverlapResult().GetCommonMuonPfoList(), pCluster1, connectedMuonPfoList1);
-    this->GetConnectedMuons(element2.GetOverlapResult().GetCommonMuonPfoList(), pCluster2, connectedMuonPfoList2);
+    this->GetConnectedMuons(pCluster1, commonMuonPfoList1, connectedMuonPfoList1);
+    this->GetConnectedMuons(pCluster2, commonMuonPfoList2, connectedMuonPfoList2);
 
     if (connectedMuonPfoList1.empty() || connectedMuonPfoList2.empty())
         return (this->IsBrokenCluster(pCluster1, pCluster2));
@@ -163,11 +163,8 @@ bool DeltaRayMergeTool::AreAssociated(const TensorType::Element &element1, const
     {
         for (const ParticleFlowObject *const pConnectedMuon2 : connectedMuonPfoList2)
         {
-            if (pConnectedMuon1 == pConnectedMuon2)
-            {
-                if (this->IsHiddenTrack(pConnectedMuon1, pCluster1, pCluster2))
+            if ((pConnectedMuon1 == pConnectedMuon2) && (this->IsHiddenByTrack(pConnectedMuon1, pCluster1, pCluster2)))
                     return true;
-            }
         }
     }
 
@@ -190,18 +187,18 @@ void DeltaRayMergeTool::CombineCommonMuonPfoLists(const PfoList &commonMuonPfoLi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMergeTool::GetConnectedMuons(const PfoList &commonMuonPfoList, const Cluster *const pDeltaRayCluster, PfoList &connectedMuonPfoList) const 
+void DeltaRayMergeTool::GetConnectedMuons(const Cluster *const pDeltaRayCluster, const PfoList &commonMuonPfoList, PfoList &connectedMuonPfoList) const 
 {
     for (const ParticleFlowObject *const pCommonMuonPfo : commonMuonPfoList)
     {
-        if (this->IsConnected(pCommonMuonPfo, pDeltaRayCluster))
+        if (this->IsConnected(pDeltaRayCluster, pCommonMuonPfo))
             connectedMuonPfoList.push_back(pCommonMuonPfo);
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
     
-bool DeltaRayMergeTool::IsConnected(const Pfo *const pCommonMuonPfo, const Cluster *const pCluster) const
+bool DeltaRayMergeTool::IsConnected(const Cluster *const pCluster, const Pfo *const pCommonMuonPfo) const
 {
     HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     
@@ -227,7 +224,7 @@ bool DeltaRayMergeTool::IsBrokenCluster(const Cluster *const pClusterToEnlarge, 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool DeltaRayMergeTool::IsHiddenTrack(const ParticleFlowObject *const pMuonPfo, const Cluster *const pCluster1, const Cluster *const pCluster2) const 
+bool DeltaRayMergeTool::IsHiddenByTrack(const ParticleFlowObject *const pMuonPfo, const Cluster *const pCluster1, const Cluster *const pCluster2) const 
 {
     CaloHitList vertices1, vertices2;
     this->FindVertices(pMuonPfo, pCluster1, vertices1);
@@ -270,15 +267,13 @@ void DeltaRayMergeTool::FindVertices(const Pfo *const pCommonMuonPfo, const Clus
 
 bool DeltaRayMergeTool::MakeOneCommonViewMerges(const TensorType::ElementList &elementList) const
 {
-    for (const TensorType::Element &element1 : elementList)
+    for (auto iter1 = elementList.begin(); iter1 != elementList.end(); ++iter1)
     {
-        for (const TensorType::Element &element2 : elementList)
+        const TensorType::Element &element1(*iter1);
+        
+        for (auto iter2 = std::next(iter1); iter2 != elementList.end(); ++iter2)
         {
-            if ((element1.GetCluster(TPC_VIEW_U) == element2.GetCluster(TPC_VIEW_U)) && (element1.GetCluster(TPC_VIEW_V) == element2.GetCluster(TPC_VIEW_V)) &&
-                (element1.GetCluster(TPC_VIEW_W) == element2.GetCluster(TPC_VIEW_W)))
-            {
-                continue;
-            }
+            const TensorType::Element &element2(*iter2);
 
             for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
             {
