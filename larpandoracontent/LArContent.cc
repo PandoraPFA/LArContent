@@ -127,9 +127,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewClearTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewLongTracksTool.h"
-#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewUndershootTracksTool.h"
-#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewOvershootTracksTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewSimpleTracksTool.h"
+#include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.h"
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
@@ -340,9 +339,8 @@
     d("LArUndershootTracks",                    UndershootTracksTool)                                                           \
     d("LArTwoViewClearTracks",                  TwoViewClearTracksTool)                                                         \
     d("LArTwoViewLongTracks",                   TwoViewLongTracksTool)                                                          \
-    d("LArTwoViewUndershootTracks",             TwoViewUndershootTracksTool)                                                    \
-    d("LArTwoViewOvershootTracks",              TwoViewOvershootTracksTool)                                                     \
     d("LArTwoViewSimpleTracks",                 TwoViewSimpleTracksTool)                                                        \
+    d("LArTwoViewThreeDKink",                   TwoViewThreeDKinkTool)                                                          \
     d("LArEnergyKickFeature",                   EnergyKickFeatureTool)                                                          \
     d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \
     d("LArLocalAsymmetryFeature",               LocalAsymmetryFeatureTool)                                                      \
