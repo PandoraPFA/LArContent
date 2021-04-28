@@ -61,10 +61,10 @@ bool TwoViewThreeDKinkTool::PassesElementCuts(MatrixType::ElementList::const_ite
     if (usedClusters.count(eIter->GetCluster1()) || usedClusters.count(eIter->GetCluster2()))
         return false;
 
-    if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
+    if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < -std::numeric_limits<float>::epsilon())
         return false;
 
-    if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
+    if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < -std::numeric_limits<float>::epsilon())
         return false;
 
     if (eIter->GetOverlapResult().GetMatchingScore() - m_minMatchingScore < std::numeric_limits<float>::epsilon())
