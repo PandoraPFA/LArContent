@@ -31,7 +31,7 @@ public:
     /**
      *  @brief  Destructor
      */
-    ~TwoViewThreeDKinkTool();
+    virtual ~TwoViewThreeDKinkTool();
 
     bool Run(TwoViewTransverseTracksAlgorithm *const pAlgorithm, MatrixType &overlapMatrix);
 
