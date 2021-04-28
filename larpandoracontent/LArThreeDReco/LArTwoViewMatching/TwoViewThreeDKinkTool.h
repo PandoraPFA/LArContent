@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.h
  *
- *  @brief  Header file for the two view three d kink base tool
+ *  @brief  Header file for the two view three d kink tool class.
  *
  *  $Log: $
  */
@@ -50,71 +50,6 @@ private:
     typedef std::vector<Modification> ModificationList;
 
     /**
-     *  @brief  Whether a provided (iterator to a) matrix element passes the
-     * selection cuts for overshoot identification
-     *
-     *  @param  eIter the iterator to the matrix element
-     *  @param  usedClusters the list of used clusters
-     */
-    bool PassesElementCuts(MatrixType::ElementList::const_iterator eIter, const pandora::ClusterSet &usedClusters) const;
-
-    /**
-     *  @brief  Get a sampling point in x that is common to sliding linear fit
-     * objects in two views
-     *
-     *  @param  splitPosition1 the split position in view 1
-     *  @param  isForwardInX whether to work forwards (or backwards) in x
-     *  @param  fitResult1 the sliding fit result in view 1
-     *  @param  fitResult2 the sliding fit result in view 2
-     *
-     *  @return the sampling point
-     */
-    float GetXSamplingPoint(const pandora::CartesianVector &splitPosition1, const bool isForwardInX, const TwoDSlidingFitResult &fitResult1,
-        const TwoDSlidingFitResult &fitResult2) const;
-
-    /**
-     *  @brief  Whether pointing cluster labelled A extends to lowest x positions
-     * (as opposed to that labelled B)
-     *
-     *  @param  pointingClusterA pointing cluster A
-     *  @param  pointingClusterB pointing cluster B
-     */
-    static bool IsALowestInX(const LArPointingCluster &pointingClusterA, const LArPointingCluster &pointingClusterB);
-
-    /**
-     *  @brief  Get modification objects, identifying required splits and merges
-     * for clusters
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  overlapMatrix the overlap matrix
-     *  @param  modificationList to be populated with modifications
-     */
-    void GetModifications(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType &overlapMatrix, ModificationList &modificationList) const;
-
-    /**
-     *  @brief  Apply the changes cached in a modification list and update the
-     * matrix accordingly
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  modificationList the modification list
-     *
-     *  @return whether changes to the matrix have been made
-     */
-    bool ApplyChanges(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const ModificationList &modificationList) const;
-
-    /**
-     *  @brief  Select elements representing possible components of interest due
-     * to overshoots or undershoots in clustering
-     *
-     *  @param  eIter iterator to a candidate element
-     *  @param  elementList the provided element list
-     *  @param  usedClusters the list of used clusters
-     *  @param  iteratorList to receive a list of iterators to relevant elements
-     */
-    void SelectMatrixElements(MatrixType::ElementList::const_iterator eIter, const MatrixType::ElementList &elementList,
-        const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const;
-
-    /**
      *  @brief  Particle class
      */
     class Particle
@@ -133,8 +68,55 @@ private:
         const pandora::Cluster *m_pCommonCluster; ///< Address of the common cluster
     };
 
+    /**
+     *  @brief  Get modification objects, identifying required splits and merges
+     * for clusters
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  overlapMatrix the overlap matrix
+     *  @param  modificationList to be populated with modifications
+     */
+    void GetModifications(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const MatrixType &overlapMatrix, ModificationList &modificationList) const;
+
+    /**
+     *  @brief  Whether a provided (iterator to a) matrix element passes the
+     * selection cuts for overshoot identification
+     *
+     *  @param  eIter the iterator to the matrix element
+     *  @param  usedClusters the list of used clusters
+     */
+    bool PassesElementCuts(MatrixType::ElementList::const_iterator eIter, const pandora::ClusterSet &usedClusters) const;
+
+    /**
+     *  @brief  Select elements representing possible components of interest due
+     * to overshoots or undershoots in clustering
+     *
+     *  @param  eIter iterator to a candidate element
+     *  @param  elementList the provided element list
+     *  @param  usedClusters the list of used clusters
+     *  @param  iteratorList to receive a list of iterators to relevant elements
+     */
+    void SelectMatrixElements(MatrixType::ElementList::const_iterator eIter, const MatrixType::ElementList &elementList,
+        const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const;
+
+    /**
+     *  @brief  Get modification objects for specific elements of the matrix, identifying required splits and merges for clusters
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  iteratorList list of iterators to relevant tensor elements
+     *  @param  modificationList to be populated with modifications
+     */
     void GetIteratorListModifications(
         TwoViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ModificationList &modificationList) const;
+
+    /**
+     *  @brief  Whether pointing cluster labelled A extends to lowest x positions
+     * (as opposed to that labelled B)
+     *
+     *  @param  pointingClusterA pointing cluster A
+     *  @param  pointingClusterB pointing cluster B
+     */
+    static bool IsALowestInX(const LArPointingCluster &pointingClusterA, const LArPointingCluster &pointingClusterB);
 
     /**
      *  @brief  Whether the provided particle is consistent with being a kink,
@@ -151,6 +133,31 @@ private:
     bool IsThreeDKink(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
         const pandora::CartesianVector &splitPosition, const bool isALowestInX) const;
 
+    /**
+     *  @brief  Get a sampling point in x that is common to sliding linear fit
+     * objects in two views
+     *
+     *  @param  splitPosition1 the split position in view 1
+     *  @param  isForwardInX whether to work forwards (or backwards) in x
+     *  @param  fitResult1 the sliding fit result in view 1
+     *  @param  fitResult2 the sliding fit result in view 2
+     *
+     *  @return the sampling point
+     */
+    float GetXSamplingPoint(const pandora::CartesianVector &splitPosition1, const bool isForwardInX, const TwoDSlidingFitResult &fitResult1,
+        const TwoDSlidingFitResult &fitResult2) const;
+
+    /**
+     *  @brief  Apply the changes cached in a modification list and update the
+     * matrix accordingly
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  modificationList the modification list
+     *
+     *  @return whether changes to the matrix have been made
+     */
+    bool ApplyChanges(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const ModificationList &modificationList) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float m_minXOverlapFraction;            ///< The min x overlap fraction value for particle creation
@@ -163,8 +170,6 @@ private:
     float m_maxTransverseImpactParameter;   ///< The maximum transverse impact parameter for connecting broken clusters
     float m_minImpactParameterCosTheta;     ///< The minimum cos theta (angle between vertex directions) for connecting broken clusters
     float m_cosThetaCutForKinkSearch;       ///< The cos theta cut used for the kink search in three dimensions
-
-
 };
 
 } // namespace lar_content

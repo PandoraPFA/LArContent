@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.cc
  *
- *  @brief  Implementation of the three d kink base tool class.
+ *  @brief  Implementation of the two view three d kink tool class.
  *
  *  $Log: $
  */
@@ -63,6 +63,7 @@ bool TwoViewThreeDKinkTool::PassesElementCuts(MatrixType::ElementList::const_ite
 
     if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
         return false;
+
     if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < -1.f * std::numeric_limits<float>::epsilon())
         return false;
 
@@ -356,7 +357,7 @@ void TwoViewThreeDKinkTool::GetIteratorListModifications(
 
                 modificationList.push_back(modification);
             }
-            catch (StatusCodeException &statusCodeException)
+            catch (const StatusCodeException &statusCodeException)
             {
                 if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                     throw statusCodeException;
@@ -416,14 +417,12 @@ bool TwoViewThreeDKinkTool::IsThreeDKink(TwoViewTransverseTracksAlgorithm *const
         if (dotProduct < m_cosThetaCutForKinkSearch)
             return true;
     }
-    catch (StatusCodeException &s)
+    catch (const StatusCodeException &)
     {
     }
 
     return false;
 }
-
-
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
