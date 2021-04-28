@@ -1,6 +1,5 @@
 /**
- *  @file
- * larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.cc
  *
  *  @brief  Implementation of the three d kink base tool class.
  *
@@ -39,6 +38,20 @@ TwoViewThreeDKinkTool::TwoViewThreeDKinkTool() :
 
 TwoViewThreeDKinkTool::~TwoViewThreeDKinkTool()
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TwoViewThreeDKinkTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
+{
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+
+    ModificationList modificationList;
+    this->GetModifications(pAlgorithm, overlapMatrix, modificationList);
+    const bool changesMade(this->ApplyChanges(pAlgorithm, modificationList));
+
+    return changesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -125,20 +138,6 @@ bool TwoViewThreeDKinkTool::IsALowestInX(const LArPointingCluster &pointingClust
     }
 
     return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool TwoViewThreeDKinkTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
-{
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
-    ModificationList modificationList;
-    this->GetModifications(pAlgorithm, overlapMatrix, modificationList);
-    const bool changesMade(this->ApplyChanges(pAlgorithm, modificationList));
-
-    return changesMade;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
