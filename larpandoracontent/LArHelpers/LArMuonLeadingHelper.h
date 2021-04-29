@@ -35,6 +35,16 @@ public:
     };
 
     typedef std::map<const pandora::MCParticle*, pandora::CaloHitList> LeadingMCParticleToPostBremsstrahlungHitList;
+
+    /**
+     *  @brief  Return the MCProcess of the leading particle (tier 1) in the delta ray/michel hierarchy
+     *
+     *  @param  pMCParticle the address of the input MCParticle
+     *
+     *  @return  the MCProcess of the leading particle (tier 1) in the delta ray/michel hierarchy
+     *
+     */    
+    static MCProcess GetLeadingProcess(const pandora::MCParticle *const pMCParticle);
     
     /**
      *  @brief  Return true if input MCParticle is a child of a cosmic ray and has 'delta ray' process tag
@@ -98,16 +108,50 @@ public:
     static void GetMuonPfoContaminationContribution(const pandora::CaloHitList &cosmicRayPfoHitList, const pandora::CaloHitList &leadingMCHitList,
         pandora::CaloHitList &leadingHitsInParentCosmicRay);
 
-    static pandora::CartesianVector GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector,
-        const pandora::Cluster *const pCluster);
-
+    /**
+     *  @brief  Get closest distance between a specified cluster and list of positions
+     *
+     *  @param  pCluster address of the input cluster
+     *  @param  cartesianPointVector the list of input positions
+     *
+     *  @return the closest distance
+     */
     static float GetClosestDistance(const pandora::Cluster *const pCluster, const pandora::CartesianPointVector &cartesianPointVector);
 
+    /**
+     *  @brief  Get closest distance between a specified calo hit and list of positions
+     *
+     *  @param  pCaloHit the address of the input calo hit
+     *  @param  cartesianPointVector the list of input positions
+     *
+     *  @return the closest distance
+     */    
     static float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector);
 
-    static float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CaloHitList &caloHitList);
+    /**
+     *  @brief  Get the closest position from an input list of projected positions that lies close to both a reference point and an input cluster
+     *
+     *  @param  referencePoint the input reference point
+     *  @param  cartesianPointVector the input list of projected positions
+     *  @param  pCluster the input cluster
+     *  @param  maxDistanceToCluster the maximum distance to the cluster
+     *  @param  maxDistanceToReferencePoint the maximum distance to the reference point
+     *  @param  closestPosition to receive the closest position if found
+     *
+     *  @return  whether a closest position could be found
+     */    
+    static pandora::StatusCode GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector,
+        const pandora::Cluster *const pCluster, const float maxDistanceToCluster, const float maxDistanceToReferencePoint, pandora::CartesianVector &closestPosition);
 
-    static void GetClosestPositions(const pandora::CartesianPointVector &pCluster1, const pandora::Cluster *const pCluster2, pandora::CartesianVector &outputPosition1,
+    /**
+     *  @brief  Get the closest positions between a list of positions and a cluster
+     *
+     *  @param  cartesianPointVector1 the input list of positions
+     *  @param  pCluster2 the address of the input cluster
+     *  @param  outputPosition1 the closest position in the list of positions
+     *  @param  outputPosition2 the closest position in the cluster
+     */    
+    static void GetClosestPositions(const pandora::CartesianPointVector &cartesianPointVector1, const pandora::Cluster *const pCluster2, pandora::CartesianVector &outputPosition1,
         pandora::CartesianVector &outputPosition2);
 
  private:

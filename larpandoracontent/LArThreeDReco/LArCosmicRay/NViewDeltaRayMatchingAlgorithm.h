@@ -29,6 +29,8 @@ public:
     typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
+    typedef std::vector<pandora::HitType> HitTypeVector;
+    
     /**
      *  @brief  Default constructor
      */
@@ -145,6 +147,21 @@ public:
         const float maxDistanceToCollected, pandora::CaloHitList &collectedHits) const;
 
     /**
+     *  @brief  In one view, pull out any hits from a cosmic ray cluster that belong to the child delta ray cluster 
+     *
+     *  @param  positionOnMuon the parameterised cosmic ray position 
+     *  @param  muonDirection the parameterised cosmic ray direction 
+     *  @param  pMuon the address of the parent cosmic ray pfo
+     *  @param  deltaRayProjectedPositions the projected positions of the delta ray
+     *  @param  minDistanceFromMuon the minimum distance of a hit from the cosmic ray track required for removal
+     *  @param  maxDistanceToCollected the maximim distance of a hit from the projected delta ray hits required for removal
+     *  @param  collectedHits the list of hits to be removed from the cosmic ray 
+     */
+    void CollectHitsFromMuon(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection,
+        const pandora::Cluster *const pMuonCluster, const pandora::CartesianPointVector &deltaRayProjectedPositions, const float &minDistanceFromMuon,
+        const float maxDistanceToCollected, pandora::CaloHitList &collectedHits) const;
+    
+    /**
      *  @brief  Parameterise the projection of a cosmic ray track in order to avoid poor/sparse projections
      *
      *  @param  pParentMuon the address of the cosmic ray pfo
@@ -170,21 +187,6 @@ public:
      */
     pandora::StatusCode ParameteriseMuon(const pandora::ParticleFlowObject *const pParentMuon, const pandora::CartesianPointVector &deltaRayProjectedPositions,
         const pandora::HitType hitType, pandora::CartesianVector &positionOnMuon, pandora::CartesianVector &muonDirection) const;
-
-    /**
-     *  @brief  In one view, pull out any hits from a cosmic ray cluster that belong to the child delta ray cluster 
-     *
-     *  @param  positionOnMuon the parameterised cosmic ray position 
-     *  @param  muonDirection the parameterised cosmic ray direction 
-     *  @param  pMuon the address of the parent cosmic ray pfo
-     *  @param  deltaRayProjectedPositions the projected positions of the delta ray
-     *  @param  minDistanceFromMuon the minimum distance of a hit from the cosmic ray track required for removal
-     *  @param  maxDistanceToCollected the maximim distance of a hit from the projected delta ray hits required for removal
-     *  @param  collectedHits the list of hits to be removed from the cosmic ray 
-     */
-    void CollectHitsFromMuon(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection,
-        const pandora::Cluster *const pMuonCluster, const pandora::CartesianPointVector &deltaRayProjectedPositions, const float &minDistanceFromMuon,
-        const float maxDistanceToCollected, pandora::CaloHitList &collectedHits) const;
 
     /**
      *  @brief  Move a list of hits from a cosmic ray cluster into the given child delta ray cluster
@@ -358,7 +360,9 @@ protected:
     unsigned int m_minMatchedPoints; ///< The threshold number of matched sampling points for a good match
     unsigned int m_minProjectedPositions; ///< The threshold number of projected points for a good projection
     float m_maxCosmicRayHitFraction; ///< The maximum allowed fraction of hits to be removed from the cosmic ray track
-    float m_strayClusterSeparation; ///< The maximum allowed separation of a stray cluster and a delta ray cluster for merge
+    float m_maxDistanceToCluster; ///< the maximum distance of a projected point to the cosmic ray cluster used when parameterising the cosmic ray cluster
+    float m_maxDistanceToReferencePoint; ///< the maximum distance of a projected point to the cosmic ray vertex used when parameterising the cosmic ray cluster    
+    float m_strayClusterSeparation; ///< The maximum allowed separation of a stray cluster and a delta ray cluster for merge    
 };
     
 } // namespace lar_content

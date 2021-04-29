@@ -174,8 +174,6 @@ public:
 
 private:
     XOverlap m_xOverlap; ///< The x overlap object
-
-    friend class DeltaRayOverlapResult;
 };
 
 typedef std::vector<TransverseOverlapResult> TransverseOverlapResultVector;
@@ -378,7 +376,7 @@ public:
     /**
      *  @brief  Destructor
      */
-    ~DeltaRayOverlapResult();
+    virtual ~DeltaRayOverlapResult();
 
     /**
      *  @brief  Get the common muon pfo list

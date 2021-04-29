@@ -33,7 +33,6 @@ class TwoViewDeltaRayMatchingAlgorithm : public NViewDeltaRayMatchingAlgorithm<T
 public:
     typedef NViewDeltaRayMatchingAlgorithm<TwoViewMatchingControl<TwoViewDeltaRayOverlapResult> > BaseAlgorithm;
     typedef TwoViewDeltaRayMatchingAlgorithm::MatchingType::MatrixType MatrixType;
-    typedef std::vector<pandora::HitType> HitTypeVector;
     
     /**
      *  @brief  Default constructor

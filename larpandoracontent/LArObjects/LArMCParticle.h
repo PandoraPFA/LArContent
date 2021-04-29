@@ -21,9 +21,7 @@
 namespace lar_content
 {
 
-// ATTN - Enumeration replicates the numbering in the CellTree module and thus has a dummy UNUSED enumeration at 15 to account for an used
-// duplication in the CellTree process map
-// We also add an INCIDENT_NU to assign a process for neutrino MC given that we don't have a distinct class for neutrino MC
+// Enumeration maps onto G4 process IDs, plus an ID for the incident neutrino
 enum MCProcess
 {
     MC_PROC_INCIDENT_NU = -1,
@@ -245,14 +243,19 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
     {
         pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter &>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArMCParticle->GetNuanceCode()));
-        PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(static_cast<int>(pLArMCParticle->GetProcess())));
+
+        if (m_version > 1)
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(static_cast<int>(pLArMCParticle->GetProcess())));
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
         pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter &>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NuanceCode", pLArMCParticle->GetNuanceCode()));
-        PANDORA_RETURN_RESULT_IF(
-            pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("Process", static_cast<int>(pLArMCParticle->GetProcess())));
+
+        if (m_version > 1)
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("Process", static_cast<int>(pLArMCParticle->GetProcess())));
     }
     else
     {

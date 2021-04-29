@@ -257,49 +257,6 @@ float LArPfoHelper::GetClosestDistance(const ParticleFlowObject *const pPfo, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode LArPfoHelper::GetTwoDSeparation(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2, float &separation)
-{
-    ClusterList clusterListU1, clusterListV1, clusterListW1;
-    ClusterList clusterListU2, clusterListV2, clusterListW2;
-
-    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_U, clusterListU1);
-    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_V, clusterListV1);
-    LArPfoHelper::GetClusters(pPfo1, TPC_VIEW_W, clusterListW1);
-
-    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_U, clusterListU2);
-    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_V, clusterListV2);
-    LArPfoHelper::GetClusters(pPfo2, TPC_VIEW_W, clusterListW2);
-
-    float numViews(0.f), distance(0.f);
-
-    if (!clusterListU1.empty() && !clusterListU2.empty())
-    {
-        distance += LArClusterHelper::GetClosestDistance(clusterListU1, clusterListU2);
-        numViews += 1.f;
-    }
-
-    if (!clusterListV1.empty() && !clusterListV2.empty())
-    {
-        distance += LArClusterHelper::GetClosestDistance(clusterListV1, clusterListV2);
-        numViews += 1.f;
-    }
-
-    if (!clusterListW1.empty() && !clusterListW2.empty())
-    {
-        distance += LArClusterHelper::GetClosestDistance(clusterListW1, clusterListW2);
-        numViews += 1.f;
-    }
-
-    if (numViews < std::numeric_limits<float>::epsilon())
-        return STATUS_CODE_NOT_FOUND;
-
-    separation = distance / numViews;
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 float LArPfoHelper::GetThreeDSeparation(const ParticleFlowObject *const pPfo1, const ParticleFlowObject *const pPfo2)
 {
     ClusterList clusterList1, clusterList2;

@@ -36,7 +36,7 @@ public:
     /**
      *  @brief  Destructor
      */
-    ~MuonLeadingEventValidationAlgorithm();
+    virtual ~MuonLeadingEventValidationAlgorithm();
 
 private:
     /**

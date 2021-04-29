@@ -47,8 +47,14 @@ void MuonLeadingEventValidationAlgorithm::FillValidationInfo(const MCParticleLis
     if (!(m_michelMode || m_deltaRayMode))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
+
     if (m_visualize)
+    {
+        #ifdef MONITORING
         PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
+        #endif
+    }
+
     
     CaloHitList recoCosmicRayHitList;
     if (m_removeRecoCosmicRayHits)
@@ -335,9 +341,12 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(const ValidationInfo &va
             const CartesianVector shiftedVertex(vertex.GetX() - x0, vertex.GetY(), vertex.GetZ());
             const CartesianVector shiftedEndpoint(endpoint.GetX() - x0, vertex.GetY(), vertex.GetZ());
 
+
+            #ifdef MONITORING
             PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &shiftedVertex, "T0 shifted vertex ", BLACK, 2);
             PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &shiftedEndpoint, "T0 shifted endpoint", BLACK, 2);
             PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            #endif
         }
         ///////////////////////////////
         
@@ -392,9 +401,11 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(const ValidationInfo &va
                 const CartesianVector shiftedVertex(vertex.GetX() - x0, vertex.GetY(), vertex.GetZ());
                 const CartesianVector shiftedEndpoint(endpoint.GetX() - x0, vertex.GetY(), vertex.GetZ());
 
+                #ifdef MONITORING
                 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &shiftedVertex, "T0 shifted vertex", BLACK, 2);
                 PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &shiftedEndpoint, "T0 shifted endpoint", BLACK, 2);
                 PandoraMonitoringApi::ViewEvent(this->GetPandora());
+                #endif
             }
             ///////////////////////////////
 
@@ -579,15 +590,23 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(const ValidationInfo &va
                     else
                     {
                         PfoList deltaRayList({pMatchedPfo});
-                        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &deltaRayList, "Delta Ray Pfo", BLACK, false, false);
 
+                        #ifdef MONITORING
+                        PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &deltaRayList, "Delta Ray Pfo", BLACK, false, false);
+                        #endif
+                        
                         PfoList cosmicList({pParentPfo});
+
+                        #ifdef MONITORING                        
                         PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &cosmicList, "Delta Ray Pfo", RED, false, false);
+                        #endif                        
                         
                         const CartesianVector &vertex(deltaRayVertexList.front()->GetPosition());
+
+                        #ifdef MONITORING                        
                         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &vertex, "vertex", RED, 2);
                         PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
+                        #endif                        
                     }
                 }
                 ///////////////////////////////
@@ -732,10 +751,14 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList caloHitLis
     {
         const CartesianVector hitPosition(pCaloHit->GetPositionVector().GetX() - pCaloHit->GetX0(), pCaloHit->GetPositionVector().GetY(), pCaloHit->GetPositionVector().GetZ());
 
+        #ifdef MONITORING        
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, stringTag, colour, 2);
+        #endif         
     }
-
+    
+    #ifdef MONITORING
     PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    #endif    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -767,10 +790,14 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloH
             color = BLUE;
         }
 
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, color, 2);    
+        #ifdef MONITORING
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, color, 2);
+        #endif
     }    
-    
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());  
+
+    #ifdef MONITORING    
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    #endif    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -790,10 +817,14 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloH
             color = RED;
         }
 
+        #ifdef MONITORING        
         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, color, 2);
+        #endif        
     }
 
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());  
+    #ifdef MONITORING    
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+    #endif    
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -232,7 +232,7 @@ bool DeltaRayMergeTool::IsHiddenByTrack(const ParticleFlowObject *const pMuonPfo
 
     for (const CaloHit *const pCaloHit : vertices1)
     {
-        const float separation(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, vertices2));
+        const float separation(LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), vertices2));
         
         if (separation < m_maxVertexSeparation)
             return true;

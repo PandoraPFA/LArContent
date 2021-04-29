@@ -10,7 +10,6 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArMuonLeadingHelper.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -281,7 +280,7 @@ void CosmicRayRemovalTool::CollectHitsFromDeltaRay(const CartesianVector &positi
             if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
                 continue;
 
-            const float distanceToCollectedHits(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, collectedHits));
+            const float distanceToCollectedHits(LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), collectedHits));
             const float distanceToMuonHits(muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude());
 
             if ((distanceToMuonHits < minDistanceFromMuon) || (demandCloserToCollected && (distanceToCollectedHits > distanceToMuonHits)))

@@ -50,7 +50,7 @@ public:
     /**
      *  @brief  Destructor
      */
-    ~TwoViewDeltaRayOverlapResult();
+    virtual ~TwoViewDeltaRayOverlapResult();
 
     /**
      *  @brief  Whether the track overlap result has been initialized

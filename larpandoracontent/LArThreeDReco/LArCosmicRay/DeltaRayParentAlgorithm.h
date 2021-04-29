@@ -48,6 +48,17 @@ private:
     void FindParentPfo(const PfoLengthMap &pfoLengthMap, const pandora::ParticleFlowObject *const pPfo, const pandora::ParticleFlowObject *&pParentPfo) const;
 
     /**
+     *  @brief  Get distance between two Pfos using 2D clusters
+     *
+     *  @param  pPfo the address of the first Pfo
+     *  @param  pPfo the address of the second Pfo
+     *  @param  to recieve the output pfo separation
+     *
+     *  @return  whether the pfo separation could be calculated
+     */
+    pandora::StatusCode GetTwoDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2, float &separation) const;
+    
+    /**
      *  @brief  Apply parent-child link (if parent is a cosmic ray create parent-child link else merge the delta ray cluster into parent delta ray pfo)
      *
      *  @param  muonPfoList the list of all cosmic ray pfos

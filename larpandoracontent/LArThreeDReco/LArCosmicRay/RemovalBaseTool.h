@@ -18,6 +18,8 @@ namespace lar_content
 class RemovalBaseTool : public DeltaRayTensorTool
 {
 public:
+    typedef std::vector<pandora::HitType> HitTypeVector;
+
     /**
      *  @brief  Default constructor
      */

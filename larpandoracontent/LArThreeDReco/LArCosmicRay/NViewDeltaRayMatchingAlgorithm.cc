@@ -38,6 +38,8 @@ NViewDeltaRayMatchingAlgorithm<T>::NViewDeltaRayMatchingAlgorithm() :
     m_minMatchedPoints(3),
     m_minProjectedPositions(3),
     m_maxCosmicRayHitFraction(0.05f),
+    m_maxDistanceToCluster(0.5f),
+    m_maxDistanceToReferencePoint(5.f),    
     m_strayClusterSeparation(2.f)
 {
 }
@@ -553,29 +555,17 @@ template<typename T>
 StatusCode NViewDeltaRayMatchingAlgorithm<T>::ProjectMuonPositions(const HitType &thirdViewHitType, const ParticleFlowObject *const pParentMuon,
     CartesianPointVector &projectedPositions) const
 {
-    ClusterList muonClusterList1, muonClusterList2;    
+    ClusterList muonClusterList1, muonClusterList2;
 
-    for (const HitType hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
-    {
-        if (hitType1 == thirdViewHitType)
-            continue;
-        
-        for (const HitType hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
-        {
-            if ((hitType2 == thirdViewHitType) || (hitType1 == hitType2))
-                continue;
-
-            LArPfoHelper::GetClusters(pParentMuon, hitType1, muonClusterList1);
-            LArPfoHelper::GetClusters(pParentMuon, hitType2, muonClusterList2);
+    HitTypeVector hitTypes({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
+    
+    hitTypes.erase(std::find(hitTypes.begin(), hitTypes.end(), thirdViewHitType));
+    
+    LArPfoHelper::GetClusters(pParentMuon, hitTypes[0], muonClusterList1);
+    LArPfoHelper::GetClusters(pParentMuon, hitTypes[1], muonClusterList2);
             
-            if ((muonClusterList1.size() != 1) || (muonClusterList2.size() != 1))
-                return STATUS_CODE_NOT_FOUND;
-            
-            break;
-        }
-
-        break;
-    }
+    if ((muonClusterList1.size() != 1) || (muonClusterList2.size() != 1))
+        return STATUS_CODE_NOT_FOUND;
 
     return (this->GetProjectedPositions(muonClusterList1.front(), muonClusterList2.front(), projectedPositions));
 }
@@ -707,6 +697,42 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const Cluster 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template<typename T>
+void NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const CartesianVector &positionOnMuon, const CartesianVector &muonDirection,
+    const Cluster *const pMuonCluster, const CartesianPointVector &deltaRayProjectedPositions, const float &minDistanceFromMuon, const float maxDistanceToCollected,
+     CaloHitList &collectedHits) const
+{
+    CaloHitList cosmicRayHitList;
+    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(cosmicRayHitList);
+    
+    bool hitsAdded(true);
+    while (hitsAdded)
+    {
+        hitsAdded = false;
+
+	    for (const CaloHit *const pCaloHit : cosmicRayHitList)
+        {
+            if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
+                continue;
+
+            const float distanceToCollectedHits(std::min(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, deltaRayProjectedPositions),
+                LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), collectedHits)));
+            const float distanceToMuonHits(muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude());
+
+            if ((std::fabs(distanceToMuonHits - distanceToCollectedHits) < std::numeric_limits<float>::epsilon()) || (distanceToMuonHits < minDistanceFromMuon) ||
+                (distanceToCollectedHits > distanceToMuonHits) || (distanceToCollectedHits > maxDistanceToCollected))
+            {
+                continue;
+            }
+                
+            collectedHits.push_back(pCaloHit);
+            hitsAdded = true;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template<typename T>
 StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlowObject *const pParentMuon, const Cluster *const pDeltaRayCluster,
     CartesianVector &positionOnMuon, CartesianVector &muonDirection) const
 {
@@ -744,9 +770,9 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlo
     CartesianVector deltaRayVertex(0.f, 0.f, 0.f), muonVertex(0.f, 0.f, 0.f);
     LArMuonLeadingHelper::GetClosestPositions(deltaRayProjectedPositions, pMuonCluster, deltaRayVertex, muonVertex);
 
-    positionOnMuon = LArMuonLeadingHelper::GetClosestPosition(muonVertex, muonProjectedPositions, pMuonCluster);
+    const StatusCode status(LArMuonLeadingHelper::GetClosestPosition(muonVertex, muonProjectedPositions, pMuonCluster, m_maxDistanceToCluster, m_maxDistanceToReferencePoint, positionOnMuon));
 
-    if (positionOnMuon.GetMagnitude() < std::numeric_limits<float>::epsilon())
+    if (status != STATUS_CODE_SUCCESS)
         return STATUS_CODE_NOT_FOUND;
 
     float rL(0.f), rT(0.f);
@@ -754,42 +780,6 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlo
     slidingFitResult.GetGlobalFitDirection(rL, muonDirection);
 
     return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template<typename T>
-void NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const CartesianVector &positionOnMuon, const CartesianVector &muonDirection,
-    const Cluster *const pMuonCluster, const CartesianPointVector &deltaRayProjectedPositions, const float &minDistanceFromMuon, const float maxDistanceToCollected,
-     CaloHitList &collectedHits) const
-{
-    CaloHitList cosmicRayHitList;
-    pMuonCluster->GetOrderedCaloHitList().FillCaloHitList(cosmicRayHitList);
-    
-    bool hitsAdded(true);
-    while (hitsAdded)
-    {
-        hitsAdded = false;
-
-	    for (const CaloHit *const pCaloHit : cosmicRayHitList)
-        {
-            if (std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end())
-                continue;
-
-            const float distanceToCollectedHits(std::min(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, deltaRayProjectedPositions),
-                LArMuonLeadingHelper::GetClosestDistance(pCaloHit, collectedHits)));
-            const float distanceToMuonHits(muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude());
-
-            if ((std::fabs(distanceToMuonHits - distanceToCollectedHits) < std::numeric_limits<float>::epsilon()) || (distanceToMuonHits < minDistanceFromMuon) ||
-                (distanceToCollectedHits > distanceToMuonHits) || (distanceToCollectedHits > maxDistanceToCollected))
-            {
-                continue;
-            }
-                
-            collectedHits.push_back(pCaloHit);
-            hitsAdded = true;
-        }
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1088,7 +1078,13 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xml
         "MinProjectedPositions", m_minProjectedPositions));    
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxCosmicRayHitFraction", m_maxCosmicRayHitFraction));    
+        "MaxCosmicRayHitFraction", m_maxCosmicRayHitFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxDistanceToCluster", m_maxDistanceToCluster));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MaxDistanceToReferencePoint", m_maxDistanceToReferencePoint));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "StrayClusterSeparation", m_strayClusterSeparation));    

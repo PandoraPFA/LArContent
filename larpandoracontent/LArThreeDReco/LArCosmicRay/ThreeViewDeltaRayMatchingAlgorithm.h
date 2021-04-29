@@ -99,8 +99,7 @@ class DeltaRayTensorTool : public pandora::AlgorithmTool
 public:
     typedef ThreeViewDeltaRayMatchingAlgorithm::MatchingType::TensorType TensorType;
     typedef std::vector<TensorType::ElementList::const_iterator> IteratorList;
-    typedef std::vector<pandora::HitType> HitTypeVector;
-
+    
     /**
      *  @brief  Run the algorithm tool
      *
