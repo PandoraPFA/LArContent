@@ -33,9 +33,10 @@ private:
      *  @brief  Remove hits from delta ray clusters that belong to the parent muon
      *
      *  @param  elementList the tensor element list
-     *  @param  changesMade receive boolean indicating whether clusters in element have been modified
+     *
+     *  @return  whether any clusters have been modified
      */
-    void ExamineConnectedElements(const TensorType::ElementList &elementList, bool &changesMade) const;
+    bool RemoveCosmicRayHits(const TensorType::ElementList &elementList) const;
 
     /**
      *  @brief  Determine whether element satifies simple checks
@@ -113,10 +114,9 @@ private:
      *  @param  clusterVector a vector containing the address of created/modified clusters for bookeeping purposes
      *  @param  pfoVector a vector containing the address of the pfo to which a modified muon cluster belongs for bookeeping purposes
      */        
-    void FragmentRemnant(const pandora::HitType hitType, const pandora::Cluster *const pMuonCluster,
+    void ReclusterRemnant(const pandora::HitType hitType, const pandora::Cluster *const pMuonCluster,
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
     
-    float m_minSeparation;                    ///< The minimum delta ray - parent muon cluster separation required to investigate delta ray cluster
     unsigned int m_slidingFitWindow;          ///< The sliding fit window used in cosmic ray parameterisations
     float m_minContaminationLength;           ///< The minimum projected length of a delta ray cluster onto the muon track for it to be considered contaminated
     float m_maxDistanceToHit;                 ///< The maximum distance of a hit from the cosmic ray track for it to be added into the CR

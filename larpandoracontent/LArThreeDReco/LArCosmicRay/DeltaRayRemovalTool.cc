@@ -21,7 +21,6 @@ namespace lar_content
 {
 
 DeltaRayRemovalTool::DeltaRayRemovalTool() :
-    m_minSeparation(1.f),
     m_slidingFitWindow(10000),
     m_minDeviationFromTransverse(0.35f),
     m_contaminationWindow(5.f),
@@ -57,7 +56,9 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
         for (const TensorType::Element &element : elementList)
             usedKeyClusters.insert(element.GetClusterU());
 
-        this->ExamineConnectedElements(elementList, changesMade);
+        const bool changesMadeInIteration = this->RemoveDeltaRayHits(elementList);
+
+        changesMade = (changesMade ? changesMade : changesMadeInIteration);        
     }
     
     return changesMade;
@@ -65,8 +66,7 @@ bool DeltaRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayRemovalTool::ExamineConnectedElements(const TensorType::ElementList &elementList,
-    bool &changesMade) const
+bool DeltaRayRemovalTool::RemoveDeltaRayHits(const TensorType::ElementList &elementList) const
 {
     ClusterSet modifiedClusters, checkedClusters;
     
@@ -79,7 +79,8 @@ void DeltaRayRemovalTool::ExamineConnectedElements(const TensorType::ElementList
 
             if (checkedClusters.count(pDeltaRayCluster))
                 continue;
-            
+
+            // ATTN: The underlying tensor will update during this loop, do not proceed if element has been modified            
             if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
                 continue;
 
@@ -104,7 +105,7 @@ void DeltaRayRemovalTool::ExamineConnectedElements(const TensorType::ElementList
          }
     }
 
-    changesMade = modifiedClusters.size();
+    return !modifiedClusters.empty();
 }
     
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -115,17 +116,7 @@ bool DeltaRayRemovalTool::PassElementChecks(const TensorType::Element &element, 
     if (this->IsMuonEndpoint(element, false))
         return false;
 
-    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
-    
-    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
-        return false;    
-
-    const float separation(LArClusterHelper::GetClosestDistance(pDeltaRayCluster, pMuonCluster));
-
-    if (separation > m_minSeparation)
-        return false;
-
-    return true;
+    return RemovalBaseTool::PassElementChecks(element, hitType);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,9 +195,6 @@ void DeltaRayRemovalTool::SplitMuonCluster(const TensorType::Element &element,
     
 StatusCode DeltaRayRemovalTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSeparation", m_minSeparation));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));
 

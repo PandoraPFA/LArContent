@@ -22,7 +22,6 @@ namespace lar_content
 {
 
 CosmicRayRemovalTool::CosmicRayRemovalTool() :
-    m_minSeparation(2.f),
     m_slidingFitWindow(10000),
     m_minContaminationLength(3.f),
     m_maxDistanceToHit(1.f),
@@ -57,7 +56,9 @@ bool CosmicRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgori
         for (const TensorType::Element &element : elementList)
             usedKeyClusters.insert(element.GetClusterU());
 
-        this->ExamineConnectedElements(elementList, changesMade);
+        const bool changesMadeInIteration = this->RemoveCosmicRayHits(elementList);
+
+        changesMade = (changesMade ? changesMade : changesMadeInIteration);
     }
     
     return changesMade;
@@ -65,7 +66,7 @@ bool CosmicRayRemovalTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgori
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayRemovalTool::ExamineConnectedElements(const TensorType::ElementList &elementList, bool &changesMade) const
+bool CosmicRayRemovalTool::RemoveCosmicRayHits(const TensorType::ElementList &elementList) const
 {
     ClusterSet modifiedClusters, checkedClusters;
     
@@ -77,7 +78,8 @@ void CosmicRayRemovalTool::ExamineConnectedElements(const TensorType::ElementLis
             
             if (checkedClusters.count(pDeltaRayCluster))
                 continue;
-            
+
+            // ATTN: The underlying tensor will update during this loop, do not proceed if element has been modified
             if ((modifiedClusters.count(element.GetClusterU())) || (modifiedClusters.count(element.GetClusterV())) || (modifiedClusters.count(element.GetClusterW())))
                 continue;
             
@@ -113,29 +115,18 @@ void CosmicRayRemovalTool::ExamineConnectedElements(const TensorType::ElementLis
         }
     }
 
-    changesMade = modifiedClusters.size();
+    return !modifiedClusters.empty();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayRemovalTool::PassElementChecks(const TensorType::Element &element,
-    const HitType hitType) const
+bool CosmicRayRemovalTool::PassElementChecks(const TensorType::Element &element, const HitType hitType) const
 {
     // ATTN: Avoid endpoints, topological michel reconstruction is very ambiguous
     if (this->IsMuonEndpoint(element, true, hitType))
         return false;
 
-    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
-    
-    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
-        return false;    
-
-    const float separation(LArClusterHelper::GetClosestDistance(pDeltaRayCluster, pMuonCluster));
-    
-    if (separation > m_minSeparation)
-        return false;
-
-    return true;
+    return RemovalBaseTool::PassElementChecks(element, hitType);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,9 +195,7 @@ void CosmicRayRemovalTool::CreateSeed(const TensorType::Element &element,
     CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
     if (m_pParentAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), element.GetCluster(hitType), positionOnMuon, muonDirection) !=
         STATUS_CODE_SUCCESS)
-    {
         return;
-    }
 
     CartesianPointVector deltaRayProjectedPositions;   
     if (this->ProjectDeltaRayPositions(element, hitType, deltaRayProjectedPositions) != STATUS_CODE_SUCCESS)
@@ -259,9 +248,7 @@ StatusCode CosmicRayRemovalTool::GrowSeed(const TensorType::Element &element,
     CartesianVector positionOnMuon(0.f, 0.f, 0.f), muonDirection(0.f, 0.f, 0.f);
     if (m_pParentAlgorithm->ParameteriseMuon(element.GetOverlapResult().GetCommonMuonPfoList().front(), pDeltaRayCluster, positionOnMuon, muonDirection) !=
         STATUS_CODE_SUCCESS)
-    {
         return STATUS_CODE_NOT_FOUND;
-    }
 
     // Identify delta ray hits
     this->CollectHitsFromDeltaRay(positionOnMuon, muonDirection, pDeltaRayCluster, m_maxDistanceToHit, true, deltaRayHits, deltaRayHits);
@@ -280,8 +267,9 @@ void CosmicRayRemovalTool::CollectHitsFromDeltaRay(const CartesianVector &positi
     CaloHitList deltaRayHitList;
     pDeltaRayCluster->GetOrderedCaloHitList().FillCaloHitList(deltaRayHitList);
     
-    bool hitsAdded(true);
-    while (hitsAdded)
+    bool hitsAdded(false);
+    
+    do
     {
         hitsAdded = false;
 
@@ -303,6 +291,7 @@ void CosmicRayRemovalTool::CollectHitsFromDeltaRay(const CartesianVector &positi
             hitsAdded = true;
         }
     }
+    while (hitsAdded);
 } 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -331,8 +320,7 @@ void CosmicRayRemovalTool::SplitDeltaRayCluster(const TensorType::Element &eleme
     for (const CaloHit *const pCaloHit : deltaRayHitList)
     {
         const bool isDeltaRay(std::find(collectedHits.begin(), collectedHits.end(), pCaloHit) != collectedHits.end());
-        const bool isDeltaRayRemnant(std::find(deltaRayRemnantHits.begin(), deltaRayRemnantHits.end(), pCaloHit) != deltaRayRemnantHits.end());
-
+        const bool isDeltaRayRemnant(!isDeltaRay && (std::find(deltaRayRemnantHits.begin(), deltaRayRemnantHits.end(), pCaloHit) != deltaRayRemnantHits.end()));        
         const Cluster *&pCluster(isDeltaRay ? pDeltaRay : isDeltaRayRemnant ? pDeltaRayRemnant : pMuonCluster);
       
         if (!pCluster)
@@ -351,7 +339,7 @@ void CosmicRayRemovalTool::SplitDeltaRayCluster(const TensorType::Element &eleme
 
     ClusterVector clusterVector; PfoVector pfoVector;
     if (pDeltaRayRemnant)
-        this->FragmentRemnant(hitType, pMuonCluster, pDeltaRayRemnant, clusterVector, pfoVector);
+        this->ReclusterRemnant(hitType, pMuonCluster, pDeltaRayRemnant, clusterVector, pfoVector);
 
     clusterVector.push_back(pMuonCluster); pfoVector.push_back(element.GetOverlapResult().GetCommonMuonPfoList().front());
     clusterVector.push_back(pDeltaRay); pfoVector.push_back(nullptr);
@@ -361,7 +349,7 @@ void CosmicRayRemovalTool::SplitDeltaRayCluster(const TensorType::Element &eleme
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayRemovalTool::FragmentRemnant(const HitType hitType, const Cluster *const pMuonCluster,
+void CosmicRayRemovalTool::ReclusterRemnant(const HitType hitType, const Cluster *const pMuonCluster,
     const Cluster *const pDeltaRayRemnant, ClusterVector &clusterVector, PfoVector &pfoVector) const
 {
     std::string caloHitListName(hitType == TPC_VIEW_U ? "CaloHitListU" : hitType == TPC_VIEW_V ? "CaloHitListV" : "CaloHitListW");
@@ -399,9 +387,6 @@ void CosmicRayRemovalTool::FragmentRemnant(const HitType hitType, const Cluster 
 
 StatusCode CosmicRayRemovalTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinSeparation", m_minSeparation));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "SlidingFitWindow", m_slidingFitWindow));   
     

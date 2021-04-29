@@ -32,9 +32,10 @@ private:
      *  @brief  Remove hits from cosmic ray clusters that belong to a child delta ray 
      *
      *  @param  elementList the tensor element list
-     *  @param  changesMade receive boolean indicating whether clusters in element have been modified
+     *
+     *  @return  changesMade whether clusters in element have been modified
      */
-    void ExamineConnectedElements(const TensorType::ElementList &elementList, bool &changesMade) const;
+    bool RemoveDeltaRayHits(const TensorType::ElementList &elementList) const;
 
     /**
      *  @brief  Determine whether element satifies simple checks
@@ -65,7 +66,6 @@ private:
      */
     void SplitMuonCluster(const TensorType::Element &element, const pandora::HitType hitType, const pandora::CaloHitList &deltaRayHits) const;
 
-    float m_minSeparation;                    ///< The minimum delta ray - parent cosmic ray separation required to investigate cosmic ray cluster
     unsigned int m_slidingFitWindow;          ///< The sliding fit window used in cosmic ray parameterisations
     float m_minDeviationFromTransverse;       ///< The minimum deviation from transverse required to avoid mistakes
     float m_contaminationWindow;              ///< The distance in which to search for delta ray contamination in the cosmic ray track

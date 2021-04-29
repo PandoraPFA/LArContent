@@ -84,7 +84,7 @@ protected:
     bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;    
 
     /**
-     *  @brief  Collect the hits that are clost to and can be projected onto a defined line 
+     *  @brief  Collect the hits that are closest to and can be projected onto a defined line 
      *
      *  @param  pCluster the address of the input cluster containing the hits to be investigated
      *  @param  lowerBoundary the start position of the line
@@ -95,7 +95,7 @@ protected:
 	    pandora::CaloHitList &collectedHits) const;
 
     /**
-     *  @brief  Use two views of a delta ray pfo to calculate projected positions in a given the third view
+     *  @brief  Use two views of a delta ray pfo to calculate projected positions in a given third view
      *
      *  @param  element the tensor element
      *  @param  hitType the view to be projected into
@@ -106,6 +106,7 @@ protected:
     pandora::StatusCode ProjectDeltaRayPositions(const TensorType::Element &element, const pandora::HitType hitType,
         pandora::CartesianPointVector &projectedPositions) const;
     
+    float m_minSeparation;  ///< The minimum delta ray - parent muon cluster separation required to investigate a delta/cosmic ray cluster
     float m_distanceToLine; ///< The maximum perpendicular distance of a position to a line for it to be considered close 
 };
 

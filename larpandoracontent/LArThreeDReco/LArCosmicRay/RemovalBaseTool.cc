@@ -1,5 +1,5 @@
 /**
- *  @file   larpandoracontent/LArThreeDReco/LArCosmic ray/RemovalBaseTool.cc
+ *  @file   larpandoracontent/LArThreeDReco/LArCosmicRay/RemovalBaseTool.cc
  *
  *  @brief  Implementation of the removal base class.
  *
@@ -7,6 +7,8 @@
  */
 
 #include "Pandora/AlgorithmHeaders.h"
+
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/RemovalBaseTool.h"
 
@@ -16,8 +18,23 @@ namespace lar_content
 {
 
 RemovalBaseTool::RemovalBaseTool() :
+    m_minSeparation(1.f),
     m_distanceToLine(0.5f)
 {
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool RemovalBaseTool::PassElementChecks(const TensorType::Element &element, const HitType hitType) const
+{
+    const Cluster *pMuonCluster(nullptr), *const pDeltaRayCluster(element.GetCluster(hitType));
+    
+    if (m_pParentAlgorithm->GetMuonCluster(element.GetOverlapResult().GetCommonMuonPfoList(), hitType, pMuonCluster) != STATUS_CODE_SUCCESS)
+        return false;    
+
+    const float separation(LArClusterHelper::GetClosestDistance(pDeltaRayCluster, pMuonCluster));
+
+    return separation <= m_minSeparation;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -148,25 +165,12 @@ void RemovalBaseTool::FindExtrapolatedHits(const Cluster *const pCluster, const 
 StatusCode RemovalBaseTool::ProjectDeltaRayPositions(const TensorType::Element &element,
     const HitType hitType, CartesianPointVector &projectedPositions) const
 {
-    const Cluster *pCluster1(nullptr), *pCluster2(nullptr);
+    HitTypeVector hitTypes({TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W});
     
-    for (const HitType hitType1 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
-    {
-        if (hitType1 == hitType)
-            continue;
-        
-        for (const HitType hitType2 : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
-        {
-            if ((hitType2 == hitType) || (hitType1 == hitType2))
-                continue;
-
-            pCluster1 = element.GetCluster(hitType1);
-            pCluster2 = element.GetCluster(hitType2);
-            
-            break;
-        }
-        break;
-    }
+    hitTypes.erase(std::find(hitTypes.begin(), hitTypes.end(), hitType));
+    
+    const Cluster *const pCluster1(element.GetCluster(hitTypes[0]));
+    const Cluster *const pCluster2(element.GetCluster(hitTypes[1]));
 
     return m_pParentAlgorithm->GetProjectedPositions(pCluster1, pCluster2, projectedPositions);
 }
@@ -175,6 +179,9 @@ StatusCode RemovalBaseTool::ProjectDeltaRayPositions(const TensorType::Element &
     
 StatusCode RemovalBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
+        "MinSeparation", m_minSeparation));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "DistanceToLine", m_distanceToLine));
     

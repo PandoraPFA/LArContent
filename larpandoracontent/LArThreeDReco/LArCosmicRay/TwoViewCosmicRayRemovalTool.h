@@ -32,9 +32,10 @@ private:
      *  @brief  Remove hits from delta ray clusters that belong to the parent muon
      *
      *  @param  elementList the matrix element list
-     *  @param  changesMade receive boolean indicating whether clusters in element have been modified
+     *
+     *  @return  whether any clusters have been modified
      */
-    void ExamineConnectedElements(const MatrixType::ElementList &elementList, bool &changesMade) const;
+    bool RemoveCosmicRayHits(const MatrixType::ElementList &elementList) const;
 
     /**
      *  @brief  Determine whether element satifies simple checks
@@ -159,11 +160,11 @@ private:
      *  @param  clusterVector a vector containing the address of created/modified clusters for bookeeping purposes
      *  @param  pfoVector a vector containing the address of the pfo to which a modified muon cluster belongs for bookeeping purposes
      */        
-    void FragmentRemnant(const pandora::HitType hitType, const pandora::Cluster *const pMuonCluster,
+    void ReclusterRemnant(const pandora::HitType hitType, const pandora::Cluster *const pMuonCluster,
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
 
     /**
-     *  @brief  Use two views of a delta ray pfo to calculate projected positions in a given the third view
+     *  @brief  Use two views of a delta ray pfo to calculate projected positions in a given third view
      *
      *  @param  element the matrix element
      *  @param  hitType the view to be projected into
