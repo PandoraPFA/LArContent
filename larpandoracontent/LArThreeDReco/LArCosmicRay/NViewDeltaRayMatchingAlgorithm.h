@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArThreeDBase/NViewMatchingAlgorithm.h"
 
+#include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingContainers.h"
+
 #include "larpandoracontent/LArUtility/KDTreeLinkerAlgoT.h"
 
 namespace lar_content
@@ -216,14 +218,6 @@ public:
      */ 
     void UpdateForNewClusters(const pandora::ClusterVector &newClusterVector, const pandora::PfoVector &pfoVector);
 
-    /**
-     *  @brief  Add a new cluster to algorithm ownership maps
-     *
-     *  @param  newClusterVector the vector of clusters to add - the order must match the pfoVector
-     *  @param  pfoVector the vector of cosmic ray pfos to which the new clusters belong (nullptr for delta ray cluster)
-     */     
-    void UpdateContainers(const pandora::ClusterVector &newClusterVector, const pandora::PfoVector &pfoVector);
-    
     void UpdateUponDeletion(const pandora::Cluster *const pDeletedCluster);
     void SelectInputClusters(const pandora::ClusterList *const pInputClusterList, pandora::ClusterList &selectedClusterList) const;
     void PrepareInputClusters(pandora::ClusterList &preparedClusterList);
@@ -237,48 +231,6 @@ protected:
      *  @return  whether the checks were met
      */
     virtual bool DoesClusterPassTensorThreshold(const pandora::Cluster *const pCluster) const = 0;
-
-    /**
-     *  @brief  Populate the hit to cluster map  
-     *
-     *  @param  hitType the hit type of the map to populate
-     */
-    void FillHitToClusterMap(const pandora::HitType hitType);
-
-    /**
-     *  @brief  Add the hits of a given cluster to the hit to cluster map
-     *
-     *  @param  hitType the hit type of the input cluster and of the map to add to
-     */
-    void AddToClusterMap(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Populate the cluster proximity map which maps clusters to neighbouring clusters
-     *
-     *  @param  hitType the hit type of the map to populate
-     */
-    void FillClusterProximityMap(const pandora::HitType hitType);
-
-    /**
-     *  @brief  Build the KD tree
-     *
-     *  @param  hitType the hit type of the KD tree to build
-     */
-    void BuildKDTree(const pandora::HitType hitType);
-
-    /**
-     *  @brief  Add a cluster to the cluster proximity map
-     *
-     *  @param  hitType the hit type of the input cluster and of the map to add to
-     */
-    void AddToClusterProximityMap(const pandora::Cluster *const pCluster);
-
-    /**
-     *  @brief  Populate the cluster to pfo map which maps clusters to their cosmic ray pfo owner (if appropriate)
-     *
-     *  @param  hitType the hit type of the map to populate
-     */
-    void FillClusterToPfoMap(const pandora::HitType hitType);
 
     /**
      *  @brief  Fill the stray cluster list with clusters that do not pass the tensor threshold requirement 
@@ -338,22 +290,11 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     std::string m_muonPfoListName; ///< The list of reconstructed cosmic ray pfos
-    HitToClusterMap m_hitToClusterMapU; ///< The mapping of hits to the clusters to which they belong (in the U view)
-    HitToClusterMap m_hitToClusterMapV; ///< The mapping of hits to the clusters to which they belong (in the V view)
-    HitToClusterMap m_hitToClusterMapW; ///< The mapping of hits to the clusters to which they belong (in the W view)
-    HitKDTree2D m_kdTreeU; ///< The KD tree (in the U view)    
-    HitKDTree2D m_kdTreeV; ///< The KD tree (in the V view)
-    HitKDTree2D m_kdTreeW; ///< The KD tree (in the W view)
-    ClusterProximityMap m_clusterProximityMapU; ///< The mapping of clusters to their neighbouring clusters (in the U view)
-    ClusterProximityMap m_clusterProximityMapV; ///< The mapping of clusters to their neighbouting clusters (in the V view)
-    ClusterProximityMap m_clusterProximityMapW; ///< The mapping of clusters to their neighbouring clusters (in the W view)
-    ClusterToPfoMap m_clusterToPfoMapU; ///< The mapping of cosmic ray U clusters to the cosmic ray pfos to which they belong 
-    ClusterToPfoMap m_clusterToPfoMapV; ///< The mapping of cosmic ray V clusters to the cosmic ray pfos to which they belong 
-    ClusterToPfoMap m_clusterToPfoMapW; ///< The mapping of cosmic ray W clusters to the cosmic ray pfos to which they belong 
     pandora::ClusterList m_strayClusterListU; ///< The list of U clusters that do not pass the tensor threshold requirement 
     pandora::ClusterList m_strayClusterListV; ///< The list of V clusters that do not pass the tensor threshold requirement 
     pandora::ClusterList m_strayClusterListW; ///< The list of W clusters that do not pass the tensor threshold requirement     
-    float m_searchRegion1D; ///< Search region, applied to each dimension, for look-up from kd-tree    
+    float m_searchRegion1D; ///< Search region, applied to each dimension, for look-up from kd-tree
+    DeltaRayMatchingContainers m_deltaRayMatchingContainers; ///< The class of hit, cluster and pfo ownership and proximity maps    
     float m_pseudoChi2Cut; ///< Pseudo chi2 cut for three view matching 
     float m_xOverlapWindow; ///< The maximum allowed displacement in x position
     float m_minMatchedFraction; ///< The threshold matched fraction of sampling points for a good match  
