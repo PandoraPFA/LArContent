@@ -27,7 +27,6 @@ TwoViewThreeDKinkTool::TwoViewThreeDKinkTool() :
     m_minLongitudinalImpactParameter(-1.f),
     m_nLayersForKinkSearch(10),
     m_additionalXStepForKinkSearch(0.01f),
-    m_splitMode(false),
     m_maxTransverseImpactParameter(5.f),
     m_minImpactParameterCosTheta(0.5f),
     m_cosThetaCutForKinkSearch(0.75f)
@@ -312,13 +311,10 @@ void TwoViewThreeDKinkTool::GetIteratorListModifications(
                 const CartesianVector splitPosition((vertexA.GetPosition() + vertexB.GetPosition()) * 0.5f);
                 const bool isThreeDKink(this->IsThreeDKink(pAlgorithm, particle, splitPosition, isALowestInX));
 
-                if (isThreeDKink != m_splitMode)
-                    continue;
-
                 // Construct the modification object
                 Modification modification;
 
-                if (m_splitMode)
+                if (isThreeDKink)
                 {
                     const TwoDSlidingFitResult &fitResultCommon(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster));
 
@@ -382,7 +378,7 @@ bool TwoViewThreeDKinkTool::IsThreeDKink(TwoViewTransverseTracksAlgorithm *const
             (STATUS_CODE_SUCCESS != lowXFitResult.GetGlobalFitPositionAtX(minusX, minus2)) ||
             (STATUS_CODE_SUCCESS != highXFitResult.GetGlobalFitPositionAtX(plusX, plus2)))
         {
-            return m_splitMode; // split mode rules, by default
+            return true; // split by default
         }
 
         // Extract results
@@ -447,8 +443,6 @@ StatusCode TwoViewThreeDKinkTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "AdditionalXStepForKinkSearch", m_additionalXStepForKinkSearch));
-
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SplitMode", m_splitMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MaxTransverseImpactParameter", m_maxTransverseImpactParameter));
