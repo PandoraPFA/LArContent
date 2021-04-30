@@ -108,12 +108,8 @@ float TwoViewThreeDKinkTool::GetXSamplingPoint(const CartesianVector &splitPosit
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, fitResult1.GetGlobalFitPosition(fitResult1.GetL(highLayer), plus));
 
     if (minus.GetX() > plus.GetX())
-    {
-        CartesianVector temporary(minus);
-        minus = plus;
-        plus = temporary;
-    }
-
+        std::swap(minus, plus);
+    
     const float layerStepX(isForwardInX ? plus.GetX() : minus.GetX());
 
     // Final x position selection
@@ -126,19 +122,9 @@ float TwoViewThreeDKinkTool::GetXSamplingPoint(const CartesianVector &splitPosit
 
 bool TwoViewThreeDKinkTool::IsALowestInX(const LArPointingCluster &pointingClusterA, const LArPointingCluster &pointingClusterB)
 {
-    if ((pointingClusterA.GetInnerVertex().GetPosition().GetX() < pointingClusterB.GetInnerVertex().GetPosition().GetX()) &&
-        (pointingClusterA.GetInnerVertex().GetPosition().GetX() < pointingClusterB.GetOuterVertex().GetPosition().GetX()))
-    {
-        return true;
-    }
-
-    if ((pointingClusterA.GetOuterVertex().GetPosition().GetX() < pointingClusterB.GetInnerVertex().GetPosition().GetX()) &&
-        (pointingClusterA.GetOuterVertex().GetPosition().GetX() < pointingClusterB.GetOuterVertex().GetPosition().GetX()))
-    {
-        return true;
-    }
-
-    return false;
+    const float xMinA{std::min(pointingClusterA.GetInnerVertex().GetPosition().GetX(), pointingClusterA.GetOuterVertex().GetPosition().GetX())};
+    const float xMinB{std::min(pointingClusterB.GetInnerVertex().GetPosition().GetX(), pointingClusterB.GetOuterVertex().GetPosition().GetX())};
+    return xMinA < xMinB;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -285,10 +271,11 @@ void TwoViewThreeDKinkTool::GetIteratorListModifications(
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
     {
-        for (IteratorList::const_iterator iIter2 = iIter1; iIter2 != iIter1End; ++iIter2)
+        //for (IteratorList::const_iterator iIter2 = iIter1; iIter2 != iIter1End; ++iIter2)
+        for (IteratorList::const_iterator iIter2 = std::next(iIter1); iIter2 != iIter1End; ++iIter2)
         {
-            if (iIter1 == iIter2)
-                continue;
+         //   if (iIter1 == iIter2)
+         //       continue;
 
             try
             {
@@ -403,11 +390,10 @@ bool TwoViewThreeDKinkTool::IsThreeDKink(TwoViewTransverseTracksAlgorithm *const
         const HitType hitType2(LArClusterHelper::GetClusterHitType(particle.m_pClusterA));
 
         CartesianVector minus(0.f, 0.f, 0.f), split(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
-        float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()),
-            chi2Plus(std::numeric_limits<float>::max());
-        LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, minus1, minus2, minus, chi2Minus);
-        LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, split1, split2, split, chi2Split);
-        LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, plus1, plus2, plus, chi2Plus);
+        float chi2Dummy(std::numeric_limits<float>::max());
+        LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, minus1, minus2, minus, chi2Dummy);
+        LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, split1, split2, split, chi2Dummy);
+        LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), hitType1, hitType2, plus1, plus2, plus, chi2Dummy);
 
         // Apply final cuts
         const CartesianVector minusToSplit((split - minus).GetUnitVector());
