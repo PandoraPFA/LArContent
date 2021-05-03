@@ -21,8 +21,6 @@ namespace lar_content
 {
 
 OneViewDeltaRayMatchingAlgorithm::OneViewDeltaRayMatchingAlgorithm() :
-  m_searchRegion1D(2.f),
-  m_deltaRayMatchingContainers(m_searchRegion1D),
   m_overlapExtension(1.f),
   m_minClusterHits(3)
 {
@@ -482,7 +480,7 @@ StatusCode OneViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SearchRegion1D", m_searchRegion1D));
+        "SearchRegion1D", m_deltaRayMatchingContainers.m_searchRegion1D));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "OverlapExtension", m_overlapExtension));

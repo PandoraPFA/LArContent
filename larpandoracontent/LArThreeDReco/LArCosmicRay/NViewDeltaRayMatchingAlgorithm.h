@@ -293,7 +293,6 @@ protected:
     pandora::ClusterList m_strayClusterListU; ///< The list of U clusters that do not pass the tensor threshold requirement 
     pandora::ClusterList m_strayClusterListV; ///< The list of V clusters that do not pass the tensor threshold requirement 
     pandora::ClusterList m_strayClusterListW; ///< The list of W clusters that do not pass the tensor threshold requirement     
-    float m_searchRegion1D; ///< Search region, applied to each dimension, for look-up from kd-tree
     DeltaRayMatchingContainers m_deltaRayMatchingContainers; ///< The class of hit, cluster and pfo ownership and proximity maps    
     float m_pseudoChi2Cut; ///< Pseudo chi2 cut for three view matching 
     float m_xOverlapWindow; ///< The maximum allowed displacement in x position

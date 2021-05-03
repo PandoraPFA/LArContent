@@ -27,7 +27,7 @@ public:
     /**
      *  @brief  Default constructor
      */
-    DeltaRayMatchingContainers(const float searchRegion1D);
+    DeltaRayMatchingContainers();
 
     /**
      *  @brief  Get the mapping of clusters to the pfos to which they belong
@@ -81,6 +81,8 @@ public:
      */
     void ClearContainers();
 
+    float m_searchRegion1D; ///< Search region, applied to each dimension, for look-up from kd-tree    
+
 private:
     typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;    
     typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
@@ -129,7 +131,6 @@ private:
      */
     void AddToClusterProximityMap(const pandora::Cluster *const pCluster);    
 
-    float m_searchRegion1D; ///< Search region, applied to each dimension, for look-up from kd-tree    
     HitToClusterMap m_hitToClusterMapU; ///< The mapping of hits to the clusters to which they belong (in the U view)
     HitToClusterMap m_hitToClusterMapV; ///< The mapping of hits to the clusters to which they belong (in the V view)
     HitToClusterMap m_hitToClusterMapW; ///< The mapping of hits to the clusters to which they belong (in the W view)

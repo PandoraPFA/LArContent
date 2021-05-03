@@ -161,7 +161,6 @@ private:
     std::string m_inputClusterListNameV; ///< The list of reconstructed V clusters
     std::string m_inputClusterListNameW; ///< The list of reconstructed W clusters
     std::string m_outputPfoListName; ///< The list to receive the created delta ray pfos
-    float m_searchRegion1D; ///< Search region, applied to each dimension, for look-up from kd-tree
     DeltaRayMatchingContainers m_deltaRayMatchingContainers; ///< The class of hit, cluster and pfo ownership and proximity maps
     float m_overlapExtension; ///< The extension to each side of the x overlap region in which to search for matched clusters
     unsigned int m_minClusterHits; ///< The minimum number of hits for a cluster to be significant

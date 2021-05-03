@@ -230,6 +230,9 @@ bool DeltaRayMergeTool::IsHiddenByTrack(const ParticleFlowObject *const pMuonPfo
     this->FindVertices(pMuonPfo, pCluster1, vertices1);
     this->FindVertices(pMuonPfo, pCluster2, vertices2); 
 
+    if (vertices1.empty() || vertices2.empty())
+        return false;
+
     for (const CaloHit *const pCaloHit : vertices1)
     {
         const float separation(LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), vertices2));

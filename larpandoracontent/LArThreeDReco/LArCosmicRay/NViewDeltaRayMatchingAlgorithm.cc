@@ -31,8 +31,6 @@ namespace lar_content
 
 template<typename T>
 NViewDeltaRayMatchingAlgorithm<T>::NViewDeltaRayMatchingAlgorithm() :
-    m_searchRegion1D(3.f),
-    m_deltaRayMatchingContainers(m_searchRegion1D),
     m_pseudoChi2Cut(1.5f), 
     m_xOverlapWindow(1.f),
     m_minMatchedFraction(0.5),
@@ -600,7 +598,7 @@ void NViewDeltaRayMatchingAlgorithm<T>::CollectHitsFromMuon(const CartesianVecto
                 continue;
 
             const float distanceToCollectedHits(std::min(LArMuonLeadingHelper::GetClosestDistance(pCaloHit, deltaRayProjectedPositions),
-                LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), collectedHits)));
+                collectedHits.empty() ? std::numeric_limits<float>::max() : LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), collectedHits)));
             const float distanceToMuonHits(muonDirection.GetCrossProduct(pCaloHit->GetPositionVector() - positionOnMuon).GetMagnitude());
 
             if ((std::fabs(distanceToMuonHits - distanceToCollectedHits) < std::numeric_limits<float>::epsilon()) || (distanceToMuonHits < minDistanceFromMuon) ||
@@ -865,7 +863,7 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ReadSettings(const TiXmlHandle xml
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MuonPfoListName", m_muonPfoListName)); 
     
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SearchRegion1D", m_searchRegion1D));        
+        "SearchRegion1D", m_deltaRayMatchingContainers.m_searchRegion1D));        
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
         "PseudoChi2Cut", m_pseudoChi2Cut));

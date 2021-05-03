@@ -12,6 +12,7 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/DeltaRayMatchingContainers.h"
 
 using namespace pandora;
@@ -19,8 +20,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-DeltaRayMatchingContainers::DeltaRayMatchingContainers(const float searchRegion1D) :
-    m_searchRegion1D(searchRegion1D)
+DeltaRayMatchingContainers::DeltaRayMatchingContainers() :
+    m_searchRegion1D(3.f)
 {
 }
 
