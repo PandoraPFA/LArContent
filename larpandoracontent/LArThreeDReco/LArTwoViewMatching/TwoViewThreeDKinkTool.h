@@ -39,7 +39,7 @@ private:
     /**
      *  @brief  Modification class
      */
-    struct Modification
+    class Modification
     {
     public:
         SplitPositionMap m_splitPositionMap;     ///< The split position map
@@ -52,7 +52,7 @@ private:
     /**
      *  @brief  Particle class
      */
-    struct Particle
+    class Particle
     {
     public:
         /**
