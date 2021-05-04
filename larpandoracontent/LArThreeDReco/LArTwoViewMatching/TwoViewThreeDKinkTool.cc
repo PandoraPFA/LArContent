@@ -10,8 +10,8 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewThreeDKinkTool.h"
 
@@ -108,7 +108,7 @@ float TwoViewThreeDKinkTool::GetXSamplingPoint(const CartesianVector &splitPosit
 
     if (minus.GetX() > plus.GetX())
         std::swap(minus, plus);
-    
+
     const float layerStepX(isForwardInX ? plus.GetX() : minus.GetX());
 
     // Final x position selection
@@ -225,8 +225,8 @@ bool TwoViewThreeDKinkTool::ApplyChanges(TwoViewTransverseTracksAlgorithm *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoViewThreeDKinkTool::SelectMatrixElements(MatrixType::ElementList::const_iterator eIter,
-    const MatrixType::ElementList &elementList, const ClusterSet &usedClusters, IteratorList &iteratorList) const
+void TwoViewThreeDKinkTool::SelectMatrixElements(MatrixType::ElementList::const_iterator eIter, const MatrixType::ElementList &elementList,
+    const ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
     iteratorList.push_back(eIter);
 
@@ -251,7 +251,7 @@ void TwoViewThreeDKinkTool::SelectMatrixElements(MatrixType::ElementList::const_
             if ((*iIter)->GetCluster2() == eIter2->GetCluster2())
                 ++nMatchedClusters;
 
-            if (nMatchedClusters>1)
+            if (nMatchedClusters > 1)
                 continue;
 
             if (nMatchedClusters)
@@ -347,7 +347,6 @@ void TwoViewThreeDKinkTool::GetIteratorListModifications(
     }
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool TwoViewThreeDKinkTool::IsThreeDKink(TwoViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
@@ -419,17 +418,14 @@ TwoViewThreeDKinkTool::Particle::Particle(const MatrixType::Element &elementA, c
 
 StatusCode TwoViewThreeDKinkTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MinMatchingScore",
-            m_minMatchingScore)); 
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchingScore", m_minMatchingScore));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MinLocallyMatchedFraction",
-            m_minLocallyMatchedFraction));
+        XmlHelper::ReadValue(xmlHandle, "MinLocallyMatchedFraction", m_minLocallyMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
-        XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction",
-            m_minXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction", m_minXOverlapFraction));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinLongitudinalImpactParameter", m_minLongitudinalImpactParameter));
