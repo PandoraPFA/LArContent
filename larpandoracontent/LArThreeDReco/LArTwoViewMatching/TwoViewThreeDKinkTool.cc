@@ -270,12 +270,8 @@ void TwoViewThreeDKinkTool::GetIteratorListModifications(
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
     {
-        //for (IteratorList::const_iterator iIter2 = iIter1; iIter2 != iIter1End; ++iIter2)
         for (IteratorList::const_iterator iIter2 = std::next(iIter1); iIter2 != iIter1End; ++iIter2)
         {
-         //   if (iIter1 == iIter2)
-         //       continue;
-
             try
             {
                 const unsigned int nMatchedReUpsampledSamplingPoints1((*iIter1)->GetOverlapResult().GetNMatchedReUpsampledSamplingPoints());
