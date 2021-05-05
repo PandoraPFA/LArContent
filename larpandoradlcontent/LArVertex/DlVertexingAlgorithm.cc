@@ -36,6 +36,14 @@ DlVertexingAlgorithm::DlVertexingAlgorithm():
 
 DlVertexingAlgorithm::~DlVertexingAlgorithm()
 {
+    try
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "vertex", "vertex.root", "RECREATE"));
+    }
+    catch (StatusCodeException e)
+    {
+        std::cout << "VertexAssessmentAlgorithm: Unable to write to ROOT tree" << std::endl;
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -154,8 +162,6 @@ StatusCode DlVertexingAlgorithm::Train()
 
 StatusCode DlVertexingAlgorithm::Infer()
 {
-    //PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
-
     CartesianPointVector vertexCandidatesU, vertexCandidatesV, vertexCandidatesW;
     for (const std::string listName : m_caloHitListNames)
     {
@@ -218,14 +224,15 @@ StatusCode DlVertexingAlgorithm::Infer()
         else
             vertexCandidatesW.emplace_back(positionVector.front());
 
-        PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
-        for (const auto pos : positionVector)
+        if (m_visualise)
         {
-            Color color{isU ? RED : isV ? GREEN : BLUE};
-            PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, "hit", color, 1));
-
+            PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+            for (const auto pos : positionVector)
+            {
+                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, "hit", isU ? RED : isV ? GREEN : BLUE, 1));
+            }
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
-        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
 
         for (int row = 0; row < canvasHeight; ++row)
             delete[] canvas[row];
@@ -245,6 +252,52 @@ StatusCode DlVertexingAlgorithm::Infer()
     {
         vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesV.front(),
             vertexCandidatesW.front()));
+
+        const MCParticleList *pMCParticleList{nullptr};
+        if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList))
+        {
+            if (pMCParticleList)
+            {
+                LArMCParticleHelper::MCContributionMap mcToHitsMap;
+                MCParticleVector primaries;
+                LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
+                if (!primaries.empty())
+                {
+                    const MCParticle *primary{primaries.front()};
+                    const MCParticleList &parents{primary->GetParentList()};
+                    if (parents.size() == 1)
+                    {
+                        const MCParticle *trueNeutrino{parents.front()};
+                        if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
+                        {
+                            const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+                            const CartesianVector &trueVertex{primaries.front()->GetVertex()};
+                            const float tx{trueVertex.GetX()};
+                            const float tu{static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()))};
+                            const float tv{static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()))};
+                            const float tw{static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()))};
+                            const float rx_u{vertexCandidatesU.front().GetX()};
+                            const float ru{vertexCandidatesU.front().GetZ()};
+                            const float rx_v{vertexCandidatesV.front().GetX()};
+                            const float rv{vertexCandidatesV.front().GetZ()};
+                            const float rx_w{vertexCandidatesW.front().GetX()};
+                            const float rw{vertexCandidatesW.front().GetZ()};
+                            const float dr_u{std::sqrt((rx_u - tx) * (rx_u - tx) + (ru - tu) * (ru - tu))};
+                            const float dr_v{std::sqrt((rx_v - tx) * (rx_v - tx) + (rv - tv) * (rv - tv))};
+                            const float dr_w{std::sqrt((rx_w - tx) * (rx_w - tx) + (rw - tw) * (rw - tw))};
+/*                            std::cout << "Truth: " << tx << " " << tu << " " << tv << " " << tw << std::endl;
+                            std::cout << "U: " << rx_u << " " << ru << " " << dr_u << std::endl;
+                            std::cout << "V: " << rx_v << " " << rv << " " << dr_v << std::endl;
+                            std::cout << "W: " << rx_w << " " << rw << " " << dr_w << std::endl;*/
+                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_u", dr_u));
+                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_v", dr_v));
+                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_w", dr_w));
+                            PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
+                        }
+                    }
+                }
+            }
+        }
     }
     else if (nEmptyLists == 1)
     {
@@ -267,11 +320,13 @@ StatusCode DlVertexingAlgorithm::Infer()
     else
     {   // Not enough views to reconstruct a 3D vertex
         std::cout << "Insufficient 2D vertices to reconstruct a 3D vertex" << std::endl;
-        return STATUS_CODE_FAILURE;
+        return STATUS_CODE_NOT_FOUND;
     }
 
     if (m_visualise)
+    {
         PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &vertexTuples.front().GetPosition(), "candidate", GREEN, 1));
+    }
 
     if (!vertexTuples.empty())
     {
@@ -280,9 +335,16 @@ StatusCode DlVertexingAlgorithm::Infer()
         vertexCandidates.emplace_back(vertex);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->MakeCandidateVertexList(vertexCandidates));
     }
+    else
+    {
+        std::cout << "Insufficient 2D vertices to reconstruct a 3D vertex" << std::endl;
+        return STATUS_CODE_NOT_FOUND;
+    }
 
     if (m_visualise)
+    {
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 
     return STATUS_CODE_SUCCESS;
 }
