@@ -145,6 +145,7 @@
 #include "larpandoracontent/LArThreeDReco/LArTwoViewMatching/TwoViewTransverseTracksAlgorithm.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
+#include "larpandoracontent/LArVertex/EnergyDepositionAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
@@ -368,6 +369,7 @@
     d("LArTwoViewSimpleTracks",                 TwoViewSimpleTracksTool)                                                        \
     d("LArTwoViewThreeDKink",                   TwoViewThreeDKinkTool)                                                          \
     d("LArEnergyKickFeature",                   EnergyKickFeatureTool)                                                          \
+    d("LArEnergyDepositionAsymmetryFeature",    EnergyDepositionAsymmetryFeatureTool)                                           \
     d("LArGlobalAsymmetryFeature",              GlobalAsymmetryFeatureTool)                                                     \
     d("LArLocalAsymmetryFeature",               LocalAsymmetryFeatureTool)                                                      \
     d("LArRPhiFeature",                         RPhiFeatureTool)                                                                \
