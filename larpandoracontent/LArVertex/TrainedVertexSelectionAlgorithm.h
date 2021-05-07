@@ -51,9 +51,11 @@ public:
          *  @param  localAsymmetry the local asymmetry feature
          *  @param  globalAsymmetry the global asymmetry feature
          *  @param  showerAsymmetry the shower asymmetry feature
+         *  @param  dEdxAsymmetry the dE/dx asymmetry feature
+         *  @param  vertexEnergy the vertex energy feature
          */
         VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick, const float localAsymmetry,
-            const float globalAsymmetry, const float showerAsymmetry);
+	    const float globalAsymmetry, const float showerAsymmetry, const float dEdxAsymmetry, const float vertexEnergy);
 
         float m_beamDeweighting; ///< The beam deweighting feature
         float m_rPhiFeature;     ///< The r/phi feature
@@ -61,6 +63,8 @@ public:
         float m_localAsymmetry;  ///< The local asymmetry feature
         float m_globalAsymmetry; ///< The global asymmetry feature
         float m_showerAsymmetry; ///< The shower asymmetry feature
+        float m_dEdxAsymmetry;   ///< The dE/dx asymmetry feature
+	float m_vertexEnergy;    ///< The vertex energy feature
     };
 
     typedef std::map<const pandora::Vertex *const, VertexFeatureInfo> VertexFeatureInfoMap;
@@ -360,6 +364,7 @@ protected:
      *  @param  interactionType the interaction type string
      *  @param  trainingOutputFile the training set output file
      *  @param  eventFeatureList the event feature list
+     *  @param  kdTreeMap the map of 2D hit kd trees
      *  @param  maxRadius the maximum allowed radius for the 'best' vertex
      *  @param  useRPhi whether to include the r/phi feature
      *
@@ -367,7 +372,7 @@ protected:
      */
     const pandora::Vertex *ProduceTrainingExamples(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
         std::bernoulli_distribution &coinFlip, std::mt19937 &generator, const std::string &interactionType, const std::string &trainingOutputFile,
-        const LArMvaHelper::MvaFeatureVector &eventFeatureList, const float maxRadius, const bool useRPhi) const;
+        const LArMvaHelper::MvaFeatureVector &eventFeatureList, const KDTreeMap &kdTreeMap, const float maxRadius, const bool useRPhi) const;
 
     /**
      *  @brief  Use the MC information to get the best vertex from a list
@@ -487,18 +492,21 @@ protected:
     bool m_dropFailedRPhiFastScoreCandidates; ///< Whether to drop candidates that fail the r/phi fast score test
     bool m_testBeamMode;                      ///< Test beam mode
     bool m_legacyEventShapes;                 ///< Whether to use the old event shapes calculation
+    bool m_legacyVariables;                   ///< Whether to only use the old variables
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrainedVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature,
-    const float energyKick, const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry) :
+    const float energyKick, const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry, const float dEdxAsymmetry, const float vertexEnergy) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
     m_energyKick(energyKick),
     m_localAsymmetry(localAsymmetry),
     m_globalAsymmetry(globalAsymmetry),
-    m_showerAsymmetry(showerAsymmetry)
+    m_showerAsymmetry(showerAsymmetry),
+    m_dEdxAsymmetry(dEdxAsymmetry),
+    m_vertexEnergy(vertexEnergy)
 {
 }
 

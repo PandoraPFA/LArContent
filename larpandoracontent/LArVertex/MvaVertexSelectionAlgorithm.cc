@@ -96,7 +96,7 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
     {
         // Use mva to choose the region.
         const Vertex *const pBestRegionVertex(
-            this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaRegion, m_useRPhiFeatureForRegion));
+            this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, kdTreeMap, m_mvaRegion, m_useRPhiFeatureForRegion));
 
         // Get all the vertices in the best region.
         VertexVector regionalVertices{pBestRegionVertex};
@@ -114,7 +114,7 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
         if (!regionalVertices.empty())
         {
             // Use mva to choose the vertex and then fine-tune using the RPhi score.
-            const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaVertex, true));
+	    const Vertex *const pBestVertex(this->CompareVertices(regionalVertices, vertexFeatureInfoMap, eventFeatureList, kdTreeMap, m_mvaVertex, true));
             this->PopulateFinalVertexScoreList(vertexFeatureInfoMap, pBestVertex, vertexVector, vertexScoreList);
         }
     }
@@ -124,7 +124,7 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
 
 template <typename T>
 const pandora::Vertex *MvaVertexSelectionAlgorithm<T>::CompareVertices(const VertexVector &vertexVector,
-    const VertexFeatureInfoMap &vertexFeatureInfoMap, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const T &t, const bool useRPhi) const
+    const VertexFeatureInfoMap &vertexFeatureInfoMap, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const KDTreeMap &kdTreeMap, const T &t, const bool useRPhi) const
 {
     const Vertex *pBestVertex(vertexVector.front());
     LArMvaHelper::MvaFeatureVector chosenFeatureList;
@@ -141,11 +141,28 @@ const pandora::Vertex *MvaVertexSelectionAlgorithm<T>::CompareVertices(const Ver
         VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
         this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
 
-        if (LArMvaHelper::Classify(t, eventFeatureList, featureList, chosenFeatureList))
-        {
-            pBestVertex = pVertex;
-            chosenFeatureList = featureList;
-        }
+	if(!m_legacyVariables)
+	  {
+	    LArMvaHelper::MvaFeatureVector sharedFeatureList;
+	    float separation(0.f), axisHits(0.f);
+	    this->GetSharedFeatures(pVertex,pBestVertex,kdTreeMap,separation,axisHits);
+	    VertexSharedFeatureInfo sharedFeatureInfo(separation,axisHits);
+	    this->AddSharedFeaturesToVector(sharedFeatureInfo,sharedFeatureList);
+	  
+	    if (LArMvaHelper::Classify(t, eventFeatureList, featureList, chosenFeatureList, sharedFeatureList))
+	      {
+		pBestVertex = pVertex;
+		chosenFeatureList = featureList;
+	      }
+	  }
+	else
+	  {
+	    if (LArMvaHelper::Classify(t, eventFeatureList, featureList, chosenFeatureList))
+	      {
+		pBestVertex = pVertex;
+		chosenFeatureList = featureList;
+	      }
+	  }
     }
 
     return pBestVertex;

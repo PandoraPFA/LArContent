@@ -20,6 +20,7 @@
 #include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
 #include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
+#include "larpandoracontent/LArVertex/EnergyDepositionAsymmetryFeatureTool.h"
 
 #include "larpandoracontent/LArVertex/TrainedVertexSelectionAlgorithm.h"
 
@@ -54,7 +55,8 @@ TrainedVertexSelectionAlgorithm::TrainedVertexSelectionAlgorithm() :
     m_useRPhiFeatureForRegion(false),
     m_dropFailedRPhiFastScoreCandidates(true),
     m_testBeamMode(false),
-    m_legacyEventShapes(true)
+    m_legacyEventShapes(true),
+    m_legacyVariables(true)
 {
 }
 
@@ -451,7 +453,19 @@ void TrainedVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamCon
     //const double rPhiFeature(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
     //    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore).at(0).Get());
 
-    VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry);
+    double dEdxAsymmetry(0.f), vertexEnergy(0.f);
+
+    if(!m_legacyVariables)
+      {
+	dEdxAsymmetry = LArMvaHelper::CalculateFeaturesOfType<EnergyDepositionAsymmetryFeatureTool>(m_featureToolVector, this, pVertex,
+	    slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore)
+                                         .at(0)
+                                         .Get();
+	
+	vertexEnergy = this->GetVertexEnergy(pVertex, kdTreeMap);
+      }
+    
+    VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry, dEdxAsymmetry, vertexEnergy);
     vertexFeatureInfoMap.emplace(pVertex, vertexFeatureInfo);
 }
 
@@ -521,7 +535,7 @@ void TrainedVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &ve
 
     // Produce training examples for the vertices representing regions.
     const Vertex *const pBestRegionVertex(this->ProduceTrainingExamples(bestRegionVertices, vertexFeatureInfoMap, coinFlip, generator,
-        interactionType, m_trainingOutputFileRegion, eventFeatureList, m_regionRadius, m_useRPhiFeatureForRegion));
+	interactionType, m_trainingOutputFileRegion, eventFeatureList, kdTreeMap, m_regionRadius, m_useRPhiFeatureForRegion));
 
     // Get all the vertices in the best region.
     VertexVector regionalVertices{pBestRegionVertex};
@@ -540,7 +554,7 @@ void TrainedVertexSelectionAlgorithm::ProduceTrainingSets(const VertexVector &ve
     if (!regionalVertices.empty())
     {
         this->ProduceTrainingExamples(regionalVertices, vertexFeatureInfoMap, coinFlip, generator, interactionType,
-            m_trainingOutputFileVertex, eventFeatureList, m_maxTrueVertexRadius, true);
+            m_trainingOutputFileVertex, eventFeatureList, kdTreeMap, m_maxTrueVertexRadius, true);
     }
 }
 
@@ -605,7 +619,7 @@ std::string TrainedVertexSelectionAlgorithm::GetInteractionType() const
 
 const pandora::Vertex *TrainedVertexSelectionAlgorithm::ProduceTrainingExamples(const VertexVector &vertexVector,
     const VertexFeatureInfoMap &vertexFeatureInfoMap, std::bernoulli_distribution &coinFlip, std::mt19937 &generator, const std::string &interactionType,
-    const std::string &trainingOutputFile, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const float maxRadius, const bool useRPhi) const
+    const std::string &trainingOutputFile, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const KDTreeMap &kdTreeMap, const float maxRadius, const bool useRPhi) const
 {
     const Vertex *pBestVertex(nullptr);
     float bestVertexDr(std::numeric_limits<float>::max());
@@ -625,18 +639,42 @@ const pandora::Vertex *TrainedVertexSelectionAlgorithm::ProduceTrainingExamples(
         VertexFeatureInfo vertexFeatureInfo(vertexFeatureInfoMap.at(pVertex));
         this->AddVertexFeaturesToVector(vertexFeatureInfo, featureList, useRPhi);
 
+	if(m_legacyVariables)
+	  {
+	    LArMvaHelper::MvaFeatureVector sharedFeatureList;
+	    float separation(0.f), axisHits(0.f);
+	    this->GetSharedFeatures(pVertex,pBestVertex,kdTreeMap,separation,axisHits);
+	    VertexSharedFeatureInfo sharedFeatureInfo(separation,axisHits);
+	    this->AddSharedFeaturesToVector(sharedFeatureInfo,sharedFeatureList);
+
+	    if (pBestVertex && (bestVertexDr < maxRadius))
+	      {
+		if (coinFlip(generator))
+		  {
+		    LArMvaHelper::ProduceTrainingExample(
+		        trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList, bestVertexFeatureList, featureList, sharedFeatureList);
+		  }
+
+		else
+		  {
+		    LArMvaHelper::ProduceTrainingExample(
+		        trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList, featureList, bestVertexFeatureList, sharedFeatureList);
+		  }
+	      }
+	  }
+
         if (pBestVertex && (bestVertexDr < maxRadius))
         {
             if (coinFlip(generator))
             {
                 LArMvaHelper::ProduceTrainingExample(
-                    trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList, bestVertexFeatureList, featureList);
+		    trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList, bestVertexFeatureList, featureList);
             }
 
             else
             {
                 LArMvaHelper::ProduceTrainingExample(
-                    trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList, featureList, bestVertexFeatureList);
+		    trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList, featureList, bestVertexFeatureList);
             }
         }
     }
@@ -790,6 +828,12 @@ void TrainedVertexSelectionAlgorithm::AddVertexFeaturesToVector(
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_localAsymmetry));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_showerAsymmetry));
 
+    if(!m_legacyVariables)
+      {
+	featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_dEdxAsymmetry));
+	featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_vertexEnergy));
+      }
+
     if (useRPhi)
         featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_rPhiFeature));
 }
@@ -918,6 +962,8 @@ StatusCode TrainedVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHa
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TestBeamMode", m_testBeamMode));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LegacyEventShapes", m_legacyEventShapes));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LegacyVariables", m_legacyVariables));
 
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
