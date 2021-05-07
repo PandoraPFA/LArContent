@@ -323,7 +323,7 @@ protected:
      *  @param  kdTreeMap the map of 2D hit kd trees
      *
      *  @return the summed vertex energy
-     **/
+     */
 
     float GetVertexEnergy(const pandora::Vertex *const pVertex, const KDTreeMap &kdTreeMap) const;
 
@@ -335,7 +335,7 @@ protected:
      *  @param  kdTree the kd tree of 2D hits
      *
      *  @return the energy of the nearest hit
-     **/
+     */
 
     float VertexHitEnergy(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree) const;
 

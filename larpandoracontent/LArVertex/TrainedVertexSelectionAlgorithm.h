@@ -1,7 +1,7 @@
 /**
  *  @file   larpandoracontent/LArVertex/TrainedVertexSelectionAlgorithm.h
  *
- *  @brief  Header file for the mva vertex selection algorithm class.
+ *  @brief  Header file for the trained vertex selection algorithm class.
  *
  *  $Log: $
  */
@@ -78,18 +78,18 @@ public:
          *
          *  @param  eventShoweryness the event showeryness feature
          *  @param  eventEnergy the energy of the event
-         *  @param  eventVolume the volume of the event
+         *  @param  eventArea the area of the event
          *  @param  longitudinality the longitudinality of the event
          *  @param  nHits the number of hits in the event
          *  @param  nClusters the number of clusters in the event
          *  @param  nCandidates the total number of vertex candidates
          */
-        EventFeatureInfo(const float eventShoweryness, const float eventEnergy, const float eventVolume, const float longitudinality,
+        EventFeatureInfo(const float eventShoweryness, const float eventEnergy, const float eventArea, const float longitudinality,
             const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates);
 
         float m_eventShoweryness;   ///< The event showeryness feature
         float m_eventEnergy;        ///< The event energy
-        float m_eventVolume;        ///< The volume of the event
+        float m_eventArea;          ///< The area of the event
         float m_longitudinality;    ///< The longitudinality of the event
         unsigned int m_nHits;       ///< The number of hits in the event
         unsigned int m_nClusters;   ///< The number of clusters in the event
@@ -221,7 +221,25 @@ protected:
      *  @param  eventVolume the event volume
      *  @param  longitudinality the event longitudinality
      */
-    void GetEventShapeFeatures(const pandora::ClusterList &clusterList, float &eventVolume, float &longitudinality) const;
+    void GetLegacyEventShapeFeatures(const pandora::ClusterList &clusterList, float &eventVolume, float &longitudinality) const;
+
+    /**
+     *  @brief  Get the event shape features
+     *
+     *  @param  clusterList the map of cluster lists for each view
+     *  @param  eventArea the event area
+     *  @param  longitudinality the event longitudinality
+     */
+    void GetEventShapeFeatures(const ClusterListMap &clusterListMap, float &eventArea, float &longitudinality) const;
+
+    /**
+     *  @brief  Get the coordinate span in one view
+     *
+     *  @param  clusterList the cluster list in one view
+     *  @param  xSpan the coordinate span in the drift direction
+     *  @param  zSpan the coordinate span in the wire direction
+     */
+    void Get2DSpan(const pandora::ClusterList &clusterList, float &xSpan, float &zSpan) const;
 
     /**
      *  @brief  Update the min/max coordinate spans
@@ -348,7 +366,7 @@ protected:
      *  @param  kdTreeMap the map of 2D hit kd trees
      *  @param  separation the 3D distance between the two vertex candidates
      *  @param  axisHits the number of hits between the two candidates normalised to the distance between them
-     **/
+     */
 
     void GetSharedFeatures(const pandora::Vertex *const pVertex1, const pandora::Vertex *const pVertex2, const KDTreeMap &kdTreeMap, 
 			   float &separation, float &axisHits) const;
@@ -360,7 +378,7 @@ protected:
      *  @param  pos2 2D projected position of the second vertex
      *  @param  kdTree the kd tree of 2D hits
      *  @param  axisHits the number of hits between the two candidates
-     **/
+     */
     void IncrementSharedAxisValues(const pandora::CartesianVector pos1, const pandora::CartesianVector pos2, HitKDTree2D &kdTree,
 				   float &axisHits) const;
 
@@ -372,7 +390,7 @@ protected:
      *  @param  xMax the maximum position in the drift direction
      *  @param  zMin the minimum position in the wire direction
      *  @param  zMax the maximum position in the wire direction
-     **/
+     */
     void UpdateBoxEdges(const pandora::CartesianVector &point, float &xMin, float &xMax, float &zMin, float &zMax) const;
 
     /**
@@ -385,7 +403,7 @@ protected:
      *  @param  point4 the fourth corner of the box
      *
      *  @return boolean
-     **/
+     */
     bool IsHitInBox(const pandora::CartesianVector &hitPos, const pandora::CartesianVector &point1, const pandora::CartesianVector &point2, 
 		    const pandora::CartesianVector &point3, const pandora::CartesianVector &point4) const;
 
@@ -440,6 +458,7 @@ protected:
     bool m_useRPhiFeatureForRegion;           ///< Whether to use the r/phi feature for the region vertex
     bool m_dropFailedRPhiFastScoreCandidates; ///< Whether to drop candidates that fail the r/phi fast score test
     bool m_testBeamMode;                      ///< Test beam mode
+    bool m_legacyEventShapes;                 ///< Whether to use the old event shapes calculation
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -458,10 +477,10 @@ inline TrainedVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(con
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline TrainedVertexSelectionAlgorithm::EventFeatureInfo::EventFeatureInfo(const float eventShoweryness, const float eventEnergy,
-    const float eventVolume, const float longitudinality, const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates) :
+    const float eventArea, const float longitudinality, const unsigned int nHits, const unsigned int nClusters, const unsigned int nCandidates) :
     m_eventShoweryness(eventShoweryness),
     m_eventEnergy(eventEnergy),
-    m_eventVolume(eventVolume),
+    m_eventArea(eventArea),
     m_longitudinality(longitudinality),
     m_nHits(nHits),
     m_nClusters(nClusters),
