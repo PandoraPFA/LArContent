@@ -796,6 +796,15 @@ void TrainedVertexSelectionAlgorithm::AddVertexFeaturesToVector(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TrainedVertexSelectionAlgorithm::AddSharedFeaturesToVector(const VertexSharedFeatureInfo &vertexSharedFeatureInfo,
+								LArMvaHelper::MvaFeatureVector &featureVector) const
+{
+  featureVector.push_back(static_cast<double>(vertexSharedFeatureInfo.m_separation));
+  featureVector.push_back(static_cast<double>(vertexSharedFeatureInfo.m_axisHits));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TrainedVertexSelectionAlgorithm::PopulateFinalVertexScoreList(const VertexFeatureInfoMap &vertexFeatureInfoMap,
     const Vertex *const pFavouriteVertex, const VertexVector &vertexVector, VertexScoreList &finalVertexScoreList) const
 {

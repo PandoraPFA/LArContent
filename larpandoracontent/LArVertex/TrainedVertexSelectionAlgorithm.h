@@ -68,6 +68,26 @@ public:
     //--------------------------------------------------------------------------------------------------------------------------------------
 
     /**
+     *  @brief Shared vertex feature info class
+     */
+    class VertexSharedFeatureInfo
+    {
+    public:
+      /**
+       *  @brief  Constructor
+       *
+       *  @param  m_separation the distance between the two vertices
+       *  @param  m_axisHits the hit density along the axis between the two vertices
+       */
+      VertexSharedFeatureInfo(const float separation, const float axisHits);
+
+      float    m_separation;        ///< The distance between the two vertices
+      float    m_axisHits;          ///< The hit density along the axis between the two vertices
+    };
+
+    //--------------------------------------------------------------------------------------------------------------------------------------
+
+    /**
      *  @brief Event feature info class
      */
     class EventFeatureInfo
@@ -417,6 +437,14 @@ protected:
     void AddVertexFeaturesToVector(const VertexFeatureInfo &vertexFeatureInfo, LArMvaHelper::MvaFeatureVector &featureVector, const bool useRPhi) const;
 
     /**
+     *  @brief  Add the shared features to a vector in the correct order
+     *
+     *  @param  vertexSharedFeatureInfo the shared vertex feature info
+     *  @param  featureVector the vector of floats to append
+     */
+    void AddSharedFeaturesToVector(const VertexSharedFeatureInfo &vertexSharedFeatureInfo, LArMvaHelper::MvaFeatureVector &featureVector) const;
+
+    /**
      *  @brief  Populate the final vertex score list using the r/phi score to find the best vertex in the vicinity
      *
      *  @param  vertexFeatureInfoMap the vertex feature info map
@@ -485,6 +513,14 @@ inline TrainedVertexSelectionAlgorithm::EventFeatureInfo::EventFeatureInfo(const
     m_nHits(nHits),
     m_nClusters(nClusters),
     m_nCandidates(nCandidates)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline TrainedVertexSelectionAlgorithm::VertexSharedFeatureInfo::VertexSharedFeatureInfo(const float separation, const float axisHits) :
+    m_separation(separation),
+    m_axisHits(axisHits)
 {
 }
 
