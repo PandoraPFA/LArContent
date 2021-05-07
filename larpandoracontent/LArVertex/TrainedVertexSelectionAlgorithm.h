@@ -341,6 +341,55 @@ protected:
     void GetBestVertex(const pandora::VertexVector &vertexVector, const pandora::Vertex *&pBestVertex, float &bestVertexDr) const;
 
     /**
+     *  @brief  Calculates the shared features of a pair of vertex candidates
+     *
+     *  @param  pVertex1 the address of the first vertex
+     *  @param  pVertex2 the address of the second vertex
+     *  @param  kdTreeMap the map of 2D hit kd trees
+     *  @param  separation the 3D distance between the two vertex candidates
+     *  @param  axisHits the number of hits between the two candidates normalised to the distance between them
+     **/
+
+    void GetSharedFeatures(const pandora::Vertex *const pVertex1, const pandora::Vertex *const pVertex2, const KDTreeMap &kdTreeMap, 
+			   float &separation, float &axisHits) const;
+
+    /**
+     *  @brief  Increments the axis hits information for one view
+     *
+     *  @param  pos1 2D projected position of the first vertex
+     *  @param  pos2 2D projected position of the second vertex
+     *  @param  kdTree the kd tree of 2D hits
+     *  @param  axisHits the number of hits between the two candidates
+     **/
+    void IncrementSharedAxisValues(const pandora::CartesianVector pos1, const pandora::CartesianVector pos2, HitKDTree2D &kdTree,
+				   float &axisHits) const;
+
+
+    /**
+     *  @brief  Use a 2D vector point to update the minimum and maximum values in each direction
+     *
+     *  @param  xMin the minimum position in the drift direction
+     *  @param  xMax the maximum position in the drift direction
+     *  @param  zMin the minimum position in the wire direction
+     *  @param  zMax the maximum position in the wire direction
+     **/
+    void UpdateBoxEdges(const pandora::CartesianVector &point, float &xMin, float &xMax, float &zMin, float &zMax) const;
+
+    /**
+     *  @brief  Determines whether a hit lies within the box defined by four other positions
+     *
+     *  @param  hitPos the hit position
+     *  @param  point1 the first corner of the box
+     *  @param  point2 the second corner of the box
+     *  @param  point3 the third corner of the box
+     *  @param  point4 the fourth corner of the box
+     *
+     *  @return boolean
+     **/
+    bool IsHitInBox(const pandora::CartesianVector &hitPos, const pandora::CartesianVector &point1, const pandora::CartesianVector &point2, 
+		    const pandora::CartesianVector &point3, const pandora::CartesianVector &point4) const;
+
+    /**
      *  @brief  Add the vertex features to a vector in the correct order
      *
      *  @param  vertexFeatureInfo the vertex feature info

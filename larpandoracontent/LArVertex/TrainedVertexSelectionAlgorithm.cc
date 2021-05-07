@@ -582,6 +582,98 @@ const pandora::Vertex *TrainedVertexSelectionAlgorithm::ProduceTrainingExamples(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void TrainedVertexSelectionAlgorithm::GetSharedFeatures(const Vertex *const pVertex1, const Vertex *const pVertex2, const KDTreeMap &kdTreeMap,
+							  float &separation, float &axisHits) const
+{
+  separation = (pVertex1->GetPosition() - pVertex2->GetPosition()).GetMagnitude();
+
+  this->IncrementSharedAxisValues(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex1->GetPosition(), TPC_VIEW_U),
+				  LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex2->GetPosition(), TPC_VIEW_U),
+				  kdTreeMap.at(TPC_VIEW_U), axisHits);
+  
+  this->IncrementSharedAxisValues(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex1->GetPosition(), TPC_VIEW_V),
+				  LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex2->GetPosition(), TPC_VIEW_V),
+				  kdTreeMap.at(TPC_VIEW_V), axisHits);
+  
+  this->IncrementSharedAxisValues(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex1->GetPosition(), TPC_VIEW_W),
+				  LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex2->GetPosition(), TPC_VIEW_W),
+				  kdTreeMap.at(TPC_VIEW_W), axisHits);
+
+  if(!separation)
+    axisHits = 0;
+
+  axisHits /= separation;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrainedVertexSelectionAlgorithm::IncrementSharedAxisValues(const CartesianVector pos1, const CartesianVector pos2, HitKDTree2D &kdTree,
+								    float &axisHits) const
+{
+  if(pos1 == pos2) return;
+
+  // Define the axis and perpendicular directions
+  const CartesianVector unitAxis = (pos1 - pos2).GetUnitVector();
+  const CartesianVector unitPerp(unitAxis.GetZ(),0,-unitAxis.GetX());
+
+  // Define the corners of the search box
+  const CartesianVector point1 = pos1 + unitPerp;
+  const CartesianVector point2 = pos1 - unitPerp;
+  const CartesianVector point3 = pos2 + unitPerp;
+  const CartesianVector point4 = pos2 - unitPerp;
+
+  // Find the total coordinate span these points cover
+  float xMin(std::numeric_limits<float>::max());
+  float xMax(-std::numeric_limits<float>::max());
+  float zMin(std::numeric_limits<float>::max());
+  float zMax(-std::numeric_limits<float>::max());
+
+  this->UpdateBoxEdges(point1,xMin,xMax,zMin,zMax);
+  this->UpdateBoxEdges(point2,xMin,xMax,zMin,zMax);
+  this->UpdateBoxEdges(point3,xMin,xMax,zMin,zMax);
+  this->UpdateBoxEdges(point4,xMin,xMax,zMin,zMax);
+
+
+  // Use a kd search to find the hits in the 'wide' area
+  KDTreeBox searchBox(xMin,zMin,xMax,zMax);
+  HitKDNode2DList found;
+  kdTree.search(searchBox, found);
+
+  // Use IsHitInBox method to check the 'wide' area hits for those in the search box
+  for(auto f : found)
+    {
+      const CartesianVector hitPos = f.data->GetPositionVector();
+      bool inBox = this->IsHitInBox(hitPos,point1,point2,point3,point4);
+
+      if(inBox) ++axisHits;
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrainedVertexSelectionAlgorithm::UpdateBoxEdges(const CartesianVector &point, float &xMin, float &xMax, float &zMin, float &zMax) const
+{
+  xMin = std::min(xMin,point.GetX());
+  xMax = std::max(xMax,point.GetX());
+  zMin = std::min(zMin,point.GetZ());
+  zMax = std::max(zMax,point.GetZ());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TrainedVertexSelectionAlgorithm::IsHitInBox(const CartesianVector &hitPos, const CartesianVector &point1, const CartesianVector &point2,
+						     const CartesianVector &point3, const CartesianVector &point4) const
+{
+  bool b1 = std::signbit(((point2 - point1).GetCrossProduct(point2-hitPos)).GetY());
+  bool b2 = std::signbit(((point4 - point3).GetCrossProduct(point4-hitPos)).GetY());
+  bool b3 = std::signbit(((point3 - point1).GetCrossProduct(point3-hitPos)).GetY());
+  bool b4 = std::signbit(((point4 - point2).GetCrossProduct(point4-hitPos)).GetY());
+  
+  return (b1 xor b2) && (b3 xor b4);
+}
+  
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void TrainedVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVector, const Vertex *&pBestVertex, float &bestVertexDr) const
 {
     // Extract input collections
