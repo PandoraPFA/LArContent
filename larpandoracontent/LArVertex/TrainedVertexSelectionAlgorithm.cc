@@ -965,6 +965,9 @@ StatusCode TrainedVertexSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHa
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LegacyVariables", m_legacyVariables));
 
+    if(m_trainingSetMode && m_legacyEventShapes)
+      std::cout << "TrainedVertexSelectionAlgorithm: WARNING -- Producing training sample using incorrect legacy event shapes, consider turning LegacyEventShapes off" << std::endl;
+
     return VertexSelectionBaseAlgorithm::ReadSettings(xmlHandle);
 }
 
