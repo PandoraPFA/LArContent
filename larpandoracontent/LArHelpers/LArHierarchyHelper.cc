@@ -47,7 +47,6 @@ void LArHierarchyHelper::MCHierarchy::FillHierarchy(const MCParticleList &mcPart
         }
         catch(const StatusCodeException&)
         {
-            std::cout << "Found calo hit with no MC" << std::endl;
         }
     }
 
@@ -241,6 +240,7 @@ const std::string LArHierarchyHelper::MCHierarchy::ToString() const
 
 LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const MCParticle *pMC) :
     m_hierarchy(hierarchy),
+    m_mainParticle(pMC),
     m_pdg{0}
 {
     if (pMC)
@@ -254,10 +254,14 @@ LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const 
 
 LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const MCParticleList &mcParticleList, const CaloHitList &caloHitList) :
     m_hierarchy(hierarchy),
+    m_mainParticle(nullptr),
     m_pdg{0}
 {
     if (!mcParticleList.empty())
-        m_pdg = mcParticleList.front()->GetParticleId();
+    {
+        m_mainParticle = mcParticleList.front();
+        m_pdg = m_mainParticle->GetParticleId();
+    }
     m_mcParticles = mcParticleList; m_mcParticles.sort();
     m_caloHits = caloHitList; m_caloHits.sort();
 }
@@ -402,9 +406,29 @@ int LArHierarchyHelper::MCHierarchy::Node::GetParticleId() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArHierarchyHelper::MCHierarchy::Node::IsTestBeamParticle() const
+{
+    if (m_mainParticle)
+        return LArMCParticleHelper::IsBeamParticle(m_mainParticle);
+    else
+        return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArHierarchyHelper::MCHierarchy::Node::IsCosmicRay() const
+{
+    if (m_mainParticle)
+        return LArMCParticleHelper::IsCosmicRay(m_mainParticle);
+    else
+        return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const std::string LArHierarchyHelper::MCHierarchy::Node::ToString(const std::string &prefix) const
 {
-    std::string str(prefix + "PDG: " + std::to_string(m_pdg) + " Energy: " + std::to_string(m_mcParticles.front()->GetEnergy()) +
+    std::string str(prefix + "PDG: " + std::to_string(m_pdg) + " Energy: " + std::to_string(m_mainParticle ? m_mainParticle->GetEnergy() : 0) +
         " Hits: " + std::to_string(m_caloHits.size()) + "\n");
     for (const Node *pChild : m_children)
         str += pChild->ToString(prefix + "   ");
@@ -873,10 +897,13 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
 
     for (const MCHierarchy::Node *pMCNode : mcNodes)
     {
-        if (mcToMatchMap.find(pMCNode) == mcToMatchMap.end())
-        {   // Unmatched MC
-            MCMatches match(pMCNode);
-            matchVector.emplace_back(match);
+        if (pMCNode->IsReconstructable())
+        {
+            if (mcToMatchMap.find(pMCNode) == mcToMatchMap.end())
+            {   // Unmatched MC
+                MCMatches match(pMCNode);
+                matchVector.emplace_back(match);
+            }
         }
     }
 
@@ -886,13 +913,25 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
         };
     std::sort(matchVector.begin(), matchVector.end(), predicate);
 
+    int nNeutrinoMCParticles{0}, nNeutrinoRecoParticles{0}, nNeutrinoRecoBTParticles{0};
+    int nCosmicMCParticles{0}, nCosmicRecoParticles{0}, nCosmicRecoBTParticles{0};
+    int nTestBeamMCParticles{0}, nTestBeamRecoParticles{0}, nTestBeamRecoBTParticles{0};
+    //int nTriggeredTestBeamMCParticles{0}, nTriggeredTestBeamRecoParticles{0};
     for (const MCMatches &match : matchVector)
     {
         const MCHierarchy::Node *pMCNode{match.GetMC()};
+        if (pMCNode->IsTestBeamParticle())
+            ++nTestBeamMCParticles;
+        else if (pMCNode->IsCosmicRay())
+            ++nCosmicMCParticles;
+        else
+            ++nNeutrinoMCParticles;
         const int pdg{pMCNode->GetParticleId()};
         const size_t mcHits{pMCNode->GetCaloHits().size()};
-        std::cout << "MC " << pdg << " hits " << mcHits << std::endl;
+        const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
+        std::cout << "MC " << tag << pdg << " hits " << mcHits << std::endl;
         const RecoHierarchy::NodeVector &nodeVector{match.GetRecoMatches()};
+        int nGoodReco{0};
         for (const RecoHierarchy::Node *pRecoNode : nodeVector)
         {
             const int recoHits{static_cast<int>(pRecoNode->GetCaloHits().size())};
@@ -901,9 +940,66 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
             const float completeness{match.GetCompleteness(pRecoNode)};
             std::cout << "   Matched " << sharedHits << " out of " << recoHits << " with purity " << purity << " and completeness " <<
                 completeness << std::endl;
+            if (purity > 0.5f && completeness > 0.1f)
+                ++nGoodReco;
         }
-        if (nodeVector.empty())
+        if (nodeVector.size() == 1 && nGoodReco == 1)
+        {   // We have a good, single match
+            if (pMCNode->IsTestBeamParticle())
+                ++nTestBeamRecoParticles;
+            else if (pMCNode->IsCosmicRay())
+                ++nCosmicRecoParticles;
+            else
+                ++nNeutrinoRecoParticles;
+        }
+        else if (!nodeVector.empty())
+        {   // We have either below threshold or multiple matches
+            if (pMCNode->IsTestBeamParticle())
+                ++nTestBeamRecoBTParticles;
+            else if (pMCNode->IsCosmicRay())
+                ++nCosmicRecoBTParticles;
+            else
+                ++nNeutrinoRecoBTParticles;
+        }
+        else if (nodeVector.empty())
             std::cout << "   Unmatched" << std::endl;
+    }
+
+    if (mcHierarchy.IsNeutrinoHierarchy())
+    {
+        std::cout << "Neutrino Interaction Summary:" << std::endl;
+        std::cout << std::fixed << std::setprecision(1);
+        if (nNeutrinoMCParticles)
+        {
+            std::cout << "Matched final state particles: " << nNeutrinoRecoParticles << " of " << nNeutrinoMCParticles << " : " <<
+                (100 * nNeutrinoRecoParticles / static_cast<float>(nNeutrinoMCParticles)) << "%" << std::endl;
+        }
+        if (nCosmicMCParticles)
+        {
+            std::cout << "Matched cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : " <<
+                (100 * nCosmicRecoParticles / static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
+        }
+    }
+    else if (mcHierarchy.IsTestBeamHierarchy())
+    {
+        std::cout << "Test Beam Interaction Summary:" << std::endl;
+        std::cout << std::fixed << std::setprecision(1);
+        if (nTestBeamMCParticles)
+        {
+            std::cout << "Matched test beam particles: " << nTestBeamRecoParticles << " of " << nTestBeamMCParticles << " : " <<
+                (100 * nTestBeamRecoParticles / static_cast<float>(nTestBeamMCParticles)) << "%" << std::endl;
+            std::cout << "Loosely matched test beam particles: " << (nTestBeamRecoParticles + nTestBeamRecoBTParticles) << " of " <<
+                nTestBeamMCParticles << " : " << (100 * (nTestBeamRecoParticles + nTestBeamRecoBTParticles) /
+                    static_cast<float>(nTestBeamMCParticles)) << "%" << std::endl;
+        }
+        if (nCosmicMCParticles)
+        {
+            std::cout << "Matched cosmics: " << nCosmicRecoParticles << " of " << nCosmicMCParticles << " : " <<
+                (100 * nCosmicRecoParticles / static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
+            std::cout << "Loosely matched cosmics: " << (nCosmicRecoParticles + nCosmicRecoBTParticles) << " of " <<
+                nCosmicMCParticles << " : " << (100 * (nCosmicRecoParticles + nCosmicRecoBTParticles) /
+                    static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
+        }
     }
 }
 
@@ -918,13 +1014,16 @@ const MCParticle *LArHierarchyHelper::GetMCPrimaries(const MCParticleList &mcPar
         try
         {
             const MCParticle *const pPrimary{LArMCParticleHelper::GetPrimaryMCParticle(pMC)};
-            primaries.insert(pPrimary);
+            if (!LArMCParticleHelper::IsTriggeredBeamParticle(pPrimary))
+                primaries.insert(pPrimary);
+            else
+                primaries.insert(pPrimary);
         }
         catch (const StatusCodeException&)
         {
             if (LArMCParticleHelper::IsNeutrino(pMC))
                 pRoot = pMC;
-            else if (pMC->GetParticleId() != 111)
+            else if (pMC->GetParticleId() != 111 && pMC->GetParticleId() < 1e9)
                 std::cout << "LArHierarchyHelper::MCHierarchy::FillHierarchy: MC particle with PDG code " << pMC->GetParticleId() <<
                     " at address " << pMC << " has no associated primary particle" << std::endl;
         }
@@ -936,6 +1035,7 @@ const MCParticle *LArHierarchyHelper::GetMCPrimaries(const MCParticleList &mcPar
 const ParticleFlowObject *LArHierarchyHelper::GetRecoPrimaries(const PfoList &pfoList, PfoSet &primaries)
 {
     const ParticleFlowObject *pRoot{nullptr};
+    PfoSet cosmicPfos;
     for (const ParticleFlowObject *pPfo : pfoList)
     {
         if (LArPfoHelper::IsNeutrino(pPfo))
@@ -946,20 +1046,39 @@ const ParticleFlowObject *LArHierarchyHelper::GetRecoPrimaries(const PfoList &pf
         else
         {
             const ParticleFlowObject *const pParent{LArPfoHelper::GetParentPfo(pPfo)};
-            if (LArPfoHelper::IsNeutrino(pParent))
+            if (pParent && LArPfoHelper::IsNeutrino(pParent))
             {
                 pRoot = pParent;
                 break;
             }
             else
-            {
-                std::cout << "Still need to handle test beam, cosmics, ..." << std::endl;
+            {   // Should be in a test beam scenario
+                const int tier{LArPfoHelper::GetHierarchyTier(pPfo)};
+                if (tier == 0 && LArPfoHelper::IsTestBeam(pPfo))
+                {   // Triggered beam particle
+                    primaries.insert(pPfo);
+                    continue;
+                }
+                if (tier > 1)
+                    continue;
+                if (!LArPfoHelper::IsTestBeam(pPfo))
+                {   // Cosmic induced
+                    cosmicPfos.insert(pPfo);
+                }
             }
         }
     }
-    const PfoList &children{pRoot->GetDaughterPfoList()};
-    for (const ParticleFlowObject *pPrimary : children)
-        primaries.insert(pPrimary); 
+    if (pRoot && LArPfoHelper::IsNeutrino(pRoot))
+    {
+        const PfoList &children{pRoot->GetDaughterPfoList()};
+        for (const ParticleFlowObject *pPrimary : children)
+            primaries.insert(pPrimary);
+    }
+    else
+    {
+        for(const ParticleFlowObject *pPfo : cosmicPfos)
+            primaries.insert(pPfo);
+    }
 
     return pRoot;
 }

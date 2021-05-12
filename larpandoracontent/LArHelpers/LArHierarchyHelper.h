@@ -145,6 +145,20 @@ public:
             int GetParticleId() const;
 
             /**
+             *  @brief  Check if this is a test beam particle
+             *
+             *  @return Whether or not this is a test beam particle
+             */
+            bool IsTestBeamParticle() const;
+
+            /**
+             *  @brief  Check if this is a cosmic ray particle
+             *
+             *  @return Whether or not this is a cosmic ray
+             */
+            bool IsCosmicRay() const;
+
+            /**
              *  @brief  Produce a string representation of the hierarchy
              *
              *  @return The string representation of the hierarchy
@@ -156,6 +170,7 @@ public:
             pandora::MCParticleList m_mcParticles;
             pandora::CaloHitList m_caloHits;
             NodeVector m_children;
+            const pandora::MCParticle *m_mainParticle;
             int m_pdg;
         };
 
@@ -224,6 +239,20 @@ public:
          *  @return The string representation of the hierarchy
          */
         const std::string ToString() const;
+
+        /**
+         *  @brief  Check if this is a neutrino hierarchy.
+         *
+         *  @return Whether or not this is a neutrino hierarchy.
+         */
+        bool IsNeutrinoHierarchy() const { return m_pNeutrino != nullptr; }
+
+        /**
+         *  @brief  Check if this is a test beam hierarchy.
+         *
+         *  @return Whether or not this is a test beam hierarchy.
+         */
+        bool IsTestBeamHierarchy() const { return m_pNeutrino == nullptr; };
 
     private:
         NodeVector m_rootNodes;
