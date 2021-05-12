@@ -268,9 +268,10 @@ float VertexSelectionBaseAlgorithm::VertexHitEnergy(const Vertex *const pVertex,
   
   for(auto hit : foundHits)
     {
-      if((vertexPosition2D - hit.data->GetPositionVector()).GetMagnitude() < dr)
+      const float diff = (vertexPosition2D - hit.data->GetPositionVector()).GetMagnitude();
+      if(diff < dr)
 	{
-	  dr = (vertexPosition2D - hit.data->GetPositionVector()).GetMagnitude();
+	  dr = diff;
 	  energy = hit.data->GetElectromagneticEnergy();
 	}
     }

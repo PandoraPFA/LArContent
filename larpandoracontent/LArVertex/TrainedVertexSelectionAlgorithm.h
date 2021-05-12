@@ -392,7 +392,6 @@ protected:
      *  @param  separation the 3D distance between the two vertex candidates
      *  @param  axisHits the number of hits between the two candidates normalised to the distance between them
      */
-
     void GetSharedFeatures(const pandora::Vertex *const pVertex1, const pandora::Vertex *const pVertex2, const KDTreeMap &kdTreeMap, 
 			   float &separation, float &axisHits) const;
 
@@ -406,17 +405,6 @@ protected:
      */
     void IncrementSharedAxisValues(const pandora::CartesianVector pos1, const pandora::CartesianVector pos2, HitKDTree2D &kdTree,
 				   float &axisHits) const;
-
-
-    /**
-     *  @brief  Use a 2D vector point to update the minimum and maximum values in each direction
-     *
-     *  @param  xMin the minimum position in the drift direction
-     *  @param  xMax the maximum position in the drift direction
-     *  @param  zMin the minimum position in the wire direction
-     *  @param  zMax the maximum position in the wire direction
-     */
-    void UpdateBoxEdges(const pandora::CartesianVector &point, float &xMin, float &xMax, float &zMin, float &zMax) const;
 
     /**
      *  @brief  Determines whether a hit lies within the box defined by four other positions

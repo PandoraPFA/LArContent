@@ -307,16 +307,6 @@ protected:
     bool IsBeamModeOn() const;
 
     /**
-     *  @brief  Whether the vertex lies in a registered gap
-     *
-     *  @param  pVertex the address of the vertex
-     *  @param  hitType the relevant hit type
-     *
-     *  @return boolean
-     */
-    bool IsVertexInGap(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const;
-
-    /**
      *  @brief  Calculate the energy of a vertex candidate by summing values from all three planes
      *
      *  @param  pVertex the address of the vertex
@@ -324,7 +314,6 @@ protected:
      *
      *  @return the summed vertex energy
      */
-
     float GetVertexEnergy(const pandora::Vertex *const pVertex, const KDTreeMap &kdTreeMap) const;
 
     /**
@@ -336,7 +325,6 @@ protected:
      *
      *  @return the energy of the nearest hit
      */
-
     float VertexHitEnergy(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -363,6 +351,16 @@ private:
      *  @return boolean
      */
     bool IsVertexOnHit(const pandora::Vertex *const pVertex, const pandora::HitType hitType, HitKDTree2D &kdTree) const;
+
+    /**
+     *  @brief  Whether the vertex lies in a registered gap
+     *
+     *  @param  pVertex the address of the vertex
+     *  @param  hitType the relevant hit type
+     *
+     *  @return boolean
+     */
+    bool IsVertexInGap(const pandora::Vertex *const pVertex, const pandora::HitType hitType) const;
 
     /**
      *  @brief  From the top-scoring candidate vertices, select a subset for further investigation
