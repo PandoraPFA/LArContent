@@ -33,7 +33,6 @@ bool TwoViewTransverseTracksValidationTool::Run(const Cluster *const pCluster1, 
     const DiscreteProbabilityVector &discreteProbabilityVector1, const DiscreteProbabilityVector &discreteProbabilityVector2,
     const TwoViewTransverseOverlapResult &overlapResult)
 {
-
     TreeDataBox treeDataBox;
 
     this->CollectTruthInformation(pCluster1, treeDataBox, "1");
