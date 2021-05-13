@@ -197,9 +197,7 @@ template <typename T>
 void TwoViewTransverseTracksValidationTool::TreeDatum<T>::emplace_back_impl(const std::any &value)
 {
     if constexpr (is_std_vector<T>::value)
-    {
-        m_Datum.emplace_back((std::any_cast<typename T::value_type>(value)));
-    }
+        m_Datum.emplace_back(std::any_cast<typename T::value_type>(value));
     else
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_ALLOWED);
     return;
