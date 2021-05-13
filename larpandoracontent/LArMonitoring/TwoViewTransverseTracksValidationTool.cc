@@ -121,11 +121,11 @@ void TwoViewTransverseTracksValidationTool::CollectTruthInformation(const Cluste
 void TwoViewTransverseTracksValidationTool::CollectChargeProfileInformation(
     const DiscreteProbabilityVector &discreteProbabilityVector, TreeDataBox &treeDataBox, std::string clusterName)
 {
-    std::string xName("xValues" + clusterName);
-    std::string probabilityDensityName("probDensityValues" + clusterName);
-    std::string probabilityName("probValues" + clusterName);
-    std::string cumulativeProbabilityName("cumulProbValues" + clusterName);
-    std::string widthName("widthValues" + clusterName);
+    const std::string xName("xValues" + clusterName);
+    const std::string probabilityDensityName("probDensityValues" + clusterName);
+    const std::string probabilityName("probValues" + clusterName);
+    const std::string cumulativeProbabilityName("cumulProbValues" + clusterName);
+    const std::string widthName("widthValues" + clusterName);
 
     StoreAndRegisterDatum(std::vector<float>(), xName, treeDataBox);
     StoreAndRegisterDatum(std::vector<float>(), probabilityDensityName, treeDataBox);
