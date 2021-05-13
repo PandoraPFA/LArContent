@@ -69,9 +69,7 @@ bool TwoViewTransverseTracksValidationTool::IsSameMCParticle(const Cluster *cons
     const MCParticle *const pMCParticle2(MCParticleHelper::GetMainMCParticle(pCluster2));
 
     if (pMCParticle1 && pMCParticle2)
-    {
         return pMCParticle1->GetUid() == pMCParticle2->GetUid();
-    }
 
     return false;
 }
