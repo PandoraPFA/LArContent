@@ -14,7 +14,7 @@ fcldir  -
 product		version
 eigen		v3_3_9a
 pandora		v03_16_00b
-libtorch	v1_6_0a	-	optional
+libtorch	v1_6_0b	-	optional
 cetbuildtools	v7_17_01	-	only_for_build
 end_product_list
 
