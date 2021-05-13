@@ -92,7 +92,7 @@ private:
          *  @param  pTool the tool that requested the data be saved
          *  @param  datumName the label for the data
          */
-        TreeDatum(const T &t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string datumName);
+        TreeDatum(const T &t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string &datumName);
 
     private:
         /**
@@ -131,7 +131,7 @@ private:
      *  @param  treeDataBox the box where the data is stored before TTree writing
      */
     template <typename T>
-    void StoreAndRegisterDatum(const T &t, const std::string datumName, TreeDataBox &treeDataBox);
+    void StoreAndRegisterDatum(const T &t, const std::string &datumName, TreeDataBox &treeDataBox);
 
     /**
      *  @brief  Register some data with the pandora monitoring api for writing to a TTree 
@@ -140,7 +140,7 @@ private:
      *  @param  datumName the data label
      */
     template <typename T>
-    void RegisterTreeDatum(T &t, const std::string datumName) const;
+    void RegisterTreeDatum(T &t, const std::string &datumName) const;
 
     /**
      *  @brief  Convenience function for collecting and registering truth information with the pandora monitoring api for writing to a TTree 
@@ -187,7 +187,7 @@ void TwoViewTransverseTracksValidationTool::AbstractDatum::emplace_back(const T 
 
 template <typename T>
 TwoViewTransverseTracksValidationTool::TreeDatum<T>::TreeDatum(
-    const T &t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string datumName) :
+    const T &t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string &datumName) :
     m_Datum(t)
 {
     pTool->RegisterTreeDatum(m_Datum, datumName);
@@ -208,7 +208,7 @@ void TwoViewTransverseTracksValidationTool::TreeDatum<T>::emplace_back_impl(cons
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewTransverseTracksValidationTool::StoreAndRegisterDatum(const T &t, const std::string datumName, TreeDataBox &treeDataBox)
+void TwoViewTransverseTracksValidationTool::StoreAndRegisterDatum(const T &t, const std::string &datumName, TreeDataBox &treeDataBox)
 {
     auto [iterator, inserted] = treeDataBox.try_emplace(datumName, std::make_unique<TreeDatum<T>>(t, this, datumName));
     if (!inserted)
@@ -219,7 +219,7 @@ void TwoViewTransverseTracksValidationTool::StoreAndRegisterDatum(const T &t, co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void TwoViewTransverseTracksValidationTool::RegisterTreeDatum(T &t, const std::string datumName) const
+void TwoViewTransverseTracksValidationTool::RegisterTreeDatum(T &t, const std::string &datumName) const
 {
     if constexpr (is_std_vector<T>::value)
     {
