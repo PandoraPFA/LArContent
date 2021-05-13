@@ -93,7 +93,7 @@ private:
     float                       m_minOverallLocallyMatchedFraction;      ///< The minimum required lcoally matched fraction to fill the overlap result
     std::mt19937                m_randomNumberGenerator;                 ///< The random number generator
 
-    TwoViewTransverseTracksValidationTool* p_ValidationTool;             ///< The validation tool
+    TwoViewTransverseTracksValidationTool* m_pValidationTool;             ///< The validation tool
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

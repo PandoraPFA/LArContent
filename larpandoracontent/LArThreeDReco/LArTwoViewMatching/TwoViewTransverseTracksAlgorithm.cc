@@ -30,7 +30,7 @@ TwoViewTransverseTracksAlgorithm::TwoViewTransverseTracksAlgorithm() :
     m_minOverallMatchingScore(0.1f),
     m_minOverallLocallyMatchedFraction(0.1f),
     m_randomNumberGenerator(static_cast<std::mt19937::result_type>(0)),
-    p_ValidationTool(nullptr)
+    m_pValidationTool(nullptr)
 {
 }
 
@@ -138,8 +138,8 @@ pandora::StatusCode TwoViewTransverseTracksAlgorithm::CalculateOverlapResult(con
     overlapResult = TwoViewTransverseOverlapResult(matchingScore, m_downsampleFactor, nComparisons, nLocallyMatchedSamplingPoints,
         correlation, twoViewXOverlap);
 
-    if (p_ValidationTool) 
-        p_ValidationTool->Run(pCluster1, pCluster2, resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, overlapResult);
+    if (m_pValidationTool) 
+        m_pValidationTool->Run(pCluster1, pCluster2, resampledDiscreteProbabilityVector1, resampledDiscreteProbabilityVector2, overlapResult);
 
     return STATUS_CODE_SUCCESS;
 }
@@ -247,8 +247,8 @@ StatusCode TwoViewTransverseTracksAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
         if (!pTransverseMatrixTool)
         {
-            p_ValidationTool = dynamic_cast<TwoViewTransverseTracksValidationTool*>(*iter); 
-            if (!p_ValidationTool)
+            m_pValidationTool = dynamic_cast<TwoViewTransverseTracksValidationTool*>(*iter); 
+            if (!m_pValidationTool)
                 return STATUS_CODE_INVALID_PARAMETER;
         }
         else
