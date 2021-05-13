@@ -92,6 +92,7 @@ private:
          */
         TreeDatum(const T &t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string datumName);
 
+    private:
         /**
          *  @brief  Overriding implementation of emplace_back.   
          *
@@ -99,7 +100,6 @@ private:
          */
         void emplace_back_impl(const std::any &value) override;
 
-    private:
         T m_Datum;      ///< the datum that is destined for a TTree
     };
 
