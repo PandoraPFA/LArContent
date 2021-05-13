@@ -210,8 +210,7 @@ void TwoViewTransverseTracksValidationTool::TreeDatum<T>::emplace_back_impl(cons
 template <typename T>
 void TwoViewTransverseTracksValidationTool::StoreAndRegisterDatum(const T &t, const std::string &datumName, TreeDataBox &treeDataBox)
 {
-    auto [iterator, inserted] = treeDataBox.try_emplace(datumName, std::make_unique<TreeDatum<T>>(t, this, datumName));
-    if (!inserted)
+    if (!(treeDataBox.try_emplace(datumName, std::make_unique<TreeDatum<T>>(t, this, datumName))).second)
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
     return;
 }
