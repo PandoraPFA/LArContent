@@ -102,7 +102,7 @@ private:
          */
         void emplace_back_impl(const std::any &value) override;
 
-        T m_Datum;      ///< the datum that is destined for a TTree
+        T m_datum;      ///< the datum that is destined for a TTree
     };
 
     /**
@@ -188,9 +188,9 @@ void TwoViewTransverseTracksValidationTool::AbstractDatum::emplace_back(const T 
 template <typename T>
 TwoViewTransverseTracksValidationTool::TreeDatum<T>::TreeDatum(
     const T &t, const TwoViewTransverseTracksValidationTool *const pTool, const std::string &datumName) :
-    m_Datum(t)
+    m_datum(t)
 {
-    pTool->RegisterTreeDatum(m_Datum, datumName);
+    pTool->RegisterTreeDatum(m_datum, datumName);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -199,7 +199,7 @@ template <typename T>
 void TwoViewTransverseTracksValidationTool::TreeDatum<T>::emplace_back_impl(const std::any &value)
 {
     if constexpr (is_std_vector<T>::value)
-        m_Datum.emplace_back(std::any_cast<typename T::value_type>(value));
+        m_datum.emplace_back(std::any_cast<typename T::value_type>(value));
     else
         throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_ALLOWED);
     return;
