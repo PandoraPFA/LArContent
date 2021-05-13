@@ -7,14 +7,16 @@
  */
 #ifndef TWO_VIEW_TRANSVERSE_TRACKS_VALIDATION_TOOL_H
 #define TWO_VIEW_TRANSVERSE_TRACKS_VALIDATION_TOOL_H 1
-
-#include "PandoraMonitoringApi.h"
 #include "Objects/Cluster.h"
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArObjects/LArDiscreteProbabilityVector.h"
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
+
+#ifdef MONITORING
+#include "PandoraMonitoringApi.h"
+#endif
 
 #include <any>
 #include <memory>
