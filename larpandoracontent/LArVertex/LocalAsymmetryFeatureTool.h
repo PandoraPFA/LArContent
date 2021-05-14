@@ -25,7 +25,7 @@ public:
     LocalAsymmetryFeatureTool();
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
     /**
      *  @brief  Get the local asymmetry feature in a given view
@@ -36,9 +36,17 @@ private:
      *  @return the local asymmetry feature
      */
     float GetAsymmetryForView(
-        const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList,
-	const VertexSelectionBaseAlgorithm::ShowerClusterList &) const;
+	const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList,
+	const VertexSelectionBaseAlgorithm::ShowerClusterList &) const override;
 
+    /**
+     *  @brief  Check whether a cluster's direction agrees with the current weighted direction
+     *
+     *  @param  weightedDirectionSum the current weighted direction
+     *  @param  clusterDirection the cluster's direction
+     *
+     *  @return boolean
+     */
     bool CheckAngle(const pandora::CartesianVector &weightedDirectionSum, const pandora::CartesianVector &clusterDirection) const;
 
     float m_minAsymmetryCosAngle;         ///< The min opening angle cosine used to determine viability of asymmetry score

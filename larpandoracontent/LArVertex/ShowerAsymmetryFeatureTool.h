@@ -27,7 +27,7 @@ public:
     ShowerAsymmetryFeatureTool();
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
     /**
      *  @brief  Get the shower asymmetry feature for a given view
@@ -38,8 +38,8 @@ private:
      *  @return the shower asymmetry feature
      */
     float GetAsymmetryForView(
-         const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &, 
-	 const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const;
+	 const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &, 
+	 const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const override;
 
     /**
      *  @brief  Get whether we should use a given shower cluster for asymmetry calculation
@@ -50,18 +50,6 @@ private:
      *  @return whether the shower cluster should be considered
      */
     bool ShouldUseShowerCluster(const pandora::CartesianVector &vertexPosition, const VertexSelectionBaseAlgorithm::ShowerCluster &showerCluster) const;
-
-    /**
-     *  @brief  Calculate the parameters for the asymmetry calculation
-     *
-     *  @param  showerCluster the shower cluster
-     *  @param  projectedVtxPosition the projected vertex position
-     *  @param  showerDirection the direction of the shower axis
-     *  @param  beforeVtxEnergy the shower energy before the vertex position
-     *  @param  afterVtxEnergy the shower energy after the vertex position
-     */
-    void CalculateAsymmetryParameters(const VertexSelectionBaseAlgorithm::ShowerCluster &showerCluster, const float projectedVtxPosition,
-        const pandora::CartesianVector &showerDirection, float &beforeVtxEnergy, float &afterVtxEnergy) const;
 
     float m_vertexClusterDistance; ///< The distance around the vertex to look for shower clusters
 };

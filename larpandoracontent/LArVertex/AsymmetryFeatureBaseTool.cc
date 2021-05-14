@@ -63,9 +63,8 @@ void AsymmetryFeatureBaseTool::IncrementAsymmetryParameters(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename C, typename T = typename C::value_type>
 float AsymmetryFeatureBaseTool::CalculateAsymmetry(const bool useEnergyMetrics, const CartesianVector &vertexPosition2D,
-    const C &asymmetryClusters, const CartesianVector &localWeightedDirectionSum) const
+    const ClusterVector &asymmetryClusters, const CartesianVector &localWeightedDirectionSum) const
 {
     // Project every hit onto local event axis direction and record side of the projected vtx position on which it falls
     float beforeVtxHitEnergy(0.f), afterVtxHitEnergy(0.f);
@@ -120,13 +119,5 @@ StatusCode AsymmetryFeatureBaseTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     return STATUS_CODE_SUCCESS;
 }
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-template float AsymmetryFeatureBaseTool::CalculateAsymmetry(const bool useEnergyMetrics, const CartesianVector &vertexPosition2D,
-    const ClusterVector &asymmetryClusters, const CartesianVector &localWeightedDirectionSum) const;
-
-template float AsymmetryFeatureBaseTool::CalculateAsymmetry(const bool useEnergyMetrics, const CartesianVector &vertexPosition2D,
-    const ClusterList &asymmetryClusters, const CartesianVector &localWeightedDirectionSum) const;
 
 } // namespace lar_content

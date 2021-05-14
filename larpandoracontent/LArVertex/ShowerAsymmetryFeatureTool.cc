@@ -43,7 +43,10 @@ float ShowerAsymmetryFeatureTool::GetAsymmetryForView(
             if (STATUS_CODE_SUCCESS != showerFit.GetGlobalFitDirection(rL, showerDirection))
                 continue;
 
-	    showerAsymmetry = this->CalculateAsymmetry(true, vertexPosition2D, showerCluster.GetClusters(), showerDirection);
+	    ClusterVector asymmetryClusters;
+	    std::copy(showerCluster.GetClusters().begin(), showerCluster.GetClusters().end(), std::back_inserter(asymmetryClusters));
+
+	    showerAsymmetry = this->CalculateAsymmetry(true, vertexPosition2D, asymmetryClusters, showerDirection);
 
             break;
         }
@@ -64,33 +67,6 @@ bool ShowerAsymmetryFeatureTool::ShouldUseShowerCluster(
     }
 
     return false;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void ShowerAsymmetryFeatureTool::CalculateAsymmetryParameters(const VertexSelectionBaseAlgorithm::ShowerCluster &showerCluster,
-    const float projectedVtxPosition, const CartesianVector &showerDirection, float &beforeVtxEnergy, float &afterVtxEnergy) const
-{
-    beforeVtxEnergy = 0.f;
-    afterVtxEnergy = 0.f;
-
-    for (const Cluster *const pCluster : showerCluster.GetClusters())
-    {
-        CaloHitList caloHitList;
-        pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
-
-        CaloHitVector caloHitVector(caloHitList.begin(), caloHitList.end());
-        std::sort(caloHitVector.begin(), caloHitVector.end(), LArClusterHelper::SortHitsByPosition);
-
-        for (const CaloHit *const pCaloHit : caloHitVector)
-        {
-            if (pCaloHit->GetPositionVector().GetDotProduct(showerDirection) < projectedVtxPosition)
-                beforeVtxEnergy += pCaloHit->GetElectromagneticEnergy();
-
-            else if (pCaloHit->GetPositionVector().GetDotProduct(showerDirection) > projectedVtxPosition)
-                afterVtxEnergy += pCaloHit->GetElectromagneticEnergy();
-        }
-    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

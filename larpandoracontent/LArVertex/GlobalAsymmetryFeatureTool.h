@@ -25,7 +25,7 @@ public:
     GlobalAsymmetryFeatureTool();
 
 protected:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
 private:
     /**
@@ -37,8 +37,8 @@ private:
      *  @return the global asymmetry feature
      */
     float GetAsymmetryForView(
-        const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList,
-	const VertexSelectionBaseAlgorithm::ShowerClusterList &) const;
+	const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList,
+	const VertexSelectionBaseAlgorithm::ShowerClusterList &) const override;
 };
 
 } // namespace lar_content

@@ -464,7 +464,7 @@ void TrainedVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamCon
 	
 	vertexEnergy = this->GetVertexEnergy(pVertex, kdTreeMap);
       }
-    
+
     VertexFeatureInfo vertexFeatureInfo(beamDeweighting, 0.f, energyKick, localAsymmetry, globalAsymmetry, showerAsymmetry, dEdxAsymmetry, vertexEnergy);
     vertexFeatureInfoMap.emplace(pVertex, vertexFeatureInfo);
 }

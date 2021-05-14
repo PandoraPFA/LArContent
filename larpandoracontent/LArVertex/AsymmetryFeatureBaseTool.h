@@ -72,9 +72,8 @@ protected:
      *
      *  @return the asymmetry feature
      */
-    template <typename C, typename T = typename C::value_type>
-    float CalculateAsymmetry(const bool useEnergyMetrics, const pandora::CartesianVector &vertexPosition2D,
-        const C &asymmetryClusters, const pandora::CartesianVector &localWeightedDirectionSum) const;
+    virtual float CalculateAsymmetry(const bool useEnergyMetrics, const pandora::CartesianVector &vertexPosition2D,
+        const pandora::ClusterVector &asymmetryClusters, const pandora::CartesianVector &localWeightedDirectionSum) const;
 
     float m_maxAsymmetryDistance; ///< The max distance between cluster (any hit) and vertex to calculate asymmetry score
 };

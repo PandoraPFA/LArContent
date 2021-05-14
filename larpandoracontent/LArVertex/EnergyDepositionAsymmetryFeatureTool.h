@@ -25,7 +25,7 @@ public:
     EnergyDepositionAsymmetryFeatureTool();
 
 private:
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle) override;
 
     /**
      *  @brief  Calculate the energy deposition asymmetry feature
@@ -38,7 +38,7 @@ private:
      *  @return the energy deposition asymmetry feature
      */
     float CalculateAsymmetry(const bool useEnergyMetrics, const pandora::CartesianVector &vertexPosition2D,
-        const pandora::ClusterList &clusterList, const pandora::CartesianVector &localWeightedDirectionSum) const;
+        const pandora::ClusterVector &clusterVector, const pandora::CartesianVector &localWeightedDirectionSum) const override;
 };
 
 } // namespace lar_content

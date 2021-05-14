@@ -24,11 +24,11 @@ EnergyDepositionAsymmetryFeatureTool::EnergyDepositionAsymmetryFeatureTool() :
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float EnergyDepositionAsymmetryFeatureTool::CalculateAsymmetry(const bool useEnergyMetrics, const CartesianVector &vertexPosition2D,
-    const ClusterList &clusterList, const CartesianVector &localWeightedDirectionSum) const
+    const ClusterVector &clusterVector, const CartesianVector &localWeightedDirectionSum) const
 {
     // Project every hit onto local event axis direction and record side of the projected vtx position on which it falls
-    float beforeVtxHitEnergy(0.f), afterVtxHitEnergy(0.f);
-    unsigned int beforeVtxHitCount(0), afterVtxHitCount(0);
+    float beforeVtxEnergy(0.f), afterVtxEnergy(0.f);
+    unsigned int beforeVtxHits(0), afterVtxHits(0);
 
     const CartesianVector localWeightedDirection(localWeightedDirectionSum.GetUnitVector());
     const float evtProjectedVtxPos(vertexPosition2D.GetDotProduct(localWeightedDirection));
@@ -39,7 +39,7 @@ float EnergyDepositionAsymmetryFeatureTool::CalculateAsymmetry(const bool useEne
     float minAfterProjectedPos(std::numeric_limits<float>::max());
     float maxAfterProjectedPos(-std::numeric_limits<float>::max());
 
-    for (const Cluster *const pCluster : clusterList)
+    for (const Cluster *const pCluster : clusterVector)
     {
         CaloHitList caloHitList;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
@@ -70,7 +70,7 @@ float EnergyDepositionAsymmetryFeatureTool::CalculateAsymmetry(const bool useEne
     }
 
     // Use energy metrics if possible, otherwise fall back on hit counting.
-    const unsigned int totHitCount(beforeVtxHitCount + afterVtxHitCount);
+    const unsigned int totalHits(beforeVtxHits + afterVtxHits);
 
     const float beforeVtxEnergyDeposition(!std::fabs(maxBeforeProjectedPos - minBeforeProjectedPos) ? 0 : 
 					  beforeVtxHitEnergy / std::fabs(maxBeforeProjectedPos - minBeforeProjectedPos));
@@ -83,7 +83,7 @@ float EnergyDepositionAsymmetryFeatureTool::CalculateAsymmetry(const bool useEne
     if (useEnergyMetrics && totalEnergyDeposition)
         return std::fabs((afterVtxEnergyDeposition - beforeVtxEnergyDeposition)) / totalEnergyDeposition;
 
-    if (0 == totHitCount)
+    if (0 == totalHits)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     const float beforeVtxHitDeposition(!std::fabs(maxBeforeProjectedPos - minBeforeProjectedPos) ? 0 :
