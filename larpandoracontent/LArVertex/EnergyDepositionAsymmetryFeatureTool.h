@@ -8,7 +8,7 @@
 #ifndef LAR_ENERGY_DEPOSITION_ASYMMETRY_FEATURE_TOOL_H
 #define LAR_ENERGY_DEPOSITION_ASYMMETRY_FEATURE_TOOL_H 1
 
-#include "larpandoracontent/LArVertex/VertexSelectionBaseAlgorithm.h"
+#include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
 
 namespace lar_content
 {
@@ -16,7 +16,7 @@ namespace lar_content
 /**
  *  @brief  EnergyDepositionAsymmetryFeatureTool class
  */
-class EnergyDepositionAsymmetryFeatureTool : public VertexSelectionBaseAlgorithm::VertexFeatureTool
+class EnergyDepositionAsymmetryFeatureTool : public GlobalAsymmetryFeatureTool
 {
 public:
     /**
@@ -24,40 +24,8 @@ public:
      */
     EnergyDepositionAsymmetryFeatureTool();
 
-    /**
-     *  @brief  Run the tool
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pVertex address of the vertex
-     *  @param  slidingFitDataListMap map of the sliding fit data lists
-     *
-     *  @return the energy deposition asymmetry feature
-     */
-    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm * const pAlgorithm, const pandora::Vertex * const pVertex,
-        const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
-        const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &);
-
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-
-    /**
-     *  @brief  Get the energy deposition asymmetry feature for a given view
-     *
-     *  @param  vertexPosition2D the vertex position projected into this view
-     *  @param  slidingFitDataList the list of sliding fit data objects for this view
-     *
-     *  @return the energy deposition asymmetry feature
-     */
-    float GetEnergyDepositionAsymmetryForView(const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const;
-
-    /**
-     *  @brief  Increment the asymmetry parameters
-     *
-     *  @param  weight the weight to assign to this vector
-     *  @param  clusterDirection the direction of the cluster
-     *  @param  localWeightedDirectionSum the current energy-weighted local cluster direction vector
-     */
-    void IncrementAsymmetryParameters(const float weight, const pandora::CartesianVector &clusterDirection, pandora::CartesianVector &localWeightedDirectionSum) const;
 
     /**
      *  @brief  Calculate the energy deposition asymmetry feature
@@ -69,10 +37,8 @@ private:
      *
      *  @return the energy deposition asymmetry feature
      */
-    float CalculateEnergyDepositionAsymmetry(const bool useEnergyMetrics, const pandora::CartesianVector &vertexPosition2D,
-        const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList, const pandora::CartesianVector &localWeightedDirectionSum) const;
-
-    float     m_maxAsymmetryDistance;    ///< The max distance between cluster (any hit) and vertex to calculate asymmetry score
+    float CalculateAsymmetry(const bool useEnergyMetrics, const pandora::CartesianVector &vertexPosition2D,
+        const pandora::ClusterList &clusterList, const pandora::CartesianVector &localWeightedDirectionSum) const;
 };
 
 } // namespace lar_content

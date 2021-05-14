@@ -8,7 +8,7 @@
 #ifndef LAR_SHOWER_ASYMMETRY_FEATURE_TOOL_H
 #define LAR_SHOWER_ASYMMETRY_FEATURE_TOOL_H 1
 
-#include "larpandoracontent/LArVertex/VertexSelectionBaseAlgorithm.h"
+#include "larpandoracontent/LArVertex/AsymmetryFeatureBaseTool.h"
 
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 
@@ -18,27 +18,13 @@ namespace lar_content
 /**
  *  @brief  ShowerAsymmetryFeatureTool class
  */
-class ShowerAsymmetryFeatureTool : public VertexSelectionBaseAlgorithm::VertexFeatureTool
+class ShowerAsymmetryFeatureTool : public AsymmetryFeatureBaseTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
     ShowerAsymmetryFeatureTool();
-
-    /**
-     *  @brief  Run the tool
-     *
-     *  @param  pAlgorithm address of the calling algorithm
-     *  @param  pVertex address of the vertex
-     *  @param  showerClusterListMap map of the shower cluster lists
-     *
-     *  @return the shower asymmetry feature
-     */
-    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm,
-        const pandora::Vertex *const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &,
-        const VertexSelectionBaseAlgorithm::ClusterListMap &, const VertexSelectionBaseAlgorithm::KDTreeMap &,
-        const VertexSelectionBaseAlgorithm::ShowerClusterListMap &showerClusterListMap, const float, float &);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -51,8 +37,9 @@ private:
      *
      *  @return the shower asymmetry feature
      */
-    float GetShowerAsymmetryForView(
-        const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const;
+    float GetAsymmetryForView(
+         const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &, 
+	 const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const;
 
     /**
      *  @brief  Get whether we should use a given shower cluster for asymmetry calculation

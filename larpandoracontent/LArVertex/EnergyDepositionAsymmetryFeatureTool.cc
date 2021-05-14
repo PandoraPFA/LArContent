@@ -17,91 +17,14 @@ namespace lar_content
 {
 
 EnergyDepositionAsymmetryFeatureTool::EnergyDepositionAsymmetryFeatureTool() :
-    m_maxAsymmetryDistance(5.f)
+    GlobalAsymmetryFeatureTool()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EnergyDepositionAsymmetryFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
-    const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &)
-{
-    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
-
-    float dEdxAsymmetry(0.f);
-
-    dEdxAsymmetry += this->GetEnergyDepositionAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U),
-        slidingFitDataListMap.at(TPC_VIEW_U));
-
-    dEdxAsymmetry += this->GetEnergyDepositionAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V),
-        slidingFitDataListMap.at(TPC_VIEW_V));
-
-    dEdxAsymmetry += this->GetEnergyDepositionAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W),
-        slidingFitDataListMap.at(TPC_VIEW_W));
-
-    featureVector.push_back(dEdxAsymmetry);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float EnergyDepositionAsymmetryFeatureTool::GetEnergyDepositionAsymmetryForView(const CartesianVector &vertexPosition2D,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const
-{
-    bool useEnergy(true);
-    CartesianVector energyWeightedDirectionSum(0.f, 0.f, 0.f), hitWeightedDirectionSum(0.f, 0.f, 0.f);
-
-    for (const VertexSelectionBaseAlgorithm::SlidingFitData &slidingFitData : slidingFitDataList)
-    {
-        const Cluster *const pCluster(slidingFitData.GetCluster());
-
-        if (pCluster->GetElectromagneticEnergy() < std::numeric_limits<float>::epsilon())
-            useEnergy = false;
-
-        const CartesianVector vertexToMinLayer(slidingFitData.GetMinLayerPosition() - vertexPosition2D);
-        const CartesianVector vertexToMaxLayer(slidingFitData.GetMaxLayerPosition() - vertexPosition2D);
-
-        const bool minLayerClosest(vertexToMinLayer.GetMagnitudeSquared() < vertexToMaxLayer.GetMagnitudeSquared());
-        const CartesianVector &clusterDirection((minLayerClosest) ? slidingFitData.GetMinLayerDirection() : slidingFitData.GetMaxLayerDirection());
-
-        if ((LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster) < m_maxAsymmetryDistance))
-        {
-            this->IncrementAsymmetryParameters(pCluster->GetElectromagneticEnergy(), clusterDirection, energyWeightedDirectionSum);
-            this->IncrementAsymmetryParameters(static_cast<float>(pCluster->GetNCaloHits()), clusterDirection, hitWeightedDirectionSum);
-        }
-    }
-
-    const CartesianVector &localWeightedDirectionSum(useEnergy ? energyWeightedDirectionSum : hitWeightedDirectionSum);
-
-    if (localWeightedDirectionSum.GetMagnitudeSquared() < std::numeric_limits<float>::epsilon()){
-      return 0.f;
-    }
-
-    return this->CalculateEnergyDepositionAsymmetry(useEnergy, vertexPosition2D, slidingFitDataList, localWeightedDirectionSum);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void EnergyDepositionAsymmetryFeatureTool::IncrementAsymmetryParameters(const float weight, const CartesianVector &clusterDirection,
-    CartesianVector &localWeightedDirectionSum) const
-{
-    // If the new axis direction is at an angle of greater than 90 deg to the current axis direction, flip it 180 degs.
-    CartesianVector newDirection(clusterDirection);
-
-    if (localWeightedDirectionSum.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon())
-    {
-        if (localWeightedDirectionSum.GetCosOpeningAngle(clusterDirection) < 0.f)
-            newDirection *= -1.f;
-    }
-
-    localWeightedDirectionSum += newDirection * weight;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-float EnergyDepositionAsymmetryFeatureTool::CalculateEnergyDepositionAsymmetry(const bool useEnergyMetrics, const CartesianVector &vertexPosition2D,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList, const CartesianVector &localWeightedDirectionSum) const
+float EnergyDepositionAsymmetryFeatureTool::CalculateAsymmetry(const bool useEnergyMetrics, const CartesianVector &vertexPosition2D,
+    const ClusterList &clusterList, const CartesianVector &localWeightedDirectionSum) const
 {
     // Project every hit onto local event axis direction and record side of the projected vtx position on which it falls
     float beforeVtxHitEnergy(0.f), afterVtxHitEnergy(0.f);
@@ -116,10 +39,8 @@ float EnergyDepositionAsymmetryFeatureTool::CalculateEnergyDepositionAsymmetry(c
     float minAfterProjectedPos(std::numeric_limits<float>::max());
     float maxAfterProjectedPos(-std::numeric_limits<float>::max());
 
-    for (const VertexSelectionBaseAlgorithm::SlidingFitData &slidingFitData : slidingFitDataList)
+    for (const Cluster *const pCluster : clusterList)
     {
-        const Cluster * const pCluster(slidingFitData.GetCluster());
-
         CaloHitList caloHitList;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
@@ -183,10 +104,7 @@ float EnergyDepositionAsymmetryFeatureTool::CalculateEnergyDepositionAsymmetry(c
 
 StatusCode EnergyDepositionAsymmetryFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAsymmetryDistance", m_maxAsymmetryDistance));
-
-    return STATUS_CODE_SUCCESS;
+    return GlobalAsymmetryFeatureTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content
