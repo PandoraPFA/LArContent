@@ -36,7 +36,7 @@ LArHierarchyHelper::MCHierarchy::~MCHierarchy()
 void LArHierarchyHelper::MCHierarchy::FillHierarchy(const MCParticleList &mcParticleList, const CaloHitList &caloHitList,
     const bool foldToPrimaries, const bool foldToLeadingShowers)
 {
-    auto predicate = [](const MCParticle *pMC) { return std::abs(pMC->GetParticleId() == NEUTRON); };
+    auto predicate = [](const MCParticle *pMC) { return std::abs(pMC->GetParticleId()) == NEUTRON; };
     m_mcToHitsMap.clear();
     for (const CaloHit *pCaloHit : caloHitList)
     {
@@ -349,7 +349,7 @@ bool LArHierarchyHelper::MCHierarchy::Node::IsReconstructable() const
 {
     const bool enoughHits{m_caloHits.size() >= m_hierarchy.m_recoCriteria.m_minHits};
     bool enoughGoodViews{false};
-    int nHitsU{0}, nHitsV{0}, nHitsW{0};
+    unsigned int nHitsU{0}, nHitsV{0}, nHitsW{0};
     for (const CaloHit *pCaloHit : m_caloHits)
     {
         switch (pCaloHit->GetHitType())
@@ -366,7 +366,7 @@ bool LArHierarchyHelper::MCHierarchy::Node::IsReconstructable() const
             default:
                 break;
         }
-        int nGoodViews{0};
+        unsigned int nGoodViews{0};
         if (nHitsU >= m_hierarchy.m_recoCriteria.m_minHitsForGoodView)
             ++nGoodViews;
         if (nHitsV >= m_hierarchy.m_recoCriteria.m_minHitsForGoodView)
@@ -817,23 +817,36 @@ float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::FillMCHierarchy(const MCParticleList &mcParticleList, const CaloHitList &caloHitList, const bool foldToPrimaries,
-    const bool foldToLeadingShowers, MCHierarchy &hierarchy)
+LArHierarchyHelper::MatchInfo::QualityCuts::QualityCuts() :
+    m_minPurity{0.5f},
+    m_minCompleteness{0.1f}
 {
-    hierarchy.FillHierarchy(mcParticleList, caloHitList, foldToPrimaries, foldToLeadingShowers);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::FillRecoHierarchy(const PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers,
-    RecoHierarchy &hierarchy)
+LArHierarchyHelper::MatchInfo::QualityCuts::QualityCuts(const float minPurity, const float minCompleteness) :
+    m_minPurity{minPurity},
+    m_minCompleteness{minCompleteness}
 {
-    hierarchy.FillHierarchy(pfoList, foldToPrimaries, foldToLeadingShowers);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+LArHierarchyHelper::MatchInfo::MatchInfo() :
+    MatchInfo(QualityCuts())
+{
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MCMatchesVector &matchVector)
+LArHierarchyHelper::MatchInfo::MatchInfo(const QualityCuts &qualityCuts) :
+    m_qualityCuts{qualityCuts}
+{
+}
+
+void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy)
 {
     MCHierarchy::NodeVector mcNodes;
     mcHierarchy.GetFlattenedNodes(mcNodes);
@@ -888,22 +901,28 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
                 mcToMatchMap.insert(std::make_pair(pBestNode, match));
             }
         }
-    }
-
-    for (auto [ mc, matches ] : mcToMatchMap)
-    {   (void)mc;
-        matchVector.emplace_back(matches);
-    }
-
-    for (const MCHierarchy::Node *pMCNode : mcNodes)
-    {
-        if (pMCNode->IsReconstructable())
+        else
         {
-            if (mcToMatchMap.find(pMCNode) == mcToMatchMap.end())
-            {   // Unmatched MC
-                MCMatches match(pMCNode);
-                matchVector.emplace_back(match);
-            }
+            m_unmatchedReco.emplace_back(pRecoNode);
+        }
+    }
+
+    for (auto [ pMCNode, matches ] : mcToMatchMap)
+    {   (void)pMCNode;  // gcc 7 requirement
+        const RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
+        if (nodeVector.size() == 1)
+        {
+            const RecoHierarchy::Node *pRecoNode{nodeVector.front()};
+            const float purity{matches.GetPurity(pRecoNode)};
+            const float completeness{matches.GetCompleteness(pRecoNode)};
+            if (purity >= m_qualityCuts.m_minPurity && completeness > m_qualityCuts.m_minCompleteness)
+                m_goodMatches.emplace_back(matches);
+            else
+                m_subThresholdMatches.emplace_back(matches);
+        }
+        else
+        {
+            m_subThresholdMatches.emplace_back(matches);
         }
     }
 
@@ -911,13 +930,42 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
         {
             return lhs.GetMC()->GetCaloHits().size() > rhs.GetMC()->GetCaloHits().size();
         };
-    std::sort(matchVector.begin(), matchVector.end(), predicate);
+    std::sort(m_goodMatches.begin(), m_goodMatches.end(), predicate);
+    std::sort(m_subThresholdMatches.begin(), m_subThresholdMatches.end(), predicate);
 
+    for (const MCHierarchy::Node *pMCNode : mcNodes)
+    {
+        if (pMCNode->IsReconstructable() && mcToMatchMap.find(pMCNode) == mcToMatchMap.end())
+            m_unmatchedMC.emplace_back(pMCNode);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::FillMCHierarchy(const MCParticleList &mcParticleList, const CaloHitList &caloHitList, const bool foldToPrimaries,
+    const bool foldToLeadingShowers, MCHierarchy &hierarchy)
+{
+    hierarchy.FillHierarchy(mcParticleList, caloHitList, foldToPrimaries, foldToLeadingShowers);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::FillRecoHierarchy(const PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers,
+    RecoHierarchy &hierarchy)
+{
+    hierarchy.FillHierarchy(pfoList, foldToPrimaries, foldToLeadingShowers);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MatchInfo &matchInfo)
+{
+    matchInfo.Match(mcHierarchy, recoHierarchy);
     int nNeutrinoMCParticles{0}, nNeutrinoRecoParticles{0}, nNeutrinoRecoBTParticles{0};
     int nCosmicMCParticles{0}, nCosmicRecoParticles{0}, nCosmicRecoBTParticles{0};
     int nTestBeamMCParticles{0}, nTestBeamRecoParticles{0}, nTestBeamRecoBTParticles{0};
-    //int nTriggeredTestBeamMCParticles{0}, nTriggeredTestBeamRecoParticles{0};
-    for (const MCMatches &match : matchVector)
+    for (const MCMatches &match : matchInfo.GetGoodMatches())
     {
         const MCHierarchy::Node *pMCNode{match.GetMC()};
         if (pMCNode->IsTestBeamParticle())
@@ -932,6 +980,7 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
         std::cout << "MC " << tag << pdg << " hits " << mcHits << std::endl;
         const RecoHierarchy::NodeVector &nodeVector{match.GetRecoMatches()};
         int nGoodReco{0};
+
         for (const RecoHierarchy::Node *pRecoNode : nodeVector)
         {
             const int recoHits{static_cast<int>(pRecoNode->GetCaloHits().size())};
@@ -943,26 +992,60 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
             if (purity > 0.5f && completeness > 0.1f)
                 ++nGoodReco;
         }
-        if (nodeVector.size() == 1 && nGoodReco == 1)
-        {   // We have a good, single match
-            if (pMCNode->IsTestBeamParticle())
-                ++nTestBeamRecoParticles;
-            else if (pMCNode->IsCosmicRay())
-                ++nCosmicRecoParticles;
-            else
-                ++nNeutrinoRecoParticles;
+        if (pMCNode->IsTestBeamParticle())
+            ++nTestBeamRecoParticles;
+        else if (pMCNode->IsCosmicRay())
+            ++nCosmicRecoParticles;
+        else
+            ++nNeutrinoRecoParticles;
+    }
+    for (const MCMatches &match : matchInfo.GetSubThresholdMatches())
+    {
+        const MCHierarchy::Node *pMCNode{match.GetMC()};
+        if (pMCNode->IsTestBeamParticle())
+            ++nTestBeamMCParticles;
+        else if (pMCNode->IsCosmicRay())
+            ++nCosmicMCParticles;
+        else
+            ++nNeutrinoMCParticles;
+        const int pdg{pMCNode->GetParticleId()};
+        const size_t mcHits{pMCNode->GetCaloHits().size()};
+        const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
+        std::cout << "MC " << tag << pdg << " hits " << mcHits << std::endl;
+        const RecoHierarchy::NodeVector &nodeVector{match.GetRecoMatches()};
+        int nGoodReco{0};
+
+        for (const RecoHierarchy::Node *pRecoNode : nodeVector)
+        {
+            const int recoHits{static_cast<int>(pRecoNode->GetCaloHits().size())};
+            const int sharedHits{match.GetSharedHits(pRecoNode)};
+            const float purity{match.GetPurity(pRecoNode)};
+            const float completeness{match.GetCompleteness(pRecoNode)};
+            std::cout << "   Matched " << sharedHits << " out of " << recoHits << " with purity " << purity << " and completeness " <<
+                completeness << std::endl;
+            if (purity > 0.5f && completeness > 0.1f)
+                ++nGoodReco;
         }
-        else if (!nodeVector.empty())
-        {   // We have either below threshold or multiple matches
-            if (pMCNode->IsTestBeamParticle())
-                ++nTestBeamRecoBTParticles;
-            else if (pMCNode->IsCosmicRay())
-                ++nCosmicRecoBTParticles;
-            else
-                ++nNeutrinoRecoBTParticles;
-        }
-        else if (nodeVector.empty())
-            std::cout << "   Unmatched" << std::endl;
+        if (pMCNode->IsTestBeamParticle())
+            ++nTestBeamRecoBTParticles;
+        else if (pMCNode->IsCosmicRay())
+            ++nCosmicRecoBTParticles;
+        else
+            ++nNeutrinoRecoBTParticles;
+    }
+    for (const MCHierarchy::Node *pMCNode : matchInfo.GetUnmatchedMC())
+    {
+        if (pMCNode->IsTestBeamParticle())
+            ++nTestBeamMCParticles;
+        else if (pMCNode->IsCosmicRay())
+            ++nCosmicMCParticles;
+        else
+            ++nNeutrinoMCParticles;
+        const int pdg{pMCNode->GetParticleId()};
+        const size_t mcHits{pMCNode->GetCaloHits().size()};
+        const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
+        std::cout << "MC " << tag << pdg << " hits " << mcHits << std::endl;
+        std::cout << "   Unmatched" << std::endl;
     }
 
     if (mcHierarchy.IsNeutrinoHierarchy())
@@ -1001,6 +1084,8 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
                     static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
         }
     }
+    if (!matchInfo.GetUnmatchedReco().empty())
+        std::cout << "Unmatched reco: " << matchInfo.GetUnmatchedReco().size() << std::endl;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -422,74 +422,150 @@ public:
 
     class MCMatches
     {
-        public:
-            /**
-             *  @brief  Constructor
-             *
-             *  @param  pMC The MCParticle being matched
-             */
-            MCMatches(const MCHierarchy::Node *pMC);
+    public:
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  pMC The MCParticle being matched
+         */
+        MCMatches(const MCHierarchy::Node *pMC);
 
-            virtual ~MCMatches() = default;
+        virtual ~MCMatches() = default;
 
-            // Might be better to pass in the shared hits themselves
-            /**
-             *  @brief  Add a reconstructed node as a match for this MC node
-             *
-             *  @param  pReco The reconstructed node that matches this MC node
-             */
-            void AddRecoMatch(const RecoHierarchy::Node *pReco, const int nSharedHits);
+        // Might be better to pass in the shared hits themselves
+        /**
+         *  @brief  Add a reconstructed node as a match for this MC node
+         *
+         *  @param  pReco The reconstructed node that matches this MC node
+         */
+        void AddRecoMatch(const RecoHierarchy::Node *pReco, const int nSharedHits);
 
-            /**
-             *  @brief  Retrieve the MC node
-             *
-             *  @return The MC node
-             */
-            const MCHierarchy::Node *GetMC() const { return m_pMC; };
+        /**
+         *  @brief  Retrieve the MC node
+         *
+         *  @return The MC node
+         */
+        const MCHierarchy::Node *GetMC() const { return m_pMC; };
 
-            /**
-             *  @brief  Retrieve the vector of matched reco nodes
-             *
-             *  @return The vector of matched reco nodes
-             */
-            const RecoHierarchy::NodeVector &GetRecoMatches() const { return m_recoNodes; };
+        /**
+         *  @brief  Retrieve the vector of matched reco nodes
+         *
+         *  @return The vector of matched reco nodes
+         */
+        const RecoHierarchy::NodeVector &GetRecoMatches() const { return m_recoNodes; };
 
-            /**
-             *  @brief  Retrieve the number of shared hits in the match
-             *
-             *  @param  pReco The reco node to consider
-             *
-             *  @return The number of shared hits
-             */
-            int GetSharedHits(const RecoHierarchy::Node *pReco) const;
+        /**
+         *  @brief  Retrieve the number of shared hits in the match
+         *
+         *  @param  pReco The reco node to consider
+         *
+         *  @return The number of shared hits
+         */
+        int GetSharedHits(const RecoHierarchy::Node *pReco) const;
 
-            /**
-             *  @brief  Retrieve the purity of the match
-             *
-             *  @param  pReco The reco node to consider
-             *
-             *  @return The purity of the match
-             */
-            float GetPurity(const RecoHierarchy::Node *pReco) const;
+        /**
+         *  @brief  Retrieve the purity of the match
+         *
+         *  @param  pReco The reco node to consider
+         *
+         *  @return The purity of the match
+         */
+        float GetPurity(const RecoHierarchy::Node *pReco) const;
 
-            /**
-             *  @brief  Retrieve the completeness of the match
-             *
-             *  @param  pReco The reco node to consider
-             *
-             *  @return The completeness of the match
-             */
-            float GetCompleteness(const RecoHierarchy::Node *pReco) const;
-
+        /**
+         *  @brief  Retrieve the completeness of the match
+         *
+         *  @param  pReco The reco node to consider
+         *
+         *  @return The completeness of the match
+         */
+        float GetCompleteness(const RecoHierarchy::Node *pReco) const;
 
         private:
             const MCHierarchy::Node *m_pMC; ///< MC node associated with any matches
             RecoHierarchy::NodeVector m_recoNodes; ///< Matched reco nodes
             pandora::IntVector m_sharedHits; ///< Number of shared hits for each match
-
     };
 
     typedef std::vector<MCMatches> MCMatchesVector;
+
+    class MatchInfo
+    {
+    public:
+        class QualityCuts
+        {
+        public:
+            /**
+             *  @brief Default constructor
+             */
+            QualityCuts();
+
+            /**
+             *  @brief Constructor
+             *
+             *  @param  minPurity The minimum purity for a cut to be considered good
+             *  @param  minCompleteness The minimum completeness for a cut to be considered good
+             */
+            QualityCuts(const float minPurity, const float minCompleteness);
+
+            const float m_minPurity;    ///< The minimum purity for a match to be considered good
+            const float m_minCompleteness;  ///< The minimum completeness for a match to be considered good
+        };
+
+
+        /**
+         *  @brief  Default constructor
+         */
+        MatchInfo();
+
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  qualityCuts The quality cuts to be applied to matched nodes
+         */
+        MatchInfo(const QualityCuts &qualityCuts);
+
+        /**
+         *  @brief  Match the nodes in the MC and reco hierarchies.
+         *
+         *  @param  mcHierarchy The MC hierarchy
+         *  @param  recoHierarchy The reco hierarchy
+         */
+        void Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy);
+
+        /**
+         *  @brief  Retrieve the vector of good matches
+         *
+         *  @return The vector of good matches
+         */
+        const MCMatchesVector &GetGoodMatches() const { return m_goodMatches; }
+
+        /**
+         *  @brief  Retrieve the vector of matches that don't pass quality cuts
+         *
+         *  @return The vector of sub-threshold matches
+         */
+        const MCMatchesVector &GetSubThresholdMatches() const { return m_subThresholdMatches; }
+
+        /**
+         *  @brief  Retrieve the vector of unmatched MC nodes
+         *
+         *  @return The vector of unmatched MC
+         */
+        const MCHierarchy::NodeVector &GetUnmatchedMC() const { return m_unmatchedMC; };
+
+        /**
+         *  @brief  Retrieve the vector of unmatched reco nodes
+         */
+        const RecoHierarchy::NodeVector &GetUnmatchedReco() const { return m_unmatchedReco; }
+
+    private:
+        MCMatchesVector m_goodMatches;  ///< The vector of good matches
+        MCMatchesVector m_subThresholdMatches;  ///< The vector of matches MC nodes that don't pass quality cuts
+        MCHierarchy::NodeVector m_unmatchedMC;  ///< The vector of unmatched MC nodes
+        RecoHierarchy::NodeVector m_unmatchedReco;  ///< The vector of unmatched reco nodes
+        QualityCuts m_qualityCuts;  ///< The quality cuts to be applied to matches
+    };
 
     /**
      *  @brief  Fill an MC hierarchy based on the specified folding criteria (see MCHierarchy::Construct for details)
@@ -519,9 +595,9 @@ public:
      *
      *  @param  mcHierarchy The MC hiearchy
      *  @param  recoHierarchy The reconstructed hierarchy
-     *  @param  matchVector The output vector of matches
+     *  @param  matchInfo The output match information
      */
-    static void MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MCMatchesVector &matchVector);
+    static void MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MatchInfo &matchInfo);
 
 private:
     typedef std::set<const pandora::MCParticle*> MCParticleSet;
