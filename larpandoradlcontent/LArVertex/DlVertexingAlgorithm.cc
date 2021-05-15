@@ -136,10 +136,10 @@ StatusCode DlVertexingAlgorithm::Train()
         {
             try
             {
-                const MCParticle *const pMCParticle{MCParticleHelper::GetMainMCParticle(pCaloHit)};
+/*                const MCParticle *const pMCParticle{MCParticleHelper::GetMainMCParticle(pCaloHit)};
                 // Discard non-reconstructable hits
                 if (mcToHitsMap.find(pMCParticle) == mcToHitsMap.end())
-                    continue;
+                    continue;*/
 
                 const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetInputEnergy()};
                 featureVector.push_back(static_cast<double>(x));
@@ -198,15 +198,24 @@ StatusCode DlVertexingAlgorithm::Infer()
             canvas[row] = new float[canvasWidth]{};
 
         // output is a 1 x num_classes x height x width tensor
+        auto outputAccessor{output.accessor<float, 4>()};
         // we want the maximum value in the num_classes dimension (1) for every pixel
         auto classes{torch::argmax(output, 1)};
         // the argmax result is a 1 x height x width tensor where each element is a class id
         auto classesAccessor{classes.accessor<long, 3>()};
         const double scaleFactor{std::sqrt(m_height * m_height + m_width * m_width)};
         std::map<int, bool> haveSeenMap;
+        //std::cout << std::fixed << std::setprecision(2);
         for (const auto [ row, col ] : pixelVector)
         {
             const auto cls{classesAccessor[0][row][col]};
+            /*std::cout << "(" << row << ", " << col << ") [" << cls << "]: ";
+            for (int i = 0; i < 20; ++i)
+            {
+                const auto raw{outputAccessor[0][i][row][col]};
+                std::cout << raw << " ";
+            }
+            std::cout << std::endl;*/
             if (cls > 0 && cls < 19)
             {
                 const int inner{static_cast<int>(std::round(std::ceil(scaleFactor * thresholds[cls - 1])))};
@@ -356,6 +365,7 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const pandora::CaloHit
 {
     // Determine the range of coordinates for the view
     float xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
+    //std::cout << "Hit Region in view " << caloHits.front()->GetHitType() << std::endl;
     GetHitRegion(caloHits, xMin, xMax, zMin, zMax);
 
     // Determine the bin edges - need double precision here for consistency with Python binning
@@ -392,7 +402,7 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const pandora::CaloHit
             for (int col = 0; col < m_width; ++col)
             {
                 const float value{accessor[0][0][row][col]};
-                accessor[0][0][row][col] = 255.f * value / maxValue;
+                accessor[0][0][row][col] = value / maxValue;
                 if (value > 0)
                     pixelVector.emplace_back(std::make_pair(row, col));
             }
@@ -665,6 +675,7 @@ void DlVertexingAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &x
         zMin -= padding;
         zMax += padding;
     }
+    //std::cout << "Min/Max: " << xMin << " " << xMax << " " << zMin << " " << zMax << std::endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
