@@ -30,12 +30,14 @@ public:
      *  @param  pAlgorithm address of the calling algorithm
      *  @param  pVertex address of the vertex
      *  @param  slidingFitDataListMap map of the sliding fit data lists
+     *  @param  showerClusterListMap map of the shower cluster lists
      *
      *  @return the asymmetry feature
      */
-    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const pandora::Vertex *const pVertex,
-        const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
-        const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &showerClusterListMap, const float, float &);
+    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm,
+        const pandora::Vertex *const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap,
+        const VertexSelectionBaseAlgorithm::ClusterListMap &, const VertexSelectionBaseAlgorithm::KDTreeMap &,
+        const VertexSelectionBaseAlgorithm::ShowerClusterListMap &showerClusterListMap, const float, float &);
 
 protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -45,12 +47,13 @@ protected:
      *
      *  @param  vertexPosition2D the vertex position projected into this view
      *  @param  slidingFitDataList the list of sliding fit data objects for this view
+     *  @param  showerClusterList the list of shower cluster objects for this view
      *
      *  @return the asymmetry feature
      */
-    virtual float GetAsymmetryForView(
-        const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList, 
-	const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const = 0;
+    virtual float GetAsymmetryForView(const pandora::CartesianVector &vertexPosition2D,
+        const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList,
+        const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const = 0;
 
     /**
      *  @brief  Increment the asymmetry parameters
@@ -67,7 +70,7 @@ protected:
      *
      *  @param  useEnergyMetrics whether to use energy-based metrics instead of hit-counting-based metrics
      *  @param  vertexPosition2D the vertex position in this view
-     *  @param  slidingFitDataList the list of sliding fit data objects
+     *  @param  asymmetryCluster the vector of cluster objects to be used in the asymmetry calculation
      *  @param  localWeightedDirectionSum the local event axis
      *
      *  @return the asymmetry feature

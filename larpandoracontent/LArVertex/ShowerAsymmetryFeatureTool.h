@@ -37,9 +37,8 @@ private:
      *
      *  @return the shower asymmetry feature
      */
-    float GetAsymmetryForView(
-	 const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &, 
-	 const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const override;
+    float GetAsymmetryForView(const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &,
+        const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const override;
 
     /**
      *  @brief  Get whether we should use a given shower cluster for asymmetry calculation

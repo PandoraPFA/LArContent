@@ -6,18 +6,17 @@
  *  $Log: $
  */
 
-#include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArVertex/EnergyDepositionAsymmetryFeatureTool.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-EnergyDepositionAsymmetryFeatureTool::EnergyDepositionAsymmetryFeatureTool() :
-    GlobalAsymmetryFeatureTool()
+EnergyDepositionAsymmetryFeatureTool::EnergyDepositionAsymmetryFeatureTool() : GlobalAsymmetryFeatureTool()
 {
 }
 
@@ -51,20 +50,20 @@ float EnergyDepositionAsymmetryFeatureTool::CalculateAsymmetry(const bool useEne
         {
             if (pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection) < evtProjectedVtxPos)
             {
-	      minBeforeProjectedPos = std::min(minBeforeProjectedPos, pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection));
-	      maxBeforeProjectedPos = std::max(maxBeforeProjectedPos, pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection));
+                minBeforeProjectedPos = std::min(minBeforeProjectedPos, pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection));
+                maxBeforeProjectedPos = std::max(maxBeforeProjectedPos, pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection));
 
-	      beforeVtxHitEnergy += pCaloHit->GetElectromagneticEnergy();
-	      ++beforeVtxHitCount;
+                beforeVtxEnergy += pCaloHit->GetElectromagneticEnergy();
+                ++beforeVtxHits;
             }
 
             else
             {
-	      minAfterProjectedPos = std::min(minAfterProjectedPos, pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection));
-	      maxAfterProjectedPos = std::max(maxAfterProjectedPos, pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection));
-	      
-	      afterVtxHitEnergy += pCaloHit->GetElectromagneticEnergy();
-	      ++afterVtxHitCount;
+                minAfterProjectedPos = std::min(minAfterProjectedPos, pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection));
+                maxAfterProjectedPos = std::max(maxAfterProjectedPos, pCaloHit->GetPositionVector().GetDotProduct(localWeightedDirection));
+
+                afterVtxEnergy += pCaloHit->GetElectromagneticEnergy();
+                ++afterVtxHits;
             }
         }
     }
@@ -72,30 +71,29 @@ float EnergyDepositionAsymmetryFeatureTool::CalculateAsymmetry(const bool useEne
     // Use energy metrics if possible, otherwise fall back on hit counting.
     const unsigned int totalHits(beforeVtxHits + afterVtxHits);
 
-    const float beforeVtxEnergyDeposition(!std::fabs(maxBeforeProjectedPos - minBeforeProjectedPos) ? 0 : 
-					  beforeVtxHitEnergy / std::fabs(maxBeforeProjectedPos - minBeforeProjectedPos));
+    const float beforeLength(std::fabs(maxBeforeProjectedPos - minBeforeProjectedPos));
+    const float afterLength(std::fabs(maxAfterProjectedPos - minAfterProjectedPos));
 
-    const float afterVtxEnergyDeposition(!std::fabs(maxAfterProjectedPos - minAfterProjectedPos) ? 0 : 
-					 afterVtxHitEnergy / std::fabs(maxAfterProjectedPos - minAfterProjectedPos));
+    const float beforeVtxEnergyDeposition(beforeLength < std::numeric_limits<float>::epsilon() ? 0 : beforeVtxEnergy / beforeLength);
+
+    const float afterVtxEnergyDeposition(afterLength < std::numeric_limits<float>::epsilon() ? 0 : afterVtxEnergy / afterLength);
 
     const float totalEnergyDeposition(beforeVtxEnergyDeposition + afterVtxEnergyDeposition);
 
-    if (useEnergyMetrics && totalEnergyDeposition)
+    if (useEnergyMetrics && totalEnergyDeposition > std::numeric_limits<float>::epsilon())
         return std::fabs((afterVtxEnergyDeposition - beforeVtxEnergyDeposition)) / totalEnergyDeposition;
 
     if (0 == totalHits)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    const float beforeVtxHitDeposition(!std::fabs(maxBeforeProjectedPos - minBeforeProjectedPos) ? 0 :
-				       beforeVtxHitCount / std::fabs(maxBeforeProjectedPos - minBeforeProjectedPos));
+    const float beforeVtxHitDeposition(beforeLength < std::numeric_limits<float>::epsilon() ? 0 : beforeVtxHits / beforeLength);
 
-    const float afterVtxHitDeposition(!std::fabs(maxAfterProjectedPos - minAfterProjectedPos) ? 0 : 
-				      afterVtxHitCount / std::fabs(maxAfterProjectedPos - minAfterProjectedPos));
+    const float afterVtxHitDeposition(afterLength < std::numeric_limits<float>::epsilon() ? 0 : afterVtxHits / afterLength);
 
     const float totalHitDeposition(beforeVtxHitDeposition + afterVtxHitDeposition);
 
-    if(totalHitDeposition)
-      return std::fabs((afterVtxHitDeposition - beforeVtxHitDeposition)) / totalHitDeposition;
+    if (totalHitDeposition > std::numeric_limits<float>::epsilon())
+        return std::fabs((afterVtxHitDeposition - beforeVtxHitDeposition)) / totalHitDeposition;
 
     return 0.f;
 }

@@ -16,15 +16,14 @@ using namespace pandora;
 namespace lar_content
 {
 
-GlobalAsymmetryFeatureTool::GlobalAsymmetryFeatureTool() :   AsymmetryFeatureBaseTool()
+GlobalAsymmetryFeatureTool::GlobalAsymmetryFeatureTool() : AsymmetryFeatureBaseTool()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float GlobalAsymmetryFeatureTool::GetAsymmetryForView(
-    const CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList, 
-    const VertexSelectionBaseAlgorithm::ShowerClusterList &) const
+float GlobalAsymmetryFeatureTool::GetAsymmetryForView(const CartesianVector &vertexPosition2D,
+    const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList, const VertexSelectionBaseAlgorithm::ShowerClusterList &) const
 {
     bool useEnergy(true);
     CartesianVector energyWeightedDirectionSum(0.f, 0.f, 0.f), hitWeightedDirectionSum(0.f, 0.f, 0.f);
@@ -34,7 +33,7 @@ float GlobalAsymmetryFeatureTool::GetAsymmetryForView(
     {
         const Cluster *const pCluster(slidingFitData.GetCluster());
 
-	asymmetryClusters.push_back(pCluster);
+        asymmetryClusters.push_back(pCluster);
 
         if (pCluster->GetElectromagneticEnergy() < std::numeric_limits<float>::epsilon())
             useEnergy = false;
@@ -49,7 +48,7 @@ float GlobalAsymmetryFeatureTool::GetAsymmetryForView(
         {
             this->IncrementAsymmetryParameters(pCluster->GetElectromagneticEnergy(), clusterDirection, energyWeightedDirectionSum);
             this->IncrementAsymmetryParameters(static_cast<float>(pCluster->GetNCaloHits()), clusterDirection, hitWeightedDirectionSum);
-	}
+        }
     }
 
     const CartesianVector &localWeightedDirectionSum(useEnergy ? energyWeightedDirectionSum : hitWeightedDirectionSum);
@@ -62,7 +61,7 @@ float GlobalAsymmetryFeatureTool::GetAsymmetryForView(
 
 StatusCode GlobalAsymmetryFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-  return AsymmetryFeatureBaseTool::ReadSettings(xmlHandle);
+    return AsymmetryFeatureBaseTool::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content

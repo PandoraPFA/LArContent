@@ -35,9 +35,8 @@ private:
      *
      *  @return the local asymmetry feature
      */
-    float GetAsymmetryForView(
-	const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList,
-	const VertexSelectionBaseAlgorithm::ShowerClusterList &) const override;
+    float GetAsymmetryForView(const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList,
+        const VertexSelectionBaseAlgorithm::ShowerClusterList &) const override;
 
     /**
      *  @brief  Check whether a cluster's direction agrees with the current weighted direction

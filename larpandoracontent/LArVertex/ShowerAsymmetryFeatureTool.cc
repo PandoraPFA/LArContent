@@ -16,17 +16,14 @@ using namespace pandora;
 namespace lar_content
 {
 
-ShowerAsymmetryFeatureTool::ShowerAsymmetryFeatureTool() : 
-  AsymmetryFeatureBaseTool(),
-  m_vertexClusterDistance(4.f)
+ShowerAsymmetryFeatureTool::ShowerAsymmetryFeatureTool() : AsymmetryFeatureBaseTool(), m_vertexClusterDistance(4.f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ShowerAsymmetryFeatureTool::GetAsymmetryForView(
-     const CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &, 
-     const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const
+float ShowerAsymmetryFeatureTool::GetAsymmetryForView(const CartesianVector &vertexPosition2D,
+    const VertexSelectionBaseAlgorithm::SlidingFitDataList &, const VertexSelectionBaseAlgorithm::ShowerClusterList &showerClusterList) const
 {
     float showerAsymmetry(1.f);
 
@@ -43,10 +40,10 @@ float ShowerAsymmetryFeatureTool::GetAsymmetryForView(
             if (STATUS_CODE_SUCCESS != showerFit.GetGlobalFitDirection(rL, showerDirection))
                 continue;
 
-	    ClusterVector asymmetryClusters;
-	    std::copy(showerCluster.GetClusters().begin(), showerCluster.GetClusters().end(), std::back_inserter(asymmetryClusters));
+            ClusterVector asymmetryClusters;
+            std::copy(showerCluster.GetClusters().begin(), showerCluster.GetClusters().end(), std::back_inserter(asymmetryClusters));
 
-	    showerAsymmetry = this->CalculateAsymmetry(true, vertexPosition2D, asymmetryClusters, showerDirection);
+            showerAsymmetry = this->CalculateAsymmetry(true, vertexPosition2D, asymmetryClusters, showerDirection);
 
             break;
         }

@@ -55,7 +55,7 @@ public:
          *  @param  vertexEnergy the vertex energy feature
          */
         VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick, const float localAsymmetry,
-	    const float globalAsymmetry, const float showerAsymmetry, const float dEdxAsymmetry, const float vertexEnergy);
+            const float globalAsymmetry, const float showerAsymmetry, const float dEdxAsymmetry, const float vertexEnergy);
 
         float m_beamDeweighting; ///< The beam deweighting feature
         float m_rPhiFeature;     ///< The r/phi feature
@@ -64,7 +64,7 @@ public:
         float m_globalAsymmetry; ///< The global asymmetry feature
         float m_showerAsymmetry; ///< The shower asymmetry feature
         float m_dEdxAsymmetry;   ///< The dE/dx asymmetry feature
-	float m_vertexEnergy;    ///< The vertex energy feature
+        float m_vertexEnergy;    ///< The vertex energy feature
     };
 
     typedef std::map<const pandora::Vertex *const, VertexFeatureInfo> VertexFeatureInfoMap;
@@ -77,16 +77,16 @@ public:
     class VertexSharedFeatureInfo
     {
     public:
-      /**
+        /**
        *  @brief  Constructor
        *
        *  @param  m_separation the distance between the two vertices
        *  @param  m_axisHits the hit density along the axis between the two vertices
        */
-      VertexSharedFeatureInfo(const float separation, const float axisHits);
+        VertexSharedFeatureInfo(const float separation, const float axisHits);
 
-      float    m_separation;        ///< The distance between the two vertices
-      float    m_axisHits;          ///< The hit density along the axis between the two vertices
+        float m_separation; ///< The distance between the two vertices
+        float m_axisHits;   ///< The hit density along the axis between the two vertices
     };
 
     //--------------------------------------------------------------------------------------------------------------------------------------
@@ -392,8 +392,8 @@ protected:
      *  @param  separation the 3D distance between the two vertex candidates
      *  @param  axisHits the number of hits between the two candidates normalised to the distance between them
      */
-    void GetSharedFeatures(const pandora::Vertex *const pVertex1, const pandora::Vertex *const pVertex2, const KDTreeMap &kdTreeMap, 
-			   float &separation, float &axisHits) const;
+    void GetSharedFeatures(const pandora::Vertex *const pVertex1, const pandora::Vertex *const pVertex2, const KDTreeMap &kdTreeMap,
+        float &separation, float &axisHits) const;
 
     /**
      *  @brief  Increments the axis hits information for one view
@@ -403,8 +403,7 @@ protected:
      *  @param  kdTree the kd tree of 2D hits
      *  @param  axisHits the number of hits between the two candidates
      */
-    void IncrementSharedAxisValues(const pandora::CartesianVector pos1, const pandora::CartesianVector pos2, HitKDTree2D &kdTree,
-				   float &axisHits) const;
+    void IncrementSharedAxisValues(const pandora::CartesianVector pos1, const pandora::CartesianVector pos2, HitKDTree2D &kdTree, float &axisHits) const;
 
     /**
      *  @brief  Determines whether a hit lies within the box defined by four other positions
@@ -417,8 +416,8 @@ protected:
      *
      *  @return boolean
      */
-    bool IsHitInBox(const pandora::CartesianVector &hitPos, const pandora::CartesianVector &point1, const pandora::CartesianVector &point2, 
-		    const pandora::CartesianVector &point3, const pandora::CartesianVector &point4) const;
+    bool IsHitInBox(const pandora::CartesianVector &hitPos, const pandora::CartesianVector &point1, const pandora::CartesianVector &point2,
+        const pandora::CartesianVector &point3, const pandora::CartesianVector &point4) const;
 
     /**
      *  @brief  Add the vertex features to a vector in the correct order
@@ -485,8 +484,8 @@ protected:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline TrainedVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature,
-    const float energyKick, const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry, const float dEdxAsymmetry, const float vertexEnergy) :
+inline TrainedVertexSelectionAlgorithm::VertexFeatureInfo::VertexFeatureInfo(const float beamDeweighting, const float rPhiFeature, const float energyKick,
+    const float localAsymmetry, const float globalAsymmetry, const float showerAsymmetry, const float dEdxAsymmetry, const float vertexEnergy) :
     m_beamDeweighting(beamDeweighting),
     m_rPhiFeature(rPhiFeature),
     m_energyKick(energyKick),

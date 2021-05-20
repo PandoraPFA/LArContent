@@ -26,9 +26,8 @@ LocalAsymmetryFeatureTool::LocalAsymmetryFeatureTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LocalAsymmetryFeatureTool::GetAsymmetryForView(
-    const CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList, 
-    const VertexSelectionBaseAlgorithm::ShowerClusterList &) const
+float LocalAsymmetryFeatureTool::GetAsymmetryForView(const CartesianVector &vertexPosition2D,
+    const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList, const VertexSelectionBaseAlgorithm::ShowerClusterList &) const
 {
     bool useEnergy(true), useAsymmetry(true);
     CartesianVector energyWeightedDirectionSum(0.f, 0.f, 0.f), hitWeightedDirectionSum(0.f, 0.f, 0.f);
@@ -49,10 +48,10 @@ float LocalAsymmetryFeatureTool::GetAsymmetryForView(
 
         if (useAsymmetry && (LArClusterHelper::GetClosestDistance(vertexPosition2D, pCluster) < m_maxAsymmetryDistance))
         {
-  	    useAsymmetry &= this->CheckAngle(energyWeightedDirectionSum,clusterDirection);
-	    this->IncrementAsymmetryParameters(pCluster->GetElectromagneticEnergy(), clusterDirection, energyWeightedDirectionSum);
-	  
-	    useAsymmetry &= this->CheckAngle(hitWeightedDirectionSum,clusterDirection);
+            useAsymmetry &= this->CheckAngle(energyWeightedDirectionSum, clusterDirection);
+            this->IncrementAsymmetryParameters(pCluster->GetElectromagneticEnergy(), clusterDirection, energyWeightedDirectionSum);
+
+            useAsymmetry &= this->CheckAngle(hitWeightedDirectionSum, clusterDirection);
             this->IncrementAsymmetryParameters(static_cast<float>(pCluster->GetNCaloHits()), clusterDirection, hitWeightedDirectionSum);
 
             asymmetryClusters.push_back(pCluster);
@@ -78,11 +77,11 @@ float LocalAsymmetryFeatureTool::GetAsymmetryForView(
 
 bool LocalAsymmetryFeatureTool::CheckAngle(const CartesianVector &weightedDirectionSum, const CartesianVector &clusterDirection) const
 {
-  if (!(weightedDirectionSum.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon()))
-    return true;
+    if (!(weightedDirectionSum.GetMagnitudeSquared() > std::numeric_limits<float>::epsilon()))
+        return true;
 
-  const float cosOpeningAngle(weightedDirectionSum.GetCosOpeningAngle(clusterDirection));
-  return std::fabs(cosOpeningAngle) > m_minAsymmetryCosAngle;
+    const float cosOpeningAngle(weightedDirectionSum.GetCosOpeningAngle(clusterDirection));
+    return std::fabs(cosOpeningAngle) > m_minAsymmetryCosAngle;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
