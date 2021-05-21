@@ -43,6 +43,15 @@ public:
             const OverlapResult &overlapResult);
 
         /**
+         *  @brief  Get the address of the given hit type cluster
+         *
+         *  @param  hitType hit type of the required cluster
+         *
+         *  @return address of the required cluster
+         */
+        const pandora::Cluster *GetCluster(const pandora::HitType hitType) const;
+
+        /**
          *  @brief  Get the address of the u cluster
          *
          *  @return address of the u cluster

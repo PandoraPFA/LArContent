@@ -179,14 +179,6 @@ public:
     static float GetClosestDistance(const pandora::ParticleFlowObject *const pPfo, const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Get distance between two Pfos using 2D clusters
-     *
-     *  @param  pPfo the address of the first Pfo
-     *  @param  pPfo the address of the second Pfo
-     */
-    static float GetTwoDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2);
-
-    /**
      *  @brief  Get distance between two Pfos using 3D clusters
      *
      *  @param  pPfo the address of the first Pfo

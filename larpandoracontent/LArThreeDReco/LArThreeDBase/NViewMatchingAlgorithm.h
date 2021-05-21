@@ -55,7 +55,7 @@ protected:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T>
+template<typename T>
 inline T &NViewMatchingAlgorithm<T>::GetMatchingControl()
 {
     return m_matchingControl;

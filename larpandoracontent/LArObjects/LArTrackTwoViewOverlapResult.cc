@@ -7,11 +7,110 @@
  */
 
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
+#include "Objects/Cluster.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
+
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult() :
+    m_isInitialized(false),
+    m_xOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f)),
+    m_commonMuonPfoList(),
+    m_pBestMatchedCluster(nullptr),
+    m_matchedClusterList()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult(const TwoViewXOverlap &xOverlap, const PfoList &commonMuonPfoList,
+    const Cluster *const pBestMatchedCluster, const ClusterList &matchedClusterList, const float reducedChiSquared) :
+    m_isInitialized(true),
+    m_xOverlap(xOverlap),
+    m_commonMuonPfoList(commonMuonPfoList),
+    m_pBestMatchedCluster(pBestMatchedCluster),
+    m_matchedClusterList(matchedClusterList),
+    m_reducedChiSquared(reducedChiSquared)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult(const TwoViewDeltaRayOverlapResult &rhs) :
+    m_isInitialized(rhs.m_isInitialized),
+    m_xOverlap(rhs.GetXOverlap()),
+    m_commonMuonPfoList(rhs.GetCommonMuonPfoList()),
+    m_pBestMatchedCluster(rhs.GetBestMatchedCluster()),
+    m_matchedClusterList(rhs.GetMatchedClusterList()),
+    m_reducedChiSquared(rhs.GetReducedChiSquared())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoViewDeltaRayOverlapResult::~TwoViewDeltaRayOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const Cluster *TwoViewDeltaRayOverlapResult::GetBestMatchedAvailableCluster() const
+{
+    unsigned int highestNHits(0);
+    const Cluster *pBestMatchedCluster(nullptr);
+
+    for (const Cluster *const pMatchedCluster : m_matchedClusterList)
+    {
+        if (!pMatchedCluster->IsAvailable())
+            continue;
+
+        if (pMatchedCluster->GetNCaloHits() > highestNHits)
+        {
+            highestNHits = pMatchedCluster->GetNCaloHits();
+            pBestMatchedCluster = pMatchedCluster;
+        }
+    }
+
+    return pBestMatchedCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoViewDeltaRayOverlapResult &TwoViewDeltaRayOverlapResult::operator=(const TwoViewDeltaRayOverlapResult &rhs)
+{
+    m_isInitialized = rhs.m_isInitialized;
+    m_xOverlap = rhs.GetXOverlap();
+    m_commonMuonPfoList = rhs.GetCommonMuonPfoList();
+    m_pBestMatchedCluster = rhs.GetBestMatchedCluster();
+    m_matchedClusterList = rhs.GetMatchedClusterList();
+    m_reducedChiSquared = rhs.GetReducedChiSquared();
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TwoViewDeltaRayOverlapResult::operator<(const TwoViewDeltaRayOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    if (!m_isInitialized && !rhs.m_isInitialized)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (!m_isInitialized)
+        return true;
+
+    if (!rhs.m_isInitialized)
+        return false;
+
+    return (m_xOverlap.GetTwoViewXOverlapSpan() < rhs.m_xOverlap.GetTwoViewXOverlapSpan());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() : m_isInitialized(false), m_matchingScore(0)
 {

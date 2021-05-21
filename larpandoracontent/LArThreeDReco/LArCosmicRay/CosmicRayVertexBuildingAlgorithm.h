@@ -78,11 +78,12 @@ private:
     void SetParticleParameters(const pandora::CartesianVector &vtxPosition, const pandora::CartesianVector &vtxDirection,
         const pandora::ParticleFlowObject *const pPfo) const;
 
-    bool m_useParentShowerVertex;    ///< use the parent pfo for the shower vertices
-    bool m_isDualPhase;              ///< type of geometry
-    unsigned int m_halfWindowLayers; ///< number of layers to use for half-window of sliding fit
-    std::string m_parentPfoListName; ///< The name of the input pfo list
-    std::string m_vertexListName;    ///< The name of the output vertex list
+    bool m_useParentShowerVertex;           ///< use the parent pfo for the shower vertices
+    bool m_isDualPhase;                     ///< type of geometry
+    unsigned int m_halfWindowLayers;        ///< number of layers to use for half-window of sliding fit
+    std::string m_parentPfoListName;        ///< The name of the input pfo list
+    std::string m_vertexListName;           ///< The name of the output vertex list
+    float m_maxVertexDisplacementFromTrack; ///< The maximum separation of a close vertex from the cosmic ray track
 };
 
 } // namespace lar_content

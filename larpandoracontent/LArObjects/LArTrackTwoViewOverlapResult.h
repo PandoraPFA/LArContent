@@ -10,12 +10,121 @@
 
 #include "Pandora/StatusCodes.h"
 
+#include "larpandoracontent/LArObjects/LArTrackOverlapResult.h"
 #include "larpandoracontent/LArObjects/LArTwoViewXOverlap.h"
 
 #include <vector>
 
 namespace lar_content
 {
+/**
+ *  @brief  TwoViewDeltaRayOverlapResult class
+ */
+class TwoViewDeltaRayOverlapResult
+{
+public:
+    /**
+     *  @brief Default constructor
+     */
+    TwoViewDeltaRayOverlapResult();
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  xOverlap the xOverlap of the two clusters
+     *  @param  commonMuonPfoList the list of muon pfos whose clusters lie close to delta ray clusters in all views 
+     *  @param  pBestMatchedCluster the largest cluster that lies on the projected hits
+     *  @param  matchedClusterList the list of clusters that lie on the projected hits
+     *  @param  reducedChiSquared the reduced chi squared
+     */
+    TwoViewDeltaRayOverlapResult(const TwoViewXOverlap &xOverlap, const pandora::PfoList &commonMuonPfoList,
+        const pandora::Cluster *const pBestMatchedCluster, const pandora::ClusterList &matchedClusterList, const float reducedChiSquared);
+
+    /**
+     *  @brief  Copy constructor
+     *
+     *  @param  rhs
+     */
+    TwoViewDeltaRayOverlapResult(const TwoViewDeltaRayOverlapResult &rhs);
+
+    /**
+     *  @brief  Destructor
+     */
+    virtual ~TwoViewDeltaRayOverlapResult();
+
+    /**
+     *  @brief  Whether the track overlap result has been initialized
+     *
+     *  @return boolean
+     */
+    bool IsInitialized() const;
+
+    /**
+     *  @brief  Get the x overlap object
+     *
+     *  @return the x overlap object
+     */
+    const TwoViewXOverlap &GetXOverlap() const;
+
+    /**
+     *  @brief  Get the best matched cluster
+     *
+     *  @return the best matched cluster
+     */
+    const pandora::Cluster *GetBestMatchedCluster() const;
+
+    /**
+     *  @brief  Get the common muon pfo list
+     *
+     *  @return the common muon pfo list
+     */
+    const pandora::PfoList &GetCommonMuonPfoList() const;
+
+    /**
+     *  @brief  Get the matched cluster list
+     *
+     *  @return the matched cluster list
+     */
+    const pandora::ClusterList &GetMatchedClusterList() const;
+
+    /**
+     *  @brief  Get the reduced chi squared value
+     *
+     *  @return the reduced chi squared value
+     */
+    float GetReducedChiSquared() const;
+
+    /**
+     *  @brief  Get the best matched available cluster
+     *
+     *  @return the best matched available cluster
+     */
+    const pandora::Cluster *GetBestMatchedAvailableCluster() const;
+
+    /**
+     *  @brief  Track overlap result assigment operator
+     *
+     *  @param  rhs the track overlap result to assign
+     */
+    TwoViewDeltaRayOverlapResult &operator=(const TwoViewDeltaRayOverlapResult &rhs);
+
+    /**
+     *  @brief  Track two view overlap result less than operator
+     *
+     *  @param  rhs the track two view overlap result for comparison
+     */
+    bool operator<(const TwoViewDeltaRayOverlapResult &rhs) const;
+
+private:
+    bool m_isInitialized;                          ///< Whether the two view delta ray overlap result has been initialized
+    TwoViewXOverlap m_xOverlap;                    ///< The x overlap object
+    pandora::PfoList m_commonMuonPfoList;          ///< The list of muon pfos whose clusters lie close to delta ray clusters in all views
+    const pandora::Cluster *m_pBestMatchedCluster; ///< The largest cluster that lies on the projected hits
+    pandora::ClusterList m_matchedClusterList;     ///< The list of clusters that lie on the projected hits
+    float m_reducedChiSquared;                     ///< The reduced chi squared of the best matched cluster
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
  *  @brief  TrackTwoViewOverlapResult class
@@ -197,6 +306,49 @@ private:
 };
 
 typedef std::vector<TwoViewTransverseOverlapResult> TwoViewTransverseOverlapResultVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool TwoViewDeltaRayOverlapResult::IsInitialized() const
+{
+    return m_isInitialized;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const TwoViewXOverlap &TwoViewDeltaRayOverlapResult::GetXOverlap() const
+{
+    return m_xOverlap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::Cluster *TwoViewDeltaRayOverlapResult::GetBestMatchedCluster() const
+{
+    return m_pBestMatchedCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::PfoList &TwoViewDeltaRayOverlapResult::GetCommonMuonPfoList() const
+{
+    return m_commonMuonPfoList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::ClusterList &TwoViewDeltaRayOverlapResult::GetMatchedClusterList() const
+{
+    return m_matchedClusterList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline float TwoViewDeltaRayOverlapResult::GetReducedChiSquared() const
+{
+    return m_reducedChiSquared;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------

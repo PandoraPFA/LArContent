@@ -266,6 +266,7 @@ void OverlapMatrix<T>::ExploreConnections(
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class OverlapMatrix<float>;
+template class OverlapMatrix<TwoViewDeltaRayOverlapResult>;
 template class OverlapMatrix<TwoViewTransverseOverlapResult>;
 
 } // namespace lar_content

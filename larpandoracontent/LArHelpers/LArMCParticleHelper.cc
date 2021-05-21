@@ -871,6 +871,46 @@ void LArMCParticleHelper::GetBreadthFirstHierarchyRepresentation(const MCParticl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArMCParticleHelper::SelectParticlesByHitCount(const MCParticleVector &candidateTargets, const MCContributionMap &mcToTrueHitListMap,
+    const MCRelationMap &mcToTargetMCMap, const PrimaryParameters &parameters, MCContributionMap &selectedMCParticlesToHitsMap)
+{
+    // Apply restrictions on the number of good hits associated with the MCParticles
+    for (const MCParticle *const pMCTarget : candidateTargets)
+    {
+        MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCTarget);
+        if (mcToTrueHitListMap.end() == trueHitsIter)
+            continue;
+
+        const CaloHitList &caloHitList(trueHitsIter->second);
+
+        // Remove shared hits where target particle deposits below threshold energy fraction
+        CaloHitList goodCaloHitList;
+        LArMCParticleHelper::SelectGoodCaloHits(
+            &caloHitList, mcToTargetMCMap, goodCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction);
+
+        if (goodCaloHitList.size() < parameters.m_minPrimaryGoodHits)
+            continue;
+
+        unsigned int nGoodViews(0);
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, goodCaloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, goodCaloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, goodCaloHitList) >= parameters.m_minHitsForGoodView)
+            ++nGoodViews;
+
+        if (nGoodViews < parameters.m_minPrimaryGoodViews)
+            continue;
+
+        if (!selectedMCParticlesToHitsMap.insert(MCContributionMap::value_type(pMCTarget, caloHitList)).second)
+            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArMCParticleHelper::SelectGoodCaloHits(const CaloHitList *const pSelectedCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap,
     CaloHitList &selectedGoodCaloHitList, const bool selectInputHits, const float minHitSharingFraction)
 {
@@ -951,46 +991,6 @@ void LArMCParticleHelper::SelectParticlesMatchingCriteria(const MCParticleVector
             }
         }
         selectedParticles.push_back(pMCParticle);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArMCParticleHelper::SelectParticlesByHitCount(const MCParticleVector &candidateTargets, const MCContributionMap &mcToTrueHitListMap,
-    const MCRelationMap &mcToTargetMCMap, const PrimaryParameters &parameters, MCContributionMap &selectedMCParticlesToHitsMap)
-{
-    // Apply restrictions on the number of good hits associated with the MCParticles
-    for (const MCParticle *const pMCTarget : candidateTargets)
-    {
-        MCContributionMap::const_iterator trueHitsIter = mcToTrueHitListMap.find(pMCTarget);
-        if (mcToTrueHitListMap.end() == trueHitsIter)
-            continue;
-
-        const CaloHitList &caloHitList(trueHitsIter->second);
-
-        // Remove shared hits where target particle deposits below threshold energy fraction
-        CaloHitList goodCaloHitList;
-        LArMCParticleHelper::SelectGoodCaloHits(
-            &caloHitList, mcToTargetMCMap, goodCaloHitList, parameters.m_selectInputHits, parameters.m_minHitSharingFraction);
-
-        if (goodCaloHitList.size() < parameters.m_minPrimaryGoodHits)
-            continue;
-
-        unsigned int nGoodViews(0);
-        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, goodCaloHitList) >= parameters.m_minHitsForGoodView)
-            ++nGoodViews;
-
-        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, goodCaloHitList) >= parameters.m_minHitsForGoodView)
-            ++nGoodViews;
-
-        if (LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, goodCaloHitList) >= parameters.m_minHitsForGoodView)
-            ++nGoodViews;
-
-        if (nGoodViews < parameters.m_minPrimaryGoodViews)
-            continue;
-
-        if (!selectedMCParticlesToHitsMap.insert(MCContributionMap::value_type(pMCTarget, caloHitList)).second)
-            throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
     }
 }
 

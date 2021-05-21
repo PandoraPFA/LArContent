@@ -342,6 +342,63 @@ private:
 typedef std::vector<FragmentOverlapResult> FragmentOverlapResultVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *  @brief  DeltaRayOverlapResult class
+ */
+class DeltaRayOverlapResult : public TransverseOverlapResult
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    DeltaRayOverlapResult();
+
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  nMatchedSamplingPoints
+     *  @param  nSamplingPoints
+     *  @param  chi2
+     *  @param  xOverlap
+     *  @param  commonMuonPfoList the list of cosmic ray pfos that, in each view, lie close to the clusters of the tensor element   
+     */
+    DeltaRayOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
+        const XOverlap &xOverlap, const pandora::PfoList &commonMuonPfoList);
+
+    /**
+     *  @brief  Copy constructor
+     *
+     *  @param  rhs
+     */
+    DeltaRayOverlapResult(const DeltaRayOverlapResult &rhs);
+
+    /**
+     *  @brief  Destructor
+     */
+    virtual ~DeltaRayOverlapResult();
+
+    /**
+     *  @brief  Get the common muon pfo list
+     *
+     *  @return the common muon pfo list
+     */
+    const pandora::PfoList &GetCommonMuonPfoList() const;
+
+    /**
+     *  @brief  Track overlap result assigment operator
+     *
+     *  @param  rhs the track overlap result to assign
+     */
+    DeltaRayOverlapResult &operator=(const DeltaRayOverlapResult &rhs);
+
+private:
+    pandora::PfoList m_commonMuonPfoList; ///< The list of cosmic ray pfos that, in each view, lie close to the clusters of the tensor element
+};
+
+typedef std::vector<DeltaRayOverlapResult> DeltaRayOverlapResultVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline bool TrackOverlapResult::IsInitialized() const
@@ -438,6 +495,14 @@ inline const pandora::CaloHitList &FragmentOverlapResult::GetFragmentCaloHitList
 inline const pandora::ClusterList &FragmentOverlapResult::GetFragmentClusterList() const
 {
     return m_clusterList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::PfoList &DeltaRayOverlapResult::GetCommonMuonPfoList() const
+{
+    return m_commonMuonPfoList;
 }
 
 } // namespace lar_content

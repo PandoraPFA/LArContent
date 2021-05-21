@@ -293,4 +293,48 @@ pandora::HitType FragmentOverlapResult::GetFragmentHitType() const
     return (*(m_caloHitList.begin()))->GetHitType();
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult() : TransverseOverlapResult(), m_commonMuonPfoList(PfoList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints,
+    const float chi2, const XOverlap &xOverlap, const PfoList &commonMuonPfoList) :
+    TransverseOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chi2, xOverlap),
+    m_commonMuonPfoList(commonMuonPfoList)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::DeltaRayOverlapResult(const DeltaRayOverlapResult &rhs) :
+    TransverseOverlapResult(rhs),
+    m_commonMuonPfoList(rhs.GetCommonMuonPfoList())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult::~DeltaRayOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+DeltaRayOverlapResult &DeltaRayOverlapResult::operator=(const DeltaRayOverlapResult &rhs)
+{
+    this->TransverseOverlapResult::operator=(rhs);
+
+    m_commonMuonPfoList = rhs.GetCommonMuonPfoList();
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 } // namespace lar_content
