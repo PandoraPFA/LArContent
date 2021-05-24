@@ -69,7 +69,7 @@ private:
     bool IsContaminated(const MatrixType::Element &element, const pandora::HitType hitType) const;
 
     /**
-     *  @brief  Whether a given position is close to a defined line 
+     *  @brief  Whether a given position is close to a defined line
      *
      *  @param  hitPosition the input position
      *  @param  lineStart the start position of the line
@@ -119,7 +119,7 @@ private:
      *  @param  element the matrix element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
-     *  @param  deltaRayRemantHits the list of remainder hits 
+     *  @param  deltaRayRemantHits the list of remainder hits
      *
      *  @return  whether the muon projection mechanics were successful - abort process if not
      */
@@ -147,7 +147,7 @@ private:
      *  @param  element the matrix element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
-     *  @param  deltaRayRemantHits the list of remainder hits 
+     *  @param  deltaRayRemantHits the list of remainder hits
      */
     void SplitDeltaRayCluster(const MatrixType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits,
         pandora::CaloHitList &deltaRayRemnantHits) const;

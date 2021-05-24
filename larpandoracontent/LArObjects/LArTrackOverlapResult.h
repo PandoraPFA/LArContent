@@ -361,7 +361,7 @@ public:
      *  @param  nSamplingPoints
      *  @param  chi2
      *  @param  xOverlap
-     *  @param  commonMuonPfoList the list of cosmic ray pfos that, in each view, lie close to the clusters of the tensor element   
+     *  @param  commonMuonPfoList the list of cosmic ray pfos that, in each view, lie close to the clusters of the tensor element
      */
     DeltaRayOverlapResult(const unsigned int nMatchedSamplingPoints, const unsigned int nSamplingPoints, const float chi2,
         const XOverlap &xOverlap, const pandora::PfoList &commonMuonPfoList);

@@ -74,12 +74,12 @@ private:
         const pandora::Cluster *const pClusterW, DeltaRayOverlapResult &overlapResult) const;
 
     /**
-     *  @brief  Find the cosmic ray pfos that, in each view, lie close to the clusters of the tensor element   
+     *  @brief  Find the cosmic ray pfos that, in each view, lie close to the clusters of the tensor element
      *
      *  @param  pClusterU the cluster from the U view
      *  @param  pClusterV the cluster from the V view
      *  @param  pClusterW the cluster from the W view
-     *  @param  commonMuonPfoList the output list of common cosmic ray pfos 
+     *  @param  commonMuonPfoList the output list of common cosmic ray pfos
      */
     void FindCommonMuonParents(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV,
         const pandora::Cluster *const pClusterW, pandora::PfoList &commonMuonPfoList) const;

@@ -80,7 +80,7 @@ public:
      *  @param  pMCParticleList the address of the list of MCParticles
      *  @param  pCaloHitList the address of the list of CaloHits
      *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
-     *  @param  recoMuonHitList the list of reconstructed cosmic ray hits 
+     *  @param  recoMuonHitList the list of reconstructed cosmic ray hits
      *  @param  selectedMCParticlesToHitsMap the output mapping from selected MCParticles to their hits
      */
     static void SelectReconstructableLeadingParticles(const pandora::MCParticleList *pMCParticleList,
@@ -92,7 +92,7 @@ public:
      *
      *  @param  pLeadingParticle the address of the input leading MCParticle
      *  @param  matchedPfoHitList the input leading pfo hit list
-     *  @param  parentTrackHits the output list of hits that belong to the parent cosmic ray 
+     *  @param  parentTrackHits the output list of hits that belong to the parent cosmic ray
      *  @param  otherTrackHits the output list of hits that belong to a cosmic ray that is not the parent
      *  @param  otherShowerHits the output list of hits that belong to a different shower hierarchy
      */
@@ -173,7 +173,7 @@ private:
      *  @param  selectedCaloHitList to receive the populated selected calo hit list
      *  @param  selectInputHits whether to select input hits
      *  @param  minHitSharingFraction the minimum required charge share of the hit
-     *  @param  recoMuonHitList the list of reconstructed cosmic ray hits 
+     *  @param  recoMuonHitList the list of reconstructed cosmic ray hits
      *  @param  leadingMCParticleToPostBremsstrahlungHitList the mapping of leading MCParticles to post-bremsstrahlung hits
      */
     static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap,

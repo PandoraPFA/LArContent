@@ -73,7 +73,7 @@ private:
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
-     *  @param  deltaRayRemantHits the list of remainder hits 
+     *  @param  deltaRayRemantHits the list of remainder hits
      *
      *  @return  whether the muon projection mechanics were successful - abort process if not
      */
@@ -101,7 +101,7 @@ private:
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
-     *  @param  deltaRayRemantHits the list of remainder hits 
+     *  @param  deltaRayRemantHits the list of remainder hits
      */
     void SplitDeltaRayCluster(const TensorType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits,
         pandora::CaloHitList &deltaRayRemnantHits) const;

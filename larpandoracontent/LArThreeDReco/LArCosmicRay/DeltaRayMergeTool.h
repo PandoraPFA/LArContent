@@ -58,7 +58,7 @@ private:
     /**
      *  @brief  Determine, from a topological point of view, whether two delta ray clusters should be merged together
      *
-     *  @param  element1 the first tensor element 
+     *  @param  element1 the first tensor element
      *  @param  element2 the second tensor element
      *  @param  mergeHitType the hit type of the view in which to assess the merge
      *

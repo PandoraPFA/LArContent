@@ -56,7 +56,7 @@ private:
     const pandora::PfoList GetDeltaRayPfoList();
 
     /**
-     *  @brief  Use nearby muon pfos to project into other views and attempt to match the remaining delta ray clusters 
+     *  @brief  Use nearby muon pfos to project into other views and attempt to match the remaining delta ray clusters
      *
      *  @param  hitType the hit type of the input cluster and of the map to add to
      */
@@ -104,7 +104,7 @@ private:
     bool IsDeltaRayPfo(const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Determine cluster span (in x) of a group of clusters 
+     *  @brief  Determine cluster span (in x) of a group of clusters
      *
      *  @param  clusterList the input list of clusters
      *  @param  spanMinX the output minimum x value
@@ -125,7 +125,7 @@ private:
      *  @brief  In the view of the input available cluster, gather nearby available clusters
      *
      *  @param  pCluster the input available cluster
-     *  @param  consideredClusters the list of investigated clusters 
+     *  @param  consideredClusters the list of investigated clusters
      *  @param  foundClusters the output list of nearby available clusters (including the available cluster)
      */
     void GetNearbyAvailableClusters(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::ClusterList &foundClusters);

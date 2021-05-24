@@ -29,7 +29,7 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
-     *  @brief  Remove hits from cosmic ray clusters that belong to a child delta ray 
+     *  @brief  Remove hits from cosmic ray clusters that belong to a child delta ray
      *
      *  @param  elementList the tensor element list
      *

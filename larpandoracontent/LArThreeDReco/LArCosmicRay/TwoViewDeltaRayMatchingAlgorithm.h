@@ -111,11 +111,11 @@ private:
         const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, TwoViewDeltaRayOverlapResult &overlapResult) const;
 
     /**
-     *  @brief  Find the cosmic ray pfos that, in each view, lie close to the clusters of the matrix element   
+     *  @brief  Find the cosmic ray pfos that, in each view, lie close to the clusters of the matrix element
      *
      *  @param  pCluster1 the cluster from the first input view
      *  @param  pCluster2 the cluster from the second input view
-     *  @param  commonMuonPfoList the output list of common cosmic ray pfos 
+     *  @param  commonMuonPfoList the output list of common cosmic ray pfos
      */
     void FindCommonMuonParents(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, pandora::PfoList &commonMuonPfoList) const;
 
@@ -139,13 +139,13 @@ private:
      *  @param  matchedClusters the list of third view matched clusters
      *  @param  reducedChiSquared to receive the calculated reduced chi-squared value
      *
-     *  @return  the address of the best matched third view cluster    
+     *  @return  the address of the best matched third view cluster
      */
     const pandora::Cluster *GetBestMatchedCluster(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         const pandora::PfoList &commonMuonPfoList, const pandora::ClusterList &matchedClusters, float &reducedChiSquared) const;
 
     /**
-     *  @brief  Form the third view cluster by removing hits from cosmic ray clusters and merging the matched clusters where appropriate  
+     *  @brief  Form the third view cluster by removing hits from cosmic ray clusters and merging the matched clusters where appropriate
      *
      *  @param  element the matrix element
      *  @param  protoParticle the output proto particle
