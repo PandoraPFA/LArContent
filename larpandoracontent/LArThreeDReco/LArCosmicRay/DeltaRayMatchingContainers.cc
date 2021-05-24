@@ -20,14 +20,14 @@ using namespace pandora;
 namespace lar_content
 {
 
-DeltaRayMatchingContainers::DeltaRayMatchingContainers() :
-    m_searchRegion1D(3.f)
+DeltaRayMatchingContainers::DeltaRayMatchingContainers() : m_searchRegion1D(3.f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void DeltaRayMatchingContainers::FillContainers(const PfoList &inputPfoList, const ClusterList &inputClusterList1, const ClusterList &inputClusterList2, const ClusterList &inputClusterList3)
+void DeltaRayMatchingContainers::FillContainers(const PfoList &inputPfoList, const ClusterList &inputClusterList1,
+    const ClusterList &inputClusterList2, const ClusterList &inputClusterList3)
 {
     this->FillHitToClusterMap(inputClusterList1);
     this->FillHitToClusterMap(inputClusterList2);
@@ -39,7 +39,7 @@ void DeltaRayMatchingContainers::FillContainers(const PfoList &inputPfoList, con
 
     this->FillClusterToPfoMaps(inputPfoList);
 }
-    
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayMatchingContainers::FillHitToClusterMap(const ClusterList &inputClusterList)
@@ -52,7 +52,7 @@ void DeltaRayMatchingContainers::FillHitToClusterMap(const ClusterList &inputClu
 
 void DeltaRayMatchingContainers::AddToClusterMap(const Cluster *const pCluster)
 {
-    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));      
+    const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
 
     CaloHitList caloHitList;
@@ -68,11 +68,11 @@ void DeltaRayMatchingContainers::FillClusterProximityMap(const ClusterList &inpu
 {
     if (inputClusterList.empty())
         return;
-    
+
     const HitType hitType(LArClusterHelper::GetClusterHitType(inputClusterList.front()));
-    
+
     this->BuildKDTree(hitType);
-    
+
     for (const Cluster *const pCluster : inputClusterList)
         this->AddToClusterProximityMap(pCluster);
 }
@@ -82,13 +82,13 @@ void DeltaRayMatchingContainers::FillClusterProximityMap(const ClusterList &inpu
 void DeltaRayMatchingContainers::BuildKDTree(const HitType hitType)
 {
     const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
-    HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);    
+    HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
 
     CaloHitList allCaloHits;
 
     for (auto &entry : hitToClusterMap)
         allCaloHits.push_back(entry.first);
-    
+
     HitKDNode2DList hitKDNode2DList;
     KDTreeBox hitsBoundingRegion2D(fill_and_bound_2d_kd_tree(allCaloHits, hitKDNode2DList));
 
@@ -102,47 +102,48 @@ void DeltaRayMatchingContainers::AddToClusterProximityMap(const Cluster *const p
     const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
     const HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
     HitKDTree2D &kdTree((hitType == TPC_VIEW_U) ? m_kdTreeU : (hitType == TPC_VIEW_V) ? m_kdTreeV : m_kdTreeW);
-    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
-  
+    ClusterProximityMap &clusterProximityMap(
+        (hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+
     CaloHitList caloHitList;
     pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
     for (const CaloHit *const pCaloHit : caloHitList)
-    {             
+    {
         HitKDNode2DList found;
         KDTreeBox searchRegionHits(build_2d_kd_search_region(pCaloHit, m_searchRegion1D, m_searchRegion1D));
 
         kdTree.search(searchRegionHits, found);
-            
+
         for (const auto &hit : found)
         {
             const Cluster *const pNearbyCluster(hitToClusterMap.at(hit.data));
-            
+
             if (pNearbyCluster == pCluster)
                 continue;
-                
-            ClusterList  &nearbyClusterList(clusterProximityMap[pCluster]);
+
+            ClusterList &nearbyClusterList(clusterProximityMap[pCluster]);
 
             if (std::find(nearbyClusterList.begin(), nearbyClusterList.end(), pNearbyCluster) == nearbyClusterList.end())
                 nearbyClusterList.push_back(pNearbyCluster);
-            
+
             ClusterList &invertedNearbyClusterList(clusterProximityMap[pNearbyCluster]);
-            
+
             if (std::find(invertedNearbyClusterList.begin(), invertedNearbyClusterList.end(), pCluster) == invertedNearbyClusterList.end())
                 invertedNearbyClusterList.push_back(pCluster);
         }
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------        
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayMatchingContainers::FillClusterToPfoMaps(const PfoList &inputPfoList)
-{     
+{
     for (const ParticleFlowObject *const pPfo : inputPfoList)
         this->AddClustersToPfoMaps(pPfo);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------        
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 void DeltaRayMatchingContainers::AddClustersToPfoMaps(const ParticleFlowObject *const pPfo)
 {
@@ -174,7 +175,7 @@ void DeltaRayMatchingContainers::AddClustersToContainers(const ClusterVector &ne
     {
         const Cluster *const pNewCluster(newClusterVector.at(i));
         const ParticleFlowObject *const pMuonPfo(pfoVector.at(i));
-        
+
         this->AddToClusterProximityMap(pNewCluster);
 
         if (pMuonPfo)
@@ -188,9 +189,10 @@ void DeltaRayMatchingContainers::RemoveClusterFromContainers(const Cluster *cons
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(pDeletedCluster));
     HitToClusterMap &hitToClusterMap((hitType == TPC_VIEW_U) ? m_hitToClusterMapU : (hitType == TPC_VIEW_V) ? m_hitToClusterMapV : m_hitToClusterMapW);
-    ClusterProximityMap &clusterProximityMap((hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
+    ClusterProximityMap &clusterProximityMap(
+        (hitType == TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
     ClusterToPfoMap &clusterToPfoMap((hitType == TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
-    
+
     CaloHitList caloHitList;
     pDeletedCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
 
@@ -200,7 +202,7 @@ void DeltaRayMatchingContainers::RemoveClusterFromContainers(const Cluster *cons
 
         if (iter == hitToClusterMap.end())
             throw StatusCodeException(STATUS_CODE_FAILURE);
-        
+
         hitToClusterMap.erase(iter);
     }
 
@@ -216,13 +218,13 @@ void DeltaRayMatchingContainers::RemoveClusterFromContainers(const Cluster *cons
 
             if (iter == clusterProximityMap.end())
                 continue;
-        
+
             ClusterList &invertedCloseClusters(iter->second);
 
             ClusterList::iterator invertedIter(std::find(invertedCloseClusters.begin(), invertedCloseClusters.end(), pDeletedCluster));
             invertedCloseClusters.erase(invertedIter);
         }
-        
+
         clusterProximityMap.erase(clusterProximityIter);
     }
 
@@ -238,11 +240,11 @@ void DeltaRayMatchingContainers::ClearContainers()
 {
     m_hitToClusterMapU.clear();
     m_hitToClusterMapV.clear();
-    m_hitToClusterMapW.clear();    
+    m_hitToClusterMapW.clear();
 
     m_kdTreeU.clear();
     m_kdTreeV.clear();
-    m_kdTreeW.clear();    
+    m_kdTreeW.clear();
 
     m_clusterProximityMapU.clear();
     m_clusterProximityMapV.clear();

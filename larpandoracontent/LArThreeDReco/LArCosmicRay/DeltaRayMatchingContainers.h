@@ -21,8 +21,8 @@ namespace lar_content
 class DeltaRayMatchingContainers
 {
 public:
-    typedef std::map<const pandora::Cluster*, const pandora::ParticleFlowObject*> ClusterToPfoMap;
-    typedef std::map<const pandora::Cluster*, pandora::ClusterList> ClusterProximityMap;
+    typedef std::map<const pandora::Cluster *, const pandora::ParticleFlowObject *> ClusterToPfoMap;
+    typedef std::map<const pandora::Cluster *, pandora::ClusterList> ClusterProximityMap;
 
     /**
      *  @brief  Default constructor
@@ -33,14 +33,14 @@ public:
      *  @brief  Get the mapping of clusters to the pfos to which they belong
      *
      *  @return  the cluster to pfo map
-     */    
+     */
     const ClusterToPfoMap &GetClusterToPfoMap(const pandora::HitType hitType) const;
 
     /**
      *  @brief  Get the mapping of clusters to to their neighbouring clusters
      *
      *  @return  the cluster to nearby cluster map
-     */        
+     */
     const ClusterProximityMap &GetClusterProximityMap(const pandora::HitType hitType) const;
 
     /**
@@ -50,8 +50,9 @@ public:
      *  @param  inputClusterList1 the input list of clusters in view 1
      *  @param  inputClusterList2 the input list of clusters in view 2
      *  @param  inputClusterList3 the input list of clusters in view 3
-     */       
-    void FillContainers(const pandora::PfoList &inputPfoList, const pandora::ClusterList &inputClusterList1, const pandora::ClusterList &inputClusterList2 = pandora::ClusterList(),
+     */
+    void FillContainers(const pandora::PfoList &inputPfoList, const pandora::ClusterList &inputClusterList1,
+        const pandora::ClusterList &inputClusterList2 = pandora::ClusterList(),
         const pandora::ClusterList &inputClusterList3 = pandora::ClusterList());
 
     /**
@@ -81,14 +82,14 @@ public:
      */
     void ClearContainers();
 
-    float m_searchRegion1D; ///< Search region, applied to each dimension, for look-up from kd-tree    
+    float m_searchRegion1D; ///< Search region, applied to each dimension, for look-up from kd-tree
 
 private:
-    typedef std::map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;    
-    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
-    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef std::map<const pandora::CaloHit *, const pandora::Cluster *> HitToClusterMap;
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
-    
+
     /**
      *  @brief  Populate the hit to cluster map from a list of clusters
      *
@@ -122,41 +123,40 @@ private:
      *
      *  @param  hitType the hit type of the KD tree to build
      */
-    void BuildKDTree(const pandora::HitType hitType);    
+    void BuildKDTree(const pandora::HitType hitType);
 
     /**
      *  @brief  Add a cluster to the cluster proximity map
      *
      *  @param  pCluster the address of the input cluster
      */
-    void AddToClusterProximityMap(const pandora::Cluster *const pCluster);    
+    void AddToClusterProximityMap(const pandora::Cluster *const pCluster);
 
-    HitToClusterMap m_hitToClusterMapU; ///< The mapping of hits to the clusters to which they belong (in the U view)
-    HitToClusterMap m_hitToClusterMapV; ///< The mapping of hits to the clusters to which they belong (in the V view)
-    HitToClusterMap m_hitToClusterMapW; ///< The mapping of hits to the clusters to which they belong (in the W view)
-    HitKDTree2D m_kdTreeU; ///< The KD tree (in the U view)        
-    HitKDTree2D m_kdTreeV; ///< The KD tree (in the V view)    
-    HitKDTree2D m_kdTreeW; ///< The KD tree (in the W view)    
+    HitToClusterMap m_hitToClusterMapU;         ///< The mapping of hits to the clusters to which they belong (in the U view)
+    HitToClusterMap m_hitToClusterMapV;         ///< The mapping of hits to the clusters to which they belong (in the V view)
+    HitToClusterMap m_hitToClusterMapW;         ///< The mapping of hits to the clusters to which they belong (in the W view)
+    HitKDTree2D m_kdTreeU;                      ///< The KD tree (in the U view)
+    HitKDTree2D m_kdTreeV;                      ///< The KD tree (in the V view)
+    HitKDTree2D m_kdTreeW;                      ///< The KD tree (in the W view)
     ClusterProximityMap m_clusterProximityMapU; ///< The mapping of clusters to their neighbouring clusters (in the U view)
     ClusterProximityMap m_clusterProximityMapV; ///< The mapping of clusters to their neighbouring clusters (in the V view)
     ClusterProximityMap m_clusterProximityMapW; ///< The mapping of clusters to their neighbouring clusters (in the W view)
-    ClusterToPfoMap m_clusterToPfoMapU; ///< The mapping of cosmic ray U clusters to the cosmic ray pfos to which they belong 
-    ClusterToPfoMap m_clusterToPfoMapV; ///< The mapping of cosmic ray V clusters to the cosmic ray pfos to which they belong 
-    ClusterToPfoMap m_clusterToPfoMapW; ///< The mapping of cosmic ray W clusters to the cosmic ray pfos to which they belong 
+    ClusterToPfoMap m_clusterToPfoMapU;         ///< The mapping of cosmic ray U clusters to the cosmic ray pfos to which they belong
+    ClusterToPfoMap m_clusterToPfoMapV;         ///< The mapping of cosmic ray V clusters to the cosmic ray pfos to which they belong
+    ClusterToPfoMap m_clusterToPfoMapW;         ///< The mapping of cosmic ray W clusters to the cosmic ray pfos to which they belong
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------    
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-
-inline const DeltaRayMatchingContainers::ClusterProximityMap& DeltaRayMatchingContainers::GetClusterProximityMap(const pandora::HitType hitType) const
+inline const DeltaRayMatchingContainers::ClusterProximityMap &DeltaRayMatchingContainers::GetClusterProximityMap(const pandora::HitType hitType) const
 {
     return ((hitType == pandora::TPC_VIEW_U) ? m_clusterProximityMapU : (hitType == pandora::TPC_VIEW_V) ? m_clusterProximityMapV : m_clusterProximityMapW);
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------    
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const DeltaRayMatchingContainers::ClusterToPfoMap& DeltaRayMatchingContainers::GetClusterToPfoMap(const pandora::HitType hitType) const
+inline const DeltaRayMatchingContainers::ClusterToPfoMap &DeltaRayMatchingContainers::GetClusterToPfoMap(const pandora::HitType hitType) const
 {
     return ((hitType == pandora::TPC_VIEW_U) ? m_clusterToPfoMapU : (hitType == pandora::TPC_VIEW_V) ? m_clusterToPfoMapV : m_clusterToPfoMapW);
 }

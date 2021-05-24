@@ -24,9 +24,9 @@ TwoViewAmbiguousDeltaRayTool::TwoViewAmbiguousDeltaRayTool()
 bool TwoViewAmbiguousDeltaRayTool::Run(TwoViewDeltaRayMatchingAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
 {
     m_pParentAlgorithm = pAlgorithm;
-    
+
     if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     this->ExamineConnectedElements(overlapMatrix);
 
@@ -66,8 +66,7 @@ void TwoViewAmbiguousDeltaRayTool::ExamineConnectedElements(MatrixType &overlapM
                 break;
             }
         }
-    }
-    while (particleCreated);
+    } while (particleCreated);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,7 +76,7 @@ bool TwoViewAmbiguousDeltaRayTool::PickOutGoodMatches(const MatrixType::ElementL
     unsigned int highestHitCount(0);
     float bestChiSquared(std::numeric_limits<float>::max());
     auto bestElementIter(elementList.end());
-    
+
     for (auto iter = elementList.begin(); iter != elementList.end(); ++iter)
     {
         const MatrixType::Element &element(*iter);

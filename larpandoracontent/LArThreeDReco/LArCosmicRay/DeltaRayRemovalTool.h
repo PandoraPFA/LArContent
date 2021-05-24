@@ -26,7 +26,7 @@ public:
 
 private:
     bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
-    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);    
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
      *  @brief  Remove hits from cosmic ray clusters that belong to a child delta ray 
@@ -66,12 +66,12 @@ private:
      */
     void SplitMuonCluster(const TensorType::Element &element, const pandora::HitType hitType, const pandora::CaloHitList &deltaRayHits) const;
 
-    unsigned int m_slidingFitWindow;          ///< The sliding fit window used in cosmic ray parameterisations
-    float m_minDeviationFromTransverse;       ///< The minimum deviation from transverse required to avoid mistakes
-    float m_contaminationWindow;              ///< The distance in which to search for delta ray contamination in the cosmic ray track
-    unsigned int m_significantHitThreshold;   ///< The threshold number of hits which define significant contimination
-    float m_minDistanceFromMuon; ///< The minimum distance of a hit from the cosmic ray track required for removal
-    float m_maxDistanceToCollected; ///< The maximim distance of a hit from the projected delta ray hits required for removal
+    unsigned int m_slidingFitWindow;        ///< The sliding fit window used in cosmic ray parameterisations
+    float m_minDeviationFromTransverse;     ///< The minimum deviation from transverse required to avoid mistakes
+    float m_contaminationWindow;            ///< The distance in which to search for delta ray contamination in the cosmic ray track
+    unsigned int m_significantHitThreshold; ///< The threshold number of hits which define significant contimination
+    float m_minDistanceFromMuon;            ///< The minimum distance of a hit from the cosmic ray track required for removal
+    float m_maxDistanceToCollected;         ///< The maximim distance of a hit from the projected delta ray hits required for removal
 };
 
 } // namespace lar_content

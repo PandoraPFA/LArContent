@@ -27,7 +27,7 @@ public:
      *  @brief  Default constructor
      */
     OneViewDeltaRayMatchingAlgorithm();
-    
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -91,8 +91,8 @@ private:
      *
      *  @return whether the best matched cluster of the specified view
      */
-    const pandora::Cluster *GetBestProjectedCluster(const pandora::ClusterList &deltaRayClusterGroup, const pandora::ParticleFlowObject *const pNearbyMuonPfo,
-        const pandora::HitType hitType, const bool findAvailable);
+    const pandora::Cluster *GetBestProjectedCluster(const pandora::ClusterList &deltaRayClusterGroup,
+        const pandora::ParticleFlowObject *const pNearbyMuonPfo, const pandora::HitType hitType, const bool findAvailable);
 
     /**
      *  @brief  Determine whether an input cluster belongs to a delta ray pfo
@@ -129,7 +129,7 @@ private:
      *  @param  foundClusters the output list of nearby available clusters (including the available cluster)
      */
     void GetNearbyAvailableClusters(const pandora::Cluster *const pCluster, pandora::ClusterList &consideredClusters, pandora::ClusterList &foundClusters);
-    
+
     /**
      *  @brief  Merge a collection of available clusters together updating hit containers accordingly
      *
@@ -155,14 +155,14 @@ private:
      */
     void PerformRecovery(const pandora::HitType hitType);
 
-    std::string m_muonPfoListName; ///< The list of reconstructed cosmic ray pfos
-    std::string m_deltaRayPfoListName; ///< The list of reconstructed delta ray pfos
-    std::string m_inputClusterListNameU; ///< The list of reconstructed U clusters
-    std::string m_inputClusterListNameV; ///< The list of reconstructed V clusters
-    std::string m_inputClusterListNameW; ///< The list of reconstructed W clusters
-    std::string m_outputPfoListName; ///< The list to receive the created delta ray pfos
+    std::string m_muonPfoListName;                           ///< The list of reconstructed cosmic ray pfos
+    std::string m_deltaRayPfoListName;                       ///< The list of reconstructed delta ray pfos
+    std::string m_inputClusterListNameU;                     ///< The list of reconstructed U clusters
+    std::string m_inputClusterListNameV;                     ///< The list of reconstructed V clusters
+    std::string m_inputClusterListNameW;                     ///< The list of reconstructed W clusters
+    std::string m_outputPfoListName;                         ///< The list to receive the created delta ray pfos
     DeltaRayMatchingContainers m_deltaRayMatchingContainers; ///< The class of hit, cluster and pfo ownership and proximity maps
-    float m_overlapExtension; ///< The extension to each side of the x overlap region in which to search for matched clusters
+    float m_overlapExtension;      ///< The extension to each side of the x overlap region in which to search for matched clusters
     unsigned int m_minClusterHits; ///< The minimum number of hits for a cluster to be significant
 };
 

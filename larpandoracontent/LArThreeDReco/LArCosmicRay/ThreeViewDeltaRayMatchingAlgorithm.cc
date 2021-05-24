@@ -15,9 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm() :
-    m_minClusterCaloHits(5),
-    m_nMaxTensorToolRepeats(10)
+ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm() : m_minClusterCaloHits(5), m_nMaxTensorToolRepeats(10)
 {
 }
 
@@ -26,14 +24,15 @@ ThreeViewDeltaRayMatchingAlgorithm::ThreeViewDeltaRayMatchingAlgorithm() :
 bool ThreeViewDeltaRayMatchingAlgorithm::DoesClusterPassTensorThreshold(const Cluster *const pCluster) const
 {
     return (pCluster->GetNCaloHits() >= m_minClusterCaloHits);
-}    
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     DeltaRayOverlapResult overlapResult;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult));
 
     if (overlapResult.IsInitialized())
         this->GetMatchingControl().GetOverlapTensor().SetOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
@@ -41,14 +40,15 @@ void ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
-    DeltaRayOverlapResult &overlapResult) const
+StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV,
+    const Cluster *const pClusterW, DeltaRayOverlapResult &overlapResult) const
 {
     float chiSquaredSum(0.f);
     unsigned int nSamplingPoints(0), nMatchedSamplingPoints(0);
     XOverlap xOverlapObject(0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
-    
-    StatusCode statusCode(this->PerformThreeViewMatching(pClusterU, pClusterV, pClusterW, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xOverlapObject));
+
+    StatusCode statusCode(
+        this->PerformThreeViewMatching(pClusterU, pClusterV, pClusterW, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints, xOverlapObject));
 
     if (statusCode != STATUS_CODE_SUCCESS)
         return statusCode;
@@ -60,32 +60,32 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::CalculateOverlapResult(const Clus
         return STATUS_CODE_NOT_FOUND;
 
     overlapResult = DeltaRayOverlapResult(nMatchedSamplingPoints, nSamplingPoints, chiSquaredSum, xOverlapObject, commonMuonPfoList);
-    
+
     return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewDeltaRayMatchingAlgorithm::FindCommonMuonParents(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
-    PfoList &commonMuonPfoList) const
+void ThreeViewDeltaRayMatchingAlgorithm::FindCommonMuonParents(
+    const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW, PfoList &commonMuonPfoList) const
 {
     ClusterList consideredClustersU, consideredClustersV, consideredClustersW;
     PfoList nearbyMuonPfosU, nearbyMuonPfosV, nearbyMuonPfosW;
-    
+
     this->GetNearbyMuonPfos(pClusterU, consideredClustersU, nearbyMuonPfosU);
 
     if (nearbyMuonPfosU.empty())
         return;
-    
+
     this->GetNearbyMuonPfos(pClusterV, consideredClustersV, nearbyMuonPfosV);
 
     if (nearbyMuonPfosV.empty())
         return;
-    
+
     this->GetNearbyMuonPfos(pClusterW, consideredClustersW, nearbyMuonPfosW);
 
     if (nearbyMuonPfosW.empty())
-        return;    
+        return;
 
     for (const ParticleFlowObject *const pNearbyMuonU : nearbyMuonPfosU)
     {
@@ -126,16 +126,15 @@ void ThreeViewDeltaRayMatchingAlgorithm::ExamineOverlapContainer()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
-{   
+{
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MuonPfoListName", m_muonPfoListName));
-    
+
     AlgorithmToolVector algorithmToolVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "DeltaRayTools", algorithmToolVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "DeltaRayTools", algorithmToolVector));
 
     for (auto algorithmTool : algorithmToolVector)
     {
-        DeltaRayTensorTool *const pDeltaRayTensorTool(dynamic_cast<DeltaRayTensorTool*>(algorithmTool));
+        DeltaRayTensorTool *const pDeltaRayTensorTool(dynamic_cast<DeltaRayTensorTool *>(algorithmTool));
 
         if (!pDeltaRayTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
@@ -143,17 +142,15 @@ StatusCode ThreeViewDeltaRayMatchingAlgorithm::ReadSettings(const TiXmlHandle xm
         m_algorithmToolVector.push_back(pDeltaRayTensorTool);
     }
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle,
-        "ClusterRebuilding", m_reclusteringAlgorithmName));    
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle, "ClusterRebuilding", m_reclusteringAlgorithmName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterCaloHits", m_minClusterCaloHits));
-    
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));    
-    
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterCaloHits", m_minClusterCaloHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
+
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }
 
 } // namespace lar_content
-
