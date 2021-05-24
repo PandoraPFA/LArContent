@@ -24,7 +24,7 @@ public:
     AmbiguousDeltaRayTool();
 
 private:
-    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);    
+    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -41,8 +41,7 @@ private:
      *  @param  usedClusters the output list of clusters contained within to be created pfos
      *  @param  protoParticleVector the output vector of ProtoParticles
      */
-    void PickOutGoodMatches(const TensorType::ElementList &elementList, pandora::ClusterSet &usedClusters, 
-        ProtoParticleVector &protoParticleVector) const;
+    void PickOutGoodMatches(const TensorType::ElementList &elementList, pandora::ClusterSet &usedClusters, ProtoParticleVector &protoParticleVector) const;
 
     float m_maxGoodMatchReducedChiSquared; ///< The maximum reduced chi squared value of a good 1:1:1 match
 };

@@ -47,8 +47,6 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 #include "larpandoracontent/LArMonitoring/CosmicRayTaggingMonitoringTool.h"
-#include "larpandoracontent/LArMonitoring/DeltaRayMatrixVisualizationTool.h"
-#include "larpandoracontent/LArMonitoring/DeltaRayTensorVisualizationTool.h"
 #include "larpandoracontent/LArMonitoring/MCParticleMonitoringAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/MuonLeadingEventValidationAlgorithm.h"
 #include "larpandoracontent/LArMonitoring/NeutrinoEventValidationAlgorithm.h"
@@ -330,8 +328,6 @@
     d("LArTwoViewAmbiguousDeltaRay",            TwoViewAmbiguousDeltaRayTool)                                                   \
     d("LArTwoViewCosmicRayRemoval",             TwoViewCosmicRayRemovalTool)                                                    \
     d("LArUnambiguousDeltaRay",                 UnambiguousDeltaRayTool)                                                        \
-    d("LArDeltaRayTensorVisualization",         DeltaRayTensorVisualizationTool)                                                \
-    d("LArDeltaRayMatrixVisualization",         DeltaRayMatrixVisualizationTool)                                                \
     d("LArCheatingBeamParticleId",              CheatingBeamParticleIdTool)                                                     \
     d("LArCheatingBeamParticleSliceSelection",  CheatingBeamParticleSliceSelectionTool)                                         \
     d("LArCheatingEventSlicing",                CheatingEventSlicingTool)                                                       \

@@ -32,7 +32,7 @@ public:
      *  @brief  Constructor
      *
      *  @param  xOverlap the xOverlap of the two clusters
-     *  @param  commonMuonPfoList the list of muon pfos whose clusters lie close to delta ray clusters in all views 
+     *  @param  commonMuonPfoList the list of muon pfos whose clusters lie close to delta ray clusters in all views
      *  @param  pBestMatchedCluster the largest cluster that lies on the projected hits
      *  @param  matchedClusterList the list of clusters that lie on the projected hits
      *  @param  reducedChiSquared the reduced chi squared

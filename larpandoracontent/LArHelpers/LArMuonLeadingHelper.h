@@ -34,7 +34,7 @@ public:
         float m_maxBremsstrahlungSeparation; ///< The maximum separation of a reconstructable post-bremsstrahlung hit from the pre-radiation hits
     };
 
-    typedef std::map<const pandora::MCParticle*, pandora::CaloHitList> LeadingMCParticleToPostBremsstrahlungHitList;
+    typedef std::map<const pandora::MCParticle *, pandora::CaloHitList> LeadingMCParticleToPostBremsstrahlungHitList;
 
     /**
      *  @brief  Return the MCProcess of the leading particle (tier 1) in the delta ray/michel hierarchy
@@ -43,9 +43,9 @@ public:
      *
      *  @return  the MCProcess of the leading particle (tier 1) in the delta ray/michel hierarchy
      *
-     */    
+     */
     static MCProcess GetLeadingProcess(const pandora::MCParticle *const pMCParticle);
-    
+
     /**
      *  @brief  Return true if input MCParticle is a child of a cosmic ray and has 'delta ray' process tag
      *
@@ -65,7 +65,7 @@ public:
      *
      *  @param  pMCParticle the input MCParticle
      */
-    static bool IsMuonLeading(const pandora::MCParticle *const pMCParticle);   
+    static bool IsMuonLeading(const pandora::MCParticle *const pMCParticle);
 
     /**
      *  @brief  Return leading particle in the delta ray/michel hierarchy i.e. tier below cosmic ray
@@ -80,18 +80,19 @@ public:
      *  @param  pMCParticleList the address of the list of MCParticles
      *  @param  pCaloHitList the address of the list of CaloHits
      *  @param  parameters validation parameters to decide when an MCParticle is considered reconstructable
-     *  @param  recoMuonHitList the list of reconstructed cosmic ray hits 
+     *  @param  recoMuonHitList the list of reconstructed cosmic ray hits
      *  @param  selectedMCParticlesToHitsMap the output mapping from selected MCParticles to their hits
      */
-    static void SelectReconstructableLeadingParticles(const pandora::MCParticleList *pMCParticleList, const pandora::CaloHitList *pCaloHitList, 
-       const ValidationParameters &parameters, const pandora::CaloHitList &recoMuonHitList, LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap);
+    static void SelectReconstructableLeadingParticles(const pandora::MCParticleList *pMCParticleList,
+        const pandora::CaloHitList *pCaloHitList, const ValidationParameters &parameters, const pandora::CaloHitList &recoMuonHitList,
+        LArMCParticleHelper::MCContributionMap &selectedMCParticlesToHitsMap);
 
     /**
      *  @brief  Separate a leading pfo hit list according to the true owner of the hit e.g. other shower
      *
      *  @param  pLeadingParticle the address of the input leading MCParticle
      *  @param  matchedPfoHitList the input leading pfo hit list
-     *  @param  parentTrackHits the output list of hits that belong to the parent cosmic ray 
+     *  @param  parentTrackHits the output list of hits that belong to the parent cosmic ray
      *  @param  otherTrackHits the output list of hits that belong to a cosmic ray that is not the parent
      *  @param  otherShowerHits the output list of hits that belong to a different shower hierarchy
      */
@@ -105,8 +106,8 @@ public:
      *  @param  leadingMCHitList the list of hits that belong to the leading MCParticle
      *  @param  leadingHitsInParentCosmicRay the output list of 'stolen' leading MCParticle hits
      */
-    static void GetMuonPfoContaminationContribution(const pandora::CaloHitList &cosmicRayPfoHitList, const pandora::CaloHitList &leadingMCHitList,
-        pandora::CaloHitList &leadingHitsInParentCosmicRay);
+    static void GetMuonPfoContaminationContribution(const pandora::CaloHitList &cosmicRayPfoHitList,
+        const pandora::CaloHitList &leadingMCHitList, pandora::CaloHitList &leadingHitsInParentCosmicRay);
 
     /**
      *  @brief  Get closest distance between a specified cluster and list of positions
@@ -125,7 +126,7 @@ public:
      *  @param  cartesianPointVector the list of input positions
      *
      *  @return the closest distance
-     */    
+     */
     static float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &cartesianPointVector);
 
     /**
@@ -139,9 +140,10 @@ public:
      *  @param  closestPosition to receive the closest position if found
      *
      *  @return  whether a closest position could be found
-     */    
-    static pandora::StatusCode GetClosestPosition(const pandora::CartesianVector &referencePoint, const pandora::CartesianPointVector &cartesianPointVector,
-        const pandora::Cluster *const pCluster, const float maxDistanceToCluster, const float maxDistanceToReferencePoint, pandora::CartesianVector &closestPosition);
+     */
+    static pandora::StatusCode GetClosestPosition(const pandora::CartesianVector &referencePoint,
+        const pandora::CartesianPointVector &cartesianPointVector, const pandora::Cluster *const pCluster, const float maxDistanceToCluster,
+        const float maxDistanceToReferencePoint, pandora::CartesianVector &closestPosition);
 
     /**
      *  @brief  Get the closest positions between a list of positions and a cluster
@@ -150,11 +152,11 @@ public:
      *  @param  pCluster2 the address of the input cluster
      *  @param  outputPosition1 the closest position in the list of positions
      *  @param  outputPosition2 the closest position in the cluster
-     */    
-    static void GetClosestPositions(const pandora::CartesianPointVector &cartesianPointVector1, const pandora::Cluster *const pCluster2, pandora::CartesianVector &outputPosition1,
-        pandora::CartesianVector &outputPosition2);
+     */
+    static void GetClosestPositions(const pandora::CartesianPointVector &cartesianPointVector1, const pandora::Cluster *const pCluster2,
+        pandora::CartesianVector &outputPosition1, pandora::CartesianVector &outputPosition2);
 
- private:
+private:
     /**
      *  @brief  Construct the hierarchy folding map (cosmic rays folded to themselves, delta ray/michel hierarchy folded to leading particle)
      *
@@ -171,12 +173,12 @@ public:
      *  @param  selectedCaloHitList to receive the populated selected calo hit list
      *  @param  selectInputHits whether to select input hits
      *  @param  minHitSharingFraction the minimum required charge share of the hit
-     *  @param  recoMuonHitList the list of reconstructed cosmic ray hits 
+     *  @param  recoMuonHitList the list of reconstructed cosmic ray hits
      *  @param  leadingMCParticleToPostBremsstrahlungHitList the mapping of leading MCParticles to post-bremsstrahlung hits
      */
     static void SelectCaloHits(const pandora::CaloHitList *const pCaloHitList, const LArMCParticleHelper::MCRelationMap &mcToTargetMCMap,
         pandora::CaloHitList &selectedCaloHitList, const bool selectInputHits, const float minHitSharingFraction,
-        const pandora::CaloHitList &recoMuonHitList, LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList); 
+        const pandora::CaloHitList &recoMuonHitList, LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList);
 
     /**
      *  @brief  Identify and record the hits that are post-bremsstralung radiation in a cosmic ray hierarchy
@@ -186,7 +188,8 @@ public:
      *
      *  @return whether the hit lies post-bremsstrahlung radiation in a cosmic ray hierarchy
      */
-    static bool RejectBremsstrahlungHits(const pandora::CaloHit *const pCaloHit, LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList);
+    static bool RejectBremsstrahlungHits(
+        const pandora::CaloHit *const pCaloHit, LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList);
 
     /**
      *  @brief  Identify the reconstructable post-bremsstrahlung radiation hits
@@ -195,8 +198,8 @@ public:
      *  @param  maxBremsstrahlungSeparation the maximum separation of a reconstructable post-bremsstrahlung hit from the pre-radiation hits
      *  @param  leadingMCToTrueHitListMap the mapping of cosmic ray and leading MCParticles to their reconstructable hits
      */
-    static void AddInPostBremsstrahlungHits(const LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList, const float maxBremsstrahlungSeparation,
-        LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap);
+    static void AddInPostBremsstrahlungHits(const LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList,
+        const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap);
 
     /**
      *  @brief  Identify the reconstructable post-bremsstrahlung radiation hits
@@ -207,8 +210,9 @@ public:
      *  @param  leadingMCToTrueHitListMap the mapping of cosmic ray and leading MCParticles to their reconstructable hits
      *  @param  tpcView the TPC view of the hits to be collected
      */
-    static void AddInPostBremsstrahlungHits(const pandora::MCParticle *const pLeadingParticle, const LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList, 
-        const float maxBremsstrahlungSeparation, LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const pandora::HitType tpcView);
+    static void AddInPostBremsstrahlungHits(const pandora::MCParticle *const pLeadingParticle,
+        const LeadingMCParticleToPostBremsstrahlungHitList &leadingMCParticleToPostBremsstrahlungHitList, const float maxBremsstrahlungSeparation,
+        LArMCParticleHelper::MCContributionMap &leadingMCToTrueHitListMap, const pandora::HitType tpcView);
 
     /**
      *  @brief  Select all tier 0 and tier 1 MCParticles in cosmic ray hierarchies from an input list

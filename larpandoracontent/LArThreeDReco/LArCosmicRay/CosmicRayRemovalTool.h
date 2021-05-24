@@ -26,7 +26,7 @@ public:
     CosmicRayRemovalTool();
 
 private:
-    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);    
+    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -45,7 +45,7 @@ private:
      *  @param  hitType the hit type of the cluster under investigation
      *
      *  @return  whether the checks pass
-     */    
+     */
     virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType hitType) const;
 
     /**
@@ -55,7 +55,7 @@ private:
      *  @param  hitType the hit type of the cluster under investigation
      *
      *  @return  whether the cluster contains muon hits to remove
-     */        
+     */
     bool IsContaminated(const TensorType::Element &element, const pandora::HitType hitType) const;
 
     /**
@@ -73,10 +73,10 @@ private:
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
-     *  @param  deltaRayRemantHits the list of remainder hits 
+     *  @param  deltaRayRemantHits the list of remainder hits
      *
      *  @return  whether the muon projection mechanics were successful - abort process if not
-     */   
+     */
     pandora::StatusCode GrowSeed(const TensorType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits,
         pandora::CaloHitList &deltaRayRemantHits) const;
 
@@ -90,9 +90,10 @@ private:
      *  @param  demandCloserToCollected whether to demand a hit be closer to the collected hits than to the muon hits for it to be collected
      *  @param  protectedHits the hits that are protected from being collected
      *  @param  collectedHits the output list of collected hits
-     */   
-    void CollectHitsFromDeltaRay(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection, const pandora::Cluster *const pDeltaRayCluster,
-        const float &minDistanceFromMuon, const bool demandCloserToCollected, const pandora::CaloHitList &protectedHits, pandora::CaloHitList &collectedHits) const;
+     */
+    void CollectHitsFromDeltaRay(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection,
+        const pandora::Cluster *const pDeltaRayCluster, const float &minDistanceFromMuon, const bool demandCloserToCollected,
+        const pandora::CaloHitList &protectedHits, pandora::CaloHitList &collectedHits) const;
 
     /**
      *  @brief  Fragment the delta ray cluster adding hits to the muon track and perhaps creating significant remnants in the process
@@ -100,8 +101,8 @@ private:
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  collectedHits the list of identified delta ray hits
-     *  @param  deltaRayRemantHits the list of remainder hits 
-     */       
+     *  @param  deltaRayRemantHits the list of remainder hits
+     */
     void SplitDeltaRayCluster(const TensorType::Element &element, const pandora::HitType hitType, pandora::CaloHitList &collectedHits,
         pandora::CaloHitList &deltaRayRemnantHits) const;
 
@@ -113,15 +114,15 @@ private:
      *  @param  pDeltaRayRemnant the address of the delta ray remnant
      *  @param  clusterVector a vector containing the address of created/modified clusters for bookeeping purposes
      *  @param  pfoVector a vector containing the address of the pfo to which a modified muon cluster belongs for bookeeping purposes
-     */        
+     */
     void ReclusterRemnant(const pandora::HitType hitType, const pandora::Cluster *const pMuonCluster,
         const pandora::Cluster *const pDeltaRayRemnant, pandora::ClusterVector &clusterVector, pandora::PfoVector &pfoVector) const;
-    
-    unsigned int m_slidingFitWindow;          ///< The sliding fit window used in cosmic ray parameterisations
-    float m_minContaminationLength;           ///< The minimum projected length of a delta ray cluster onto the muon track for it to be considered contaminated
-    float m_maxDistanceToHit;                 ///< The maximum distance of a hit from the cosmic ray track for it to be added into the CR
-    unsigned int m_minRemnantClusterSize;     ///< The minimum hit number of a remnant cluster for it to be considered significant
-    float m_maxDistanceToTrack;               ///< The minimum distance of an insignificant remnant cluster from the cosmic ray track for it to be merged into the CR
+
+    unsigned int m_slidingFitWindow; ///< The sliding fit window used in cosmic ray parameterisations
+    float m_minContaminationLength; ///< The minimum projected length of a delta ray cluster onto the muon track for it to be considered contaminated
+    float m_maxDistanceToHit;             ///< The maximum distance of a hit from the cosmic ray track for it to be added into the CR
+    unsigned int m_minRemnantClusterSize; ///< The minimum hit number of a remnant cluster for it to be considered significant
+    float m_maxDistanceToTrack; ///< The minimum distance of an insignificant remnant cluster from the cosmic ray track for it to be merged into the CR
 };
 
 } // namespace lar_content
