@@ -25,7 +25,7 @@ namespace lar_content
 /**
  *  @brief  MuonLeadingEventValidationAlgorithm class
  */
-class MuonLeadingEventValidationAlgorithm: public EventValidationBaseAlgorithm
+class MuonLeadingEventValidationAlgorithm : public EventValidationBaseAlgorithm
 {
 public:
     /**
@@ -72,7 +72,8 @@ private:
      *  @param  validationInfo to receive the validation info
      */
     void PerformUnfoldedMatching(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
-        const pandora::PfoList *const pPfoList, const pandora::CaloHitList &recoCosmicRayHitList, const float minHitSharingFraction, ValidationInfo &validationInfo) const;
+        const pandora::PfoList *const pPfoList, const pandora::CaloHitList &recoCosmicRayHitList, const float minHitSharingFraction,
+        ValidationInfo &validationInfo) const;
 
     /**
      *  @brief  Remove incorrectly reconstructed cosmic rays from main matching maps
@@ -82,8 +83,8 @@ private:
      *  @param  pPfoList the address of the pfo list
      *  @param  validationInfo to receive the updated validation info
      */
-    void RemoveIncorrectlyReconstructedCosmicRays(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
-        const pandora::PfoList *const pPfoList, ValidationInfo &validationInfo) const;
+    void RemoveIncorrectlyReconstructedCosmicRays(const pandora::MCParticleList *const pMCParticleList,
+        const pandora::CaloHitList *const pCaloHitList, const pandora::PfoList *const pPfoList, ValidationInfo &validationInfo) const;
 
     /**
      *  @brief  Perform the cosmic ray matching procedure and identify incorrectly reconstructed cosmic rays
@@ -95,7 +96,7 @@ private:
      */
     void DetermineIncorrectlyReconstructedCosmicRays(const pandora::MCParticleList *const pMCParticleList, const pandora::CaloHitList *const pCaloHitList,
         const pandora::PfoList *const pPfoList, pandora::MCParticleList &incorrectlyReconstructedCosmicRays) const;
-    
+
     /**
      *  @brief  Print matching information in a provided validation info object, and write information to tree if configured to do so
      *
@@ -124,8 +125,8 @@ private:
      *  @param  parentTrackCaloHitList the list of hits that in truth belong to the parent cosmic ray
      *  @param  stringTag the event display marker string
      */
-    void PrintHits(const pandora::CaloHitList totalCaloHitList, const pandora::CaloHitList otherShowerCaloHitList, const pandora::CaloHitList otherTrackCaloHitList,
-        const pandora::CaloHitList parentTrackCaloHitList, const std::string &stringTag) const;
+    void PrintHits(const pandora::CaloHitList totalCaloHitList, const pandora::CaloHitList otherShowerCaloHitList,
+        const pandora::CaloHitList otherTrackCaloHitList, const pandora::CaloHitList parentTrackCaloHitList, const std::string &stringTag) const;
 
     /**
      *  @brief  Print hits of the parent cosmic ray 
@@ -157,15 +158,15 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    LArMuonLeadingHelper::ValidationParameters  m_validationParameters; ///< The definition of a reconstructable MCParticle
-    bool m_removeRecoCosmicRayHits;                                     ///< Whether to remove the reconstructed cosmic ray hits from leading particle metrics
-    bool m_deltaRayMode;                                                ///< Whether to run in delta ray mode
-    bool m_michelMode;                                                  ///< Whether to run in michel mode
-    int  m_cosmicRaysToSkip;                                            ///< The number of reconstructable cosmic rays to skip
-    bool m_visualize;                                                   ///< Whether to visualize the MC and reco leading particles
-    bool m_ignoreIncorrectCosmicRays;                                   ///< Whether to remove the leading particles with incorrrectly reconstructed parents from metrics
-    bool m_writeRawMatchesToTree;                                       ///< Whether to write all matches to output tree
-    std::vector<int> m_deltaRayIDs;                                     ///< If filled, to contain the list leading particles to run metrics over 
+    LArMuonLeadingHelper::ValidationParameters m_validationParameters; ///< The definition of a reconstructable MCParticle
+    bool m_removeRecoCosmicRayHits;   ///< Whether to remove the reconstructed cosmic ray hits from leading particle metrics
+    bool m_deltaRayMode;              ///< Whether to run in delta ray mode
+    bool m_michelMode;                ///< Whether to run in michel mode
+    int m_cosmicRaysToSkip;           ///< The number of reconstructable cosmic rays to skip
+    bool m_visualize;                 ///< Whether to visualize the MC and reco leading particles
+    bool m_ignoreIncorrectCosmicRays; ///< Whether to remove the leading particles with incorrrectly reconstructed parents from metrics
+    bool m_writeRawMatchesToTree;     ///< Whether to write all matches to output tree
+    std::vector<int> m_deltaRayIDs;   ///< If filled, to contain the list leading particles to run metrics over
 };
 
 } // namespace lar_content

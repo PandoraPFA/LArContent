@@ -24,7 +24,7 @@ public:
     DeltaRayMergeTool();
 
 private:
-    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);    
+    bool Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
@@ -42,7 +42,7 @@ private:
      *  @param  elementList the tensor element list
      *
      *  @return  whether a merge was made
-     */    
+     */
     bool MakeTwoCommonViewMerges(const TensorType::ElementList &elementList) const;
 
     /**
@@ -52,7 +52,8 @@ private:
      *  @param  commonMuonPfoList2 the common muon pfo list of the second element
      *  @param  commonMuonPfoList the output common muon pfo list
      */
-    void CombineCommonMuonPfoLists(const pandora::PfoList &commonMuonPfoList1, const pandora::PfoList &commonMuonPfoList2, pandora::PfoList &commonMuonPfoList) const;
+    void CombineCommonMuonPfoLists(
+        const pandora::PfoList &commonMuonPfoList1, const pandora::PfoList &commonMuonPfoList2, pandora::PfoList &commonMuonPfoList) const;
 
     /**
      *  @brief  Determine, from a topological point of view, whether two delta ray clusters should be merged together
@@ -72,7 +73,8 @@ private:
      *  @param  commonMuonPfoList the common muon pfo list of the element to which the DR cluster belongs
      *  @param  connectedMuonPfoList the output list of connected muon pfos
      */
-    void GetConnectedMuons(const pandora::Cluster *const pDeltaRayCluster, const pandora::PfoList &commonMuonPfoList, pandora::PfoList &connectedMuonPfoList) const;
+    void GetConnectedMuons(const pandora::Cluster *const pDeltaRayCluster, const pandora::PfoList &commonMuonPfoList,
+        pandora::PfoList &connectedMuonPfoList) const;
 
     /**
      *  @brief  Determine whether a given cluster is connected to a cosmic ray pfo
@@ -103,8 +105,9 @@ private:
      *
      *  @return  whether the delta ray clusters are one delta ray cluster, hidden behind a cosmic ray track
      */
-    bool IsHiddenByTrack(const pandora::ParticleFlowObject *const pMuonPfo, const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2) const;
-    
+    bool IsHiddenByTrack(const pandora::ParticleFlowObject *const pMuonPfo, const pandora::Cluster *const pCluster1,
+        const pandora::Cluster *const pCluster2) const;
+
     /**
      *  @brief  Find all connection points of a delta ray cluster and a cosmic ray pfo
      *
@@ -120,11 +123,11 @@ private:
      *  @param  elementList the tensor element list
      *
      *  @return  whether a merge was made
-     */    
+     */
     bool MakeOneCommonViewMerges(const TensorType::ElementList &elementList) const;
 
     float m_maxDRSeparationFromTrack; ///< The maximum distance of a connected delta ray from a cosmic ray track
-    float m_maxClusterSeparation;  ///< The maximum separation of two broken clusters that should be merged 
+    float m_maxClusterSeparation;     ///< The maximum separation of two broken clusters that should be merged
     float m_maxVertexSeparation; ///< The maximum separation of the connection points of two delta ray clusters that are hidden by a CR track and should be merged
     float m_maxGoodMatchReducedChiSquared; ///< The threshold reduced chi squared value for a potential two view merge to go ahead
 };

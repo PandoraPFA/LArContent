@@ -15,8 +15,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-AmbiguousDeltaRayTool::AmbiguousDeltaRayTool() :
-    m_maxGoodMatchReducedChiSquared(1.f)
+AmbiguousDeltaRayTool::AmbiguousDeltaRayTool() : m_maxGoodMatchReducedChiSquared(1.f)
 {
 }
 
@@ -25,9 +24,9 @@ AmbiguousDeltaRayTool::AmbiguousDeltaRayTool() :
 bool AmbiguousDeltaRayTool::Run(ThreeViewDeltaRayMatchingAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     m_pParentAlgorithm = pAlgorithm;
-    
+
     if (PandoraContentApi::GetSettings(*m_pParentAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     this->ExamineConnectedElements(overlapTensor);
 
@@ -69,10 +68,11 @@ void AmbiguousDeltaRayTool::ExamineConnectedElements(TensorType &overlapTensor) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void AmbiguousDeltaRayTool::PickOutGoodMatches(const TensorType::ElementList &elementList, ClusterSet &usedClusters, ProtoParticleVector &protoParticleVector) const
+void AmbiguousDeltaRayTool::PickOutGoodMatches(
+    const TensorType::ElementList &elementList, ClusterSet &usedClusters, ProtoParticleVector &protoParticleVector) const
 {
     bool found(false);
-    
+
     do
     {
         found = false;
@@ -82,9 +82,9 @@ void AmbiguousDeltaRayTool::PickOutGoodMatches(const TensorType::ElementList &el
         const Cluster *pBestClusterU(nullptr), *pBestClusterV(nullptr), *pBestClusterW(nullptr);
 
         for (const TensorType::Element &element : elementList)
-        {            
+        {
             const Cluster *const pClusterU(element.GetClusterU()), *const pClusterV(element.GetClusterV()), *const pClusterW(element.GetClusterW());
-            
+
             if (usedClusters.count(pClusterU) || usedClusters.count(pClusterV) || usedClusters.count(pClusterW))
                 continue;
 
@@ -92,39 +92,42 @@ void AmbiguousDeltaRayTool::PickOutGoodMatches(const TensorType::ElementList &el
 
             if (chiSquared > m_maxGoodMatchReducedChiSquared)
                 continue;
-            
+
             const unsigned int hitSum(pClusterU->GetNCaloHits() + pClusterV->GetNCaloHits() + pClusterW->GetNCaloHits());
 
             if ((hitSum > highestHitCount) || ((hitSum == highestHitCount) && (chiSquared < bestChiSquared)))
             {
                 bestChiSquared = chiSquared;
                 highestHitCount = hitSum;
-                pBestClusterU = pClusterU; pBestClusterV = pClusterV; pBestClusterW = pClusterW;
+                pBestClusterU = pClusterU;
+                pBestClusterV = pClusterV;
+                pBestClusterW = pClusterW;
             }
         }
 
         if (pBestClusterU && pBestClusterV && pBestClusterW)
         {
             found = true;
-            usedClusters.insert(pBestClusterU); usedClusters.insert(pBestClusterV); usedClusters.insert(pBestClusterW);
-            
+            usedClusters.insert(pBestClusterU);
+            usedClusters.insert(pBestClusterV);
+            usedClusters.insert(pBestClusterW);
+
             ProtoParticle protoParticle;
             protoParticle.m_clusterList.push_back(pBestClusterU);
             protoParticle.m_clusterList.push_back(pBestClusterV);
             protoParticle.m_clusterList.push_back(pBestClusterW);
             protoParticleVector.push_back(protoParticle);
         }
-    }
-    while (found);
+    } while (found);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 StatusCode AmbiguousDeltaRayTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxGoodMatchReducedChiSquared", m_maxGoodMatchReducedChiSquared)); 
-    
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxGoodMatchReducedChiSquared", m_maxGoodMatchReducedChiSquared));
+
     return STATUS_CODE_SUCCESS;
 }
 
