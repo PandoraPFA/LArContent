@@ -39,7 +39,7 @@ public:
     NViewDeltaRayMatchingAlgorithm();
 
     /**
-     *  @brief  Return the cluster of the common cosmic ray pfo in a given view (function demands there to be only one common CR pfo) 
+     *  @brief  Return the cluster of the common cosmic ray pfo in a given view (function demands there to be only one common CR pfo)
      *
      *  @param  commonMuonPfoList the element's list of common muon pfos
      *  @param  hitType the specified view
@@ -58,7 +58,7 @@ public:
      *  @param  pCluster3 the third cluster
      *  @param  reducedChiSquared the reduced chi squared
      *
-     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode PerformThreeViewMatching(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         const pandora::Cluster *const pCluster3, float &reducedChiSquared) const;
@@ -72,9 +72,9 @@ public:
      *  @param  chiSquaredSum the sum of the chi-squared values of the sampled points
      *  @param  nSamplingPoints the number of sampled points
      *  @param  nMatchedSamplingPoints the number of matched sampled points
-     *  @param  xOverlap the xOverlap object  
+     *  @param  xOverlap the xOverlap object
      *
-     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode PerformThreeViewMatching(const pandora::Cluster *const pClusterU, const pandora::Cluster *const pClusterV,
         const pandora::Cluster *const pClusterW, float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints,
@@ -88,7 +88,7 @@ public:
      *  @param  pCluster3 the third CaloHitList
      *  @param  reducedChiSquared the reduced chi squared
      *
-     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode PerformThreeViewMatching(const pandora::CaloHitList &pCluster1, const pandora::CaloHitList &pCluster2,
         const pandora::CaloHitList &pCluster3, float &reducedChiSquared) const;
@@ -102,9 +102,9 @@ public:
      *  @param  chiSquaredSum the sum of the chi-squared values of the sampled points
      *  @param  nSamplingPoints the number of sampled points
      *  @param  nMatchedSamplingPoints the number of matched sampled points
-     *  @param  xOverlap the xOverlap object  
+     *  @param  xOverlap the xOverlap object
      *
-     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the matching procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode PerformThreeViewMatching(const pandora::CaloHitList &clusterU, const pandora::CaloHitList &clusterV,
         const pandora::CaloHitList &clusterW, float &chiSquaredSum, unsigned int &nSamplingPoints, unsigned int &nMatchedSamplingPoints,
@@ -117,7 +117,7 @@ public:
      *  @param  pParentMuon the input cosmic ray pfo
      *  @param  projectedPositions the output projected positions
      *
-     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode ProjectMuonPositions(const pandora::HitType &thirdViewHitType, const pandora::ParticleFlowObject *const pParentMuon,
         pandora::CartesianPointVector &projectedPositions) const;
@@ -129,38 +129,38 @@ public:
      *  @param  pCluster2 the address of the second cluster
      *  @param  projectedPositions the output projected positions
      *
-     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode GetProjectedPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         pandora::CartesianPointVector &projectedPositions) const;
 
     /**
-     *  @brief  In one view, pull out any hits from a cosmic ray cluster that belong to the child delta ray cluster 
+     *  @brief  In one view, pull out any hits from a cosmic ray cluster that belong to the child delta ray cluster
      *
      *  @param  pCluster1 the address of a delta ray cluster in a view that is to go unmodified
-     *  @param  pCluster2 the address of a delta ray cluster in the other view that is to unmodified 
+     *  @param  pCluster2 the address of a delta ray cluster in the other view that is to unmodified
      *  @param  pThirdViewCluster the address of the delta ray cluster in the view in which the hit removal process will run
      *  @param  pParentMuon the address of the parent cosmic ray pfo
      *  @param  minDistanceFromMuon the minimum distance of a hit from the cosmic ray track required for removal
      *  @param  maxDistanceToCollected the maximim distance of a hit from the projected delta ray hits required for removal
-     *  @param  collectedHits the list of hits to be removed from the cosmic ray 
+     *  @param  collectedHits the list of hits to be removed from the cosmic ray
      *
-     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode CollectHitsFromMuon(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         const pandora::Cluster *const pThirdViewCluster, const pandora::ParticleFlowObject *const pParentMuon,
         const float minDistanceFromMuon, const float maxDistanceToCollected, pandora::CaloHitList &collectedHits) const;
 
     /**
-     *  @brief  In one view, pull out any hits from a cosmic ray cluster that belong to the child delta ray cluster 
+     *  @brief  In one view, pull out any hits from a cosmic ray cluster that belong to the child delta ray cluster
      *
-     *  @param  positionOnMuon the parameterised cosmic ray position 
-     *  @param  muonDirection the parameterised cosmic ray direction 
+     *  @param  positionOnMuon the parameterised cosmic ray position
+     *  @param  muonDirection the parameterised cosmic ray direction
      *  @param  pMuon the address of the parent cosmic ray pfo
      *  @param  deltaRayProjectedPositions the projected positions of the delta ray
      *  @param  minDistanceFromMuon the minimum distance of a hit from the cosmic ray track required for removal
      *  @param  maxDistanceToCollected the maximim distance of a hit from the projected delta ray hits required for removal
-     *  @param  collectedHits the list of hits to be removed from the cosmic ray 
+     *  @param  collectedHits the list of hits to be removed from the cosmic ray
      */
     void CollectHitsFromMuon(const pandora::CartesianVector &positionOnMuon, const pandora::CartesianVector &muonDirection,
         const pandora::Cluster *const pMuonCluster, const pandora::CartesianPointVector &deltaRayProjectedPositions,
@@ -174,7 +174,7 @@ public:
      *  @param  positionOnMuon the output position to localise the parameterisation in space
      *  @param  muonDirection the output cosmic ray direction
      *
-     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode ParameteriseMuon(const pandora::ParticleFlowObject *const pParentMuon, const pandora::Cluster *const pDeltaRayCluster,
         pandora::CartesianVector &positionOnMuon, pandora::CartesianVector &muonDirection) const;
@@ -188,7 +188,7 @@ public:
      *  @param  positionOnMuon the output position to localise the parameterisation in space
      *  @param  muonDirection the output cosmic ray direction
      *
-     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good 
+     *  @return  a status code reflecting whether the procedure ran smoothly and if the outcome is good
      */
     pandora::StatusCode ParameteriseMuon(const pandora::ParticleFlowObject *const pParentMuon, const pandora::CartesianPointVector &deltaRayProjectedPositions,
         const pandora::HitType hitType, pandora::CartesianVector &positionOnMuon, pandora::CartesianVector &muonDirection) const;
@@ -198,7 +198,7 @@ public:
      *
      *  @param  clusterListName the pandora list to which the cosmic ray and delta ray clusters belong
      *  @param  pMuonCluster the address of the cosmic ray cluster
-     *  @param  collectedHits the list of hits to reassign 
+     *  @param  collectedHits the list of hits to reassign
      *  @param  pDeltaRayCluster the address of the delta ray cluster (may be a nullptr if cluster is yet to be made)
      */
     void SplitMuonCluster(const std::string &clusterListName, const pandora::Cluster *const pMuonCluster,
@@ -236,14 +236,14 @@ protected:
     virtual bool DoesClusterPassTensorThreshold(const pandora::Cluster *const pCluster) const = 0;
 
     /**
-     *  @brief  Fill the stray cluster list with clusters that do not pass the tensor threshold requirement 
+     *  @brief  Fill the stray cluster list with clusters that do not pass the tensor threshold requirement
      *
      *  @param  hitType the hit type of the list to fill
      */
     void FillStrayClusterList(const pandora::HitType hitType);
 
     /**
-     *  @brief  Use the cluster proximity map to travel along paths of nearby clusters finding the cosmic ray clusters on which they terminate 
+     *  @brief  Use the cluster proximity map to travel along paths of nearby clusters finding the cosmic ray clusters on which they terminate
      *
      *  @param  pCluster the address of the input cluster
      *  @param  consideredClusters the list of investigated clusters
@@ -274,7 +274,7 @@ protected:
     /**
      *  @brief  Collect the stray clusters that are close to a specified cluster and that lie within a given x range
      *
-     *  @param  pClusterToEnlarge the specified cluster 
+     *  @param  pClusterToEnlarge the specified cluster
      *  @param  rangeMinX the minimum x coordinate of the region of interest
      *  @param  rangeMaxX the maximum x coordinate of the region of interest
      *  @param  collectedClusters the list of collected stray clusters
@@ -285,7 +285,7 @@ protected:
     /**
      *  @brief  Merge in the collected stray clusters of a given delta ray cluster
      *
-     *  @param  pClusterToEnlarge the delta ray cluster to enlarge 
+     *  @param  pClusterToEnlarge the delta ray cluster to enlarge
      *  @param  collectedClusters the list of collected stray clusters
      */
     void AddInStrayClusters(const pandora::Cluster *const pClusterToEnlarge, const pandora::ClusterList &collectedClusters);

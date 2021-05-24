@@ -58,7 +58,7 @@ public:
     /**
      *  @brief  Add the clusters of a cosmic ray/delta ray pfo to the cluster to pfo maps
      *
-     *  @param  the address of the input cosmic ray/delta ray pfo 
+     *  @param  the address of the input cosmic ray/delta ray pfo
      */
     void AddClustersToPfoMaps(const pandora::ParticleFlowObject *const pPfo);
 

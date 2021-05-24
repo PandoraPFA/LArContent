@@ -129,7 +129,7 @@ private:
         const pandora::CaloHitList otherTrackCaloHitList, const pandora::CaloHitList parentTrackCaloHitList, const std::string &stringTag) const;
 
     /**
-     *  @brief  Print hits of the parent cosmic ray 
+     *  @brief  Print hits of the parent cosmic ray
      *
      *  @param  totalCaloHitList the list of hits to print
      *  @param  leadingCaloHitList the list of hits that in truth belong to the child hierarchy
@@ -138,7 +138,7 @@ private:
     void PrintHits(const pandora::CaloHitList totalCaloHitList, const pandora::CaloHitList leadingCaloHitList, const std::string &stringTag) const;
 
     /**
-     *  @brief  Fill an input contamination hit distance vector with the closest distance of each contaminant hit to the true leading particle hits 
+     *  @brief  Fill an input contamination hit distance vector with the closest distance of each contaminant hit to the true leading particle hits
      *
      *  @param  contaminationHits the list of contaminant hits
      *  @param  leadingMCHitList the list of true MCParticles hits

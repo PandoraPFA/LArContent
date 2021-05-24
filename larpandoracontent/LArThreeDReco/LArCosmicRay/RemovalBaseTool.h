@@ -62,7 +62,7 @@ protected:
     virtual bool PassElementChecks(const TensorType::Element &element, const pandora::HitType hitType) const = 0;
 
     /**
-     *  @brief  Whether a given position is close to a defined line 
+     *  @brief  Whether a given position is close to a defined line
      *
      *  @param  hitPosition the input position
      *  @param  lineStart the start position of the line
@@ -87,7 +87,7 @@ protected:
         const pandora::CartesianVector &point) const;
 
     /**
-     *  @brief  Collect the hits that are closest to and can be projected onto a defined line 
+     *  @brief  Collect the hits that are closest to and can be projected onto a defined line
      *
      *  @param  pCluster the address of the input cluster containing the hits to be investigated
      *  @param  lowerBoundary the start position of the line

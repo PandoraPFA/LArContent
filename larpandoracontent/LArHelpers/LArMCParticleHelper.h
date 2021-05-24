@@ -385,7 +385,7 @@ public:
     /**
      *  @brief  Determine if the MC particle is a descendent of a particle with the given PDG code.
      *
-     *  @param  pMCParticle the descendent particle 
+     *  @param  pMCParticle the descendent particle
      *  @param  pdg the PDG code of the ancestor particle
      *  @param  isChargeSensitive whether or not to consider the sign of the PDG code when looking for the ancestor (default: false)
      *
