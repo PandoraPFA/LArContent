@@ -60,10 +60,10 @@ bool TwoViewThreeDKinkTool::PassesElementCuts(MatrixType::ElementList::const_ite
     if (usedClusters.count(eIter->GetCluster1()) || usedClusters.count(eIter->GetCluster2()))
         return false;
 
-    if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < -std::numeric_limits<float>::epsilon())
+    if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction0() - m_minXOverlapFraction < std::numeric_limits<float>::epsilon())
         return false;
 
-    if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < -std::numeric_limits<float>::epsilon())
+    if (eIter->GetOverlapResult().GetTwoViewXOverlap().GetXOverlapFraction1() - m_minXOverlapFraction < std::numeric_limits<float>::epsilon())
         return false;
 
     if (eIter->GetOverlapResult().GetMatchingScore() - m_minMatchingScore < std::numeric_limits<float>::epsilon())
@@ -81,8 +81,8 @@ float TwoViewThreeDKinkTool::GetXSamplingPoint(const CartesianVector &splitPosit
     const TwoDSlidingFitResult &fitResult1, const TwoDSlidingFitResult &fitResult2) const
 {
     // Nearest common x position
-    float xMin1(std::numeric_limits<float>::max()), xMax1(-std::numeric_limits<float>::max());
-    float xMin2(std::numeric_limits<float>::max()), xMax2(-std::numeric_limits<float>::max());
+    float xMin1(std::numeric_limits<float>::max()), xMax1(std::numeric_limits<float>::lowest());
+    float xMin2(std::numeric_limits<float>::max()), xMax2(std::numeric_limits<float>::lowest());
     fitResult1.GetMinAndMaxX(xMin1, xMax1);
     fitResult2.GetMinAndMaxX(xMin2, xMax2);
 
