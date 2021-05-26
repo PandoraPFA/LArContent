@@ -34,8 +34,8 @@ public:
         /**
          *  @brief  Constructor
          *
-         *  @param  pClusterU the address of cluster 1
-         *  @param  pClusterV the address of cluster 2
+         *  @param  pCluster1 the address of cluster 1
+         *  @param  pCluster2 the address of cluster 2
          *  @param  overlapResult the overlap result
          */
         Element(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const OverlapResult &overlapResult);
@@ -231,7 +231,7 @@ private:
      *
      *  @param  pCluster address of the cluster
      *  @param  clusterList1 connected view 1 clusters
-     *  @param  clusterListV connected view 2 clusters
+     *  @param  clusterList2 connected view 2 clusters
      */
     void ExploreConnections(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, pandora::ClusterList &clusterList1,
         pandora::ClusterList &clusterList2) const;
