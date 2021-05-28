@@ -19,7 +19,8 @@ TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult() :
     m_xOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f)),
     m_commonMuonPfoList(),
     m_pBestMatchedCluster(nullptr),
-    m_matchedClusterList()
+    m_matchedClusterList(),
+    m_reducedChiSquared(std::numeric_limits<float>::max())
 {
 }
 
