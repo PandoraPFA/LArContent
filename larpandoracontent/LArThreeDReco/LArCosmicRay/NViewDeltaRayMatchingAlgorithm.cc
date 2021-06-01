@@ -161,6 +161,9 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(
             xThreeViewOverlapObject) == STATUS_CODE_NOT_FOUND)
         return STATUS_CODE_NOT_FOUND;
 
+    if (nSamplingPoints == 0)
+        return STATUS_CODE_NOT_FOUND;
+
     reducedChiSquared = chiSquaredSum / nSamplingPoints;
 
     return STATUS_CODE_SUCCESS;
@@ -278,6 +281,9 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::PerformThreeViewMatching(
 
     if (this->PerformThreeViewMatching(pCluster1, pCluster2, pCluster3, chiSquaredSum, nSamplingPoints, nMatchedSamplingPoints,
             xThreeViewOverlapObject) == STATUS_CODE_NOT_FOUND)
+        return STATUS_CODE_NOT_FOUND;
+
+    if (nSamplingPoints == 0)
         return STATUS_CODE_NOT_FOUND;
 
     reducedChiSquared = chiSquaredSum / nSamplingPoints;
@@ -672,7 +678,9 @@ StatusCode NViewDeltaRayMatchingAlgorithm<T>::ParameteriseMuon(const ParticleFlo
 
     float rL(0.f), rT(0.f);
     slidingFitResult.GetLocalPosition(positionOnMuon, rL, rT);
-    slidingFitResult.GetGlobalFitDirection(rL, muonDirection);
+
+    if (slidingFitResult.GetGlobalFitDirection(rL, muonDirection) != STATUS_CODE_SUCCESS)
+        return STATUS_CODE_NOT_FOUND;
 
     return STATUS_CODE_SUCCESS;
 }

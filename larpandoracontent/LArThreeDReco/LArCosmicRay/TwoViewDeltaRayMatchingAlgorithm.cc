@@ -333,6 +333,9 @@ void TwoViewDeltaRayMatchingAlgorithm::MergeThirdView(const MatrixType::Element 
             }
         }
 
+        if (!pClusterToDelete)
+            return;
+
         checkedClusters.insert(pClusterToDelete);
 
         if (!pClusterToDelete->IsAvailable())
