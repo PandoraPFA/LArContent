@@ -65,13 +65,14 @@ private:
      *  @param  vertexVector the vector of vertices
      *  @param  vertexFeatureInfoMap the vertex feature info map
      *  @param  eventFeatureList the event feature list
+     *  @param  kdTreeMap the map of 2D hit kd trees
      *  @param  t the mva
      *  @param  useRPhi whether to include the r/phi feature
      *
      *  @return address of the best vertex
      */
     const pandora::Vertex *CompareVertices(const pandora::VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
-        const LArMvaHelper::MvaFeatureVector &eventFeatureList, const T &t, const bool useRPhi) const;
+        const LArMvaHelper::MvaFeatureVector &eventFeatureList, const KDTreeMap &kdTreeMap, const T &t, const bool useRPhi) const;
 
     std::string m_filePathEnvironmentVariable; ///< The environment variable providing a list of paths to mva files
     std::string m_mvaFileName;                 ///< The mva file name

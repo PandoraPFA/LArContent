@@ -240,6 +240,49 @@ bool VertexSelectionBaseAlgorithm::IsVertexInGap(const Vertex *const pVertex, co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float VertexSelectionBaseAlgorithm::GetVertexEnergy(const Vertex *const pVertex, const KDTreeMap &kdTreeMap) const
+{
+    float totalEnergy(0.f);
+
+    if (!this->IsVertexInGap(pVertex, TPC_VIEW_U))
+        totalEnergy += this->VertexHitEnergy(pVertex, TPC_VIEW_U, kdTreeMap.at(TPC_VIEW_U));
+
+    if (!this->IsVertexInGap(pVertex, TPC_VIEW_V))
+        totalEnergy += this->VertexHitEnergy(pVertex, TPC_VIEW_V, kdTreeMap.at(TPC_VIEW_V));
+
+    if (!this->IsVertexInGap(pVertex, TPC_VIEW_W))
+        totalEnergy += this->VertexHitEnergy(pVertex, TPC_VIEW_W, kdTreeMap.at(TPC_VIEW_W));
+
+    return totalEnergy;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float VertexSelectionBaseAlgorithm::VertexHitEnergy(const Vertex *const pVertex, const HitType hitType, HitKDTree2D &kdTree) const
+{
+    const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+    KDTreeBox searchRegionHits = build_2d_kd_search_region(vertexPosition2D, m_maxOnHitDisplacement, m_maxOnHitDisplacement);
+
+    HitKDNode2DList foundHits;
+    kdTree.search(searchRegionHits, foundHits);
+
+    float dr(std::numeric_limits<float>::max());
+    float energy(0);
+
+    for (auto hit : foundHits)
+    {
+        const float diff = (vertexPosition2D - hit.data->GetPositionVector()).GetMagnitude();
+        if (diff < dr)
+        {
+            dr = diff;
+            energy = hit.data->GetElectromagneticEnergy();
+        }
+    }
+    return energy;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void VertexSelectionBaseAlgorithm::SelectTopScoreVertices(VertexScoreList &vertexScoreList, VertexList &selectedVertexList) const
 {
     float bestScore(0.f);
