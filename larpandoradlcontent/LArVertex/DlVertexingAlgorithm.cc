@@ -281,6 +281,9 @@ StatusCode DlVertexingAlgorithm::Infer()
                         {
                             const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
                             const CartesianVector &trueVertex{primaries.front()->GetVertex()};
+//                            std::cout << "True vertex (" << trueVertex.GetX() << ", " << trueVertex.GetY() << ", " << trueVertex.GetZ() <<
+//                                ")" << std::endl;
+                            const CartesianVector &recoVertex{vertexTuples.back().GetPosition()};
                             const float tx{trueVertex.GetX()};
                             const float tu{static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()))};
                             const float tv{static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()))};
@@ -294,6 +297,7 @@ StatusCode DlVertexingAlgorithm::Infer()
                             const float dr_u{std::sqrt((rx_u - tx) * (rx_u - tx) + (ru - tu) * (ru - tu))};
                             const float dr_v{std::sqrt((rx_v - tx) * (rx_v - tx) + (rv - tv) * (rv - tv))};
                             const float dr_w{std::sqrt((rx_w - tx) * (rx_w - tx) + (rw - tw) * (rw - tw))};
+                            const float dr{(recoVertex - trueVertex).GetMagnitude()};
 /*                            std::cout << "Truth: " << tx << " " << tu << " " << tv << " " << tw << std::endl;
                             std::cout << "U: " << rx_u << " " << ru << " " << dr_u << std::endl;
                             std::cout << "V: " << rx_v << " " << rv << " " << dr_v << std::endl;
@@ -301,6 +305,7 @@ StatusCode DlVertexingAlgorithm::Infer()
                             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_u", dr_u));
                             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_v", dr_v));
                             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_w", dr_w));
+                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr", dr));
                             PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
                         }
                     }
@@ -747,6 +752,38 @@ DlVertexingAlgorithm::VertexTuple::VertexTuple(const Pandora &pandora, const Car
     m_chi2{0.f}
 {
     LArGeometryHelper::MergeThreePositions3D(pandora, TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, vertexU, vertexV, vertexW, m_pos, m_chi2);
+    if (m_chi2 > 1.f)
+    {
+        CartesianVector vertexUV(0.f, 0.f, 0.f);
+        float chi2UV{0.f};
+        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_U, TPC_VIEW_V, vertexU, vertexV, vertexUV, chi2UV);
+
+        CartesianVector vertexUW(0.f, 0.f, 0.f);
+        float chi2UW{0.f};
+        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_U, TPC_VIEW_W, vertexU, vertexW, vertexUW, chi2UW);
+
+        CartesianVector vertexVW(0.f, 0.f, 0.f);
+        float chi2VW{0.f};
+        LArGeometryHelper::MergeTwoPositions3D(pandora, TPC_VIEW_V, TPC_VIEW_W, vertexV, vertexW, vertexVW, chi2VW);
+
+        if (chi2UV < m_chi2)
+        {
+            m_pos = vertexUV;
+            m_chi2 = chi2UV;
+        }
+        if (chi2UW < m_chi2)
+        {
+            m_pos = vertexUW;
+            m_chi2 = chi2UW;
+        }
+        if (chi2VW < m_chi2)
+        {
+            m_pos = vertexVW;
+            m_chi2 = chi2VW;
+        }
+    }
+//    std::cout << "Merging 3, position (" << m_pos.GetX() << ", " << m_pos.GetY() << ", " << m_pos.GetZ() << ") with chi2 " << m_chi2 <<
+//        std::endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -757,6 +794,7 @@ DlVertexingAlgorithm::VertexTuple::VertexTuple(const Pandora &pandora, const Car
     m_chi2{0.f}
 {
     LArGeometryHelper::MergeTwoPositions3D(pandora, view1, view2, vertex1, vertex2, m_pos, m_chi2);
+    std::cout << "Merging 2, position (" << m_pos.GetX() << ", " << m_pos.GetY() << ", " << m_pos.GetZ() << ") with chi2 " << m_chi2 << std::endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
