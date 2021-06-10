@@ -73,6 +73,18 @@ void LArPfoHelper::GetIsolatedCaloHits(const ParticleFlowObject *const pPfo, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetAllCaloHits(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList)
+{
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitList);
+    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_U, caloHitList);
+    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_V, caloHitList);
+    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_W, caloHitList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetClusters(const PfoList &pfoList, const HitType &hitType, ClusterList &clusterList)
 {
     for (const ParticleFlowObject *const pPfo : pfoList)
@@ -179,8 +191,7 @@ void LArPfoHelper::GetAllDownstreamPfos(
     if (LArPfoHelper::IsTrack(pPfo))
     {
         outputTrackPfoList.emplace_back(pPfo);
-        const PfoList &childPfoList(pPfo->GetDaughterPfoList());
-        for (const ParticleFlowObject *pChild : childPfoList)
+        for (const ParticleFlowObject *pChild : pPfo->GetDaughterPfoList())
         {
             if (std::find(outputTrackPfoList.begin(), outputTrackPfoList.end(), pChild) == outputTrackPfoList.end())
             {

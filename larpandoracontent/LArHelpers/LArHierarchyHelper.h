@@ -49,7 +49,7 @@ public:
             /**
              *  @brief  Constructor
              *
-             *  @param  minHits The total minimumm number of hits for a particle to be considered reconstructable
+             *  @param  minHits The total minimum number of hits for a particle to be considered reconstructable
              *  @param  minHitsForGoodView The number of hits within a view for a particle to be considered reconstructable
              *  @param  minGoodViews The minimum number of good views for a particle to be considered reconstructable
              *  @param removeNeutrons Whether to remove neutrons and downstream particles from consideration
@@ -57,15 +57,16 @@ public:
             ReconstructabilityCriteria(const unsigned int minHits, const unsigned int minHitsForGoodView, const unsigned int minGoodViews,
                 const bool removeNeutrons);
 
-            const unsigned int  m_minHits;              ///< the minimum number of primary good Hits
-            const unsigned int  m_minHitsForGoodView;   ///< the minimum number of Hits for a good view
-            const unsigned int  m_minGoodViews;         ///< the minimum number of primary good views
-            const bool m_removeNeutrons;                ///< whether to remove neutrons and their downstream particles
+            const unsigned int m_minHits;            ///< the minimum number of primary good Hits
+            const unsigned int m_minHitsForGoodView; ///< the minimum number of Hits for a good view
+            const unsigned int m_minGoodViews;       ///< the minimum number of primary good views
+            const bool m_removeNeutrons;             ///< whether to remove neutrons and their downstream particles
         };
 
         class Node;
-        typedef std::vector<const Node*> NodeVector;
-        typedef std::list<const Node*> NodeList;
+        typedef std::vector<const Node *> NodeVector;
+        typedef std::list<const Node *> NodeList;
+
         /**
          *  @brief  Node class
          */
@@ -76,9 +77,9 @@ public:
              *  @brief  Create a node with a primary MC particle
              *
              *  @param  hierarchy The parent hierarchy of this node
-             *  @param  pMC The primary MC particle with which this node should be created
+             *  @param  pMCParticle The primary MC particle with which this node should be created
              */
-            Node(const MCHierarchy &hierarchy, const pandora::MCParticle *pMC);
+            Node(const MCHierarchy &hierarchy, const pandora::MCParticle *pMCParticle);
 
             /**
              *  @brief  Create a node from a list of MC particles
@@ -121,7 +122,7 @@ public:
              *
              *  @return The vector of children
              */
-            const NodeVector &GetChildren() const { return m_children; }
+            const NodeVector &GetChildren() const;
 
             /**
              *  @brief  Retrieve the MC particles associated with this node
@@ -145,6 +146,13 @@ public:
             int GetParticleId() const;
 
             /**
+             *  @brief  Check if this is a particle induced by a neutrino interaction
+             *
+             *  @return Whether or not this is neutrino induced
+             */
+            bool IsNeutrinoInduced() const;
+
+            /**
              *  @brief  Check if this is a test beam particle
              *
              *  @return Whether or not this is a test beam particle
@@ -166,12 +174,12 @@ public:
             const std::string ToString(const std::string &prefix) const;
 
         private:
-            const MCHierarchy &m_hierarchy;
-            pandora::MCParticleList m_mcParticles;
-            pandora::CaloHitList m_caloHits;
-            NodeVector m_children;
-            const pandora::MCParticle *m_mainParticle;
-            int m_pdg;
+            const MCHierarchy &m_hierarchy;            ///< The parent MC hierarchy
+            pandora::MCParticleList m_mcParticles;     ///< The list of MC particles of which this node is composed
+            pandora::CaloHitList m_caloHits;           ///< The list of calo hits of which this node is composed
+            NodeVector m_children;                     ///< The child nodes of this node
+            const pandora::MCParticle *m_mainParticle; ///< The leading MC particle for this node
+            int m_pdg;                                 ///< The PDG code of the leading MC particle for this node
         };
 
         /**
@@ -218,13 +226,12 @@ public:
         void FillHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList,
             const bool foldToPrimaries, const bool foldToLeadingShowers);
 
-        // Note - likely want to change this to retrieve the neutrino, the test beam particle, all primaries, all cosmics etc
         /**
          *  @brief  Retrieve the root nodes in this hierarchy
          *
          *  @return The root nodes in this hierarchy
          */
-        const NodeVector& GetRootNodes() const { return m_rootNodes; }
+        const NodeVector &GetRootNodes() const;
 
         /**
          *  @brief  Retrieve a flat vector of the ndoes in the hierarchy
@@ -245,32 +252,32 @@ public:
          *
          *  @return Whether or not this is a neutrino hierarchy.
          */
-        bool IsNeutrinoHierarchy() const { return m_pNeutrino != nullptr; }
+        bool IsNeutrinoHierarchy() const;
 
         /**
          *  @brief  Check if this is a test beam hierarchy.
          *
          *  @return Whether or not this is a test beam hierarchy.
          */
-        bool IsTestBeamHierarchy() const { return m_pNeutrino == nullptr; };
+        bool IsTestBeamHierarchy() const;
 
     private:
-        NodeVector m_rootNodes;
-        ReconstructabilityCriteria m_recoCriteria;
-        const pandora::MCParticle *m_pNeutrino;
-        std::map<const pandora::MCParticle*, pandora::CaloHitList> m_mcToHitsMap;
+        NodeVector m_rootNodes;                    ///< The leading nodes (e.g. primary particles, cosmic rays, ...)
+        ReconstructabilityCriteria m_recoCriteria; ///< The criteria used to determine if the node is reconstructable
+        const pandora::MCParticle *m_pNeutrino;    ///< The incident neutrino, if it exists
+        std::map<const pandora::MCParticle *, pandora::CaloHitList> m_mcToHitsMap; ///< The map between MC particles and calo hits
     };
 
     /**
-     *  @brief   RecoHiearchy class
+     *  @brief   RecoHierarchy class
      */
     class RecoHierarchy
     {
     public:
-
         class Node;
-        typedef std::vector<const Node*> NodeVector;
-        typedef std::list<const Node*> NodeList;
+        typedef std::vector<const Node *> NodeVector;
+        typedef std::list<const Node *> NodeList;
+
         /**
          *  @brief  Node class
          */
@@ -319,7 +326,7 @@ public:
              *
              *  @return The vector of children
              */
-            const NodeVector &GetChildren() const { return m_children; }
+            const NodeVector &GetChildren() const;
 
             /**
              *  @brief  Retrieve the PFOs associated with this node
@@ -351,11 +358,11 @@ public:
             const std::string ToString(const std::string &prefix) const;
 
         private:
-            const RecoHierarchy &m_hierarchy;
-            pandora::PfoList m_pfos;
-            pandora::CaloHitList m_caloHits;
-            NodeVector m_children;
-            int m_pdg;
+            const RecoHierarchy &m_hierarchy; ///< The parent reco hierarchy
+            pandora::PfoList m_pfos;          ///< The list of PFOs of which this node is composed
+            pandora::CaloHitList m_caloHits;  ///< The list of calo hits of which this node is composed
+            NodeVector m_children;            ///< The child nodes of this node
+            int m_pdg;                        ///< The particle ID (track = muon, shower = electron)
         };
 
         /**
@@ -393,16 +400,15 @@ public:
          */
         void FillHierarchy(const pandora::PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers);
 
-        // Note - likely want to change this to retrieve the neutrino, the test beam particle, all primaries, all cosmics etc
         /**
          *  @brief  Retrieve the root nodes in this hierarchy
          *
          *  @return The root nodes in this hierarchy
          */
-        const NodeVector& GetRootNodes() const { return m_rootNodes; }
+        const NodeVector &GetRootNodes() const;
 
         /**
-         *  @brief  Retrieve a flat vector of the ndoes in the hierarchy
+         *  @brief  Retrieve a flat vector of the nodes in the hierarchy
          *
          *  @param  nodeVector The output vector for the nodes in the hierarchy in breadth first order
          */
@@ -416,27 +422,36 @@ public:
         const std::string ToString() const;
 
     private:
-        NodeVector m_rootNodes;
-        const pandora::ParticleFlowObject *m_pNeutrino;
+        /**
+         * @brief  GetAllRecoHits
+         *
+         * @param  pPfo The PFO from which hits should be retrieved
+         * @param  allHits The output list of hits
+         */
+        void GetAllRecoHits(const pandora::ParticleFlowObject *pPfo, pandora::CaloHitList &allHits) const;
+
+        NodeVector m_rootNodes;                         ///< The leading nodes (e.g. primary particles, cosmic rays, ...)
+        const pandora::ParticleFlowObject *m_pNeutrino; ///< The incident neutrino, if it exists
     };
 
+    /**
+     *  @brief  MCMatches class
+     */
     class MCMatches
     {
     public:
         /**
          *  @brief  Constructor
          *
-         *  @param  pMC The MCParticle being matched
+         *  @param  pMCParticle The MCParticle being matched
          */
-        MCMatches(const MCHierarchy::Node *pMC);
+        MCMatches(const MCHierarchy::Node *pMCParticle);
 
-        virtual ~MCMatches() = default;
-
-        // Might be better to pass in the shared hits themselves
         /**
          *  @brief  Add a reconstructed node as a match for this MC node
          *
          *  @param  pReco The reconstructed node that matches this MC node
+         *  @param  nSharedHits The number of hits shared betweeb reco and MC nodes
          */
         void AddRecoMatch(const RecoHierarchy::Node *pReco, const int nSharedHits);
 
@@ -445,14 +460,14 @@ public:
          *
          *  @return The MC node
          */
-        const MCHierarchy::Node *GetMC() const { return m_pMC; };
+        const MCHierarchy::Node *GetMC() const;
 
         /**
          *  @brief  Retrieve the vector of matched reco nodes
          *
          *  @return The vector of matched reco nodes
          */
-        const RecoHierarchy::NodeVector &GetRecoMatches() const { return m_recoNodes; };
+        const RecoHierarchy::NodeVector &GetRecoMatches() const;
 
         /**
          *  @brief  Retrieve the number of shared hits in the match
@@ -461,7 +476,7 @@ public:
          *
          *  @return The number of shared hits
          */
-        int GetSharedHits(const RecoHierarchy::Node *pReco) const;
+        unsigned int GetSharedHits(const RecoHierarchy::Node *pReco) const;
 
         /**
          *  @brief  Retrieve the purity of the match
@@ -481,17 +496,23 @@ public:
          */
         float GetCompleteness(const RecoHierarchy::Node *pReco) const;
 
-        private:
-            const MCHierarchy::Node *m_pMC; ///< MC node associated with any matches
-            RecoHierarchy::NodeVector m_recoNodes; ///< Matched reco nodes
-            pandora::IntVector m_sharedHits; ///< Number of shared hits for each match
+    private:
+        const MCHierarchy::Node *m_pMCParticle; ///< MC node associated with any matches
+        RecoHierarchy::NodeVector m_recoNodes;  ///< Matched reco nodes
+        pandora::IntVector m_sharedHits;        ///< Number of shared hits for each match
     };
 
     typedef std::vector<MCMatches> MCMatchesVector;
 
+    /**
+     *  @brief  MatcheInfo class
+     */
     class MatchInfo
     {
     public:
+        /**
+         *  @brief  QualityCuts class
+         */
         class QualityCuts
         {
         public:
@@ -508,10 +529,9 @@ public:
              */
             QualityCuts(const float minPurity, const float minCompleteness);
 
-            const float m_minPurity;    ///< The minimum purity for a match to be considered good
-            const float m_minCompleteness;  ///< The minimum completeness for a match to be considered good
+            const float m_minPurity;       ///< The minimum purity for a match to be considered good
+            const float m_minCompleteness; ///< The minimum completeness for a match to be considered good
         };
-
 
         /**
          *  @brief  Default constructor
@@ -538,37 +558,37 @@ public:
          *
          *  @return The vector of good matches
          */
-        const MCMatchesVector &GetGoodMatches() const { return m_goodMatches; }
+        const MCMatchesVector &GetGoodMatches() const;
 
         /**
          *  @brief  Retrieve the vector of matches that don't pass quality cuts
          *
          *  @return The vector of sub-threshold matches
          */
-        const MCMatchesVector &GetSubThresholdMatches() const { return m_subThresholdMatches; }
+        const MCMatchesVector &GetSubThresholdMatches() const;
 
         /**
          *  @brief  Retrieve the vector of unmatched MC nodes
          *
          *  @return The vector of unmatched MC
          */
-        const MCHierarchy::NodeVector &GetUnmatchedMC() const { return m_unmatchedMC; };
+        const MCHierarchy::NodeVector &GetUnmatchedMC() const;
 
         /**
          *  @brief  Retrieve the vector of unmatched reco nodes
          */
-        const RecoHierarchy::NodeVector &GetUnmatchedReco() const { return m_unmatchedReco; }
+        const RecoHierarchy::NodeVector &GetUnmatchedReco() const;
 
     private:
-        MCMatchesVector m_goodMatches;  ///< The vector of good matches
-        MCMatchesVector m_subThresholdMatches;  ///< The vector of matches MC nodes that don't pass quality cuts
-        MCHierarchy::NodeVector m_unmatchedMC;  ///< The vector of unmatched MC nodes
-        RecoHierarchy::NodeVector m_unmatchedReco;  ///< The vector of unmatched reco nodes
-        QualityCuts m_qualityCuts;  ///< The quality cuts to be applied to matches
+        MCMatchesVector m_goodMatches;             ///< The vector of good matches
+        MCMatchesVector m_subThresholdMatches;     ///< The vector of matches MC nodes that don't pass quality cuts
+        MCHierarchy::NodeVector m_unmatchedMC;     ///< The vector of unmatched MC nodes
+        RecoHierarchy::NodeVector m_unmatchedReco; ///< The vector of unmatched reco nodes
+        QualityCuts m_qualityCuts;                 ///< The quality cuts to be applied to matches
     };
 
     /**
-     *  @brief  Fill an MC hierarchy based on the specified folding criteria (see MCHierarchy::Construct for details)
+     *  @brief  Fill an MC hierarchy based on the specified folding criteria (see MCHierarchy::FillHierarchy for details)
      *
      *  @param  mcParticleList The MCParticle list to use to fill this hierarchy
      *  @param  caloHitList The list of CaloHits to use to fill this hierarchy
@@ -580,15 +600,14 @@ public:
         const bool foldToPrimaries, const bool foldToLeadingShowers, MCHierarchy &hierarchy);
 
     /**
-     *  @brief  Fill a reconstructed hierarchy based on the specified folding criteria (see RecoHierarchy::Construct for details)
+     *  @brief  Fill a reconstructed hierarchy based on the specified folding criteria (see RecoHierarchy::FillHierarchy for details)
      *
      *  @param  pfoList The ParticleFlowObject list to use to fill this hierarchy
      *  @param  foldToPrimaries Whether or not to fold to primary particles
      *  @param  foldToLeadingShowers Whether or not to fold to leading shower particles
      *  @param  hierarchy The output reconstructed hierarchy
      */
-    static void FillRecoHierarchy(const pandora::PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers,
-        RecoHierarchy &hierarchy);
+    static void FillRecoHierarchy(const pandora::PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers, RecoHierarchy &hierarchy);
 
     /**
      *  @brief  Finds the matches between reconstructed and MC hierarchies.
@@ -600,8 +619,8 @@ public:
     static void MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MatchInfo &matchInfo);
 
 private:
-    typedef std::set<const pandora::MCParticle*> MCParticleSet;
-    typedef std::set<const pandora::ParticleFlowObject*> PfoSet;
+    typedef std::set<const pandora::MCParticle *> MCParticleSet;
+    typedef std::set<const pandora::ParticleFlowObject *> PfoSet;
 
     /**
      *  @brief  Retrieves the primary MC particles from a list and returns the root (neutrino) for hierarchy, if it exists.
@@ -623,6 +642,124 @@ private:
      */
     static const pandora::ParticleFlowObject *GetRecoPrimaries(const pandora::PfoList &pfoList, PfoSet &primaries);
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCHierarchy::NodeVector &LArHierarchyHelper::MCHierarchy::Node::GetChildren() const
+{
+    return m_children;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::MCParticleList &LArHierarchyHelper::MCHierarchy::Node::GetMCParticles() const
+{
+    return m_mcParticles;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const pandora::CaloHitList &LArHierarchyHelper::MCHierarchy::Node::GetCaloHits() const
+{
+    return m_caloHits;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArHierarchyHelper::MCHierarchy::Node::GetParticleId() const
+{
+    return m_pdg;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArHierarchyHelper::MCHierarchy::Node::IsNeutrinoInduced() const
+{
+    return !(LArHierarchyHelper::MCHierarchy::Node::IsTestBeamParticle() || LArHierarchyHelper::MCHierarchy::Node::IsCosmicRay());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCHierarchy::NodeVector &LArHierarchyHelper::MCHierarchy::GetRootNodes() const
+{
+    return m_rootNodes;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArHierarchyHelper::MCHierarchy::IsNeutrinoHierarchy() const
+{
+    return m_pNeutrino != nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArHierarchyHelper::MCHierarchy::IsTestBeamHierarchy() const
+{
+    return m_pNeutrino == nullptr;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::RecoHierarchy::Node::GetChildren() const
+{
+    return m_children;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::RecoHierarchy::GetRootNodes() const
+{
+    return m_rootNodes;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCHierarchy::Node *LArHierarchyHelper::MCMatches::GetMC() const
+{
+    return m_pMCParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::MCMatches::GetRecoMatches() const
+{
+    return m_recoNodes;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetGoodMatches() const
+{
+    return m_goodMatches;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetSubThresholdMatches() const
+{
+    return m_subThresholdMatches;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCHierarchy::NodeVector &LArHierarchyHelper::MatchInfo::GetUnmatchedMC() const
+{
+    return m_unmatchedMC;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::MatchInfo::GetUnmatchedReco() const
+{
+    return m_unmatchedReco;
+}
 
 } // namespace lar_content
 

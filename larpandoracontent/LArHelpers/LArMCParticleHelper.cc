@@ -248,8 +248,7 @@ const MCParticle *LArMCParticleHelper::GetParentMCParticle(const MCParticle *con
 
 void LArMCParticleHelper::GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &descendentMCParticleList)
 {
-    const MCParticleList &daughterMCParticleList(pMCParticle->GetDaughterList());
-    for (const MCParticle *pDaughterMCParticle : daughterMCParticleList)
+    for (const MCParticle *pDaughterMCParticle : pMCParticle->GetDaughterList())
     {
         if (std::find(descendentMCParticleList.begin(), descendentMCParticleList.end(), pDaughterMCParticle) == descendentMCParticleList.end())
         {
@@ -264,8 +263,7 @@ void LArMCParticleHelper::GetAllDescendentMCParticles(const pandora::MCParticle 
 void LArMCParticleHelper::GetAllDescendentMCParticles(const MCParticle *const pMCParticle, MCParticleList &descendentTrackParticles,
     MCParticleList &leadingShowerParticles, MCParticleList &leadingNeutrons)
 {
-    const MCParticleList &daughterMCParticleList(pMCParticle->GetDaughterList());
-    for (const MCParticle *pDaughterMCParticle : daughterMCParticleList)
+    for (const MCParticle *pDaughterMCParticle : pMCParticle->GetDaughterList())
     {
         if (std::find(descendentTrackParticles.begin(), descendentTrackParticles.end(), pDaughterMCParticle) == descendentTrackParticles.end())
         {
