@@ -422,14 +422,6 @@ public:
         const std::string ToString() const;
 
     private:
-        /**
-         * @brief  GetAllRecoHits
-         *
-         * @param  pPfo The PFO from which hits should be retrieved
-         * @param  allHits The output list of hits
-         */
-        void GetAllRecoHits(const pandora::ParticleFlowObject *pPfo, pandora::CaloHitList &allHits) const;
-
         NodeVector m_rootNodes;                         ///< The leading nodes (e.g. primary particles, cosmic rays, ...)
         const pandora::ParticleFlowObject *m_pNeutrino; ///< The incident neutrino, if it exists
     };

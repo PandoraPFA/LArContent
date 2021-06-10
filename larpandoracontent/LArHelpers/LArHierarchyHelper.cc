@@ -583,18 +583,6 @@ const std::string LArHierarchyHelper::RecoHierarchy::ToString() const
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-void LArHierarchyHelper::RecoHierarchy::GetAllRecoHits(const ParticleFlowObject *pPfo, CaloHitList &allHits) const
-{
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, allHits);
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, allHits);
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, allHits);
-    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_U, allHits);
-    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_V, allHits);
-    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_W, allHits);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArHierarchyHelper::RecoHierarchy::Node::Node(const RecoHierarchy &hierarchy, const ParticleFlowObject *pPfo) :
