@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 #include "larpandoracontent/LArUtility/PfoHitCleaningAlgorithm.h"
 
 using namespace pandora;
@@ -20,6 +21,7 @@ StatusCode PfoHitCleaningAlgorithm::Run()
 {
     for (unsigned int i = 0; i < m_pfoListNames.size(); ++i)
     {
+        // ATTN - one-to-one correspondance required between PFO and cluster lists
         const std::string &pfoListName{m_pfoListNames.at(i)};
         const std::string &clusterListName{m_clusterListNames.at(i)};
         const PfoList *pList(nullptr);
@@ -30,10 +32,7 @@ StatusCode PfoHitCleaningAlgorithm::Run()
             for (const ParticleFlowObject *pPfo : *pList)
             {
                 ClusterList clustersToRemove;
-                const ClusterList &clusterList{pPfo->GetClusterList()};
-                for (const Cluster *pCluster : clusterList)
-                    if (LArClusterHelper::GetClusterHitType(pCluster) == TPC_3D)
-                        clustersToRemove.emplace_back(pCluster);
+                LArPfoHelper::GetClusters(pPfo, TPC_3D, clustersToRemove);
 
                 for (const Cluster *pCluster : clustersToRemove)
                 {
