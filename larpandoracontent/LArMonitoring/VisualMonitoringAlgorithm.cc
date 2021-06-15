@@ -161,7 +161,10 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
     for (const MCParticle *pMCParticle : *pMCParticleList)
     {
         const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pMCParticle));
-        const std::vector<pandora::CartesianVector> steps(pLArMCParticle->GetMCStepPositions());
+        const CartesianPointVector &steps(pLArMCParticle->GetMCStepPositions());
+
+        if (steps.size() == 0)
+            continue;
 
         for (unsigned int step = 0; step < steps.size() - 1; ++step)
         {
