@@ -52,7 +52,7 @@ enum MCProcess
 };
 
 // Optional Features for the LArMCParticleFactory
-enum LArMCParticleOptionalFeature {
+enum LArMCParticleFeature {
     MC_3D_STEP_POSITIONS = 0,
     MC_3D_STEP_MOMENTAS
 };
@@ -142,7 +142,7 @@ public:
      *  @param  features optional features to load/write.
      *  @param  version the LArMCParticle version
      */
-    LArMCParticleFactory(const std::set<LArMCParticleOptionalFeature> features, const unsigned int version = 2);
+    LArMCParticleFactory(const std::set<LArMCParticleFeature> &features, const unsigned int version = 2);
 
     /**
      *  @brief  Create new parameters instance on the heap (memory-management to be controlled by user)
@@ -175,9 +175,16 @@ public:
      */
     pandora::StatusCode Create(const Parameters &parameters, const Object *&pObject) const;
 
+    /**
+     *  @brief  Parse string vector to optional features set
+     *
+     *  @param  features the optional features, as strings
+     */
+    static pandora::StatusCode ParseFeatures(const pandora::StringVector &parameters, std::set<LArMCParticleFeature> &optionalFeatures);
+
 private:
     unsigned int m_version; ///< The LArMCParticle version
-    std::set<LArMCParticleOptionalFeature> m_optionalFeatures; ///< Optional features to add to the LArMCParticle
+    std::set<LArMCParticleFeature> m_optionalFeatures; ///< Optional features to add to the LArMCParticle
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -232,7 +239,7 @@ inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) : 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArMCParticleFactory::LArMCParticleFactory(const std::set<LArMCParticleOptionalFeature> features, const unsigned int version) :
+inline LArMCParticleFactory::LArMCParticleFactory(const std::set<LArMCParticleFeature> &features, const unsigned int version) :
     m_version(version),
     m_optionalFeatures(features)
 {
@@ -243,6 +250,30 @@ inline LArMCParticleFactory::LArMCParticleFactory(const std::set<LArMCParticleOp
 inline LArMCParticleFactory::Parameters *LArMCParticleFactory::NewParameters() const
 {
     return (new LArMCParticleParameters);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline pandora::StatusCode LArMCParticleFactory::ParseFeatures(const pandora::StringVector &parameters, std::set<LArMCParticleFeature> &optionalFeatures)
+{
+    for (auto feature : parameters)
+    {
+        if (feature == "3D_Step_Positions")
+        {
+            optionalFeatures.insert(LArMCParticleFeature::MC_3D_STEP_POSITIONS);
+        }
+        else if (feature == "3D_Step_Momentas")
+        {
+            optionalFeatures.insert(LArMCParticleFeature::MC_3D_STEP_MOMENTAS);
+        }
+        else
+        {
+            std::cout << "Error: Invalid LArMCParticleFactory feature given: " << feature << std::endl;
+            return pandora::STATUS_CODE_INVALID_PARAMETER;
+        }
+    }
+
+    return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -277,7 +308,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(process));
 
-        if (m_optionalFeatures.count(LArMCParticleOptionalFeature::MC_3D_STEP_POSITIONS) > 0)
+        if (m_optionalFeatures.count(LArMCParticleFeature::MC_3D_STEP_POSITIONS) > 0)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nMCStepPositions));
             for (unsigned int step = 0; step < nMCStepPositions; ++step)
@@ -288,7 +319,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
             }
         }
 
-        if (m_optionalFeatures.count(LArMCParticleOptionalFeature::MC_3D_STEP_MOMENTAS) > 0)
+        if (m_optionalFeatures.count(LArMCParticleFeature::MC_3D_STEP_MOMENTAS) > 0)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nMCStepMomentas));
             for (unsigned int step = 0; step < nMCStepMomentas; ++step)
@@ -307,7 +338,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         if (m_version > 1)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("Process", process));
 
-        if (m_optionalFeatures.count(LArMCParticleOptionalFeature::MC_3D_STEP_POSITIONS) > 0)
+        if (m_optionalFeatures.count(LArMCParticleFeature::MC_3D_STEP_POSITIONS) > 0)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NumberOfMCStepPositions", nMCStepPositions));
             for (unsigned int step = 0; step < nMCStepPositions; ++step)
@@ -320,7 +351,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
             }
         }
 
-        if (m_optionalFeatures.count(LArMCParticleOptionalFeature::MC_3D_STEP_MOMENTAS) > 0)
+        if (m_optionalFeatures.count(LArMCParticleFeature::MC_3D_STEP_MOMENTAS) > 0)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NumberOfMCStepMomentas", nMCStepMomentas));
             for (unsigned int step = 0; step < nMCStepMomentas; ++step)
@@ -373,14 +404,14 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
             PANDORA_RETURN_RESULT_IF(
                 pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(static_cast<int>(pLArMCParticle->GetProcess())));
 
-        if (m_optionalFeatures.count(LArMCParticleOptionalFeature::MC_3D_STEP_POSITIONS) > 0)
+        if (m_optionalFeatures.count(LArMCParticleFeature::MC_3D_STEP_POSITIONS) > 0)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nMCStepPositions));
             for (auto const &mcStepPosition : mcStepPositions)
                 PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(mcStepPosition));
         }
 
-        if (m_optionalFeatures.count(LArMCParticleOptionalFeature::MC_3D_STEP_MOMENTAS) > 0)
+        if (m_optionalFeatures.count(LArMCParticleFeature::MC_3D_STEP_MOMENTAS) > 0)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nMCStepMomentas));
             for (auto const &mcStepMomenta : mcStepMomentas)
@@ -397,7 +428,7 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
             PANDORA_RETURN_RESULT_IF(
                 pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("Process", static_cast<int>(pLArMCParticle->GetProcess())));
 
-        if (m_optionalFeatures.count(LArMCParticleOptionalFeature::MC_3D_STEP_POSITIONS) > 0)
+        if (m_optionalFeatures.count(LArMCParticleFeature::MC_3D_STEP_POSITIONS) > 0)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NumberOfMCStepPositions", nMCStepPositions));
             for (int step = 0; step < nMCStepPositions; ++step)
@@ -409,7 +440,7 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
             }
         }
 
-        if (m_optionalFeatures.count(LArMCParticleOptionalFeature::MC_3D_STEP_MOMENTAS) > 0)
+        if (m_optionalFeatures.count(LArMCParticleFeature::MC_3D_STEP_MOMENTAS) > 0)
         {
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NumberOfMCStepMomentas", nMCStepMomentas));
             for (int step = 0; step < nMCStepMomentas; ++step)

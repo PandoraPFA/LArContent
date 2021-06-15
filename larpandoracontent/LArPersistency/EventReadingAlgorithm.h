@@ -87,6 +87,7 @@ private:
     unsigned int m_larCaloHitVersion;    ///< LArCaloHit version for LArCaloHitFactory
     bool m_useLArMCParticles;            ///< Whether to read lar mc particles, or standard pandora mc particles
     unsigned int m_larMCParticleVersion; ///< LArMCParticle version for LArMCParticleFactory
+    std::set<LArMCParticleFeature> m_larMCParticleFeatures; ///< LArMCParticle features for LArMCParticleFactory
 
     pandora::FileReader *m_pEventFileReader; ///< Address of the event file reader
 };

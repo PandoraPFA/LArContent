@@ -29,6 +29,7 @@ EventReadingAlgorithm::EventReadingAlgorithm() :
     m_larCaloHitVersion(1),
     m_useLArMCParticles(true),
     m_larMCParticleVersion(2),
+    m_larMCParticleFeatures({}),
     m_pEventFileReader(nullptr)
 {
 }
@@ -142,7 +143,7 @@ StatusCode EventReadingAlgorithm::ReplaceEventFileReader(const std::string &file
         m_pEventFileReader->SetFactory(new LArCaloHitFactory(m_larCaloHitVersion));
 
     if (m_useLArMCParticles)
-        m_pEventFileReader->SetFactory(new LArMCParticleFactory(m_larMCParticleVersion));
+        m_pEventFileReader->SetFactory(new LArMCParticleFactory(m_larMCParticleFeatures, m_larMCParticleVersion));
 
     return STATUS_CODE_SUCCESS;
 }
@@ -232,6 +233,12 @@ StatusCode EventReadingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LArMCParticleVersion", m_larMCParticleVersion));
+
+    StringVector eventFeatures;
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+            XmlHelper::ReadVectorOfValues(xmlHandle, "LArMCParticleFeatures", eventFeatures));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMCParticleFactory::ParseFeatures(eventFeatures, m_larMCParticleFeatures));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArMCParticles", m_useLArMCParticles));
