@@ -57,6 +57,8 @@ enum LArMCParticleFeature {
     MC_3D_STEP_MOMENTAS
 };
 
+typedef std::set<LArMCParticleFeature> LArMCFeatureSet;
+
 /**
  *  @brief  LAr mc particle parameters
  */
@@ -142,7 +144,7 @@ public:
      *  @param  features optional features to load/write.
      *  @param  version the LArMCParticle version
      */
-    LArMCParticleFactory(const std::set<LArMCParticleFeature> &features, const unsigned int version = 2);
+    LArMCParticleFactory(const LArMCFeatureSet &features, const unsigned int version = 2);
 
     /**
      *  @brief  Create new parameters instance on the heap (memory-management to be controlled by user)
@@ -180,11 +182,11 @@ public:
      *
      *  @param  features the optional features, as strings
      */
-    static pandora::StatusCode ParseFeatures(const pandora::StringVector &parameters, std::set<LArMCParticleFeature> &optionalFeatures);
+    static pandora::StatusCode ParseFeatures(const pandora::StringVector &parameters, LArMCFeatureSet &optionalFeatures);
 
 private:
     unsigned int m_version; ///< The LArMCParticle version
-    std::set<LArMCParticleFeature> m_optionalFeatures; ///< Optional features to add to the LArMCParticle
+    LArMCFeatureSet m_optionalFeatures; ///< Optional features to add to the LArMCParticle
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -239,7 +241,7 @@ inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) : 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline LArMCParticleFactory::LArMCParticleFactory(const std::set<LArMCParticleFeature> &features, const unsigned int version) :
+inline LArMCParticleFactory::LArMCParticleFactory(const LArMCFeatureSet &features, const unsigned int version) :
     m_version(version),
     m_optionalFeatures(features)
 {
@@ -254,7 +256,7 @@ inline LArMCParticleFactory::Parameters *LArMCParticleFactory::NewParameters() c
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline pandora::StatusCode LArMCParticleFactory::ParseFeatures(const pandora::StringVector &parameters, std::set<LArMCParticleFeature> &optionalFeatures)
+inline pandora::StatusCode LArMCParticleFactory::ParseFeatures(const pandora::StringVector &parameters, LArMCFeatureSet &optionalFeatures)
 {
     for (auto feature : parameters)
     {

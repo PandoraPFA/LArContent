@@ -249,6 +249,7 @@ StatusCode MasterAlgorithm::CopyMCParticles() const
     if (m_pSliceCRWorkerInstance)
         pandoraWorkerInstances.push_back(m_pSliceCRWorkerInstance);
 
+    // TODO: Does this also need the feature vector??
     LArMCParticleFactory mcParticleFactory;
 
     for (const Pandora *const pPandoraWorker : pandoraWorkerInstances)
