@@ -24,7 +24,7 @@ namespace lar_content
 
 template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const float axisDeviationLimitForHitDivision) :
+    const float axisDeviationLimitForHitDivision) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -57,8 +57,8 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 }
 
 template <>
-TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const float /*axisDeviationLimitForHitDivision*/) :
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow,
+    const float layerPitch, const float /*axisDeviationLimitForHitDivision*/) :
     m_pCluster(nullptr),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -76,7 +76,8 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPo
 
 template <>
 TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, const float axisDeviationLimitForHitDivision) :
+    const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection,
+    const float axisDeviationLimitForHitDivision) :
     m_pCluster(pCluster),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -106,8 +107,9 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const Cluster *const pCluster, const 
 }
 
 template <>
-TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection, const float /*axisDeviationLimitForHitDivision*/) :
+TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPointVector, const unsigned int layerFitHalfWindow,
+    const float layerPitch, const CartesianVector &axisIntercept, const CartesianVector &axisDirection,
+    const CartesianVector &orthoDirection, const float /*axisDeviationLimitForHitDivision*/) :
     m_pCluster(nullptr),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -122,9 +124,8 @@ TwoDSlidingFitResult::TwoDSlidingFitResult(const CartesianPointVector *const pPo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoDSlidingFitResult::TwoDSlidingFitResult(const unsigned int layerFitHalfWindow, const float layerPitch,
-        const CartesianVector &axisIntercept, const CartesianVector &axisDirection, const CartesianVector &orthoDirection,
-        const LayerFitContributionMap &layerFitContributionMap) :
+TwoDSlidingFitResult::TwoDSlidingFitResult(const unsigned int layerFitHalfWindow, const float layerPitch, const CartesianVector &axisIntercept,
+    const CartesianVector &axisDirection, const CartesianVector &orthoDirection, const LayerFitContributionMap &layerFitContributionMap) :
     m_pCluster(nullptr),
     m_layerFitHalfWindow(layerFitHalfWindow),
     m_layerPitch(layerPitch),
@@ -203,7 +204,7 @@ void TwoDSlidingFitResult::GetLocalPosition(const CartesianVector &position, flo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void TwoDSlidingFitResult::GetLocalDirection(const CartesianVector &direction, float&dTdL) const
+void TwoDSlidingFitResult::GetLocalDirection(const CartesianVector &direction, float &dTdL) const
 {
     float pL(0.f), pT(0.f);
     this->GetLocalPosition((direction + m_axisIntercept), pL, pT);
@@ -326,8 +327,8 @@ float TwoDSlidingFitResult::GetCosScatteringAngle(const float rL) const
 {
     const float halfWindowLength(this->GetLayerFitHalfWindowLength());
 
-    CartesianVector firstDirection(0.f,0.f,0.f);
-    CartesianVector secondDirection(0.f,0.f,0.f);
+    CartesianVector firstDirection(0.f, 0.f, 0.f);
+    CartesianVector secondDirection(0.f, 0.f, 0.f);
 
     const StatusCode firstStatusCode(this->GetGlobalFitDirection(rL - halfWindowLength, firstDirection));
     const StatusCode secondStatusCode(this->GetGlobalFitDirection(rL + halfWindowLength, secondDirection));
@@ -422,8 +423,7 @@ StatusCode TwoDSlidingFitResult::GetGlobalFitPositionListAtX(const float x, Cart
     if (STATUS_CODE_SUCCESS != statusCode)
         return statusCode;
 
-    for (LayerInterpolationList::const_iterator iter = layerInterpolationList.begin(), iterEnd = layerInterpolationList.end();
-        iter != iterEnd; ++iter)
+    for (LayerInterpolationList::const_iterator iter = layerInterpolationList.begin(), iterEnd = layerInterpolationList.end(); iter != iterEnd; ++iter)
     {
         positionList.push_back(this->GetGlobalFitPosition(*iter));
     }
@@ -447,8 +447,8 @@ StatusCode TwoDSlidingFitResult::GetTransverseProjection(const float x, const Fi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitResult::GetTransverseProjection(const float x, const FitSegment &fitSegment, CartesianVector &position,
-    CartesianVector &direction) const
+StatusCode TwoDSlidingFitResult::GetTransverseProjection(
+    const float x, const FitSegment &fitSegment, CartesianVector &position, CartesianVector &direction) const
 {
     LayerInterpolation layerInterpolation;
     const StatusCode statusCode(this->TransverseInterpolation(x, fitSegment, layerInterpolation));
@@ -714,8 +714,12 @@ void TwoDSlidingFitResult::PerformSlidingLinearFit()
             continue;
 
         const double gradient((slidingSumLT - slidingSumL * slidingSumT / static_cast<double>(slidingNPoints)) / denominator);
-        const double intercept((slidingSumLL * slidingSumT / static_cast<double>(slidingNPoints) - slidingSumL * slidingSumLT / static_cast<double>(slidingNPoints)) / denominator);
-        double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT + intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL + gradient * gradient * slidingSumLL) / (1. + gradient * gradient));
+        const double intercept(
+            (slidingSumLL * slidingSumT / static_cast<double>(slidingNPoints) - slidingSumL * slidingSumLT / static_cast<double>(slidingNPoints)) / denominator);
+        double variance((slidingSumTT - 2. * intercept * slidingSumT - 2. * gradient * slidingSumLT +
+                            intercept * intercept * static_cast<double>(slidingNPoints) + 2. * gradient * intercept * slidingSumL +
+                            gradient * gradient * slidingSumLL) /
+                        (1. + gradient * gradient));
 
         if (variance < -std::numeric_limits<float>::epsilon())
             continue;
@@ -728,7 +732,7 @@ void TwoDSlidingFitResult::PerformSlidingLinearFit()
         const double fitT(intercept + gradient * l);
 
         const LayerFitResult layerFitResult(l, fitT, gradient, rms);
-        (void) m_layerFitResultMap.insert(LayerFitResultMap::value_type(iLayer, layerFitResult));
+        (void)m_layerFitResultMap.insert(LayerFitResultMap::value_type(iLayer, layerFitResult));
     }
 
     if (m_layerFitResultMap.empty())
@@ -773,7 +777,8 @@ void TwoDSlidingFitResult::FindSlidingFitSegments()
         else
         {
             if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
-                m_fitSegmentList.push_back(FitSegment(sustainedDirectionStartIter->first, sustainedDirectionEndIter->first, sustainedDirectionStartX, sustainedDirectionEndX));
+                m_fitSegmentList.push_back(FitSegment(
+                    sustainedDirectionStartIter->first, sustainedDirectionEndIter->first, sustainedDirectionStartX, sustainedDirectionEndX));
 
             nSustainedSteps = 0;
             sustainedDirection = UNKNOWN;
@@ -786,7 +791,8 @@ void TwoDSlidingFitResult::FindSlidingFitSegments()
     }
 
     if ((POSITIVE_IN_X == sustainedDirection) || (NEGATIVE_IN_X == sustainedDirection))
-        m_fitSegmentList.push_back(FitSegment(sustainedDirectionStartIter->first, sustainedDirectionEndIter->first, sustainedDirectionStartX, sustainedDirectionEndX));
+        m_fitSegmentList.push_back(
+            FitSegment(sustainedDirectionStartIter->first, sustainedDirectionEndIter->first, sustainedDirectionStartX, sustainedDirectionEndX));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -850,14 +856,14 @@ CartesianVector TwoDSlidingFitResult::GetGlobalFitDirection(const LayerInterpola
     if (m_layerFitResultMap.end() == firstLayerIter || m_layerFitResultMap.end() == secondLayerIter)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    CartesianVector firstLayerDirection(0.f,0.f,0.f);
-    this->GetGlobalDirection(firstLayerIter->second.GetGradient(),firstLayerDirection);
+    CartesianVector firstLayerDirection(0.f, 0.f, 0.f);
+    this->GetGlobalDirection(firstLayerIter->second.GetGradient(), firstLayerDirection);
 
     if (firstLayerIter == secondLayerIter)
         return firstLayerDirection;
 
-    CartesianVector secondLayerDirection(0.f,0.f,0.f);
-    this->GetGlobalDirection(secondLayerIter->second.GetGradient(),secondLayerDirection);
+    CartesianVector secondLayerDirection(0.f, 0.f, 0.f);
+    this->GetGlobalDirection(secondLayerIter->second.GetGradient(), secondLayerDirection);
 
     if (firstWeight + secondWeight < std::numeric_limits<float>::epsilon())
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -916,7 +922,8 @@ StatusCode TwoDSlidingFitResult::TransverseInterpolation(const float x, const Fi
     double firstWeight(0.), secondWeight(0.);
     LayerFitResultMap::const_iterator firstLayerIter, secondLayerIter;
 
-    const StatusCode statusCode(this->GetTransverseSurroundingLayers(x, fitSegment.GetStartLayer(), fitSegment.GetEndLayer(), firstLayerIter, secondLayerIter));
+    const StatusCode statusCode(
+        this->GetTransverseSurroundingLayers(x, fitSegment.GetStartLayer(), fitSegment.GetEndLayer(), firstLayerIter, secondLayerIter));
 
     if (STATUS_CODE_SUCCESS != statusCode)
         return statusCode;
@@ -951,8 +958,8 @@ StatusCode TwoDSlidingFitResult::TransverseInterpolation(const float x, LayerInt
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TwoDSlidingFitResult::GetLongitudinalSurroundingLayers(const float rL, LayerFitResultMap::const_iterator &firstLayerIter,
-    LayerFitResultMap::const_iterator &secondLayerIter) const
+StatusCode TwoDSlidingFitResult::GetLongitudinalSurroundingLayers(
+    const float rL, LayerFitResultMap::const_iterator &firstLayerIter, LayerFitResultMap::const_iterator &secondLayerIter) const
 {
     if (m_layerFitResultMap.empty())
         throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);

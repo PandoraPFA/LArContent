@@ -24,7 +24,7 @@ protected:
     virtual pandora::StatusCode Run();
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterMergeMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterMergeMap;
 
     /**
      *  @brief  Populate cluster vector with subset of cluster list, containing clusters judged to be clean
@@ -57,9 +57,10 @@ protected:
      *  @param  clusterMergeMap the map of cluster associations
      *  @param  associatedClusterList the output list of associated clusters
      */
-    void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap, pandora::ClusterList& associatedClusterList) const;
+    void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const ClusterMergeMap &clusterMergeMap,
+        pandora::ClusterList &associatedClusterList) const;
 
-   /**
+    /**
      *  @brief  Collect up all clusters associations related to a given seed cluster
      *
      *  @param  pSeedCluster pointer to the initial cluster
@@ -68,8 +69,8 @@ protected:
      *  @param  clusterVetoList the list of clusters that have already been merged
      *  @param  associatedClusterList the output list of associated clusters
      */
-    void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const pandora::Cluster *const pCurrentCluster, const ClusterMergeMap &clusterMergeMap,
-        const pandora::ClusterSet &clusterVetoList, pandora::ClusterList& associatedClusterList) const;
+    void CollectAssociatedClusters(const pandora::Cluster *const pSeedCluster, const pandora::Cluster *const pCurrentCluster,
+        const ClusterMergeMap &clusterMergeMap, const pandora::ClusterSet &clusterVetoList, pandora::ClusterList &associatedClusterList) const;
 
     /**
      *  @brief  Sort the selected clusters, so that they have a well-defined ordering
@@ -79,7 +80,7 @@ protected:
      */
     void GetSortedListOfCleanClusters(const pandora::ClusterVector &inputClusters, pandora::ClusterVector &outputClusters) const;
 
-    std::string     m_inputClusterListName;     ///< The name of the input cluster list. If not specified, will access current list.
+    std::string m_inputClusterListName; ///< The name of the input cluster list. If not specified, will access current list.
 };
 
 } // namespace lar_content

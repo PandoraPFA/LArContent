@@ -33,7 +33,7 @@ public:
      *
      *  @return the global asymmetry feature
      */
-    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm * const pAlgorithm, const pandora::Vertex * const pVertex,
+    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const pandora::Vertex *const pVertex,
         const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
         const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &);
 
@@ -48,7 +48,8 @@ private:
      *
      *  @return the global asymmetry feature
      */
-    float GetGlobalAsymmetryForView(const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const;
+    float GetGlobalAsymmetryForView(
+        const pandora::CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const;
 
     /**
      *  @brief  Increment the asymmetry parameters
@@ -57,7 +58,8 @@ private:
      *  @param  clusterDirection the direction of the cluster
      *  @param  localWeightedDirectionSum the current energy-weighted local cluster direction vector
      */
-    void IncrementAsymmetryParameters(const float weight, const pandora::CartesianVector &clusterDirection, pandora::CartesianVector &localWeightedDirectionSum) const;
+    void IncrementAsymmetryParameters(
+        const float weight, const pandora::CartesianVector &clusterDirection, pandora::CartesianVector &localWeightedDirectionSum) const;
 
     /**
      *  @brief  Calculate the global asymmetry feature
@@ -72,7 +74,7 @@ private:
     float CalculateGlobalAsymmetry(const bool useEnergyMetrics, const pandora::CartesianVector &vertexPosition2D,
         const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList, const pandora::CartesianVector &localWeightedDirectionSum) const;
 
-    float     m_maxAsymmetryDistance;    ///< The max distance between cluster (any hit) and vertex to calculate asymmetry score
+    float m_maxAsymmetryDistance; ///< The max distance between cluster (any hit) and vertex to calculate asymmetry score
 };
 
 } // namespace lar_content

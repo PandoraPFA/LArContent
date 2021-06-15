@@ -24,6 +24,7 @@ VisualMonitoringAlgorithm::VisualMonitoringAlgorithm() :
     m_showCurrentPfos(false),
     m_showCurrentVertices(false),
     m_displayEvent(true),
+    m_saveEventPath(""),
     m_showDetector(false),
     m_detectorView("xz"),
     m_showOnlyAvailable(false),
@@ -42,8 +43,9 @@ VisualMonitoringAlgorithm::VisualMonitoringAlgorithm() :
 
 StatusCode VisualMonitoringAlgorithm::Run()
 {
-    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), m_showDetector, (m_detectorView.find("xz") != std::string::npos) ? DETECTOR_VIEW_XZ :
-        (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY : DETECTOR_VIEW_DEFAULT, m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
+    PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), m_showDetector,
+        (m_detectorView.find("xz") != std::string::npos) ? DETECTOR_VIEW_XZ : (m_detectorView.find("xy") != std::string::npos) ? DETECTOR_VIEW_XY : DETECTOR_VIEW_DEFAULT,
+        m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
 
     // Show current mc particles
     if (m_showCurrentMCParticles)
@@ -118,7 +120,12 @@ StatusCode VisualMonitoringAlgorithm::Run()
     }
 
     // Finally, display the event and pause application
-    if (m_displayEvent)
+    // Save the event displays of the event if given a path to save to.
+    if (m_displayEvent && m_saveEventPath != "")
+    {
+        PANDORA_MONITORING_API(SaveAndViewEvent(this->GetPandora(), m_saveEventPath));
+    }
+    else if (m_displayEvent)
     {
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
@@ -168,8 +175,8 @@ void VisualMonitoringAlgorithm::VisualizeMCParticleList(const std::string &listN
         }
     }
 
-    PANDORA_MONITORING_API(VisualizeMCParticles(this->GetPandora(), pMCParticleList, listName.empty() ? "CurrentMCParticles" : listName.c_str(),
-        AUTO, &m_particleSuppressionMap));
+    PANDORA_MONITORING_API(VisualizeMCParticles(
+        this->GetPandora(), pMCParticleList, listName.empty() ? "CurrentMCParticles" : listName.c_str(), AUTO, &m_particleSuppressionMap));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -204,8 +211,7 @@ void VisualMonitoringAlgorithm::VisualizeCaloHitList(const std::string &listName
     {
         const CaloHit *const pCaloHit = *iter;
 
-        if ((pCaloHit->GetElectromagneticEnergy() > m_thresholdEnergy) &&
-            (!m_showOnlyAvailable || PandoraContentApi::IsAvailable(*this, pCaloHit)))
+        if ((pCaloHit->GetElectromagneticEnergy() > m_thresholdEnergy) && (!m_showOnlyAvailable || PandoraContentApi::IsAvailable(*this, pCaloHit)))
         {
             caloHitList.push_back(pCaloHit);
         }
@@ -291,9 +297,9 @@ void VisualMonitoringAlgorithm::VisualizeClusterList(const std::string &listName
     }
 
     PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, listName.empty() ? "CurrentClusters" : listName.c_str(),
-        (m_hitColors.find("particleid") != std::string::npos) ? AUTOID :
-        (m_hitColors.find("iterate") != std::string::npos) ? AUTOITER :
-        (m_hitColors.find("energy") != std::string::npos) ? AUTOENERGY : AUTO,
+        (m_hitColors.find("particleid") != std::string::npos)
+            ? AUTOID
+            : (m_hitColors.find("iterate") != std::string::npos) ? AUTOITER : (m_hitColors.find("energy") != std::string::npos) ? AUTOENERGY : AUTO,
         m_showAssociatedTracks));
 }
 
@@ -323,10 +329,10 @@ void VisualMonitoringAlgorithm::VisualizeParticleFlowList(const std::string &lis
     }
 
     PANDORA_MONITORING_API(VisualizeParticleFlowObjects(this->GetPandora(), pPfoList, listName.empty() ? "CurrentPfos" : listName.c_str(),
-        (m_hitColors.find("particleid") != std::string::npos) ? AUTOID :
-        (m_hitColors.find("iterate") != std::string::npos ? AUTOITER :
-        (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY :
-        AUTO)), m_showPfoVertices, m_showPfoHierarchy));
+        (m_hitColors.find("particleid") != std::string::npos)
+            ? AUTOID
+            : (m_hitColors.find("iterate") != std::string::npos ? AUTOITER : (m_hitColors.find("energy") != std::string::npos ? AUTOENERGY : AUTO)),
+        m_showPfoVertices, m_showPfoHierarchy));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -372,82 +378,76 @@ void VisualMonitoringAlgorithm::VisualizeVertexList(const std::string &listName)
 
 StatusCode VisualMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowCurrentMCParticles", m_showCurrentMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowCurrentMCParticles", m_showCurrentMCParticles));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "MCParticleListNames", m_mcParticleListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "MCParticleListNames", m_mcParticleListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowCurrentCaloHits", m_showCurrentCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowCurrentCaloHits", m_showCurrentCaloHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "CaloHitListNames", m_caloHitListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowCurrentTracks", m_showCurrentTracks));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowCurrentTracks", m_showCurrentTracks));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "TrackListNames", m_trackListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "TrackListNames", m_trackListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowCurrentClusters", m_showCurrentClusters));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowCurrentClusters", m_showCurrentClusters));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "ClusterListNames", m_clusterListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ClusterListNames", m_clusterListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowCurrentPfos", m_showCurrentPfos));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowCurrentPfos", m_showCurrentPfos));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "PfoListNames", m_pfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "PfoListNames", m_pfoListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowCurrentVertices", m_showCurrentVertices));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowCurrentVertices", m_showCurrentVertices));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "VertexListNames", m_vertexListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "VertexListNames", m_vertexListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DisplayEvent", m_displayEvent));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DisplayEvent", m_displayEvent));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowDetector", m_showDetector));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SaveEventPath", m_saveEventPath));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DetectorView", m_detectorView));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowDetector", m_showDetector));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DetectorView", m_detectorView));
     std::transform(m_detectorView.begin(), m_detectorView.end(), m_detectorView.begin(), ::tolower);
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowOnlyAvailable", m_showOnlyAvailable));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowOnlyAvailable", m_showOnlyAvailable));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowAssociatedTracks", m_showAssociatedTracks));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowAssociatedTracks", m_showAssociatedTracks));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "HitColors", m_hitColors));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "HitColors", m_hitColors));
     std::transform(m_hitColors.begin(), m_hitColors.end(), m_hitColors.begin(), ::tolower);
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ThresholdEnergy", m_thresholdEnergy));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ThresholdEnergy", m_thresholdEnergy));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TransparencyThresholdE", m_transparencyThresholdE));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TransparencyThresholdE", m_transparencyThresholdE));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "EnergyScaleThresholdE", m_energyScaleThresholdE));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "EnergyScaleThresholdE", m_energyScaleThresholdE));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ScalingFactor", m_scalingFactor));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ScalingFactor", m_scalingFactor));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowPfoVertices", m_showPfoVertices));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowPfoVertices", m_showPfoVertices));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowPfoHierarchy", m_showPfoHierarchy));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowPfoHierarchy", m_showPfoHierarchy));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SuppressMCParticles", m_suppressMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "SuppressMCParticles", m_suppressMCParticles));
 
     for (StringVector::iterator iter = m_suppressMCParticles.begin(), iterEnd = m_suppressMCParticles.end(); iter != iterEnd; ++iter)
     {

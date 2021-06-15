@@ -18,7 +18,10 @@
 #include <array>
 #include <vector>
 
-namespace pandora { class Algorithm; }
+namespace pandora
+{
+class Algorithm;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -29,7 +32,7 @@ namespace lar_content
  *  @brief  Box structure used to define 2D field. It's used in KDTree building step to divide the detector space (ECAL, HCAL...) and
  *          in searching step to create a bounding box around the demanded point (Track collision point, PS projection...).
  */
-template<unsigned DIM>
+template <unsigned DIM>
 class KDTreeBoxT
 {
 public:
@@ -43,11 +46,11 @@ public:
      *
      *  @param  dimargs
      */
-    template<typename... Ts>
+    template <typename... Ts>
     KDTreeBoxT(Ts... dimargs);
 
-    std::array<float, DIM>      dimmin;     ///<
-    std::array<float, DIM>      dimmax;     ///<
+    std::array<float, DIM> dimmin; ///<
+    std::array<float, DIM> dimmax; ///<
 };
 
 typedef KDTreeBoxT<2> KDTreeBox;
@@ -59,7 +62,7 @@ typedef KDTreeBoxT<3> KDTreeCube;
  *  @brief  Data stored in each KDTree node. The dim1/dim2 fields are usually the duplication of some PFRecHit values
  *          (eta/phi or x/y). But in some situations, phi field is shifted by +-2.Pi
  */
-template<typename DATA, unsigned DIM>
+template <typename DATA, unsigned DIM>
 class KDTreeNodeInfoT
 {
 public:
@@ -74,11 +77,11 @@ public:
      *  @param  d
      *  @param  dimargs
      */
-    template<typename... Ts>
+    template <typename... Ts>
     KDTreeNodeInfoT(const DATA &d, Ts... dimargs);
 
-    DATA                        data;       ///<
-    std::array<float, DIM>      dims;       ///<
+    DATA data;                   ///<
+    std::array<float, DIM> dims; ///<
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -110,10 +113,10 @@ public:
      */
     void setAttributs(const KDTreeBoxT<DIM> &regionBox);
 
-    KDTreeNodeInfoT<DATA, DIM>  info;       ///< Data
-    KDTreeNodeT<DATA, DIM>     *left;       ///< Left son
-    KDTreeNodeT<DATA, DIM>     *right;      ///< Right son
-    KDTreeBoxT<DIM>             region;     ///< Region bounding box.
+    KDTreeNodeInfoT<DATA, DIM> info; ///< Data
+    KDTreeNodeT<DATA, DIM> *left;    ///< Left son
+    KDTreeNodeT<DATA, DIM> *right;   ///< Right son
+    KDTreeBoxT<DIM> region;          ///< Region bounding box.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -121,7 +124,7 @@ public:
 /**
  *  @brief  kdtree_type_adaptor
  */
-template<typename T>
+template <typename T>
 class kdtree_type_adaptor
 {
 public:
@@ -145,7 +148,7 @@ public:
  *
  *  @return minmax
  */
-std::pair<float,float> minmax(const float a, const float b);
+std::pair<float, float> minmax(const float a, const float b);
 
 /**
  *  @brief  fill_and_bound_2d_kd_tree
@@ -155,8 +158,8 @@ std::pair<float,float> minmax(const float a, const float b);
  *
  *  @return KDTreeCube
  */
-template<typename T>
-KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 2> > &nodes);
+template <typename T>
+KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T *> &points, std::vector<KDTreeNodeInfoT<const T *, 2>> &nodes);
 
 /**
  *  @brief  fill_and_bound_3d_kd_tree
@@ -166,8 +169,8 @@ KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T*> &points, s
  *
  *  @return KDTreeCube
  */
-template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes);
+template <typename T>
+KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T *> &points, std::vector<KDTreeNodeInfoT<const T *, 3>> &nodes);
 
 /**
  *  @brief  build_2d_kd_search_region
@@ -218,15 +221,15 @@ KDTreeCube build_3d_kd_search_region(const pandora::CartesianVector &pos, const 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<unsigned DIM>
+template <unsigned DIM>
 inline KDTreeBoxT<DIM>::KDTreeBoxT()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<unsigned DIM>
-template<typename... Ts>
+template <unsigned DIM>
+template <typename... Ts>
 inline KDTreeBoxT<DIM>::KDTreeBoxT(Ts... dimargs)
 {
     static_assert(sizeof...(dimargs) == 2 * DIM, "Constructor requires 2*DIM args");
@@ -242,19 +245,16 @@ inline KDTreeBoxT<DIM>::KDTreeBoxT(Ts... dimargs)
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename DATA, unsigned DIM>
-inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT() :
-    data()
+template <typename DATA, unsigned DIM>
+inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT() : data()
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename DATA, unsigned DIM>
-template<typename... Ts>
-inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT(const DATA &d, Ts... dimargs) :
-    data(d),
-    dims{ {dimargs...} }
+template <typename DATA, unsigned DIM>
+template <typename... Ts>
+inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT(const DATA &d, Ts... dimargs) : data(d), dims{{dimargs...}}
 {
 }
 
@@ -262,9 +262,7 @@ inline KDTreeNodeInfoT<DATA, DIM>::KDTreeNodeInfoT(const DATA &d, Ts... dimargs)
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename DATA, unsigned DIM>
-inline KDTreeNodeT<DATA, DIM>::KDTreeNodeT() :
-    left(nullptr),
-    right(nullptr)
+inline KDTreeNodeT<DATA, DIM>::KDTreeNodeT() : left(nullptr), right(nullptr)
 {
 }
 
@@ -287,19 +285,19 @@ inline void KDTreeNodeT<DATA, DIM>::setAttributs(const KDTreeBoxT<DIM> &regionBo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 inline const pandora::CartesianVector &kdtree_type_adaptor<T>::position(const T *const t)
 {
     return t->GetPosition();
 }
 
-template<>
+template <>
 inline const pandora::CartesianVector &kdtree_type_adaptor<const pandora::CaloHit>::position(const pandora::CaloHit *const t)
 {
     return t->GetPositionVector();
 }
 
-template<>
+template <>
 inline const pandora::CartesianVector &kdtree_type_adaptor<const pandora::CartesianVector>::position(const pandora::CartesianVector *const t)
 {
     return *t;
@@ -307,10 +305,10 @@ inline const pandora::CartesianVector &kdtree_type_adaptor<const pandora::Cartes
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
-KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 2> > &nodes)
+template <typename T>
+KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T *> &points, std::vector<KDTreeNodeInfoT<const T *, 2>> &nodes)
 {
-    std::array<float, 2> minpos{ {0.f, 0.f} }, maxpos{ {0.f, 0.f} };
+    std::array<float, 2> minpos{{0.f, 0.f}}, maxpos{{0.f, 0.f}};
 
     unsigned i = 0;
 
@@ -321,8 +319,10 @@ KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T*> &points, s
 
         if (0 == i)
         {
-            minpos[0] = pos.GetX(); minpos[1] = pos.GetZ();
-            maxpos[0] = pos.GetX(); maxpos[1] = pos.GetZ();
+            minpos[0] = pos.GetX();
+            minpos[1] = pos.GetZ();
+            maxpos[0] = pos.GetX();
+            maxpos[1] = pos.GetZ();
         }
         else
         {
@@ -340,10 +340,10 @@ KDTreeBox fill_and_bound_2d_kd_tree(const MANAGED_CONTAINER<const T*> &points, s
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
-KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T*> &points, std::vector<KDTreeNodeInfoT<const T*, 3> > &nodes)
+template <typename T>
+KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T *> &points, std::vector<KDTreeNodeInfoT<const T *, 3>> &nodes)
 {
-    std::array<float, 3> minpos{ {0.f, 0.f, 0.f} }, maxpos{ {0.f, 0.f, 0.f} };
+    std::array<float, 3> minpos{{0.f, 0.f, 0.f}}, maxpos{{0.f, 0.f, 0.f}};
 
     unsigned i = 0;
 
@@ -354,8 +354,12 @@ KDTreeCube fill_and_bound_3d_kd_tree(const MANAGED_CONTAINER<const T*> &points, 
 
         if (0 == i)
         {
-            minpos[0] = pos.GetX(); minpos[1] = pos.GetY(); minpos[2] = pos.GetZ();
-            maxpos[0] = pos.GetX(); maxpos[1] = pos.GetY(); maxpos[2] = pos.GetZ();
+            minpos[0] = pos.GetX();
+            minpos[1] = pos.GetY();
+            minpos[2] = pos.GetZ();
+            maxpos[0] = pos.GetX();
+            maxpos[1] = pos.GetY();
+            maxpos[2] = pos.GetZ();
         }
         else
         {

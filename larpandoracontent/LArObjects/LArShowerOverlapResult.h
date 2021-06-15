@@ -107,11 +107,11 @@ public:
     ShowerOverlapResult &operator=(const ShowerOverlapResult &rhs);
 
 protected:
-    bool            m_isInitialized;                ///< Whether the track overlap result has been initialized
-    unsigned int    m_nMatchedSamplingPoints;       ///< The number of matched sampling points
-    unsigned int    m_nSamplingPoints;              ///< The number of sampling points
-    float           m_matchedFraction;              ///< The fraction of sampling points resulting in a match
-    XOverlap        m_xOverlap;                     ///< The x overlap object
+    bool m_isInitialized;                  ///< Whether the track overlap result has been initialized
+    unsigned int m_nMatchedSamplingPoints; ///< The number of matched sampling points
+    unsigned int m_nSamplingPoints;        ///< The number of sampling points
+    float m_matchedFraction;               ///< The fraction of sampling points resulting in a match
+    XOverlap m_xOverlap;                   ///< The x overlap object
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -21,10 +21,7 @@ using namespace lar_content;
 namespace lar_dl_content
 {
 
-DlHitValidationAlgorithm::DlHitValidationAlgorithm() :
-    m_confusionU(),
-    m_confusionV(),
-    m_confusionW()
+DlHitValidationAlgorithm::DlHitValidationAlgorithm() : m_confusionU(), m_confusionV(), m_confusionW()
 {
 }
 
@@ -49,7 +46,7 @@ DlHitValidationAlgorithm::~DlHitValidationAlgorithm()
     {
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "confusion_tree", "confusion.root", "UPDATE"));
     }
-    catch(const StatusCodeException&)
+    catch (const StatusCodeException &)
     {
         std::cout << "DlHitValidationAlgorithm: Unable to write confusion_tree to file" << std::endl;
     }
@@ -78,8 +75,8 @@ StatusCode DlHitValidationAlgorithm::Run()
         // Turn off max photo propagation for now, only care about killing off daughters of neutrons
         parameters.m_maxPhotonPropagation = std::numeric_limits<float>::max();
         LArMCParticleHelper::MCContributionMap targetMCParticleToHitsMap;
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters,
-            LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(
+            pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, targetMCParticleToHitsMap);
 
         for (const CaloHit *pCaloHit : *pCaloHitList)
         {
@@ -99,7 +96,7 @@ StatusCode DlHitValidationAlgorithm::Run()
                 else
                     ++m_confusionW[truth][cls];
             }
-            catch (const StatusCodeException&)
+            catch (const StatusCodeException &)
             {
                 continue;
             }
@@ -113,8 +110,8 @@ StatusCode DlHitValidationAlgorithm::Run()
 
 StatusCode DlHitValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "CaloHitListNames", m_caloHitListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "CaloHitListNames", m_caloHitListNames));
 
     return STATUS_CODE_SUCCESS;
 }

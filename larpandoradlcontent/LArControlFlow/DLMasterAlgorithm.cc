@@ -10,8 +10,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoradlcontent/LArDLContent.h"
 #include "larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.h"
+#include "larpandoradlcontent/LArDLContent.h"
 
 using namespace pandora;
 

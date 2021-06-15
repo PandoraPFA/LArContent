@@ -33,7 +33,8 @@ StatusCode ListMergingAlgorithm::Run()
             if (STATUS_CODE_NOT_FOUND == statusCode)
             {
                 if (this->GetPandora().GetSettings()->ShouldDisplayAlgorithmInfo())
-                    std::cout << "ListMergingAlgorithm: cluster list not found, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                    std::cout << "ListMergingAlgorithm: cluster list not found, source: " << sourceListName
+                              << ", target: " << targetListName << std::endl;
             }
             else if (STATUS_CODE_NOT_INITIALIZED == statusCode)
             {
@@ -42,7 +43,8 @@ StatusCode ListMergingAlgorithm::Run()
             }
             else
             {
-                std::cout << "ListMergingAlgorithm: error in cluster merging, source: " << sourceListName << ", target: " << targetListName << std::endl;
+                std::cout << "ListMergingAlgorithm: error in cluster merging, source: " << sourceListName << ", target: " << targetListName
+                          << std::endl;
                 return statusCode;
             }
         }
@@ -86,17 +88,17 @@ StatusCode ListMergingAlgorithm::Run()
 
 StatusCode ListMergingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SourceClusterListNames", m_sourceClusterListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "SourceClusterListNames", m_sourceClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "TargetClusterListNames", m_targetClusterListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "TargetClusterListNames", m_targetClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "SourcePfoListNames", m_sourcePfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "SourcePfoListNames", m_sourcePfoListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "TargetPfoListNames", m_targetPfoListNames));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadVectorOfValues(xmlHandle, "TargetPfoListNames", m_targetPfoListNames));
 
     if ((m_sourceClusterListNames.size() != m_targetClusterListNames.size()) || (m_sourcePfoListNames.size() != m_targetPfoListNames.size()))
     {

@@ -13,9 +13,9 @@
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/StatusCodes.h"
 
-#include <fstream>
 #include <chrono>
 #include <ctime>
+#include <fstream>
 
 namespace lar_content
 {
@@ -23,7 +23,7 @@ namespace lar_content
 /**
  *  @brief  MvaFeatureTool class template
  */
-template <typename ...Ts>
+template <typename... Ts>
 class MvaFeatureTool : public pandora::AlgorithmTool
 {
 public:
@@ -43,7 +43,7 @@ public:
     virtual void Run(MvaTypes::MvaFeatureVector &featureVector, Ts... args) = 0;
 };
 
-template <typename ...Ts>
+template <typename... Ts>
 using MvaFeatureToolVector = std::vector<MvaFeatureTool<Ts...> *>;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -65,7 +65,7 @@ public:
      *
      *  @return success
      */
-    template <typename ...TLISTS>
+    template <typename... TLISTS>
     static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists);
 
     /**
@@ -76,7 +76,7 @@ public:
      *
      *  @return the predicted boolean class of the example
      */
-    template <typename ...TLISTS>
+    template <typename... TLISTS>
     static bool Classify(const MvaInterface &classifier, TLISTS &&... featureLists);
 
     /**
@@ -87,7 +87,7 @@ public:
      *
      *  @return the classification score
      */
-    template <typename ...TLISTS>
+    template <typename... TLISTS>
     static double CalculateClassificationScore(const MvaInterface &classifier, TLISTS &&... featureLists);
 
     /**
@@ -98,7 +98,7 @@ public:
      *
      *  @return the classification probability
      */
-    template <typename ...TLISTS>
+    template <typename... TLISTS>
     static double CalculateProbability(const MvaInterface &classifier, TLISTS &&... featureLists);
 
     /**
@@ -109,7 +109,7 @@ public:
      *
      *  @return the vector of features
      */
-    template <typename ...Ts, typename ...TARGS>
+    template <typename... Ts, typename... TARGS>
     static MvaFeatureVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
@@ -120,7 +120,7 @@ public:
      *
      *  @return the vector of features
      */
-    template <typename T, typename ...Ts, typename ...TARGS>
+    template <typename T, typename... Ts, typename... TARGS>
     static MvaFeatureVector CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
@@ -131,7 +131,7 @@ public:
      *
      *  @return success
      */
-    template <typename ...Ts>
+    template <typename... Ts>
     static pandora::StatusCode AddFeatureToolToVector(pandora::AlgorithmTool *const pFeatureTool, MvaFeatureToolVector<Ts...> &featureToolVector);
 
 private:
@@ -152,7 +152,7 @@ private:
      *
      *  @return success
      */
-    template <typename TLIST, typename ...TLISTS>
+    template <typename TLIST, typename... TLISTS>
     static pandora::StatusCode WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists);
 
     /**
@@ -182,7 +182,7 @@ private:
      *
      *  @return the concatenated vector of features
      */
-    template <typename TLIST, typename ...TLISTS>
+    template <typename TLIST, typename... TLISTS>
     static MvaFeatureVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
 
     /**
@@ -193,7 +193,7 @@ private:
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...TLISTS>
+template <typename... TLISTS>
 pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists)
 {
     std::ofstream outfile;
@@ -216,7 +216,7 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...TLISTS>
+template <typename... TLISTS>
 bool LArMvaHelper::Classify(const MvaInterface &classifier, TLISTS &&... featureLists)
 {
     return classifier.Classify(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
@@ -224,7 +224,7 @@ bool LArMvaHelper::Classify(const MvaInterface &classifier, TLISTS &&... feature
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...TLISTS>
+template <typename... TLISTS>
 double LArMvaHelper::CalculateClassificationScore(const MvaInterface &classifier, TLISTS &&... featureLists)
 {
     return classifier.CalculateClassificationScore(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
@@ -232,7 +232,7 @@ double LArMvaHelper::CalculateClassificationScore(const MvaInterface &classifier
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...TLISTS>
+template <typename... TLISTS>
 double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, TLISTS &&... featureLists)
 {
     return classifier.CalculateProbability(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
@@ -240,7 +240,7 @@ double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, TLISTS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...Ts, typename ...TARGS>
+template <typename... Ts, typename... TARGS>
 LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
     LArMvaHelper::MvaFeatureVector featureVector;
@@ -253,7 +253,7 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename T, typename ...Ts, typename ...TARGS>
+template <typename T, typename... Ts, typename... TARGS>
 LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
     using TD = typename std::decay<T>::type;
@@ -270,7 +270,7 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeaturesOfType(const MvaFe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename ...Ts>
+template <typename... Ts>
 pandora::StatusCode LArMvaHelper::AddFeatureToolToVector(pandora::AlgorithmTool *const pFeatureTool, MvaFeatureToolVector<Ts...> &featureToolVector)
 {
     if (MvaFeatureTool<Ts...> *const pCastFeatureTool = dynamic_cast<MvaFeatureTool<Ts...> *const>(pFeatureTool))
@@ -304,8 +304,9 @@ inline std::string LArMvaHelper::GetTimestampString()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename TLIST, typename ...TLISTS>
-inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists)
+template <typename TLIST, typename... TLISTS>
+inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(
+    std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists)
 {
     static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureVector>::value,
         "LArMvaHelper: Could not write training set example because a passed parameter was not a vector of MvaFeatures");
@@ -326,7 +327,7 @@ inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(std::ofstream &, co
 template <typename TLIST>
 pandora::StatusCode LArMvaHelper::WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList)
 {
-    for (const MvaFeature feature : featureList)
+    for (const MvaFeature &feature : featureList)
         outfile << feature.Get() << delimiter;
 
     return pandora::STATUS_CODE_SUCCESS;
@@ -334,7 +335,7 @@ pandora::StatusCode LArMvaHelper::WriteFeaturesToFileImpl(std::ofstream &outfile
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename TLIST, typename ...TLISTS>
+template <typename TLIST, typename... TLISTS>
 LArMvaHelper::MvaFeatureVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists)
 {
     static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureVector>::value,
@@ -342,7 +343,7 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::ConcatenateFeatureLists(TLIST &&fea
 
     LArMvaHelper::MvaFeatureVector featureVector;
 
-    for (const MvaFeature feature : featureList)
+    for (const MvaFeature &feature : featureList)
         featureVector.push_back(feature);
 
     LArMvaHelper::MvaFeatureVector newFeatureVector = ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...);

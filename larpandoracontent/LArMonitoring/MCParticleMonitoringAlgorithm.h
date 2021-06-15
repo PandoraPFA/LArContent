@@ -18,7 +18,7 @@ namespace lar_content
 /**
  *  @brief  MCParticleMonitoringAlgorithm class
  */
-class MCParticleMonitoringAlgorithm: public pandora::Algorithm
+class MCParticleMonitoringAlgorithm : public pandora::Algorithm
 {
 public:
     /**
@@ -47,11 +47,11 @@ private:
     void PrintMCParticle(const pandora::MCParticle *const pMCParticle, const LArMCParticleHelper::MCContributionMap &mcToTrueHitListMap,
         const int depth) const;
 
-    std::string     m_caloHitListName;          ///< Name of input calo hit list
-    std::string     m_mcParticleListName;       ///< Name of input MC particle list
+    std::string m_caloHitListName;    ///< Name of input calo hit list
+    std::string m_mcParticleListName; ///< Name of input MC particle list
 
-    bool            m_useTrueNeutrinosOnly;     ///< Whether to consider only mc particles that were neutrino induced
-    unsigned int    m_minHitsForDisplay;        ///< Min hits associated with mc particle to warrant display to terminal
+    bool m_useTrueNeutrinosOnly;      ///< Whether to consider only mc particles that were neutrino induced
+    unsigned int m_minHitsForDisplay; ///< Min hits associated with mc particle to warrant display to terminal
 };
 
 } // namespace lar_content

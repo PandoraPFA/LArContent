@@ -13,9 +13,9 @@
 
 namespace pandora
 {
-    class Pandora;
-    class ParticleFlowObject;
-}
+class Pandora;
+class ParticleFlowObject;
+} // namespace pandora
 
 class MultiPandoraApiImpl;
 
@@ -107,7 +107,7 @@ public:
     static void SetVolumeId(const pandora::Pandora *const pPandora, const unsigned int volumeId);
 
 private:
-    static MultiPandoraApiImpl      m_multiPandoraApiImpl;          ///< The multi pandora api implementation
+    static MultiPandoraApiImpl m_multiPandoraApiImpl; ///< The multi pandora api implementation
 };
 
 #endif // #ifndef MULTI_PANDORA_API_H

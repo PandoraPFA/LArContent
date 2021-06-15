@@ -53,8 +53,10 @@ void ClearTransverseTrackHitsTool::GetTransverseTrackHit3D(const MatchedSlidingF
     }
 
     unsigned int nViews(1);
-    if (fitPositionList1.size() > 0) ++nViews;
-    if (fitPositionList2.size() > 0) ++nViews;
+    if (fitPositionList1.size() > 0)
+        ++nViews;
+    if (fitPositionList2.size() > 0)
+        ++nViews;
 
     if (nViews < m_minViews)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);

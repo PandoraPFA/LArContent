@@ -28,7 +28,8 @@ ThreeViewLongitudinalTracksAlgorithm::ThreeViewLongitudinalTracksAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
+void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(
+    const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW)
 {
     LongitudinalOverlapResult overlapResult;
     this->CalculateOverlapResult(pClusterU, pClusterV, pClusterW, overlapResult);
@@ -39,8 +40,8 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV, const Cluster *const pClusterW,
-    LongitudinalOverlapResult &longitudinalOverlapResult)
+void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster *const pClusterU, const Cluster *const pClusterV,
+    const Cluster *const pClusterW, LongitudinalOverlapResult &longitudinalOverlapResult)
 {
     const TwoDSlidingFitResult &slidingFitResultU(this->GetCachedSlidingFitResult(pClusterU));
     const TwoDSlidingFitResult &slidingFitResultV(this->GetCachedSlidingFitResult(pClusterV));
@@ -56,28 +57,28 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster 
         const bool isForwardW((3 == iPermutation) ? false : true);
 
         // Get 2D start and end positions from each sliding fit for this permutation
-        const CartesianVector vtxU((isForwardU)  ? slidingFitResultU.GetGlobalMinLayerPosition() : slidingFitResultU.GetGlobalMaxLayerPosition());
+        const CartesianVector vtxU((isForwardU) ? slidingFitResultU.GetGlobalMinLayerPosition() : slidingFitResultU.GetGlobalMaxLayerPosition());
         const CartesianVector endU((!isForwardU) ? slidingFitResultU.GetGlobalMinLayerPosition() : slidingFitResultU.GetGlobalMaxLayerPosition());
 
-        const CartesianVector vtxV((isForwardV)  ? slidingFitResultV.GetGlobalMinLayerPosition() : slidingFitResultV.GetGlobalMaxLayerPosition());
+        const CartesianVector vtxV((isForwardV) ? slidingFitResultV.GetGlobalMinLayerPosition() : slidingFitResultV.GetGlobalMaxLayerPosition());
         const CartesianVector endV((!isForwardV) ? slidingFitResultV.GetGlobalMinLayerPosition() : slidingFitResultV.GetGlobalMaxLayerPosition());
 
-        const CartesianVector vtxW((isForwardW)  ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
+        const CartesianVector vtxW((isForwardW) ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
         const CartesianVector endW((!isForwardW) ? slidingFitResultW.GetGlobalMinLayerPosition() : slidingFitResultW.GetGlobalMaxLayerPosition());
 
         // Merge start and end positions (three views)
-        const float halfLengthSquaredU(0.25*(vtxU - endU).GetMagnitudeSquared());
-        const float halfLengthSquaredV(0.25*(vtxV - endV).GetMagnitudeSquared());
-        const float halfLengthSquaredW(0.25*(vtxW - endW).GetMagnitudeSquared());
+        const float halfLengthSquaredU(0.25 * (vtxU - endU).GetMagnitudeSquared());
+        const float halfLengthSquaredV(0.25 * (vtxV - endV).GetMagnitudeSquared());
+        const float halfLengthSquaredW(0.25 * (vtxW - endW).GetMagnitudeSquared());
 
-        CartesianVector vtxMergedU(0.f,0.f,0.f), vtxMergedV(0.f,0.f,0.f), vtxMergedW(0.f,0.f,0.f);
-        CartesianVector endMergedU(0.f,0.f,0.f), endMergedV(0.f,0.f,0.f), endMergedW(0.f,0.f,0.f);
+        CartesianVector vtxMergedU(0.f, 0.f, 0.f), vtxMergedV(0.f, 0.f, 0.f), vtxMergedW(0.f, 0.f, 0.f);
+        CartesianVector endMergedU(0.f, 0.f, 0.f), endMergedV(0.f, 0.f, 0.f), endMergedW(0.f, 0.f, 0.f);
 
         float vtxChi2(std::numeric_limits<float>::max());
         float endChi2(std::numeric_limits<float>::max());
 
-        LArGeometryHelper::MergeThreePositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, vtxU, vtxV, vtxW, vtxMergedU,
-            vtxMergedV, vtxMergedW, vtxChi2);
+        LArGeometryHelper::MergeThreePositions(
+            this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, vtxU, vtxV, vtxW, vtxMergedU, vtxMergedV, vtxMergedW, vtxChi2);
 
         if (vtxChi2 > m_vertexChi2Cut)
             continue;
@@ -87,8 +88,8 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster 
             ((vtxMergedW - vtxW).GetMagnitudeSquared() > std::min(halfLengthSquaredW, (vtxMergedW - endW).GetMagnitudeSquared())))
             continue;
 
-        LArGeometryHelper::MergeThreePositions(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, endU, endV, endW, endMergedU,
-            endMergedV, endMergedW, endChi2);
+        LArGeometryHelper::MergeThreePositions(
+            this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, endU, endV, endW, endMergedU, endMergedV, endMergedW, endChi2);
 
         if (endChi2 > m_vertexChi2Cut)
             continue;
@@ -100,7 +101,7 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster 
 
         // Merge start and end positions (two views)
         float chi2(0.f);
-        CartesianVector position3D(0.f,0.f,0.f);
+        CartesianVector position3D(0.f, 0.f, 0.f);
         CartesianPointVector vtxList3D, endList3D;
 
         LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, vtxU, vtxV, position3D, chi2);
@@ -131,8 +132,7 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster 
                 const CartesianVector &endMerged3D(*iterJ);
 
                 TrackOverlapResult overlapResult;
-                this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW,
-                    vtxMerged3D, endMerged3D, overlapResult);
+                this->CalculateOverlapResult(slidingFitResultU, slidingFitResultV, slidingFitResultW, vtxMerged3D, endMerged3D, overlapResult);
 
                 if (overlapResult.IsInitialized() && (overlapResult.GetNMatchedSamplingPoints() > 0) && (overlapResult > bestOverlapResult))
                 {
@@ -146,8 +146,9 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const Cluster 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &slidingFitResultU, const TwoDSlidingFitResult &slidingFitResultV,
-    const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D, const CartesianVector &endMerged3D, TrackOverlapResult &overlapResult) const
+void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlidingFitResult &slidingFitResultU,
+    const TwoDSlidingFitResult &slidingFitResultV, const TwoDSlidingFitResult &slidingFitResultW, const CartesianVector &vtxMerged3D,
+    const CartesianVector &endMerged3D, TrackOverlapResult &overlapResult) const
 {
     // Calculate start and end positions of linear trajectory
     const CartesianVector vtxMergedU(LArGeometryHelper::ProjectPosition(this->GetPandora(), vtxMerged3D, TPC_VIEW_U));
@@ -158,9 +159,9 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlid
     const CartesianVector endMergedV(LArGeometryHelper::ProjectPosition(this->GetPandora(), endMerged3D, TPC_VIEW_V));
     const CartesianVector endMergedW(LArGeometryHelper::ProjectPosition(this->GetPandora(), endMerged3D, TPC_VIEW_W));
 
-    const unsigned int nSamplingPoints = static_cast<unsigned int>((endMerged3D - vtxMerged3D).GetMagnitude()/ m_samplingPitch);
+    const unsigned int nSamplingPoints = static_cast<unsigned int>((endMerged3D - vtxMerged3D).GetMagnitude() / m_samplingPitch);
 
-    if(0 == nSamplingPoints)
+    if (0 == nSamplingPoints)
         return;
 
     // Loop over sampling points and calculate track overlap result
@@ -174,7 +175,7 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlid
         const CartesianVector linearV(vtxMergedV + (endMergedV - vtxMergedV) * alpha);
         const CartesianVector linearW(vtxMergedW + (endMergedW - vtxMergedW) * alpha);
 
-        CartesianVector posU(0.f,0.f,0.f), posV(0.f,0.f,0.f), posW(0.f,0.f,0.f);
+        CartesianVector posU(0.f, 0.f, 0.f), posV(0.f, 0.f, 0.f), posW(0.f, 0.f, 0.f);
         if ((STATUS_CODE_SUCCESS != slidingFitResultU.GetGlobalFitProjection(linearU, posU)) ||
             (STATUS_CODE_SUCCESS != slidingFitResultV.GetGlobalFitProjection(linearV, posV)) ||
             (STATUS_CODE_SUCCESS != slidingFitResultW.GetGlobalFitProjection(linearW, posW)))
@@ -182,7 +183,7 @@ void ThreeViewLongitudinalTracksAlgorithm::CalculateOverlapResult(const TwoDSlid
             continue;
         }
 
-        CartesianVector mergedU(0.f,0.f,0.f), mergedV(0.f,0.f,0.f), mergedW(0.f,0.f,0.f);
+        CartesianVector mergedU(0.f, 0.f, 0.f), mergedV(0.f, 0.f, 0.f), mergedW(0.f, 0.f, 0.f);
         LArGeometryHelper::MergeThreePositions(this->GetPandora(), posU, posV, posW, mergedU, mergedV, mergedW, deltaChi2);
 
         if (deltaChi2 < m_reducedChi2Cut)
@@ -201,7 +202,7 @@ void ThreeViewLongitudinalTracksAlgorithm::ExamineOverlapContainer()
 {
     unsigned int repeatCounter(0);
 
-    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd; )
+    for (TensorToolVector::const_iterator iter = m_algorithmToolVector.begin(), iterEnd = m_algorithmToolVector.end(); iter != iterEnd;)
     {
         if ((*iter)->Run(this, this->GetMatchingControl().GetOverlapTensor()))
         {
@@ -222,12 +223,11 @@ void ThreeViewLongitudinalTracksAlgorithm::ExamineOverlapContainer()
 StatusCode ThreeViewLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmToolVector algorithmToolVector;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle,
-        "TrackTools", algorithmToolVector));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "TrackTools", algorithmToolVector));
 
     for (AlgorithmToolVector::const_iterator iter = algorithmToolVector.begin(), iterEnd = algorithmToolVector.end(); iter != iterEnd; ++iter)
     {
-        LongitudinalTensorTool *const pLongitudinalTensorTool(dynamic_cast<LongitudinalTensorTool*>(*iter));
+        LongitudinalTensorTool *const pLongitudinalTensorTool(dynamic_cast<LongitudinalTensorTool *>(*iter));
 
         if (!pLongitudinalTensorTool)
             return STATUS_CODE_INVALID_PARAMETER;
@@ -235,17 +235,14 @@ StatusCode ThreeViewLongitudinalTracksAlgorithm::ReadSettings(const TiXmlHandle 
         m_algorithmToolVector.push_back(pLongitudinalTensorTool);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NMaxTensorToolRepeats", m_nMaxTensorToolRepeats));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexChi2Cut", m_vertexChi2Cut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexChi2Cut", m_vertexChi2Cut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReducedChi2Cut", m_reducedChi2Cut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ReducedChi2Cut", m_reducedChi2Cut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SamplingPitch", m_samplingPitch));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SamplingPitch", m_samplingPitch));
 
     if (m_samplingPitch < std::numeric_limits<float>::epsilon())
         return STATUS_CODE_INVALID_PARAMETER;

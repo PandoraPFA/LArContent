@@ -89,7 +89,7 @@ bool LArStitchingHelper::AreTPCsAdjacent(const LArTPC &firstTPC, const LArTPC &s
     const float deltaY(std::fabs(firstTPC.GetCenterY() - secondTPC.GetCenterY()));
     const float deltaZ(std::fabs(firstTPC.GetCenterZ() - secondTPC.GetCenterZ()));
 
-    if (std::fabs(deltaX-widthX) > maxDisplacement || deltaY > maxDisplacement || deltaZ > maxDisplacement)
+    if (std::fabs(deltaX - widthX) > maxDisplacement || deltaY > maxDisplacement || deltaZ > maxDisplacement)
         return false;
 
     return true;
@@ -108,7 +108,7 @@ bool LArStitchingHelper::AreTPCsAdjacent(const Pandora &pandora, const LArTPC &f
         if ((&firstTPCCheck == &firstTPC) && (&secondTPCCheck == &secondTPC))
             return true;
     }
-    catch (pandora::StatusCodeException& )
+    catch (pandora::StatusCodeException &)
     {
     }
 
@@ -121,7 +121,7 @@ bool LArStitchingHelper::AreTPCsAdjacent(const Pandora &pandora, const LArTPC &f
         if ((&firstTPCCheck == &firstTPC) && (&secondTPCCheck == &secondTPC))
             return true;
     }
-    catch (pandora::StatusCodeException& )
+    catch (pandora::StatusCodeException &)
     {
     }
 
@@ -175,9 +175,8 @@ float LArStitchingHelper::GetTPCDisplacement(const LArTPC &firstTPC, const LArTP
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC &larTPC2,
-    const LArPointingCluster &pointingCluster1, const LArPointingCluster &pointingCluster2,
-    LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2)
+void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC &larTPC2, const LArPointingCluster &pointingCluster1,
+    const LArPointingCluster &pointingCluster2, LArPointingCluster::Vertex &closestVertex1, LArPointingCluster::Vertex &closestVertex2)
 {
     if (&larTPC1 == &larTPC2)
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -194,11 +193,11 @@ void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC 
     const bool useInner2((dxVolume > 0.f) == (dx2 > 0.f)); // xVol1 - | - INNER - OUTER - xVol2  [xVol2-xVol1>0; xOuter2-xInner2>0]
 
     // Confirm that these really are the closest pair of vertices by checking the other possible pairs
-    const LArPointingCluster::Vertex &nearVertex1(useInner1 ?  pointingCluster1.GetInnerVertex() : pointingCluster1.GetOuterVertex());
-    const LArPointingCluster::Vertex &nearVertex2(useInner2 ?  pointingCluster2.GetInnerVertex() : pointingCluster2.GetOuterVertex());
+    const LArPointingCluster::Vertex &nearVertex1(useInner1 ? pointingCluster1.GetInnerVertex() : pointingCluster1.GetOuterVertex());
+    const LArPointingCluster::Vertex &nearVertex2(useInner2 ? pointingCluster2.GetInnerVertex() : pointingCluster2.GetOuterVertex());
 
-    const LArPointingCluster::Vertex &farVertex1(useInner1 ?  pointingCluster1.GetOuterVertex() : pointingCluster1.GetInnerVertex());
-    const LArPointingCluster::Vertex &farVertex2(useInner2 ?  pointingCluster2.GetOuterVertex() : pointingCluster2.GetInnerVertex());
+    const LArPointingCluster::Vertex &farVertex1(useInner1 ? pointingCluster1.GetOuterVertex() : pointingCluster1.GetInnerVertex());
+    const LArPointingCluster::Vertex &farVertex2(useInner2 ? pointingCluster2.GetOuterVertex() : pointingCluster2.GetInnerVertex());
 
     const float dxNearNear(0.f);
     const float dyNearNear(nearVertex1.GetPosition().GetY() - nearVertex2.GetPosition().GetY());
@@ -229,8 +228,8 @@ void LArStitchingHelper::GetClosestVertices(const LArTPC &larTPC1, const LArTPC 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArStitchingHelper::CalculateX0(const LArTPC &firstTPC, const LArTPC &secondTPC,
-    const LArPointingCluster::Vertex &firstVertex, const LArPointingCluster::Vertex &secondVertex)
+float LArStitchingHelper::CalculateX0(const LArTPC &firstTPC, const LArTPC &secondTPC, const LArPointingCluster::Vertex &firstVertex,
+    const LArPointingCluster::Vertex &secondVertex)
 {
     if (&firstTPC == &secondTPC)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
@@ -264,10 +263,12 @@ float LArStitchingHelper::CalculateX0(const LArTPC &firstTPC, const LArTPC &seco
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     const float R1(firstDirectionYZ.GetUnitVector().GetDotProduct(firstPositionYZ - secondPositionYZ) / firstDirectionYZmag);
-    const float X1(-1.f * firstDirectionX.GetUnitVector().GetDotProduct(secondVertex.GetPosition() - (firstVertex.GetPosition() - firstVertex.GetDirection() * R1)));
+    const float X1(-1.f * firstDirectionX.GetUnitVector().GetDotProduct(
+                              secondVertex.GetPosition() - (firstVertex.GetPosition() - firstVertex.GetDirection() * R1)));
 
     const float R2(secondDirectionYZ.GetUnitVector().GetDotProduct(secondPositionYZ - firstPositionYZ) / secondDirectionYZmag);
-    const float X2(-1.f * secondDirectionX.GetUnitVector().GetDotProduct(firstVertex.GetPosition() - (secondVertex.GetPosition() - secondVertex.GetDirection() * R2)));
+    const float X2(-1.f * secondDirectionX.GetUnitVector().GetDotProduct(
+                              firstVertex.GetPosition() - (secondVertex.GetPosition() - secondVertex.GetDirection() * R2)));
 
     // ATTN: By convention, X0 is half the displacement in x (because both Pfos will be corrected)
     return (X1 + X2) * 0.25f;

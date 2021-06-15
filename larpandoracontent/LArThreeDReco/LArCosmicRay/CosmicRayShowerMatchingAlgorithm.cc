@@ -10,8 +10,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayShowerMatchingAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 using namespace pandora;
 
@@ -61,8 +61,8 @@ bool CosmicRayShowerMatchingAlgorithm::MatchClusters(const Cluster *const pClust
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayShowerMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *const pCluster1, const Cluster *const pCluster2,
-    const Cluster *const pCluster3) const
+bool CosmicRayShowerMatchingAlgorithm::CheckMatchedClusters3D(
+    const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3) const
 {
     // Check that three clusters have a consistent 3D position
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
@@ -111,9 +111,12 @@ bool CosmicRayShowerMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *con
 void CosmicRayShowerMatchingAlgorithm::SetPfoParameters(const Particle &particle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
     ClusterList clusterList;
-    if (particle.m_pClusterU) clusterList.push_back(particle.m_pClusterU);
-    if (particle.m_pClusterV) clusterList.push_back(particle.m_pClusterV);
-    if (particle.m_pClusterW) clusterList.push_back(particle.m_pClusterW);
+    if (particle.m_pClusterU)
+        clusterList.push_back(particle.m_pClusterU);
+    if (particle.m_pClusterV)
+        clusterList.push_back(particle.m_pClusterV);
+    if (particle.m_pClusterW)
+        clusterList.push_back(particle.m_pClusterW);
 
     // TODO Correct these placeholder parameters
     pfoParameters.m_particleId = E_MINUS; // SHOWER
@@ -128,17 +131,15 @@ void CosmicRayShowerMatchingAlgorithm::SetPfoParameters(const Particle &particle
 
 StatusCode CosmicRayShowerMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlap", m_minXOverlap));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlap", m_minXOverlap));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlapFraction", m_minXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction", m_minXOverlapFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "PseudoChi2Cut", m_pseudoChi2Cut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PseudoChi2Cut", m_pseudoChi2Cut));
 
     return CosmicRayBaseMatchingAlgorithm::ReadSettings(xmlHandle);
 }

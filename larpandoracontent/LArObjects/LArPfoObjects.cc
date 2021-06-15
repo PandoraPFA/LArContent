@@ -50,15 +50,15 @@ const CaloHit *LArTrackState::GetCaloHit() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 LArShowerPCA::LArShowerPCA(const CartesianVector &centroid, const CartesianVector &primaryAxis, const CartesianVector &secondaryAxis,
-        const CartesianVector &tertiaryAxis, const CartesianVector &eigenValues) :
+    const CartesianVector &tertiaryAxis, const CartesianVector &eigenValues) :
     m_centroid(centroid),
     m_primaryAxis(primaryAxis),
     m_secondaryAxis(secondaryAxis),
     m_tertiaryAxis(tertiaryAxis),
     m_eigenValues(eigenValues),
     m_axisLengths(((eigenValues.GetX() > std::numeric_limits<float>::epsilon()) ? 6.f * std::sqrt(eigenValues.GetX()) : 0.f),
-                  ((eigenValues.GetY() > std::numeric_limits<float>::epsilon()) ? 6.f * std::sqrt(eigenValues.GetY()) : 0.f),
-                  ((eigenValues.GetZ() > std::numeric_limits<float>::epsilon()) ? 6.f * std::sqrt(eigenValues.GetZ()) : 0.f))
+        ((eigenValues.GetY() > std::numeric_limits<float>::epsilon()) ? 6.f * std::sqrt(eigenValues.GetY()) : 0.f),
+        ((eigenValues.GetZ() > std::numeric_limits<float>::epsilon()) ? 6.f * std::sqrt(eigenValues.GetZ()) : 0.f))
 {
 }
 

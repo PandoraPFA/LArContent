@@ -64,8 +64,8 @@ StatusCode CheatingPfoCreationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingPfoCreationAlgorithm::GetMCParticleToClusterListMap(const ClusterList *const pClusterList, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
-    MCParticleToClusterListMap &mcParticleToClusterListMap) const
+void CheatingPfoCreationAlgorithm::GetMCParticleToClusterListMap(const ClusterList *const pClusterList,
+    const LArMCParticleHelper::MCRelationMap &mcPrimaryMap, MCParticleToClusterListMap &mcParticleToClusterListMap) const
 {
     for (const Cluster *const pCluster : *pClusterList)
     {
@@ -91,7 +91,9 @@ void CheatingPfoCreationAlgorithm::GetMCParticleToClusterListMap(const ClusterLi
 
             mcParticleToClusterListMap[pMCParticle].push_back(pCluster);
         }
-        catch (const StatusCodeException &) {}
+        catch (const StatusCodeException &)
+        {
+        }
     }
 }
 
@@ -102,14 +104,17 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
     if (mcParticleToClusterListMap.empty())
         return;
 
-    const PfoList *pPfoList(nullptr); std::string pfoListName;
+    const PfoList *pPfoList(nullptr);
+    std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
-    const VertexList *pVertexList(nullptr); std::string vertexListName;
+    const VertexList *pVertexList(nullptr);
+    std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
 
     MCParticleVector mcParticleVector;
-    for (const auto &mapEntry : mcParticleToClusterListMap) mcParticleVector.push_back(mapEntry.first);
+    for (const auto &mapEntry : mcParticleToClusterListMap)
+        mcParticleVector.push_back(mapEntry.first);
     std::sort(mcParticleVector.begin(), mcParticleVector.end(), LArMCParticleHelper::SortByMomentum);
 
     for (const MCParticle *const pMCParticle : mcParticleVector)
@@ -149,7 +154,8 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
         }
         catch (const StatusCodeException &)
         {
-            std::cout << "CheatingPfoCreationAlgorithm: Could not create PFO for MCParticle with pdg code " << pMCParticle->GetParticleId() << std::endl;
+            std::cout << "CheatingPfoCreationAlgorithm: Could not create PFO for MCParticle with pdg code " << pMCParticle->GetParticleId()
+                      << std::endl;
         }
     }
 
@@ -194,47 +200,41 @@ unsigned int CheatingPfoCreationAlgorithm::GetNHitTypesAboveThreshold(const Clus
 
 StatusCode CheatingPfoCreationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputClusterListNames", m_inputClusterListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputPfoListName", m_outputPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputPfoListName", m_outputPfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
 
     if (m_collapseToPrimaryMCParticles)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "MCParticleListName", m_mcParticleListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseOnlyAvailableClusters", m_useOnlyAvailableClusters));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseOnlyAvailableClusters", m_useOnlyAvailableClusters));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "AddVertices", m_addVertices));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "AddVertices", m_addVertices));
 
     if (m_addVertices)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "OutputVertexListName", m_outputVertexListName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
-        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-            "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+            XmlHelper::ReadValue(xmlHandle, "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
     }
 
     IntVector particleIdVector;
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "ParticleIdList", particleIdVector));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ParticleIdList", particleIdVector));
 
     m_particleIdList.insert(particleIdVector.begin(), particleIdVector.end());
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinGoodHitTypes", m_minGoodHitTypes));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinGoodHitTypes", m_minGoodHitTypes));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NHitsForGoodHitType", m_nHitsForGoodHitType));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NHitsForGoodHitType", m_nHitsForGoodHitType));
 
     return STATUS_CODE_SUCCESS;
 }

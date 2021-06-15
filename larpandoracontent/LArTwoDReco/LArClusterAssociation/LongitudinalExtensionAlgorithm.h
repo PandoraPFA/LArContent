@@ -38,17 +38,18 @@ private:
      *  @param  clusterJ the second pointing cluster
      *  @param  clusterAssociationMatrix the matrix of cluster associations
      */
-    void FillClusterAssociationMatrix(const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
+    void FillClusterAssociationMatrix(
+        const LArPointingCluster &clusterI, const LArPointingCluster &clusterJ, ClusterAssociationMatrix &clusterAssociationMatrix) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float   m_clusterMinLength;                     ///<
-    float   m_clusterMinLayerOccupancy;             ///<
-    float   m_nodeMaxDisplacement;                  ///<
-    float   m_nodeMaxCosRelativeAngle;              ///<
-    float   m_emissionMaxLongitudinalDisplacement;  ///<
-    float   m_emissionMaxTransverseDisplacement;    ///<
-    float   m_emissionMaxCosRelativeAngle;          ///<
+    float m_clusterMinLength;                    ///<
+    float m_clusterMinLayerOccupancy;            ///<
+    float m_nodeMaxDisplacement;                 ///<
+    float m_nodeMaxCosRelativeAngle;             ///<
+    float m_emissionMaxLongitudinalDisplacement; ///<
+    float m_emissionMaxTransverseDisplacement;   ///<
+    float m_emissionMaxCosRelativeAngle;         ///<
 };
 
 } // namespace lar_content

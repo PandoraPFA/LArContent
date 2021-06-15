@@ -14,7 +14,10 @@
 
 #include "Persistency/PandoraIO.h"
 
-namespace pandora {class FileReader;}
+namespace pandora
+{
+class FileReader;
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -43,9 +46,9 @@ public:
     class ExternalEventReadingParameters : public pandora::ExternalParameters
     {
     public:
-        std::string             m_geometryFileName;             ///< Name of the file containing geometry information
-        std::string             m_eventFileNameList;            ///< Colon-separated list of file names to be processed
-        pandora::InputUInt      m_skipToEvent;                  ///< Index of first event to consider in input file
+        std::string m_geometryFileName;   ///< Name of the file containing geometry information
+        std::string m_eventFileNameList;  ///< Colon-separated list of file names to be processed
+        pandora::InputUInt m_skipToEvent; ///< Index of first event to consider in input file
     };
 
 private:
@@ -75,16 +78,17 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    std::string                 m_geometryFileName;             ///< Name of the file containing geometry information
-    std::string                 m_eventFileName;                ///< Name of the current file containing event information
-    pandora::StringVector       m_eventFileNameVector;          ///< Vector of file names to be processed
+    std::string m_geometryFileName;              ///< Name of the file containing geometry information
+    std::string m_eventFileName;                 ///< Name of the current file containing event information
+    pandora::StringVector m_eventFileNameVector; ///< Vector of file names to be processed
 
-    unsigned int                m_skipToEvent;                  ///< Index of first event to consider in first input file
+    unsigned int m_skipToEvent;          ///< Index of first event to consider in first input file
+    bool m_useLArCaloHits;               ///< Whether to read lar calo hits, or standard pandora calo hits
+    unsigned int m_larCaloHitVersion;    ///< LArCaloHit version for LArCaloHitFactory
+    bool m_useLArMCParticles;            ///< Whether to read lar mc particles, or standard pandora mc particles
+    unsigned int m_larMCParticleVersion; ///< LArMCParticle version for LArMCParticleFactory
 
-    bool                        m_useLArCaloHits;               ///< Whether to read lar calo hits, or standard pandora calo hits
-    bool                        m_useLArMCParticles;            ///< Whether to read lar mc particles, or standard pandora mc particles
-
-    pandora::FileReader        *m_pEventFileReader;             ///< Address of the event file reader
+    pandora::FileReader *m_pEventFileReader; ///< Address of the event file reader
 };
 
 } // namespace lar_content

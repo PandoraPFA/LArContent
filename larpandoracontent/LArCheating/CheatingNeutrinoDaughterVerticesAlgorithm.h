@@ -54,11 +54,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool                m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
-    std::string         m_mcParticleListName;           ///< The mc particle list name, required if want to collapse mc particle hierarchy
+    bool m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
+    std::string m_mcParticleListName;    ///< The mc particle list name, required if want to collapse mc particle hierarchy
 
-    std::string         m_neutrinoListName;             ///< The input list of pfo list names
-    std::string         m_vertexListName;               ///< The name of the output cosmic-ray vertex list
+    std::string m_neutrinoListName; ///< The input list of pfo list names
+    std::string m_vertexListName;   ///< The name of the output cosmic-ray vertex list
 };
 
 } // namespace lar_content

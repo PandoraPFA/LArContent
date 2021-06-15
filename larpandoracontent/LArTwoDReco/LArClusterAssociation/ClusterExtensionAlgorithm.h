@@ -35,8 +35,8 @@ protected:
         enum VertexType
         {
             UNDEFINED = 0,
-            INNER     = 1,
-            OUTER     = 2
+            INNER = 1,
+            OUTER = 2
         };
 
         /**
@@ -44,8 +44,8 @@ protected:
          */
         enum AssociationType
         {
-            NONE   = 0,
-            WEAK   = 1,
+            NONE = 0,
+            WEAK = 1,
             STRONG = 2
         };
 
@@ -88,14 +88,14 @@ protected:
         float GetFigureOfMerit() const;
 
     private:
-        VertexType      m_parent;           ///<
-        VertexType      m_daughter;         ///<
-        AssociationType m_association;      ///<
-        float           m_fom;              ///<
+        VertexType m_parent;           ///<
+        VertexType m_daughter;         ///<
+        AssociationType m_association; ///<
+        float m_fom;                   ///<
     };
 
-    typedef std::unordered_map<const pandora::Cluster*, ClusterAssociation> ClusterAssociationMap;
-    typedef std::unordered_map<const pandora::Cluster*, ClusterAssociationMap> ClusterAssociationMatrix;
+    typedef std::unordered_map<const pandora::Cluster *, ClusterAssociation> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster *, ClusterAssociationMap> ClusterAssociationMatrix;
 
     /**
      *  @brief  Fill the cluster association matrix
@@ -105,7 +105,7 @@ protected:
      */
     virtual void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const = 0;
 
-     /**
+    /**
      *  @brief  Fill the cluster merge map
      *
      *  @param  clusterAssociationMatrix the matrix of cluster associations
@@ -117,8 +117,8 @@ protected:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ClusterExtensionAlgorithm::ClusterAssociation::ClusterAssociation(const VertexType parent, const VertexType daughter,
-        const AssociationType association, const float fom) :
+inline ClusterExtensionAlgorithm::ClusterAssociation::ClusterAssociation(
+    const VertexType parent, const VertexType daughter, const AssociationType association, const float fom) :
     m_parent(parent),
     m_daughter(daughter),
     m_association(association),

@@ -39,7 +39,7 @@ void MatchingBaseAlgorithm::SelectInputClusters(const ClusterList *const pInputC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MatchingBaseAlgorithm::PrepareInputClusters(ClusterList &/*preparedClusterList*/)
+void MatchingBaseAlgorithm::PrepareInputClusters(ClusterList & /*preparedClusterList*/)
 {
 }
 
@@ -50,7 +50,8 @@ bool MatchingBaseAlgorithm::MakeClusterMerges(const ClusterMergeMap &clusterMerg
     ClusterSet deletedClusters;
 
     ClusterList parentClusters;
-    for (const auto &mapEntry : clusterMergeMap) parentClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : clusterMergeMap)
+        parentClusters.push_back(mapEntry.first);
     parentClusters.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : parentClusters)
@@ -71,7 +72,8 @@ bool MatchingBaseAlgorithm::MakeClusterMerges(const ClusterMergeMap &clusterMerg
 
             this->UpdateUponDeletion(pDaughterCluster);
             this->UpdateUponDeletion(pParentCluster);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster, clusterListName, clusterListName));
 
             this->UpdateForNewCluster(pParentCluster);
             deletedClusters.insert(pDaughterCluster);
@@ -86,7 +88,8 @@ bool MatchingBaseAlgorithm::MakeClusterMerges(const ClusterMergeMap &clusterMerg
 bool MatchingBaseAlgorithm::CreateThreeDParticles(const ProtoParticleVector &protoParticleVector)
 {
     bool particlesMade(false);
-    const PfoList *pPfoList(nullptr); std::string pfoListName;
+    const PfoList *pPfoList(nullptr);
+    std::string pfoListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pPfoList, pfoListName));
 
     for (const ProtoParticle &protoParticle : protoParticleVector)

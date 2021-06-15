@@ -38,7 +38,7 @@ CutClusterCharacterisationAlgorithm::CutClusterCharacterisationAlgorithm() :
 float CutClusterCharacterisationAlgorithm::GetVertexDistance(const Algorithm *const pAlgorithm, const Cluster *const pCluster)
 {
     const VertexList *pVertexList = nullptr;
-    (void) PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
+    (void)PandoraContentApi::GetCurrentList(*pAlgorithm, pVertexList);
 
     if (!pVertexList || (pVertexList->size() != 1) || (VERTEX_3D != pVertexList->front()->GetVertexType()))
         return -1.f;
@@ -52,8 +52,7 @@ float CutClusterCharacterisationAlgorithm::GetVertexDistance(const Algorithm *co
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float CutClusterCharacterisationAlgorithm::GetShowerFitWidth(const Algorithm *const pAlgorithm, const Cluster *const pCluster,
-    const unsigned int showerFitWindow)
+float CutClusterCharacterisationAlgorithm::GetShowerFitWidth(const Algorithm *const pAlgorithm, const Cluster *const pCluster, const unsigned int showerFitWindow)
 {
     try
     {
@@ -148,29 +147,27 @@ bool CutClusterCharacterisationAlgorithm::IsClearTrack(const Cluster *const pClu
 
 StatusCode CutClusterCharacterisationAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitWindow", m_slidingFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitWindow", m_slidingFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingShowerFitWindow", m_slidingShowerFitWindow));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingShowerFitWindow", m_slidingShowerFitWindow));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCaloHitsCut", m_minCaloHitsCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCaloHitsCut", m_minCaloHitsCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxShowerLengthCut", m_maxShowerLengthCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxShowerLengthCut", m_maxShowerLengthCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "PathLengthRatioCut", m_pathLengthRatioCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PathLengthRatioCut", m_pathLengthRatioCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RTWidthRatioCut", m_rTWidthRatioCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RTWidthRatioCut", m_rTWidthRatioCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexDistanceRatioCut", m_vertexDistanceRatioCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexDistanceRatioCut", m_vertexDistanceRatioCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerWidthRatioCut", m_showerWidthRatioCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowerWidthRatioCut", m_showerWidthRatioCut));
 
     return ClusterCharacterisationBaseAlgorithm::ReadSettings(xmlHandle);
 }

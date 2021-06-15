@@ -32,7 +32,7 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int m_minCaloHitsPerCluster;    ///< The minimum number of calo hits per seed cluster
+    unsigned int m_minCaloHitsPerCluster; ///< The minimum number of calo hits per seed cluster
 };
 
 } // namespace lar_content

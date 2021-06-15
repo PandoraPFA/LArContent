@@ -163,7 +163,7 @@ void LArFormattingHelper::Table::PrintTableElements() const
     if (m_columnTitles.empty())
         return;
 
-    const unsigned int nRows((m_elements.size() + m_columnTitles.size() - 1)/m_columnTitles.size());
+    const unsigned int nRows((m_elements.size() + m_columnTitles.size() - 1) / m_columnTitles.size());
     const unsigned int nColumns(m_columnTitles.size());
     if (nRows * nColumns != m_elements.size())
     {
@@ -185,7 +185,8 @@ void LArFormattingHelper::Table::PrintTableCell(const std::string &value, const 
     const unsigned int column(index % m_widths.size());
 
     const std::string separator(this->IsSeparatorColumn(column) ? "" : " ");
-    std::cout << "|" << format << separator << std::setw(m_widths[column]) << std::internal << value << separator << std::resetiosflags(std::ios::adjustfield);
+    std::cout << "|" << format << separator << std::setw(m_widths[column]) << std::internal << value << separator
+              << std::resetiosflags(std::ios::adjustfield);
     LArFormattingHelper::ResetStyle();
 
     if (column == m_columnTitles.size() - 1)

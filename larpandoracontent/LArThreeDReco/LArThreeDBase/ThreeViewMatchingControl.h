@@ -18,7 +18,7 @@ namespace lar_content
 /**
  *  @brief  ThreeViewMatchingControl class
  */
-template<typename T>
+template <typename T>
 class ThreeViewMatchingControl : public NViewMatchingControl
 {
 public:
@@ -55,21 +55,22 @@ private:
     void TidyUp();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    const pandora::ClusterList *m_pInputClusterListU;           ///< Address of the input cluster list U
-    const pandora::ClusterList *m_pInputClusterListV;           ///< Address of the input cluster list V
-    const pandora::ClusterList *m_pInputClusterListW;           ///< Address of the input cluster list W
+    const pandora::ClusterList *m_pInputClusterListU; ///< Address of the input cluster list U
+    const pandora::ClusterList *m_pInputClusterListV; ///< Address of the input cluster list V
+    const pandora::ClusterList *m_pInputClusterListW; ///< Address of the input cluster list W
 
-    pandora::ClusterList        m_clusterListU;                 ///< The selected modified cluster list U
-    pandora::ClusterList        m_clusterListV;                 ///< The selected modified cluster list V
-    pandora::ClusterList        m_clusterListW;                 ///< The selected modified cluster list W
+    pandora::ClusterList m_clusterListU; ///< The selected modified cluster list U
+    pandora::ClusterList m_clusterListV; ///< The selected modified cluster list V
+    pandora::ClusterList m_clusterListW; ///< The selected modified cluster list W
 
-    TensorType                  m_overlapTensor;                ///< The overlap tensor
+    TensorType m_overlapTensor; ///< The overlap tensor
 
-    std::string                 m_inputClusterListNameU;        ///< The name of the view U cluster list
-    std::string                 m_inputClusterListNameV;        ///< The name of the view V cluster list
-    std::string                 m_inputClusterListNameW;        ///< The name of the view W cluster list
+    std::string m_inputClusterListNameU; ///< The name of the view U cluster list
+    std::string m_inputClusterListNameV; ///< The name of the view V cluster list
+    std::string m_inputClusterListNameW; ///< The name of the view W cluster list
 
-    friend class ThreeViewTrackFragmentsAlgorithm;              ///< ATTN This is for legacy purposes only
+    friend class ThreeViewTrackFragmentsAlgorithm; ///< ATTN This is for legacy purposes only
+    friend class ThreeViewDeltaRayMatchingAlgorithm;
 
     template <typename U>
     friend class NViewMatchingAlgorithm;

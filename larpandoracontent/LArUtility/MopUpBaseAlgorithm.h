@@ -32,7 +32,7 @@ public:
 protected:
     virtual pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_daughterListNames;                ///< The list of potential daughter object list names
+    pandora::StringVector m_daughterListNames; ///< The list of potential daughter object list names
 };
 
 } // namespace lar_content

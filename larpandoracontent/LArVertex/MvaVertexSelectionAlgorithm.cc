@@ -16,10 +16,10 @@
 #include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 
 #include "larpandoracontent/LArVertex/EnergyKickFeatureTool.h"
-#include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
-#include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
+#include "larpandoracontent/LArVertex/LocalAsymmetryFeatureTool.h"
 #include "larpandoracontent/LArVertex/RPhiFeatureTool.h"
+#include "larpandoracontent/LArVertex/ShowerAsymmetryFeatureTool.h"
 
 #include "larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h"
 
@@ -32,7 +32,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-template<typename T>
+template <typename T>
 MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
     TrainedVertexSelectionAlgorithm(),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
@@ -41,7 +41,7 @@ MvaVertexSelectionAlgorithm<T>::MvaVertexSelectionAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
     HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
@@ -59,21 +59,14 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
     this->CalculateShowerClusterList(clustersW, showerClusterListW);
 
     // Create maps from hit types to objects for passing to feature tools.
-    const ClusterListMap clusterListMap{{TPC_VIEW_U, clustersU},
-                                        {TPC_VIEW_V, clustersV},
-                                        {TPC_VIEW_W, clustersW}};
+    const ClusterListMap clusterListMap{{TPC_VIEW_U, clustersU}, {TPC_VIEW_V, clustersV}, {TPC_VIEW_W, clustersW}};
 
-    const SlidingFitDataListMap slidingFitDataListMap{{TPC_VIEW_U, slidingFitDataListU},
-                                                      {TPC_VIEW_V, slidingFitDataListV},
-                                                      {TPC_VIEW_W, slidingFitDataListW}};
+    const SlidingFitDataListMap slidingFitDataListMap{
+        {TPC_VIEW_U, slidingFitDataListU}, {TPC_VIEW_V, slidingFitDataListV}, {TPC_VIEW_W, slidingFitDataListW}};
 
-    const ShowerClusterListMap showerClusterListMap{{TPC_VIEW_U, showerClusterListU},
-                                                    {TPC_VIEW_V, showerClusterListV},
-                                                    {TPC_VIEW_W, showerClusterListW}};
+    const ShowerClusterListMap showerClusterListMap{{TPC_VIEW_U, showerClusterListU}, {TPC_VIEW_V, showerClusterListV}, {TPC_VIEW_W, showerClusterListW}};
 
-    const KDTreeMap kdTreeMap{{TPC_VIEW_U, kdTreeU},
-                              {TPC_VIEW_V, kdTreeV},
-                              {TPC_VIEW_W, kdTreeW}};
+    const KDTreeMap kdTreeMap{{TPC_VIEW_U, kdTreeU}, {TPC_VIEW_V, kdTreeV}, {TPC_VIEW_W, kdTreeW}};
 
     // Calculate the event feature list and the vertex feature map.
     EventFeatureInfo eventFeatureInfo(this->CalculateEventFeatures(clustersU, clustersV, clustersW, vertexVector));
@@ -84,8 +77,8 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
     VertexFeatureInfoMap vertexFeatureInfoMap;
     for (const Vertex *const pVertex : vertexVector)
     {
-        this->PopulateVertexFeatureInfoMap(beamConstants, clusterListMap, slidingFitDataListMap, showerClusterListMap, kdTreeMap, pVertex,
-            vertexFeatureInfoMap);
+        this->PopulateVertexFeatureInfoMap(
+            beamConstants, clusterListMap, slidingFitDataListMap, showerClusterListMap, kdTreeMap, pVertex, vertexFeatureInfoMap);
     }
 
     // Use a simple score to get the list of vertices representing good regions.
@@ -102,8 +95,8 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
     if ((!m_trainingSetMode || m_allowClassifyDuringTraining) && !bestRegionVertices.empty())
     {
         // Use mva to choose the region.
-        const Vertex *const pBestRegionVertex(this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaRegion,
-            m_useRPhiFeatureForRegion));
+        const Vertex *const pBestRegionVertex(
+            this->CompareVertices(bestRegionVertices, vertexFeatureInfoMap, eventFeatureList, m_mvaRegion, m_useRPhiFeatureForRegion));
 
         // Get all the vertices in the best region.
         VertexVector regionalVertices{pBestRegionVertex};
@@ -129,9 +122,9 @@ void MvaVertexSelectionAlgorithm<T>::GetVertexScoreList(const VertexVector &vert
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
-const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::CompareVertices(const VertexVector &vertexVector, const VertexFeatureInfoMap &vertexFeatureInfoMap,
-    const LArMvaHelper::MvaFeatureVector &eventFeatureList, const T &t, const bool useRPhi) const
+template <typename T>
+const pandora::Vertex *MvaVertexSelectionAlgorithm<T>::CompareVertices(const VertexVector &vertexVector,
+    const VertexFeatureInfoMap &vertexFeatureInfoMap, const LArMvaHelper::MvaFeatureVector &eventFeatureList, const T &t, const bool useRPhi) const
 {
     const Vertex *pBestVertex(vertexVector.front());
     LArMvaHelper::MvaFeatureVector chosenFeatureList;
@@ -158,22 +151,19 @@ const pandora::Vertex * MvaVertexSelectionAlgorithm<T>::CompareVertices(const Ve
     return pBestVertex;
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------ 
+//------------------------------------------------------------------------------------------------------------------------------------------
 
-template<typename T>
+template <typename T>
 StatusCode MvaVertexSelectionAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MvaFileName", m_mvaFileName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MvaFileName", m_mvaFileName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RegionMvaName", m_regionMvaName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RegionMvaName", m_regionMvaName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexMvaName", m_vertexMvaName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexMvaName", m_vertexMvaName));
 
     // ATTN : Need access to base class member variables at this point, so call read settings prior to end of this function
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, TrainedVertexSelectionAlgorithm::ReadSettings(xmlHandle));
@@ -182,8 +172,8 @@ StatusCode MvaVertexSelectionAlgorithm<T>::ReadSettings(const TiXmlHandle xmlHan
     {
         if (m_mvaFileName.empty() || m_regionMvaName.empty() || m_vertexMvaName.empty())
         {
-            std::cout << "MvaVertexSelectionAlgorithm: MvaFileName, RegionMvaName and VertexMvaName must be set if training set mode is" <<
-                         "off or we allow classification during training" << std::endl;
+            std::cout << "MvaVertexSelectionAlgorithm: MvaFileName, RegionMvaName and VertexMvaName must be set if training set mode is"
+                      << "off or we allow classification during training" << std::endl;
             return STATUS_CODE_INVALID_PARAMETER;
         }
 

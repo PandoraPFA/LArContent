@@ -31,11 +31,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float           m_maxTransverseDisplacement;        ///<
-    float           m_maxLongitudinalDisplacement;      ///<
-    float           m_minLongitudinalExtension;         ///<
-    float           m_minCosRelativeAngle;              ///<
-    float           m_projectionAngularAllowance;       ///<
+    float m_maxTransverseDisplacement;   ///<
+    float m_maxLongitudinalDisplacement; ///<
+    float m_minLongitudinalExtension;    ///<
+    float m_minCosRelativeAngle;         ///<
+    float m_projectionAngularAllowance;  ///<
 };
 
 } // namespace lar_content

@@ -27,17 +27,17 @@ HitAngleVertexSelectionAlgorithm::HitAngleVertexSelectionAlgorithm()
 void HitAngleVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &beamConstants,
     HitKDTree2D &kdTreeU, HitKDTree2D &kdTreeV, HitKDTree2D &kdTreeW, VertexScoreList &vertexScoreList) const
 {
-    const KDTreeMap kdTreeMap{{TPC_VIEW_U, kdTreeU},
-                              {TPC_VIEW_V, kdTreeV},
-                              {TPC_VIEW_W, kdTreeW}};
+    const KDTreeMap kdTreeMap{{TPC_VIEW_U, kdTreeU}, {TPC_VIEW_V, kdTreeV}, {TPC_VIEW_W, kdTreeW}};
 
     float bestFastScore(0.f);
     for (const Vertex *const pVertex : vertexVector)
     {
         const float beamDeweightingScore(this->IsBeamModeOn() ? std::exp(this->GetBeamDeweightingScore(beamConstants, pVertex)) : 1.f);
 
-        const float rPhiScore(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex, SlidingFitDataListMap(),
-            ClusterListMap(), kdTreeMap, ShowerClusterListMap(), beamDeweightingScore, bestFastScore).at(0).Get());
+        const float rPhiScore(LArMvaHelper::CalculateFeaturesOfType<RPhiFeatureTool>(m_featureToolVector, this, pVertex,
+            SlidingFitDataListMap(), ClusterListMap(), kdTreeMap, ShowerClusterListMap(), beamDeweightingScore, bestFastScore)
+                                  .at(0)
+                                  .Get());
 
         vertexScoreList.emplace_back(pVertex, beamDeweightingScore * rPhiScore);
     }

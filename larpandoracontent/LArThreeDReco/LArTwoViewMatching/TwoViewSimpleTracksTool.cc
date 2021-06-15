@@ -28,7 +28,7 @@ TwoViewSimpleTracksTool::TwoViewSimpleTracksTool() :
 bool TwoViewSimpleTracksTool::Run(TwoViewTransverseTracksAlgorithm *const pAlgorithm, MatrixType &overlapMatrix)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     ProtoParticleVector protoParticleVector;
     this->FindBestTrack(overlapMatrix, protoParticleVector);
@@ -55,9 +55,9 @@ void TwoViewSimpleTracksTool::FindBestTrack(const MatrixType &overlapMatrix, Pro
         if (elementList.empty())
             continue;
 
-	for (MatrixType::ElementList::const_reverse_iterator iIter = elementList.rbegin(); iIter != elementList.rend(); ++iIter)
+        for (MatrixType::ElementList::const_reverse_iterator iIter = elementList.rbegin(); iIter != elementList.rend(); ++iIter)
         {
-            if(this->PassesElementCuts(iIter))
+            if (this->PassesElementCuts(iIter))
             {
                 if ((nullptr == iIter->GetCluster1()) || (nullptr == iIter->GetCluster2()))
                     continue;
@@ -91,8 +91,7 @@ bool TwoViewSimpleTracksTool::PassesElementCuts(MatrixType::ElementList::const_r
 
     const TwoViewXOverlap &xOverlap(eIter->GetOverlapResult().GetTwoViewXOverlap());
 
-    if (!((xOverlap.GetXOverlapFraction0() > m_minXOverlapFraction) &&
-         (xOverlap.GetXOverlapFraction1() > m_minXOverlapFraction)))
+    if (!((xOverlap.GetXOverlapFraction0() > m_minXOverlapFraction) && (xOverlap.GetXOverlapFraction1() > m_minXOverlapFraction)))
     {
         return false;
     }
@@ -104,17 +103,17 @@ bool TwoViewSimpleTracksTool::PassesElementCuts(MatrixType::ElementList::const_r
 
 StatusCode TwoViewSimpleTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchedFraction", m_minMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchingScore", m_minMatchingScore));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchingScore", m_minMatchingScore));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlapFraction", m_minXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction", m_minXOverlapFraction));
 
     return STATUS_CODE_SUCCESS;
 }

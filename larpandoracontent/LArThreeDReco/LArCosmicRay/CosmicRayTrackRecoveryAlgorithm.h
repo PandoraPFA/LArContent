@@ -41,7 +41,8 @@ private:
     };
 
     typedef std::vector<Particle> ParticleList;
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterList> ClusterAssociationMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterList> ClusterAssociationMap;
+    typedef std::set<unsigned int> UIntSet;
 
     /**
      *  @brief Get a vector of available clusters
@@ -86,7 +87,7 @@ private:
      *  @param slidingFitResultMap the input map of sliding linear fit results
      *  @param clusterAssociationMap the output map of cluster associations
      */
-    void MatchClusters(const pandora::Cluster* const pSeedCluster, const pandora::ClusterVector &targetClusters,
+    void MatchClusters(const pandora::Cluster *const pSeedCluster, const pandora::ClusterVector &targetClusters,
         const TwoDSlidingFitResultMap &slidingFitResultMap, ClusterAssociationMap &clusterAssociationMap) const;
 
     /**
@@ -102,8 +103,7 @@ private:
      */
     void MatchThreeViews(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
         const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV,
-        const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
-        ParticleList &particleList) const;
+        const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU, ParticleList &particleList) const;
 
     /**
      *  @brief  Create candidate particles using two primary clusters and one pair of broken clusters
@@ -116,10 +116,9 @@ private:
      *  @param clusterAssociationMapWU map of cluster associations between the W and U views
      *  @param particleList the output list of candidate particles
      */
-    void MatchTwoViews(const pandora::ClusterVector &clusterVectorU,  const pandora::ClusterVector &clusterVectorV,
+    void MatchTwoViews(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
         const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV,
-        const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
-        ParticleList &particleList) const;
+        const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU, ParticleList &particleList) const;
 
     /**
      *  @brief  Create candidate particles using one primary cluster and one pair of broken clusters
@@ -132,10 +131,9 @@ private:
      *  @param clusterAssociationMapWU map of cluster associations between the W and U views
      *  @param particleList the output list of candidate particles
      */
-    void MatchOneView(const pandora::ClusterVector &clusterVectorU,  const pandora::ClusterVector &clusterVectorV,
+    void MatchOneView(const pandora::ClusterVector &clusterVectorU, const pandora::ClusterVector &clusterVectorV,
         const pandora::ClusterVector &clusterVectorW, const ClusterAssociationMap &clusterAssociationMapUV,
-        const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU,
-        ParticleList &particleList) const;
+        const ClusterAssociationMap &clusterAssociationMapVW, const ClusterAssociationMap &clusterAssociationMapWU, ParticleList &particleList) const;
 
     /**
      *  @brief Build the list of clusters already used to create particles
@@ -168,15 +166,16 @@ private:
      */
     void BuildParticles(const ParticleList &particleList);
 
-    float          m_clusterMinLength;          ///<
-    float          m_clusterMinSpanZ;           ///<
-    float          m_clusterMinOverlapX;        ///<
-    float          m_clusterMaxDeltaX;          ///<
+    float m_clusterMinLength;      ///<
+    float m_clusterMinSpanZ;       ///<
+    float m_clusterMinOverlapX;    ///<
+    float m_clusterMaxDeltaX;      ///<
+    unsigned int m_clusterMinHits; ///<
 
-    std::string    m_inputClusterListNameU;     ///<
-    std::string    m_inputClusterListNameV;     ///<
-    std::string    m_inputClusterListNameW;     ///<
-    std::string    m_outputPfoListName;         ///<
+    std::string m_inputClusterListNameU; ///<
+    std::string m_inputClusterListNameV; ///<
+    std::string m_inputClusterListNameW; ///<
+    std::string m_outputPfoListName;     ///<
 };
 
 } // namespace lar_content

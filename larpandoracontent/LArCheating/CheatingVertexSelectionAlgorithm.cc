@@ -15,8 +15,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-void CheatingVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants &/*beamConstants*/,
-    HitKDTree2D &/*kdTreeU*/, HitKDTree2D &/*kdTreeV*/, HitKDTree2D &/*kdTreeW*/, VertexScoreList &vertexScoreList) const
+void CheatingVertexSelectionAlgorithm::GetVertexScoreList(const VertexVector &vertexVector, const BeamConstants & /*beamConstants*/,
+    HitKDTree2D & /*kdTreeU*/, HitKDTree2D & /*kdTreeV*/, HitKDTree2D & /*kdTreeW*/, VertexScoreList &vertexScoreList) const
 {
     const Vertex *pBestVertex(nullptr);
     float bestVertexDr(std::numeric_limits<float>::max());

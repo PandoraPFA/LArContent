@@ -37,7 +37,8 @@ public:
      *  @param  selectedMCParticleToGoodHitsMaps the input vector of mappings from selected reconstructable MCParticles to their good hits
      *  @param  orderedMCParticleVector the output vector of ordered MCParticles
      */
-    static void GetOrderedMCParticleVector(const LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps, pandora::MCParticleVector &orderedMCParticleVector);
+    static void GetOrderedMCParticleVector(const LArMCParticleHelper::MCContributionMapVector &selectedMCParticleToGoodHitsMaps,
+        pandora::MCParticleVector &orderedMCParticleVector);
 
     /**
      *  @brief  Order input Pfos by their number of hits.
@@ -53,7 +54,8 @@ public:
      *  @param  selectedMCParticleToGoodHitsMap the input mapping from selected reconstructable MCParticles to their good hits
      *  @param  orderedMCParticleVector the input vector of ordered MCParticles
      */
-    static void PrintMCParticleTable(const LArMCParticleHelper::MCContributionMap &selectedMCParticleToGoodHitsMaps, const pandora::MCParticleVector &orderedMCParticleVector);
+    static void PrintMCParticleTable(const LArMCParticleHelper::MCContributionMap &selectedMCParticleToGoodHitsMaps,
+        const pandora::MCParticleVector &orderedMCParticleVector);
 
     /**
      *  @brief  Print details of input Pfos to the terminal in a table.
@@ -71,7 +73,8 @@ public:
      *  @param  mcParticleToPfoHitSharingMap the output mapping from selected reconstructable MCParticles to Pfos and the number hits shared
      *  @param  nMatches the maximum number of Pfo matches to show
      */
-    static void PrintMatchingTable(const pandora::PfoVector &orderedPfoVector, const pandora::MCParticleVector &orderedMCParticleVector, const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const unsigned int nMatches);
+    static void PrintMatchingTable(const pandora::PfoVector &orderedPfoVector, const pandora::MCParticleVector &orderedMCParticleVector,
+        const LArMCParticleHelper::MCParticleToPfoHitSharingMap &mcParticleToPfoHitSharingMap, const unsigned int nMatches);
 };
 
 } // namespace lar_content

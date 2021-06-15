@@ -44,9 +44,10 @@ MissingTrackSegmentTool::MissingTrackSegmentTool() :
 bool MissingTrackSegmentTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
-    ProtoParticleVector protoParticleVector; ClusterMergeMap clusterMergeMap;
+    ProtoParticleVector protoParticleVector;
+    ClusterMergeMap clusterMergeMap;
     this->FindTracks(pAlgorithm, overlapTensor, protoParticleVector, clusterMergeMap);
 
     const bool particlesMade(pAlgorithm->CreateThreeDParticles(protoParticleVector));
@@ -102,7 +103,8 @@ void MissingTrackSegmentTool::FindTracks(ThreeViewTransverseTracksAlgorithm *con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackSegmentTool::SelectElements(const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const
+void MissingTrackSegmentTool::SelectElements(
+    const TensorType::ElementList &elementList, const pandora::ClusterSet &usedClusters, IteratorList &iteratorList) const
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
     {
@@ -118,8 +120,10 @@ void MissingTrackSegmentTool::SelectElements(const TensorType::ElementList &elem
         const XOverlap &xOverlap(eIter->GetOverlapResult().GetXOverlap());
         const float shortSpan(std::min(xOverlap.GetXSpanU(), std::min(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
         const float longSpan1(std::max(xOverlap.GetXSpanU(), std::max(xOverlap.GetXSpanV(), xOverlap.GetXSpanW())));
-        const float longSpan2(((xOverlap.GetXSpanU() > shortSpan) && (xOverlap.GetXSpanU() < longSpan1)) ? xOverlap.GetXSpanU() :
-            ((xOverlap.GetXSpanV() > shortSpan) && (xOverlap.GetXSpanV() < longSpan1)) ? xOverlap.GetXSpanV() : xOverlap.GetXSpanW());
+        const float longSpan2(
+            ((xOverlap.GetXSpanU() > shortSpan) && (xOverlap.GetXSpanU() < longSpan1))
+                ? xOverlap.GetXSpanU()
+                : ((xOverlap.GetXSpanV() > shortSpan) && (xOverlap.GetXSpanV() < longSpan1)) ? xOverlap.GetXSpanV() : xOverlap.GetXSpanW());
 
         if ((xOverlap.GetXOverlapSpan() < std::numeric_limits<float>::epsilon()) || (longSpan1 < std::numeric_limits<float>::epsilon()))
             continue;
@@ -168,8 +172,8 @@ bool MissingTrackSegmentTool::PassesParticleChecks(ThreeViewTransverseTracksAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackSegmentTool::GetCandidateClusters(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
-    ClusterList &candidateClusters) const
+void MissingTrackSegmentTool::GetCandidateClusters(
+    ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, ClusterList &candidateClusters) const
 {
     const ClusterList &clusterList(pAlgorithm->GetInputClusterList(particle.m_shortHitType));
 
@@ -189,10 +193,10 @@ void MissingTrackSegmentTool::GetCandidateClusters(ThreeViewTransverseTracksAlgo
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const ClusterList &candidateClusterList,
-    TwoDSlidingFitResultMap &slidingFitResultMap) const
+void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeViewTransverseTracksAlgorithm *const pAlgorithm,
+    const ClusterList &candidateClusterList, TwoDSlidingFitResultMap &slidingFitResultMap) const
 {
-  const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
     for (ClusterList::const_iterator iter = candidateClusterList.begin(), iterEnd = candidateClusterList.end(); iter != iterEnd; ++iter)
     {
@@ -201,7 +205,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeViewTransverseTracksAl
         try
         {
             const TwoDSlidingFitResult &slidingFitResult(pAlgorithm->GetCachedSlidingFitResult(pCluster));
-            (void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult));
+            (void)slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
         }
         catch (StatusCodeException &)
@@ -211,7 +215,7 @@ void MissingTrackSegmentTool::GetSlidingFitResultMap(ThreeViewTransverseTracksAl
         try
         {
             const TwoDSlidingFitResult slidingFitResult(pCluster, pAlgorithm->GetSlidingFitWindow(), slidingFitPitch);
-            (void) slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult));
+            (void)slidingFitResultMap.insert(TwoDSlidingFitResultMap::value_type(pCluster, slidingFitResult));
             continue;
         }
         catch (StatusCodeException &)
@@ -234,7 +238,8 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeViewTransverseTracksAlgo
     const unsigned int nPoints(static_cast<unsigned int>(1.f + (nPoints1 + nPoints2) / 2.f));
 
     ClusterList clusterList;
-    for (const auto &mapEntry : slidingFitResultMap) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : slidingFitResultMap)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (unsigned n = 0; n <= nPoints; ++n)
@@ -252,7 +257,8 @@ void MissingTrackSegmentTool::GetSegmentOverlapMap(ThreeViewTransverseTracksAlgo
             continue;
         }
 
-        const float prediction(LArGeometryHelper::MergeTwoPositions(this->GetPandora(), particle.m_hitType1, particle.m_hitType2, fitVector1.GetZ(), fitVector2.GetZ()));
+        const float prediction(LArGeometryHelper::MergeTwoPositions(
+            this->GetPandora(), particle.m_hitType1, particle.m_hitType2, fitVector1.GetZ(), fitVector2.GetZ()));
 
         for (const Cluster *const pCluster : clusterList)
         {
@@ -292,7 +298,8 @@ bool MissingTrackSegmentTool::MakeDecisions(const Particle &particle, const TwoD
     bool matchesACluster(false);
 
     ClusterVector sortedClusters;
-    for (const auto &mapEntry : segmentOverlapMap) sortedClusters.push_back(mapEntry.first);
+    for (const auto &mapEntry : segmentOverlapMap)
+        sortedClusters.push_back(mapEntry.first);
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pCluster : sortedClusters)
@@ -380,20 +387,27 @@ MissingTrackSegmentTool::Particle::Particle(const TensorType::Element &element)
 {
     const XOverlap &xOverlap(element.GetOverlapResult().GetXOverlap());
 
-    m_shortHitType = ((xOverlap.GetXSpanU() < xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() < xOverlap.GetXSpanW())) ? TPC_VIEW_U :
-        ((xOverlap.GetXSpanV() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() < xOverlap.GetXSpanW())) ? TPC_VIEW_V :
-        ((xOverlap.GetXSpanW() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() < xOverlap.GetXSpanV())) ? TPC_VIEW_W : HIT_CUSTOM;
+    m_shortHitType = ((xOverlap.GetXSpanU() < xOverlap.GetXSpanV()) && (xOverlap.GetXSpanU() < xOverlap.GetXSpanW()))
+                         ? TPC_VIEW_U
+                         : ((xOverlap.GetXSpanV() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanV() < xOverlap.GetXSpanW()))
+                               ? TPC_VIEW_V
+                               : ((xOverlap.GetXSpanW() < xOverlap.GetXSpanU()) && (xOverlap.GetXSpanW() < xOverlap.GetXSpanV())) ? TPC_VIEW_W : HIT_CUSTOM;
 
     if (HIT_CUSTOM == m_shortHitType)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    m_pShortCluster = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterU() : (TPC_VIEW_V == m_shortHitType) ? element.GetClusterV() : element.GetClusterW();
+    m_pShortCluster = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterU()
+                                                     : (TPC_VIEW_V == m_shortHitType) ? element.GetClusterV() : element.GetClusterW();
     m_pCluster1 = (TPC_VIEW_U == m_shortHitType) ? element.GetClusterV() : element.GetClusterU();
     m_pCluster2 = (TPC_VIEW_W == m_shortHitType) ? element.GetClusterV() : element.GetClusterW();
     m_shortMinX = (TPC_VIEW_U == m_shortHitType) ? xOverlap.GetUMinX() : (TPC_VIEW_V == m_shortHitType) ? xOverlap.GetVMinX() : xOverlap.GetWMinX();
     m_shortMaxX = (TPC_VIEW_U == m_shortHitType) ? xOverlap.GetUMaxX() : (TPC_VIEW_V == m_shortHitType) ? xOverlap.GetVMaxX() : xOverlap.GetWMaxX();
-    m_longMinX = (TPC_VIEW_U == m_shortHitType) ? std::min(xOverlap.GetVMinX(), xOverlap.GetWMinX()) : (TPC_VIEW_V == m_shortHitType) ? std::min(xOverlap.GetUMinX(), xOverlap.GetWMinX()) : std::min(xOverlap.GetUMinX(), xOverlap.GetVMinX());
-    m_longMaxX = (TPC_VIEW_U == m_shortHitType) ? std::max(xOverlap.GetVMaxX(), xOverlap.GetWMaxX()) : (TPC_VIEW_V == m_shortHitType) ? std::max(xOverlap.GetUMaxX(), xOverlap.GetWMaxX()) : std::max(xOverlap.GetUMaxX(), xOverlap.GetVMaxX());
+    m_longMinX = (TPC_VIEW_U == m_shortHitType) ? std::min(xOverlap.GetVMinX(), xOverlap.GetWMinX())
+                                                : (TPC_VIEW_V == m_shortHitType) ? std::min(xOverlap.GetUMinX(), xOverlap.GetWMinX())
+                                                                                 : std::min(xOverlap.GetUMinX(), xOverlap.GetVMinX());
+    m_longMaxX = (TPC_VIEW_U == m_shortHitType) ? std::max(xOverlap.GetVMaxX(), xOverlap.GetWMaxX())
+                                                : (TPC_VIEW_V == m_shortHitType) ? std::max(xOverlap.GetUMaxX(), xOverlap.GetWMaxX())
+                                                                                 : std::max(xOverlap.GetUMaxX(), xOverlap.GetVMaxX());
 
     m_hitType1 = LArClusterHelper::GetClusterHitType(m_pCluster1);
     m_hitType2 = LArClusterHelper::GetClusterHitType(m_pCluster2);
@@ -404,44 +418,43 @@ MissingTrackSegmentTool::Particle::Particle(const TensorType::Element &element)
 
 StatusCode MissingTrackSegmentTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedFraction", m_minMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinMatchedFraction", m_minMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingPoints", m_minMatchedSamplingPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinInitialXOverlapFraction", m_minInitialXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinInitialXOverlapFraction", m_minInitialXOverlapFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinFinalXOverlapFraction", m_minFinalXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinFinalXOverlapFraction", m_minFinalXOverlapFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCaloHitsInCandidateCluster", m_minCaloHitsInCandidateCluster));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinCaloHitsInCandidateCluster", m_minCaloHitsInCandidateCluster));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "PseudoChi2Cut", m_pseudoChi2Cut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PseudoChi2Cut", m_pseudoChi2Cut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MakePfoMinSamplingPoints", m_makePfoMinSamplingPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MakePfoMinSamplingPoints", m_makePfoMinSamplingPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MakePfoMinMatchedSamplingPoints", m_makePfoMinMatchedSamplingPoints));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MakePfoMinMatchedSamplingPoints", m_makePfoMinMatchedSamplingPoints));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MakePfoMinMatchedFraction", m_makePfoMinMatchedFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MakePfoMinMatchedFraction", m_makePfoMinMatchedFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MakePfoMaxImpactParameter", m_makePfoMaxImpactParameter));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MakePfoMaxImpactParameter", m_makePfoMaxImpactParameter));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MergeMaxChi2PerSamplingPoint", m_mergeMaxChi2PerSamplingPoint));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MergeMaxChi2PerSamplingPoint", m_mergeMaxChi2PerSamplingPoint));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MergeXContainmentTolerance", m_mergeXContainmentTolerance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MergeXContainmentTolerance", m_mergeXContainmentTolerance));
 
     return STATUS_CODE_SUCCESS;
 }

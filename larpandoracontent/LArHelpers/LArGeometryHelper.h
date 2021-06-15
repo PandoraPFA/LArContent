@@ -13,7 +13,11 @@
 
 #include <unordered_map>
 
-namespace pandora {class CartesianVector; class Pandora;}
+namespace pandora
+{
+class CartesianVector;
+class Pandora;
+} // namespace pandora
 
 namespace lar_content
 {
@@ -28,6 +32,8 @@ class TwoDSlidingFitResult;
 class LArGeometryHelper
 {
 public:
+    typedef std::set<unsigned int> UIntSet;
+
     /**
      *  @brief  Merge two views (U,V) to give a third view (Z).
      *
@@ -64,8 +70,7 @@ public:
      *  @param  chi-squared
      */
     static void MergeTwoPositions(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3,
-        float &chiSquared);
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3, float &chiSquared);
 
     /**
      *  @brief  Merge 2D positions from two views to give 2D position in third view
@@ -132,8 +137,7 @@ public:
      *  @param  chi-squared
      */
     static void MergeTwoPositions3D(const pandora::Pandora &pandora, const pandora::HitType view1, const pandora::HitType view2,
-        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D,
-        float &chiSquared);
+        const pandora::CartesianVector &position1, const pandora::CartesianVector &position2, pandora::CartesianVector &position3D, float &chiSquared);
 
     /**
      *  @brief  Merge 2D positions from three views to give unified 3D position
@@ -159,8 +163,8 @@ public:
      *  @param  position3D the position in 3D
      *  @param  view the 2D projection
      */
-    static pandora::CartesianVector ProjectPosition(const pandora::Pandora &pandora, const pandora::CartesianVector &position3D,
-        const pandora::HitType view);
+    static pandora::CartesianVector ProjectPosition(
+        const pandora::Pandora &pandora, const pandora::CartesianVector &position3D, const pandora::HitType view);
 
     /**
      *  @brief  Project 3D direction into a given 2D view
@@ -169,8 +173,8 @@ public:
      *  @param  direction3D the direction in 3D
      *  @param  view the 2D projection
      */
-    static pandora::CartesianVector ProjectDirection(const pandora::Pandora &pandora, const pandora::CartesianVector &direction3D,
-        const pandora::HitType view);
+    static pandora::CartesianVector ProjectDirection(
+        const pandora::Pandora &pandora, const pandora::CartesianVector &direction3D, const pandora::HitType view);
 
     /**
      *  @brief  Return the wire pitch
@@ -233,8 +237,8 @@ public:
      *
      *  @return boolean
      */
-    static bool IsXSamplingPointInGap(const pandora::Pandora &pandora, const float xSample, const TwoDSlidingFitResult &slidingFitResult,
-        const float gapTolerance = 0.f);
+    static bool IsXSamplingPointInGap(
+        const pandora::Pandora &pandora, const float xSample, const TwoDSlidingFitResult &slidingFitResult, const float gapTolerance = 0.f);
 
     /**
      *  @brief  Calculate the total distance within a given 2D region that is composed of detector gaps
@@ -253,8 +257,16 @@ public:
      *  @param  maxSigmaDiscrepancy maximum allowed discrepancy between lar tpc sigmaUVW values
      */
     static float GetSigmaUVW(const pandora::Pandora &pandora, const float maxSigmaDiscrepancy = 0.01);
-};
 
+    /**
+     *  @brief  Return the set of common daughter volumes between two 2D clusters
+     *
+     *  @param  intersect the set of shared daughter volumes
+     *  @param  pCluster1 the first cluster
+     *  @param  pCluster2 the second cluster
+     */
+    static void GetCommonDaughterVolumes(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, UIntSet &intersect);
+};
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline float LArGeometryHelper::GetWireZPitch(const pandora::Pandora &pandora, const float maxWirePitchWDiscrepancy)

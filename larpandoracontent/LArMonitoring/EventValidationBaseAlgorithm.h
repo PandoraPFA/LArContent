@@ -24,7 +24,7 @@ namespace lar_content
 /**
  *  @brief  EventValidationBaseAlgorithm class
  */
-class EventValidationBaseAlgorithm: public pandora::Algorithm
+class EventValidationBaseAlgorithm : public pandora::Algorithm
 {
 protected:
     /**
@@ -38,7 +38,7 @@ protected:
     ~EventValidationBaseAlgorithm();
 
 protected:
-   /**
+    /**
      *  @brief  ValidationInfo class
      */
     class ValidationInfo
@@ -115,11 +115,11 @@ protected:
         void SetInterpretedMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap);
 
     private:
-        LArMCParticleHelper::MCContributionMap              m_allMCParticleToHitsMap;               ///< The all mc particle to hits map
-        LArMCParticleHelper::MCContributionMap              m_targetMCParticleToHitsMap;            ///< The target mc particle to hits map
-        LArMCParticleHelper::PfoContributionMap             m_pfoToHitsMap;                         ///< The pfo to hits map
-        LArMCParticleHelper::MCParticleToPfoHitSharingMap   m_mcToPfoHitSharingMap;                 ///< The mc to pfo hit sharing map
-        LArMCParticleHelper::MCParticleToPfoHitSharingMap   m_interpretedMCToPfoHitSharingMap;      ///< The interpreted mc to pfo hit sharing map
+        LArMCParticleHelper::MCContributionMap m_allMCParticleToHitsMap;                     ///< The all mc particle to hits map
+        LArMCParticleHelper::MCContributionMap m_targetMCParticleToHitsMap;                  ///< The target mc particle to hits map
+        LArMCParticleHelper::PfoContributionMap m_pfoToHitsMap;                              ///< The pfo to hits map
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap m_mcToPfoHitSharingMap;            ///< The mc to pfo hit sharing map
+        LArMCParticleHelper::MCParticleToPfoHitSharingMap m_interpretedMCToPfoHitSharingMap; ///< The interpreted mc to pfo hit sharing map
     };
 
     /**
@@ -141,8 +141,8 @@ protected:
      *  @param  printToScreen whether to print the information to screen
      *  @param  fillTree whether to write the information to tree
      */
-    virtual void ProcessOutput(const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen,
-        const bool fillTree) const = 0;
+    virtual void ProcessOutput(
+        const ValidationInfo &validationInfo, const bool useInterpretedMatching, const bool printToScreen, const bool fillTree) const = 0;
 
     /**
      *  @brief  Apply an interpretative matching procedure to the comprehensive matches in the provided validation info object
@@ -162,8 +162,8 @@ protected:
      *
      *  @return whether a strong match was identified
      */
-    bool GetStrongestPfoMatch(const ValidationInfo &validationInfo, const pandora::MCParticleVector &mcPrimaryVector, pandora::PfoSet &usedPfos,
-        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+    bool GetStrongestPfoMatch(const ValidationInfo &validationInfo, const pandora::MCParticleVector &mcPrimaryVector,
+        pandora::PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Get the best matches for any pfos left-over after the strong matching procedure
@@ -173,8 +173,8 @@ protected:
      *  @param  usedPfos the set of previously used pfos
      *  @param  interpretedMCToPfoHitSharingMap the output, interpreted mc particle to pfo hit sharing map
      */
-    void GetRemainingPfoMatches(const ValidationInfo &validationInfo, const pandora::MCParticleVector &mcPrimaryVector, const pandora::PfoSet &usedPfos,
-        LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
+    void GetRemainingPfoMatches(const ValidationInfo &validationInfo, const pandora::MCParticleVector &mcPrimaryVector,
+        const pandora::PfoSet &usedPfos, LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap) const;
 
     /**
      *  @brief  Whether a provided mc primary and pfo are deemed to be a good match
@@ -189,11 +189,11 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    LArMCParticleHelper::PrimaryParameters  m_primaryParameters;        ///< The mc particle primary selection parameters
-    int                                     m_fileIdentifier;           ///< The input file identifier
-    int                                     m_eventNumber;              ///< The event number
+    LArMCParticleHelper::PrimaryParameters m_primaryParameters; ///< The mc particle primary selection parameters
+    int m_fileIdentifier;                                       ///< The input file identifier
+    int m_eventNumber;                                          ///< The event number
 
-    std::string                             m_treeName;                 ///< Name of output tree
+    std::string m_treeName; ///< Name of output tree
 
 private:
     pandora::StatusCode Run();
@@ -219,20 +219,20 @@ private:
      */
     void WriteInterpretedMatches(const ValidationInfo &validationInfo) const;
 
-    std::string             m_caloHitListName;              ///< Name of input calo hit list
-    std::string             m_mcParticleListName;           ///< Name of input MC particle list
-    std::string             m_pfoListName;                  ///< Name of input Pfo list
+    std::string m_caloHitListName;    ///< Name of input calo hit list
+    std::string m_mcParticleListName; ///< Name of input MC particle list
+    std::string m_pfoListName;        ///< Name of input Pfo list
 
-    bool                    m_printAllToScreen;             ///< Whether to print all/raw matching details to screen
-    bool                    m_printMatchingToScreen;        ///< Whether to print matching output to screen
-    bool                    m_writeToTree;                  ///< Whether to write all/raw matching details to tree
+    bool m_printAllToScreen;      ///< Whether to print all/raw matching details to screen
+    bool m_printMatchingToScreen; ///< Whether to print matching output to screen
+    bool m_writeToTree;           ///< Whether to write all/raw matching details to tree
 
-    bool                    m_useSmallPrimaries;            ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
-    unsigned int            m_matchingMinSharedHits;        ///< The minimum number of shared hits used in matching scheme
-    float                   m_matchingMinCompleteness;      ///< The minimum particle completeness to declare a match
-    float                   m_matchingMinPurity;            ///< The minimum particle purity to declare a match
+    bool m_useSmallPrimaries;             ///< Whether to consider matches to mc primaries with fewer than m_matchingMinPrimaryHits
+    unsigned int m_matchingMinSharedHits; ///< The minimum number of shared hits used in matching scheme
+    float m_matchingMinCompleteness;      ///< The minimum particle completeness to declare a match
+    float m_matchingMinPurity;            ///< The minimum particle purity to declare a match
 
-    std::string             m_fileName;                     ///< Name of output file
+    std::string m_fileName; ///< Name of output file
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -301,7 +301,8 @@ inline void EventValidationBaseAlgorithm::ValidationInfo::SetMCToPfoHitSharingMa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void EventValidationBaseAlgorithm::ValidationInfo::SetInterpretedMCToPfoHitSharingMap(const LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap)
+inline void EventValidationBaseAlgorithm::ValidationInfo::SetInterpretedMCToPfoHitSharingMap(
+    const LArMCParticleHelper::MCParticleToPfoHitSharingMap &interpretedMCToPfoHitSharingMap)
 {
     m_interpretedMCToPfoHitSharingMap = interpretedMCToPfoHitSharingMap;
 }

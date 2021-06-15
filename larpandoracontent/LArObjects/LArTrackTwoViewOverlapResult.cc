@@ -7,23 +7,119 @@
  */
 
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
+#include "Objects/Cluster.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() :
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult() :
     m_isInitialized(false),
-    m_matchingScore(0)
+    m_xOverlap(TwoViewXOverlap(0.f, 0.f, 0.f, 0.f)),
+    m_commonMuonPfoList(),
+    m_pBestMatchedCluster(nullptr),
+    m_matchedClusterList(),
+    m_reducedChiSquared(std::numeric_limits<float>::max())
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) :
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult(const TwoViewXOverlap &xOverlap, const PfoList &commonMuonPfoList,
+    const Cluster *const pBestMatchedCluster, const ClusterList &matchedClusterList, const float reducedChiSquared) :
     m_isInitialized(true),
-    m_matchingScore(matchingScore)
+    m_xOverlap(xOverlap),
+    m_commonMuonPfoList(commonMuonPfoList),
+    m_pBestMatchedCluster(pBestMatchedCluster),
+    m_matchedClusterList(matchedClusterList),
+    m_reducedChiSquared(reducedChiSquared)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoViewDeltaRayOverlapResult::TwoViewDeltaRayOverlapResult(const TwoViewDeltaRayOverlapResult &rhs) :
+    m_isInitialized(rhs.m_isInitialized),
+    m_xOverlap(rhs.GetXOverlap()),
+    m_commonMuonPfoList(rhs.GetCommonMuonPfoList()),
+    m_pBestMatchedCluster(rhs.GetBestMatchedCluster()),
+    m_matchedClusterList(rhs.GetMatchedClusterList()),
+    m_reducedChiSquared(rhs.GetReducedChiSquared())
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoViewDeltaRayOverlapResult::~TwoViewDeltaRayOverlapResult()
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+const Cluster *TwoViewDeltaRayOverlapResult::GetBestMatchedAvailableCluster() const
+{
+    unsigned int highestNHits(0);
+    const Cluster *pBestMatchedCluster(nullptr);
+
+    for (const Cluster *const pMatchedCluster : m_matchedClusterList)
+    {
+        if (!pMatchedCluster->IsAvailable())
+            continue;
+
+        if (pMatchedCluster->GetNCaloHits() > highestNHits)
+        {
+            highestNHits = pMatchedCluster->GetNCaloHits();
+            pBestMatchedCluster = pMatchedCluster;
+        }
+    }
+
+    return pBestMatchedCluster;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TwoViewDeltaRayOverlapResult &TwoViewDeltaRayOverlapResult::operator=(const TwoViewDeltaRayOverlapResult &rhs)
+{
+    m_isInitialized = rhs.m_isInitialized;
+    m_xOverlap = rhs.GetXOverlap();
+    m_commonMuonPfoList = rhs.GetCommonMuonPfoList();
+    m_pBestMatchedCluster = rhs.GetBestMatchedCluster();
+    m_matchedClusterList = rhs.GetMatchedClusterList();
+    m_reducedChiSquared = rhs.GetReducedChiSquared();
+
+    return *this;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool TwoViewDeltaRayOverlapResult::operator<(const TwoViewDeltaRayOverlapResult &rhs) const
+{
+    if (this == &rhs)
+        return false;
+
+    if (!m_isInitialized && !rhs.m_isInitialized)
+        throw StatusCodeException(STATUS_CODE_NOT_INITIALIZED);
+
+    if (!m_isInitialized)
+        return true;
+
+    if (!rhs.m_isInitialized)
+        return false;
+
+    return (m_xOverlap.GetTwoViewXOverlapSpan() < rhs.m_xOverlap.GetTwoViewXOverlapSpan());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackTwoViewOverlapResult::TrackTwoViewOverlapResult() : m_isInitialized(false), m_matchingScore(0)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+TrackTwoViewOverlapResult::TrackTwoViewOverlapResult(const float matchingScore) : m_isInitialized(true), m_matchingScore(matchingScore)
 {
 }
 
@@ -98,9 +194,8 @@ TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor,
-        const unsigned int nSamplingPoints, const unsigned int nMatchedSamplingPoints, const float correlationCoefficient,
-        const TwoViewXOverlap &twoViewXOverlap) :
+TwoViewTransverseOverlapResult::TwoViewTransverseOverlapResult(const float matchingScore, const float downsamplingFactor, const unsigned int nSamplingPoints,
+    const unsigned int nMatchedSamplingPoints, const float correlationCoefficient, const TwoViewXOverlap &twoViewXOverlap) :
     TrackTwoViewOverlapResult(matchingScore),
     m_downsamplingFactor(downsamplingFactor),
     m_nSamplingPoints(nSamplingPoints),
@@ -148,16 +243,16 @@ bool TwoViewTransverseOverlapResult::operator<(const TwoViewTransverseOverlapRes
         return (m_matchingScore < rhs.m_matchingScore);
 
     if (std::fabs(m_correlationCoefficient - rhs.m_correlationCoefficient) > std::numeric_limits<float>::epsilon())
-	return (m_correlationCoefficient < rhs.m_correlationCoefficient);
+        return (m_correlationCoefficient < rhs.m_correlationCoefficient);
 
     if (m_nMatchedSamplingPoints != rhs.m_nMatchedSamplingPoints)
-	return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
+        return (m_nMatchedSamplingPoints < rhs.m_nMatchedSamplingPoints);
 
     if (m_nSamplingPoints != rhs.m_nSamplingPoints)
-	return (m_nSamplingPoints < rhs.m_nSamplingPoints);
+        return (m_nSamplingPoints < rhs.m_nSamplingPoints);
 
     if (std::fabs(this->GetLocallyMatchedFraction() - rhs.GetLocallyMatchedFraction()) > std::numeric_limits<float>::epsilon())
-	return (this->GetLocallyMatchedFraction() < rhs.GetLocallyMatchedFraction());
+        return (this->GetLocallyMatchedFraction() < rhs.GetLocallyMatchedFraction());
 
     if (std::fabs(m_twoViewXOverlap.GetTwoViewXOverlapSpan() - rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan()) > std::numeric_limits<float>::epsilon())
         return (m_twoViewXOverlap.GetTwoViewXOverlapSpan() < rhs.m_twoViewXOverlap.GetTwoViewXOverlapSpan());

@@ -15,7 +15,7 @@
 namespace lar_content
 {
 
-// Specify (name)
+// clang-format off
 #define INTERACTION_TYPE_TABLE(d)                         \
     d(CCQEL_MU                                          ) \
     d(CCQEL_MU_P                                        ) \
@@ -231,6 +231,7 @@ namespace lar_content
  */
 #define GET_INTERACTION_TYPE_NAME_SWITCH(a)               \
     case a : return std::string(#a);
+// clang-format on
 
 /**
  *  @brief  LArInteractionTypeHelper class
@@ -243,8 +244,7 @@ public:
      */
     enum InteractionType : unsigned int
     {
-        INTERACTION_TYPE_TABLE(GET_INTERACTION_TYPE_ENTRY)
-        UNKNOWN_INTERACTION_TYPE = 0
+        INTERACTION_TYPE_TABLE(GET_INTERACTION_TYPE_ENTRY) UNKNOWN_INTERACTION_TYPE = 0
     };
 
     /**
@@ -320,4 +320,3 @@ public:
 } // namespace lar_content
 
 #endif // #ifndef LAR_INTERACTION_TYPE_HELPER_H
-

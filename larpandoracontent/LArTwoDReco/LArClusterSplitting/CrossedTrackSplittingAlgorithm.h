@@ -15,8 +15,10 @@
 namespace lar_content
 {
 
-template<typename, unsigned int> class KDTreeLinkerAlgo;
-template<typename, unsigned int> class KDTreeNodeInfoT;
+template <typename, unsigned int>
+class KDTreeLinkerAlgo;
+template <typename, unsigned int>
+class KDTreeNodeInfoT;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -32,12 +34,12 @@ public:
     CrossedTrackSplittingAlgorithm();
 
 private:
-    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
-    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::ClusterSet> ClusterToClustersMap;
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> HitToClusterMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::ClusterSet> ClusterToClustersMap;
+    typedef std::unordered_map<const pandora::CaloHit *, const pandora::Cluster *> HitToClusterMap;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
     pandora::StatusCode PreparationStep(const pandora::ClusterVector &clusterVector);
@@ -55,12 +57,12 @@ private:
     void FindCandidateSplitPositions(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
         pandora::CartesianPointVector &candidateVector) const;
 
-    float                   m_maxClusterSeparation;             ///< maximum separation of two clusters
-    float                   m_maxClusterSeparationSquared;      ///< maximum separation of two clusters (squared)
-    float                   m_minCosRelativeAngle;              ///< maximum relative angle between tracks after un-crossing
+    float m_maxClusterSeparation;        ///< maximum separation of two clusters
+    float m_maxClusterSeparationSquared; ///< maximum separation of two clusters (squared)
+    float m_minCosRelativeAngle;         ///< maximum relative angle between tracks after un-crossing
 
-    float                   m_searchRegion1D;                   ///< Search region, applied to each dimension, for look-up from kd-trees
-    ClusterToClustersMap    m_nearbyClusters;                   ///< The nearby clusters map
+    float m_searchRegion1D;                ///< Search region, applied to each dimension, for look-up from kd-trees
+    ClusterToClustersMap m_nearbyClusters; ///< The nearby clusters map
 };
 
 } // namespace lar_content

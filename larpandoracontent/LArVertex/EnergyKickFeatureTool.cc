@@ -17,39 +17,38 @@ using namespace pandora;
 namespace lar_content
 {
 
-EnergyKickFeatureTool::EnergyKickFeatureTool() :
-    m_rOffset(10.f),
-    m_xOffset(0.06f)
+EnergyKickFeatureTool::EnergyKickFeatureTool() : m_rOffset(10.f), m_xOffset(0.06f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void EnergyKickFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
-    const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &)
+void EnergyKickFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm,
+    const Vertex *const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap,
+    const VertexSelectionBaseAlgorithm::ClusterListMap &, const VertexSelectionBaseAlgorithm::KDTreeMap &,
+    const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     float energyKick(0.f);
 
-    energyKick += this->GetEnergyKickForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U),
-        slidingFitDataListMap.at(TPC_VIEW_U));
+    energyKick += this->GetEnergyKickForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U), slidingFitDataListMap.at(TPC_VIEW_U));
 
-    energyKick += this->GetEnergyKickForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V),
-        slidingFitDataListMap.at(TPC_VIEW_V));
+    energyKick += this->GetEnergyKickForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V), slidingFitDataListMap.at(TPC_VIEW_V));
 
-    energyKick += this->GetEnergyKickForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W),
-        slidingFitDataListMap.at(TPC_VIEW_W));
+    energyKick += this->GetEnergyKickForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W), slidingFitDataListMap.at(TPC_VIEW_W));
 
     featureVector.push_back(energyKick);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float EnergyKickFeatureTool::GetEnergyKickForView(const CartesianVector &vertexPosition2D,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const
+float EnergyKickFeatureTool::GetEnergyKickForView(
+    const CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const
 {
     unsigned int totHits(0);
     bool useEnergy(true);
@@ -101,11 +100,9 @@ void EnergyKickFeatureTool::IncrementEnergyKickParameters(const Cluster *const p
 
 StatusCode EnergyKickFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ROffset", m_rOffset));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ROffset", m_rOffset));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "XOffset", m_xOffset));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "XOffset", m_xOffset));
 
     return STATUS_CODE_SUCCESS;
 }

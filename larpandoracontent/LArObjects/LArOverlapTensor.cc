@@ -8,8 +8,8 @@
 
 #include "Pandora/PandoraInputTypes.h"
 
-#include "Pandora/PandoraInternal.h"
 #include "Pandora/PandoraInputTypes.h"
+#include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
 
 #include "Objects/Cluster.h"
@@ -26,6 +26,17 @@ using namespace pandora;
 
 namespace lar_content
 {
+
+template <typename T>
+const Cluster *OverlapTensor<T>::Element::GetCluster(const HitType hitType) const
+{
+    if ((hitType != TPC_VIEW_U) && (hitType != TPC_VIEW_V) && (hitType != TPC_VIEW_W))
+        throw StatusCodeException(STATUS_CODE_NOT_ALLOWED);
+
+    return (hitType == TPC_VIEW_U) ? m_pClusterU : (hitType == TPC_VIEW_V) ? m_pClusterV : m_pClusterW;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
 void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, ElementList &elementList) const
@@ -65,8 +76,8 @@ void OverlapTensor<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool OverlapTensor<T>::DefaultAmbiguityFunction(const ClusterList &clusterListU, const ClusterList &clusterListV, const ClusterList &clusterListW,
-    const Cluster *&pClusterU, const Cluster *&pClusterV, const Cluster *&pClusterW) const
+bool OverlapTensor<T>::DefaultAmbiguityFunction(const ClusterList &clusterListU, const ClusterList &clusterListV,
+    const ClusterList &clusterListW, const Cluster *&pClusterU, const Cluster *&pClusterV, const Cluster *&pClusterW) const
 {
     if ((1 != clusterListU.size()) || (1 != clusterListV.size()) || (1 != clusterListW.size()))
         return false;
@@ -86,7 +97,9 @@ void OverlapTensor<T>::GetConnectedElements(const pandora::Cluster *const pClust
 {
     ClusterList clusterListU, clusterListV, clusterListW;
     this->GetConnectedElements(pCluster, ignoreUnavailable, elementList, clusterListU, clusterListV, clusterListW);
-    nU = clusterListU.size(); nV = clusterListV.size(); nW = clusterListW.size();
+    nU = clusterListU.size();
+    nV = clusterListV.size();
+    nW = clusterListW.size();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,9 +132,12 @@ void OverlapTensor<T>::SetOverlapResult(const pandora::Cluster *const pClusterU,
     ClusterList &navigationVW(m_clusterNavigationMapVW[pClusterV]);
     ClusterList &navigationWU(m_clusterNavigationMapWU[pClusterW]);
 
-    if (navigationUV.end() == std::find(navigationUV.begin(), navigationUV.end(), pClusterV)) navigationUV.push_back(pClusterV);
-    if (navigationVW.end() == std::find(navigationVW.begin(), navigationVW.end(), pClusterW)) navigationVW.push_back(pClusterW);
-    if (navigationWU.end() == std::find(navigationWU.begin(), navigationWU.end(), pClusterU)) navigationWU.push_back(pClusterU);
+    if (navigationUV.end() == std::find(navigationUV.begin(), navigationUV.end(), pClusterV))
+        navigationUV.push_back(pClusterV);
+    if (navigationVW.end() == std::find(navigationVW.begin(), navigationVW.end(), pClusterW))
+        navigationVW.push_back(pClusterW);
+    if (navigationWU.end() == std::find(navigationWU.begin(), navigationWU.end(), pClusterU))
+        navigationWU.push_back(pClusterU);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -162,7 +178,7 @@ void OverlapTensor<T>::RemoveCluster(const pandora::Cluster *const pCluster)
         if (m_overlapTensor.end() != iter)
             m_overlapTensor.erase(iter);
 
-        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapWU.begin(); navIter != m_clusterNavigationMapWU.end(); )
+        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapWU.begin(); navIter != m_clusterNavigationMapWU.end();)
         {
             ClusterNavigationMap::iterator thisIter = navIter++;
             ClusterList::iterator listIter = std::find(thisIter->second.begin(), thisIter->second.end(), pCluster);
@@ -185,7 +201,7 @@ void OverlapTensor<T>::RemoveCluster(const pandora::Cluster *const pCluster)
                 iterU->second.erase(iter);
         }
 
-        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapUV.begin(); navIter != m_clusterNavigationMapUV.end(); )
+        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapUV.begin(); navIter != m_clusterNavigationMapUV.end();)
         {
             ClusterNavigationMap::iterator thisIter = navIter++;
             ClusterList::iterator listIter = std::find(thisIter->second.begin(), thisIter->second.end(), pCluster);
@@ -211,7 +227,7 @@ void OverlapTensor<T>::RemoveCluster(const pandora::Cluster *const pCluster)
             }
         }
 
-        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapVW.begin(); navIter != m_clusterNavigationMapVW.end(); )
+        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMapVW.begin(); navIter != m_clusterNavigationMapVW.end();)
         {
             ClusterNavigationMap::iterator thisIter = navIter++;
             ClusterList::iterator listIter = std::find(thisIter->second.begin(), thisIter->second.end(), pCluster);
@@ -240,7 +256,10 @@ void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const
     this->ExploreConnections(pCluster, ignoreUnavailable, localClusterListU, localClusterListV, localClusterListW);
 
     // ATTN Now need to check that all clusters received are from fully available tensor elements
-    elementList.clear(); clusterListU.clear(); clusterListV.clear(); clusterListW.clear();
+    elementList.clear();
+    clusterListU.clear();
+    clusterListV.clear();
+    clusterListW.clear();
 
     for (typename TheTensor::const_iterator iterU = this->begin(), iterUEnd = this->end(); iterU != iterUEnd; ++iterU)
     {
@@ -257,9 +276,12 @@ void OverlapTensor<T>::GetConnectedElements(const Cluster *const pCluster, const
                 Element element(iterU->first, iterV->first, iterW->first, iterW->second);
                 elementList.push_back(element);
 
-                if (clusterListU.end() == std::find(clusterListU.begin(), clusterListU.end(), iterU->first)) clusterListU.push_back(iterU->first);
-                if (clusterListV.end() == std::find(clusterListV.begin(), clusterListV.end(), iterV->first)) clusterListV.push_back(iterV->first);
-                if (clusterListW.end() == std::find(clusterListW.begin(), clusterListW.end(), iterW->first)) clusterListW.push_back(iterW->first);
+                if (clusterListU.end() == std::find(clusterListU.begin(), clusterListU.end(), iterU->first))
+                    clusterListU.push_back(iterU->first);
+                if (clusterListV.end() == std::find(clusterListV.begin(), clusterListV.end(), iterV->first))
+                    clusterListV.push_back(iterV->first);
+                if (clusterListW.end() == std::find(clusterListW.begin(), clusterListW.end(), iterW->first))
+                    clusterListW.push_back(iterW->first);
             }
         }
     }
@@ -282,7 +304,8 @@ void OverlapTensor<T>::ExploreConnections(const Cluster *const pCluster, const b
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
     ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
-    const ClusterNavigationMap &navigationMap((TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV : (TPC_VIEW_V == hitType) ? m_clusterNavigationMapVW : m_clusterNavigationMapWU);
+    const ClusterNavigationMap &navigationMap(
+        (TPC_VIEW_U == hitType) ? m_clusterNavigationMapUV : (TPC_VIEW_V == hitType) ? m_clusterNavigationMapVW : m_clusterNavigationMapWU);
 
     if (clusterList.end() != std::find(clusterList.begin(), clusterList.end(), pCluster))
         return;
@@ -304,5 +327,6 @@ template class OverlapTensor<TransverseOverlapResult>;
 template class OverlapTensor<LongitudinalOverlapResult>;
 template class OverlapTensor<FragmentOverlapResult>;
 template class OverlapTensor<ShowerOverlapResult>;
+template class OverlapTensor<DeltaRayOverlapResult>;
 
 } // namespace lar_content

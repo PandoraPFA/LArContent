@@ -17,8 +17,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-SlicingAlgorithm::SlicingAlgorithm() :
-    m_pEventSlicingTool(nullptr)
+SlicingAlgorithm::SlicingAlgorithm() : m_pEventSlicingTool(nullptr)
 {
 }
 
@@ -48,18 +47,24 @@ StatusCode SlicingAlgorithm::Run()
         clusterParametersU.m_caloHitList = slice.m_caloHitListU;
         clusterParametersV.m_caloHitList = slice.m_caloHitListV;
         clusterParametersW.m_caloHitList = slice.m_caloHitListW;
-        if (!clusterParametersU.m_caloHitList.empty()) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersU, pClusterU));
-        if (!clusterParametersV.m_caloHitList.empty()) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersV, pClusterV));
-        if (!clusterParametersW.m_caloHitList.empty()) PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersW, pClusterW));
+        if (!clusterParametersU.m_caloHitList.empty())
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersU, pClusterU));
+        if (!clusterParametersV.m_caloHitList.empty())
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersV, pClusterV));
+        if (!clusterParametersW.m_caloHitList.empty())
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Cluster::Create(*this, clusterParametersW, pClusterW));
 
         if (!pClusterU && !pClusterV && !pClusterW)
             throw StatusCodeException(STATUS_CODE_FAILURE);
 
         const Pfo *pSlicePfo(nullptr);
         PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-        if (pClusterU) pfoParameters.m_clusterList.push_back(pClusterU);
-        if (pClusterV) pfoParameters.m_clusterList.push_back(pClusterV);
-        if (pClusterW) pfoParameters.m_clusterList.push_back(pClusterW);
+        if (pClusterU)
+            pfoParameters.m_clusterList.push_back(pClusterU);
+        if (pClusterV)
+            pfoParameters.m_clusterList.push_back(pClusterV);
+        if (pClusterW)
+            pfoParameters.m_clusterList.push_back(pClusterW);
         pfoParameters.m_charge = 0;
         pfoParameters.m_energy = 0.f;
         pfoParameters.m_mass = 0.f;
@@ -89,12 +94,13 @@ StatusCode SlicingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     AlgorithmTool *pAlgorithmTool(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmTool(*this, xmlHandle, "SliceCreation", pAlgorithmTool));
-    m_pEventSlicingTool = dynamic_cast<EventSlicingBaseTool*>(pAlgorithmTool);
+    m_pEventSlicingTool = dynamic_cast<EventSlicingBaseTool *>(pAlgorithmTool);
 
     if (!m_pEventSlicingTool)
         return STATUS_CODE_INVALID_PARAMETER;
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle, "SlicingListDeletion", m_slicingListDeletionAlgorithm));
+    PANDORA_RETURN_RESULT_IF(
+        STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithm(*this, xmlHandle, "SlicingListDeletion", m_slicingListDeletionAlgorithm));
 
     std::string caloHitListNameU, caloHitListNameV, caloHitListNameW;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputCaloHitListNameU", caloHitListNameU));

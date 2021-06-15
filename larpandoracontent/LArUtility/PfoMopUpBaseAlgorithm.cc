@@ -33,7 +33,7 @@ void PfoMopUpBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const p
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SetPfoParentDaughterRelationship(*this, pPfoToEnlarge, pDaughterPfo));
     }
 
-    for (const  Vertex *const pDaughterVertex : daughterVertices)
+    for (const Vertex *const pDaughterVertex : daughterVertices)
     {
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pDaughterVertex, this->GetListName(pDaughterVertex)));
     }
@@ -45,8 +45,9 @@ void PfoMopUpBaseAlgorithm::MergeAndDeletePfos(const ParticleFlowObject *const p
 
         if (pParentCluster)
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pDaughterCluster,
-                this->GetListName(pParentCluster), this->GetListName(pDaughterCluster)));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                PandoraContentApi::MergeAndDeleteClusters(
+                    *this, pParentCluster, pDaughterCluster, this->GetListName(pParentCluster), this->GetListName(pDaughterCluster)));
         }
         else
         {

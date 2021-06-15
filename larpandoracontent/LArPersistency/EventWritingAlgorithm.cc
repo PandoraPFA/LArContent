@@ -37,6 +37,7 @@ EventWritingAlgorithm::EventWritingAlgorithm() :
     m_shouldOverwriteEventFile(false),
     m_shouldOverwriteGeometryFile(false),
     m_useLArCaloHits(true),
+    m_larCaloHitVersion(1),
     m_useLArMCParticles(true),
     m_shouldFilterByNuanceCode(false),
     m_filterNuanceCode(0),
@@ -110,7 +111,7 @@ StatusCode EventWritingAlgorithm::Initialize()
         }
 
         if (m_useLArCaloHits)
-            m_pEventFileWriter->SetFactory(new LArCaloHitFactory);
+            m_pEventFileWriter->SetFactory(new LArCaloHitFactory(m_larCaloHitVersion));
 
         if (m_useLArMCParticles)
             m_pEventFileWriter->SetFactory(new LArMCParticleFactory);
@@ -145,8 +146,8 @@ StatusCode EventWritingAlgorithm::Run()
         const MCParticleList *pMCParticleList = nullptr;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, m_pEventFileWriter->WriteEvent(*pCaloHitList, *pTrackList, *pMCParticleList,
-            m_shouldWriteMCRelationships, m_shouldWriteTrackRelationships));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+            m_pEventFileWriter->WriteEvent(*pCaloHitList, *pTrackList, *pMCParticleList, m_shouldWriteMCRelationships, m_shouldWriteTrackRelationships));
     }
 
     return STATUS_CODE_SUCCESS;
@@ -164,7 +165,7 @@ bool EventWritingAlgorithm::PassNuanceCodeFilter() const
 
     for (const MCParticle *const pMCNeutrino : mcNeutrinoList)
     {
-        const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle*>(pMCNeutrino);
+        const LArMCParticle *const pLArMCNeutrino = dynamic_cast<const LArMCParticle *>(pMCNeutrino);
 
         if (pLArMCNeutrino && (pLArMCNeutrino->GetNuanceCode() == m_filterNuanceCode))
             return true;
@@ -185,34 +186,44 @@ bool EventWritingAlgorithm::PassMCParticleFilter() const
 
     LArMCParticleHelper::PrimaryParameters parameters;
     LArMCParticleHelper::MCContributionMap mcParticlesToGoodHitsMap;
-    LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcParticlesToGoodHitsMap);
+    LArMCParticleHelper::SelectReconstructableMCParticles(
+        pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamNeutrinoFinalState, mcParticlesToGoodHitsMap);
 
     if (!m_neutrinoInducedOnly)
     {
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, mcParticlesToGoodHitsMap);
-        LArMCParticleHelper::SelectReconstructableMCParticles(pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcParticlesToGoodHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(
+            pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsBeamParticle, mcParticlesToGoodHitsMap);
+        LArMCParticleHelper::SelectReconstructableMCParticles(
+            pMCParticleList, pCaloHitList, parameters, LArMCParticleHelper::IsCosmicRay, mcParticlesToGoodHitsMap);
     }
 
     unsigned int nNonNeutrons(0), nMuons(0), nElectrons(0), nProtons(0), nPhotons(0), nChargedPions(0);
 
     MCParticleVector mcPrimaryVector;
-    for (const auto &mapEntry : mcParticlesToGoodHitsMap) mcPrimaryVector.push_back(mapEntry.first);
+    for (const auto &mapEntry : mcParticlesToGoodHitsMap)
+        mcPrimaryVector.push_back(mapEntry.first);
     std::sort(mcPrimaryVector.begin(), mcPrimaryVector.end(), LArMCParticleHelper::SortByMomentum);
 
     for (const MCParticle *const pMCPrimary : mcPrimaryVector)
     {
         const unsigned int particleId(std::abs(pMCPrimary->GetParticleId()));
-        if (NEUTRON != particleId) ++nNonNeutrons;
+        if (NEUTRON != particleId)
+            ++nNonNeutrons;
 
-        if (MU_MINUS == particleId) ++nMuons;
-        else if (E_MINUS == particleId) ++nElectrons;
-        else if (PROTON == particleId) ++nProtons;
-        else if (PHOTON == particleId) ++nPhotons;
-        else if (PI_PLUS == particleId) ++nChargedPions;
+        if (MU_MINUS == particleId)
+            ++nMuons;
+        else if (E_MINUS == particleId)
+            ++nElectrons;
+        else if (PROTON == particleId)
+            ++nProtons;
+        else if (PHOTON == particleId)
+            ++nPhotons;
+        else if (PI_PLUS == particleId)
+            ++nChargedPions;
     }
 
-    if ((nNonNeutrons == m_nNonNeutrons) && (nMuons == m_nMuons) && (nElectrons == m_nElectrons) &&
-        (nProtons == m_nProtons) && (nPhotons == m_nPhotons) && (nChargedPions == m_nChargedPions))
+    if ((nNonNeutrons == m_nNonNeutrons) && (nMuons == m_nMuons) && (nElectrons == m_nElectrons) && (nProtons == m_nProtons) &&
+        (nPhotons == m_nPhotons) && (nChargedPions == m_nChargedPions))
     {
         return true;
     }
@@ -234,9 +245,12 @@ bool EventWritingAlgorithm::PassNeutrinoVertexFilter() const
     {
         const CartesianVector &neutrinoInteractionVertex(pMCNeutrino->GetEndpoint());
 
-        if ((neutrinoInteractionVertex.GetX() < (m_detectorHalfLengthX - m_coordinateOffsetX - m_selectedBorderX)) && (neutrinoInteractionVertex.GetX() > (-m_coordinateOffsetX + m_selectedBorderX)) &&
-            (neutrinoInteractionVertex.GetY() < (m_detectorHalfLengthY - m_coordinateOffsetY - m_selectedBorderY)) && (neutrinoInteractionVertex.GetY() > (-m_coordinateOffsetY + m_selectedBorderY)) &&
-            (neutrinoInteractionVertex.GetZ() < (m_detectorHalfLengthZ - m_coordinateOffsetZ - m_selectedBorderZ)) && (neutrinoInteractionVertex.GetZ() > (-m_coordinateOffsetZ + m_selectedBorderZ)) )
+        if ((neutrinoInteractionVertex.GetX() < (m_detectorHalfLengthX - m_coordinateOffsetX - m_selectedBorderX)) &&
+            (neutrinoInteractionVertex.GetX() > (-m_coordinateOffsetX + m_selectedBorderX)) &&
+            (neutrinoInteractionVertex.GetY() < (m_detectorHalfLengthY - m_coordinateOffsetY - m_selectedBorderY)) &&
+            (neutrinoInteractionVertex.GetY() > (-m_coordinateOffsetY + m_selectedBorderY)) &&
+            (neutrinoInteractionVertex.GetZ() < (m_detectorHalfLengthZ - m_coordinateOffsetZ - m_selectedBorderZ)) &&
+            (neutrinoInteractionVertex.GetZ() > (-m_coordinateOffsetZ + m_selectedBorderZ)))
         {
             return true;
         }
@@ -249,13 +263,12 @@ bool EventWritingAlgorithm::PassNeutrinoVertexFilter() const
 
 StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldWriteGeometry", m_shouldWriteGeometry));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShouldWriteGeometry", m_shouldWriteGeometry));
 
     if (m_shouldWriteGeometry)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "GeometryFileName", m_geometryFileName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "GeometryFileName", m_geometryFileName));
 
         std::string fileExtension(m_geometryFileName.substr(m_geometryFileName.find_last_of(".")));
         std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
@@ -275,13 +288,12 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         }
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldWriteEvents", m_shouldWriteEvents));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShouldWriteEvents", m_shouldWriteEvents));
 
     if (m_shouldWriteEvents)
     {
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-            "EventFileName", m_eventFileName));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "EventFileName", m_eventFileName));
 
         std::string fileExtension(m_eventFileName.substr(m_eventFileName.find_last_of(".")));
         std::transform(fileExtension.begin(), fileExtension.end(), fileExtension.begin(), ::tolower);
@@ -301,32 +313,34 @@ StatusCode EventWritingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         }
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldWriteMCRelationships", m_shouldWriteMCRelationships));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShouldWriteMCRelationships", m_shouldWriteMCRelationships));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldWriteTrackRelationships", m_shouldWriteTrackRelationships));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShouldWriteTrackRelationships", m_shouldWriteTrackRelationships));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldOverwriteEventFile", m_shouldOverwriteEventFile));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShouldOverwriteEventFile", m_shouldOverwriteEventFile));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldOverwriteGeometryFile", m_shouldOverwriteGeometryFile));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShouldOverwriteGeometryFile", m_shouldOverwriteGeometryFile));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseLArCaloHits", m_useLArCaloHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArCaloHits", m_useLArCaloHits));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseLArMCParticles", m_useLArMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "LArCaloHitVersion", m_larCaloHitVersion));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldFilterByNuanceCode", m_shouldFilterByNuanceCode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseLArMCParticles", m_useLArMCParticles));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldFilterByMCParticles", m_shouldFilterByMCParticles));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShouldFilterByNuanceCode", m_shouldFilterByNuanceCode));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShouldFilterByNeutrinoVertex", m_shouldFilterByNeutrinoVertex));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShouldFilterByMCParticles", m_shouldFilterByMCParticles));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ShouldFilterByNeutrinoVertex", m_shouldFilterByNeutrinoVertex));
 
     if (m_shouldFilterByNuanceCode)
     {

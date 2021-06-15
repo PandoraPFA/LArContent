@@ -75,8 +75,8 @@ public:
         bool IsInitialized() const;
 
     private:
-        double m_number;        ///< Number held by class
-        bool   m_isInitialized; ///< Whether the number has been initialized
+        double m_number;      ///< Number held by class
+        bool m_isInitialized; ///< Whether the number has been initialized
     };
 
     typedef InitializedDouble MvaFeature;
@@ -127,17 +127,13 @@ public:
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline MvaTypes::InitializedDouble::InitializedDouble() :
-    m_number(0.),
-    m_isInitialized(false)
+inline MvaTypes::InitializedDouble::InitializedDouble() : m_number(0.), m_isInitialized(false)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline MvaTypes::InitializedDouble::InitializedDouble(const double number) :
-    m_number(number),
-    m_isInitialized(true)
+inline MvaTypes::InitializedDouble::InitializedDouble(const double number) : m_number(number), m_isInitialized(true)
 {
 }
 

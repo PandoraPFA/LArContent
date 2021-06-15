@@ -30,8 +30,8 @@ public:
      *  @param  hitType the cluster hit type
      *  @param  coordinateVector the output list of coordinates
      */
-    static void GetCoordinateVector(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType,
-        pandora::CartesianPointVector &coordinateVector);
+    static void GetCoordinateVector(
+        const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::CartesianPointVector &coordinateVector);
 
     /**
      *  @brief  Get a list of calo hits of a particular hit type from a list of pfos
@@ -179,14 +179,6 @@ public:
     static float GetClosestDistance(const pandora::ParticleFlowObject *const pPfo, const pandora::Cluster *const pCluster);
 
     /**
-     *  @brief  Get distance between two Pfos using 2D clusters
-     *
-     *  @param  pPfo the address of the first Pfo
-     *  @param  pPfo the address of the second Pfo
-     */
-    static float GetTwoDSeparation(const pandora::ParticleFlowObject *const pPfo1, const pandora::ParticleFlowObject *const pPfo2);
-
-    /**
      *  @brief  Get distance between two Pfos using 3D clusters
      *
      *  @param  pPfo the address of the first Pfo
@@ -240,7 +232,7 @@ public:
      */
     static bool IsFinalState(const pandora::ParticleFlowObject *const pPfo);
 
-     /**
+    /**
      *  @brief  Whether a pfo is a final-state particle from a neutrino (or antineutrino) interaction
      *
      *  @param  pPfo the address of the Pfo
@@ -258,7 +250,7 @@ public:
      */
     static bool IsNeutrino(const pandora::ParticleFlowObject *const pPfo);
 
-     /**
+    /**
      *  @brief  Whether a pfo is a final-state particle from a test beam particle interaction
      *
      *  @param  pPfo the address of the Pfo
@@ -386,6 +378,16 @@ public:
      *  @param  pRhs address of second pfo
      */
     static bool SortByNHits(const pandora::ParticleFlowObject *const pLhs, const pandora::ParticleFlowObject *const pRhs);
+
+    /**
+     *  @brief  Retrieve a linearised representation of the PFO hierarchy in breadth first order. This iterates over the PFO hierarchy in a
+     *          manor that sees primaries at the front of the list, with progressively deeper tiers later in the list. This is useful for
+     *          some visualisation cases.
+     *
+     *  @param  pPfo a PFO in the hierarchy - can be any PFO
+     *  @param  pfoList the output PFO list
+     */
+    static void GetBreadthFirstHierarchyRepresentation(const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &pfoList);
 
 private:
     /**

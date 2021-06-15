@@ -73,9 +73,9 @@ private:
         bool operator<(const ClusterMerge &rhs) const;
 
     private:
-        const pandora::Cluster *m_pParentCluster;       ///< The address of the candidate parent (shower) cluster
-        float                   m_boundedFraction;      ///< The bounded fraction for algorithm-specified cone angle
-        float                   m_meanRT;               ///< The mean transverse distance of all hits (whether contained or not)
+        const pandora::Cluster *m_pParentCluster; ///< The address of the candidate parent (shower) cluster
+        float m_boundedFraction;                  ///< The bounded fraction for algorithm-specified cone angle
+        float m_meanRT;                           ///< The mean transverse distance of all hits (whether contained or not)
     };
 
     typedef std::vector<ClusterMerge> ClusterMergeList;
@@ -89,7 +89,7 @@ private:
      */
     void GetInteractionVertex(const pandora::Vertex *&pVertex) const;
 
-    typedef std::unordered_map<const pandora::Cluster*, const pandora::ParticleFlowObject*> ClusterToPfoMap;
+    typedef std::unordered_map<const pandora::Cluster *, const pandora::ParticleFlowObject *> ClusterToPfoMap;
 
     /**
      *  @brief  Get all 3d clusters contained in the input pfo lists and a mapping from clusters to pfos
@@ -106,7 +106,7 @@ private:
      */
     void GetAvailableTwoDClusters(pandora::ClusterVector &availableClusters2D) const;
 
-    typedef std::unordered_map<const pandora::Cluster*, ClusterMergeList> ClusterMergeMap;
+    typedef std::unordered_map<const pandora::Cluster *, ClusterMergeList> ClusterMergeMap;
 
     /**
      *  @brief  Get the cluster merge map describing all potential 3d cluster merges
@@ -116,8 +116,8 @@ private:
      *  @param  availableClusters2D the sorted list of available 2d clusters
      *  @param  clusterMergeMap to receive the populated cluster merge map
      */
-    void GetClusterMergeMap(const pandora::Vertex *const pVertex, const pandora::ClusterVector &clusters3D, const pandora::ClusterVector &availableClusters2D,
-        ClusterMergeMap &clusterMergeMap) const;
+    void GetClusterMergeMap(const pandora::Vertex *const pVertex, const pandora::ClusterVector &clusters3D,
+        const pandora::ClusterVector &availableClusters2D, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Make cluster merges based on the provided cluster merge map
@@ -129,24 +129,25 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector   m_inputPfoListNames;            ///< The input pfo list names
-    bool                    m_useVertex;                    ///< Whether to use the interaction vertex to select useful cone directions
-    unsigned int            m_maxIterations;                ///< The maximum allowed number of algorithm iterations
-    unsigned int            m_maxHitsToConsider3DTrack;     ///< The maximum number of hits in a 3d track cluster to warrant inclusion in algorithm
-    unsigned int            m_minHitsToConsider3DShower;    ///< The minimum number of hits in a 3d shower cluster to attempt cone fits
-    unsigned int            m_maxHitsToConsider2DCluster;   ///< The maximum number of hits in a 2d cluster to allow pick-up via sliding cone fits
-    unsigned int            m_halfWindowLayers;             ///< The number of layers to use for half-window of sliding fit
-    unsigned int            m_nConeFitLayers;               ///< The number of layers over which to sum fitted direction to obtain cone fit
-    unsigned int            m_nConeFits;                    ///< The number of cone fits to perform, spread roughly uniformly along the shower length
-    float                   m_coneLengthMultiplier;         ///< The cone length multiplier to use when calculating bounded cluster fractions
-    float                   m_maxConeLength;                ///< The maximum allowed cone length to use when calculating bounded cluster fractions
-    float                   m_coneTanHalfAngle;             ///< The cone tan half angle to use when calculating bounded cluster fractions
-    float                   m_coneBoundedFraction;          ///< The minimum cluster bounded fraction for association
+    pandora::StringVector m_inputPfoListNames; ///< The input pfo list names
+    bool m_useVertex;                          ///< Whether to use the interaction vertex to select useful cone directions
+    unsigned int m_maxIterations;              ///< The maximum allowed number of algorithm iterations
+    unsigned int m_maxHitsToConsider3DTrack;   ///< The maximum number of hits in a 3d track cluster to warrant inclusion in algorithm
+    unsigned int m_minHitsToConsider3DShower;  ///< The minimum number of hits in a 3d shower cluster to attempt cone fits
+    unsigned int m_maxHitsToConsider2DCluster; ///< The maximum number of hits in a 2d cluster to allow pick-up via sliding cone fits
+    unsigned int m_halfWindowLayers;           ///< The number of layers to use for half-window of sliding fit
+    unsigned int m_nConeFitLayers;             ///< The number of layers over which to sum fitted direction to obtain cone fit
+    unsigned int m_nConeFits;                  ///< The number of cone fits to perform, spread roughly uniformly along the shower length
+    float m_coneLengthMultiplier;              ///< The cone length multiplier to use when calculating bounded cluster fractions
+    float m_maxConeLength;                     ///< The maximum allowed cone length to use when calculating bounded cluster fractions
+    float m_coneTanHalfAngle;                  ///< The cone tan half angle to use when calculating bounded cluster fractions
+    float m_coneBoundedFraction;               ///< The minimum cluster bounded fraction for association
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(const pandora::Cluster *const pParentCluster, const float boundedFraction, const float meanRT) :
+inline SlidingConeClusterMopUpAlgorithm::ClusterMerge::ClusterMerge(
+    const pandora::Cluster *const pParentCluster, const float boundedFraction, const float meanRT) :
     m_pParentCluster(pParentCluster),
     m_boundedFraction(boundedFraction),
     m_meanRT(meanRT)

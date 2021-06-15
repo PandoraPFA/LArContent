@@ -8,7 +8,10 @@
 #ifndef LAR_CONTENT_H
 #define LAR_CONTENT_H 1
 
-namespace pandora { class Pandora; }
+namespace pandora
+{
+class Pandora;
+}
 
 /**
  *  @brief  LArContent class

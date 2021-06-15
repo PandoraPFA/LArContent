@@ -10,8 +10,8 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
-#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+#include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
 #include "larpandoracontent/LArObjects/LArPointingCluster.h"
@@ -47,7 +47,8 @@ StatusCode VertexBasedPfoMopUpAlgorithm::Run()
     const VertexList *pVertexList = nullptr;
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
 
-    const Vertex *const pSelectedVertex((pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
+    const Vertex *const pSelectedVertex(
+        (pVertexList && (pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 
     if (!pSelectedVertex)
     {
@@ -80,18 +81,19 @@ StatusCode VertexBasedPfoMopUpAlgorithm::Run()
 bool VertexBasedPfoMopUpAlgorithm::IsVertexAssociated(const CartesianVector &vertex2D, const LArPointingCluster &pointingCluster) const
 {
     return (LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-        LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance));
+            LArPointingClusterHelper::IsNode(vertex2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMopUpAlgorithm::PfoAssociation VertexBasedPfoMopUpAlgorithm::GetPfoAssociation(const Pfo *const pVertexPfo, const Pfo *const pDaughterPfo,
-    HitTypeToAssociationMap &hitTypeToAssociationMap) const
+VertexBasedPfoMopUpAlgorithm::PfoAssociation VertexBasedPfoMopUpAlgorithm::GetPfoAssociation(
+    const Pfo *const pVertexPfo, const Pfo *const pDaughterPfo, HitTypeToAssociationMap &hitTypeToAssociationMap) const
 {
     if ((pVertexPfo->GetClusterList().size() != pDaughterPfo->GetClusterList().size()) || (3 != pVertexPfo->GetClusterList().size()))
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-    return PfoAssociation(pVertexPfo, pDaughterPfo, hitTypeToAssociationMap.at(TPC_VIEW_U), hitTypeToAssociationMap.at(TPC_VIEW_V), hitTypeToAssociationMap.at(TPC_VIEW_W));
+    return PfoAssociation(pVertexPfo, pDaughterPfo, hitTypeToAssociationMap.at(TPC_VIEW_U), hitTypeToAssociationMap.at(TPC_VIEW_V),
+        hitTypeToAssociationMap.at(TPC_VIEW_W));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -142,7 +144,9 @@ bool VertexBasedPfoMopUpAlgorithm::IsVertexAssociated(const Pfo *const pPfo, con
             if (this->IsVertexAssociated(vertex2D, pointingCluster))
                 hitTypeSet.insert(hitType);
         }
-        catch (StatusCodeException &) {}
+        catch (StatusCodeException &)
+        {
+        }
     }
 
     const unsigned int nVertexAssociatedHitTypes(hitTypeSet.size());
@@ -151,8 +155,8 @@ bool VertexBasedPfoMopUpAlgorithm::IsVertexAssociated(const Pfo *const pPfo, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexBasedPfoMopUpAlgorithm::GetPfoAssociations(const Vertex *const pVertex, const PfoList &vertexPfos, const PfoList &nonVertexPfos,
-    PfoAssociationList &pfoAssociationList) const
+void VertexBasedPfoMopUpAlgorithm::GetPfoAssociations(
+    const Vertex *const pVertex, const PfoList &vertexPfos, const PfoList &nonVertexPfos, PfoAssociationList &pfoAssociationList) const
 {
     for (const Pfo *const pVertexPfo : vertexPfos)
     {
@@ -163,15 +167,17 @@ void VertexBasedPfoMopUpAlgorithm::GetPfoAssociations(const Vertex *const pVerte
                 const PfoAssociation pfoAssociation(this->GetPfoAssociation(pVertex, pVertexPfo, pDaughterPfo));
                 pfoAssociationList.push_back(pfoAssociation);
             }
-            catch (StatusCodeException &) {}
+            catch (StatusCodeException &)
+            {
+            }
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMopUpAlgorithm::PfoAssociation VertexBasedPfoMopUpAlgorithm::GetPfoAssociation(const Vertex *const pVertex, const Pfo *const pVertexPfo,
-    const Pfo *const pDaughterPfo) const
+VertexBasedPfoMopUpAlgorithm::PfoAssociation VertexBasedPfoMopUpAlgorithm::GetPfoAssociation(
+    const Vertex *const pVertex, const Pfo *const pVertexPfo, const Pfo *const pDaughterPfo) const
 {
     if (pVertexPfo->GetClusterList().empty() || pDaughterPfo->GetClusterList().empty())
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
@@ -199,8 +205,8 @@ VertexBasedPfoMopUpAlgorithm::PfoAssociation VertexBasedPfoMopUpAlgorithm::GetPf
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMopUpAlgorithm::ClusterAssociation VertexBasedPfoMopUpAlgorithm::GetClusterAssociation(const Vertex *const pVertex,
-    const Cluster *const pVertexCluster, const Cluster *const pDaughterCluster) const
+VertexBasedPfoMopUpAlgorithm::ClusterAssociation VertexBasedPfoMopUpAlgorithm::GetClusterAssociation(
+    const Vertex *const pVertex, const Cluster *const pVertexCluster, const Cluster *const pDaughterCluster) const
 {
     const HitType vertexHitType(LArClusterHelper::GetClusterHitType(pVertexCluster));
     const CartesianVector vertexPosition2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), vertexHitType));
@@ -208,10 +214,10 @@ VertexBasedPfoMopUpAlgorithm::ClusterAssociation VertexBasedPfoMopUpAlgorithm::G
     const ConeParameters coneParameters(pVertexCluster, vertexPosition2D, m_coneAngleCentile, m_maxConeCosHalfAngle);
     const float boundedFraction(coneParameters.GetBoundedFraction(pDaughterCluster, m_maxConeLengthMultiplier));
 
-    const LArVertexHelper::ClusterDirection vertexClusterDirection(LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
-        pVertexCluster, m_directionTanAngle, m_directionApexShift));
-    const LArVertexHelper::ClusterDirection daughterClusterDirection(LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
-        pDaughterCluster, m_directionTanAngle, m_directionApexShift));
+    const LArVertexHelper::ClusterDirection vertexClusterDirection(
+        LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pVertexCluster, m_directionTanAngle, m_directionApexShift));
+    const LArVertexHelper::ClusterDirection daughterClusterDirection(
+        LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pDaughterCluster, m_directionTanAngle, m_directionApexShift));
     const bool isConsistentDirection(vertexClusterDirection == daughterClusterDirection);
 
     return ClusterAssociation(pVertexCluster, pDaughterCluster, boundedFraction, isConsistentDirection);
@@ -222,13 +228,12 @@ VertexBasedPfoMopUpAlgorithm::ClusterAssociation VertexBasedPfoMopUpAlgorithm::G
 bool VertexBasedPfoMopUpAlgorithm::ProcessPfoAssociations(const PfoAssociationList &pfoAssociationList) const
 {
     const PfoList *pTrackPfoList(nullptr);
-    (void) PandoraContentApi::GetList(*this, m_trackPfoListName, pTrackPfoList);
+    (void)PandoraContentApi::GetList(*this, m_trackPfoListName, pTrackPfoList);
 
     for (const PfoAssociation &pfoAssociation : pfoAssociationList)
     {
         if ((pfoAssociation.GetMeanBoundedFraction() < m_meanBoundedFractionCut) ||
-            (pfoAssociation.GetMaxBoundedFraction() < m_maxBoundedFractionCut) ||
-            (pfoAssociation.GetMinBoundedFraction() < m_minBoundedFractionCut) ||
+            (pfoAssociation.GetMaxBoundedFraction() < m_maxBoundedFractionCut) || (pfoAssociation.GetMinBoundedFraction() < m_minBoundedFractionCut) ||
             (pfoAssociation.GetNConsistentDirections() < m_minConsistentDirections))
         {
             continue;
@@ -243,7 +248,7 @@ bool VertexBasedPfoMopUpAlgorithm::ProcessPfoAssociations(const PfoAssociationLi
             }
 
             if (((pTrackPfoList->end() != std::find(pTrackPfoList->begin(), pTrackPfoList->end(), pfoAssociation.GetVertexPfo())) ||
-                (pTrackPfoList->end() != std::find(pTrackPfoList->begin(), pTrackPfoList->end(), pfoAssociation.GetDaughterPfo()))) &&
+                    (pTrackPfoList->end() != std::find(pTrackPfoList->begin(), pTrackPfoList->end(), pfoAssociation.GetDaughterPfo()))) &&
                 (pfoAssociation.GetNConsistentDirections() < m_minConsistentDirectionsTrack))
             {
                 continue;
@@ -262,8 +267,8 @@ bool VertexBasedPfoMopUpAlgorithm::ProcessPfoAssociations(const PfoAssociationLi
 void VertexBasedPfoMopUpAlgorithm::MergePfos(const PfoAssociation &pfoAssociation) const
 {
     const PfoList *pTrackPfoList(nullptr), *pShowerPfoList(nullptr);
-    (void) PandoraContentApi::GetList(*this, m_trackPfoListName, pTrackPfoList);
-    (void) PandoraContentApi::GetList(*this, m_showerPfoListName, pShowerPfoList);
+    (void)PandoraContentApi::GetList(*this, m_trackPfoListName, pTrackPfoList);
+    (void)PandoraContentApi::GetList(*this, m_showerPfoListName, pShowerPfoList);
 
     if (!pTrackPfoList && !pShowerPfoList)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -300,8 +305,8 @@ VertexBasedPfoMopUpAlgorithm::ClusterAssociation::ClusterAssociation() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMopUpAlgorithm::ClusterAssociation::ClusterAssociation(const Cluster *const pVertexCluster, const Cluster *const pDaughterCluster,
-        const float boundedFraction, const bool isConsistentDirection) :
+VertexBasedPfoMopUpAlgorithm::ClusterAssociation::ClusterAssociation(const Cluster *const pVertexCluster,
+    const Cluster *const pDaughterCluster, const float boundedFraction, const bool isConsistentDirection) :
     m_pVertexCluster(pVertexCluster),
     m_pDaughterCluster(pDaughterCluster),
     m_boundedFraction(boundedFraction),
@@ -312,8 +317,8 @@ VertexBasedPfoMopUpAlgorithm::ClusterAssociation::ClusterAssociation(const Clust
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMopUpAlgorithm::PfoAssociation::PfoAssociation(const Pfo *const pVertexPfo, const Pfo *const pDaughterPfo, const ClusterAssociation &clusterAssociationU,
-        const ClusterAssociation &clusterAssociationV, const ClusterAssociation &clusterAssociationW) :
+VertexBasedPfoMopUpAlgorithm::PfoAssociation::PfoAssociation(const Pfo *const pVertexPfo, const Pfo *const pDaughterPfo,
+    const ClusterAssociation &clusterAssociationU, const ClusterAssociation &clusterAssociationV, const ClusterAssociation &clusterAssociationW) :
     m_pVertexPfo(pVertexPfo),
     m_pDaughterPfo(pDaughterPfo),
     m_clusterAssociationU(clusterAssociationU),
@@ -326,21 +331,25 @@ VertexBasedPfoMopUpAlgorithm::PfoAssociation::PfoAssociation(const Pfo *const pV
 
 float VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetMeanBoundedFraction() const
 {
-    return ((this->GetClusterAssociationU().GetBoundedFraction() + this->GetClusterAssociationV().GetBoundedFraction() + this->GetClusterAssociationW().GetBoundedFraction()) / 3.f);
+    return ((this->GetClusterAssociationU().GetBoundedFraction() + this->GetClusterAssociationV().GetBoundedFraction() +
+                this->GetClusterAssociationW().GetBoundedFraction()) /
+            3.f);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetMaxBoundedFraction() const
 {
-    return std::max(this->GetClusterAssociationU().GetBoundedFraction(), std::max(this->GetClusterAssociationV().GetBoundedFraction(), this->GetClusterAssociationW().GetBoundedFraction()));
+    return std::max(this->GetClusterAssociationU().GetBoundedFraction(),
+        std::max(this->GetClusterAssociationV().GetBoundedFraction(), this->GetClusterAssociationW().GetBoundedFraction()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 float VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetMinBoundedFraction() const
 {
-    return std::min(this->GetClusterAssociationU().GetBoundedFraction(), std::min(this->GetClusterAssociationV().GetBoundedFraction(), this->GetClusterAssociationW().GetBoundedFraction()));
+    return std::min(this->GetClusterAssociationU().GetBoundedFraction(),
+        std::min(this->GetClusterAssociationV().GetBoundedFraction(), this->GetClusterAssociationW().GetBoundedFraction()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -363,7 +372,7 @@ unsigned int VertexBasedPfoMopUpAlgorithm::PfoAssociation::GetNConsistentDirecti
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool VertexBasedPfoMopUpAlgorithm::PfoAssociation::operator< (const PfoAssociation &rhs) const
+bool VertexBasedPfoMopUpAlgorithm::PfoAssociation::operator<(const PfoAssociation &rhs) const
 {
     if (std::fabs(this->GetMeanBoundedFraction() - rhs.GetMeanBoundedFraction()) > std::numeric_limits<float>::epsilon())
         return (this->GetMeanBoundedFraction() > rhs.GetMeanBoundedFraction());
@@ -377,8 +386,8 @@ bool VertexBasedPfoMopUpAlgorithm::PfoAssociation::operator< (const PfoAssociati
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexBasedPfoMopUpAlgorithm::ConeParameters::ConeParameters(const Cluster *const pCluster, const CartesianVector &vertexPosition2D,
-        const float coneAngleCentile, const float maxCosHalfAngle) :
+VertexBasedPfoMopUpAlgorithm::ConeParameters::ConeParameters(
+    const Cluster *const pCluster, const CartesianVector &vertexPosition2D, const float coneAngleCentile, const float maxCosHalfAngle) :
     m_pCluster(pCluster),
     m_apex(vertexPosition2D),
     m_direction(0.f, 0.f, 0.f),
@@ -498,50 +507,50 @@ float VertexBasedPfoMopUpAlgorithm::ConeParameters::GetCosHalfAngleEstimate(cons
 
 StatusCode VertexBasedPfoMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TrackPfoListName", m_trackPfoListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrackPfoListName", m_trackPfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ShowerPfoListName", m_showerPfoListName));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ShowerPfoListName", m_showerPfoListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexAssociatedHitTypes", m_minVertexAssociatedHitTypes));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinVertexAssociatedHitTypes", m_minVertexAssociatedHitTypes));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ConeAngleCentile", m_coneAngleCentile));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConeAngleCentile", m_coneAngleCentile));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxConeCosHalfAngle", m_maxConeCosHalfAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxConeCosHalfAngle", m_maxConeCosHalfAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxConeLengthMultiplier", m_maxConeLengthMultiplier));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DirectionTanAngle", m_directionTanAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DirectionTanAngle", m_directionTanAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DirectionApexShift", m_directionApexShift));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DirectionApexShift", m_directionApexShift));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MeanBoundedFractionCut", m_meanBoundedFractionCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MeanBoundedFractionCut", m_meanBoundedFractionCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxBoundedFractionCut", m_maxBoundedFractionCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxBoundedFractionCut", m_maxBoundedFractionCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinBoundedFractionCut", m_minBoundedFractionCut));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinBoundedFractionCut", m_minBoundedFractionCut));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinConsistentDirections", m_minConsistentDirections));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinConsistentDirections", m_minConsistentDirections));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinConsistentDirectionsTrack", m_minConsistentDirectionsTrack));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinConsistentDirectionsTrack", m_minConsistentDirectionsTrack));
 
     m_daughterListNames.push_back(m_trackPfoListName);
     m_daughterListNames.push_back(m_showerPfoListName);

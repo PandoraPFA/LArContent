@@ -32,8 +32,8 @@ UndershootTracksTool::UndershootTracksTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void UndershootTracksTool::GetIteratorListModifications(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList,
-    ModificationList &modificationList) const
+void UndershootTracksTool::GetIteratorListModifications(
+    ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const IteratorList &iteratorList, ModificationList &modificationList) const
 {
     for (IteratorList::const_iterator iIter1 = iteratorList.begin(), iIter1End = iteratorList.end(); iIter1 != iIter1End; ++iIter1)
     {
@@ -126,15 +126,17 @@ void UndershootTracksTool::GetIteratorListModifications(ThreeViewTransverseTrack
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool UndershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle, const CartesianVector &splitPosition,
-    const bool isALowestInX) const
+bool UndershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Particle &particle,
+    const CartesianVector &splitPosition, const bool isALowestInX) const
 {
     try
     {
         const TwoDSlidingFitResult &fitResultCommon1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster1));
         const TwoDSlidingFitResult &fitResultCommon2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster2));
-        const TwoDSlidingFitResult &lowXFitResult(isALowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB));
-        const TwoDSlidingFitResult &highXFitResult(isALowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB) : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA));
+        const TwoDSlidingFitResult &lowXFitResult(isALowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA)
+                                                               : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB));
+        const TwoDSlidingFitResult &highXFitResult(isALowestInX ? pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB)
+                                                                : pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA));
 
         const float minusX(this->GetXSamplingPoint(splitPosition, false, lowXFitResult, fitResultCommon1, fitResultCommon2));
         const float plusX(this->GetXSamplingPoint(splitPosition, true, highXFitResult, fitResultCommon1, fitResultCommon2));
@@ -162,7 +164,8 @@ bool UndershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *cons
         const HitType hitType3(LArClusterHelper::GetClusterHitType(particle.m_pClusterA));
 
         CartesianVector minus(0.f, 0.f, 0.f), split(0.f, 0.f, 0.f), plus(0.f, 0.f, 0.f);
-        float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()), chi2Plus(std::numeric_limits<float>::max());
+        float chi2Minus(std::numeric_limits<float>::max()), chi2Split(std::numeric_limits<float>::max()),
+            chi2Plus(std::numeric_limits<float>::max());
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, minus1, minus2, minus3, minus, chi2Minus);
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, split1, split2, split3, split, chi2Split);
         LArGeometryHelper::MergeThreePositions3D(this->GetPandora(), hitType1, hitType2, hitType3, plus1, plus2, plus3, plus, chi2Plus);
@@ -187,14 +190,20 @@ bool UndershootTracksTool::IsThreeDKink(ThreeViewTransverseTracksAlgorithm *cons
 
 UndershootTracksTool::Particle::Particle(const TensorType::Element &elementA, const TensorType::Element &elementB)
 {
-    m_pClusterA = (elementA.GetClusterU() != elementB.GetClusterU()) ? elementA.GetClusterU() :
-        (elementA.GetClusterV() != elementB.GetClusterV()) ? elementA.GetClusterV() : elementA.GetClusterW();
-    m_pClusterB = (elementA.GetClusterU() != elementB.GetClusterU()) ? elementB.GetClusterU() :
-        (elementA.GetClusterV() != elementB.GetClusterV()) ? elementB.GetClusterV() : elementB.GetClusterW();
-    m_pCommonCluster1 = (elementA.GetClusterU() == elementB.GetClusterU()) ? elementA.GetClusterU() :
-        (elementA.GetClusterV() == elementB.GetClusterV()) ? elementA.GetClusterV() : elementA.GetClusterW();
-    m_pCommonCluster2 = ((m_pClusterA != elementA.GetClusterU()) && (m_pCommonCluster1 != elementA.GetClusterU())) ? elementA.GetClusterU() :
-        ((m_pClusterA != elementA.GetClusterV()) && (m_pCommonCluster1 != elementA.GetClusterV())) ? elementA.GetClusterV() : elementA.GetClusterW();
+    m_pClusterA = (elementA.GetClusterU() != elementB.GetClusterU())
+                      ? elementA.GetClusterU()
+                      : (elementA.GetClusterV() != elementB.GetClusterV()) ? elementA.GetClusterV() : elementA.GetClusterW();
+    m_pClusterB = (elementA.GetClusterU() != elementB.GetClusterU())
+                      ? elementB.GetClusterU()
+                      : (elementA.GetClusterV() != elementB.GetClusterV()) ? elementB.GetClusterV() : elementB.GetClusterW();
+    m_pCommonCluster1 = (elementA.GetClusterU() == elementB.GetClusterU())
+                            ? elementA.GetClusterU()
+                            : (elementA.GetClusterV() == elementB.GetClusterV()) ? elementA.GetClusterV() : elementA.GetClusterW();
+    m_pCommonCluster2 = ((m_pClusterA != elementA.GetClusterU()) && (m_pCommonCluster1 != elementA.GetClusterU()))
+                            ? elementA.GetClusterU()
+                            : ((m_pClusterA != elementA.GetClusterV()) && (m_pCommonCluster1 != elementA.GetClusterV()))
+                                  ? elementA.GetClusterV()
+                                  : elementA.GetClusterW();
 
     if ((m_pClusterA == m_pClusterB) || (m_pCommonCluster1 == m_pCommonCluster2))
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -205,17 +214,16 @@ UndershootTracksTool::Particle::Particle(const TensorType::Element &elementA, co
 
 StatusCode UndershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SplitMode", m_splitMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SplitMode", m_splitMode));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTransverseImpactParameter", m_maxTransverseImpactParameter));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxTransverseImpactParameter", m_maxTransverseImpactParameter));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinImpactParameterCosTheta", m_minImpactParameterCosTheta));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinImpactParameterCosTheta", m_minImpactParameterCosTheta));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "CosThetaCutForKinkSearch", m_cosThetaCutForKinkSearch));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "CosThetaCutForKinkSearch", m_cosThetaCutForKinkSearch));
 
     return ThreeDKinkBaseTool::ReadSettings(xmlHandle);
 }

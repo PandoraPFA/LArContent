@@ -8,8 +8,8 @@
 
 #include "Pandora/PandoraInputTypes.h"
 
-#include "Pandora/PandoraInternal.h"
 #include "Pandora/PandoraInputTypes.h"
+#include "Pandora/PandoraInternal.h"
 #include "Pandora/StatusCodes.h"
 
 #include "Objects/Cluster.h"
@@ -18,7 +18,6 @@
 
 #include "larpandoracontent/LArObjects/LArOverlapMatrix.h"
 #include "larpandoracontent/LArObjects/LArTrackTwoViewOverlapResult.h"
-
 
 #include <algorithm>
 
@@ -61,8 +60,8 @@ void OverlapMatrix<T>::GetUnambiguousElements(const bool ignoreUnavailable, Elem
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-bool OverlapMatrix<T>::DefaultAmbiguityFunction(const ClusterList &clusterList1, const ClusterList &clusterList2, const Cluster *&pCluster1,
-    const Cluster *&pCluster2) const
+bool OverlapMatrix<T>::DefaultAmbiguityFunction(
+    const ClusterList &clusterList1, const ClusterList &clusterList2, const Cluster *&pCluster1, const Cluster *&pCluster2) const
 {
     if ((1 != clusterList1.size()) || (1 != clusterList2.size()))
         return false;
@@ -76,12 +75,13 @@ bool OverlapMatrix<T>::DefaultAmbiguityFunction(const ClusterList &clusterList1,
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapMatrix<T>::GetConnectedElements(const pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList,
-    unsigned int &n1, unsigned int &n2) const
+void OverlapMatrix<T>::GetConnectedElements(
+    const pandora::Cluster *const pCluster, const bool ignoreUnavailable, ElementList &elementList, unsigned int &n1, unsigned int &n2) const
 {
     ClusterList clusterList1, clusterList2;
     this->GetConnectedElements(pCluster, ignoreUnavailable, elementList, clusterList1, clusterList2);
-    n1 = clusterList1.size(); n2 = clusterList2.size();
+    n1 = clusterList1.size();
+    n2 = clusterList2.size();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -98,8 +98,7 @@ void OverlapMatrix<T>::GetSortedKeyClusters(ClusterVector &sortedKeyClusters) co
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapMatrix<T>::SetOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-    const OverlapResult &overlapResult)
+void OverlapMatrix<T>::SetOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const OverlapResult &overlapResult)
 {
     OverlapList &overlapList = m_overlapMatrix[pCluster1];
     typename OverlapList::const_iterator iter = overlapList.find(pCluster2);
@@ -113,15 +112,16 @@ void OverlapMatrix<T>::SetOverlapResult(const pandora::Cluster *const pCluster1,
     ClusterList &navigation12(m_clusterNavigationMap12[pCluster1]);
     ClusterList &navigation21(m_clusterNavigationMap21[pCluster2]);
 
-    if (navigation12.end() == std::find(navigation12.begin(), navigation12.end(), pCluster2)) navigation12.push_back(pCluster2);
-    if (navigation21.end() == std::find(navigation21.begin(), navigation21.end(), pCluster1)) navigation21.push_back(pCluster1);
+    if (navigation12.end() == std::find(navigation12.begin(), navigation12.end(), pCluster2))
+        navigation12.push_back(pCluster2);
+    if (navigation21.end() == std::find(navigation21.begin(), navigation21.end(), pCluster1))
+        navigation21.push_back(pCluster1);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapMatrix<T>::ReplaceOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2,
-    const OverlapResult &overlapResult)
+void OverlapMatrix<T>::ReplaceOverlapResult(const pandora::Cluster *const pCluster1, const pandora::Cluster *const pCluster2, const OverlapResult &overlapResult)
 {
     typename TheMatrix::iterator iter1 = m_overlapMatrix.find(pCluster1);
 
@@ -150,7 +150,7 @@ void OverlapMatrix<T>::RemoveCluster(const pandora::Cluster *const pCluster)
         if (m_overlapMatrix.end() != iter)
             m_overlapMatrix.erase(iter);
 
-        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMap21.begin(); navIter != m_clusterNavigationMap21.end(); )
+        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMap21.begin(); navIter != m_clusterNavigationMap21.end();)
         {
             ClusterNavigationMap::iterator thisIter = navIter++;
             ClusterList::iterator listIter = std::find(thisIter->second.begin(), thisIter->second.end(), pCluster);
@@ -173,7 +173,7 @@ void OverlapMatrix<T>::RemoveCluster(const pandora::Cluster *const pCluster)
                 iter1->second.erase(iter);
         }
 
-        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMap12.begin(); navIter != m_clusterNavigationMap12.end(); )
+        for (ClusterNavigationMap::iterator navIter = m_clusterNavigationMap12.begin(); navIter != m_clusterNavigationMap12.end();)
         {
             ClusterNavigationMap::iterator thisIter = navIter++;
             ClusterList::iterator listIter = std::find(thisIter->second.begin(), thisIter->second.end(), pCluster);
@@ -202,7 +202,9 @@ void OverlapMatrix<T>::GetConnectedElements(const Cluster *const pCluster, const
     this->ExploreConnections(pCluster, ignoreUnavailable, localClusterList1, localClusterList2);
 
     // ATTN Now need to check that all clusters received are from fully available matrix elements
-    elementList.clear(); clusterList1.clear(); clusterList2.clear();
+    elementList.clear();
+    clusterList1.clear();
+    clusterList2.clear();
 
     for (typename TheMatrix::const_iterator iter1 = this->begin(), iter1End = this->end(); iter1 != iter1End; ++iter1)
     {
@@ -217,8 +219,10 @@ void OverlapMatrix<T>::GetConnectedElements(const Cluster *const pCluster, const
             Element element(iter1->first, iter2->first, iter2->second);
             elementList.push_back(element);
 
-            if (clusterList1.end() == std::find(clusterList1.begin(), clusterList1.end(), iter1->first)) clusterList1.push_back(iter1->first);
-            if (clusterList2.end() == std::find(clusterList2.begin(), clusterList2.end(), iter2->first)) clusterList2.push_back(iter2->first);
+            if (clusterList1.end() == std::find(clusterList1.begin(), clusterList1.end(), iter1->first))
+                clusterList1.push_back(iter1->first);
+            if (clusterList2.end() == std::find(clusterList2.begin(), clusterList2.end(), iter2->first))
+                clusterList2.push_back(iter2->first);
         }
     }
 
@@ -228,15 +232,17 @@ void OverlapMatrix<T>::GetConnectedElements(const Cluster *const pCluster, const
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename T>
-void OverlapMatrix<T>::ExploreConnections(const Cluster *const pCluster, const bool ignoreUnavailable, ClusterList &clusterList1,
-    ClusterList &clusterList2) const
+void OverlapMatrix<T>::ExploreConnections(
+    const Cluster *const pCluster, const bool ignoreUnavailable, ClusterList &clusterList1, ClusterList &clusterList2) const
 {
     if (ignoreUnavailable && !pCluster->IsAvailable())
         return;
 
     const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
-    const bool clusterFromView1(!m_clusterNavigationMap12.empty() && (LArClusterHelper::GetClusterHitType(m_clusterNavigationMap12.begin()->first) == hitType));
-    const bool clusterFromView2(!m_clusterNavigationMap21.empty() && (LArClusterHelper::GetClusterHitType(m_clusterNavigationMap21.begin()->first) == hitType));
+    const bool clusterFromView1(
+        !m_clusterNavigationMap12.empty() && (LArClusterHelper::GetClusterHitType(m_clusterNavigationMap12.begin()->first) == hitType));
+    const bool clusterFromView2(
+        !m_clusterNavigationMap21.empty() && (LArClusterHelper::GetClusterHitType(m_clusterNavigationMap21.begin()->first) == hitType));
 
     if (clusterFromView1 == clusterFromView2)
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -260,7 +266,7 @@ void OverlapMatrix<T>::ExploreConnections(const Cluster *const pCluster, const b
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template class OverlapMatrix<float>;
+template class OverlapMatrix<TwoViewDeltaRayOverlapResult>;
 template class OverlapMatrix<TwoViewTransverseOverlapResult>;
-
 
 } // namespace lar_content

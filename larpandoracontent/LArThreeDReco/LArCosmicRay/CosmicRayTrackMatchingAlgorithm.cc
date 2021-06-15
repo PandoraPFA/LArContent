@@ -10,8 +10,8 @@
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayTrackMatchingAlgorithm.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 using namespace pandora;
 
@@ -46,7 +46,7 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
     for (const Cluster *const pCluster : clusterVector)
     {
         const float lengthSquared(LArClusterHelper::GetLengthSquared(pCluster));
-        CartesianVector innerVertex(0.f,0.f,0.f), outerVertex(0.f,0.f,0.f);
+        CartesianVector innerVertex(0.f, 0.f, 0.f), outerVertex(0.f, 0.f, 0.f);
         LArClusterHelper::GetExtremalCoordinates(pCluster, innerVertex, outerVertex);
 
         bool isDeltaRay(false);
@@ -58,7 +58,7 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
 
             if ((LArClusterHelper::GetLengthSquared(pClusterCheck) > 10.f * lengthSquared) &&
                 (LArClusterHelper::GetClosestDistance(innerVertex, pClusterCheck) < m_vtxXOverlap ||
-                 LArClusterHelper::GetClosestDistance(outerVertex, pClusterCheck) < m_vtxXOverlap))
+                    LArClusterHelper::GetClosestDistance(outerVertex, pClusterCheck) < m_vtxXOverlap))
             {
                 isDeltaRay = true;
                 break;
@@ -75,8 +75,8 @@ void CosmicRayTrackMatchingAlgorithm::SelectCleanClusters(const ClusterVector &i
 bool CosmicRayTrackMatchingAlgorithm::MatchClusters(const Cluster *const pCluster1, const Cluster *const pCluster2) const
 {
     // Use start and end points
-    CartesianVector innerVertex1(0.f,0.f,0.f), outerVertex1(0.f,0.f,0.f);
-    CartesianVector innerVertex2(0.f,0.f,0.f), outerVertex2(0.f,0.f,0.f);
+    CartesianVector innerVertex1(0.f, 0.f, 0.f), outerVertex1(0.f, 0.f, 0.f);
+    CartesianVector innerVertex2(0.f, 0.f, 0.f), outerVertex2(0.f, 0.f, 0.f);
 
     LArClusterHelper::GetExtremalCoordinates(pCluster1, innerVertex1, outerVertex1);
     LArClusterHelper::GetExtremalCoordinates(pCluster2, innerVertex2, outerVertex2);
@@ -97,8 +97,8 @@ bool CosmicRayTrackMatchingAlgorithm::MatchClusters(const Cluster *const pCluste
     pCluster1->GetClusterSpanX(xMin1, xMax1);
     pCluster2->GetClusterSpanX(xMin2, xMax2);
 
-    const float xOverlap(std::min(xMax1,xMax2) - std::max(xMin1,xMin2));
-    const float xSpan(std::max(xMax1,xMax2) - std::min(xMin1,xMin2));
+    const float xOverlap(std::min(xMax1, xMax2) - std::max(xMin1, xMin2));
+    const float xSpan(std::max(xMax1, xMax2) - std::min(xMin1, xMin2));
 
     if (xSpan < std::numeric_limits<float>::epsilon())
         return false;
@@ -111,8 +111,8 @@ bool CosmicRayTrackMatchingAlgorithm::MatchClusters(const Cluster *const pCluste
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *const pCluster1, const Cluster *const pCluster2,
-    const Cluster *const pCluster3) const
+bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(
+    const Cluster *const pCluster1, const Cluster *const pCluster2, const Cluster *const pCluster3) const
 {
     // Check that three clusters have a consistent 3D position
     const HitType hitType1(LArClusterHelper::GetClusterHitType(pCluster1));
@@ -122,9 +122,9 @@ bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *cons
     if (hitType1 == hitType2 || hitType2 == hitType3 || hitType3 == hitType1)
         throw StatusCodeException(STATUS_CODE_FAILURE);
 
-    CartesianVector innerVertex1(0.f,0.f,0.f), outerVertex1(0.f,0.f,0.f);
-    CartesianVector innerVertex2(0.f,0.f,0.f), outerVertex2(0.f,0.f,0.f);
-    CartesianVector innerVertex3(0.f,0.f,0.f), outerVertex3(0.f,0.f,0.f);
+    CartesianVector innerVertex1(0.f, 0.f, 0.f), outerVertex1(0.f, 0.f, 0.f);
+    CartesianVector innerVertex2(0.f, 0.f, 0.f), outerVertex2(0.f, 0.f, 0.f);
+    CartesianVector innerVertex3(0.f, 0.f, 0.f), outerVertex3(0.f, 0.f, 0.f);
 
     LArClusterHelper::GetExtremalCoordinates(pCluster1, innerVertex1, outerVertex1);
     LArClusterHelper::GetExtremalCoordinates(pCluster2, innerVertex2, outerVertex2);
@@ -149,9 +149,9 @@ bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *cons
             std::fabs(end3.GetX() - end1.GetX()) < std::max(m_vtxXOverlap, std::fabs(end3.GetX() - vtx1.GetX())))
         {
             float chi2(0.f);
-            CartesianVector projVtx1(0.f,0.f,0.f), projEnd1(0.f,0.f,0.f);
-            CartesianVector projVtx2(0.f,0.f,0.f), projEnd2(0.f,0.f,0.f);
-            CartesianVector projVtx3(0.f,0.f,0.f), projEnd3(0.f,0.f,0.f);
+            CartesianVector projVtx1(0.f, 0.f, 0.f), projEnd1(0.f, 0.f, 0.f);
+            CartesianVector projVtx2(0.f, 0.f, 0.f), projEnd2(0.f, 0.f, 0.f);
+            CartesianVector projVtx3(0.f, 0.f, 0.f), projEnd3(0.f, 0.f, 0.f);
 
             LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, vtx1, vtx2, projVtx3, chi2);
             LArGeometryHelper::MergeTwoPositions(this->GetPandora(), hitType1, hitType2, end1, end2, projEnd3, chi2);
@@ -187,9 +187,12 @@ bool CosmicRayTrackMatchingAlgorithm::CheckMatchedClusters3D(const Cluster *cons
 void CosmicRayTrackMatchingAlgorithm::SetPfoParameters(const Particle &particle, PandoraContentApi::ParticleFlowObject::Parameters &pfoParameters) const
 {
     ClusterList clusterList;
-    if (particle.m_pClusterU) clusterList.push_back(particle.m_pClusterU);
-    if (particle.m_pClusterV) clusterList.push_back(particle.m_pClusterV);
-    if (particle.m_pClusterW) clusterList.push_back(particle.m_pClusterW);
+    if (particle.m_pClusterU)
+        clusterList.push_back(particle.m_pClusterU);
+    if (particle.m_pClusterV)
+        clusterList.push_back(particle.m_pClusterV);
+    if (particle.m_pClusterW)
+        clusterList.push_back(particle.m_pClusterW);
 
     // TODO Correct these placeholder parameters
     pfoParameters.m_particleId = MU_MINUS; // TRACK
@@ -204,20 +207,17 @@ void CosmicRayTrackMatchingAlgorithm::SetPfoParameters(const Particle &particle,
 
 StatusCode CosmicRayTrackMatchingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ClusterMinLength", m_clusterMinLength));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ClusterMinLength", m_clusterMinLength));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VtxXOverlap", m_vtxXOverlap));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VtxXOverlap", m_vtxXOverlap));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlap", m_minXOverlap));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlap", m_minXOverlap));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinXOverlapFraction", m_minXOverlapFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction", m_minXOverlapFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxDisplacement", m_maxDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxDisplacement", m_maxDisplacement));
 
     return CosmicRayBaseMatchingAlgorithm::ReadSettings(xmlHandle);
 }

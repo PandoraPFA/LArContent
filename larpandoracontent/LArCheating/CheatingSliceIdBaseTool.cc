@@ -19,9 +19,11 @@ using namespace pandora;
 namespace lar_content
 {
 
-void CheatingSliceIdBaseTool::GetTargetParticleWeight(const PfoList *const pPfoList, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
+void CheatingSliceIdBaseTool::GetTargetParticleWeight(
+    const PfoList *const pPfoList, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
 {
-    targetParticleWeight = 0.f; totalWeight = 0.f;
+    targetParticleWeight = 0.f;
+    totalWeight = 0.f;
 
     for (const ParticleFlowObject *const pPfo : *pPfoList)
     {
@@ -53,16 +55,19 @@ void CheatingSliceIdBaseTool::GetTargetParticleWeight(const PfoList *const pPfoL
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingSliceIdBaseTool::GetTargetParticleWeight(const CaloHit *const pCaloHit, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
+void CheatingSliceIdBaseTool::GetTargetParticleWeight(
+    const CaloHit *const pCaloHit, float &targetParticleWeight, float &totalWeight, std::function<bool(const MCParticle *const)> fCriteria)
 {
-    targetParticleWeight = 0.f; totalWeight = 0.f;
+    targetParticleWeight = 0.f;
+    totalWeight = 0.f;
     const MCParticleWeightMap &hitMCParticleWeightMap(pCaloHit->GetMCParticleWeightMap());
 
     if (hitMCParticleWeightMap.empty())
         return;
 
     MCParticleList mcParticleList;
-    for (const auto &mapEntry : hitMCParticleWeightMap) mcParticleList.push_back(mapEntry.first);
+    for (const auto &mapEntry : hitMCParticleWeightMap)
+        mcParticleList.push_back(mapEntry.first);
     mcParticleList.sort(LArMCParticleHelper::SortByMomentum);
 
     for (const MCParticle *const pMCParticle : mcParticleList)

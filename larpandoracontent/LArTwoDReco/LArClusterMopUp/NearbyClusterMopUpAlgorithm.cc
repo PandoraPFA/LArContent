@@ -34,7 +34,8 @@ void NearbyClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, c
 
     const VertexList *pVertexList(NULL);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
+    const Vertex *const pVertex(
+        ((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : NULL);
 
     ClusterVector sortedPfoClusters(pfoClusters.begin(), pfoClusters.end());
     std::sort(sortedPfoClusters.begin(), sortedPfoClusters.end(), LArClusterHelper::SortByNHits);
@@ -45,8 +46,8 @@ void NearbyClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, c
     for (const Cluster *const pClusterP : sortedPfoClusters)
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterP));
-        const CartesianVector vertexPosition2D(!pVertex ? CartesianVector(0.f, 0.f, 0.f) :
-            LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
+        const CartesianVector vertexPosition2D(
+            !pVertex ? CartesianVector(0.f, 0.f, 0.f) : LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
 
         const float innerPV((vertexPosition2D - pClusterP->GetCentroid(pClusterP->GetInnerPseudoLayer())).GetMagnitude());
         const float outerPV((vertexPosition2D - pClusterP->GetCentroid(pClusterP->GetOuterPseudoLayer())).GetMagnitude());
@@ -60,7 +61,8 @@ void NearbyClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, c
             const float outerRV((vertexPosition2D - pClusterR->GetCentroid(pClusterR->GetOuterPseudoLayer())).GetMagnitude());
 
             // ATTN Could use pointing clusters here, for consistency with other vertex association mechanics
-            if (pVertex && (((innerPV < m_vertexProximity) || (outerPV < m_vertexProximity)) && ((innerRV < m_vertexProximity) || (outerRV < m_vertexProximity))))
+            if (pVertex && (((innerPV < m_vertexProximity) || (outerPV < m_vertexProximity)) &&
+                               ((innerRV < m_vertexProximity) || (outerRV < m_vertexProximity))))
                 continue;
 
             const float innerRP(LArClusterHelper::GetClosestDistance(pClusterR->GetCentroid(pClusterR->GetInnerPseudoLayer()), pClusterP));
@@ -90,17 +92,16 @@ void NearbyClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, c
 
 StatusCode NearbyClusterMopUpAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinHitsInCluster", m_minHitsInCluster));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinHitsInCluster", m_minHitsInCluster));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexProximity", m_vertexProximity));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexProximity", m_vertexProximity));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinClusterSeparation", m_minClusterSeparation));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterSeparation", m_minClusterSeparation));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "TouchingDistance", m_touchingDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TouchingDistance", m_touchingDistance));
 
     return ClusterMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 }

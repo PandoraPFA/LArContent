@@ -31,7 +31,7 @@ private:
     void FillClusterAssociationMatrix(const pandora::ClusterVector &clusterVector, ClusterAssociationMatrix &clusterAssociationMatrix) const;
     void FillClusterMergeMap(const ClusterAssociationMatrix &clusterAssociationMatrix, ClusterMergeMap &clusterMergeMap) const;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::CartesianVector> ClusterToCoordinateMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::CartesianVector> ClusterToCoordinateMap;
 
     /**
      *  @brief  Reduce number of extremal coordinates calculations by caching results when they are first obtained
@@ -59,11 +59,11 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    float    m_minClusterLength;                ///<
-    float    m_maxClusterLength;                ///<
+    float m_minClusterLength; ///<
+    float m_maxClusterLength; ///<
 
-    float    m_maxLongitudinalDisplacement;     ///<
-    float    m_maxTransverseDisplacement;       ///<
+    float m_maxLongitudinalDisplacement; ///<
+    float m_maxTransverseDisplacement;   ///<
 };
 
 } // namespace lar_content

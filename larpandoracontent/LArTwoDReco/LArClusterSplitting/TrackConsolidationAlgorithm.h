@@ -48,12 +48,12 @@ private:
      *  @param caloHitsToAdd  the output map of hits to be added to clusters
      *  @param caloHitsToRemove  the output map of hits to be removed from clusters
      */
-    void GetReclusteredHits(const TwoDSlidingFitResult& slidingFitResult, const pandora::Cluster *const pTargetCluster,
+    void GetReclusteredHits(const TwoDSlidingFitResult &slidingFitResult, const pandora::Cluster *const pTargetCluster,
         ClusterToHitMap &caloHitsToAdd, ClusterToHitMap &caloHitsToRemove) const;
 
-    float        m_maxTransverseDisplacement;  ///<
-    float        m_minAssociatedSpan;          ///<
-    float        m_minAssociatedFraction;      ///<
+    float m_maxTransverseDisplacement; ///<
+    float m_minAssociatedSpan;         ///<
+    float m_minAssociatedFraction;     ///<
 };
 
 } // namespace lar_content

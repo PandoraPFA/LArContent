@@ -17,8 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-void ClearLongitudinalTrackHitsTool::GetLongitudinalTrackHit3D(const MatchedSlidingFitMap &matchedSlidingFitMap, const CartesianVector &vtx3D,
-    const CartesianVector &end3D, ProtoHit &protoHit) const
+void ClearLongitudinalTrackHitsTool::GetLongitudinalTrackHit3D(
+    const MatchedSlidingFitMap &matchedSlidingFitMap, const CartesianVector &vtx3D, const CartesianVector &end3D, ProtoHit &protoHit) const
 {
     const CaloHit *const pCaloHit2D(protoHit.GetParentCaloHit2D());
     const HitType hitType(pCaloHit2D->GetHitType());
@@ -73,8 +73,10 @@ void ClearLongitudinalTrackHitsTool::GetLongitudinalTrackHit3D(const MatchedSlid
     }
 
     unsigned int nViews(1);
-    if (fitPositionList1.size() > 0) ++nViews;
-    if (fitPositionList2.size() > 0) ++nViews;
+    if (fitPositionList1.size() > 0)
+        ++nViews;
+    if (fitPositionList2.size() > 0)
+        ++nViews;
 
     if (nViews < m_minViews)
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);

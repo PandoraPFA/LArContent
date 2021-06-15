@@ -40,9 +40,11 @@ ShowerGrowingAlgorithm::ShowerGrowingAlgorithm() :
 bool ShowerGrowingAlgorithm::IsVertexAssociated(const LArPointingCluster &pointingCluster, const CartesianVector &vertexPosition2D) const
 {
     return (LArPointingClusterHelper::IsNode(vertexPosition2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-        LArPointingClusterHelper::IsNode(vertexPosition2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
-        LArPointingClusterHelper::IsEmission(vertexPosition2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
-        LArPointingClusterHelper::IsEmission(vertexPosition2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance));
+            LArPointingClusterHelper::IsNode(vertexPosition2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance, m_maxVertexTransverseDistance) ||
+            LArPointingClusterHelper::IsEmission(vertexPosition2D, pointingCluster.GetInnerVertex(), m_minVertexLongitudinalDistance,
+                m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance) ||
+            LArPointingClusterHelper::IsEmission(vertexPosition2D, pointingCluster.GetOuterVertex(), m_minVertexLongitudinalDistance,
+                m_maxVertexLongitudinalDistance, m_maxVertexTransverseDistance, m_vertexAngularAllowance));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -69,7 +71,8 @@ StatusCode ShowerGrowingAlgorithm::Run()
         try
         {
             const ClusterList *pClusterList = nullptr;
-            PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+            PANDORA_RETURN_RESULT_IF_AND_IF(
+                STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
             if (!pClusterList || pClusterList->empty())
             {
@@ -98,7 +101,8 @@ void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pC
 {
     const VertexList *pVertexList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
+    const Vertex *const pVertex(
+        ((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 
     ClusterSet usedClusters;
 
@@ -126,8 +130,7 @@ void ShowerGrowingAlgorithm::SimpleModeShowerGrowing(const ClusterList *const pC
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClusterList, const ClusterSet &usedClusters,
-    const Cluster *&pSeedCluster) const
+bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClusterList, const ClusterSet &usedClusters, const Cluster *&pSeedCluster) const
 {
     pSeedCluster = nullptr;
 
@@ -158,8 +161,7 @@ bool ShowerGrowingAlgorithm::GetNextSeedCandidate(const ClusterList *const pClus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerGrowingAlgorithm::GetAllVertexSeedCandidates(const ClusterList *const pClusterList, const Vertex *const pVertex,
-    ClusterVector &seedClusters) const
+void ShowerGrowingAlgorithm::GetAllVertexSeedCandidates(const ClusterList *const pClusterList, const Vertex *const pVertex, ClusterVector &seedClusters) const
 {
     ClusterVector clusterVector;
     clusterVector.insert(clusterVector.end(), pClusterList->begin(), pClusterList->end());
@@ -196,8 +198,8 @@ void ShowerGrowingAlgorithm::GetAllVertexSeedCandidates(const ClusterList *const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particleSeedVector, const ClusterList *const pClusterList,
-    SeedAssociationList &seedAssociationList) const
+void ShowerGrowingAlgorithm::GetSeedAssociationList(
+    const ClusterVector &particleSeedVector, const ClusterList *const pClusterList, SeedAssociationList &seedAssociationList) const
 {
     if (particleSeedVector.empty())
         return;
@@ -233,11 +235,12 @@ void ShowerGrowingAlgorithm::GetSeedAssociationList(const ClusterVector &particl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerGrowingAlgorithm::ProcessSeedAssociationDetails(const SeedAssociationList &seedAssociationList, const std::string &clusterListName,
-    ClusterSet &usedClusters) const
+void ShowerGrowingAlgorithm::ProcessSeedAssociationDetails(
+    const SeedAssociationList &seedAssociationList, const std::string &clusterListName, ClusterSet &usedClusters) const
 {
     ClusterList clusterList;
-    for (const auto &mapEntry : seedAssociationList) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : seedAssociationList)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pParentCluster : clusterList)
@@ -260,7 +263,8 @@ void ShowerGrowingAlgorithm::ProcessBranchClusters(const Cluster *const pParentC
     {
         if (pBranchCluster->IsAvailable())
         {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pBranchCluster, listName, listName));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                PandoraContentApi::MergeAndDeleteClusters(*this, pParentCluster, pBranchCluster, listName, listName));
         }
 
         m_clusterDirectionMap.erase(pBranchCluster);
@@ -273,15 +277,17 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
 {
     const VertexList *pVertexList(nullptr);
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
+    const Vertex *const pVertex(
+        ((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 
     // Direction of seed cluster (cache for efficiency)
     ClusterDirectionMap::const_iterator seedIter = m_clusterDirectionMap.find(pClusterSeed);
 
     if (m_clusterDirectionMap.end() == seedIter)
     {
-        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
-            LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pClusterSeed, m_directionTanAngle, m_directionApexShift));
+        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN
+                                                                               : LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
+                                                                                     pClusterSeed, m_directionTanAngle, m_directionApexShift));
         seedIter = m_clusterDirectionMap.insert(ClusterDirectionMap::value_type(pClusterSeed, direction)).first;
     }
 
@@ -294,8 +300,9 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
 
     if (m_clusterDirectionMap.end() == candIter)
     {
-        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN :
-            LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex, pCluster, m_directionTanAngle, m_directionApexShift));
+        const LArVertexHelper::ClusterDirection direction((nullptr == pVertex) ? LArVertexHelper::DIRECTION_UNKNOWN
+                                                                               : LArVertexHelper::GetClusterDirectionInZ(this->GetPandora(), pVertex,
+                                                                                     pCluster, m_directionTanAngle, m_directionApexShift));
         candIter = m_clusterDirectionMap.insert(ClusterDirectionMap::value_type(pCluster, direction)).first;
     }
 
@@ -311,8 +318,7 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
 
     // Association check 1(a), look for enclosed clusters
     if ((cOuter < m_nearbyClusterDistance && cInner < m_nearbyClusterDistance) &&
-        (!checkSeedForward || (sInner > m_nearbyClusterDistance)) &&
-        (!checkSeedBackward || (sOuter > m_nearbyClusterDistance)))
+        (!checkSeedForward || (sInner > m_nearbyClusterDistance)) && (!checkSeedBackward || (sOuter > m_nearbyClusterDistance)))
     {
         return STRONG;
     }
@@ -321,23 +327,20 @@ ShowerGrowingAlgorithm::AssociationType ShowerGrowingAlgorithm::AreClustersAssoc
     if ((checkSeedForward == checkCandidateForward) && (checkSeedBackward == checkCandidateBackward))
     {
         if ((cInner < m_nearbyClusterDistance && sOuter < m_nearbyClusterDistance) &&
-            (!checkSeedForward || (sInner > m_nearbyClusterDistance)) &&
-            (!checkSeedBackward || (cOuter > m_nearbyClusterDistance)))
+            (!checkSeedForward || (sInner > m_nearbyClusterDistance)) && (!checkSeedBackward || (cOuter > m_nearbyClusterDistance)))
         {
             return STRONG;
         }
 
         if ((cOuter < m_nearbyClusterDistance && sInner < m_nearbyClusterDistance) &&
-            (!checkSeedBackward || (sOuter > m_nearbyClusterDistance)) &&
-            (!checkSeedForward || (cInner > m_nearbyClusterDistance)))
+            (!checkSeedBackward || (sOuter > m_nearbyClusterDistance)) && (!checkSeedForward || (cInner > m_nearbyClusterDistance)))
         {
             return STRONG;
         }
     }
 
     // Association check 2, look for branching clusters
-    if ((!checkSeedForward || (sInner > m_remoteClusterDistance)) &&
-        (!checkSeedBackward || (sOuter > m_remoteClusterDistance)) &&
+    if ((!checkSeedForward || (sInner > m_remoteClusterDistance)) && (!checkSeedBackward || (sOuter > m_remoteClusterDistance)) &&
         ((checkCandidateForward && (cInner < m_nearbyClusterDistance)) || (checkCandidateBackward && (cOuter < m_nearbyClusterDistance))))
     {
         return STANDARD;
@@ -356,7 +359,8 @@ float ShowerGrowingAlgorithm::GetFigureOfMerit(const SeedAssociationList &seedAs
 {
     const VertexList *pVertexList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pVertexList));
-    const Vertex *const pVertex(((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
+    const Vertex *const pVertex(
+        ((pVertexList->size() == 1) && (VERTEX_3D == (*(pVertexList->begin()))->GetVertexType())) ? *(pVertexList->begin()) : nullptr);
 
     // ATTN Consistently returning same value will accept all candidate cluster merges
     if (!pVertex)
@@ -365,7 +369,8 @@ float ShowerGrowingAlgorithm::GetFigureOfMerit(const SeedAssociationList &seedAs
     unsigned int nVertexAssociatedSeeds(0), nVertexAssociatedNonSeeds(0);
 
     ClusterList clusterList;
-    for (const auto &mapEntry : seedAssociationList) clusterList.push_back(mapEntry.first);
+    for (const auto &mapEntry : seedAssociationList)
+        clusterList.push_back(mapEntry.first);
     clusterList.sort(LArClusterHelper::SortByNHits);
 
     for (const Cluster *const pSeedCluster : clusterList)
@@ -375,12 +380,24 @@ float ShowerGrowingAlgorithm::GetFigureOfMerit(const SeedAssociationList &seedAs
         const CartesianVector vertex2D(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), hitType));
 
         LArPointingClusterList pointingClusterSeedList;
-        try {pointingClusterSeedList.push_back(LArPointingCluster(pSeedCluster));} catch (StatusCodeException &) {}
+        try
+        {
+            pointingClusterSeedList.push_back(LArPointingCluster(pSeedCluster));
+        }
+        catch (StatusCodeException &)
+        {
+        }
 
         LArPointingClusterList pointingClusterNonSeedList;
         for (const Cluster *const pAssociatedCluster : associatedClusters)
         {
-            try {pointingClusterNonSeedList.push_back(LArPointingCluster(pAssociatedCluster));} catch (StatusCodeException &) {}
+            try
+            {
+                pointingClusterNonSeedList.push_back(LArPointingCluster(pAssociatedCluster));
+            }
+            catch (StatusCodeException &)
+            {
+            }
         }
 
         nVertexAssociatedSeeds += this->GetNVertexConnections(vertex2D, pointingClusterSeedList);
@@ -412,32 +429,32 @@ StatusCode ShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCaloHitsPerCluster", m_minCaloHitsPerCluster));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NearbyClusterDistance", m_nearbyClusterDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NearbyClusterDistance", m_nearbyClusterDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "RemoteClusterDistance", m_remoteClusterDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "RemoteClusterDistance", m_remoteClusterDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DirectionTanAngle", m_directionTanAngle));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DirectionTanAngle", m_directionTanAngle));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "DirectionApexShift", m_directionApexShift));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "DirectionApexShift", m_directionApexShift));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinVertexLongitudinalDistance", m_minVertexLongitudinalDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxVertexLongitudinalDistance", m_maxVertexLongitudinalDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxVertexLongitudinalDistance", m_maxVertexLongitudinalDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxVertexTransverseDistance", m_maxVertexTransverseDistance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "VertexAngularAllowance", m_vertexAngularAllowance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VertexAngularAllowance", m_vertexAngularAllowance));
 
     return BranchGrowingAlgorithm::ReadSettings(xmlHandle);
 }

@@ -36,8 +36,7 @@ protected:
      *  @param  caloHitVector2 the vector of candidate hits in view 2
      *  @param  protoHit to receive the populated proto hit
      */
-    virtual void GetShowerHit3D(const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2,
-        ProtoHit &protoHit) const = 0;
+    virtual void GetShowerHit3D(const pandora::CaloHitVector &caloHitVector1, const pandora::CaloHitVector &caloHitVector2, ProtoHit &protoHit) const = 0;
 
     /**
      *  @brief  Create three dimensional hits, using a list of input two dimensional hits and the hits (contained in the same particle)
@@ -65,7 +64,7 @@ private:
     void FilterCaloHits(const float x, const float xTolerance, const pandora::CaloHitVector &inputCaloHitVector,
         pandora::CaloHitVector &outputCaloHitVector) const;
 
-    float       m_xTolerance;           ///< The x tolerance to use when looking for associated calo hits between views
+    float m_xTolerance; ///< The x tolerance to use when looking for associated calo hits between views
 };
 
 } // namespace lar_content

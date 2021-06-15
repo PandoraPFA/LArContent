@@ -38,8 +38,8 @@ private:
      */
     void CreateThreeDParticles(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const TensorType::ElementList &elementList, bool &particlesMade) const;
 
-    float           m_minMatchedFraction;               ///< The min matched sampling point fraction for particle creation
-    float           m_minXOverlapFraction;              ///< The min x overlap fraction (in each view) for particle creation
+    float m_minMatchedFraction;  ///< The min matched sampling point fraction for particle creation
+    float m_minXOverlapFraction; ///< The min x overlap fraction (in each view) for particle creation
 };
 
 } // namespace lar_content

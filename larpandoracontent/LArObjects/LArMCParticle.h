@@ -21,15 +21,47 @@
 namespace lar_content
 {
 
+// Enumeration maps onto G4 process IDs, plus an ID for the incident neutrino
+enum MCProcess
+{
+    MC_PROC_INCIDENT_NU = -1,
+    MC_PROC_UNKNOWN,
+    MC_PROC_PRIMARY,
+    MC_PROC_COMPT,
+    MC_PROC_PHOT,
+    MC_PROC_ANNIHIL,
+    MC_PROC_E_IONI,
+    MC_PROC_E_BREM,
+    MC_PROC_CONV,
+    MC_PROC_MU_IONI,
+    MC_PROC_MU_MINUS_CAPTURE_AT_REST,
+    MC_PROC_NEUTRON_INELASTIC,
+    MC_PROC_N_CAPTURE,
+    MC_PROC_HAD_ELASTIC,
+    MC_PROC_DECAY,
+    MC_PROC_COULOMB_SCAT,
+    MC_PROC_UNUSED,
+    MC_PROC_MU_BREM,
+    MC_PROC_MU_PAIR_PROD,
+    MC_PROC_PHOTON_INELASTIC,
+    MC_PROC_HAD_IONI,
+    MC_PROC_PROTON_INELASTIC,
+    MC_PROC_PI_PLUS_INELASTIC,
+    MC_PROC_CHIPS_NUCLEAR_CAPTURE_AT_REST,
+    MC_PROC_PI_MINUS_INELASTIC
+};
+
 /**
  *  @brief  LAr mc particle parameters
  */
 class LArMCParticleParameters : public object_creation::MCParticle::Parameters
 {
 public:
-    pandora::InputInt                          m_nuanceCode;        ///< The nuance code
-    std::vector<pandora::InputCartesianVector> m_mcStepPositions;   ///< The positions of the geant4 steps
-    std::vector<pandora::InputCartesianVector> m_mcStepMomentas;    ///< The momenta of the geant4 steps
+    pandora::InputInt                          m_nuanceCode;      ///< The nuance code
+    pandora::InputInt                          m_process;         ///< The process creating the particle
+
+    std::vector<pandora::InputCartesianVector> m_mcStepPositions; ///< The positions of the geant4 steps
+    std::vector<pandora::InputCartesianVector> m_mcStepMomentas;  ///< The momenta of the geant4 steps
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -68,10 +100,19 @@ public:
      */
     std::vector<pandora::CartesianVector> GetMCStepMomentas() const;
 
+    /**
+     *  @brief  Get the process
+     *
+     *  @return the process
+     */
+    MCProcess GetProcess() const;
+
 private:
-    int                                   m_nuanceCode;       ///< The nuance code
-    std::vector<pandora::CartesianVector> m_mcStepPositions;  ///< The positions of the geant4 steps
-    std::vector<pandora::CartesianVector> m_mcStepMomentas;   ///< The momenta of the geant4 steps
+    int                                   m_nuanceCode;      ///< The nuance code
+    int                                   m_process;         ///< The process that created the particle
+
+    std::vector<pandora::CartesianVector> m_mcStepPositions; ///< The positions of the geant4 steps
+    std::vector<pandora::CartesianVector> m_mcStepMomentas;  ///< The momenta of the geant4 steps
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -82,6 +123,13 @@ private:
 class LArMCParticleFactory : public pandora::ObjectFactory<object_creation::MCParticle::Parameters, object_creation::MCParticle::Object>
 {
 public:
+    /**
+     *  @brief  Constructor
+     *
+     *  @param  version the LArMCParticle version
+     */
+    LArMCParticleFactory(const unsigned int version = 2);
+
     /**
      *  @brief  Create new parameters instance on the heap (memory-management to be controlled by user)
      *
@@ -112,6 +160,9 @@ public:
      *  @param  pObject to receive the address of the object created
      */
     pandora::StatusCode Create(const Parameters &parameters, const Object *&pObject) const;
+
+private:
+    unsigned int m_version; ///< The LArMCParticle version
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -119,7 +170,8 @@ public:
 
 inline LArMCParticle::LArMCParticle(const LArMCParticleParameters &parameters) :
     object_creation::MCParticle::Object(parameters),
-    m_nuanceCode(parameters.m_nuanceCode.Get())
+    m_nuanceCode(parameters.m_nuanceCode.Get()),
+    m_process(parameters.m_process.Get())
 {
     for (auto const &mcStepPosition : parameters.m_mcStepPositions)
         m_mcStepPositions.emplace_back(mcStepPosition.Get());
@@ -150,6 +202,19 @@ inline std::vector<pandora::CartesianVector> LArMCParticle::GetMCStepMomentas() 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+inline MCProcess LArMCParticle::GetProcess() const
+{
+    return MCProcess(m_process);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline LArMCParticleFactory::LArMCParticleFactory(const unsigned int version) : m_version(version)
+{
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline LArMCParticleFactory::Parameters *LArMCParticleFactory::NewParameters() const
@@ -161,7 +226,7 @@ inline LArMCParticleFactory::Parameters *LArMCParticleFactory::NewParameters() c
 
 inline pandora::StatusCode LArMCParticleFactory::Create(const Parameters &parameters, const Object *&pObject) const
 {
-    const LArMCParticleParameters &larMCParticleParameters(dynamic_cast<const LArMCParticleParameters&>(parameters));
+    const LArMCParticleParameters &larMCParticleParameters(dynamic_cast<const LArMCParticleParameters &>(parameters));
     pObject = new LArMCParticle(larMCParticleParameters);
 
     return pandora::STATUS_CODE_SUCCESS;
@@ -173,6 +238,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 {
     // ATTN: To receive this call-back must have already set file reader mc particle factory to this factory
     int nuanceCode(0);
+    int process(0);
 
     unsigned int nMCStepPositions(0);
     std::vector<pandora::InputCartesianVector> mcStepPositions;
@@ -182,8 +248,11 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 
     if (pandora::BINARY == fileReader.GetFileType())
     {
-        pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader&>(fileReader));
+        pandora::BinaryFileReader &binaryFileReader(dynamic_cast<pandora::BinaryFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nuanceCode));
+
+        if (m_version > 1)
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(process));
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileReader.ReadVariable(nMCStepPositions));
         for (unsigned int step = 0; step < nMCStepPositions; ++step)
@@ -203,8 +272,11 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
     }
     else if (pandora::XML == fileReader.GetFileType())
     {
-        pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader&>(fileReader));
+        pandora::XmlFileReader &xmlFileReader(dynamic_cast<pandora::XmlFileReader &>(fileReader));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NuanceCode", nuanceCode));
+
+        if (m_version > 1)
+            PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("Process", process));
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileReader.ReadVariable("NumberOfMCStepPositions", nMCStepPositions));
         for (unsigned int step = 0; step < nMCStepPositions; ++step)
@@ -231,8 +303,10 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
         return pandora::STATUS_CODE_INVALID_PARAMETER;
     }
 
-    LArMCParticleParameters &larMCParticleParameters(dynamic_cast<LArMCParticleParameters&>(parameters));
+    LArMCParticleParameters &larMCParticleParameters(dynamic_cast<LArMCParticleParameters &>(parameters));
     larMCParticleParameters.m_nuanceCode = nuanceCode;
+    larMCParticleParameters.m_process = process;
+
     larMCParticleParameters.m_mcStepPositions = mcStepPositions;
     larMCParticleParameters.m_mcStepMomentas = mcStepMomentas;
 
@@ -244,7 +318,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
 inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObject, pandora::FileWriter &fileWriter) const
 {
     // ATTN: To receive this call-back must have already set file writer mc particle factory to this factory
-    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle*>(pObject));
+    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pObject));
 
     if (!pLArMCParticle)
         return pandora::STATUS_CODE_INVALID_PARAMETER;
@@ -257,8 +331,12 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
 
     if (pandora::BINARY == fileWriter.GetFileType())
     {
-        pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter&>(fileWriter));
+        pandora::BinaryFileWriter &binaryFileWriter(dynamic_cast<pandora::BinaryFileWriter &>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(pLArMCParticle->GetNuanceCode()));
+
+        if (m_version > 1)
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(static_cast<int>(pLArMCParticle->GetProcess())));
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nMCStepPositions));
         for (auto const &mcStepPosition : mcStepPositions)
@@ -267,11 +345,16 @@ inline pandora::StatusCode LArMCParticleFactory::Write(const Object *const pObje
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(nMCStepMomentas));
         for (auto const &mcStepMomenta : mcStepMomentas)
             PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, binaryFileWriter.WriteVariable(mcStepMomenta));
+
     }
     else if (pandora::XML == fileWriter.GetFileType())
     {
-        pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter&>(fileWriter));
+        pandora::XmlFileWriter &xmlFileWriter(dynamic_cast<pandora::XmlFileWriter &>(fileWriter));
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NuanceCode", pLArMCParticle->GetNuanceCode()));
+
+        if (m_version > 1)
+            PANDORA_RETURN_RESULT_IF(
+                pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("Process", static_cast<int>(pLArMCParticle->GetProcess())));
 
         PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, xmlFileWriter.WriteVariable("NumberOfMCStepPositions", nMCStepPositions));
         for (int step = 0; step < nMCStepPositions; ++step)

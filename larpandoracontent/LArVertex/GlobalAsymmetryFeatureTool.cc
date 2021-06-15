@@ -6,48 +6,48 @@
  *  $Log: $
  */
 
-#include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArVertex/GlobalAsymmetryFeatureTool.h"
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "Pandora/AlgorithmHeaders.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-GlobalAsymmetryFeatureTool::GlobalAsymmetryFeatureTool() :
-    m_maxAsymmetryDistance(5.f)
+GlobalAsymmetryFeatureTool::GlobalAsymmetryFeatureTool() : m_maxAsymmetryDistance(5.f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void GlobalAsymmetryFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm, const Vertex * const pVertex,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap, const VertexSelectionBaseAlgorithm::ClusterListMap &,
-    const VertexSelectionBaseAlgorithm::KDTreeMap &, const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &)
+void GlobalAsymmetryFeatureTool::Run(LArMvaHelper::MvaFeatureVector &featureVector, const VertexSelectionBaseAlgorithm *const pAlgorithm,
+    const Vertex *const pVertex, const VertexSelectionBaseAlgorithm::SlidingFitDataListMap &slidingFitDataListMap,
+    const VertexSelectionBaseAlgorithm::ClusterListMap &, const VertexSelectionBaseAlgorithm::KDTreeMap &,
+    const VertexSelectionBaseAlgorithm::ShowerClusterListMap &, const float, float &)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
-       std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
 
     float globalAsymmetry(0.f);
 
-    globalAsymmetry += this->GetGlobalAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U),
-        slidingFitDataListMap.at(TPC_VIEW_U));
+    globalAsymmetry += this->GetGlobalAsymmetryForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U), slidingFitDataListMap.at(TPC_VIEW_U));
 
-    globalAsymmetry += this->GetGlobalAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V),
-        slidingFitDataListMap.at(TPC_VIEW_V));
+    globalAsymmetry += this->GetGlobalAsymmetryForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V), slidingFitDataListMap.at(TPC_VIEW_V));
 
-    globalAsymmetry += this->GetGlobalAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W),
-        slidingFitDataListMap.at(TPC_VIEW_W));
+    globalAsymmetry += this->GetGlobalAsymmetryForView(
+        LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W), slidingFitDataListMap.at(TPC_VIEW_W));
 
     featureVector.push_back(globalAsymmetry);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float GlobalAsymmetryFeatureTool::GetGlobalAsymmetryForView(const CartesianVector &vertexPosition2D,
-    const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const
+float GlobalAsymmetryFeatureTool::GetGlobalAsymmetryForView(
+    const CartesianVector &vertexPosition2D, const VertexSelectionBaseAlgorithm::SlidingFitDataList &slidingFitDataList) const
 {
     bool useEnergy(true);
     CartesianVector energyWeightedDirectionSum(0.f, 0.f, 0.f), hitWeightedDirectionSum(0.f, 0.f, 0.f);
@@ -82,8 +82,8 @@ float GlobalAsymmetryFeatureTool::GetGlobalAsymmetryForView(const CartesianVecto
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void GlobalAsymmetryFeatureTool::IncrementAsymmetryParameters(const float weight, const CartesianVector &clusterDirection,
-    CartesianVector &localWeightedDirectionSum) const
+void GlobalAsymmetryFeatureTool::IncrementAsymmetryParameters(
+    const float weight, const CartesianVector &clusterDirection, CartesianVector &localWeightedDirectionSum) const
 {
     // If the new axis direction is at an angle of greater than 90 deg to the current axis direction, flip it 180 degs.
     CartesianVector newDirection(clusterDirection);
@@ -111,7 +111,7 @@ float GlobalAsymmetryFeatureTool::CalculateGlobalAsymmetry(const bool useEnergyM
 
     for (const VertexSelectionBaseAlgorithm::SlidingFitData &slidingFitData : slidingFitDataList)
     {
-        const Cluster * const pCluster(slidingFitData.GetCluster());
+        const Cluster *const pCluster(slidingFitData.GetCluster());
 
         CaloHitList caloHitList;
         pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
@@ -152,8 +152,8 @@ float GlobalAsymmetryFeatureTool::CalculateGlobalAsymmetry(const bool useEnergyM
 
 StatusCode GlobalAsymmetryFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxAsymmetryDistance", m_maxAsymmetryDistance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxAsymmetryDistance", m_maxAsymmetryDistance));
 
     return STATUS_CODE_SUCCESS;
 }

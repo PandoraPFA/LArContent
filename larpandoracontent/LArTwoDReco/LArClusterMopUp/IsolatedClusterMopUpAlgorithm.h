@@ -17,8 +17,10 @@
 namespace lar_content
 {
 
-template<typename, unsigned int> class KDTreeLinkerAlgo;
-template<typename, unsigned int> class KDTreeNodeInfoT;
+template <typename, unsigned int>
+class KDTreeLinkerAlgo;
+template <typename, unsigned int>
+class KDTreeNodeInfoT;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -44,7 +46,7 @@ private:
      */
     void DissolveClustersToHits(const pandora::ClusterList &clusterList, pandora::CaloHitList &caloHitList) const;
 
-    typedef std::unordered_map<const pandora::CaloHit*, const pandora::Cluster*> CaloHitToClusterMap;
+    typedef std::unordered_map<const pandora::CaloHit *, const pandora::Cluster *> CaloHitToClusterMap;
 
     /**
      *  @brief  Look for isolated hit additions, considering a list of candidate hits and a list of host clusters
@@ -53,17 +55,18 @@ private:
      *  @param  clusterList the list of clusters to consider
      *  @param  caloHitToClusterMap to receive the calo hit to cluster map
      */
-    void GetCaloHitToClusterMap(const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList, CaloHitToClusterMap &caloHitToClusterMap) const;
+    void GetCaloHitToClusterMap(
+        const pandora::CaloHitList &caloHitList, const pandora::ClusterList &clusterList, CaloHitToClusterMap &caloHitToClusterMap) const;
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef KDTreeLinkerAlgo<const pandora::CaloHit*, 2> HitKDTree2D;
-    typedef KDTreeNodeInfoT<const pandora::CaloHit*, 2> HitKDNode2D;
+    typedef KDTreeLinkerAlgo<const pandora::CaloHit *, 2> HitKDTree2D;
+    typedef KDTreeNodeInfoT<const pandora::CaloHit *, 2> HitKDNode2D;
     typedef std::vector<HitKDNode2D> HitKDNode2DList;
 
-    unsigned int    m_maxCaloHitsInCluster;     ///< The maximum number of hits in a cluster to be dissolved
-    float           m_maxHitClusterDistance;    ///< The maximum hit to cluster distance for isolated hit merging
-    bool            m_addHitsAsIsolated;        ///< Whether to add hits to clusters as "isolated" (don't contribute to spatial properties)
+    unsigned int m_maxCaloHitsInCluster; ///< The maximum number of hits in a cluster to be dissolved
+    float m_maxHitClusterDistance;       ///< The maximum hit to cluster distance for isolated hit merging
+    bool m_addHitsAsIsolated;            ///< Whether to add hits to clusters as "isolated" (don't contribute to spatial properties)
 };
 
 } // namespace lar_content

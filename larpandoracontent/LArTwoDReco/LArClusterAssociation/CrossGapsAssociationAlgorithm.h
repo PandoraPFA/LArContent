@@ -67,16 +67,16 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    unsigned int    m_minClusterHits;               ///< The minimum allowed number of hits in a clean cluster
-    unsigned int    m_minClusterLayers;             ///< The minimum allowed number of layers for a clean cluster
-    unsigned int    m_slidingFitWindow;             ///< The layer window for the sliding linear fits
-    unsigned int    m_maxSamplingPoints;            ///< The maximum number of extension sampling points considered per association check
-    float           m_sampleStepSize;               ///< The sampling step size used in association checks, units cm
-    unsigned int    m_maxUnmatchedSampleRun;        ///< The maximum run of unmatched (and non-gap) samples to consider before stopping
-    float           m_maxOnClusterDistance;         ///< The maximum distance between a sampling point and sliding fit to target cluster
-    unsigned int    m_minMatchedSamplingPoints;     ///< Minimum number of matched sampling points to declare association
-    float           m_minMatchedSamplingFraction;   ///< Minimum ratio between matched sampling points and expectation to declare association
-    float           m_gapTolerance;                 ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
+    unsigned int m_minClusterHits;           ///< The minimum allowed number of hits in a clean cluster
+    unsigned int m_minClusterLayers;         ///< The minimum allowed number of layers for a clean cluster
+    unsigned int m_slidingFitWindow;         ///< The layer window for the sliding linear fits
+    unsigned int m_maxSamplingPoints;        ///< The maximum number of extension sampling points considered per association check
+    float m_sampleStepSize;                  ///< The sampling step size used in association checks, units cm
+    unsigned int m_maxUnmatchedSampleRun;    ///< The maximum run of unmatched (and non-gap) samples to consider before stopping
+    float m_maxOnClusterDistance;            ///< The maximum distance between a sampling point and sliding fit to target cluster
+    unsigned int m_minMatchedSamplingPoints; ///< Minimum number of matched sampling points to declare association
+    float m_minMatchedSamplingFraction;      ///< Minimum ratio between matched sampling points and expectation to declare association
+    float m_gapTolerance;                    ///< The tolerance to use when querying whether a sampling point is in a gap, units cm
 };
 
 } // namespace lar_content

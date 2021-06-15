@@ -26,8 +26,8 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    pandora::StatusCode DivideCaloHits(const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList,
-        pandora::CaloHitList &secondCaloHitList) const;
+    pandora::StatusCode DivideCaloHits(
+        const pandora::Cluster *const pCluster, pandora::CaloHitList &firstCaloHitList, pandora::CaloHitList &secondCaloHitList) const;
 
     /**
      *  @brief Find the best layer for splitting the cluster
@@ -55,13 +55,13 @@ private:
      *  @param  firstLayer the first extremal layer
      *  @param  secondLayer the second extremal layer
      */
-    float CalculateRms(const pandora::Cluster *const pCluster, const unsigned int &firstLayer, const unsigned int& secondLayer) const;
+    float CalculateRms(const pandora::Cluster *const pCluster, const unsigned int &firstLayer, const unsigned int &secondLayer) const;
 
-    unsigned int    m_minClusterLayers;       ///<
-    unsigned int    m_layerWindow;            ///<
-    float           m_maxScatterRms;          ///<
-    float           m_maxScatterCosTheta;     ///<
-    float           m_maxSlidingCosTheta;     ///<
+    unsigned int m_minClusterLayers; ///<
+    unsigned int m_layerWindow;      ///<
+    float m_maxScatterRms;           ///<
+    float m_maxScatterCosTheta;      ///<
+    float m_maxSlidingCosTheta;      ///<
 };
 
 } // namespace lar_content

@@ -58,4 +58,3 @@ public:
 } // namespace lar_dl_content
 
 #endif // #ifndef LAR_DL_HELPER_H
-

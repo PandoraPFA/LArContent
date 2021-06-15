@@ -77,8 +77,8 @@ public:
      *
      *  @return the projected position
      */
-    static pandora::CartesianVector GetProjectedPosition(const pandora::CartesianVector &initialPosition, const pandora::CartesianVector &initialDirection,
-        const pandora::Cluster *const pCluster, const float projectionAngularAllowance);
+    static pandora::CartesianVector GetProjectedPosition(const pandora::CartesianVector &initialPosition,
+        const pandora::CartesianVector &initialDirection, const pandora::Cluster *const pCluster, const float projectionAngularAllowance);
 
     /**
      *  @brief  Given a pair of pointing clusters, receive the closest or farthest pair of vertices
@@ -90,9 +90,8 @@ public:
      *  @param  closestVertexI to receive the relevant vertex from the first pointing cluster
      *  @param  closestVertexJ to receive the relevant vertex from the second pointing cluster
      */
-    static void GetClosestVertices(const bool useX, const bool useY, const bool useZ,
-        const LArPointingCluster &pointingClusterI, const LArPointingCluster &pointingClusterJ,
-        LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
+    static void GetClosestVertices(const bool useX, const bool useY, const bool useZ, const LArPointingCluster &pointingClusterI,
+        const LArPointingCluster &pointingClusterJ, LArPointingCluster::Vertex &closestVertexI, LArPointingCluster::Vertex &closestVertexJ);
 
     /**
      *  @brief  Given a pair of pointing clusters, find the closest pair of vertices
@@ -233,8 +232,9 @@ public:
      *
      *  @return the best vertex estimate
      */
-    static LArPointingCluster::Vertex GetBestVertexEstimate(const LArPointingClusterVertexList &vertexList, const LArPointingClusterList &pointingClusterList,
-        const float minLongitudinalDistance, const float maxLongitudinalDistance, const float maxTransverseDistance, const float angularAllowance);
+    static LArPointingCluster::Vertex GetBestVertexEstimate(const LArPointingClusterVertexList &vertexList,
+        const LArPointingClusterList &pointingClusterList, const float minLongitudinalDistance, const float maxLongitudinalDistance,
+        const float maxTransverseDistance, const float angularAllowance);
 
 private:
     /**
@@ -248,8 +248,9 @@ private:
      *  @param  angularAllowance the pointing angular allowance in degrees
      *  @param  outputList to receive the output list of cluster vertices associated with the specified vertex
      */
-    static void CollectAssociatedClusters(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &inputList, const float minLongitudinalDistance,
-        const float maxLongitudinalDistance, const float maxTransverseDistance, const float angularAllowance, LArPointingClusterVertexList &outputList);
+    static void CollectAssociatedClusters(const LArPointingCluster::Vertex &vertex, const LArPointingClusterList &inputList,
+        const float minLongitudinalDistance, const float maxLongitudinalDistance, const float maxTransverseDistance,
+        const float angularAllowance, LArPointingClusterVertexList &outputList);
 
     /**
      *  @brief  Get an estimate of the energy associated with a specified vertex

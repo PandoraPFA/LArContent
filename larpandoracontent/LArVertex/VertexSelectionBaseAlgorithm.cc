@@ -88,18 +88,19 @@ void VertexSelectionBaseAlgorithm::GetBeamConstants(const VertexVector &vertexVe
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void VertexSelectionBaseAlgorithm::GetClusterLists(const StringVector &inputClusterListNames, ClusterList &clusterListU, ClusterList &clusterListV,
-    ClusterList &clusterListW) const
+void VertexSelectionBaseAlgorithm::GetClusterLists(
+    const StringVector &inputClusterListNames, ClusterList &clusterListU, ClusterList &clusterListV, ClusterList &clusterListW) const
 {
     for (const std::string &clusterListName : inputClusterListNames)
     {
         const ClusterList *pClusterList(NULL);
-        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+        PANDORA_THROW_RESULT_IF_AND_IF(
+            STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
         if (!pClusterList || pClusterList->empty())
         {
-             if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                 std::cout << "EnergyKickVertexSelectionAlgorithm: unable to find cluster list " << clusterListName << std::endl;
+            if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+                std::cout << "EnergyKickVertexSelectionAlgorithm: unable to find cluster list " << clusterListName << std::endl;
 
             continue;
         }
@@ -124,13 +125,14 @@ void VertexSelectionBaseAlgorithm::CalculateClusterSlidingFits(const ClusterList
     ClusterVector sortedClusters(inputClusterList.begin(), inputClusterList.end());
     std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
 
-    for (const Cluster * const pCluster : sortedClusters)
+    for (const Cluster *const pCluster : sortedClusters)
     {
         if (pCluster->GetNCaloHits() < minClusterCaloHits)
             continue;
 
         // Make sure the window size is such that there are not more layers than hits (following TwoDSlidingLinearFit calculation).
-        const unsigned int newSlidingFitWindow(std::min(static_cast<int>(pCluster->GetNCaloHits()), static_cast<int>(slidingFitPitch * slidingFitWindow)));
+        const unsigned int newSlidingFitWindow(
+            std::min(static_cast<int>(pCluster->GetNCaloHits()), static_cast<int>(slidingFitPitch * slidingFitWindow)));
         slidingFitDataList.emplace_back(pCluster, newSlidingFitWindow, slidingFitPitch);
     }
 }
@@ -186,7 +188,8 @@ void VertexSelectionBaseAlgorithm::InitializeKDTrees(HitKDTree2D &kdTreeU, HitKD
     for (const std::string &caloHitListName : m_inputCaloHitListNames)
     {
         const CaloHitList *pCaloHitList = NULL;
-        PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, caloHitListName, pCaloHitList));
+        PANDORA_THROW_RESULT_IF_AND_IF(
+            STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, caloHitListName, pCaloHitList));
 
         if (!pCaloHitList || pCaloHitList->empty())
         {
@@ -300,8 +303,7 @@ bool VertexSelectionBaseAlgorithm::SortByVertexZPosition(const pandora::Vertex *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexSelectionBaseAlgorithm::SlidingFitData::SlidingFitData(const pandora::Cluster *const pCluster, const int slidingFitWindow,
-        const float slidingFitPitch) :
+VertexSelectionBaseAlgorithm::SlidingFitData::SlidingFitData(const pandora::Cluster *const pCluster, const int slidingFitWindow, const float slidingFitPitch) :
     m_minLayerDirection(0.f, 0.f, 0.f),
     m_maxLayerDirection(0.f, 0.f, 0.f),
     m_minLayerPosition(0.f, 0.f, 0.f),
@@ -317,8 +319,7 @@ VertexSelectionBaseAlgorithm::SlidingFitData::SlidingFitData(const pandora::Clus
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-VertexSelectionBaseAlgorithm::ShowerCluster::ShowerCluster(const pandora::ClusterList &clusterList, const int slidingFitWindow,
-        const float slidingFitPitch) :
+VertexSelectionBaseAlgorithm::ShowerCluster::ShowerCluster(const pandora::ClusterList &clusterList, const int slidingFitWindow, const float slidingFitPitch) :
     m_clusterList(clusterList),
     m_coordinateVector(this->GetClusterListCoordinateVector(clusterList)),
     m_twoDSlidingFitResult(&m_coordinateVector, slidingFitWindow, slidingFitPitch)
@@ -331,13 +332,13 @@ pandora::CartesianPointVector VertexSelectionBaseAlgorithm::ShowerCluster::GetCl
 {
     CartesianPointVector coordinateVector;
 
-    for (const Cluster * const pCluster : clusterList)
+    for (const Cluster *const pCluster : clusterList)
     {
         CartesianPointVector clusterCoordinateVector;
         LArClusterHelper::GetCoordinateVector(pCluster, clusterCoordinateVector);
 
         coordinateVector.insert(coordinateVector.end(), std::make_move_iterator(clusterCoordinateVector.begin()),
-                                std::make_move_iterator(clusterCoordinateVector.end()));
+            std::make_move_iterator(clusterCoordinateVector.end()));
     }
 
     return coordinateVector;
@@ -348,47 +349,42 @@ pandora::CartesianPointVector VertexSelectionBaseAlgorithm::ShowerCluster::GetCl
 
 StatusCode VertexSelectionBaseAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle,
-        "InputCaloHitListNames", m_inputCaloHitListNames));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputCaloHitListNames", m_inputCaloHitListNames));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle,
-        "OutputVertexListName", m_outputVertexListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ReplaceCurrentVertexList", m_replaceCurrentVertexList));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "BeamMode", m_beamMode));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BeamMode", m_beamMode));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "NDecayLengthsInZSpan", m_nDecayLengthsInZSpan));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "NDecayLengthsInZSpan", m_nDecayLengthsInZSpan));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SelectSingleVertex", m_selectSingleVertex));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SelectSingleVertex", m_selectSingleVertex));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxTopScoreSelections", m_maxTopScoreSelections));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxTopScoreSelections", m_maxTopScoreSelections));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MaxOnHitDisplacement", m_maxOnHitDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaxOnHitDisplacement", m_maxOnHitDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCandidateDisplacement", m_minCandidateDisplacement));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinCandidateDisplacement", m_minCandidateDisplacement));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinCandidateScoreFraction", m_minCandidateScoreFraction));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinCandidateScoreFraction", m_minCandidateScoreFraction));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseDetectorGaps", m_useDetectorGaps));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "UseDetectorGaps", m_useDetectorGaps));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "GapTolerance", m_gapTolerance));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "GapTolerance", m_gapTolerance));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "IsEmptyViewAcceptable", m_isEmptyViewAcceptable));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IsEmptyViewAcceptable", m_isEmptyViewAcceptable));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "MinVertexAcceptableViews", m_minVertexAcceptableViews));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinVertexAcceptableViews", m_minVertexAcceptableViews));
 
     return STATUS_CODE_SUCCESS;
 }

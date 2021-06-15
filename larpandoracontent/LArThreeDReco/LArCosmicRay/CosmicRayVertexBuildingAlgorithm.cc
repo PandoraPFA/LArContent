@@ -8,8 +8,8 @@
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayVertexBuildingAlgorithm.h"
@@ -22,7 +22,8 @@ namespace lar_content
 CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
     m_useParentShowerVertex(false),
     m_isDualPhase(false),
-    m_halfWindowLayers(30)
+    m_halfWindowLayers(30),
+    m_maxVertexDisplacementFromTrack(1.f)
 {
 }
 
@@ -31,8 +32,8 @@ CosmicRayVertexBuildingAlgorithm::CosmicRayVertexBuildingAlgorithm() :
 StatusCode CosmicRayVertexBuildingAlgorithm::Run()
 {
     const PfoList *pPfoList = NULL;
-    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_parentPfoListName,
-        pPfoList));
+    PANDORA_THROW_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_parentPfoListName, pPfoList));
 
     if (NULL == pPfoList)
     {
@@ -158,8 +159,8 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
 
         try
         {
-            CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f,0.f,0.f);
-            CartesianVector minDirection(0.f, 0.f, 0.f), maxDirection(0.f,0.f,0.f);
+            CartesianVector minPosition(0.f, 0.f, 0.f), maxPosition(0.f, 0.f, 0.f);
+            CartesianVector minDirection(0.f, 0.f, 0.f), maxDirection(0.f, 0.f, 0.f);
 
             LArPointingClusterMap::const_iterator cIter2 = pointingClusterMap.find(pCluster);
 
@@ -216,7 +217,7 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
                 endDirection = maxDirection;
             }
         }
-        catch(StatusCodeException &statusCodeException)
+        catch (StatusCodeException &statusCodeException)
         {
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
@@ -247,42 +248,60 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayDaughter(const ParticleFlow
     if (daughterList.empty() || parentList.empty())
         return;
 
-    bool foundVtx(false);
-    float vtxDistanceSquared(0.f);
-    CartesianVector vtxPosition(0.f, 0.f, 0.f);
+    bool found(false);
+    float closestMaxVerticalCoordinate(-std::numeric_limits<float>::max()), maxVerticalCoordinate(-std::numeric_limits<float>::max());
+    CartesianVector closestMaxVerticalVertex(0.f, 0.f, 0.f), maxVerticalVertex(0.f, 0.f, 0.f);
 
-    for (ClusterList::const_iterator dIter = daughterList.begin(), dIterEnd = daughterList.end(); dIter != dIterEnd; ++dIter)
+    for (const Cluster *const pDaughterCluster : daughterList)
     {
-        const Cluster *const pDaughterCluster = *dIter;
+        CaloHitList daughterCaloHitList;
+        pDaughterCluster->GetOrderedCaloHitList().FillCaloHitList(daughterCaloHitList);
 
-        for (ClusterList::const_iterator pIter = parentList.begin(), pIterEnd = parentList.end(); pIter != pIterEnd; ++pIter)
+        for (const Cluster *const pParentCluster : parentList)
         {
-            const Cluster *const pParentCluster = *pIter;
+            CaloHitList parentCaloHitList;
+            pParentCluster->GetOrderedCaloHitList().FillCaloHitList(parentCaloHitList);
 
-            CartesianVector closestDaughterPosition(0.f, 0.f, 0.f), closestParentPosition(0.f, 0.f, 0.f);
-            LArClusterHelper::GetClosestPositions(pDaughterCluster, pParentCluster, closestDaughterPosition, closestParentPosition);
-
-            const float closestDistanceSquared((closestDaughterPosition - closestParentPosition).GetMagnitudeSquared());
-
-            if (!foundVtx || closestDistanceSquared < vtxDistanceSquared)
+            for (const CaloHit *const pDaughterCaloHit : daughterCaloHitList)
             {
-                foundVtx = true;
-                vtxDistanceSquared = closestDistanceSquared;
-                vtxPosition = (m_useParentShowerVertex ? closestParentPosition : closestDaughterPosition);
+                const CartesianVector &daughterPosition(pDaughterCaloHit->GetPositionVector());
+
+                for (const CaloHit *const pParentCaloHit : parentCaloHitList)
+                {
+                    const CartesianVector &parentPosition(pParentCaloHit->GetPositionVector());
+                    const float separationSquared((daughterPosition - parentPosition).GetMagnitudeSquared());
+                    const float verticalCoordinate(m_isDualPhase ? daughterPosition.GetX() : daughterPosition.GetY());
+
+                    if (verticalCoordinate > maxVerticalCoordinate)
+                    {
+                        maxVerticalCoordinate = verticalCoordinate;
+                        maxVerticalVertex = daughterPosition;
+                    }
+
+                    if (separationSquared < (m_maxVertexDisplacementFromTrack * m_maxVertexDisplacementFromTrack))
+                    {
+                        if (verticalCoordinate > closestMaxVerticalCoordinate)
+                        {
+                            found = true;
+                            closestMaxVerticalCoordinate = verticalCoordinate;
+                            closestMaxVerticalVertex = daughterPosition;
+                        }
+                    }
+                }
             }
         }
     }
 
-    if (!foundVtx)
-        return;
+    const CartesianVector &daughterVertex(found ? closestMaxVerticalVertex : maxVerticalVertex);
+    const CartesianVector &vertexPosition(m_useParentShowerVertex ? LArClusterHelper::GetClosestPosition(daughterVertex, parentList) : daughterVertex);
 
-    this->SetParticleParameters(vtxPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
+    this->SetParticleParameters(vertexPosition, CartesianVector(0.f, 0.f, 0.f), pDaughterPfo);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVector &vtxPosition, const CartesianVector &vtxDirection,
-    const ParticleFlowObject *const pPfo) const
+void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(
+    const CartesianVector &vtxPosition, const CartesianVector &vtxDirection, const ParticleFlowObject *const pPfo) const
 {
     if (!pPfo->GetVertexList().empty())
         throw StatusCodeException(STATUS_CODE_FAILURE);
@@ -291,7 +310,8 @@ void CosmicRayVertexBuildingAlgorithm::SetParticleParameters(const CartesianVect
     metadata.m_momentum = vtxDirection;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
 
-    const VertexList *pVertexList = NULL; std::string vertexListName;
+    const VertexList *pVertexList = NULL;
+    std::string vertexListName;
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
 
     PandoraContentApi::Vertex::Parameters parameters;
@@ -317,14 +337,16 @@ StatusCode CosmicRayVertexBuildingAlgorithm::ReadSettings(const TiXmlHandle xmlH
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "UseParentForShowerVertex", m_useParentShowerVertex));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "UseParentForShowerVertex", m_useParentShowerVertex));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-        "SlidingFitHalfWindow", m_halfWindowLayers));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "SlidingFitHalfWindow", m_halfWindowLayers));
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle,
-	"IsDualPhase", m_isDualPhase));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "IsDualPhase", m_isDualPhase));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxVertexDisplacementFromTrack", m_maxVertexDisplacementFromTrack));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -65,7 +65,7 @@ private:
      */
     bool IsConnected(const pandora::ClusterVector &clusterVector) const;
 
-    float m_maxClusterSeparation;       ///<
+    float m_maxClusterSeparation; ///<
 };
 
 } // namespace lar_content
