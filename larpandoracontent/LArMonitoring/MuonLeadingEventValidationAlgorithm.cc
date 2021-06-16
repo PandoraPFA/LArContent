@@ -269,11 +269,14 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
             continue;
 
         // Cosmic ray parameters
-        int ID_CR, nReconstructableChildCRLs(0);
+        int nReconstructableChildCRLs(0), nCorrectChildCRLs(0);
+
+#ifdef MONITORING
+	int ID_CR;
         float mcE_CR, mcPX_CR, mcPY_CR, mcPZ_CR;
         int nMCHitsTotal_CR, nMCHitsU_CR, nMCHitsV_CR, nMCHitsW_CR;
         float mcVertexX_CR, mcVertexY_CR, mcVertexZ_CR, mcEndX_CR, mcEndY_CR, mcEndZ_CR;
-        int nCorrectChildCRLs(0);
+#endif
 
         // Leading particle parameters
         FloatVector mcE_CRL, mcPX_CRL, mcPY_CRL, mcPZ_CRL;
@@ -338,7 +341,7 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
         if (m_visualize && useInterpretedMatching)
         {
             std::cout << "MC COSMIC RAY HITS" << std::endl;
-            this->PrintHits(cosmicRayHitList, "MC_CR", BLUE);
+            this->PrintHits(cosmicRayHitList, true);
 
             const CartesianVector vertex(pCosmicRay->GetVertex()), endpoint(pCosmicRay->GetEndpoint());
             const float x0(cosmicRayHitList.front()->GetX0());
@@ -353,6 +356,7 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
         }
         ///////////////////////////////
 
+#ifdef MONITORING
         ID_CR = muonCount;
         mcE_CR = pCosmicRay->GetEnergy();
         mcPX_CR = pCosmicRay->GetMomentum().GetX();
@@ -368,6 +372,7 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
         nMCHitsU_CR = LArMonitoringHelper::CountHitsByType(TPC_VIEW_U, cosmicRayHitList);
         nMCHitsV_CR = LArMonitoringHelper::CountHitsByType(TPC_VIEW_V, cosmicRayHitList);
         nMCHitsW_CR = LArMonitoringHelper::CountHitsByType(TPC_VIEW_W, cosmicRayHitList);
+#endif
         nReconstructableChildCRLs = childLeadingParticles.size();
 
         stringStream << "\033[34m"
@@ -397,7 +402,7 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
                 std::cout << "mcID: " << mcIndex << std::endl;
                 std::cout << "MC DELTA RAY HITS" << std::endl;
 
-                this->PrintHits(leadingParticleHitList, "MC_DR", RED);
+                this->PrintHits(leadingParticleHitList, false);
 
                 const CartesianVector vertex(pLeadingParticle->GetVertex()), endpoint(pLeadingParticle->GetEndpoint());
                 const float x0(leadingParticleHitList.front()->GetX0());
@@ -603,11 +608,9 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
 
 #ifdef MONITORING
                         PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &cosmicList, "Delta Ray Pfo", RED, false, false);
-#endif
 
                         const CartesianVector &vertex(deltaRayVertexList.front()->GetPosition());
 
-#ifdef MONITORING
                         PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &vertex, "vertex", RED, 2);
                         PandoraMonitoringApi::ViewEvent(this->GetPandora());
 #endif
@@ -788,15 +791,17 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList caloHitList, const std::string &stringTag, const Color &colour) const
+void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList caloHitList, const bool isCR) const
 {
+    const std::string stringTag(isCR ? "MC_CR" : "MC_DR");
+
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         const CartesianVector hitPosition(pCaloHit->GetPositionVector().GetX() - pCaloHit->GetX0(), pCaloHit->GetPositionVector().GetY(),
             pCaloHit->GetPositionVector().GetZ());
 
 #ifdef MONITORING
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, stringTag, colour, 2);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, stringTag, isCR ? BLUE : RED, 2);
 #endif
     }
 
@@ -812,7 +817,6 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloH
 {
     for (const CaloHit *const pCaloHit : totalCaloHitList)
     {
-        Color color(BLACK);
         std::string newStringTag(stringTag);
         const CartesianVector hitPosition(pCaloHit->GetPositionVector().GetX() - pCaloHit->GetX0(), pCaloHit->GetPositionVector().GetY(),
             pCaloHit->GetPositionVector().GetZ());
@@ -820,24 +824,33 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloH
         if (std::find(otherShowerCaloHitList.begin(), otherShowerCaloHitList.end(), pCaloHit) != otherShowerCaloHitList.end())
         {
             newStringTag += "_OTHER_SHOWER";
-            color = VIOLET;
-        }
-
-        if (std::find(otherTrackCaloHitList.begin(), otherTrackCaloHitList.end(), pCaloHit) != otherTrackCaloHitList.end())
-        {
-            newStringTag += "_OTHER_TRACK";
-            color = RED;
-        }
-
-        if (std::find(parentTrackCaloHitList.begin(), parentTrackCaloHitList.end(), pCaloHit) != parentTrackCaloHitList.end())
-        {
-            newStringTag += "_PARENT_TRACK";
-            color = BLUE;
-        }
 
 #ifdef MONITORING
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, color, 2);
+	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, VIOLET, 2);
 #endif
+        }
+        else if (std::find(otherTrackCaloHitList.begin(), otherTrackCaloHitList.end(), pCaloHit) != otherTrackCaloHitList.end())
+        {
+            newStringTag += "_OTHER_TRACK";
+
+#ifdef MONITORING
+	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, RED, 2);
+#endif
+        }
+        else if (std::find(parentTrackCaloHitList.begin(), parentTrackCaloHitList.end(), pCaloHit) != parentTrackCaloHitList.end())
+        {
+            newStringTag += "_PARENT_TRACK";
+
+#ifdef MONITORING
+	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, BLUE, 2);
+#endif
+        }
+	else
+	{
+#ifdef MONITORING
+	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, BLACK, 2);
+#endif
+	}
     }
 
 #ifdef MONITORING
@@ -852,7 +865,6 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(
 {
     for (const CaloHit *const pCaloHit : totalCaloHitList)
     {
-        Color color(DARKGREEN);
         std::string newStringTag(stringTag);
         const CartesianVector hitPosition(pCaloHit->GetPositionVector().GetX() - pCaloHit->GetX0(), pCaloHit->GetPositionVector().GetY(),
             pCaloHit->GetPositionVector().GetZ());
@@ -860,12 +872,17 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(
         if (std::find(leadingCaloHitList.begin(), leadingCaloHitList.end(), pCaloHit) != leadingCaloHitList.end())
         {
             newStringTag += "_LEADING";
-            color = RED;
-        }
 
 #ifdef MONITORING
-        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, color, 2);
+	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, RED, 2);
 #endif
+        }
+	else
+	{
+#ifdef MONITORING
+	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, DARKGREEN, 2);
+#endif
+	}
     }
 
 #ifdef MONITORING

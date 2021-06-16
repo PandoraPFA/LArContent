@@ -111,10 +111,9 @@ private:
      *  @brief  Print leading MCParticle hits
      *
      *  @param  caloHitList the list of hits to print
-     *  @param  stringTag the event display marker string
-     *  @param  colour the colour of the event display markers
+     *  @param  isCR whether the hits belong to a MC cosmic ray or delta ray/michel electron
      */
-    void PrintHits(const pandora::CaloHitList caloHitList, const std::string &stringTag, const Color &colour) const;
+    void PrintHits(const pandora::CaloHitList caloHitList, const bool isCR) const;
 
     /**
      *  @brief  Print leading pfo hits
