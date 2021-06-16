@@ -599,7 +599,7 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
                     }
                     else
                     {
-		        const PfoList deltaRayList({pMatchedPfo}), cosmicList({pParentPfo});
+                        const PfoList deltaRayList({pMatchedPfo}), cosmicList({pParentPfo});
                         const CartesianVector &vertex(deltaRayVertexList.front()->GetPosition());
 
                         PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &deltaRayList, "Delta Ray Pfo", BLACK, false, false);
