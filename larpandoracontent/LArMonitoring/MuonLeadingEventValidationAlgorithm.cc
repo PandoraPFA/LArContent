@@ -272,7 +272,7 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
         int nReconstructableChildCRLs(0), nCorrectChildCRLs(0);
 
 #ifdef MONITORING
-	int ID_CR;
+        int ID_CR;
         float mcE_CR, mcPX_CR, mcPY_CR, mcPZ_CR;
         int nMCHitsTotal_CR, nMCHitsU_CR, nMCHitsV_CR, nMCHitsW_CR;
         float mcVertexX_CR, mcVertexY_CR, mcVertexZ_CR, mcEndX_CR, mcEndY_CR, mcEndZ_CR;
@@ -826,7 +826,7 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloH
             newStringTag += "_OTHER_SHOWER";
 
 #ifdef MONITORING
-	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, VIOLET, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, VIOLET, 2);
 #endif
         }
         else if (std::find(otherTrackCaloHitList.begin(), otherTrackCaloHitList.end(), pCaloHit) != otherTrackCaloHitList.end())
@@ -834,7 +834,7 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloH
             newStringTag += "_OTHER_TRACK";
 
 #ifdef MONITORING
-	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, RED, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, RED, 2);
 #endif
         }
         else if (std::find(parentTrackCaloHitList.begin(), parentTrackCaloHitList.end(), pCaloHit) != parentTrackCaloHitList.end())
@@ -842,15 +842,15 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(const CaloHitList totalCaloH
             newStringTag += "_PARENT_TRACK";
 
 #ifdef MONITORING
-	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, BLUE, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, BLUE, 2);
 #endif
         }
-	else
-	{
+        else
+        {
 #ifdef MONITORING
-	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, BLACK, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, BLACK, 2);
 #endif
-	}
+        }
     }
 
 #ifdef MONITORING
@@ -874,15 +874,15 @@ void MuonLeadingEventValidationAlgorithm::PrintHits(
             newStringTag += "_LEADING";
 
 #ifdef MONITORING
-	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, RED, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, RED, 2);
 #endif
         }
-	else
-	{
+        else
+        {
 #ifdef MONITORING
-	    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, DARKGREEN, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, newStringTag, DARKGREEN, 2);
 #endif
-	}
+        }
     }
 
 #ifdef MONITORING
