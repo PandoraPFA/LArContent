@@ -272,10 +272,10 @@ void MuonLeadingEventValidationAlgorithm::ProcessOutput(
         int nReconstructableChildCRLs(0), nCorrectChildCRLs(0);
 
 #ifdef MONITORING
-        int ID_CR;
-        float mcE_CR, mcPX_CR, mcPY_CR, mcPZ_CR;
-        int nMCHitsTotal_CR, nMCHitsU_CR, nMCHitsV_CR, nMCHitsW_CR;
-        float mcVertexX_CR, mcVertexY_CR, mcVertexZ_CR, mcEndX_CR, mcEndY_CR, mcEndZ_CR;
+        int ID_CR(0);
+        float mcE_CR(0.f), mcPX_CR(0.f), mcPY_CR(0.f), mcPZ_CR(0.f);
+        int nMCHitsTotal_CR(0), nMCHitsU_CR(0), nMCHitsV_CR(0), nMCHitsW_CR(0);
+        float mcVertexX_CR(0.f), mcVertexY_CR(0.f), mcVertexZ_CR(0.f), mcEndX_CR(0.f), mcEndY_CR(0.f), mcEndZ_CR(0.f);
 #endif
 
         // Leading particle parameters
