@@ -55,6 +55,7 @@ void LArHierarchyHelper::MCHierarchy::FillHierarchy(
     MCParticleSet primarySet;
     m_pNeutrino = LArHierarchyHelper::GetMCPrimaries(mcParticleList, primarySet);
     MCParticleList primaries(primarySet.begin(), primarySet.end());
+    primaries.sort(LArMCParticleHelper::SortByMomentum);
     if (m_recoCriteria.m_removeNeutrons)
         primaries.erase(std::remove_if(primaries.begin(), primaries.end(), predicate), primaries.end());
     if (foldToPrimaries && !foldToLeadingShowers)
@@ -254,7 +255,7 @@ LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const 
         m_mainParticle = mcParticleList.front();
         m_pdg = m_mainParticle->GetParticleId();
     }
-    m_mcParticles.sort();
+    m_mcParticles.sort(LArMCParticleHelper::SortByMomentum);
     m_caloHits.sort();
 }
 
@@ -464,8 +465,10 @@ LArHierarchyHelper::RecoHierarchy::~RecoHierarchy()
 
 void LArHierarchyHelper::RecoHierarchy::FillHierarchy(const PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers)
 {
-    PfoSet primaries;
-    m_pNeutrino = LArHierarchyHelper::GetRecoPrimaries(pfoList, primaries);
+    PfoSet primarySet;
+    m_pNeutrino = LArHierarchyHelper::GetRecoPrimaries(pfoList, primarySet);
+    PfoList primaries(primarySet.begin(), primarySet.end());
+    primaries.sort(LArPfoHelper::SortByNHits);
     if (foldToPrimaries && !foldToLeadingShowers)
     {
         for (const ParticleFlowObject *pPrimary : primaries)
@@ -605,7 +608,7 @@ LArHierarchyHelper::RecoHierarchy::Node::Node(const RecoHierarchy &hierarchy, co
     if (!pfoList.empty())
         m_pdg = pfoList.front()->GetParticleId();
     m_pfos = pfoList;
-    m_pfos.sort();
+    m_pfos.sort(LArPfoHelper::SortByNHits);
     m_caloHits = caloHitList;
     m_caloHits.sort();
 }
@@ -738,7 +741,7 @@ float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *
     auto iter{std::find(m_recoNodes.begin(), m_recoNodes.end(), pReco)};
     if (iter == m_recoNodes.end())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    int index = std::distance(m_recoNodes.begin(), iter);
+    const int index{static_cast<int>(std::distance(m_recoNodes.begin(), iter))};
 
     const unsigned int nHits{static_cast<unsigned int>(m_pMCParticle->GetCaloHits().size())};
     return nHits ? m_sharedHits[index] / static_cast<float>(nHits) : 0.f;
@@ -900,7 +903,6 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
         const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
         std::cout << "MC " << tag << pdg << " hits " << mcHits << std::endl;
         const RecoHierarchy::NodeVector &nodeVector{match.GetRecoMatches()};
-        int nGoodReco{0};
 
         for (const RecoHierarchy::Node *pRecoNode : nodeVector)
         {
@@ -910,8 +912,6 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
             const float completeness{match.GetCompleteness(pRecoNode)};
             std::cout << "   Matched " << sharedHits << " out of " << recoHits << " with purity " << purity << " and completeness "
                       << completeness << std::endl;
-            if (purity > 0.5f && completeness > 0.1f)
-                ++nGoodReco;
         }
         if (pMCNode->IsTestBeamParticle())
             ++nTestBeamRecoParticles;
@@ -934,7 +934,6 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
         const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
         std::cout << "MC " << tag << pdg << " hits " << mcHits << std::endl;
         const RecoHierarchy::NodeVector &nodeVector{match.GetRecoMatches()};
-        int nGoodReco{0};
 
         for (const RecoHierarchy::Node *pRecoNode : nodeVector)
         {
@@ -944,8 +943,6 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
             const float completeness{match.GetCompleteness(pRecoNode)};
             std::cout << "   Matched " << sharedHits << " out of " << recoHits << " with purity " << purity << " and completeness "
                       << completeness << std::endl;
-            if (purity > 0.5f && completeness > 0.1f)
-                ++nGoodReco;
         }
         if (pMCNode->IsTestBeamParticle())
             ++nTestBeamRecoBTParticles;
