@@ -14,6 +14,7 @@
 
 #include "larpandoradlcontent/LArControlFlow/DLMasterAlgorithm.h"
 #include "larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.h"
+#include "larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
 #include "larpandoradlcontent/LArTwoDReco/DlTrackShowerStreamSelectionAlgorithm.h"
 
@@ -22,6 +23,7 @@
 // clang-format off
 #define LAR_DL_ALGORITHM_LIST(d)                                                                                                           \
     d("LArDLMaster", DLMasterAlgorithm)                                                                                                    \
+    d("LArDLClusterCharacterisation", DlClusterCharacterisationAlgorithm)                                                                  \
     d("LArDLHitTrackShowerId", DlHitTrackShowerIdAlgorithm)                                                                                \
     d("LArDLHitValidation", DlHitValidationAlgorithm)                                                                                      \
     d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)

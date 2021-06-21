@@ -22,7 +22,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-StreamSelectionAlgorithm::StreamSelectionAlgorithm() : m_listType{"cluster"}
+StreamSelectionAlgorithm::StreamSelectionAlgorithm() : m_inputListName{""}, m_listType{"cluster"}
 {
 }
 
@@ -37,9 +37,17 @@ StatusCode StreamSelectionAlgorithm::Run()
     }
 
     const ClusterList *pClusterList{nullptr};
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
     std::string originalClusterListName;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, originalClusterListName));
+    if (m_inputListName.empty())
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pClusterList));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<Cluster>(*this, originalClusterListName));
+    }
+    else
+    {
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputListName, pClusterList));
+        originalClusterListName = m_inputListName;
+    }
 
     for (std::string listName : m_listNames)
         m_clusterListMap[listName] = ClusterList();
@@ -63,6 +71,7 @@ StatusCode StreamSelectionAlgorithm::Run()
 
 StatusCode StreamSelectionAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "InputListName", m_inputListName));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ListType", m_listType));
     std::transform(m_listType.begin(), m_listType.end(), m_listType.begin(), ::tolower);
     if (m_listType != "cluster")

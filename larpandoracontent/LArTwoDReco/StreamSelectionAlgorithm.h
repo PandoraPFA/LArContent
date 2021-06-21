@@ -40,6 +40,7 @@ protected:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
+    std::string m_inputListName;       ///< The input list name if not using the current list
     std::string m_listType;            ///< The type of the input lists (currently only Cluster is supported)
     pandora::StringVector m_listNames; ///< The name of the output lists
     ClusterListMap m_clusterListMap;   ///< The map from cluster list names to cluster lists
