@@ -111,10 +111,11 @@ private:
      *  @brief  Print leading MCParticle hits
      *
      *  @param  caloHitList the list of hits to print
-     *  @param  stringTag the event display marker string
-     *  @param  colour the colour of the event display markers
+     *  @param  isCR whether the hits belong to a MC cosmic ray or delta ray/michel electron
      */
-    void PrintHits(const pandora::CaloHitList caloHitList, const std::string &stringTag, const Color &colour) const;
+#ifdef MONITORING
+    void PrintHits(const pandora::CaloHitList caloHitList, const bool isCR) const;
+#endif
 
     /**
      *  @brief  Print leading pfo hits
@@ -125,8 +126,10 @@ private:
      *  @param  parentTrackCaloHitList the list of hits that in truth belong to the parent cosmic ray
      *  @param  stringTag the event display marker string
      */
+#ifdef MONITORING
     void PrintHits(const pandora::CaloHitList totalCaloHitList, const pandora::CaloHitList otherShowerCaloHitList,
         const pandora::CaloHitList otherTrackCaloHitList, const pandora::CaloHitList parentTrackCaloHitList, const std::string &stringTag) const;
+#endif
 
     /**
      *  @brief  Print hits of the parent cosmic ray
