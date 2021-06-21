@@ -16,6 +16,7 @@
 #include "larpandoradlcontent/LArMonitoring/DlHitValidationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlClusterCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTrackShowerId/DlHitTrackShowerIdAlgorithm.h"
+#include "larpandoradlcontent/LArTrackShowerId/DlPfoCharacterisationAlgorithm.h"
 #include "larpandoradlcontent/LArTwoDReco/DlTrackShowerStreamSelectionAlgorithm.h"
 
 #include "larpandoradlcontent/LArDLContent.h"
@@ -25,6 +26,7 @@
     d("LArDLMaster", DLMasterAlgorithm)                                                                                                    \
     d("LArDLClusterCharacterisation", DlClusterCharacterisationAlgorithm)                                                                  \
     d("LArDLHitTrackShowerId", DlHitTrackShowerIdAlgorithm)                                                                                \
+    d("LArDLPfoCharacterisation", DlPfoCharacterisationAlgorithm)                                                                          \
     d("LArDLHitValidation", DlHitValidationAlgorithm)                                                                                      \
     d("LArDLTrackShowerStreamSelection", DlTrackShowerStreamSelectionAlgorithm)
 
