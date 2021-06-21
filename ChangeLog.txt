@@ -1,4 +1,11 @@
 --------------------------------------------------------------------------------------------------------------------------------------------
+TAG v03_23_03
+--------------------------------------------------------------------------------------------------------------------------------------------
+Add tools for matching reconstructed and true hierarchies
+Add algorithm to clean up 3D hits to support iterative shower growing
+Fix issue when building without PandoraMonitoring
+
+--------------------------------------------------------------------------------------------------------------------------------------------
 TAG v03_23_02
 --------------------------------------------------------------------------------------------------------------------------------------------
 Updated MVA vertex selection to provide for energy deposition asymmetry and feature sharing between two vertex candidates
