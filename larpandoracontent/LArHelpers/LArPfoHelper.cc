@@ -73,6 +73,18 @@ void LArPfoHelper::GetIsolatedCaloHits(const ParticleFlowObject *const pPfo, con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArPfoHelper::GetAllCaloHits(const ParticleFlowObject *const pPfo, CaloHitList &caloHitList)
+{
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitList);
+    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_U, caloHitList);
+    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_V, caloHitList);
+    LArPfoHelper::GetIsolatedCaloHits(pPfo, TPC_VIEW_W, caloHitList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArPfoHelper::GetClusters(const PfoList &pfoList, const HitType &hitType, ClusterList &clusterList)
 {
     for (const ParticleFlowObject *const pPfo : pfoList)
@@ -169,6 +181,37 @@ void LArPfoHelper::GetAllDownstreamPfos(const ParticleFlowObject *const pPfo, Pf
 
     outputPfoList.push_back(pPfo);
     LArPfoHelper::GetAllDownstreamPfos(pPfo->GetDaughterPfoList(), outputPfoList);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArPfoHelper::GetAllDownstreamPfos(
+    const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputTrackPfoList, pandora::PfoList &outputLeadingShowerPfoList)
+{
+    if (LArPfoHelper::IsTrack(pPfo))
+    {
+        outputTrackPfoList.emplace_back(pPfo);
+        for (const ParticleFlowObject *pChild : pPfo->GetDaughterPfoList())
+        {
+            if (std::find(outputTrackPfoList.begin(), outputTrackPfoList.end(), pChild) == outputTrackPfoList.end())
+            {
+                const int pdg{std::abs(pChild->GetParticleId())};
+                if (pdg == E_MINUS)
+                {
+                    outputLeadingShowerPfoList.emplace_back(pChild);
+                }
+                else
+                {
+                    outputTrackPfoList.emplace_back(pChild);
+                    LArPfoHelper::GetAllDownstreamPfos(pChild, outputTrackPfoList, outputLeadingShowerPfoList);
+                }
+            }
+        }
+    }
+    else
+    {
+        outputLeadingShowerPfoList.emplace_back(pPfo);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -70,6 +70,14 @@ public:
     static void GetIsolatedCaloHits(const pandora::ParticleFlowObject *const pPfo, const pandora::HitType &hitType, pandora::CaloHitList &caloHitList);
 
     /**
+     *  @brief  Get a list of all calo hits (including isolated) of all types from a given pfo
+     *
+     *  @param  pPfo the input Pfo
+     *  @param  caloHitList the output list of calo hits
+     */
+    static void GetAllCaloHits(const pandora::ParticleFlowObject *pPfo, pandora::CaloHitList &caloHitList);
+
+    /**
      *  @brief  Get a list of clusters of a particular hit type from a list of pfos
      *
      *  @param  pfoList the input list of Pfos
@@ -142,6 +150,18 @@ public:
      *  @param  outputPfoList to receive the output pfo list
      */
     static void GetAllDownstreamPfos(const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputPfoList);
+
+    /**
+     *  @brief  Get flat lists of all downstream track pfos and also shower-like pfos.
+     *          This method collects together all track-like particles downstream of the root particle, stopping at a leading shower and
+     *          then storing that leading shower in a separate list.
+     *
+     *  @param  pPfo the input pfo
+     *  @param  outputTrackPfoList the output list of descendent track-like particles
+     *  @param  outputLeadingShowerParticles the output list of leading shower particles
+     */
+    static void GetAllDownstreamPfos(
+        const pandora::ParticleFlowObject *const pPfo, pandora::PfoList &outputTrackPfoList, pandora::PfoList &outputLeadingShowerPfoList);
 
     /**
      *  @brief  Determine the position in the hierarchy for the MCParticle
