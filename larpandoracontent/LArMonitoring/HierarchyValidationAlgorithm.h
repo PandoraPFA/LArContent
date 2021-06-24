@@ -37,8 +37,10 @@ private:
      *  @brief  Collates variables and fills ROOT tree for MC particles with matches
      *
      *  @param matches The MCMatches object containing the matches
+     *  @param isGood Whether or not this is a single good match
+     *  @param isAboveThreshold Whether or not the matches are above threshold
      */
-    void FillMatched(const LArHierarchyHelper::MCMatches &matches) const;
+    void FillMatched(const LArHierarchyHelper::MCMatches &matches, const bool isGood, const bool isAboveThreshold) const;
 
     /**
      *  @brief  Collates variables and fills ROOT tree for MC particles without matches

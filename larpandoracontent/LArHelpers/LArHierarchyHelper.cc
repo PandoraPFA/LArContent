@@ -775,6 +775,8 @@ LArHierarchyHelper::MatchInfo::MatchInfo(const QualityCuts &qualityCuts) : m_qua
 {
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy)
 {
     MCHierarchy::NodeVector mcNodes;
@@ -834,7 +836,6 @@ void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const 
 
     for (auto [pMCNode, matches] : mcToMatchMap)
     {
-        (void)pMCNode; // gcc 7 requirement
         const RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
         if (nodeVector.size() == 1)
         {
@@ -848,7 +849,23 @@ void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const 
         }
         else
         {
-            m_subThresholdMatches.emplace_back(matches);
+            MCMatches aboveThresholdMatches(pMCNode), belowThresholdMatches(pMCNode);
+            for (const RecoHierarchy::Node *pRecoNode : nodeVector)
+            {
+                const float purity{matches.GetPurity(pRecoNode)};
+                const float completeness{matches.GetCompleteness(pRecoNode)};
+                if (purity >= m_qualityCuts.m_minPurity && completeness > m_qualityCuts.m_minCompleteness)
+                    aboveThresholdMatches.AddRecoMatch(pRecoNode, matches.GetSharedHits(pRecoNode));
+                else
+                    belowThresholdMatches.AddRecoMatch(pRecoNode, matches.GetSharedHits(pRecoNode));
+            }
+            const size_t nAboveThresholdMatches{aboveThresholdMatches.GetNRecoMatches()};
+            if (nAboveThresholdMatches == 1)
+                m_goodMatches.emplace_back(aboveThresholdMatches);
+            else if (nAboveThresholdMatches > 1)
+                m_aboveThresholdMatches.emplace_back(aboveThresholdMatches);
+            if (belowThresholdMatches.GetNRecoMatches() > 0)
+                m_subThresholdMatches.emplace_back(belowThresholdMatches);
         }
     }
 
@@ -866,38 +883,132 @@ void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const 
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::FillMCHierarchy(const MCParticleList &mcParticleList, const CaloHitList &caloHitList, const bool foldToPrimaries,
-    const bool foldToLeadingShowers, MCHierarchy &hierarchy)
+unsigned int LArHierarchyHelper::MatchInfo::GetNMCNodes() const
 {
-    hierarchy.FillHierarchy(mcParticleList, caloHitList, foldToPrimaries, foldToLeadingShowers);
+    std::set<const MCHierarchy::Node *> mcNodeSet;
+    for (const MCMatches &match : this->GetGoodMatches())
+        mcNodeSet.insert(match.GetMC());
+    for (const MCMatches &match : this->GetAboveThresholdMatches())
+        mcNodeSet.insert(match.GetMC());
+    for (const MCMatches &match : this->GetSubThresholdMatches())
+        mcNodeSet.insert(match.GetMC());
+    for (const MCMatches &match : this->GetUnmatchedMC())
+        mcNodeSet.insert(match.GetMC());
+
+    return static_cast<unsigned int>(mcNodeSet.size());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::FillRecoHierarchy(const PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers, RecoHierarchy &hierarchy)
+unsigned int LArHierarchyHelper::MatchInfo::GetNNeutrinoMCNodes() const
 {
-    hierarchy.FillHierarchy(pfoList, foldToPrimaries, foldToLeadingShowers);
+    std::set<const MCHierarchy::Node *> mcNodeSet;
+    for (const MCMatches &match : this->GetGoodMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (!(pNode->IsCosmicRay() || pNode->IsTestBeamParticle()))
+            mcNodeSet.insert(pNode);
+    }
+    for (const MCMatches &match : this->GetAboveThresholdMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (!(pNode->IsCosmicRay() || pNode->IsTestBeamParticle()))
+            mcNodeSet.insert(match.GetMC());
+    }
+    for (const MCMatches &match : this->GetSubThresholdMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (!(pNode->IsCosmicRay() || pNode->IsTestBeamParticle()))
+            mcNodeSet.insert(match.GetMC());
+    }
+    for (const MCMatches &match : this->GetUnmatchedMC())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (!(pNode->IsCosmicRay() || pNode->IsTestBeamParticle()))
+            mcNodeSet.insert(match.GetMC());
+    }
+
+    return static_cast<unsigned int>(mcNodeSet.size());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MatchInfo &matchInfo)
+unsigned int LArHierarchyHelper::MatchInfo::GetNCosmicRayMCNodes() const
 {
-    matchInfo.Match(mcHierarchy, recoHierarchy);
-    int nNeutrinoMCParticles{0}, nNeutrinoRecoParticles{0}, nNeutrinoRecoBTParticles{0};
-    int nCosmicMCParticles{0}, nCosmicRecoParticles{0}, nCosmicRecoBTParticles{0};
-    int nTestBeamMCParticles{0}, nTestBeamRecoParticles{0}, nTestBeamRecoBTParticles{0};
-    for (const MCMatches &match : matchInfo.GetGoodMatches())
+    std::set<const MCHierarchy::Node *> mcNodeSet;
+    for (const MCMatches &match : this->GetGoodMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (pNode->IsCosmicRay())
+            mcNodeSet.insert(pNode);
+    }
+    for (const MCMatches &match : this->GetAboveThresholdMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (pNode->IsCosmicRay())
+            mcNodeSet.insert(match.GetMC());
+    }
+    for (const MCMatches &match : this->GetSubThresholdMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (pNode->IsCosmicRay())
+            mcNodeSet.insert(match.GetMC());
+    }
+    for (const MCMatches &match : this->GetUnmatchedMC())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (pNode->IsCosmicRay())
+            mcNodeSet.insert(match.GetMC());
+    }
+
+    return static_cast<unsigned int>(mcNodeSet.size());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+unsigned int LArHierarchyHelper::MatchInfo::GetNTestBeamMCNodes() const
+{
+    std::set<const MCHierarchy::Node *> mcNodeSet;
+    for (const MCMatches &match : this->GetGoodMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (pNode->IsTestBeamParticle())
+            mcNodeSet.insert(pNode);
+    }
+    for (const MCMatches &match : this->GetAboveThresholdMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (pNode->IsTestBeamParticle())
+            mcNodeSet.insert(match.GetMC());
+    }
+    for (const MCMatches &match : this->GetSubThresholdMatches())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (pNode->IsTestBeamParticle())
+            mcNodeSet.insert(match.GetMC());
+    }
+    for (const MCMatches &match : this->GetUnmatchedMC())
+    {
+        const MCHierarchy::Node *pNode{match.GetMC()};
+        if (pNode->IsCosmicRay())
+            mcNodeSet.insert(match.GetMC());
+    }
+
+    return static_cast<unsigned int>(mcNodeSet.size());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::MatchInfo::Print(const MCHierarchy &mcHierarchy) const
+{
+    unsigned int nNeutrinoMCParticles{this->GetNNeutrinoMCNodes()}, nNeutrinoRecoParticles{0}, nNeutrinoRecoBTParticles{0};
+    unsigned int nCosmicMCParticles{this->GetNCosmicRayMCNodes()}, nCosmicRecoParticles{0}, nCosmicRecoBTParticles{0};
+    unsigned int nTestBeamMCParticles{this->GetNTestBeamMCNodes()}, nTestBeamRecoParticles{0}, nTestBeamRecoBTParticles{0};
+    std::cout << "=== Good matches ===" << std::endl;
+    for (const MCMatches &match : this->GetGoodMatches())
     {
         const MCHierarchy::Node *pMCNode{match.GetMC()};
-        if (pMCNode->IsTestBeamParticle())
-            ++nTestBeamMCParticles;
-        else if (pMCNode->IsCosmicRay())
-            ++nCosmicMCParticles;
-        else
-            ++nNeutrinoMCParticles;
         const int pdg{pMCNode->GetParticleId()};
         const size_t mcHits{pMCNode->GetCaloHits().size()};
         const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
@@ -920,15 +1031,11 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
         else
             ++nNeutrinoRecoParticles;
     }
-    for (const MCMatches &match : matchInfo.GetSubThresholdMatches())
+
+    std::cout << "=== Above threshold matches ===" << std::endl;
+    for (const MCMatches &match : this->GetAboveThresholdMatches())
     {
         const MCHierarchy::Node *pMCNode{match.GetMC()};
-        if (pMCNode->IsTestBeamParticle())
-            ++nTestBeamMCParticles;
-        else if (pMCNode->IsCosmicRay())
-            ++nCosmicMCParticles;
-        else
-            ++nNeutrinoMCParticles;
         const int pdg{pMCNode->GetParticleId()};
         const size_t mcHits{pMCNode->GetCaloHits().size()};
         const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
@@ -945,20 +1052,43 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
                       << completeness << std::endl;
         }
         if (pMCNode->IsTestBeamParticle())
+            ++nTestBeamRecoParticles;
+        else if (pMCNode->IsCosmicRay())
+            ++nCosmicRecoParticles;
+        else
+            ++nNeutrinoRecoParticles;
+    }
+
+    std::cout << "=== Below threshold matches ===" << std::endl;
+    for (const MCMatches &match : this->GetSubThresholdMatches())
+    {
+        const MCHierarchy::Node *pMCNode{match.GetMC()};
+        const int pdg{pMCNode->GetParticleId()};
+        const size_t mcHits{pMCNode->GetCaloHits().size()};
+        const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
+        std::cout << "MC " << tag << pdg << " hits " << mcHits << std::endl;
+        const RecoHierarchy::NodeVector &nodeVector{match.GetRecoMatches()};
+
+        for (const RecoHierarchy::Node *pRecoNode : nodeVector)
+        {
+            const unsigned int recoHits{static_cast<unsigned int>(pRecoNode->GetCaloHits().size())};
+            const unsigned int sharedHits{match.GetSharedHits(pRecoNode)};
+            const float purity{match.GetPurity(pRecoNode)};
+            const float completeness{match.GetCompleteness(pRecoNode)};
+            std::cout << "   Matched (below threshold) " << sharedHits << " out of " << recoHits << " with purity " << purity
+                      << " and completeness " << completeness << std::endl;
+        }
+        if (pMCNode->IsTestBeamParticle())
             ++nTestBeamRecoBTParticles;
         else if (pMCNode->IsCosmicRay())
             ++nCosmicRecoBTParticles;
         else
             ++nNeutrinoRecoBTParticles;
     }
-    for (const MCHierarchy::Node *pMCNode : matchInfo.GetUnmatchedMC())
+
+    std::cout << "=== Unmatched ===" << std::endl;
+    for (const MCHierarchy::Node *pMCNode : this->GetUnmatchedMC())
     {
-        if (pMCNode->IsTestBeamParticle())
-            ++nTestBeamMCParticles;
-        else if (pMCNode->IsCosmicRay())
-            ++nCosmicMCParticles;
-        else
-            ++nNeutrinoMCParticles;
         const int pdg{pMCNode->GetParticleId()};
         const size_t mcHits{pMCNode->GetCaloHits().size()};
         const std::string tag{pMCNode->IsTestBeamParticle() ? "(Beam) " : pMCNode->IsCosmicRay() ? "(Cosmic) " : ""};
@@ -1001,8 +1131,31 @@ void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const 
                       << (100 * (nCosmicRecoParticles + nCosmicRecoBTParticles) / static_cast<float>(nCosmicMCParticles)) << "%" << std::endl;
         }
     }
-    if (!matchInfo.GetUnmatchedReco().empty())
-        std::cout << "Unmatched reco: " << matchInfo.GetUnmatchedReco().size() << std::endl;
+    if (!this->GetUnmatchedReco().empty())
+        std::cout << "Unmatched reco: " << this->GetUnmatchedReco().size() << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::FillMCHierarchy(const MCParticleList &mcParticleList, const CaloHitList &caloHitList, const bool foldToPrimaries,
+    const bool foldToLeadingShowers, MCHierarchy &hierarchy)
+{
+    hierarchy.FillHierarchy(mcParticleList, caloHitList, foldToPrimaries, foldToLeadingShowers);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::FillRecoHierarchy(const PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers, RecoHierarchy &hierarchy)
+{
+    hierarchy.FillHierarchy(pfoList, foldToPrimaries, foldToLeadingShowers);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void LArHierarchyHelper::MatchHierarchies(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy, MatchInfo &matchInfo)
+{
+    matchInfo.Match(mcHierarchy, recoHierarchy);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

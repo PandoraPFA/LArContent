@@ -488,6 +488,13 @@ public:
          */
         float GetCompleteness(const RecoHierarchy::Node *pReco) const;
 
+        /**
+         *  @brief  Get the number of reco nodes matched (both above and below quality cut thresholds) to the MC node
+         *
+         *  @return The number of reco nodes matched to the MC node
+         */
+        size_t GetNRecoMatches() const;
+
     private:
         const MCHierarchy::Node *m_pMCParticle; ///< MC node associated with any matches
         RecoHierarchy::NodeVector m_recoNodes;  ///< Matched reco nodes
@@ -546,11 +553,19 @@ public:
         void Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy);
 
         /**
-         *  @brief  Retrieve the vector of good matches
+         *  @brief  Retrieve the vector of good matches (will contain either zero or one matches)
          *
          *  @return The vector of good matches
          */
         const MCMatchesVector &GetGoodMatches() const;
+
+        /**
+         *  @brief  Retrieve the vector of matches that pass quality cuts (empty if there are either no matches passing quality cuts, or
+         *          precisely one match passing quality cuts - i.e. a good match)
+         *
+         *  @return The vector of sub-threshold matches
+         */
+        const MCMatchesVector &GetAboveThresholdMatches() const;
 
         /**
          *  @brief  Retrieve the vector of matches that don't pass quality cuts
@@ -571,9 +586,46 @@ public:
          */
         const RecoHierarchy::NodeVector &GetUnmatchedReco() const;
 
+        /**
+         *  @brief  Retrieve the number of MC nodes available to match
+         *
+         *  @return The number of MC nodes available to match
+         */
+        unsigned int GetNMCNodes() const;
+
+        /**
+         *  @brief  Retrieve the number of neutrino interaction derived MC nodes available to match
+         *
+         *  @return The number of MC nodes available to match
+         */
+        unsigned int GetNNeutrinoMCNodes() const;
+
+        /**
+         *  @brief  Retrieve the number of cosmic ray derived MC nodes available to match
+         *
+         *  @return The number of MC nodes available to match
+         */
+        unsigned int GetNCosmicRayMCNodes() const;
+
+        /**
+         *  @brief  Retrieve the number of test beam derived MC nodes available to match
+         *
+         *  @return The number of MC nodes available to match
+         */
+        unsigned int GetNTestBeamMCNodes() const;
+
+        /**
+         *  @brief  Prints information about which reco nodes are matched to the MC nodes, information about hit sharing, purity and
+         *          completeness.
+         *
+         *  @param  mcHierarchy The MC hierarchy
+         */
+        void Print(const MCHierarchy &mcHierarchy) const;
+
     private:
-        MCMatchesVector m_goodMatches;             ///< The vector of good matches
-        MCMatchesVector m_subThresholdMatches;     ///< The vector of matches MC nodes that don't pass quality cuts
+        MCMatchesVector m_goodMatches;             ///< The vector of good matches - above threshold one reco to one MC matches
+        MCMatchesVector m_aboveThresholdMatches;   ///< The vector of matches that pass quality but with multiple reco matches to the MC
+        MCMatchesVector m_subThresholdMatches;     ///< The vector of matches that don't pass quality cuts
         MCHierarchy::NodeVector m_unmatchedMC;     ///< The vector of unmatched MC nodes
         RecoHierarchy::NodeVector m_unmatchedReco; ///< The vector of unmatched reco nodes
         QualityCuts m_qualityCuts;                 ///< The quality cuts to be applied to matches
@@ -725,11 +777,25 @@ inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+inline size_t LArHierarchyHelper::MCMatches::GetNRecoMatches() const
+{
+    return m_recoNodes.size();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetGoodMatches() const
 {
     return m_goodMatches;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetAboveThresholdMatches() const
+{
+    return m_aboveThresholdMatches;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

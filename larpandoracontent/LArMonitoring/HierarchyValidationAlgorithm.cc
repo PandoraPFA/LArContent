@@ -46,13 +46,16 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::FillRecoHierarchy(*pPfoList, m_foldToPrimaries, m_foldToLeadingShowers, recoHierarchy);
     LArHierarchyHelper::MatchInfo matchInfo;
     LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
+    matchInfo.Print(mcHierarchy);
 
     if (m_writeTree)
     {
         for (const LArHierarchyHelper::MCMatches &match : matchInfo.GetGoodMatches())
-            this->FillMatched(match);
+            this->FillMatched(match, true, true);
+        for (const LArHierarchyHelper::MCMatches &match : matchInfo.GetAboveThresholdMatches())
+            this->FillMatched(match, false, true);
         for (const LArHierarchyHelper::MCMatches &match : matchInfo.GetSubThresholdMatches())
-            this->FillMatched(match);
+            this->FillMatched(match, false, false);
         for (const LArHierarchyHelper::MCHierarchy::Node *pNode : matchInfo.GetUnmatchedMC())
             this->FillUnmatchedMC(pNode);
         for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : matchInfo.GetUnmatchedReco())
@@ -64,7 +67,7 @@ StatusCode HierarchyValidationAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void HierarchyValidationAlgorithm::FillMatched(const LArHierarchyHelper::MCMatches &matches) const
+void HierarchyValidationAlgorithm::FillMatched(const LArHierarchyHelper::MCMatches &matches, const bool isGood, const bool isAboveThreshold) const
 {
     const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
     const int isTestBeam{pMCNode->IsTestBeamParticle() ? 1 : 0};
@@ -72,8 +75,10 @@ void HierarchyValidationAlgorithm::FillMatched(const LArHierarchyHelper::MCMatch
     const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
     const int pdg{pMCNode->GetParticleId()};
     const int mcHits{static_cast<int>(pMCNode->GetCaloHits().size())};
-    
+
     const LArHierarchyHelper::RecoHierarchy::NodeVector &nodeVector{matches.GetRecoMatches()};
+    const int isGoodMatch{isGood};
+    const int isAboveThresholdMatch{isAboveThreshold};
     const int nMatches{static_cast<int>(nodeVector.size())};
     IntVector recoIdVector, nRecoHitsVector, nSharedHitsVector;
     FloatVector purityVector, completenessVector;
@@ -91,6 +96,8 @@ void HierarchyValidationAlgorithm::FillMatched(const LArHierarchyHelper::MCMatch
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuInteration", isNeutrinoInt));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCosmicRay", isCosmicRay));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isTestBeam", isTestBeam));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isGoodMatch", isGoodMatch));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isAboveThresholdMatch", isAboveThresholdMatch));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nMatches", nMatches));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoIdVector", &recoIdVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nRecoHitsVector", &nRecoHitsVector));
@@ -109,8 +116,10 @@ void HierarchyValidationAlgorithm::FillUnmatchedMC(const LArHierarchyHelper::MCH
     const int isNeutrinoInt{!(isTestBeam || isCosmicRay) ? 1 : 0};
     const int pdg{pNode->GetParticleId()};
     const int mcHits{static_cast<int>(pNode->GetCaloHits().size())};
-    
+
     const int nMatches{0};
+    const int isGoodMatch{0};
+    const int isAboveThresholdMatch{0};
     IntVector recoIdVector, nRecoHitsVector, nSharedHitsVector;
     FloatVector purityVector, completenessVector;
 
@@ -119,6 +128,8 @@ void HierarchyValidationAlgorithm::FillUnmatchedMC(const LArHierarchyHelper::MCH
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuInteration", isNeutrinoInt));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCosmicRay", isCosmicRay));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isTestBeam", isTestBeam));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isGoodMatch", isGoodMatch));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isAboveThresholdMatch", isAboveThresholdMatch));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nMatches", nMatches));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoIdVector", &recoIdVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nRecoHitsVector", &nRecoHitsVector));
@@ -137,10 +148,11 @@ void HierarchyValidationAlgorithm::FillUnmatchedReco(const LArHierarchyHelper::R
     const int isNeutrinoInt{0};
     const int pdg{0};
     const int mcHits{0};
-    
+
     const int nMatches{0};
-    IntVector recoIdVector{pNode->GetParticleId()}, nRecoHitsVector{static_cast<int>(pNode->GetCaloHits().size())},
-        nSharedHitsVector{0};
+    const int isGoodMatch{0};
+    const int isAboveThresholdMatch{0};
+    IntVector recoIdVector{pNode->GetParticleId()}, nRecoHitsVector{static_cast<int>(pNode->GetCaloHits().size())}, nSharedHitsVector{0};
     FloatVector purityVector{0.f}, completenessVector{0.f};
 
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "mcPDG", pdg));
@@ -148,6 +160,8 @@ void HierarchyValidationAlgorithm::FillUnmatchedReco(const LArHierarchyHelper::R
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isNuInteration", isNeutrinoInt));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isCosmicRay", isCosmicRay));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isTestBeam", isTestBeam));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isGoodMatch", isGoodMatch));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isAboveThresholdMatch", isAboveThresholdMatch));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nMatches", nMatches));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "recoIdVector", &recoIdVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nRecoHitsVector", &nRecoHitsVector));
