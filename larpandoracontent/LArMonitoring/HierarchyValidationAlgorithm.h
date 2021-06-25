@@ -34,6 +34,20 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     /**
+     *  @brief  Validate information at the level of MC nodes
+     *
+     *  @param  matchInfo The match info object to use for validation
+     */
+    void EventValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const;
+
+    /**
+     *  @brief  Validate information at the level of MC nodes
+     *
+     *  @param  matchInfo The match info object to use for validation
+     */
+    void MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const;
+
+    /**
      *  @brief  Collates variables and fills ROOT tree for MC particles with matches
      *
      *  @param matches The MCMatches object containing the matches
@@ -60,9 +74,11 @@ private:
     std::string m_pfoListName;     ///< Name of input PFO list
     bool m_writeTree;              ///< Whether or not to output validation information to a ROOT file
     std::string m_filename;        ///< The name of the ROOT file to write
-    std::string m_treename;        ///< The name of the ROOT tree
+    std::string m_treename;        ///< The name of the ROOT tree to write
     bool m_foldToPrimaries;        ///< Whether or not to fold the hierarchy back to primary particles
     bool m_foldToLeadingShowers;   ///< Whether or not to fold the hierarchy back to leading shower particles
+    bool m_validateEvent;          ///< Whether to validate at the level of an event
+    bool m_validateMC;             ///< Whether to validate at the level of MC nodes
 };
 
 } // namespace lar_content

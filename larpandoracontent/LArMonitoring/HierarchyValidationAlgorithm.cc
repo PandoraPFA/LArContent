@@ -15,7 +15,12 @@ using namespace pandora;
 namespace lar_content
 {
 
-HierarchyValidationAlgorithm::HierarchyValidationAlgorithm() : m_writeTree{false}, m_foldToPrimaries{false}, m_foldToLeadingShowers{false}
+HierarchyValidationAlgorithm::HierarchyValidationAlgorithm() :
+    m_writeTree{false},
+    m_foldToPrimaries{false},
+    m_foldToLeadingShowers{false},
+    m_validateEvent{false},
+    m_validateMC{false}
 {
 }
 
@@ -48,6 +53,102 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
     matchInfo.Print(mcHierarchy);
 
+    if (m_validateEvent)
+        this->EventValidation(matchInfo);
+    else if (m_validateMC)
+        this->MCValidation(matchInfo);
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const
+{
+    if (m_writeTree)
+    {
+        const int nGoodMatches{static_cast<int>(matchInfo.GetGoodMatches().size())};
+        const int nAboveThresholdMatches{static_cast<int>(matchInfo.GetAboveThresholdMatches().size())};
+        const int nSubThresholdMatches{static_cast<int>(matchInfo.GetSubThresholdMatches().size())};
+        const int nUnmatched{static_cast<int>(matchInfo.GetUnmatchedMC().size())};
+        const int nNodes{static_cast<int>(matchInfo.GetNMCNodes())};
+
+        std::set<const LArHierarchyHelper::MCHierarchy::Node *> trackNodeSet, showerNodeSet;
+        int nGoodTrackMatches{0}, nGoodShowerMatches{0};
+        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetGoodMatches())
+        {
+            const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
+            const int pdg{std::abs(pNode->GetParticleId())};
+            if (pdg == PHOTON || pdg == E_MINUS)
+            {
+                showerNodeSet.insert(pNode);
+                ++nGoodShowerMatches;
+            }
+            else
+            {
+                trackNodeSet.insert(pNode);
+                ++nGoodTrackMatches;
+            }
+        }
+
+        int nAboveThresholdTrackMatches{0}, nAboveThresholdShowerMatches{0};
+        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetAboveThresholdMatches())
+        {
+            const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
+            const int pdg{std::abs(pNode->GetParticleId())};
+            if (pdg == PHOTON || pdg == E_MINUS)
+            {
+                showerNodeSet.insert(pNode);
+                ++nAboveThresholdShowerMatches;
+            }
+            else
+            {
+                trackNodeSet.insert(pNode);
+                ++nAboveThresholdTrackMatches;
+            }
+        }
+
+        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetSubThresholdMatches())
+        {
+            const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
+            const int pdg{std::abs(pNode->GetParticleId())};
+            if (pdg == PHOTON || pdg == E_MINUS)
+                showerNodeSet.insert(pNode);
+            else
+                trackNodeSet.insert(pNode);
+        }
+
+        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetUnmatchedMC())
+        {
+            const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
+            const int pdg{std::abs(pNode->GetParticleId())};
+            if (pdg == PHOTON || pdg == E_MINUS)
+                showerNodeSet.insert(pNode);
+            else
+                trackNodeSet.insert(pNode);
+        }
+
+        const int nTrackNodes{static_cast<int>(trackNodeSet.size())}, nShowerNodes{static_cast<int>(showerNodeSet.size())};
+
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodMatches", nGoodMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nAboveThresholdMatches", nAboveThresholdMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nSubThresholdMatches", nSubThresholdMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nUnmatched", nUnmatched));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nNodes", nNodes));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodTrackMatches", nGoodTrackMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodShowerMatches", nGoodShowerMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nAboveThresholdTrackMatches", nAboveThresholdTrackMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nAboveThresholdShowerMatches", nAboveThresholdShowerMatches));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nTrackNodes", nTrackNodes));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nShowerNodes", nShowerNodes));
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void HierarchyValidationAlgorithm::MCValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const
+{
     if (m_writeTree)
     {
         for (const LArHierarchyHelper::MCMatches &match : matchInfo.GetGoodMatches())
@@ -61,8 +162,6 @@ StatusCode HierarchyValidationAlgorithm::Run()
         for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : matchInfo.GetUnmatchedReco())
             this->FillUnmatchedReco(pNode);
     }
-
-    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -182,11 +281,24 @@ StatusCode HierarchyValidationAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     if (m_pfoListName.empty())
         m_pfoListName = "RecreatedPfos";
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ValidateEvent", m_validateEvent));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ValidateMC", m_validateMC));
+
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
     if (m_writeTree)
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "FileName", m_filename));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TreeName", m_treename));
+        if (!(m_validateEvent || m_validateMC))
+        {
+            std::cout << "Error: WriteTree requested but no tree names found" << std::endl;
+            return STATUS_CODE_NOT_FOUND;
+        }
+        else if (m_validateEvent && m_validateMC)
+        {
+            std::cout << "Error: Both event-level and MC-level validation requested simulataneously" << std::endl;
+            return STATUS_CODE_INVALID_PARAMETER;
+        }
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldToPrimaries", m_foldToPrimaries));
