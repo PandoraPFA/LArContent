@@ -468,6 +468,74 @@ bool LArGeometryHelper::IsInGap3D(const Pandora &pandora, const CartesianVector 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float LArGeometryHelper::ProjectAcrossGap3D(const Pandora &pandora, const CartesianVector &testPoint, const CartesianVector &testDirection,
+        const float gapTolerance, const int recurseLimit)
+{
+    float bestGapSize = std::numeric_limits<float>::max();
+
+    for (const DetectorGap *const detectorGap : pandora.GetGeometry()->GetDetectorGapList())
+    {
+        if (!detectorGap->IsInGap(testPoint, TPC_3D, gapTolerance))
+            continue;
+
+        const LineGap* lineGap = dynamic_cast<const LineGap *>(detectorGap);
+
+        if (lineGap == nullptr)
+            continue;
+
+        // ATTN: Right now, this only works for gaps with only X components.
+        //       If the Z is used for detector gaps, can cause infs.
+
+        // INFO: Get the angles from the current point to each gap edge.
+        const CartesianVector startPoint(lineGap->GetLineStartX(), testPoint.GetY(), testPoint.GetZ());
+        const float distanceToStart = std::fabs(testPoint.GetX() - lineGap->GetLineStartX());
+        const float angleToStart = startPoint.GetCosOpeningAngle(testDirection);
+
+        const CartesianVector endPoint(lineGap->GetLineEndX(), testPoint.GetY(), testPoint.GetZ());
+        const float distanceToEnd = std::fabs(testPoint.GetX() - lineGap->GetLineEndX());
+        const float angleToEnd = endPoint.GetCosOpeningAngle(testDirection);
+
+        // INFO: Choose the gap infront of the current point.
+        const bool shouldUseGapStart = angleToStart > angleToEnd ? true : false;
+        const CartesianVector targetEdge = shouldUseGapStart ? startPoint : endPoint;
+        const float distanceToTargetEdge = shouldUseGapStart ? distanceToStart : distanceToEnd;
+
+        // INFO: If we are at the current gap edge in the right direction, skip gap.
+        if (distanceToTargetEdge == 0)
+            continue;
+
+        const CartesianVector pointToGap(targetEdge - testPoint);
+
+        if (!((testDirection.GetX() < 0) == (pointToGap.GetX() < 0)))
+            continue;
+
+        // INFO: Init to total distance, update if less or more is needed based on current direction.
+        float distanceToProject = distanceToTargetEdge;
+
+        try
+        {
+            const float cosTheta = (pointToGap).GetCosOpeningAngle(testDirection);
+            distanceToProject = cosTheta != 0 ? distanceToTargetEdge / cosTheta : distanceToTargetEdge;
+        }
+        catch (StatusCodeException &) {}
+
+        if (distanceToProject < bestGapSize)
+            bestGapSize = distanceToProject;
+    }
+
+    if (bestGapSize == std::numeric_limits<float>::max())
+        return 0.0;
+    else if (recurseLimit <= 0)
+        return bestGapSize;
+    else
+    {
+        CartesianVector newPoint = testPoint + (testDirection * bestGapSize);
+        return bestGapSize + LArGeometryHelper::ProjectAcrossGap3D(pandora, newPoint, testDirection, gapTolerance, recurseLimit - 1);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArGeometryHelper::IsXSamplingPointInGap(const Pandora &pandora, const float xSample, const TwoDSlidingFitResult &slidingFitResult, const float gapTolerance)
 {
     const HitType hitType(LArClusterHelper::GetClusterHitType(slidingFitResult.GetCluster()));

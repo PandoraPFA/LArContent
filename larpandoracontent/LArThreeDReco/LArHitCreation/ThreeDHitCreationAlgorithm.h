@@ -11,6 +11,9 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArUtility/RANSAC/AbstractModel.h"
+#include "larpandoracontent/LArHelpers/LArPfoHelper.h"
+
 #include <vector>
 
 namespace lar_content
@@ -18,6 +21,8 @@ namespace lar_content
 
 class HitCreationBaseTool;
 class ThreeDSlidingFitResult;
+class RANSACHit;
+class RANSACMethodTool;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -27,6 +32,9 @@ class ThreeDSlidingFitResult;
 class ThreeDHitCreationAlgorithm : public pandora::Algorithm
 {
 public:
+
+    typedef std::vector<RANSACHit> RANSACHitVector;
+
     /**
      *  @brief  Trajectory samples record the results of sampling a particles in a particular view
      */
@@ -73,6 +81,7 @@ public:
     class ProtoHit
     {
     public:
+
         /**
          *  @brief  Constructor
          *
@@ -93,6 +102,13 @@ public:
          *  @return boolean
          */
         bool IsPositionSet() const;
+
+        /**
+         *  @brief  Whether the proto hit was generated using interpolation.
+         *
+         *  @return boolean
+         */
+        bool IsInterpolated() const;
 
         /**
          *  @brief  Get the output 3D position
@@ -146,21 +162,37 @@ public:
         void SetPosition3D(const pandora::CartesianVector &position3D, const double chi2);
 
         /**
+         *  @brief  Set the protohit as an interpolated hit or not.
+         *
+         *  @param  interpolated if the hit is interpolated
+         */
+        void SetInterpolated(const bool interpolated);
+
+        /**
          *  @brief  Add a trajectory sample
          *
          *  @param  the trajectory sample
          */
         void AddTrajectorySample(const TrajectorySample &trajectorySample);
 
+        /**
+         * @brief  Equality operator for a ProtoHit, compares position and parent hit.
+         *
+         * @param other The other protoHit to check equality against.
+         */
+        bool operator==(const ProtoHit &other) const;
+
     private:
-        const pandora::CaloHit *m_pParentCaloHit2D;      ///< The address of the parent 2D calo hit
-        bool m_isPositionSet;                            ///< Whether the output 3D position has been set
-        pandora::CartesianVector m_position3D;           ///< The output 3D position
-        double m_chi2;                                   ///< The output chi squared value
-        TrajectorySampleVector m_trajectorySampleVector; ///< The trajectory sample vector
+        const pandora::CaloHit     *m_pParentCaloHit2D;         ///< The address of the parent 2D calo hit
+        bool                        m_isPositionSet;            ///< Whether the output 3D position has been set
+        bool                        m_isInterpolated;           ///< Whether the 3D position was built with interpolation.
+        pandora::CartesianVector    m_position3D;               ///< The output 3D position
+        double                      m_chi2;                     ///< The output chi squared value
+        TrajectorySampleVector      m_trajectorySampleVector;   ///< The trajectory sample vector
     };
 
     typedef std::vector<ProtoHit> ProtoHitVector;
+    typedef std::map<std::string, ProtoHitVector> ProtoHitVectorMap;
 
     /**
      *  @brief  Default constructor
@@ -196,6 +228,44 @@ private:
      *  @param  protoHitVector the vector of proto hits, describing current state of 3D hit construction
      */
     void IterativeTreatment(ProtoHitVector &protoHitVector) const;
+
+    /**
+     *  @brief  Choose between the map of all protoHitVectors, to get the best
+     *  and most appropriate set of hits for the current event. Uses RANSAC under the hood.
+     *
+     *  @param  pPfo The current PFO, so we can interpolate using it later.
+     *  @param  protoHitVectorMap The map of all protoHitVectors, mapped from the algorithm that created them.
+     *  @param  protoHitVector An empty protoHitVector, to be filled with the current state of the 3D hit construction.
+     */
+    void ConsolidatedMethod(const pandora::ParticleFlowObject *const pPfo, ProtoHitVectorMap &protoHitVectorMap,
+            ProtoHitVector &protoHitVector);
+
+    /**
+     *  @brief  Project a ProtoHit into the given view.
+     *
+     *  @param  hit The ProtoHit to project.
+     *  @param  view The view to project the hit into.
+     *  @param  projectedHit The resultant hit from projecting the hit into the given view.
+     */
+    void Project3DHit(const ProtoHit &hit, const pandora::HitType view, ProtoHit &projectedHit);
+
+    /**
+     *  @brief  Take the set intersection of two vectors.
+     *
+     *  @param  first The first ProtoHitVector, to take into the set intersection.
+     *  @param  second The second ProtoHitVector, to take into the set intersection.
+     *  @param  result The result ProtoHitVector, to store the result of the intersection.
+     */
+    void GetSetIntersection(RANSACHitVector &first, RANSACHitVector &second, RANSACHitVector &result);
+
+    /**
+     *  @brief  Interpolate over the given hits to get a more complete image of
+     *          the 3D reconstruction for the given algorithm.
+     *
+     *  @param  pfo the address of the pfo
+     *  @param  protoHitVector The protoHitVector for the current algorithm, to be interpolated over.
+     */
+    void InterpolationMethod(const pandora::ParticleFlowObject *const pfo, ProtoHitVector &protoHitVector) const;
 
     /**
      *  @brief  Extract key results from a provided proto hit vector
@@ -268,19 +338,24 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    typedef std::vector<HitCreationBaseTool *> HitCreationToolVector;
-    HitCreationToolVector m_algorithmToolVector; ///< The algorithm tool vector
+    typedef std::vector<HitCreationBaseTool*> HitCreationToolVector;
+    HitCreationToolVector    m_algorithmToolVector;      ///< The algorithm tool vector
+    RANSACMethodTool*        m_ransacMethodTool;         ///< RANSAC Method tool
+    std::vector<std::string> m_toolsToAvoid;             ///< Less preferable tools to be used in the RANSAC.
 
-    std::string m_inputPfoListName;      ///< The name of the input pfo list
-    std::string m_outputCaloHitListName; ///< The name of the output calo hit list
-    std::string m_outputClusterListName; ///< The name of the output cluster list
+    std::string              m_inputPfoListName;         ///< The name of the input pfo list
+    std::string              m_outputCaloHitListName;    ///< The name of the output calo hit list
+    std::string              m_outputClusterListName;    ///< The name of the output cluster list
 
-    bool m_iterateTrackHits;                 ///< Whether to enable iterative improvement of 3D hits for track trajectories
-    bool m_iterateShowerHits;                ///< Whether to enable iterative improvement of 3D hits for showers
-    unsigned int m_slidingFitHalfWindow;     ///< The sliding linear fit half window
-    unsigned int m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
-    double m_sigma3DFitMultiplier;           ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
-    double m_iterationMaxChi2Ratio;          ///< Max ratio between current and previous chi2 values to cease iterations
+    bool                     m_iterateTrackHits;         ///< Whether to enable iterative improvement of 3D hits for track trajectories
+    bool                     m_iterateShowerHits;        ///< Whether to enable iterative improvement of 3D hits for showers
+    unsigned int             m_slidingFitHalfWindow;     ///< The sliding linear fit half window
+    unsigned int             m_nHitRefinementIterations; ///< The maximum number of hit refinement iterations
+    double                   m_sigma3DFitMultiplier;     ///< Multiplicative factor: sigmaUVW (same as sigmaHit and sigma2DFit) to sigma3DFit
+    double                   m_iterationMaxChi2Ratio;    ///< Max ratio between current and previous chi2 values to cease iterations
+    double                   m_interpolationCutOff;      ///< Max distance for a point to be interpolated from
+    double                   m_maxInterpolationRatio;    ///< Max percentage of hits to interpolate (0.0 to 1.0);
+    double                   m_avoidedDistThresold;      ///< Distance threshold to consider a hit from an avoided tool.
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -320,6 +395,7 @@ inline double ThreeDHitCreationAlgorithm::TrajectorySample::GetSigma() const
 inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *const pParentCaloHit2D) :
     m_pParentCaloHit2D(pParentCaloHit2D),
     m_isPositionSet(false),
+    m_isInterpolated(false),
     m_position3D(0.f, 0.f, 0.f),
     m_chi2(std::numeric_limits<double>::max())
 {
@@ -329,7 +405,7 @@ inline ThreeDHitCreationAlgorithm::ProtoHit::ProtoHit(const pandora::CaloHit *co
 
 inline const pandora::CaloHit *ThreeDHitCreationAlgorithm::ProtoHit::GetParentCaloHit2D() const
 {
-    return m_pParentCaloHit2D;
+    return m_pParentCaloHit2D; // TODO: I've now basically changed this by allowing nullptr. Should check its usage.
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -337,6 +413,13 @@ inline const pandora::CaloHit *ThreeDHitCreationAlgorithm::ProtoHit::GetParentCa
 inline bool ThreeDHitCreationAlgorithm::ProtoHit::IsPositionSet() const
 {
     return m_isPositionSet;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool ThreeDHitCreationAlgorithm::ProtoHit::IsInterpolated() const
+{
+    return IsPositionSet() && m_isInterpolated;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -357,9 +440,23 @@ inline void ThreeDHitCreationAlgorithm::ProtoHit::SetPosition3D(const pandora::C
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline void ThreeDHitCreationAlgorithm::ProtoHit::SetInterpolated(const bool interpolated)
+{
+    m_isInterpolated = interpolated;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline void ThreeDHitCreationAlgorithm::ProtoHit::AddTrajectorySample(const TrajectorySample &trajectorySample)
 {
     m_trajectorySampleVector.push_back(trajectorySample);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool ThreeDHitCreationAlgorithm::ProtoHit::operator==(const ProtoHit &other) const
+{
+    return this->m_pParentCaloHit2D == other.GetParentCaloHit2D() && this->m_position3D == other.GetPosition3D();
 }
 
 } // namespace lar_content
