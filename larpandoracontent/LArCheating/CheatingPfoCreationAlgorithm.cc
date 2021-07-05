@@ -130,7 +130,7 @@ void CheatingPfoCreationAlgorithm::CreatePfos(const MCParticleToClusterListMap &
         try
         {
             PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-            pfoParameters.m_particleId = pMCParticle->GetParticleId();
+            pfoParameters.m_particleId = (this->IsShower(pMCParticle) ? 11 : 13);
             pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
             pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
             pfoParameters.m_energy = pMCParticle->GetEnergy();
@@ -194,6 +194,24 @@ unsigned int CheatingPfoCreationAlgorithm::GetNHitTypesAboveThreshold(const Clus
     }
 
     return nGoodViews;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CheatingPfoCreationAlgorithm::IsTrack(const MCParticle *const pMCParticle) const
+{
+  const int pdg(pMCParticle->GetParticleId());
+
+  return ((MU_MINUS == std::abs(pdg)) || (PI_PLUS == std::abs(pdg)) || (PROTON == std::abs(pdg)) || (K_PLUS == std::abs(pdg)));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool CheatingPfoCreationAlgorithm::IsShower(const MCParticle *const pMCParticle) const
+{
+  const int pdg(pMCParticle->GetParticleId());
+
+  return ((E_MINUS == std::abs(pdg)) || (PHOTON == std::abs(pdg)));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

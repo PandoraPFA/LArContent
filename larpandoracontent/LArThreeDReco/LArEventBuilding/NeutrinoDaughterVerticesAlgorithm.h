@@ -82,6 +82,7 @@ private:
     bool m_useParentShowerVertex;    ///< use the parent pfo for the shower vertices
     unsigned int m_halfWindowLayers; ///< number of layers to use for half-window of sliding fit
     std::string m_neutrinoListName;  ///< The input list of pfo list names
+    std::string m_cheatedPfoListName;
     std::string m_vertexListName;    ///< The name of the output cosmic-ray vertex list
 };
 

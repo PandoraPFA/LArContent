@@ -19,7 +19,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-NeutrinoDaughterVerticesAlgorithm::NeutrinoDaughterVerticesAlgorithm() : m_useParentShowerVertex(false), m_halfWindowLayers(20)
+NeutrinoDaughterVerticesAlgorithm::NeutrinoDaughterVerticesAlgorithm() : m_useParentShowerVertex(false), m_halfWindowLayers(20), m_cheatedPfoListName("")
 {
 }
 
@@ -62,6 +62,11 @@ void NeutrinoDaughterVerticesAlgorithm::GetDaughterPfos(const PfoList *const pPf
         LArPfoHelper::GetAllDownstreamPfos(*pIter, outputList);
     }
 
+    const PfoList *pCheatedPfoList(nullptr);
+
+    if (!m_cheatedPfoListName.empty())
+      PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, m_cheatedPfoListName, pCheatedPfoList));
+
     for (PfoList::const_iterator pIter = outputList.begin(), pIterEnd = outputList.end(); pIter != pIterEnd; ++pIter)
     {
         ClusterList clusterList;
@@ -69,6 +74,9 @@ void NeutrinoDaughterVerticesAlgorithm::GetDaughterPfos(const PfoList *const pPf
 
         if (clusterList.empty())
             continue;
+
+	if (pCheatedPfoList && (std::find(pCheatedPfoList->begin(), pCheatedPfoList->end(), *pIter) != pCheatedPfoList->end()))
+	  continue;
 
         pfoVector.push_back(*pIter);
     }
@@ -323,6 +331,8 @@ void NeutrinoDaughterVerticesAlgorithm::SetParticleParameters(
 StatusCode NeutrinoDaughterVerticesAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "NeutrinoPfoListName", m_neutrinoListName));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CheatedPfoListName", m_cheatedPfoListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_vertexListName));
 

@@ -111,8 +111,11 @@ void CandidateVertexCreationAlgorithm::SelectClusters(ClusterVector &clusterVect
 
         ClusterVector &selectedClusterVector((TPC_VIEW_U == hitType) ? clusterVectorU : (TPC_VIEW_V == hitType) ? clusterVectorV : clusterVectorW);
 
+	// throws exception when trying to add in the cheated clusters - WELP
+	/*
         if (!selectedClusterVector.empty())
             throw StatusCodeException(STATUS_CODE_FAILURE);
+	*/
 
         ClusterVector sortedClusters(pClusterList->begin(), pClusterList->end());
         std::sort(sortedClusters.begin(), sortedClusters.end(), LArClusterHelper::SortByNHits);
