@@ -84,6 +84,13 @@ public:
     int GetNuanceCode() const;
 
     /**
+     *  @brief  Get the parameters associated with this MC particle
+     *
+     *  @param  parameters the output parameters
+     */
+    void GetParameters(LArMCParticleParameters &parameters) const;
+
+    /**
      *  @brief  Get the process
      *
      *  @return the process
@@ -160,6 +167,22 @@ inline LArMCParticle::LArMCParticle(const LArMCParticleParameters &parameters) :
 inline int LArMCParticle::GetNuanceCode() const
 {
     return m_nuanceCode;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArMCParticle::GetParameters(LArMCParticleParameters &parameters) const
+{
+    parameters.m_nuanceCode = this->GetNuanceCode();
+    parameters.m_process = this->GetProcess();
+    parameters.m_energy = this->GetEnergy();
+    parameters.m_momentum = this->GetMomentum();
+    parameters.m_vertex = this->GetVertex();
+    parameters.m_endpoint = this->GetEndpoint();
+    parameters.m_particleId = this->GetParticleId();
+    parameters.m_mcParticleType = this->GetMCParticleType();
+    // ATTN Parent of mc particle in worker is corresponding mc particle in master
+    parameters.m_pParentAddress = static_cast<const void *>(this);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

@@ -653,29 +653,7 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
         return STATUS_CODE_INVALID_PARAMETER;
     }
     LArCaloHitParameters parameters;
-    parameters.m_positionVector = pCaloHit->GetPositionVector();
-    parameters.m_expectedDirection = pCaloHit->GetExpectedDirection();
-    parameters.m_cellNormalVector = pCaloHit->GetCellNormalVector();
-    parameters.m_cellGeometry = pCaloHit->GetCellGeometry();
-    parameters.m_cellSize0 = pCaloHit->GetCellSize0();
-    parameters.m_cellSize1 = pCaloHit->GetCellSize1();
-    parameters.m_cellThickness = pCaloHit->GetCellThickness();
-    parameters.m_nCellRadiationLengths = pCaloHit->GetNCellRadiationLengths();
-    parameters.m_nCellInteractionLengths = pCaloHit->GetNCellInteractionLengths();
-    parameters.m_time = pCaloHit->GetTime();
-    parameters.m_inputEnergy = pCaloHit->GetInputEnergy();
-    parameters.m_mipEquivalentEnergy = pCaloHit->GetMipEquivalentEnergy();
-    parameters.m_electromagneticEnergy = pCaloHit->GetElectromagneticEnergy();
-    parameters.m_hadronicEnergy = pCaloHit->GetHadronicEnergy();
-    parameters.m_isDigital = pCaloHit->IsDigital();
-    parameters.m_hitType = pCaloHit->GetHitType();
-    parameters.m_hitRegion = pCaloHit->GetHitRegion();
-    parameters.m_layer = pCaloHit->GetLayer();
-    parameters.m_isInOuterSamplingLayer = pCaloHit->IsInOuterSamplingLayer();
-    // ATTN Parent of calo hit in worker is corresponding calo hit in master
-    parameters.m_pParentAddress = static_cast<const void *>(pCaloHit);
-    parameters.m_larTPCVolumeId = pLArCaloHit->GetLArTPCVolumeId();
-    parameters.m_daughterVolumeId = (m_larCaloHitVersion > 1) ? pLArCaloHit->GetDaughterVolumeId() : 0;
+    pLArCaloHit->GetParameters(parameters);
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
@@ -700,7 +678,6 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
 
 StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const MCParticle *const pMCParticle, const LArMCParticleFactory *const pMCParticleFactory) const
 {
-    LArMCParticleParameters parameters;
     const LArMCParticle *const pLArMCParticle = dynamic_cast<const LArMCParticle *>(pMCParticle);
 
     if (!pLArMCParticle)
@@ -709,16 +686,8 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const MCParticle
         return STATUS_CODE_INVALID_PARAMETER;
     }
 
-    parameters.m_nuanceCode = pLArMCParticle->GetNuanceCode();
-    parameters.m_process = pLArMCParticle->GetProcess();
-    parameters.m_energy = pMCParticle->GetEnergy();
-    parameters.m_momentum = pMCParticle->GetMomentum();
-    parameters.m_vertex = pMCParticle->GetVertex();
-    parameters.m_endpoint = pMCParticle->GetEndpoint();
-    parameters.m_particleId = pMCParticle->GetParticleId();
-    parameters.m_mcParticleType = pMCParticle->GetMCParticleType();
-    // ATTN Parent of mc particle in worker is corresponding mc particle in master
-    parameters.m_pParentAddress = static_cast<const void *>(pMCParticle);
+    LArMCParticleParameters parameters;
+    pLArMCParticle->GetParameters(parameters);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*pPandora, parameters, *pMCParticleFactory));
 
     for (const MCParticle *const pDaughterMCParticle : pMCParticle->GetDaughterList())

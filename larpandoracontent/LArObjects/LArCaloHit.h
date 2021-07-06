@@ -61,6 +61,13 @@ public:
     unsigned int GetDaughterVolumeId() const;
 
     /**
+     *  @brief  Get the parameters associated with this calo hit
+     *
+     *  @return the output parameters
+     */
+    void GetParameters(LArCaloHitParameters &parameters) const;
+
+    /**
      *  @brief  Get the probability that the hit is track-like
      *
      *  @return the probability the hit is track-like
@@ -167,6 +174,35 @@ inline unsigned int LArCaloHit::GetLArTPCVolumeId() const
 inline unsigned int LArCaloHit::GetDaughterVolumeId() const
 {
     return m_daughterVolumeId;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArCaloHit::GetParameters(LArCaloHitParameters &parameters) const
+{
+    parameters.m_positionVector = this->GetPositionVector();
+    parameters.m_expectedDirection = this->GetExpectedDirection();
+    parameters.m_cellNormalVector = this->GetCellNormalVector();
+    parameters.m_cellGeometry = this->GetCellGeometry();
+    parameters.m_cellSize0 = this->GetCellSize0();
+    parameters.m_cellSize1 = this->GetCellSize1();
+    parameters.m_cellThickness = this->GetCellThickness();
+    parameters.m_nCellRadiationLengths = this->GetNCellRadiationLengths();
+    parameters.m_nCellInteractionLengths = this->GetNCellInteractionLengths();
+    parameters.m_time = this->GetTime();
+    parameters.m_inputEnergy = this->GetInputEnergy();
+    parameters.m_mipEquivalentEnergy = this->GetMipEquivalentEnergy();
+    parameters.m_electromagneticEnergy = this->GetElectromagneticEnergy();
+    parameters.m_hadronicEnergy = this->GetHadronicEnergy();
+    parameters.m_isDigital = this->IsDigital();
+    parameters.m_hitType = this->GetHitType();
+    parameters.m_hitRegion = this->GetHitRegion();
+    parameters.m_layer = this->GetLayer();
+    parameters.m_isInOuterSamplingLayer = this->IsInOuterSamplingLayer();
+    // ATTN Parent of calo hit in worker is corresponding calo hit in master
+    parameters.m_pParentAddress = static_cast<const void *>(this);
+    parameters.m_larTPCVolumeId = this->GetLArTPCVolumeId();
+    parameters.m_daughterVolumeId = this->GetDaughterVolumeId();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
