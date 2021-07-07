@@ -23,7 +23,9 @@ OvershootTracksTool::OvershootTracksTool() :
     ThreeDKinkBaseTool(1),
     m_splitMode(true),
     m_maxVertexXSeparation(2.f),
-    m_cosThetaCutForKinkSearch(0.94f)
+    m_cosThetaCutForKinkSearch(0.94f),
+    m_minGradient{0.04f},
+    m_visualize{false}
 {
 }
 
@@ -47,10 +49,37 @@ void OvershootTracksTool::GetIteratorListModifications(
                 IteratorList::const_iterator iIterB((nMatchedSamplingPoints1 >= nMatchedSamplingPoints2) ? iIter2 : iIter1);
 
                 Particle particle(*(*iIterA), *(*iIterB));
+                const LArPointingCluster pointingClusterCommon(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCommonCluster));
                 const LArPointingCluster pointingClusterA1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA1));
                 const LArPointingCluster pointingClusterB1(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB1));
                 const LArPointingCluster pointingClusterA2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterA2));
                 const LArPointingCluster pointingClusterB2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pClusterB2));
+                const std::vector<const LArPointingCluster *> pointingClusterList{
+                    &pointingClusterCommon, &pointingClusterA1, &pointingClusterB1, &pointingClusterA2, &pointingClusterB2};
+
+                // Look for evidence of longitudinality based on the start and end directions of the clusters involved
+                bool isLongitudinal{false};
+                for (const LArPointingCluster *pCluster : pointingClusterList)
+                {
+                    const LArPointingCluster::Vertex &innerVertex{pCluster->GetInnerVertex()};
+                    const float innerX{std::abs(innerVertex.GetDirection().GetX())}, innerZ{std::abs(innerVertex.GetDirection().GetZ())};
+                    if (innerZ > std::numeric_limits<float>::epsilon() && (innerX / innerZ < m_minGradient))
+                    {
+                        isLongitudinal = true;
+                        break;
+                    }
+
+                    const LArPointingCluster::Vertex &outerVertex{pCluster->GetOuterVertex()};
+                    const float outerX{std::abs(outerVertex.GetDirection().GetX())}, outerZ{std::abs(innerVertex.GetDirection().GetZ())};
+                    if (outerZ > std::numeric_limits<float>::epsilon() && (outerX / outerZ < m_minGradient))
+                    {
+                        isLongitudinal = true;
+                        break;
+                    }
+                }
+                // Split location for longitudinal tracks is unreliable, don't proceed
+                if (isLongitudinal)
+                    continue;
 
                 LArPointingCluster::Vertex vertexA1, vertexB1, vertexA2, vertexB2;
                 LArPointingClusterHelper::GetClosestVerticesInX(pointingClusterA1, pointingClusterB1, vertexA1, vertexB1);
@@ -95,6 +124,16 @@ void OvershootTracksTool::GetIteratorListModifications(
                 modification.m_affectedClusters.push_back(particle.m_pClusterB2);
 
                 modificationList.push_back(modification);
+
+                if (m_visualize)
+                {
+                    PANDORA_MONITORING_API(SetEveDisplayParameters(pAlgorithm->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
+                    PANDORA_MONITORING_API(VisualizeClusters(pAlgorithm->GetPandora(), &modification.m_affectedClusters, "Overshoot", RED));
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(pAlgorithm->GetPandora(), &particle.m_splitPosition, "Split 0", BLACK, 1));
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(pAlgorithm->GetPandora(), &particle.m_splitPosition1, "Split 1", BLACK, 1));
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(pAlgorithm->GetPandora(), &particle.m_splitPosition2, "Split 2", BLACK, 1));
+                    PANDORA_MONITORING_API(ViewEvent(pAlgorithm->GetPandora()));
+                }
             }
             catch (StatusCodeException &statusCodeException)
             {
@@ -254,6 +293,10 @@ StatusCode OvershootTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "CosThetaCutForKinkSearch", m_cosThetaCutForKinkSearch));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinGradient", m_minGradient));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return ThreeDKinkBaseTool::ReadSettings(xmlHandle);
 }

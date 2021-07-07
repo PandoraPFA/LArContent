@@ -89,6 +89,8 @@ private:
     bool m_splitMode;                 ///< Whether to run in cluster splitting mode, as opposed to cluster merging mode
     float m_maxVertexXSeparation;     ///< The max separation between accompanying clusters vertex x positions to make split
     float m_cosThetaCutForKinkSearch; ///< The cos theta cut used for the kink search in three dimensions
+    float m_minGradient;              ///< The minimum ratio of transverse to longitudinal extent
+    bool m_visualize;                 ///< Visualize cluster split locations
 };
 
 } // namespace lar_content
