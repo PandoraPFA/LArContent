@@ -14,7 +14,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-ClearTracksTool::ClearTracksTool() : m_minMatchedFraction(0.9f), m_minXOverlapFraction(0.9f)
+ClearTracksTool::ClearTracksTool() : m_minMatchedFraction(0.9f), m_minXOverlapFraction(0.9f), m_visualize{false}
 {
 }
 
@@ -62,6 +62,13 @@ void ClearTracksTool::CreateThreeDParticles(
         protoParticle.m_clusterList.push_back(iter->GetClusterV());
         protoParticle.m_clusterList.push_back(iter->GetClusterW());
         protoParticleVector.push_back(protoParticle);
+
+        if (m_visualize)
+        {
+            PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &protoParticle.m_clusterList, "ClearTracks", RED));
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        }
     }
 
     particlesMade |= pAlgorithm->CreateThreeDParticles(protoParticleVector);
@@ -76,6 +83,8 @@ StatusCode ClearTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapFraction", m_minXOverlapFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return STATUS_CODE_SUCCESS;
 }
