@@ -19,7 +19,8 @@ LongTracksTool::LongTracksTool() :
     m_minMatchedFraction(0.9f),
     m_minMatchedSamplingPoints(20),
     m_minXOverlapFraction(0.9f),
-    m_minMatchedSamplingPointRatio(2)
+    m_minMatchedSamplingPointRatio(2),
+    m_visualize(false)
 {
 }
 
@@ -115,6 +116,13 @@ void LongTracksTool::FindLongTracks(const TensorType &overlapTensor, ProtoPartic
             protoParticle.m_clusterList.push_back((*iIter)->GetClusterW());
             protoParticleVector.push_back(protoParticle);
 
+            if (m_visualize)
+            {
+                PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &protoParticle.m_clusterList, "LongTracks", RED));
+                PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+            }
+
             usedClusters.insert((*iIter)->GetClusterU());
             usedClusters.insert((*iIter)->GetClusterV());
             usedClusters.insert((*iIter)->GetClusterW());
@@ -163,6 +171,8 @@ StatusCode LongTracksTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MinMatchedSamplingPointRatio", m_minMatchedSamplingPointRatio));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return STATUS_CODE_SUCCESS;
 }

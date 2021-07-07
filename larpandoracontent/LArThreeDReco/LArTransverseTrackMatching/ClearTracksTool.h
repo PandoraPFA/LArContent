@@ -40,6 +40,7 @@ private:
 
     float m_minMatchedFraction;  ///< The min matched sampling point fraction for particle creation
     float m_minXOverlapFraction; ///< The min x overlap fraction (in each view) for particle creation
+    bool m_visualize;            ///< Visualize the clear track matches
 };
 
 } // namespace lar_content

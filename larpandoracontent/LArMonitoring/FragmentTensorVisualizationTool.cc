@@ -1,21 +1,21 @@
 /**
- *  @file   larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.cc
+ *  @file   larpandoracontent/LArMonitoring/FragmentTensorVisualizationTool.cc
  *
- *  @brief  Implementation of the transverse tensor visualization tool class.
+ *  @brief  Implementation of the fragment tensor visualization tool class.
  *
  *  $Log: $
  */
 
 #include "Pandora/AlgorithmHeaders.h"
 
-#include "larpandoracontent/LArMonitoring/TransverseTensorVisualizationTool.h"
+#include "larpandoracontent/LArMonitoring/FragmentTensorVisualizationTool.h"
 
 using namespace pandora;
 
 namespace lar_content
 {
 
-TransverseTensorVisualizationTool::TransverseTensorVisualizationTool() :
+FragmentTensorVisualizationTool::FragmentTensorVisualizationTool() :
     m_minClusterConnections(1),
     m_ignoreUnavailableClusters(true),
     m_showEachIndividualElement(false),
@@ -25,7 +25,7 @@ TransverseTensorVisualizationTool::TransverseTensorVisualizationTool() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool TransverseTensorVisualizationTool::Run(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, TensorType &overlapTensor)
+bool FragmentTensorVisualizationTool::Run(ThreeViewTrackFragmentsAlgorithm *const pAlgorithm, TensorType &overlapTensor)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
         std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
@@ -67,10 +67,7 @@ bool TransverseTensorVisualizationTool::Run(ThreeViewTransverseTracksAlgorithm *
             usedKeyClusters.insert(eIter->GetClusterU());
 
             std::cout << " Element " << counter++ << ": MatchedFraction " << eIter->GetOverlapResult().GetMatchedFraction()
-                      << ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints() << ", xSpanU "
-                      << eIter->GetOverlapResult().GetXOverlap().GetXSpanU() << ", xSpanV " << eIter->GetOverlapResult().GetXOverlap().GetXSpanV()
-                      << ", xSpanW " << eIter->GetOverlapResult().GetXOverlap().GetXSpanW() << ", xOverlapSpan "
-                      << eIter->GetOverlapResult().GetXOverlap().GetXOverlapSpan() << ", chi2 "
+                      << ", MatchedSamplingPoints " << eIter->GetOverlapResult().GetNMatchedSamplingPoints() << ", Chi2 "
                       << eIter->GetOverlapResult().GetReducedChi2() << std::endl;
 
             if (m_showEachIndividualElement)
@@ -106,7 +103,7 @@ bool TransverseTensorVisualizationTool::Run(ThreeViewTransverseTracksAlgorithm *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode TransverseTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode FragmentTensorVisualizationTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinClusterConnections", m_minClusterConnections));
