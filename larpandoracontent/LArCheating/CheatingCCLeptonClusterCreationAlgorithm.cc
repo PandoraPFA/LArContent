@@ -89,15 +89,20 @@ void CheatingCCLeptonClusterCreationAlgorithm::SimpleMCParticleCollection(const 
 
 bool CheatingCCLeptonClusterCreationAlgorithm::SelectMCParticlesForClustering(const MCParticle *const pMCParticle) const
 {
-    // input def of is this a leading CC lepton?
-    // this might fail?
-    std::cout << "ISOBEL YOU STILL NEED TO IMPLEMENT WHETHER THIS IS A CC OR NC INTERACTION" << std::endl;
-
     const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
     const int pdg(pParentMCParticle->GetParticleId());
     const bool isLeadingLepton((E_MINUS == std::abs(pdg)) || (MU_MINUS == std::abs(pdg)));
 
-    return isLeadingLepton;
+    const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pMCParticle));
+    bool isNC(pLArMCParticle->GetIsNC());
+    //std::cout << "IS NC: " << isNC << std::endl;
+
+    //std::cout << "////////////" << std::endl;
+    //std::cout << "pdg: " << pdg << std::endl;
+    //std::cout << "isLeadingLepton: " << isLeadingLepton << std::endl;
+    //std::cout << "isNC: " << isNC << std::endl;
+
+    return (isLeadingLepton && !isNC);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

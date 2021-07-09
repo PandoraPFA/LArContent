@@ -230,7 +230,7 @@
     d("LArEventReading",                        EventReadingAlgorithm)                                                          \
     d("LArEventWriting",                        EventWritingAlgorithm)                                                          \
     d("LArCheatingClusterCharacterisation",     CheatingClusterCharacterisationAlgorithm)                                       \
-    d("LArCCLeptonCheatingClusterCreation",     CheatingCCLeptonClusterCreationAlgorithm)                                       \
+    d("LArCheatingCCLeptonClusterCreation",     CheatingCCLeptonClusterCreationAlgorithm)                                       \
     d("LArCheatingClusterCreation",             CheatingClusterCreationAlgorithm)                                               \
     d("LArCheatingCosmicRayIdentification",     CheatingCosmicRayIdentificationAlg)                                             \
     d("LArCheatingCosmicRayShowerMatching",     CheatingCosmicRayShowerMatchingAlg)                                             \
