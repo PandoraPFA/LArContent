@@ -21,11 +21,7 @@
 namespace lar_content
 {
 
-<<<<<<< HEAD
 // Enumeration maps onto G4 process IDs from QGSP_BERT and EM standard physics lists, plus an ID for the incident neutrino
-=======
-// Enumeration maps onto G4 process IDs, plus an ID for the incident neutrino
->>>>>>> 5e3dcc64 (algorithm creation and modification for CC lepton cheating - need to update LArContent though)
 enum MCProcess
 {
     MC_PROC_INCIDENT_NU = -1,
@@ -88,7 +84,7 @@ class LArMCParticleParameters : public object_creation::MCParticle::Parameters
 public:
     pandora::InputInt m_nuanceCode; ///< The nuance code
     pandora::InputInt m_process;    ///< The process creating the particle
-    pandora::InputBool m_isNC;
+    pandora::InputInt m_isNC;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -212,6 +208,7 @@ inline int LArMCParticle::GetNuanceCode() const
 inline void LArMCParticle::FillParameters(LArMCParticleParameters &parameters) const
 {
     parameters.m_nuanceCode = this->GetNuanceCode();
+    parameters.m_isNC = this->GetIsNC();
     parameters.m_process = this->GetProcess();
     parameters.m_energy = this->GetEnergy();
     parameters.m_momentum = this->GetMomentum();
@@ -232,7 +229,7 @@ inline MCProcess LArMCParticle::GetProcess() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline bool LArMCParticle::GetIsNC() const
+inline int LArMCParticle::GetIsNC() const
 {
     return m_isNC;
 }
@@ -267,7 +264,7 @@ inline pandora::StatusCode LArMCParticleFactory::Read(Parameters &parameters, pa
     // ATTN: To receive this call-back must have already set file reader mc particle factory to this factory
     int nuanceCode(0);
     int process(0);
-    bool isNC(false);
+    int isNC(false);
 
     if (pandora::BINARY == fileReader.GetFileType())
     {
