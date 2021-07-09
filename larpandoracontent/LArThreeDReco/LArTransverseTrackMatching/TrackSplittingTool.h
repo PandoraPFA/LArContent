@@ -92,6 +92,20 @@ private:
      */
     bool CheckSplitPosition(const pandora::CartesianVector &splitPosition, const float splitX, const TwoDSlidingFitResult &longFitResult) const;
 
+    /**
+     *  @brief  Refine a position used to project a split location in the long cluster
+     *
+     *  @param  pAlgorithm address of the calling algorithm
+     *  @param  pFixedCluster The cluster with a fixed reference position
+     *  @param  pRefineCluster The cluster with a reference position to be refined
+     *  @param  fixedPosition The fixed reference position
+     *  @param  refinePosition The position in need of refinement
+     *  @param  The output refined x coordinate of the split
+     */
+    void RefineSplitPosition(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const pandora::Cluster *pFixedCluster,
+        const pandora::Cluster *pRefineCluster, const pandora::CartesianVector &fixedPosition, pandora::CartesianVector &refinePosition,
+        float &splitX) const;
+
     float m_minMatchedFraction;              ///< The min matched sampling point fraction for particle creation
     unsigned int m_minMatchedSamplingPoints; ///< The min number of matched sampling points for particle creation
     float m_minXOverlapFraction;             ///< The min x overlap fraction (between long clusters and short cluster vs. shared overlap)
@@ -103,6 +117,7 @@ private:
     float m_minAbsoluteLongDeltaX;      ///< Min x distance between ends of short and long clusters (measured as an absolute distance)
     float m_minSplitToVertexProjection; ///< Min projected distance between split position and either inner or outer vertex of long cluster
     float m_maxSplitVsFitPositionDistance; ///< Max allowed distance between split position and sliding linear fit position at the split x coordinate
+    bool m_visualize;                      ///< Visualize cluster split locations
 };
 
 } // namespace lar_content
