@@ -30,7 +30,8 @@ TrackSplittingTool::TrackSplittingTool() :
     m_minLongDeltaXFraction(0.2f),
     m_minAbsoluteLongDeltaX(1.f),
     m_minSplitToVertexProjection(1.f),
-    m_maxSplitVsFitPositionDistance(1.5f)
+    m_maxSplitVsFitPositionDistance(1.5f),
+    m_visualize(false)
 {
 }
 
@@ -146,7 +147,7 @@ bool TrackSplittingTool::PassesChecks(ThreeViewTransverseTracksAlgorithm *const 
         if (longXSpan < std::numeric_limits<float>::epsilon())
             return false;
 
-        const float splitX(isMinX ? (0.5f * (particle.m_short1MinX + particle.m_short2MinX)) : (0.5f * (particle.m_short1MaxX + particle.m_short2MaxX)));
+        float splitX(isMinX ? (0.5f * (particle.m_short1MinX + particle.m_short2MinX)) : (0.5f * (particle.m_short1MaxX + particle.m_short2MaxX)));
         const float shortDeltaX(
             isMinX ? std::fabs(particle.m_short1MinX - particle.m_short2MinX) : std::fabs(particle.m_short1MaxX - particle.m_short2MaxX));
         const float longDeltaX(isMinX ? (splitX - particle.m_longMinX) : (particle.m_longMaxX - splitX));
@@ -177,13 +178,33 @@ bool TrackSplittingTool::PassesChecks(ThreeViewTransverseTracksAlgorithm *const 
             pointingCluster2.GetInnerVertex().GetPosition().GetX() > pointingCluster2.GetOuterVertex().GetPosition().GetX()
                 ? pointingCluster2.GetInnerVertex().GetPosition()
                 : pointingCluster2.GetOuterVertex().GetPosition()};
-        const CartesianVector position1(isMinX ? minPos1 : maxPos1);
-        const CartesianVector position2(isMinX ? minPos2 : maxPos2);
+        CartesianVector position1(isMinX ? minPos1 : maxPos1);
+        CartesianVector position2(isMinX ? minPos2 : maxPos2);
+
+        if (!isMinX && (maxPos2.GetX() - maxPos1.GetX() > 1.f))
+            this->RefineSplitPosition(pAlgorithm, particle.m_pCluster1, particle.m_pCluster2, position1, position2, splitX);
+        else if (!isMinX && (maxPos1.GetX() - maxPos2.GetX() > 1.f))
+            this->RefineSplitPosition(pAlgorithm, particle.m_pCluster2, particle.m_pCluster1, position2, position1, splitX);
+        else if (isMinX && (minPos2.GetX() - minPos1.GetX() > 1.f))
+            this->RefineSplitPosition(pAlgorithm, particle.m_pCluster2, particle.m_pCluster1, position2, position1, splitX);
+        else if (isMinX && (minPos1.GetX() - minPos2.GetX() > 1.f))
+            this->RefineSplitPosition(pAlgorithm, particle.m_pCluster1, particle.m_pCluster2, position1, position2, splitX);
 
         CartesianVector splitPosition(0.f, 0.f, 0.f);
         float chiSquared(std::numeric_limits<float>::max());
         LArGeometryHelper::MergeTwoPositions(this->GetPandora(), LArClusterHelper::GetClusterHitType(particle.m_pCluster1),
             LArClusterHelper::GetClusterHitType(particle.m_pCluster2), position1, position2, splitPosition, chiSquared);
+
+        if (m_visualize)
+        {
+            ClusterList clusterList{particle.m_pLongCluster, particle.m_pCluster1, particle.m_pCluster2};
+            PANDORA_MONITORING_API(SetEveDisplayParameters(pAlgorithm->GetPandora(), false, DETECTOR_VIEW_XZ, -1.f, -1.f, 1.f));
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, "Clusters", RED));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(pAlgorithm->GetPandora(), &position1, "Pos 1", BLACK, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(pAlgorithm->GetPandora(), &position2, "Pos 2", BLACK, 1));
+            PANDORA_MONITORING_API(AddMarkerToVisualization(pAlgorithm->GetPandora(), &splitPosition, "Split Pos", BLACK, 1));
+            PANDORA_MONITORING_API(ViewEvent(pAlgorithm->GetPandora()));
+        }
 
         if (!this->CheckSplitPosition(splitPosition, splitX, pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster)))
             return false;
@@ -222,6 +243,35 @@ bool TrackSplittingTool::CheckSplitPosition(const CartesianVector &splitPosition
     }
 
     return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void TrackSplittingTool::RefineSplitPosition(ThreeViewTransverseTracksAlgorithm *const pAlgorithm, const Cluster *pFixedCluster,
+    const Cluster *pRefineCluster, const CartesianVector &fixedPosition, CartesianVector &refinePosition, float &splitX) const
+{
+    CaloHitList caloHits;
+    pRefineCluster->GetOrderedCaloHitList().FillCaloHitList(caloHits);
+    float minChi2{std::numeric_limits<float>::max()};
+    const CaloHit *pBestCaloHit{nullptr};
+    for (const CaloHit *pCaloHit : caloHits)
+    {
+        float chi2{std::numeric_limits<float>::max()};
+        CartesianVector dummy(0.f, 0.f, 0.f);
+        LArGeometryHelper::MergeTwoPositions3D(pAlgorithm->GetPandora(), LArClusterHelper::GetClusterHitType(pFixedCluster),
+            LArClusterHelper::GetClusterHitType(pRefineCluster), fixedPosition, pCaloHit->GetPositionVector(), dummy, chi2);
+        if (chi2 < minChi2)
+        {
+            minChi2 = chi2;
+            pBestCaloHit = pCaloHit;
+        }
+    }
+    if (pBestCaloHit)
+    {
+        const CartesianVector &bestPosition{pBestCaloHit->GetPositionVector()};
+        refinePosition.SetValues(bestPosition.GetX(), bestPosition.GetY(), bestPosition.GetZ());
+        splitX = bestPosition.GetX();
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -287,6 +337,8 @@ StatusCode TrackSplittingTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MaxSplitVsFitPositionDistance", m_maxSplitVsFitPositionDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return STATUS_CODE_SUCCESS;
 }
