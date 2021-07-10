@@ -25,8 +25,8 @@ e20:debug	e20:debug       -nq-	e20
 e20:prof	e20:prof        -nq-	e20
 e19:debug	e19:debug	-nq-	e19
 e19:prof	e19:prof	-nq-	e19
-c7:debug	c7:debug	-nq-	-
-c7:prof		c7:prof		-nq-	-
+c7:debug	c7:debug	-nq-	c7
+c7:prof		c7:prof		-nq-	c7
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:
