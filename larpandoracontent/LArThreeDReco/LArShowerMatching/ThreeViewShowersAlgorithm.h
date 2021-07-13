@@ -160,6 +160,7 @@ private:
 
     float m_minShowerMatchedFraction;      ///< The minimum shower matched sampling fraction to allow shower grouping
     unsigned int m_minShowerMatchedPoints; ///< The minimum number of matched shower sampling points to allow shower grouping
+    bool m_visualize;                      ///< Visualize cluster matching procedure
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
