@@ -20,7 +20,8 @@ ClearShowersTool::ClearShowersTool() :
     m_minMatchedSamplingPoints(40),
     m_minXOverlapFraction(0.5f),
     m_minMatchedSamplingPointRatio(3),
-    m_minXOverlapSpanRatio(3.f)
+    m_minXOverlapSpanRatio(3.f),
+    m_visualize(false)
 {
 }
 
@@ -114,6 +115,13 @@ void ClearShowersTool::FindClearShowers(const TensorType &overlapTensor, ProtoPa
             if (!ClearShowersTool::IsLargerThanDirectConnections(iIter, elementList, m_minMatchedSamplingPointRatio, m_minXOverlapSpanRatio, usedClusters))
                 continue;
 
+            if (m_visualize)
+            {
+                ClusterList clusterList{(*iIter)->GetClusterU(), (*iIter)->GetClusterV(), (*iIter)->GetClusterW()};
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, "Selected", BLUE));
+                PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+            }
+
             ProtoParticle protoParticle;
             protoParticle.m_clusterList.push_back((*iIter)->GetClusterU());
             protoParticle.m_clusterList.push_back((*iIter)->GetClusterV());
@@ -134,6 +142,13 @@ void ClearShowersTool::SelectLargeShowerElements(
 {
     for (TensorType::ElementList::const_iterator eIter = elementList.begin(); eIter != elementList.end(); ++eIter)
     {
+        if (m_visualize)
+        {
+            ClusterList clusterList{eIter->GetClusterU(), eIter->GetClusterV(), eIter->GetClusterW()};
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, "Considered", RED));
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        }
+
         if (usedClusters.count(eIter->GetClusterU()) || usedClusters.count(eIter->GetClusterV()) || usedClusters.count(eIter->GetClusterW()))
             continue;
 
@@ -150,6 +165,12 @@ void ClearShowersTool::SelectLargeShowerElements(
             (xOverlap.GetXSpanW() > std::numeric_limits<float>::epsilon()) && (xOverlap.GetXOverlapSpan() / xOverlap.GetXSpanW() > m_minXOverlapFraction))
         {
             iteratorList.push_back(eIter);
+            if (m_visualize)
+            {
+                ClusterList clusterList{eIter->GetClusterU(), eIter->GetClusterV(), eIter->GetClusterW()};
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, "Large", GREEN));
+                PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+            }
         }
     }
 }
@@ -172,6 +193,8 @@ StatusCode ClearShowersTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinXOverlapSpanRatio", m_minXOverlapSpanRatio));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return STATUS_CODE_SUCCESS;
 }

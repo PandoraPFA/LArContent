@@ -25,7 +25,8 @@ ThreeViewShowersAlgorithm::ThreeViewShowersAlgorithm() :
     m_minClusterCaloHits(5),
     m_minClusterLengthSquared(3.f * 3.f),
     m_minShowerMatchedFraction(0.2f),
-    m_minShowerMatchedPoints(20)
+    m_minShowerMatchedPoints(20),
+    m_visualize(false)
 {
 }
 
@@ -87,6 +88,11 @@ void ThreeViewShowersAlgorithm::SelectInputClusters(const ClusterList *const pIn
 
         selectedClusterList.push_back(pCluster);
     }
+    if (m_visualize)
+    {
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &selectedClusterList, "Selected Clusters", RED));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -109,6 +115,11 @@ void ThreeViewShowersAlgorithm::PrepareInputClusters(ClusterList &preparedCluste
             if (STATUS_CODE_FAILURE == statusCodeException.GetStatusCode())
                 throw statusCodeException;
         }
+    }
+    if (m_visualize)
+    {
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &preparedClusterList, "Prepared Clusters", GREEN));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
 }
 
@@ -191,6 +202,13 @@ StatusCode ThreeViewShowersAlgorithm::CalculateOverlapResult(
 
     if ((showerOverlapResult.GetMatchedFraction() < m_minShowerMatchedFraction) || (showerOverlapResult.GetNMatchedSamplingPoints() < m_minShowerMatchedPoints))
         return STATUS_CODE_NOT_FOUND;
+
+    if (m_visualize)
+    {
+        ClusterList clusterList{pClusterU, pClusterV, pClusterW};
+        PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &clusterList, "Overlapping Clusters", BLUE));
+        PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+    }
 
     overlapResult = showerOverlapResult;
     return STATUS_CODE_SUCCESS;
@@ -398,6 +416,8 @@ StatusCode ThreeViewShowersAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinShowerMatchedPoints", m_minShowerMatchedPoints));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
     return BaseAlgorithm::ReadSettings(xmlHandle);
 }
