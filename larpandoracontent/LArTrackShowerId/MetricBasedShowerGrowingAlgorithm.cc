@@ -485,9 +485,9 @@ float MetricBasedShowerGrowingAlgorithm::GetMCFigureOfMerit(const SeedAssociatio
         try 
         {
             pParentMCParticle = MCParticleHelper::GetMainMCParticle(pParentCluster);
-            const unsigned int pdgCode(pParentMCParticle->GetParticleId());
+            const unsigned int pdgCode(std::abs(pParentMCParticle->GetParticleId()));
 
-            if (pdgCode == E_MINUS || pdgCode == E_PLUS || pdgCode == PHOTON)
+            if (pdgCode == E_MINUS || pdgCode == PHOTON)
                 pParentMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pParentMCParticle);
             //std::cout << "Parent pdg code " << pParentMCParticle->GetParticleId() << ", Energy " << pParentMCParticle->GetEnergy() << std::endl;
         }
@@ -506,9 +506,9 @@ float MetricBasedShowerGrowingAlgorithm::GetMCFigureOfMerit(const SeedAssociatio
             try
             {
                 pDaughterMCParticle = MCParticleHelper::GetMainMCParticle(pBranchCluster);
-                const unsigned int pdgCode(pDaughterMCParticle->GetParticleId());
+                const unsigned int pdgCode(std::abs(pDaughterMCParticle->GetParticleId()));
 
-                if (pdgCode == E_MINUS || pdgCode == E_PLUS || pdgCode == PHOTON)
+                if (pdgCode == E_MINUS || pdgCode == PHOTON)
                     pDaughterMCParticle = LArMCParticleHelper::GetPrimaryMCParticle(pDaughterMCParticle);
                 //std::cout << "Daughter pdg code " << pDaughterMCParticle->GetParticleId() << ", Energy " << pDaughterMCParticle->GetEnergy() << std::endl;    
             }
