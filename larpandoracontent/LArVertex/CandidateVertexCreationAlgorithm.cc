@@ -45,6 +45,18 @@ CandidateVertexCreationAlgorithm::CandidateVertexCreationAlgorithm() :
 
 StatusCode CandidateVertexCreationAlgorithm::Run()
 {
+    if (!m_nuToCheatList.empty())
+    {
+        const MCParticleList *pMCParticleList(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+        for (const int nuPdg : m_nuToCheatList)
+        {
+            if (LArMCParticleHelper::IsCCNuEvent(pMCParticleList, nuPdg))
+                return STATUS_CODE_SUCCESS;
+        }
+    }
+
     try
     {
         ClusterVector clusterVectorU, clusterVectorV, clusterVectorW;

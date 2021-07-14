@@ -44,6 +44,14 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
         parameters.m_vertexLabel = VERTEX_INTERACTION;
         parameters.m_vertexType = VERTEX_3D;
 
+
+        CartesianVector position( pMCParticle->GetEndpoint().GetX() + m_vertexXCorrection, pMCParticle->GetEndpoint().GetY(), pMCParticle->GetEndpoint().GetZ());
+        CartesianVector origin(0,0,0);
+
+        std::cout << "HERE" << std::endl;
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &position, "jam", RED, 1);
+        PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &origin, "jam", BLACK, 1);
+
         const Vertex *pVertex(nullptr);
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
     }
@@ -55,6 +63,8 @@ StatusCode CheatingVertexCreationAlgorithm::Run()
         if (m_replaceCurrentVertexList)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
     }
+
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
     return STATUS_CODE_SUCCESS;
 }
