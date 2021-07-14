@@ -90,19 +90,15 @@ void CheatingCCLeptonClusterCreationAlgorithm::SimpleMCParticleCollection(const 
 bool CheatingCCLeptonClusterCreationAlgorithm::SelectMCParticlesForClustering(const MCParticle *const pMCParticle) const
 {
     const MCParticle *const pParentMCParticle(LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle));
-    const int pdg(pParentMCParticle->GetParticleId());
-    const bool isLeadingLepton((E_MINUS == std::abs(pdg)) || (MU_MINUS == std::abs(pdg)));
+    const int pdg(std::abs(pParentMCParticle->GetParticleId()));
+    const bool isLeadingLepton((E_MINUS == pdg) || (MU_MINUS == pdg));
 
     const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pMCParticle));
     bool isNC(pLArMCParticle->GetIsNC());
-    //std::cout << "IS NC: " << isNC << std::endl;
 
-    //std::cout << "////////////" << std::endl;
-    //std::cout << "pdg: " << pdg << std::endl;
-    //std::cout << "isLeadingLepton: " << isLeadingLepton << std::endl;
-    //std::cout << "isNC: " << isNC << std::endl;
+    bool selected(std::find(m_particleIdList.begin(), m_particleIdList.end(), pdg) != m_particleIdList.end());
 
-    return (isLeadingLepton && !isNC);
+    return (isLeadingLepton && !isNC && selected);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -154,9 +150,10 @@ StatusCode CheatingCCLeptonClusterCreationAlgorithm::ReadSettings(const TiXmlHan
         XmlHelper::ReadValue(xmlHandle, "CollapseToPrimaryMCParticles", m_collapseToPrimaryMCParticles));
 
     if (m_collapseToPrimaryMCParticles)
-    {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
-    }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ParticleIdList", m_particleIdList));
 
     return STATUS_CODE_SUCCESS;
 }
