@@ -653,8 +653,7 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const CaloHit *c
         return STATUS_CODE_INVALID_PARAMETER;
     }
     LArCaloHitParameters parameters;
-    pLArCaloHit->GetParameters(parameters);
-
+    pLArCaloHit->FillParameters(parameters);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::CaloHit::Create(*pPandora, parameters, m_larCaloHitFactory));
 
     if (m_passMCParticlesToWorkerInstances)
@@ -687,7 +686,7 @@ StatusCode MasterAlgorithm::Copy(const Pandora *const pPandora, const MCParticle
     }
 
     LArMCParticleParameters parameters;
-    pLArMCParticle->GetParameters(parameters);
+    pLArMCParticle->FillParameters(parameters);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraApi::MCParticle::Create(*pPandora, parameters, *pMCParticleFactory));
 
     for (const MCParticle *const pDaughterMCParticle : pMCParticle->GetDaughterList())

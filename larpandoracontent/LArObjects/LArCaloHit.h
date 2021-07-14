@@ -61,11 +61,11 @@ public:
     unsigned int GetDaughterVolumeId() const;
 
     /**
-     *  @brief  Get the parameters associated with this calo hit
+     *  @brief  Fill the parameters associated with this calo hit
      *
-     *  @return the output parameters
+     *  @param  parameters the output parameters
      */
-    void GetParameters(LArCaloHitParameters &parameters) const;
+    void FillParameters(LArCaloHitParameters &parameters) const;
 
     /**
      *  @brief  Get the probability that the hit is track-like
@@ -178,7 +178,7 @@ inline unsigned int LArCaloHit::GetDaughterVolumeId() const
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline void LArCaloHit::GetParameters(LArCaloHitParameters &parameters) const
+inline void LArCaloHit::FillParameters(LArCaloHitParameters &parameters) const
 {
     parameters.m_positionVector = this->GetPositionVector();
     parameters.m_expectedDirection = this->GetExpectedDirection();
@@ -199,7 +199,7 @@ inline void LArCaloHit::GetParameters(LArCaloHitParameters &parameters) const
     parameters.m_hitRegion = this->GetHitRegion();
     parameters.m_layer = this->GetLayer();
     parameters.m_isInOuterSamplingLayer = this->IsInOuterSamplingLayer();
-    // ATTN Parent of calo hit in worker is corresponding calo hit in master
+    // ATTN Set the parent address to the original owner of the calo hit
     parameters.m_pParentAddress = static_cast<const void *>(this);
     parameters.m_larTPCVolumeId = this->GetLArTPCVolumeId();
     parameters.m_daughterVolumeId = this->GetDaughterVolumeId();
