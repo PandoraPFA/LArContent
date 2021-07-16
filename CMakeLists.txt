@@ -87,8 +87,8 @@ else()
     # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
     foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
         set(${PROJ}_VERSION_MAJOR 03)
-        set(${PROJ}_VERSION_MINOR 23)
-        set(${PROJ}_VERSION_PATCH 05)
+        set(${PROJ}_VERSION_MINOR 24)
+        set(${PROJ}_VERSION_PATCH 00)
         set(${PROJ}_VERSION "${${PROJ}_VERSION_MAJOR}.${${PROJ}_VERSION_MINOR}.${${PROJ}_VERSION_PATCH}")
     endforeach()
 
