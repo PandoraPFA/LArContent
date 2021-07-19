@@ -26,7 +26,9 @@ ThreeViewTransverseTracksAlgorithm::ThreeViewTransverseTracksAlgorithm() :
     m_minSegmentMatchedPoints(3),
     m_minOverallMatchedFraction(0.5f),
     m_minOverallMatchedPoints(10),
-    m_minSamplingPointsPerLayer(0.1f)
+    m_minSamplingPointsPerLayer(0.1f),
+    m_maxZToXDirectionRatio(33.f),
+    m_maxLongitudinalFraction(0.25f)
 {
 }
 
@@ -290,6 +292,33 @@ void ThreeViewTransverseTracksAlgorithm::GetPreviousOverlapResults(const unsigne
 
     if (transverseOverlapResultVector.empty())
         transverseOverlapResultVector.push_back(TransverseOverlapResult());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ThreeViewTransverseTracksAlgorithm::PrepareInputClusters(ClusterList &preparedClusterList)
+{
+    this->NViewTrackMatchingAlgorithm<ThreeViewMatchingControl<TransverseOverlapResult>>::PrepareInputClusters(preparedClusterList);
+
+    for (ClusterList::iterator iter = preparedClusterList.begin(), iterEnd = preparedClusterList.end(); iter != iterEnd;)
+    {
+        const Cluster *pCluster(*iter);
+        const TwoDSlidingFitResult &fitResult{this->GetCachedSlidingFitResult(pCluster)};
+        CartesianVector direction(0.f, 0.f, 0.f);
+        int nLongLayers{0};
+        const int nLayers{1 + fitResult.GetMaxLayer() - fitResult.GetMinLayer()};
+        for (int i = fitResult.GetMinLayer(); i < fitResult.GetMaxLayer(); ++i)
+        {
+            fitResult.GetGlobalFitDirection(fitResult.GetL(i), direction);
+            if (m_maxZToXDirectionRatio * std::abs(direction.GetX()) < std::abs(direction.GetZ()))
+                ++nLongLayers;
+        }
+        const float longFraction{nLongLayers / static_cast<float>(nLayers)};
+        if (longFraction > m_maxLongitudinalFraction)
+            preparedClusterList.erase(iter++);
+        else
+            ++iter;
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

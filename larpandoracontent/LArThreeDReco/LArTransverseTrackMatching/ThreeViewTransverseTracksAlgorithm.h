@@ -103,6 +103,7 @@ private:
     void GetPreviousOverlapResults(const unsigned int indexU, const unsigned int indexV, const unsigned int indexW,
         FitSegmentTensor &fitSegmentSumTensor, TransverseOverlapResultVector &transverseOverlapResultVector) const;
 
+    void PrepareInputClusters(pandora::ClusterList &preparedClusterList) override;
     void ExamineOverlapContainer();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
@@ -117,6 +118,8 @@ private:
     float m_minOverallMatchedFraction;      ///< The minimum matched sampling fraction to allow particle creation
     unsigned int m_minOverallMatchedPoints; ///< The minimum number of matched segment sampling points to allow particle creation
     float m_minSamplingPointsPerLayer;      ///< The minimum number of sampling points per layer to allow particle creation
+    float m_maxZToXDirectionRatio;          ///< The maximum ratio of Z direction to X direction (above this is classed longitudinal)
+    float m_maxLongitudinalFraction;        ///< The maximum fraction of longitudinal layers before a cluster is considered longitudinal
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
