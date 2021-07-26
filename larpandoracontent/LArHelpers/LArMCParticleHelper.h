@@ -226,6 +226,19 @@ public:
     static void GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &descendentMCParticleList);
 
     /**
+     *  @brief  Get all descendent mc particles, separated into track-like, shower-like and neutron branches.
+     *          This method collects together all track-like particles (i.e. not electron, photon or neutron) downstream of the root
+     *          particle, stopping at a leading shower or neutron and then storing that leading shower or neutron in a separate list.
+     *
+     *  @param  pMCParticle the input mc particle
+     *  @param  descendentTrackParticles the output list of descendent track-like particles
+     *  @param  leadingShowerParticles the output list of leading shower particles
+     *  @param  leadingNeutrons the output list of leading neutrons
+     */
+    static void GetAllDescendentMCParticles(const pandora::MCParticle *const pMCParticle, pandora::MCParticleList &descendentTrackParticles,
+        pandora::MCParticleList &leadingShowerParticles, pandora::MCParticleList &leadingNeutrons);
+
+    /**
      *  @brief  Get all ancestor mc particles
      *
      *  @param  pMCParticle the input mc particle

@@ -21,7 +21,7 @@
 namespace lar_content
 {
 
-// Enumeration maps onto G4 process IDs, plus an ID for the incident neutrino
+// Enumeration maps onto G4 process IDs from QGSP_BERT and EM standard physics lists, plus an ID for the incident neutrino
 enum MCProcess
 {
     MC_PROC_INCIDENT_NU = -1,
@@ -40,7 +40,6 @@ enum MCProcess
     MC_PROC_HAD_ELASTIC,
     MC_PROC_DECAY,
     MC_PROC_COULOMB_SCAT,
-    MC_PROC_UNUSED,
     MC_PROC_MU_BREM,
     MC_PROC_MU_PAIR_PROD,
     MC_PROC_PHOTON_INELASTIC,
@@ -48,7 +47,32 @@ enum MCProcess
     MC_PROC_PROTON_INELASTIC,
     MC_PROC_PI_PLUS_INELASTIC,
     MC_PROC_CHIPS_NUCLEAR_CAPTURE_AT_REST,
-    MC_PROC_PI_MINUS_INELASTIC
+    MC_PROC_PI_MINUS_INELASTIC,
+    MC_PROC_TRANSPORTATION,
+    MC_PROC_RAYLEIGH,
+    MC_PROC_HAD_BREM,
+    MC_PROC_HAD_PAIR_PROD,
+    MC_PROC_ION_IONI,
+    MC_PROC_NEUTRON_KILLER,
+    MC_PROC_ION_INELASTIC,
+    MC_PROC_HE3_INELASTIC,
+    MC_PROC_ALPHA_INELASTIC,
+    MC_PROC_ANTI_HE3_INELASTIC,
+    MC_PROC_ANTI_ALPHA_INELASTIC,
+    MC_PROC_HAD_FRITIOF_CAPTURE_AT_REST,
+    MC_PROC_ANTI_DEUTERON_INELASTIC,
+    MC_PROC_ANTI_NEUTRON_INELASTIC,
+    MC_PROC_ANTI_PROTON_INELASTIC,
+    MC_PROC_ANTI_TRITON_INELASTIC,
+    MC_PROC_DEUTERON_INELASTIC,
+    MC_PROC_ELECTRON_NUCLEAR,
+    MC_PROC_PHOTON_NUCLEAR,
+    MC_PROC_KAON_PLUS_INELASTIC,
+    MC_PROC_KAON_MINUS_INELASTIC,
+    MC_PROC_HAD_BERTINI_CAPTURE_AT_REST,
+    MC_PROC_LAMBDA_INELASTIC,
+    MC_PROC_MU_NUCLEAR,
+    MC_PROC_TRITON_INELASTIC
 };
 
 /**
@@ -82,6 +106,13 @@ public:
      *  @return the nuance code
      */
     int GetNuanceCode() const;
+
+    /**
+     *  @brief  Fill the parameters associated with this MC particle
+     *
+     *  @param  parameters the output parameters
+     */
+    void FillParameters(LArMCParticleParameters &parameters) const;
 
     /**
      *  @brief  Get the process
@@ -160,6 +191,22 @@ inline LArMCParticle::LArMCParticle(const LArMCParticleParameters &parameters) :
 inline int LArMCParticle::GetNuanceCode() const
 {
     return m_nuanceCode;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArMCParticle::FillParameters(LArMCParticleParameters &parameters) const
+{
+    parameters.m_nuanceCode = this->GetNuanceCode();
+    parameters.m_process = this->GetProcess();
+    parameters.m_energy = this->GetEnergy();
+    parameters.m_momentum = this->GetMomentum();
+    parameters.m_vertex = this->GetVertex();
+    parameters.m_endpoint = this->GetEndpoint();
+    parameters.m_particleId = this->GetParticleId();
+    parameters.m_mcParticleType = this->GetMCParticleType();
+    // ATTN Set the parent address to the original owner of the mc particle
+    parameters.m_pParentAddress = static_cast<const void *>(this);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

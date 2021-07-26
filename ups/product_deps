@@ -3,7 +3,7 @@
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
 # ATTN This package supports two build systems; please ensure version is specified here *and* in non-cetbuildtools section of CMakeLists.txt
-parent larpandoracontent v03_23_02
+parent larpandoracontent v03_24_00
 defaultqual e19
 
 # larpandoracontent has no fcl files
@@ -13,7 +13,7 @@ fcldir  -
 # Add the dependent product and version
 product		version
 eigen		v3_3_9a
-pandora		v03_16_00d
+pandora		v03_16_00e
 libtorch	v1_6_0d	-	optional
 cetbuildtools	v8_09_00	-	only_for_build
 end_product_list
@@ -25,8 +25,8 @@ e20:debug	e20:debug       -nq-	e20
 e20:prof	e20:prof        -nq-	e20
 e19:debug	e19:debug	-nq-	e19
 e19:prof	e19:prof	-nq-	e19
-c7:debug	c7:debug	-nq-	-
-c7:prof		c7:prof		-nq-	-
+c7:debug	c7:debug	-nq-	c7
+c7:prof		c7:prof		-nq-	c7
 end_qualifier_list
 
 # Preserve tabs and formatting in emacs and vi / vim:

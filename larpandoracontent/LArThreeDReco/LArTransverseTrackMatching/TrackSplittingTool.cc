@@ -161,14 +161,24 @@ bool TrackSplittingTool::PassesChecks(ThreeViewTransverseTracksAlgorithm *const 
         const LArPointingCluster pointingCluster2(pAlgorithm->GetCachedSlidingFitResult(particle.m_pCluster2));
         const LArPointingCluster longPointingCluster(pAlgorithm->GetCachedSlidingFitResult(particle.m_pLongCluster));
 
-        const CartesianVector &position1(
+        const CartesianVector &minPos1{
             pointingCluster1.GetInnerVertex().GetPosition().GetX() < pointingCluster1.GetOuterVertex().GetPosition().GetX()
                 ? pointingCluster1.GetInnerVertex().GetPosition()
-                : pointingCluster1.GetOuterVertex().GetPosition());
-        const CartesianVector &position2(
+                : pointingCluster1.GetOuterVertex().GetPosition()};
+        const CartesianVector &minPos2{
             pointingCluster2.GetInnerVertex().GetPosition().GetX() < pointingCluster2.GetOuterVertex().GetPosition().GetX()
                 ? pointingCluster2.GetInnerVertex().GetPosition()
-                : pointingCluster2.GetOuterVertex().GetPosition());
+                : pointingCluster2.GetOuterVertex().GetPosition()};
+        const CartesianVector &maxPos1{
+            pointingCluster1.GetInnerVertex().GetPosition().GetX() > pointingCluster1.GetOuterVertex().GetPosition().GetX()
+                ? pointingCluster1.GetInnerVertex().GetPosition()
+                : pointingCluster1.GetOuterVertex().GetPosition()};
+        const CartesianVector &maxPos2{
+            pointingCluster2.GetInnerVertex().GetPosition().GetX() > pointingCluster2.GetOuterVertex().GetPosition().GetX()
+                ? pointingCluster2.GetInnerVertex().GetPosition()
+                : pointingCluster2.GetOuterVertex().GetPosition()};
+        const CartesianVector position1(isMinX ? minPos1 : maxPos1);
+        const CartesianVector position2(isMinX ? minPos2 : maxPos2);
 
         CartesianVector splitPosition(0.f, 0.f, 0.f);
         float chiSquared(std::numeric_limits<float>::max());
