@@ -13,9 +13,9 @@ fcldir  -
 # Add the dependent product and version
 product		version
 eigen		v3_3_9a
-pandora		v03_16_00b
-libtorch	v1_6_0b	-	optional
-cetbuildtools	v7_17_01	-	only_for_build
+pandora		v03_16_00d
+libtorch	v1_6_0d	-	optional
+cetbuildtools	v8_09_00	-	only_for_build
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
