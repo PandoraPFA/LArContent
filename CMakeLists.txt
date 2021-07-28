@@ -1,5 +1,5 @@
 # use cmake 2.8 or later
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.12)
 
 # if the CETBUILDTOOLS_VERSION environmental variable is defined, use cetbuildtools
 if(DEFINED ENV{CETBUILDTOOLS_VERSION})
