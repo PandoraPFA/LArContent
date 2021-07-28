@@ -3,7 +3,7 @@
 # The *parent* line must the first non-commented line and defines this product and version
 # The version should be of the form vxx_yy_zz (e.g. v01_02_03)
 # ATTN This package supports two build systems; please ensure version is specified here *and* in non-cetbuildtools section of CMakeLists.txt
-parent larpandoracontent v09_30_00_rc1
+parent larpandoracontent v03_24_00_01
 defaultqual e19
 
 # larpandoracontent has no fcl files
@@ -15,7 +15,7 @@ product		version
 eigen		v3_3_9a
 pandora		v03_16_00f
 libtorch	v1_6_0d	-	optional
-cetbuildtools	v8_11_02	-	only_for_build
+cetbuildtools	v8_12_00	-	only_for_build
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.
