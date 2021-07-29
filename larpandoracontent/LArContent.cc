@@ -157,6 +157,7 @@
 
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArTrackShowerId/CaloShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/MetricBasedShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/MvaPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
@@ -276,6 +277,7 @@
     d("LArTwoViewTransverseTracks",             TwoViewTransverseTracksAlgorithm)                                               \
     d("LArCutClusterCharacterisation",          CutClusterCharacterisationAlgorithm)                                            \
     d("LArCutPfoCharacterisation",              CutPfoCharacterisationAlgorithm)                                                \
+    d("LArCaloShowerGrowing",                   CaloShowerGrowingAlgorithm)                                                     \
     d("LArMetricBasedShowerGrowing",            MetricBasedShowerGrowingAlgorithm)                                              \
     d("LArBdtPfoCharacterisation",              BdtPfoCharacterisationAlgorithm)                                                \
     d("LArSvmPfoCharacterisation",              SvmPfoCharacterisationAlgorithm)                                                \
