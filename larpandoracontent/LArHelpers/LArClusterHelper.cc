@@ -18,6 +18,15 @@ using namespace pandora;
 namespace lar_content
 {
 
+void LArClusterHelper::GetAllHits(const Cluster *pCluster, CaloHitList &caloHitList)
+{
+    const CaloHitList &isolatedHitList(pCluster->GetIsolatedCaloHitList());
+    pCluster->GetOrderedCaloHitList().FillCaloHitList(caloHitList);
+    std::copy(isolatedHitList.begin(), isolatedHitList.end(), std::back_inserter<CaloHitList>(caloHitList));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 HitType LArClusterHelper::GetClusterHitType(const Cluster *const pCluster)
 {
     if (0 == pCluster->GetNCaloHits())
