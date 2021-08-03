@@ -103,8 +103,20 @@ private:
      *  @param  pSeed the seed around which the shower is to be formed
      *  @param  associatedClusterList the list of clusters associated with the seed
      *  @param  showerClusterList the output list of clusters definig a shower (empty if no plausible candidate found)
+     *
+     *  @return the chi2 for the best association
      */
-    void AssessAssociation(const pandora::Cluster *pSeed, const pandora::ClusterList &associatedClusterlist, pandora::ClusterList &showerClusterList) const;
+    float AssessAssociation(const pandora::Cluster *pSeed, const pandora::ClusterList &associatedClusterlist, pandora::ClusterList &showerClusterList) const;
+
+    /**
+     *  @brief  Retrieve a reduced chi2 value for a fit of the given set of calo hits to photon and electron longitudinal energy profiles.
+     *          Considers the forward and backward energy profiles for the hits against both photon and electron profiles and returns the
+     *          reduced chi2 of the best match
+     *
+     *  @param  caloHitList the list of calo hits for which energy profiles are to be computed
+     *  @return the reduced chi2 of the best profile match
+     */
+    float GetShowerProfileChi2(const pandora::CaloHitList &caloHitList) const;
 
     /**
      *  @brief  Get a figure of merit representing the consistency of the provided cluster association map

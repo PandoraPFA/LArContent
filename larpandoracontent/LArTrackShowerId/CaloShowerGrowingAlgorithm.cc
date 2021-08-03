@@ -102,7 +102,17 @@ void CaloShowerGrowingAlgorithm::GrowShowers(const pandora::ClusterList &cluster
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
         ClusterList showerClusterList;
-        this->AssessAssociation(pSeed, associatedClusterList, showerClusterList);
+        const float chi2{this->AssessAssociation(pSeed, associatedClusterList, showerClusterList)};
+        std::cout << "Seed " << pSeed << " (" << LArClusterHelper::GetClusterHitType(pSeed) << ") with " << showerClusterList.size() <<
+            " associations and chi2 = " << chi2 << std::endl;
+        (void)chi2;
+        // Need to add the returned associations (if any) to a map, along with the chi2 value
+        // Pick the best seed from each view to merge, then repeat until nothing to do
+        // Need to think about whether or not an additional pass to potentially merge seeds is wanted
+        // Probably something along the lines of repeating until no seed is modified, then consider if seeds can be
+        // merged
+        // If multiple matches exist in a view can check to see if they sets are exclusive, if so can merge them, otherwise, only
+        // merge the best sets
     }
 }
 
@@ -157,24 +167,59 @@ CaloShowerGrowingAlgorithm::Bounds CaloShowerGrowingAlgorithm::GetSeedBounds(con
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CaloShowerGrowingAlgorithm::AssessAssociation(const Cluster *pSeed, const ClusterList &associatedClusterlist, ClusterList &showerClusterList) const
+float CaloShowerGrowingAlgorithm::AssessAssociation(const Cluster *pSeed, const ClusterList &associatedClusterList, ClusterList &showerClusterList) const
 {
     CaloHitList caloHits;
     LArClusterHelper::GetAllHits(pSeed, caloHits);
-    for (const Cluster *pCluster : associatedClusterlist)
+    for (const Cluster *pCluster : associatedClusterList)
         LArClusterHelper::GetAllHits(pCluster, caloHits);
 
-    // Get the eigen vectors for this cluster
+    float chi2Baseline{this->GetShowerProfileChi2(caloHits)};
+
+    std::map<const Cluster*, bool> dropoutClusterMap;
+    for (const Cluster *pDropout : associatedClusterList)
+    {
+        caloHits.clear();
+        LArClusterHelper::GetAllHits(pSeed, caloHits);
+        for (const Cluster *pCluster : associatedClusterList)
+        {
+            if (pCluster == pDropout || dropoutClusterMap.find(pCluster) != dropoutClusterMap.end())
+                continue;
+            LArClusterHelper::GetAllHits(pCluster, caloHits);
+        }
+        const float chi2{this->GetShowerProfileChi2(caloHits)};
+        if (chi2 < chi2Baseline * 0.8f)
+        {
+            dropoutClusterMap[pDropout] = true;
+            chi2Baseline = chi2;
+        }
+    }
+
+    for (const Cluster *pCluster : associatedClusterList)
+    {
+        if (dropoutClusterMap.find(pCluster) != dropoutClusterMap.end())
+            continue;
+        showerClusterList.emplace_back(pCluster);
+    }
+
+    return chi2Baseline;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float CaloShowerGrowingAlgorithm::GetShowerProfileChi2(const pandora::CaloHitList &caloHitList) const
+{
+    // Get the eigen vectors for this collection of hits
     CartesianVector origin(0.f, 0.f, 0.f);
     CartesianVector dir(0.f, 0.f, 0.f);
     // ATTN: PCA axis is a unit vector, so no need to correct for length in dot products
-    this->GetProjectionAxis(caloHits, origin, dir);
+    this->GetProjectionAxis(caloHitList, origin, dir);
 
     if (m_visualize)
     {
         CartesianVector source{origin - dir * 20.f}, sink{origin + dir * 20.f};
         PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
-        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHits, "associated", BLUE));
+        PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHitList, "associated", BLUE));
         PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &source, &sink, "axis", RED, 1, 1));
         PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
     }
@@ -182,7 +227,7 @@ void CaloShowerGrowingAlgorithm::AssessAssociation(const Cluster *pSeed, const C
     // Project all hits onto the direction axis
     FloatVector projVector, energies;
     float min{std::numeric_limits<float>::max()}, max{-std::numeric_limits<float>::max()};
-    for (const CaloHit *pCaloHit : caloHits)
+    for (const CaloHit *pCaloHit : caloHitList)
     {
         const float proj{dir.GetDotProduct(pCaloHit->GetPositionVector() - origin)};
         if (proj < min)
@@ -202,8 +247,8 @@ void CaloShowerGrowingAlgorithm::AssessAssociation(const Cluster *pSeed, const C
         throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
     }
     const int N{static_cast<int>(std::ceil((max - min) / binSize))};
-    if (N < 1)
-        return;
+    if (N <= 1)
+        return std::numeric_limits<float>::max();
     FloatVector binCentres(N);
     for (int i = 0; i < N; ++i)
         binCentres[i] = 0.5f * (2 * i + 1) * binSize;
@@ -236,12 +281,13 @@ void CaloShowerGrowingAlgorithm::AssessAssociation(const Cluster *pSeed, const C
         dE = binEnergiesBackward[i] - electronEnergies[i];
         electronChi2Backward += dE * dE / electronEnergies[i];
     }
-    std::cout << "Photon Forward: " << photonChi2Forward << " Backward: " << photonChi2Backward << std::endl;
-    std::cout << "Photon R Forward: " << (photonChi2Forward / N) << " R Backward: " << (photonChi2Backward / N) << std::endl;
-    std::cout << "Electron Forward: " << electronChi2Forward << " Backward: " << electronChi2Backward << std::endl;
-    std::cout << "Electron R Forward: " << (electronChi2Forward / N) << " R Backward: " << (electronChi2Backward / N) << std::endl;
 
-    (void)showerClusterList;
+    photonChi2Forward /= N - 1;
+    photonChi2Backward /= N - 1;
+    electronChi2Forward /= N - 1;
+    electronChi2Backward /= N - 1;
+
+    return std::min({photonChi2Forward, photonChi2Backward, electronChi2Forward, electronChi2Backward});
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
