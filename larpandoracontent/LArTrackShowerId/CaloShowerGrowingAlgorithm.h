@@ -69,7 +69,7 @@ private:
         const pandora::CartesianVector m_ad;    ///< Vector from tl to tr
     };
 
-    typedef std::map<const pandora::Cluster *, pandora::ClusterVector> ClusterAssociationMap;
+    typedef std::map<const pandora::Cluster *, pandora::ClusterList> ClusterAssociationMap;
 
     pandora::StatusCode Run();
 
@@ -98,14 +98,13 @@ private:
     Bounds GetSeedBounds(const pandora::Cluster *pSeed) const;
 
     /**
-     *  @brief  Determine if two clusters are associated
+     *  @brief  Assess the plausibility of the group of clusters as representing a shower
      *
-     *  @param  pClusterSeed the seed cluster
-     *  @param  pCluster the cluster to consider for association
-     *
-     *  @return Whether or not the clusters are associated
+     *  @param  pSeed the seed around which the shower is to be formed
+     *  @param  associatedClusterList the list of clusters associated with the seed
+     *  @param  showerClusterList the output list of clusters definig a shower (empty if no plausible candidate found)
      */
-    bool AreClustersAssociated(const pandora::Cluster *const pClusterSeed, const pandora::Cluster *const pCluster) const;
+    void AssessAssociation(const pandora::Cluster *pSeed, const pandora::ClusterList &associatedClusterlist, pandora::ClusterList &showerClusterList) const;
 
     /**
      *  @brief  Get a figure of merit representing the consistency of the provided cluster association map
@@ -116,10 +115,52 @@ private:
      */
     float GetFigureOfMerit(const ClusterAssociationMap &clusterAssociationMap) const;
 
+    /**
+     *  @brief  Get the origin and unit direction of a PCA fit to the specified list of calo hits
+     *
+     *  @param  caloHitList the list of calo hits from which to extract a projection axis
+     *  @param  origin the output origin of the axis
+     *  @param  dir the output direction of the axis
+     */
+    void GetProjectionAxis(const pandora::CaloHitList &caloHitList, pandora::CartesianVector &origin, pandora::CartesianVector &dir) const;
+
+    /**
+     *  @brief  Get the expected longitudinal energy profile for a photon
+     *
+     *  @param  e0 the energy of the photon (MeV)
+     *  @param  positions the array of longitudinal positions (interaction lengths)
+     *  @param  binSize the size of the position bins (interaction lengths)
+     *  @param  fractionalEnergies the output fractional energies (same length as tt)
+     */
+    void GetPhotonLongitudinalEnergyProfile(const float e0, const pandora::FloatVector &positions, const float binSize, pandora::FloatVector &fractionalEnergies) const;
+
+    /**
+     *  @brief  Get the expected longitudinal energy profile for an electron
+     *
+     *  @param  e0 the energy of the electron (MeV)
+     *  @param  positions the array of longitudinal positions (interaction lengths)
+     *  @param  binSize the size of the position bins (interaction lengths)
+     *  @param  fractionalEnergies the output fractional energies (same length as tt)
+     */
+    void GetElectronLongitudinalEnergyProfile(const float e0, const pandora::FloatVector &positions, const float binSize, pandora::FloatVector &fractionalEnergies) const;
+
+    /**
+     *  @brief  Get the expected longitudinal energy profile for a particle
+     *
+     *  @param  e0 the energy of the particle (MeV)
+     *  @param  positions the array of longitudinal positions (interaction lengths)
+     *  @param  cj length scale adjustment factor, -0.5 for electrons, +0.5 for photons
+     *  @param  binSize the size of the position bins (interaction lengths)
+     *  @param  fractionalEnergies the output fractional energies (same length as tt)
+     */
+    void GetLongitudinalEnergyProfile(const float e0, const pandora::FloatVector &positions, const float cj, const float binSize, pandora::FloatVector &fractionalEnergies) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     pandora::StringVector m_inputClusterListNames; ///< The names of the input cluster lists
     unsigned int m_minCaloHitsForSeed; ///< The minimum number of calo hits per seed cluster
+    float m_radiationLength; ///< The radiation length in liquid argon
+    float m_moliereRadius; ///< The Moliere radius in liquid argon
     bool m_visualize; ///< Whether or not to visualize the algorithm steps
 };
 
