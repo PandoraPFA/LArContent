@@ -65,6 +65,9 @@ void CaloShowerGrowingAlgorithm::GrowShowers(const pandora::ClusterList &cluster
 {
     ClusterList seedClusterList;
     this->GetSeedClusters(clusterList, seedClusterList);
+    std::map<const Cluster *, float> seedToChi2Map;
+    std::map<const Cluster *, ClusterList> seedToAssociationMap;
+    std::map<const Cluster *, ClusterList> seedIntersectionMap;
     for (const Cluster *pSeed : seedClusterList)
     {
         ClusterList associatedClusterList;
@@ -101,18 +104,67 @@ void CaloShowerGrowingAlgorithm::GrowShowers(const pandora::ClusterList &cluster
             PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &associatedClusterList, "associated", BLUE));
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
-        ClusterList showerClusterList;
-        const float chi2{this->AssessAssociation(pSeed, associatedClusterList, showerClusterList)};
-        std::cout << "Seed " << pSeed << " (" << LArClusterHelper::GetClusterHitType(pSeed) << ") with " << showerClusterList.size() <<
-            " associations and chi2 = " << chi2 << std::endl;
-        (void)chi2;
+        seedToAssociationMap[pSeed] = ClusterList();
+        seedToChi2Map[pSeed] = this->AssessAssociation(pSeed, associatedClusterList, seedToAssociationMap[pSeed]);
         // Need to add the returned associations (if any) to a map, along with the chi2 value
         // Pick the best seed from each view to merge, then repeat until nothing to do
         // Need to think about whether or not an additional pass to potentially merge seeds is wanted
         // Probably something along the lines of repeating until no seed is modified, then consider if seeds can be
         // merged
-        // If multiple matches exist in a view can check to see if they sets are exclusive, if so can merge them, otherwise, only
-        // merge the best sets
+    }
+
+    for (auto iter1 = seedClusterList.begin(); iter1 != seedClusterList.end(); ++iter1)
+    {
+        const Cluster *pSeed1{*iter1};
+        // Ensure all seeds have an entry in the intersection map, even if they have exclusive associations
+        if (seedIntersectionMap.find(pSeed1) == seedIntersectionMap.end())
+            seedIntersectionMap[pSeed1] = ClusterList();
+        const ClusterList &list1{seedToAssociationMap[pSeed1]};
+        for (auto iter2 = std::next(iter1); iter2 != seedClusterList.end(); ++iter2)
+        {
+            const Cluster *pSeed2{*iter2};
+            const ClusterList &list2{seedToAssociationMap[pSeed2]};
+            for (const Cluster *pCluster : list1)
+            {
+                if (std::find(list2.begin(), list2.end(), pCluster) != list2.end())
+                {   // Shared cluster association between seeds, can't merge both
+                    seedIntersectionMap[pSeed1].emplace_back(pSeed2);
+                    seedIntersectionMap[pSeed2].emplace_back(pSeed1);
+                    break;
+                }
+            }
+        }
+    }
+
+    ClusterList consideredSeeds;
+    for (const auto &[ key, intersections ] : seedIntersectionMap)
+    {
+        const Cluster *pBestSeed{nullptr};
+        float bestChi2{std::numeric_limits<float>::max()};
+        if (std::find(consideredSeeds.begin(), consideredSeeds.end(), key) == consideredSeeds.end())
+        {
+            pBestSeed = key;
+            bestChi2 = seedToChi2Map[key];
+            consideredSeeds.emplace_back(key);
+        }
+
+        for (const Cluster *pSeed : intersections)
+        {   // Check if another seed with shared associations would be better
+            if (std::find(consideredSeeds.begin(), consideredSeeds.end(), pSeed) == consideredSeeds.end())
+            {
+                if (seedToChi2Map[pSeed] < bestChi2)
+                {
+                    pBestSeed = pSeed;
+                    bestChi2 = seedToChi2Map[pSeed];
+                }
+                consideredSeeds.emplace_back(pSeed);
+            }
+        }
+
+        if (pBestSeed)
+        {   // Populate the merge map with the best seed and its associations
+
+        }
     }
 }
 
@@ -292,23 +344,12 @@ float CaloShowerGrowingAlgorithm::GetShowerProfileChi2(const pandora::CaloHitLis
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float CaloShowerGrowingAlgorithm::GetFigureOfMerit(const ClusterAssociationMap &clusterAssociationMap) const
-{
-    float figureOfMerit{0.f};
-    (void)clusterAssociationMap;
-    return figureOfMerit;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 void CaloShowerGrowingAlgorithm::GetProjectionAxis(const CaloHitList &caloHitList, CartesianVector &origin, CartesianVector &dir) const
 {
-    // Get the eigen vectors for this cluster
     LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
     LArPcaHelper::EigenVectors eigenVectors;
     LArPcaHelper::RunPca(caloHitList, origin, eigenValues, eigenVectors);
 
-    // Project the extremal hits of the cluster onto the principal axis
     dir = eigenVectors[0];
 }
 
