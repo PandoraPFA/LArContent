@@ -11,7 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArPcaHelper.h"
 
-#include "larpandoracontent/LArTrackShowerId/CaloShowerGrowingAlgorithm.h"
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CaloShowerGrowingAlgorithm.h"
 
 #include <numeric>
 
