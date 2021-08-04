@@ -119,15 +119,6 @@ private:
     float GetShowerProfileChi2(const pandora::CaloHitList &caloHitList) const;
 
     /**
-     *  @brief  Get a figure of merit representing the consistency of the provided cluster association map
-     *
-     *  @param  clusterAssociationMap the cluster association map
-     *
-     *  @return the figure of merit
-     */
-    float GetFigureOfMerit(const ClusterAssociationMap &clusterAssociationMap) const;
-
-    /**
      *  @brief  Get the origin and unit direction of a PCA fit to the specified list of calo hits
      *
      *  @param  caloHitList the list of calo hits from which to extract a projection axis
