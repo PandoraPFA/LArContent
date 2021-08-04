@@ -30,41 +30,17 @@ CaloShowerGrowingAlgorithm::CaloShowerGrowingAlgorithm() :
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CaloShowerGrowingAlgorithm::Run()
+void CaloShowerGrowingAlgorithm::GetListOfCleanClusters(const ClusterList *const pClusterList, ClusterVector &clusterVector) const
 {
-    for (const std::string &clusterListName : m_inputClusterListNames)
-    {
-        try
-        {
-            const ClusterList *pClusterList{nullptr};
-            PANDORA_RETURN_RESULT_IF_AND_IF(
-                STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
-
-            if (!pClusterList || pClusterList->empty())
-            {
-                if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
-                    std::cout << "CaloShowerGrowingAlgorithm: unable to find cluster list " << clusterListName << std::endl;
-
-                continue;
-            }
-
-            this->GrowShowers(*pClusterList);
-        }
-        catch (StatusCodeException &statusCodeException)
-        {
-            throw statusCodeException;
-        }
-    }
-
-    return STATUS_CODE_SUCCESS;
+    std::copy(pClusterList->begin(), pClusterList->end(), std::back_inserter(clusterVector));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CaloShowerGrowingAlgorithm::GrowShowers(const pandora::ClusterList &clusterList) const
+void CaloShowerGrowingAlgorithm::PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const
 {
     ClusterList seedClusterList;
-    this->GetSeedClusters(clusterList, seedClusterList);
+    this->GetSeedClusters(clusterVector, seedClusterList);
     std::map<const Cluster *, float> seedToChi2Map;
     std::map<const Cluster *, ClusterList> seedToAssociationMap;
     std::map<const Cluster *, ClusterList> seedIntersectionMap;
@@ -83,7 +59,7 @@ void CaloShowerGrowingAlgorithm::GrowShowers(const pandora::ClusterList &cluster
             PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &bounds.m_c, &bounds.m_d, "cd", BLUE, 1, 1));
             PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &bounds.m_d, &bounds.m_a, "da", BLACK, 1, 1));
         }
-        for (const Cluster *pCluster : clusterList)
+        for (const Cluster *pCluster : clusterVector)
         {
             if (pSeed == pCluster)
                 continue;
@@ -106,11 +82,7 @@ void CaloShowerGrowingAlgorithm::GrowShowers(const pandora::ClusterList &cluster
         }
         seedToAssociationMap[pSeed] = ClusterList();
         seedToChi2Map[pSeed] = this->AssessAssociation(pSeed, associatedClusterList, seedToAssociationMap[pSeed]);
-        // Need to add the returned associations (if any) to a map, along with the chi2 value
-        // Pick the best seed from each view to merge, then repeat until nothing to do
         // Need to think about whether or not an additional pass to potentially merge seeds is wanted
-        // Probably something along the lines of repeating until no seed is modified, then consider if seeds can be
-        // merged
     }
 
     for (auto iter1 = seedClusterList.begin(); iter1 != seedClusterList.end(); ++iter1)
@@ -163,16 +135,20 @@ void CaloShowerGrowingAlgorithm::GrowShowers(const pandora::ClusterList &cluster
 
         if (pBestSeed)
         {   // Populate the merge map with the best seed and its associations
-
+            for (const Cluster *pCluster : seedToAssociationMap[pBestSeed])
+            {
+                clusterMergeMap[pBestSeed].emplace_back(pCluster);
+                clusterMergeMap[pCluster].emplace_back(pBestSeed);
+            }
         }
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CaloShowerGrowingAlgorithm::GetSeedClusters(const ClusterList &clusterList, ClusterList &seedClusterList) const
+void CaloShowerGrowingAlgorithm::GetSeedClusters(const ClusterVector &clusterVector, ClusterList &seedClusterList) const
 {
-    for (const Cluster *const pCluster : clusterList)
+    for (const Cluster *const pCluster : clusterVector)
     {
         if (!pCluster->IsAvailable())
             continue;
@@ -394,8 +370,6 @@ void CaloShowerGrowingAlgorithm::GetLongitudinalEnergyProfile(const float e0, co
 
 StatusCode CaloShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "InputClusterListNames", m_inputClusterListNames));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCaloHitsForSeed", m_minCaloHitsForSeed));
 
@@ -407,7 +381,7 @@ StatusCode CaloShowerGrowingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
 
-    return STATUS_CODE_SUCCESS;
+    return ClusterMergingAlgorithm::ReadSettings(xmlHandle);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
