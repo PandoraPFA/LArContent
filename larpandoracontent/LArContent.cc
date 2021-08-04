@@ -158,12 +158,12 @@
 
 #include "larpandoracontent/LArTrackShowerId/CutClusterCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/CutPfoCharacterisationAlgorithm.h"
-#include "larpandoracontent/LArTrackShowerId/CaloShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/MetricBasedShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/MvaPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/ShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTrackShowerId/TrackShowerIdFeatureTool.h"
 
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CaloShowerGrowingAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsAssociationAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/CrossGapsExtensionAlgorithm.h"
 #include "larpandoracontent/LArTwoDReco/LArClusterAssociation/HitWidthClusterMergingAlgorithm.h"
@@ -279,11 +279,11 @@
     d("LArTwoViewTransverseTracks",             TwoViewTransverseTracksAlgorithm)                                               \
     d("LArCutClusterCharacterisation",          CutClusterCharacterisationAlgorithm)                                            \
     d("LArCutPfoCharacterisation",              CutPfoCharacterisationAlgorithm)                                                \
-    d("LArCaloShowerGrowing",                   CaloShowerGrowingAlgorithm)                                                     \
     d("LArMetricBasedShowerGrowing",            MetricBasedShowerGrowingAlgorithm)                                              \
     d("LArBdtPfoCharacterisation",              BdtPfoCharacterisationAlgorithm)                                                \
     d("LArSvmPfoCharacterisation",              SvmPfoCharacterisationAlgorithm)                                                \
     d("LArShowerGrowing",                       ShowerGrowingAlgorithm)                                                         \
+    d("LArCaloShowerGrowing",                   CaloShowerGrowingAlgorithm)                                                     \
     d("LArCrossGapsAssociation",                CrossGapsAssociationAlgorithm)                                                  \
     d("LArCrossGapsExtension",                  CrossGapsExtensionAlgorithm)                                                    \
     d("LArHitWidthClusterMerging",              HitWidthClusterMergingAlgorithm)                                                \
