@@ -10,13 +10,15 @@
 
 #include "Pandora/Algorithm.h"
 
+#include "larpandoracontent/LArTwoDReco/LArClusterAssociation/ClusterMergingAlgorithm.h"
+
 namespace lar_content
 {
 
 /**
  *  @brief  CaloShowerGrowingAlgorithm class
  */
-class CaloShowerGrowingAlgorithm : public pandora::Algorithm
+class CaloShowerGrowingAlgorithm : public ClusterMergingAlgorithm
 {
 public:
     /**
@@ -69,24 +71,16 @@ private:
         const pandora::CartesianVector m_ad;    ///< Vector from tl to tr
     };
 
-    typedef std::map<const pandora::Cluster *, pandora::ClusterList> ClusterAssociationMap;
-
-    pandora::StatusCode Run();
-
-    /**
-     *  @brief  Grow the showers in a cluster list
-     *
-     *  @param  clusterList the list of available seed candidates
-     */
-    void GrowShowers(const pandora::ClusterList &clusterList) const;
+    void GetListOfCleanClusters(const pandora::ClusterList *const pClusterList, pandora::ClusterVector &clusterVector) const;
+    void PopulateClusterMergeMap(const pandora::ClusterVector &clusterVector, ClusterMergeMap &clusterMergeMap) const;
 
     /**
      *  @brief  Get the seed clusters
      *
-     *  @param  clusterList the list of available seed candidates
+     *  @param  clusterVector the vector of available seed candidates
      *  @param  seedClusterList the output list of seed clusters
      */
-    void GetSeedClusters(const pandora::ClusterList &clusterList, pandora::ClusterList &seedClusterList) const;
+    void GetSeedClusters(const pandora::ClusterVector &clusterVector, pandora::ClusterList &seedClusterList) const;
 
     /**
      *  @brief  Get the bounding box for a seed cluster
@@ -160,7 +154,6 @@ private:
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StringVector m_inputClusterListNames; ///< The names of the input cluster lists
     unsigned int m_minCaloHitsForSeed; ///< The minimum number of calo hits per seed cluster
     float m_radiationLength; ///< The radiation length in liquid argon
     float m_moliereRadius; ///< The Moliere radius in liquid argon
