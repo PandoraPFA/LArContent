@@ -223,7 +223,8 @@ void HierarchyMonitoringAlgorithm::VisualizeMatchedMC(const LArHierarchyHelper::
         else
             mcWHits.emplace_back(pCaloHit);
     }
-    std::string suffix{std::to_string(mcIdx) + "_" + key};
+    std::string leading{pMCNode->IsLeadingLepton() ? "_leading" : ""};
+    std::string suffix{std::to_string(mcIdx) + "_" + key + leading};
     if (!mcUHits.empty() && mcUHits.size() > 1)
     {
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &mcUHits, "u_" + suffix, static_cast<Color>(green)));
