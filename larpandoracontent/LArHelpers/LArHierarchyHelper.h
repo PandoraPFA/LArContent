@@ -125,6 +125,13 @@ public:
             const NodeVector &GetChildren() const;
 
             /**
+             *  @brief  Retrieve the leading MC particle associated with this node
+             *
+             *  @return The main MC particle associated with this node
+             */
+            const pandora::MCParticle *GetLeadingMCParticle() const;
+
+            /**
              *  @brief  Retrieve the MC particles associated with this node
              *
              *  @return The MC particles associated with this node
@@ -167,6 +174,13 @@ public:
             bool IsCosmicRay() const;
 
             /**
+             *  @brief  Returns whether or not this particle is the leading lepton in the event
+             *
+             *  @return Whether or not this is the leading lepton
+             */
+            bool IsLeadingLepton() const;
+
+            /**
              *  @brief  Produce a string representation of the hierarchy
              *
              *  @return The string representation of the hierarchy
@@ -174,12 +188,20 @@ public:
             const std::string ToString(const std::string &prefix) const;
 
         private:
+            /**
+             *  @brief  Tags the particle as the leading lepton
+             */
+            void SetLeadingLepton();
+
             const MCHierarchy &m_hierarchy;            ///< The parent MC hierarchy
             pandora::MCParticleList m_mcParticles;     ///< The list of MC particles of which this node is composed
             pandora::CaloHitList m_caloHits;           ///< The list of calo hits of which this node is composed
             NodeVector m_children;                     ///< The child nodes of this node
             const pandora::MCParticle *m_mainParticle; ///< The leading MC particle for this node
             int m_pdg;                                 ///< The PDG code of the leading MC particle for this node
+            bool m_isLeadingLepton;                    ///< Whether or not this node is the leading lepton
+
+            friend class MCHierarchy;
         };
 
         /**
@@ -757,6 +779,13 @@ inline const pandora::CaloHitList &LArHierarchyHelper::MCHierarchy::Node::GetCal
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline const pandora::MCParticle *LArHierarchyHelper::MCHierarchy::Node::GetLeadingMCParticle() const
+{
+    return m_mainParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline int LArHierarchyHelper::MCHierarchy::Node::GetParticleId() const
 {
     return m_pdg;
@@ -767,6 +796,20 @@ inline int LArHierarchyHelper::MCHierarchy::Node::GetParticleId() const
 inline bool LArHierarchyHelper::MCHierarchy::Node::IsNeutrinoInduced() const
 {
     return !(LArHierarchyHelper::MCHierarchy::Node::IsTestBeamParticle() || LArHierarchyHelper::MCHierarchy::Node::IsCosmicRay());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArHierarchyHelper::MCHierarchy::Node::IsLeadingLepton() const
+{
+    return m_isLeadingLepton;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArHierarchyHelper::MCHierarchy::Node::SetLeadingLepton()
+{
+    m_isLeadingLepton = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

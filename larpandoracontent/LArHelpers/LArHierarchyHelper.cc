@@ -191,6 +191,24 @@ void LArHierarchyHelper::MCHierarchy::FillHierarchy(
                 pNode->FillHierarchy(pChild, foldToLeadingShowers);
         }
     }
+
+    Node *pLeadingLepton{nullptr};
+    float leadingLeptonEnergy{-std::numeric_limits<float>::max()};
+    for (const Node *pNode : m_rootNodes)
+    {
+        const MCParticle *pMC{pNode->GetLeadingMCParticle()};
+        if (pMC)
+        {
+            const int pdg{std::abs(pMC->GetParticleId())};
+            if ((pdg == MU_MINUS || pdg == E_MINUS || pdg == TAU_MINUS) && pMC->GetEnergy() > leadingLeptonEnergy)
+            {
+                pLeadingLepton = const_cast<Node *>(pNode);
+                leadingLeptonEnergy = pMC->GetEnergy();
+            }
+        }
+    }
+    if (pLeadingLepton)
+        pLeadingLepton->SetLeadingLepton();
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -232,7 +250,8 @@ const std::string LArHierarchyHelper::MCHierarchy::ToString() const
 LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const MCParticle *pMCParticle) :
     m_hierarchy(hierarchy),
     m_mainParticle(pMCParticle),
-    m_pdg{0}
+    m_pdg{0},
+    m_isLeadingLepton{false}
 {
     if (pMCParticle)
     {
@@ -248,7 +267,8 @@ LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const 
     m_mcParticles(mcParticleList),
     m_caloHits(caloHitList),
     m_mainParticle(nullptr),
-    m_pdg{0}
+    m_pdg{0},
+    m_isLeadingLepton{false}
 {
     if (!mcParticleList.empty())
     {
