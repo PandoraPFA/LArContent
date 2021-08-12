@@ -724,27 +724,138 @@ unsigned int LArHierarchyHelper::MCMatches::GetSharedHits(const RecoHierarchy::N
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArHierarchyHelper::MCMatches::GetPurity(const RecoHierarchy::Node *pReco) const
+float LArHierarchyHelper::MCMatches::GetPurity(const RecoHierarchy::Node *pReco, const bool adcWeighted) const
 {
     auto iter{std::find(m_recoNodes.begin(), m_recoNodes.end(), pReco)};
     if (iter == m_recoNodes.end())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    int index = iter - m_recoNodes.begin();
 
-    return m_sharedHits[index] / static_cast<float>(pReco->GetCaloHits().size());
+    const CaloHitList &recoHits{pReco->GetCaloHits()};
+    const CaloHitList &mcHits{m_pMCParticle->GetCaloHits()};
+    CaloHitVector intersection;
+    std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
+
+    return this->GetPurity(intersection, recoHits, adcWeighted);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *pReco) const
+float LArHierarchyHelper::MCMatches::GetPurity(const RecoHierarchy::Node *pReco, const HitType view, const bool adcWeighted) const
+{
+    (void)view;
+    auto iter{std::find(m_recoNodes.begin(), m_recoNodes.end(), pReco)};
+    if (iter == m_recoNodes.end())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    CaloHitList recoHits;
+    for (const CaloHit *pCaloHit : pReco->GetCaloHits())
+        if (pCaloHit->GetHitType() == view)
+            recoHits.emplace_back(pCaloHit);
+    CaloHitList mcHits;
+    for (const CaloHit *pCaloHit : m_pMCParticle->GetCaloHits())
+        if (pCaloHit->GetHitType() == view)
+            mcHits.emplace_back(pCaloHit);
+
+    CaloHitVector intersection;
+    std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
+
+    return this->GetPurity(intersection, recoHits, adcWeighted);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *pReco, const bool adcWeighted) const
 {
     auto iter{std::find(m_recoNodes.begin(), m_recoNodes.end(), pReco)};
     if (iter == m_recoNodes.end())
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
-    const int index{static_cast<int>(std::distance(m_recoNodes.begin(), iter))};
 
-    const unsigned int nHits{static_cast<unsigned int>(m_pMCParticle->GetCaloHits().size())};
-    return nHits ? m_sharedHits[index] / static_cast<float>(nHits) : 0.f;
+    const CaloHitList &recoHits{pReco->GetCaloHits()};
+    const CaloHitList &mcHits{m_pMCParticle->GetCaloHits()};
+    CaloHitVector intersection;
+    std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
+
+    return this->GetCompleteness(intersection, mcHits, adcWeighted);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArHierarchyHelper::MCMatches::GetCompleteness(const RecoHierarchy::Node *pReco, const HitType view, const bool adcWeighted) const
+{
+    (void)view;
+    auto iter{std::find(m_recoNodes.begin(), m_recoNodes.end(), pReco)};
+    if (iter == m_recoNodes.end())
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    CaloHitList recoHits;
+    for (const CaloHit *pCaloHit : pReco->GetCaloHits())
+        if (pCaloHit->GetHitType() == view)
+            recoHits.emplace_back(pCaloHit);
+    CaloHitList mcHits;
+    for (const CaloHit *pCaloHit : m_pMCParticle->GetCaloHits())
+        if (pCaloHit->GetHitType() == view)
+            mcHits.emplace_back(pCaloHit);
+
+    CaloHitVector intersection;
+    std::set_intersection(mcHits.begin(), mcHits.end(), recoHits.begin(), recoHits.end(), std::back_inserter(intersection));
+
+    return this->GetCompleteness(intersection, mcHits, adcWeighted);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArHierarchyHelper::MCMatches::GetPurity(const CaloHitVector &intersection, const CaloHitList &recoHits, const bool adcWeighted) const
+{
+    float purity{0.f};
+    if (!intersection.empty())
+    {
+        if (adcWeighted)
+        {
+            float adcSum{0.f};
+            for (const CaloHit *pCaloHit : recoHits)
+                adcSum += pCaloHit->GetInputEnergy();
+            if (adcSum > std::numeric_limits<float>::epsilon())
+            {
+                for (const CaloHit *pCaloHit : intersection)
+                    purity += pCaloHit->GetInputEnergy();
+                purity /= adcSum;
+            }
+        }
+        else
+        {
+            purity = intersection.size() / static_cast<float>(recoHits.size());
+        }
+    }
+
+    return purity;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float LArHierarchyHelper::MCMatches::GetCompleteness(const CaloHitVector &intersection, const CaloHitList &mcHits, const bool adcWeighted) const
+{
+    float completeness{0.f};
+    if (!intersection.empty())
+    {
+        if (adcWeighted)
+        {
+            float adcSum{0.f};
+            for (const CaloHit *pCaloHit : mcHits)
+                adcSum += pCaloHit->GetInputEnergy();
+            if (adcSum > std::numeric_limits<float>::epsilon())
+            {
+                for (const CaloHit *pCaloHit : intersection)
+                    completeness += pCaloHit->GetInputEnergy();
+                completeness /= adcSum;
+            }
+        }
+        else
+        {
+            completeness = intersection.size() / static_cast<float>(mcHits.size());
+        }
+    }
+
+    return completeness;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

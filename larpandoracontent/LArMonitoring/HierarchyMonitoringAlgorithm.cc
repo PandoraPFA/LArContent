@@ -257,15 +257,33 @@ void HierarchyMonitoringAlgorithm::VisualizeMatchedMC(const LArHierarchyHelper::
         const std::string recoSuffix{std::to_string(mcIdx) + "->" + std::to_string(recoIdx) + "_" + recoKey};
         if (!recoUHits.empty())
         {
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &recoUHits, "u_" + recoSuffix, static_cast<Color>(colors.at(colorIdx))));
+            const float purity{matches.GetPurity(pRecoNode, TPC_VIEW_U, true)};
+            const float completeness{matches.GetCompleteness(pRecoNode, TPC_VIEW_U, true)};
+            std::ostringstream metrics;
+            metrics.precision(2);
+            metrics << std::fixed << " p: " << purity << " c: " << completeness;
+            PANDORA_MONITORING_API(
+                VisualizeCaloHits(this->GetPandora(), &recoUHits, "u_" + recoSuffix + metrics.str(), static_cast<Color>(colors.at(colorIdx))));
         }
         if (!recoVHits.empty())
         {
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &recoVHits, "v_" + recoSuffix, static_cast<Color>(colors.at(colorIdx))));
+            const float purity{matches.GetPurity(pRecoNode, TPC_VIEW_V, true)};
+            const float completeness{matches.GetCompleteness(pRecoNode, TPC_VIEW_V, true)};
+            std::ostringstream metrics;
+            metrics.precision(2);
+            metrics << std::fixed << " p: " << purity << " c: " << completeness;
+            PANDORA_MONITORING_API(
+                VisualizeCaloHits(this->GetPandora(), &recoVHits, "v_" + recoSuffix + metrics.str(), static_cast<Color>(colors.at(colorIdx))));
         }
         if (!recoWHits.empty())
         {
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &recoWHits, "w_" + recoSuffix, static_cast<Color>(colors.at(colorIdx))));
+            const float purity{matches.GetPurity(pRecoNode, TPC_VIEW_W, true)};
+            const float completeness{matches.GetCompleteness(pRecoNode, TPC_VIEW_W, true)};
+            std::ostringstream metrics;
+            metrics.precision(2);
+            metrics << std::fixed << " p: " << purity << " c: " << completeness;
+            PANDORA_MONITORING_API(
+                VisualizeCaloHits(this->GetPandora(), &recoWHits, "w_" + recoSuffix + metrics.str(), static_cast<Color>(colors.at(colorIdx))));
         }
         colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
         ++recoIdx;

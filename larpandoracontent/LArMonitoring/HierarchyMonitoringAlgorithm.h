@@ -9,6 +9,7 @@
 #define LAR_HIERARCHY_MONITORING_ALGORITHM_H 1
 
 #include "Pandora/Algorithm.h"
+#include "Pandora/PandoraEnumeratedTypes.h"
 
 #include "larpandoracontent/LArHelpers/LArHierarchyHelper.h"
 
