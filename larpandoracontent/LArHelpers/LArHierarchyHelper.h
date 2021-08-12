@@ -474,19 +474,43 @@ public:
          *  @brief  Retrieve the purity of the match
          *
          *  @param  pReco The reco node to consider
+         *  @param  adcWeighted Whether or not to weight purity according to the charge contribution
          *
          *  @return The purity of the match
          */
-        float GetPurity(const RecoHierarchy::Node *pReco) const;
+        float GetPurity(const RecoHierarchy::Node *pReco, const bool adcWeighted = false) const;
+
+        /**
+         *  @brief  Retrieve the purity of the match
+         *
+         *  @param  pReco The reco node to consider
+         *  @param  view The view for which purity should be calculated
+         *  @param  adcWeighted Whether or not to weight purity according to the charge contribution
+         *
+         *  @return The purity of the match
+         */
+        float GetPurity(const RecoHierarchy::Node *pReco, const pandora::HitType view, const bool adcWeighted = false) const;
 
         /**
          *  @brief  Retrieve the completeness of the match
          *
          *  @param  pReco The reco node to consider
+         *  @param  adcWeighted Whether or not to weight completeness according to the charge contribution
          *
          *  @return The completeness of the match
          */
-        float GetCompleteness(const RecoHierarchy::Node *pReco) const;
+        float GetCompleteness(const RecoHierarchy::Node *pReco, const bool adcWeighted = false) const;
+
+        /**
+         *  @brief  Retrieve the completeness of the match
+         *
+         *  @param  pReco The reco node to consider
+         *  @param  view The view for which purity should be calculated
+         *  @param  adcWeighted Whether or not to weight completeness according to the charge contribution
+         *
+         *  @return The completeness of the match
+         */
+        float GetCompleteness(const RecoHierarchy::Node *pReco, const pandora::HitType view, const bool adcWeighted = false) const;
 
         /**
          *  @brief  Get the number of reco nodes matched (both above and below quality cut thresholds) to the MC node
@@ -496,6 +520,28 @@ public:
         size_t GetNRecoMatches() const;
 
     private:
+        /**
+         *  @brief  Core purity calculation given intersecting hits and reco hits
+         *
+         *  @param  intersection The intersecting reco and MC hits
+         *  @param  recoHits The reco hits
+         *  @param  adcWeighted Whether or not to weight purity according to the charge contribution
+         *
+         *  @return The purity of the match
+         */
+        float GetPurity(const pandora::CaloHitVector &intersection, const pandora::CaloHitList &recoHits, const bool adcWeighted) const;
+
+        /**
+         *  @brief  Core completeness calculation given intersecting hits and MC hits
+         *
+         *  @param  intersection The intersecting reco and MC hits
+         *  @param  mcHits The MC hits
+         *  @param  adcWeighted Whether or not to weight completeness according to the charge contribution
+         *
+         *  @return The completeness of the match
+         */
+        float GetCompleteness(const pandora::CaloHitVector &intersection, const pandora::CaloHitList &mcHits, const bool adcWeighted) const;
+
         const MCHierarchy::Node *m_pMCParticle; ///< MC node associated with any matches
         RecoHierarchy::NodeVector m_recoNodes;  ///< Matched reco nodes
         pandora::IntVector m_sharedHits;        ///< Number of shared hits for each match
