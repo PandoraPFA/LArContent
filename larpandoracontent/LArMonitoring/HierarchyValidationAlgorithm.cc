@@ -45,10 +45,20 @@ StatusCode HierarchyValidationAlgorithm::Run()
     const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
+    LArHierarchyHelper::FoldingParameters foldParameters;
+    if (m_foldToPrimaries)
+    {
+        foldParameters.m_foldToTier = true;
+        foldParameters.m_tier = 1;
+    }
+    else if (m_foldToLeadingShowers)
+    {
+        foldParameters.m_foldToLeadingShowers = true;
+    }
     LArHierarchyHelper::MCHierarchy mcHierarchy;
-    LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, m_foldToPrimaries, m_foldToLeadingShowers, mcHierarchy);
+    LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
-    LArHierarchyHelper::FillRecoHierarchy(*pPfoList, m_foldToPrimaries, m_foldToLeadingShowers, recoHierarchy);
+    LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
     LArHierarchyHelper::MatchInfo matchInfo;
     LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
     matchInfo.Print(mcHierarchy);

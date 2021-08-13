@@ -47,15 +47,17 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
 
     LArHierarchyHelper::MCHierarchy mcHierarchy;
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
+    LArHierarchyHelper::FoldingParameters foldParameters(1u);
 
     if (m_visualizeMC || m_match)
-        LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, true, false, mcHierarchy);
+        LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
     if (m_visualizeReco || m_match)
-        LArHierarchyHelper::FillRecoHierarchy(*pPfoList, true, false, recoHierarchy);
+        LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
     if (m_match)
     {
         LArHierarchyHelper::MatchInfo matchInfo;
         LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
+        matchInfo.Print(mcHierarchy); 
         this->VisualizeMatches(matchInfo);
     }
     else

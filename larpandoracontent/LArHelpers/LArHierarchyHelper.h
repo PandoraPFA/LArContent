@@ -25,7 +25,40 @@ class LArHierarchyHelper
 {
 public:
     /**
-     *  @brief   MCHierarchy class
+     *  @brief  FoldingParameters class
+     */
+    class FoldingParameters
+    {
+    public:
+        /**
+         *  @brief  Default constructor
+         */
+        FoldingParameters();
+
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  foldToLeadingShowers Whether or not to fold to the leading shower particle
+         */
+        FoldingParameters(const bool foldToLeadingShowers);
+
+        /**
+         *  @brief  Constructor.
+         *
+         *  If folding back to tier 2, any MC particle/PFO ("particles") at tier 1 will be allocated their own node. At tier 2, the
+         *  particles will be allocated as the main particle for a node and all of their children will also be incorprated into the node
+         *
+         *  @param  foldingTier The tier at which level child particles should be folded back (> 0)
+         */
+        FoldingParameters(const unsigned int foldingTier);
+
+        bool m_foldToLeadingShowers;    ///< Whether or not to fold shower children to the leading shower particle
+        bool m_foldToTier;              ///< Whether or not to apply folding based on particle tier
+        unsigned int m_tier;            ///< If folding to a tier, the tier to be combined with its child particles
+    };
+
+    /**
+     *  @brief  MCHierarchy class
      */
     class MCHierarchy
     {
@@ -106,9 +139,9 @@ public:
              *  @brief  Recursively fill the hierarchy based on the criteria established for this MCHierarchy
              *
              *  @param  pRoot The MC particle acting as the root of the current branch of the hierarchy
-             *  @param foldToLeadingShower Whether or not we're folding back to the leading shower particle
+             *  @param  foldParameters The folding parameters
              */
-            void FillHierarchy(const pandora::MCParticle *pRoot, const bool foldToLeadingShower);
+            void FillHierarchy(const pandora::MCParticle *pRoot, const FoldingParameters &foldParameters);
 
             /**
              *  @brief  Fill this node by folding all descendent particles to this node
@@ -242,11 +275,10 @@ public:
          *
          *  @param  mcParticleList The list of MC particles with which to fill the hierarchy
          *  @param  caloHitList The list of hits with which to fill the hierarchy
-         *  @param  foldToPrimaries Whether or not to fold daughter particles back to their primary particle
-         *  @param  foldToLeadingShowers Whether or not to fold daughter particles back to their leading shower particle
+         *  @param  foldParameters The folding parameters to use for the hierarchy
          */
         void FillHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList,
-            const bool foldToPrimaries, const bool foldToLeadingShowers);
+            const FoldingParameters &foldParameters);
 
         /**
          *  @brief  Retrieve the root nodes in this hierarchy
@@ -332,9 +364,9 @@ public:
              *  @brief  Recursively fill the hierarchy based on the criteria established for this RecoHierarchy
              *
              *  @param  pRoot The PFO acting as the root of the current branch of the hierarchy
-             *  @param foldToLeadingShower Whether or not we're folding back to the leading shower particle
+             *  @param  foldParameters The folding parameters
              */
-            void FillHierarchy(const pandora::ParticleFlowObject *pRoot, const bool foldToLeadingShower);
+            void FillHierarchy(const pandora::ParticleFlowObject *pRoot, const FoldingParameters &foldParameters);
 
             /**
              *  @brief  Fill this node by folding all descendent particles to this node
@@ -417,10 +449,9 @@ public:
          *          node.
          *
          *  @param  pfoList The list of PFOs with which to fill the hierarchy
-         *  @param  foldToPrimaries Whether or not to fold daughter particles back to their primary particle
-         *  @param  foldToLeadingShowers Whether or not to fold daughter particles back to their leading shower particle
+         *  @param  foldParameters The folding parameters to use for the hierarchy
          */
-        void FillHierarchy(const pandora::PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers);
+        void FillHierarchy(const pandora::PfoList &pfoList, const FoldingParameters &foldParameters);
 
         /**
          *  @brief  Retrieve the root nodes in this hierarchy
@@ -704,22 +735,20 @@ public:
      *
      *  @param  mcParticleList The MCParticle list to use to fill this hierarchy
      *  @param  caloHitList The list of CaloHits to use to fill this hierarchy
-     *  @param  foldToPrimaries Whether or not to fold to primary particles
-     *  @param  foldToLeadingShowers Whether or not to fold to leading shower particles
+     *  @param  foldParameters The folding parameters to use for the hierarchy
      *  @param  hierarchy The output MC hierarchy
      */
     static void FillMCHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList,
-        const bool foldToPrimaries, const bool foldToLeadingShowers, MCHierarchy &hierarchy);
+        const FoldingParameters &foldParameters, MCHierarchy &hierarchy);
 
     /**
      *  @brief  Fill a reconstructed hierarchy based on the specified folding criteria (see RecoHierarchy::FillHierarchy for details)
      *
      *  @param  pfoList The ParticleFlowObject list to use to fill this hierarchy
-     *  @param  foldToPrimaries Whether or not to fold to primary particles
-     *  @param  foldToLeadingShowers Whether or not to fold to leading shower particles
+     *  @param  foldParameters The folding parameters to use for the hierarchy
      *  @param  hierarchy The output reconstructed hierarchy
      */
-    static void FillRecoHierarchy(const pandora::PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers, RecoHierarchy &hierarchy);
+    static void FillRecoHierarchy(const pandora::PfoList &pfoList, const FoldingParameters &foldParameters, RecoHierarchy &hierarchy);
 
     /**
      *  @brief  Finds the matches between reconstructed and MC hierarchies.
