@@ -47,7 +47,7 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
 
     LArHierarchyHelper::MCHierarchy mcHierarchy;
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
-    LArHierarchyHelper::FoldingParameters foldParameters(1u);
+    LArHierarchyHelper::FoldingParameters foldParameters(4);
 
     if (m_visualizeMC || m_match)
         LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
@@ -78,7 +78,8 @@ void HierarchyMonitoringAlgorithm::VisualizeMC(const LArHierarchyHelper::MCHiera
     const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
     const std::map<std::string, int> colors = {{"mu", 5}, {"e", 2}, {"gamma", 9}, {"kaon", 1}, {"pi", 3}, {"p", 4}, {"other", 14}};
 
-    const LArHierarchyHelper::MCHierarchy::NodeVector &nodes{hierarchy.GetRootNodes()};
+    LArHierarchyHelper::MCHierarchy::NodeVector nodes;
+    hierarchy.GetFlattenedNodes(nodes);
 
     int nodeIdx{0};
     for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
@@ -125,7 +126,8 @@ void HierarchyMonitoringAlgorithm::VisualizeReco(const LArHierarchyHelper::RecoH
 {
     const std::map<int, int> colors = {{0, 5}, {1, 2}, {2, 9}, {3, 1}, {4, 3}, {5, 4}, {6, 14}};
 
-    const LArHierarchyHelper::RecoHierarchy::NodeVector &nodes{hierarchy.GetRootNodes()};
+    LArHierarchyHelper::RecoHierarchy::NodeVector nodes;
+    hierarchy.GetFlattenedNodes(nodes);
 
     size_t colorIdx{0};
     int pfoIdx{0};
