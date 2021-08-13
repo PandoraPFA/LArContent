@@ -50,11 +50,11 @@ public:
          *
          *  @param  foldingTier The tier at which level child particles should be folded back (> 0)
          */
-        FoldingParameters(const unsigned int foldingTier);
+        FoldingParameters(const int foldingTier);
 
         bool m_foldToLeadingShowers;    ///< Whether or not to fold shower children to the leading shower particle
         bool m_foldToTier;              ///< Whether or not to apply folding based on particle tier
-        unsigned int m_tier;            ///< If folding to a tier, the tier to be combined with its child particles
+        int m_tier;                     ///< If folding to a tier, the tier to be combined with its child particles
     };
 
     /**
