@@ -33,7 +33,7 @@ VertexRefinementAlgorithm::VertexRefinementAlgorithm() :
 
 StatusCode VertexRefinementAlgorithm::Run()
 {
-    const VertexList *pInputVertexList(NULL);
+    const VertexList *pInputVertexList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pInputVertexList));
 
     if (!pInputVertexList || pInputVertexList->empty())
@@ -56,7 +56,6 @@ StatusCode VertexRefinementAlgorithm::Run()
     if (!pOutputVertexList->empty())
     {
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, m_outputVertexListName));
-
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Vertex>(*this, m_outputVertexListName));
     }
 
@@ -70,7 +69,7 @@ void VertexRefinementAlgorithm::GetClusterLists(
 {
     for (const std::string &clusterListName : inputClusterListNames)
     {
-        const ClusterList *pClusterList(NULL);
+        const ClusterList *pClusterList(nullptr);
         PANDORA_THROW_RESULT_IF_AND_IF(
             STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
 
@@ -82,13 +81,13 @@ void VertexRefinementAlgorithm::GetClusterLists(
             continue;
         }
 
-        const HitType hitType(LArClusterHelper::GetClusterHitType(*(pClusterList->begin())));
+        const HitType hitType(LArClusterHelper::GetClusterHitType(pClusterList->front()));
 
         if ((TPC_VIEW_U != hitType) && (TPC_VIEW_V != hitType) && (TPC_VIEW_W != hitType))
             throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
 
-        ClusterList &clusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
-        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
+        ClusterList &outputClusterList((TPC_VIEW_U == hitType) ? clusterListU : (TPC_VIEW_V == hitType) ? clusterListV : clusterListW);
+        outputClusterList.insert(outputClusterList.end(), pClusterList->begin(), pClusterList->end());
     }
 }
 
@@ -108,9 +107,8 @@ void VertexRefinementAlgorithm::RefineVertices(const VertexList *const pVertexLi
         const CartesianVector vtxW(
             this->RefineVertexTwoD(clusterListW, LArGeometryHelper::ProjectPosition(this->GetPandora(), originalPosition, TPC_VIEW_W)));
 
-        CartesianVector vtxUV(-999, -999, -999), vtxUW(-999, -999, -999), vtxVW(-999, -999, -999), vtx3D(-999, -999, -999),
-            position3D(-999, -999, -999);
-        float chi2UV(-999.f), chi2UW(-999.f), chi2VW(-999.f), chi23D(-999.f), chi2(-999.f);
+        CartesianVector vtxUV(0.f, 0.f, 0.f), vtxUW(0.f, 0.f, 0.f), vtxVW(0.f, 0.f, 0.f), vtx3D(0.f, 0.f, 0.f), position3D(0.f, 0.f, 0.f);
+        float chi2UV(0.f), chi2UW(0.f), chi2VW(0.f), chi23D(0.f), chi2(0.f);
 
         LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, vtxU, vtxV, vtxUV, chi2UV);
         LArGeometryHelper::MergeTwoPositions3D(this->GetPandora(), TPC_VIEW_U, TPC_VIEW_W, vtxU, vtxW, vtxUW, chi2UW);
@@ -169,8 +167,8 @@ CartesianVector VertexRefinementAlgorithm::RefineVertexTwoD(const ClusterList &c
         if (pCluster->GetNCaloHits() < m_minimumHitsCut)
             continue;
 
-        CartesianVector centroid(-999, -999, -999);
-        LArPcaHelper::EigenValues eigenValues(-999, -999, -999);
+        CartesianVector centroid(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
         LArPcaHelper::EigenVectors eigenVectors;
         CartesianPointVector pointVector;
 
@@ -215,6 +213,12 @@ void VertexRefinementAlgorithm::GetBestFitPoint(const CartesianPointVector &inte
         G(3 * i, i + 3) = -directions[i].GetX();
         G(3 * i + 1, i + 3) = -directions[i].GetY();
         G(3 * i + 2, i + 3) = -directions[i].GetZ();
+    }
+
+    if ((G.transpose() * G).determinant() == 0)
+    {
+        bestFitPoint = CartesianVector(-999.f, -999.f, -999.f);
+        return;
     }
 
     Eigen::VectorXd m = (G.transpose() * G).inverse() * G.transpose() * d;
