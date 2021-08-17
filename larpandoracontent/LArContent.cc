@@ -204,6 +204,7 @@
 #include "larpandoracontent/LArVertex/EnergyKickVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/HitAngleVertexSelectionAlgorithm.h"
 #include "larpandoracontent/LArVertex/MvaVertexSelectionAlgorithm.h"
+#include "larpandoracontent/LArVertex/VertexRefinementAlgorithm.h"
 
 #include "larpandoracontent/LArContent.h"
 
@@ -311,7 +312,8 @@
     d("LArEnergyKickVertexSelection",           EnergyKickVertexSelectionAlgorithm)                                             \
     d("LArHitAngleVertexSelection",             HitAngleVertexSelectionAlgorithm)                                               \
     d("LArBdtVertexSelection",                  BdtVertexSelectionAlgorithm)                                                    \
-    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)
+    d("LArSvmVertexSelection",                  SvmVertexSelectionAlgorithm)                                                    \
+    d("LArVertexRefinement",                    VertexRefinementAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
