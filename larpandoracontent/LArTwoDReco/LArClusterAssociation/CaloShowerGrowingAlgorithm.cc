@@ -53,7 +53,7 @@ void CaloShowerGrowingAlgorithm::PopulateClusterMergeMap(const pandora::ClusterV
             CaloHitList caloHits;
             LArClusterHelper::GetAllHits(pSeed, caloHits);
             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
-            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHits, "seed", GRAY));
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &caloHits, "seed", RED));
             PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &bounds.m_a, &bounds.m_b, "ab", RED, 1, 1));
             PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &bounds.m_b, &bounds.m_c, "bc", GREEN, 1, 1));
             PANDORA_MONITORING_API(AddLineToVisualization(this->GetPandora(), &bounds.m_c, &bounds.m_d, "cd", BLUE, 1, 1));
@@ -107,6 +107,22 @@ void CaloShowerGrowingAlgorithm::PopulateClusterMergeMap(const pandora::ClusterV
             }
         }
     }
+    // Create a sorted vector of seeds here, based on chi2, then access the intersection map in the order determined by the seed with the
+    // best chi 2 value
+    if (false)
+    {
+        for (const auto [pSeed, clusterList] : seedToAssociationMap)
+        {
+            std::cout << "Considering " << pSeed << std::endl;
+            ClusterList combinedList({pSeed});
+            for (const Cluster *pCluster : seedToAssociationMap[pSeed])
+                combinedList.emplace_back(pCluster);
+            HitType view{LArClusterHelper::GetClusterHitType(pSeed)};
+            std::string seedStr{view == TPC_VIEW_W ? "W" : view == TPC_VIEW_V ? "V" : "U"};
+            PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &combinedList, seedStr + "_consider_" + std::to_string(seedToChi2Map[pSeed]), GREEN));
+            PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+        }
+    }
 
     ClusterList consideredSeeds;
     for (const auto &[ key, intersections ] : seedIntersectionMap)
@@ -119,26 +135,53 @@ void CaloShowerGrowingAlgorithm::PopulateClusterMergeMap(const pandora::ClusterV
             bestChi2 = seedToChi2Map[key];
             consideredSeeds.emplace_back(key);
         }
+        else
+        {
+            continue;
+        }
 
         for (const Cluster *pSeed : intersections)
         {   // Check if another seed with shared associations would be better
+            // This may not be quite right, could be sensitive to order in which things are considered
+            // We want to order the intersection map keys based on chi2, and then only veto at this stage
+            // if the alternative we are considering is already in use *this would probably be handled by
+            // the merge map populating step below that sets intersecting seeds to having been considered)
             if (std::find(consideredSeeds.begin(), consideredSeeds.end(), pSeed) == consideredSeeds.end())
             {
                 if (seedToChi2Map[pSeed] < bestChi2)
-                {
-                    pBestSeed = pSeed;
-                    bestChi2 = seedToChi2Map[pSeed];
+                {   // Found a better option, don't merge
+                    pBestSeed = nullptr;
                 }
-                consideredSeeds.emplace_back(pSeed);
+            }
+            else
+            {
+                // We've already selected another seed that intersects our key, don't merge this one
+                pBestSeed = nullptr;
+                break;
             }
         }
 
-        if (pBestSeed)
+        if (pBestSeed && bestChi2 < .1f)
         {   // Populate the merge map with the best seed and its associations
+            // Flag the key as used
+            consideredSeeds.emplace_back(key);
+            // Flag the seeds that intersect our key as also used
+            for (const Cluster *pSeed : intersections)
+                consideredSeeds.emplace_back(pSeed);
+
             for (const Cluster *pCluster : seedToAssociationMap[pBestSeed])
             {
                 clusterMergeMap[pBestSeed].emplace_back(pCluster);
                 clusterMergeMap[pCluster].emplace_back(pBestSeed);
+            }
+            if (false)
+            {
+                const ClusterList seedList({pBestSeed});
+                HitType view{LArClusterHelper::GetClusterHitType(pBestSeed)};
+                std::string seedStr{view == TPC_VIEW_W ? "W" : view == TPC_VIEW_V ? "V" : "U"};
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &seedList, seedStr + "_seed_" + std::to_string(bestChi2), RED));
+                PANDORA_MONITORING_API(VisualizeClusters(this->GetPandora(), &seedToAssociationMap[pBestSeed], "associated", BLUE));
+                PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
             }
         }
     }
@@ -263,7 +306,7 @@ float CaloShowerGrowingAlgorithm::GetShowerProfileChi2(const pandora::CaloHitLis
         if (proj > max)
             max = proj;
         projVector.emplace_back(proj);
-        energies.emplace_back(pCaloHit->GetElectromagneticEnergy());
+        energies.emplace_back(1000.f * pCaloHit->GetElectromagneticEnergy());
     }
     // Adjust min and max to avoid underflow/overflow issues
     min -= std::numeric_limits<float>::epsilon();
@@ -277,9 +320,6 @@ float CaloShowerGrowingAlgorithm::GetShowerProfileChi2(const pandora::CaloHitLis
     const int N{static_cast<int>(std::ceil((max - min) / binSize))};
     if (N <= 1)
         return std::numeric_limits<float>::max();
-    FloatVector binCentres(N);
-    for (int i = 0; i < N; ++i)
-        binCentres[i] = 0.5f * (2 * i + 1) * binSize;
 
     // Reconstructed energy profile
     FloatVector binEnergiesForward(N), binEnergiesBackward(N);
@@ -291,7 +331,20 @@ float CaloShowerGrowingAlgorithm::GetShowerProfileChi2(const pandora::CaloHitLis
     }
 
     // Theoretical energy profiles
-    const float e0{1000.f * std::accumulate(binEnergiesForward.begin(), binEnergiesForward.end(), 0.f)};
+    // Adjust bin size to be in terms of radiation lengths
+    binSize = 0.5f;
+    FloatVector binCentres(N);
+    for (int i = 0; i < N; ++i)
+        binCentres[i] = 0.5f * (2 * i + 1) * binSize;
+    const float e0{std::accumulate(binEnergiesForward.begin(), binEnergiesForward.end(), 0.f)};
+    if (e0 > std::numeric_limits<float>::epsilon())
+    {   // Convert to fractional energies
+        for (int i = 0; i < N; ++i)
+        {
+            binEnergiesForward[i] /= e0;
+            binEnergiesBackward[i] /= e0;
+        }
+    }
     FloatVector photonEnergies(N), electronEnergies(N);
     this->GetPhotonLongitudinalEnergyProfile(e0, binCentres, binSize, photonEnergies);
     this->GetElectronLongitudinalEnergyProfile(e0, binCentres, binSize, electronEnergies);
@@ -359,10 +412,17 @@ void CaloShowerGrowingAlgorithm::GetLongitudinalEnergyProfile(const float e0, co
     else
         a = 1 + b * cj;
     float gammaA{std::tgamma(a)};
+    float cumulativeEnergy{0.f};
     for (unsigned int i = 0; i < N; ++i)
     {
         const float t{positions[i]};
         fractionalEnergies[i] = b * std::pow(b * t * binSize, a - 1) * std::exp(-b * t) / gammaA;
+        cumulativeEnergy += fractionalEnergies[i];
+    }
+    if (cumulativeEnergy > std::numeric_limits<float>::epsilon())
+    {
+        for (unsigned int i = 0; i < N; ++i)
+            fractionalEnergies[i] /= cumulativeEnergy;
     }
 }
 
