@@ -41,6 +41,13 @@ private:
     void VisualizeMC(const LArHierarchyHelper::MCHierarchy &hierarchy) const;
 
     /**
+     *  @brief  Visualize MC nodes without grouping by particle id.
+     *
+     *  @param  hierarchy The MC hierarchy to render
+     **/
+    void VisualizeMCDistinct(const LArHierarchyHelper::MCHierarchy &hierarchy) const;
+
+    /**
      *  @brief  Visualize the reco nodes.
      *
      *  @param  hierarchy The reco hierarchy to render
@@ -81,6 +88,7 @@ private:
     std::string m_pfoListName;      ///< Name of input PFO list
     bool m_visualizeMC;             ///< Whether or not to visualize the MC nodes
     bool m_visualizeReco;           ///< Whether or not to visualize the reco nodes
+    bool m_visualizeDistinct;       ///< If true, allocate colours without consideration of particle id
     bool m_match;                   ///< Whether or not to visualize the reco to MC matches
     float m_transparencyThresholdE; ///< Cell energy for which transparency is saturated (0%, fully opaque)
     float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette

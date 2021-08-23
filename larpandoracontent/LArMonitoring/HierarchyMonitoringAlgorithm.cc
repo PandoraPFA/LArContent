@@ -18,6 +18,7 @@ namespace lar_content
 HierarchyMonitoringAlgorithm::HierarchyMonitoringAlgorithm() :
     m_visualizeMC(false),
     m_visualizeReco(false),
+    m_visualizeDistinct(false),
     m_match(false),
     m_transparencyThresholdE{-1.f},
     m_energyScaleThresholdE{1.f},
@@ -47,7 +48,7 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
 
     LArHierarchyHelper::MCHierarchy mcHierarchy;
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
-    LArHierarchyHelper::FoldingParameters foldParameters(4);
+    LArHierarchyHelper::FoldingParameters foldParameters(1);
 
     if (m_visualizeMC || m_match)
         LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
@@ -63,7 +64,12 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
     else
     {
         if (m_visualizeMC)
-            this->VisualizeMC(mcHierarchy);
+        {
+            if (m_visualizeDistinct)
+                this->VisualizeMCDistinct(mcHierarchy);
+            else
+                this->VisualizeMC(mcHierarchy);
+        }
         if (m_visualizeReco)
             this->VisualizeReco(recoHierarchy);
     }
@@ -114,6 +120,56 @@ void HierarchyMonitoringAlgorithm::VisualizeMC(const LArHierarchyHelper::MCHiera
             PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &wHits, "w_" + suffix, static_cast<Color>(colors.at(key))));
         }
         //colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
+        ++nodeIdx;
+    }
+
+    PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void HierarchyMonitoringAlgorithm::VisualizeMCDistinct(const LArHierarchyHelper::MCHierarchy &hierarchy) const
+{
+    const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
+    const int nColours{9};
+    const int colors[nColours] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+    LArHierarchyHelper::MCHierarchy::NodeVector nodes;
+    hierarchy.GetFlattenedNodes(nodes);
+
+    int nodeIdx{0}, colorIdx{0};
+    for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
+    {
+        std::string key("other");
+        const int pdg{std::abs(pNode->GetParticleId())};
+        if (keys.find(pdg) != keys.end())
+            key = keys.at(pdg);
+
+        CaloHitList uHits, vHits, wHits;
+        for (const CaloHit *pCaloHit : pNode->GetCaloHits())
+        {
+            const HitType view{pCaloHit->GetHitType()};
+            if (view == HitType::TPC_VIEW_U)
+                uHits.emplace_back(pCaloHit);
+            else if (view == HitType::TPC_VIEW_V)
+                vHits.emplace_back(pCaloHit);
+            else
+                wHits.emplace_back(pCaloHit);
+        }
+        std::string suffix{std::to_string(nodeIdx) + "_" + key};
+        if (!uHits.empty() && uHits.size() > 1)
+        {
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits, "u_" + suffix, static_cast<Color>(colors[colorIdx])));
+        }
+        if (!vHits.empty() && vHits.size() > 1)
+        {
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &vHits, "v_" + suffix, static_cast<Color>(colors[colorIdx])));
+        }
+        if (!wHits.empty() && wHits.size() > 1)
+        {
+            PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &wHits, "w_" + suffix, static_cast<Color>(colors[colorIdx])));
+        }
+        colorIdx = (colorIdx + 1) >= nColours ? 0 : colorIdx + 1;
         ++nodeIdx;
     }
 
@@ -380,6 +436,7 @@ StatusCode HierarchyMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         m_pfoListName = "RecreatedPfos";
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeMC", m_visualizeMC));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeReco", m_visualizeReco));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeDistinct", m_visualizeDistinct));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PerformMatching", m_match));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TransparencyThresholdE", m_transparencyThresholdE));
