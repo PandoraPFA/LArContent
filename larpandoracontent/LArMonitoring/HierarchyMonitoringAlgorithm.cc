@@ -19,7 +19,9 @@ HierarchyMonitoringAlgorithm::HierarchyMonitoringAlgorithm() :
     m_visualizeMC(false),
     m_visualizeReco(false),
     m_visualizeDistinct(false),
+    m_visualizeProcess{false},
     m_match(false),
+    m_collectionOnly{false},
     m_transparencyThresholdE{-1.f},
     m_energyScaleThresholdE{1.f},
     m_scalingFactor{1.f}
@@ -46,9 +48,10 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
     const PfoList *pPfoList(nullptr);
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_pfoListName, pPfoList));
 
-    LArHierarchyHelper::MCHierarchy mcHierarchy;
+    LArHierarchyHelper::MCHierarchy::ReconstructabilityCriteria criteria(15, 5, 2, false);
+    LArHierarchyHelper::MCHierarchy mcHierarchy(criteria);
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
-    LArHierarchyHelper::FoldingParameters foldParameters(1);
+    LArHierarchyHelper::FoldingParameters foldParameters; //(1);
 
     if (m_visualizeMC || m_match)
         LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
@@ -67,6 +70,8 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
         {
             if (m_visualizeDistinct)
                 this->VisualizeMCDistinct(mcHierarchy);
+            else if (m_visualizeProcess)
+                this->VisualizeMCProcess(mcHierarchy);
             else
                 this->VisualizeMC(mcHierarchy);
         }
@@ -143,28 +148,58 @@ void HierarchyMonitoringAlgorithm::VisualizeMCDistinct(const LArHierarchyHelper:
 
 void HierarchyMonitoringAlgorithm::VisualizeMCProcess(const LArHierarchyHelper::MCHierarchy &hierarchy) const
 {
-    const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
-    const int nColours{9};
-    const int colors[nColours] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
+    const std::map<MCProcess, std::string> procToCategoryMap = {{MC_PROC_INCIDENT_NU, "invisible"}, {MC_PROC_UNKNOWN, "invisible"},
+        {MC_PROC_PRIMARY, "primary"}, {MC_PROC_COMPT, "compt"}, {MC_PROC_PHOT, "phot"}, {MC_PROC_ANNIHIL, "annihil"}, {MC_PROC_E_IONI, "ioni"},
+        {MC_PROC_E_BREM, "brem"}, {MC_PROC_CONV, "conv"}, {MC_PROC_MU_IONI, "ioni"}, {MC_PROC_MU_MINUS_CAPTURE_AT_REST, "capture"},
+        {MC_PROC_NEUTRON_INELASTIC, "inelastic"}, {MC_PROC_N_CAPTURE, "capture"}, {MC_PROC_HAD_ELASTIC, "elastic"}, {MC_PROC_DECAY, "decay"},
+        {MC_PROC_COULOMB_SCAT, "coulomb"}, {MC_PROC_MU_BREM, "brem"}, {MC_PROC_MU_PAIR_PROD, "pair_prod"}, {MC_PROC_PHOTON_INELASTIC, "inelastic"},
+        {MC_PROC_HAD_IONI, "ioni"}, {MC_PROC_PROTON_INELASTIC, "inelastic"}, {MC_PROC_PI_PLUS_INELASTIC, "inelastic"},
+        {MC_PROC_CHIPS_NUCLEAR_CAPTURE_AT_REST, "capture"}, {MC_PROC_PI_MINUS_INELASTIC, "inelastic"}, {MC_PROC_TRANSPORTATION, "transport"},
+        {MC_PROC_RAYLEIGH, "rayleigh"}, {MC_PROC_HAD_BREM, "brem"}, {MC_PROC_HAD_PAIR_PROD, "pair_prod"}, {MC_PROC_ION_IONI, "ioni"},
+        {MC_PROC_NEUTRON_KILLER, "kill"}, {MC_PROC_ION_INELASTIC, "inelastic"}, {MC_PROC_HE3_INELASTIC, "inelastic"},
+        {MC_PROC_ALPHA_INELASTIC, "inelastic"}, {MC_PROC_ANTI_HE3_INELASTIC, "inelastic"}, {MC_PROC_ANTI_ALPHA_INELASTIC, "inelastic"},
+        {MC_PROC_HAD_FRITIOF_CAPTURE_AT_REST, "inelastic"}, {MC_PROC_ANTI_DEUTERON_INELASTIC, "inelastic"},
+        {MC_PROC_ANTI_NEUTRON_INELASTIC, "inelastic"}, {MC_PROC_ANTI_PROTON_INELASTIC, "inelastic"},
+        {MC_PROC_ANTI_TRITON_INELASTIC, "inelastic"}, {MC_PROC_DEUTERON_INELASTIC, "inelastic"}, {MC_PROC_ELECTRON_NUCLEAR, "nuclear"},
+        {MC_PROC_PHOTON_NUCLEAR, "nuclear"}, {MC_PROC_KAON_PLUS_INELASTIC, "inelastic"}, {MC_PROC_KAON_MINUS_INELASTIC, "inelastic"},
+        {MC_PROC_HAD_BERTINI_CAPTURE_AT_REST, "capture"}, {MC_PROC_LAMBDA_INELASTIC, "inelastic"}, {MC_PROC_MU_NUCLEAR, "nuclear"},
+        {MC_PROC_TRITON_INELASTIC, "inelastic"}, {MC_PROC_PRIMARY_BACKGROUND, "background"}};
+
+    const std::map<std::string, int> categoryToColorMap = {{"invisible", 0}, {"primary", 1}, {"compt", 2}, {"phot", 3}, {"annihil", 4},
+        {"ioni", 5}, {"brem", 6}, {"conv", 3}, {"capture", 6}, {"inelastic", 9}, {"elastic", 8}, {"decay", 7}, {"coulomb", 9},
+        {"pair_prod", 4}, {"transport", 1}, {"rayleigh", 9}, {"kill", 2}, {"nuclear", 5}, {"background", 7}};
 
     LArHierarchyHelper::MCHierarchy::NodeVector nodes;
     hierarchy.GetFlattenedNodes(nodes);
 
-    int nodeIdx{0}, colorIdx{0};
+    int nodeIdx{0};
     for (const LArHierarchyHelper::MCHierarchy::Node *pNode : nodes)
     {
-        std::string key("other");
+        const LArMCParticle *pMC{dynamic_cast<const LArMCParticle *>(pNode->GetLeadingMCParticle())};
+        if (!pMC)
+            continue;
+        const MCProcess process{pMC->GetProcess()};
+        const std::string category{procToCategoryMap.at(process)};
         const int pdg{std::abs(pNode->GetParticleId())};
-        if (keys.find(pdg) != keys.end())
-            key = keys.at(pdg);
+        const int tier{LArMCParticleHelper::GetHierarchyTier(pMC)};
 
         CaloHitList uHits, vHits, wHits;
         this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-        std::string suffix{std::to_string(nodeIdx) + "_" + key};
-        this->Visualize(uHits, "u_" + suffix, colors[colorIdx]);
-        this->Visualize(vHits, "v_" + suffix, colors[colorIdx]);
-        this->Visualize(wHits, "w_" + suffix, colors[colorIdx]);
-        colorIdx = (colorIdx + 1) >= nColours ? 0 : colorIdx + 1;
+        std::string suffix{std::to_string(nodeIdx) + " (" + std::to_string(tier) + ") " + std::to_string(pdg) + " " + category + " " +
+                           std::to_string(process)};
+        if (process == MC_PROC_DECAY)
+        {
+            const MCParticleList &parentList{pMC->GetParentList()};
+            if (!parentList.empty())
+            {
+                const MCParticle *pParent{parentList.front()};
+                const int parentPdg{std::abs(pParent->GetParticleId())};
+                suffix += " from " + std::to_string(parentPdg);
+            }
+        }
+        this->Visualize(uHits, "u_" + suffix, categoryToColorMap.at(category));
+        this->Visualize(vHits, "v_" + suffix, categoryToColorMap.at(category));
+        this->Visualize(wHits, "w_" + suffix, categoryToColorMap.at(category));
         ++nodeIdx;
     }
 
@@ -344,6 +379,8 @@ void HierarchyMonitoringAlgorithm::Visualize(const CaloHitList &hits, const std:
 {
     if (!hits.empty() && hits.size() > 1)
     {
+        if (m_collectionOnly && hits.front()->GetHitType() != TPC_VIEW_W)
+            return;
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &hits, label, static_cast<Color>(color)));
     }
 }
@@ -378,7 +415,10 @@ StatusCode HierarchyMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeReco", m_visualizeReco));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeDistinct", m_visualizeDistinct));
+    PANDORA_RETURN_RESULT_IF_AND_IF(
+        STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeProcess", m_visualizeProcess));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PerformMatching", m_match));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CollectionOnly", m_collectionOnly));
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TransparencyThresholdE", m_transparencyThresholdE));
     PANDORA_RETURN_RESULT_IF_AND_IF(

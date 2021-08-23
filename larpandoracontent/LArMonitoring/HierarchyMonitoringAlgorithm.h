@@ -115,7 +115,9 @@ private:
     bool m_visualizeMC;             ///< Whether or not to visualize the MC nodes
     bool m_visualizeReco;           ///< Whether or not to visualize the reco nodes
     bool m_visualizeDistinct;       ///< If true, allocate colours without consideration of particle id
+    bool m_visualizeProcess;        ///< If true, allocate colours based on the MC process
     bool m_match;                   ///< Whether or not to visualize the reco to MC matches
+    bool m_collectionOnly;          ///< Limit display to the collection plane only
     float m_transparencyThresholdE; ///< Cell energy for which transparency is saturated (0%, fully opaque)
     float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette
     float m_scalingFactor;          ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)
