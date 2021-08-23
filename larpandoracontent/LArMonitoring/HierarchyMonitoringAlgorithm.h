@@ -48,6 +48,13 @@ private:
     void VisualizeMCDistinct(const LArHierarchyHelper::MCHierarchy &hierarchy) const;
 
     /**
+     *  @brief  Visualize MC nodes based on the MC process that created them.
+     *
+     *  @param  hierarchy The MC hierarchy to render
+     **/
+    void VisualizeMCProcess(const LArHierarchyHelper::MCHierarchy &hierarchy) const;
+
+    /**
      *  @brief  Visualize the reco nodes.
      *
      *  @param  hierarchy The reco hierarchy to render
@@ -83,6 +90,25 @@ private:
      *  @param  pNode The unmatched reco node
      */
     void VisualizeUnmatchedReco(const LArHierarchyHelper::RecoHierarchy::Node *pNode) const;
+
+    /**
+     *  @brief  Visualize a calo hit list
+     *
+     *  @param  hits The hits to visualize
+     *  @param  label The label to apply to the hits
+     *  @param  color The color to apply to the hits
+     */
+    void Visualize(const pandora::CaloHitList &hits, const std::string &label, const int color) const;
+
+    /**
+     *  @brief  Fill per view hit lists
+     *
+     *  @param  hits The input list of hits
+     *  @param  uHits The output list of hits in U
+     *  @param  vHits The output list of hits in V
+     *  @param  wHits The output list of hits in W
+     */
+    void FillHitLists(const pandora::CaloHitList &hits, pandora::CaloHitList &uHits, pandora::CaloHitList &vHits, pandora::CaloHitList &wHits) const;
 
     std::string m_caloHitListName;  ///< Name of input calo hit list
     std::string m_pfoListName;      ///< Name of input PFO list
