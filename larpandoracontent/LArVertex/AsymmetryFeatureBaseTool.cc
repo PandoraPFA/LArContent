@@ -33,13 +33,16 @@ void AsymmetryFeatureBaseTool::Run(LArMvaHelper::MvaFeatureVector &featureVector
     float asymmetry(0.f);
 
     asymmetry += this->GetAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_U),
-        slidingFitDataListMap.at(TPC_VIEW_U), showerClusterListMap.at(TPC_VIEW_U));
+        slidingFitDataListMap.at(TPC_VIEW_U),
+        showerClusterListMap.empty() ? VertexSelectionBaseAlgorithm::ShowerClusterList() : showerClusterListMap.at(TPC_VIEW_U));
 
     asymmetry += this->GetAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_V),
-        slidingFitDataListMap.at(TPC_VIEW_V), showerClusterListMap.at(TPC_VIEW_V));
+        slidingFitDataListMap.at(TPC_VIEW_V),
+        showerClusterListMap.empty() ? VertexSelectionBaseAlgorithm::ShowerClusterList() : showerClusterListMap.at(TPC_VIEW_V));
 
     asymmetry += this->GetAsymmetryForView(LArGeometryHelper::ProjectPosition(this->GetPandora(), pVertex->GetPosition(), TPC_VIEW_W),
-        slidingFitDataListMap.at(TPC_VIEW_W), showerClusterListMap.at(TPC_VIEW_W));
+        slidingFitDataListMap.at(TPC_VIEW_W),
+        showerClusterListMap.empty() ? VertexSelectionBaseAlgorithm::ShowerClusterList() : showerClusterListMap.at(TPC_VIEW_W));
 
     featureVector.push_back(asymmetry);
 }
