@@ -32,6 +32,7 @@ HierarchyMonitoringAlgorithm::HierarchyMonitoringAlgorithm() :
 
 HierarchyMonitoringAlgorithm::~HierarchyMonitoringAlgorithm()
 {
+    PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "processes", "processes.root", "UPDATE"));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -77,6 +78,16 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
         }
         if (m_visualizeReco)
             this->VisualizeReco(recoHierarchy);
+    }
+
+    {
+        LArHierarchyHelper::MCHierarchy::ReconstructabilityCriteria criteriaDynamic(15, 5, 2, false);
+        LArHierarchyHelper::MCHierarchy mcHierarchyDynamic(criteria);
+        LArHierarchyHelper::FoldingParameters foldParametersDynamic;
+        foldParametersDynamic.m_foldDynamic = true;
+
+        LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParametersDynamic, mcHierarchyDynamic);
+        this->VisualizeMCDistinct(mcHierarchyDynamic);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -197,10 +208,17 @@ void HierarchyMonitoringAlgorithm::VisualizeMCProcess(const LArHierarchyHelper::
                 suffix += " from " + std::to_string(parentPdg);
             }
         }
-        this->Visualize(uHits, "u_" + suffix, categoryToColorMap.at(category));
-        this->Visualize(vHits, "v_" + suffix, categoryToColorMap.at(category));
-        this->Visualize(wHits, "w_" + suffix, categoryToColorMap.at(category));
+
+        this->Visualize(uHits, "U " + suffix, categoryToColorMap.at(category));
+        this->Visualize(vHits, "V " + suffix, categoryToColorMap.at(category));
+        this->Visualize(wHits, "W " + suffix, categoryToColorMap.at(category));
         ++nodeIdx;
+
+        const int proc{static_cast<int>(process)};
+        const float mom{pMC->GetMomentum().GetMagnitude()};
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "process", proc));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "processes", "momentum", mom));
+        PANDORA_MONITORING_API(FillTree(this->GetPandora(), "processes"));
     }
 
     PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
