@@ -38,9 +38,9 @@ public:
         /**
          *  @brief  Constructor
          *
-         *  @param  foldToLeadingShowers Whether or not to fold to the leading shower particle
+         *  @param  foldDynamic Whether or not to apply dynamic folding to the hierarchy
          */
-        FoldingParameters(const bool foldToLeadingShowers);
+        FoldingParameters(const bool foldDynamic, const float cosAngleTolerance = 0.9962f);
 
         /**
          *  @brief  Constructor.
@@ -52,9 +52,11 @@ public:
          */
         FoldingParameters(const int foldingTier);
 
-        bool m_foldToLeadingShowers; ///< Whether or not to fold shower children to the leading shower particle
-        bool m_foldToTier;           ///< Whether or not to apply folding based on particle tier
-        int m_tier;                  ///< If folding to a tier, the tier to be combined with its child particles
+        bool m_foldToLeadingShowers;    ///< Whether or not to fold shower children to the leading shower particle
+        bool m_foldToTier;              ///< Whether or not to apply folding based on particle tier
+        bool m_foldDynamic;             ///< Whether or not to use process and topological information to make folding decisions
+        float m_cosAngleTolerance;      ///< Cosine of the maximum angle at which topologies can be considered continuous
+        int m_tier;                     ///< If folding to a tier, the tier to be combined with its child particles
     };
 
     /**
@@ -280,6 +282,18 @@ public:
         void FillHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList, const FoldingParameters &foldParameters);
 
         /**
+         *  @brief  Interpret the hierarchy below a particular particle to determine if and how it should be folded. Folded particles are
+         *          added to the leadingParticles list and child particles are added to the childParticles list.
+         *
+         *  @param  pRoot The root of the hierarchy to interpret
+         *  @param  leadingParticles The output list of particles that should be folded into the root particle
+         *  @param  childParticles The output list of particles that should be considered children of the folded particle
+         *  @param  cosAngleTolerance The cosine of the maximum angle for which trajectories are considered continuous
+         */
+        void InterpretHierarchy(const pandora::MCParticle *const pRoot, pandora::MCParticleList &leadingParticles,
+            pandora::MCParticleList &childParticles, const float cosAngleTolerance) const;
+
+        /**
          *  @brief  Retrieve the root nodes in this hierarchy
          *
          *  @return The root nodes in this hierarchy
@@ -315,6 +329,36 @@ public:
         bool IsTestBeamHierarchy() const;
 
     private:
+
+        /**
+         *  @brief  Identify downstream particles that represent continuations of the parent particle from a reconstruction perspective
+         *
+         *  @param  pRoot The root MC particle
+         *  @param  continuingParticles An output list of the particles identified as continuations
+         *  @param  childParticles An output list of the particles identified as child particles given any continuations
+         *  @param  cosAngleTolerance The cosine of the maximum angle for which trajectories are considered continuous
+         */
+        void CollectContinuations(const pandora::MCParticle *pRoot, pandora::MCParticleList &continuingParticles,
+            pandora::MCParticleList &childParticles, const float cosAngleTolerance) const;
+
+        /**
+         *  @brief  Checks if an individual particle meets reconstructability criteria
+         *
+         *  @param  pMCParticle  The MC particle to assess
+         *
+         *  @return  Whether or not the MC particle meets reconstructability criteria
+         */
+        bool IsReconstructable(const pandora::MCParticle *pMCParticle) const;
+
+        /**
+         *  @brief  Checks if a set of hits meet reconstructability criteria
+         *
+         *  @param  caloHits  The calo hits to assess
+         *
+         *  @return  Whether or not the hits meet reconstructability criteria
+         */
+        bool IsReconstructable(const pandora::CaloHitList &caloHits) const;
+
         NodeVector m_rootNodes;                    ///< The leading nodes (e.g. primary particles, cosmic rays, ...)
         ReconstructabilityCriteria m_recoCriteria; ///< The criteria used to determine if the node is reconstructable
         const pandora::MCParticle *m_pNeutrino;    ///< The incident neutrino, if it exists
