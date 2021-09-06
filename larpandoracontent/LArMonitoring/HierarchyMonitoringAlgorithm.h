@@ -118,6 +118,8 @@ private:
     bool m_visualizeProcess;        ///< If true, allocate colours based on the MC process
     bool m_match;                   ///< Whether or not to visualize the reco to MC matches
     bool m_collectionOnly;          ///< Limit display to the collection plane only
+    bool m_foldToPrimaries;         ///< Whether or not to fold everything back to primaries
+    bool m_foldDynamic;             ///< Whether or not to fold based on process information
     float m_transparencyThresholdE; ///< Cell energy for which transparency is saturated (0%, fully opaque)
     float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette
     float m_scalingFactor;          ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)

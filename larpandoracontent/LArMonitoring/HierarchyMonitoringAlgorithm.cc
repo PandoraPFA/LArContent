@@ -22,6 +22,8 @@ HierarchyMonitoringAlgorithm::HierarchyMonitoringAlgorithm() :
     m_visualizeProcess{false},
     m_match(false),
     m_collectionOnly{false},
+    m_foldToPrimaries{false},
+    m_foldDynamic{true},
     m_transparencyThresholdE{-1.f},
     m_energyScaleThresholdE{1.f},
     m_scalingFactor{1.f}
@@ -52,7 +54,11 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
     LArHierarchyHelper::MCHierarchy::ReconstructabilityCriteria criteria(15, 5, 2, false);
     LArHierarchyHelper::MCHierarchy mcHierarchy(criteria);
     LArHierarchyHelper::RecoHierarchy recoHierarchy;
-    LArHierarchyHelper::FoldingParameters foldParameters; //(1);
+    LArHierarchyHelper::FoldingParameters foldParameters;
+    if (m_foldToPrimaries)
+        foldParameters.m_foldToTier = true;
+    else if (m_foldDynamic)
+        foldParameters.m_foldDynamic = true;
 
     if (m_visualizeMC || m_match)
         LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParameters, mcHierarchy);
@@ -78,16 +84,6 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
         }
         if (m_visualizeReco)
             this->VisualizeReco(recoHierarchy);
-    }
-
-    {
-        LArHierarchyHelper::MCHierarchy::ReconstructabilityCriteria criteriaDynamic(15, 5, 2, false);
-        LArHierarchyHelper::MCHierarchy mcHierarchyDynamic(criteria);
-        LArHierarchyHelper::FoldingParameters foldParametersDynamic;
-        foldParametersDynamic.m_foldDynamic = true;
-
-        LArHierarchyHelper::FillMCHierarchy(*pMCParticleList, *pCaloHitList, foldParametersDynamic, mcHierarchyDynamic);
-        this->VisualizeMCDistinct(mcHierarchyDynamic);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -437,6 +433,10 @@ StatusCode HierarchyMonitoringAlgorithm::ReadSettings(const TiXmlHandle xmlHandl
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "VisualizeProcess", m_visualizeProcess));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PerformMatching", m_match));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "CollectionOnly", m_collectionOnly));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldToPrimaries", m_foldToPrimaries));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "FoldDynamic", m_foldDynamic));
+    if (m_foldToPrimaries)
+        m_foldDynamic = false;
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TransparencyThresholdE", m_transparencyThresholdE));
     PANDORA_RETURN_RESULT_IF_AND_IF(
