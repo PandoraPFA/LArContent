@@ -57,7 +57,7 @@ StatusCode HierarchyMonitoringAlgorithm::Run()
     {
         LArHierarchyHelper::MatchInfo matchInfo;
         LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
-        matchInfo.Print(mcHierarchy); 
+        matchInfo.Print(mcHierarchy);
         this->VisualizeMatches(matchInfo);
     }
     else

@@ -52,9 +52,9 @@ public:
          */
         FoldingParameters(const int foldingTier);
 
-        bool m_foldToLeadingShowers;    ///< Whether or not to fold shower children to the leading shower particle
-        bool m_foldToTier;              ///< Whether or not to apply folding based on particle tier
-        int m_tier;                     ///< If folding to a tier, the tier to be combined with its child particles
+        bool m_foldToLeadingShowers; ///< Whether or not to fold shower children to the leading shower particle
+        bool m_foldToTier;           ///< Whether or not to apply folding based on particle tier
+        int m_tier;                  ///< If folding to a tier, the tier to be combined with its child particles
     };
 
     /**
@@ -277,8 +277,7 @@ public:
          *  @param  caloHitList The list of hits with which to fill the hierarchy
          *  @param  foldParameters The folding parameters to use for the hierarchy
          */
-        void FillHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList,
-            const FoldingParameters &foldParameters);
+        void FillHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList, const FoldingParameters &foldParameters);
 
         /**
          *  @brief  Retrieve the root nodes in this hierarchy

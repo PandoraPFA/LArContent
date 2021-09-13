@@ -35,13 +35,13 @@ public:
     typedef std::unordered_map<const pandora::MCParticle *, pandora::CaloHitList> MCContributionMap;
     typedef std::vector<MCContributionMap> MCContributionMapVector;
 
-    typedef std::unordered_map<const pandora::Cluster*, pandora::CaloHitList> ClusterContributionMap;
+    typedef std::unordered_map<const pandora::Cluster *, pandora::CaloHitList> ClusterContributionMap;
     typedef std::unordered_map<const pandora::ParticleFlowObject *, pandora::CaloHitList> PfoContributionMap;
     typedef std::unordered_map<const pandora::MCParticle *, PfoContributionMap> MCToPfoMatchingMap;
 
     typedef std::pair<const pandora::MCParticle *, pandora::CaloHitList> MCParticleCaloHitListPair;
     typedef std::pair<const pandora::ParticleFlowObject *, pandora::CaloHitList> PfoCaloHitListPair;
-    typedef std::pair<const pandora::Cluster*, pandora::CaloHitList > ClusterCaloHitListPair;
+    typedef std::pair<const pandora::Cluster *, pandora::CaloHitList> ClusterCaloHitListPair;
 
     typedef std::vector<MCParticleCaloHitListPair> MCParticleToSharedHitsVector;
     typedef std::vector<PfoCaloHitListPair> PfoToSharedHitsVector;
@@ -389,8 +389,8 @@ public:
      *  @param  selectedMCToHitsMaps the input vector of mappings from selected reconstructable MCParticles to their hits
      *  @param  clusterToReconstructable2DHitsMap the output mapping from cluster to their reconstructable 2D hits
      */
-    static void GetClusterToReconstructable2DHitsMap(const pandora::ClusterList &clusterList, const MCContributionMapVector &selectedMCToHitsMaps,
-        ClusterContributionMap &clusterToReconstructable2DHitsMap);
+    static void GetClusterToReconstructable2DHitsMap(const pandora::ClusterList &clusterList,
+        const MCContributionMapVector &selectedMCToHitsMaps, ClusterContributionMap &clusterToReconstructable2DHitsMap);
 
     /**
      *  @brief  Get the mappings from Pfo -> pair (reconstructable MCparticles, number of reconstructable 2D hits shared with Pfo)
@@ -501,8 +501,8 @@ private:
      *  @param  selectedMCToHitsMaps the input mappings from selected reconstructable MCParticles to hits
      *  @param  reconstructableCaloHitList2D the output list of reconstructable 2D calo hits in the input pfo
      */
-    static void CollectReconstructable2DHits(const pandora::Cluster *const pCluster, const MCContributionMapVector &selectedMCParticleToHitsMaps,
-        pandora::CaloHitList &reconstructableCaloHitList2D);
+    static void CollectReconstructable2DHits(const pandora::Cluster *const pCluster,
+        const MCContributionMapVector &selectedMCParticleToHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D);
 
     /**
      *  @brief  Apply further selection criteria to end up with a collection of "good" calo hits that can be use to define whether

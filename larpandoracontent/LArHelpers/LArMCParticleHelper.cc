@@ -733,11 +733,10 @@ void LArMCParticleHelper::GetPfoMCParticleHitSharingMaps(const PfoContributionMa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::GetClusterToReconstructable2DHitsMap(const pandora::ClusterList &clusterList, const MCContributionMap &selectedMCToHitsMap,
-    ClusterContributionMap &clusterToReconstructable2DHitsMap)
+void LArMCParticleHelper::GetClusterToReconstructable2DHitsMap(const pandora::ClusterList &clusterList,
+    const MCContributionMap &selectedMCToHitsMap, ClusterContributionMap &clusterToReconstructable2DHitsMap)
 {
-    LArMCParticleHelper::GetClusterToReconstructable2DHitsMap(clusterList, MCContributionMapVector({selectedMCToHitsMap}),
-        clusterToReconstructable2DHitsMap);
+    LArMCParticleHelper::GetClusterToReconstructable2DHitsMap(clusterList, MCContributionMapVector({selectedMCToHitsMap}), clusterToReconstructable2DHitsMap);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -861,8 +860,8 @@ void LArMCParticleHelper::CollectReconstructable2DHits(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArMCParticleHelper::CollectReconstructable2DHits(const pandora::Cluster *const pCluster, const MCContributionMapVector &selectedMCToHitsMaps,
-    pandora::CaloHitList &reconstructableCaloHitList2D)
+void LArMCParticleHelper::CollectReconstructable2DHits(const pandora::Cluster *const pCluster,
+    const MCContributionMapVector &selectedMCToHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D)
 {
     const CaloHitList &isolatedCaloHitList{pCluster->GetIsolatedCaloHitList()};
     CaloHitList caloHitList;
@@ -875,7 +874,7 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const pandora::Cluster *c
     {
         bool isTargetHit{false};
         for (const MCContributionMap &mcParticleToHitsMap : selectedMCToHitsMaps)
-        {   // ATTN This map is unordered, but this does not impact search for specific target hit
+        { // ATTN This map is unordered, but this does not impact search for specific target hit
             for (const MCContributionMap::value_type &mapEntry : mcParticleToHitsMap)
             {
                 if (std::find(mapEntry.second.begin(), mapEntry.second.end(), pCaloHit) != mapEntry.second.end())
@@ -884,7 +883,8 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const pandora::Cluster *c
                     break;
                 }
             }
-            if (isTargetHit) break;
+            if (isTargetHit)
+                break;
         }
 
         if (isTargetHit)
