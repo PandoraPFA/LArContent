@@ -25,7 +25,40 @@ class LArHierarchyHelper
 {
 public:
     /**
-     *  @brief   MCHierarchy class
+     *  @brief  FoldingParameters class
+     */
+    class FoldingParameters
+    {
+    public:
+        /**
+         *  @brief  Default constructor
+         */
+        FoldingParameters();
+
+        /**
+         *  @brief  Constructor
+         *
+         *  @param  foldToLeadingShowers Whether or not to fold to the leading shower particle
+         */
+        FoldingParameters(const bool foldToLeadingShowers);
+
+        /**
+         *  @brief  Constructor.
+         *
+         *  If folding back to tier 2, any MC particle/PFO ("particles") at tier 1 will be allocated their own node. At tier 2, the
+         *  particles will be allocated as the main particle for a node and all of their children will also be incorprated into the node
+         *
+         *  @param  foldingTier The tier at which level child particles should be folded back (> 0)
+         */
+        FoldingParameters(const int foldingTier);
+
+        bool m_foldToLeadingShowers; ///< Whether or not to fold shower children to the leading shower particle
+        bool m_foldToTier;           ///< Whether or not to apply folding based on particle tier
+        int m_tier;                  ///< If folding to a tier, the tier to be combined with its child particles
+    };
+
+    /**
+     *  @brief  MCHierarchy class
      */
     class MCHierarchy
     {
@@ -106,9 +139,9 @@ public:
              *  @brief  Recursively fill the hierarchy based on the criteria established for this MCHierarchy
              *
              *  @param  pRoot The MC particle acting as the root of the current branch of the hierarchy
-             *  @param foldToLeadingShower Whether or not we're folding back to the leading shower particle
+             *  @param  foldParameters The folding parameters
              */
-            void FillHierarchy(const pandora::MCParticle *pRoot, const bool foldToLeadingShower);
+            void FillHierarchy(const pandora::MCParticle *pRoot, const FoldingParameters &foldParameters);
 
             /**
              *  @brief  Fill this node by folding all descendent particles to this node
@@ -123,6 +156,13 @@ public:
              *  @return The vector of children
              */
             const NodeVector &GetChildren() const;
+
+            /**
+             *  @brief  Retrieve the leading MC particle associated with this node
+             *
+             *  @return The main MC particle associated with this node
+             */
+            const pandora::MCParticle *GetLeadingMCParticle() const;
 
             /**
              *  @brief  Retrieve the MC particles associated with this node
@@ -167,6 +207,13 @@ public:
             bool IsCosmicRay() const;
 
             /**
+             *  @brief  Returns whether or not this particle is the leading lepton in the event
+             *
+             *  @return Whether or not this is the leading lepton
+             */
+            bool IsLeadingLepton() const;
+
+            /**
              *  @brief  Produce a string representation of the hierarchy
              *
              *  @return The string representation of the hierarchy
@@ -174,12 +221,20 @@ public:
             const std::string ToString(const std::string &prefix) const;
 
         private:
+            /**
+             *  @brief  Tags the particle as the leading lepton
+             */
+            void SetLeadingLepton();
+
             const MCHierarchy &m_hierarchy;            ///< The parent MC hierarchy
             pandora::MCParticleList m_mcParticles;     ///< The list of MC particles of which this node is composed
             pandora::CaloHitList m_caloHits;           ///< The list of calo hits of which this node is composed
             NodeVector m_children;                     ///< The child nodes of this node
             const pandora::MCParticle *m_mainParticle; ///< The leading MC particle for this node
             int m_pdg;                                 ///< The PDG code of the leading MC particle for this node
+            bool m_isLeadingLepton;                    ///< Whether or not this node is the leading lepton
+
+            friend class MCHierarchy;
         };
 
         /**
@@ -220,11 +275,9 @@ public:
          *
          *  @param  mcParticleList The list of MC particles with which to fill the hierarchy
          *  @param  caloHitList The list of hits with which to fill the hierarchy
-         *  @param  foldToPrimaries Whether or not to fold daughter particles back to their primary particle
-         *  @param  foldToLeadingShowers Whether or not to fold daughter particles back to their leading shower particle
+         *  @param  foldParameters The folding parameters to use for the hierarchy
          */
-        void FillHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList,
-            const bool foldToPrimaries, const bool foldToLeadingShowers);
+        void FillHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList, const FoldingParameters &foldParameters);
 
         /**
          *  @brief  Retrieve the root nodes in this hierarchy
@@ -310,9 +363,9 @@ public:
              *  @brief  Recursively fill the hierarchy based on the criteria established for this RecoHierarchy
              *
              *  @param  pRoot The PFO acting as the root of the current branch of the hierarchy
-             *  @param foldToLeadingShower Whether or not we're folding back to the leading shower particle
+             *  @param  foldParameters The folding parameters
              */
-            void FillHierarchy(const pandora::ParticleFlowObject *pRoot, const bool foldToLeadingShower);
+            void FillHierarchy(const pandora::ParticleFlowObject *pRoot, const FoldingParameters &foldParameters);
 
             /**
              *  @brief  Fill this node by folding all descendent particles to this node
@@ -395,10 +448,9 @@ public:
          *          node.
          *
          *  @param  pfoList The list of PFOs with which to fill the hierarchy
-         *  @param  foldToPrimaries Whether or not to fold daughter particles back to their primary particle
-         *  @param  foldToLeadingShowers Whether or not to fold daughter particles back to their leading shower particle
+         *  @param  foldParameters The folding parameters to use for the hierarchy
          */
-        void FillHierarchy(const pandora::PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers);
+        void FillHierarchy(const pandora::PfoList &pfoList, const FoldingParameters &foldParameters);
 
         /**
          *  @brief  Retrieve the root nodes in this hierarchy
@@ -474,21 +526,74 @@ public:
          *  @brief  Retrieve the purity of the match
          *
          *  @param  pReco The reco node to consider
+         *  @param  adcWeighted Whether or not to weight purity according to the charge contribution
          *
          *  @return The purity of the match
          */
-        float GetPurity(const RecoHierarchy::Node *pReco) const;
+        float GetPurity(const RecoHierarchy::Node *pReco, const bool adcWeighted = false) const;
+
+        /**
+         *  @brief  Retrieve the purity of the match
+         *
+         *  @param  pReco The reco node to consider
+         *  @param  view The view for which purity should be calculated
+         *  @param  adcWeighted Whether or not to weight purity according to the charge contribution
+         *
+         *  @return The purity of the match
+         */
+        float GetPurity(const RecoHierarchy::Node *pReco, const pandora::HitType view, const bool adcWeighted = false) const;
 
         /**
          *  @brief  Retrieve the completeness of the match
          *
          *  @param  pReco The reco node to consider
+         *  @param  adcWeighted Whether or not to weight completeness according to the charge contribution
          *
          *  @return The completeness of the match
          */
-        float GetCompleteness(const RecoHierarchy::Node *pReco) const;
+        float GetCompleteness(const RecoHierarchy::Node *pReco, const bool adcWeighted = false) const;
+
+        /**
+         *  @brief  Retrieve the completeness of the match
+         *
+         *  @param  pReco The reco node to consider
+         *  @param  view The view for which purity should be calculated
+         *  @param  adcWeighted Whether or not to weight completeness according to the charge contribution
+         *
+         *  @return The completeness of the match
+         */
+        float GetCompleteness(const RecoHierarchy::Node *pReco, const pandora::HitType view, const bool adcWeighted = false) const;
+
+        /**
+         *  @brief  Get the number of reco nodes matched (both above and below quality cut thresholds) to the MC node
+         *
+         *  @return The number of reco nodes matched to the MC node
+         */
+        size_t GetNRecoMatches() const;
 
     private:
+        /**
+         *  @brief  Core purity calculation given intersecting hits and reco hits
+         *
+         *  @param  intersection The intersecting reco and MC hits
+         *  @param  recoHits The reco hits
+         *  @param  adcWeighted Whether or not to weight purity according to the charge contribution
+         *
+         *  @return The purity of the match
+         */
+        float GetPurity(const pandora::CaloHitVector &intersection, const pandora::CaloHitList &recoHits, const bool adcWeighted) const;
+
+        /**
+         *  @brief  Core completeness calculation given intersecting hits and MC hits
+         *
+         *  @param  intersection The intersecting reco and MC hits
+         *  @param  mcHits The MC hits
+         *  @param  adcWeighted Whether or not to weight completeness according to the charge contribution
+         *
+         *  @return The completeness of the match
+         */
+        float GetCompleteness(const pandora::CaloHitVector &intersection, const pandora::CaloHitList &mcHits, const bool adcWeighted) const;
+
         const MCHierarchy::Node *m_pMCParticle; ///< MC node associated with any matches
         RecoHierarchy::NodeVector m_recoNodes;  ///< Matched reco nodes
         pandora::IntVector m_sharedHits;        ///< Number of shared hits for each match
@@ -546,11 +651,19 @@ public:
         void Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy);
 
         /**
-         *  @brief  Retrieve the vector of good matches
+         *  @brief  Retrieve the vector of good matches (will contain either zero or one matches)
          *
          *  @return The vector of good matches
          */
         const MCMatchesVector &GetGoodMatches() const;
+
+        /**
+         *  @brief  Retrieve the vector of matches that pass quality cuts (empty if there are either no matches passing quality cuts, or
+         *          precisely one match passing quality cuts - i.e. a good match)
+         *
+         *  @return The vector of sub-threshold matches
+         */
+        const MCMatchesVector &GetAboveThresholdMatches() const;
 
         /**
          *  @brief  Retrieve the vector of matches that don't pass quality cuts
@@ -571,9 +684,46 @@ public:
          */
         const RecoHierarchy::NodeVector &GetUnmatchedReco() const;
 
+        /**
+         *  @brief  Retrieve the number of MC nodes available to match
+         *
+         *  @return The number of MC nodes available to match
+         */
+        unsigned int GetNMCNodes() const;
+
+        /**
+         *  @brief  Retrieve the number of neutrino interaction derived MC nodes available to match
+         *
+         *  @return The number of MC nodes available to match
+         */
+        unsigned int GetNNeutrinoMCNodes() const;
+
+        /**
+         *  @brief  Retrieve the number of cosmic ray derived MC nodes available to match
+         *
+         *  @return The number of MC nodes available to match
+         */
+        unsigned int GetNCosmicRayMCNodes() const;
+
+        /**
+         *  @brief  Retrieve the number of test beam derived MC nodes available to match
+         *
+         *  @return The number of MC nodes available to match
+         */
+        unsigned int GetNTestBeamMCNodes() const;
+
+        /**
+         *  @brief  Prints information about which reco nodes are matched to the MC nodes, information about hit sharing, purity and
+         *          completeness.
+         *
+         *  @param  mcHierarchy The MC hierarchy
+         */
+        void Print(const MCHierarchy &mcHierarchy) const;
+
     private:
-        MCMatchesVector m_goodMatches;             ///< The vector of good matches
-        MCMatchesVector m_subThresholdMatches;     ///< The vector of matches MC nodes that don't pass quality cuts
+        MCMatchesVector m_goodMatches;             ///< The vector of good matches - above threshold one reco to one MC matches
+        MCMatchesVector m_aboveThresholdMatches;   ///< The vector of matches that pass quality but with multiple reco matches to the MC
+        MCMatchesVector m_subThresholdMatches;     ///< The vector of matches that don't pass quality cuts
         MCHierarchy::NodeVector m_unmatchedMC;     ///< The vector of unmatched MC nodes
         RecoHierarchy::NodeVector m_unmatchedReco; ///< The vector of unmatched reco nodes
         QualityCuts m_qualityCuts;                 ///< The quality cuts to be applied to matches
@@ -584,22 +734,20 @@ public:
      *
      *  @param  mcParticleList The MCParticle list to use to fill this hierarchy
      *  @param  caloHitList The list of CaloHits to use to fill this hierarchy
-     *  @param  foldToPrimaries Whether or not to fold to primary particles
-     *  @param  foldToLeadingShowers Whether or not to fold to leading shower particles
+     *  @param  foldParameters The folding parameters to use for the hierarchy
      *  @param  hierarchy The output MC hierarchy
      */
     static void FillMCHierarchy(const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList,
-        const bool foldToPrimaries, const bool foldToLeadingShowers, MCHierarchy &hierarchy);
+        const FoldingParameters &foldParameters, MCHierarchy &hierarchy);
 
     /**
      *  @brief  Fill a reconstructed hierarchy based on the specified folding criteria (see RecoHierarchy::FillHierarchy for details)
      *
      *  @param  pfoList The ParticleFlowObject list to use to fill this hierarchy
-     *  @param  foldToPrimaries Whether or not to fold to primary particles
-     *  @param  foldToLeadingShowers Whether or not to fold to leading shower particles
+     *  @param  foldParameters The folding parameters to use for the hierarchy
      *  @param  hierarchy The output reconstructed hierarchy
      */
-    static void FillRecoHierarchy(const pandora::PfoList &pfoList, const bool foldToPrimaries, const bool foldToLeadingShowers, RecoHierarchy &hierarchy);
+    static void FillRecoHierarchy(const pandora::PfoList &pfoList, const FoldingParameters &foldParameters, RecoHierarchy &hierarchy);
 
     /**
      *  @brief  Finds the matches between reconstructed and MC hierarchies.
@@ -659,6 +807,13 @@ inline const pandora::CaloHitList &LArHierarchyHelper::MCHierarchy::Node::GetCal
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+inline const pandora::MCParticle *LArHierarchyHelper::MCHierarchy::Node::GetLeadingMCParticle() const
+{
+    return m_mainParticle;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 inline int LArHierarchyHelper::MCHierarchy::Node::GetParticleId() const
 {
     return m_pdg;
@@ -669,6 +824,20 @@ inline int LArHierarchyHelper::MCHierarchy::Node::GetParticleId() const
 inline bool LArHierarchyHelper::MCHierarchy::Node::IsNeutrinoInduced() const
 {
     return !(LArHierarchyHelper::MCHierarchy::Node::IsTestBeamParticle() || LArHierarchyHelper::MCHierarchy::Node::IsCosmicRay());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline bool LArHierarchyHelper::MCHierarchy::Node::IsLeadingLepton() const
+{
+    return m_isLeadingLepton;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline void LArHierarchyHelper::MCHierarchy::Node::SetLeadingLepton()
+{
+    m_isLeadingLepton = true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -725,11 +894,25 @@ inline const LArHierarchyHelper::RecoHierarchy::NodeVector &LArHierarchyHelper::
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
+
+inline size_t LArHierarchyHelper::MCMatches::GetNRecoMatches() const
+{
+    return m_recoNodes.size();
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetGoodMatches() const
 {
     return m_goodMatches;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetAboveThresholdMatches() const
+{
+    return m_aboveThresholdMatches;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

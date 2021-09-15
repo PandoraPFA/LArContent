@@ -73,6 +73,7 @@ private:
     float m_minXOverlapFraction;                 ///< The min x overlap fraction (in each view) for particle creation
     unsigned int m_minMatchedSamplingPointRatio; ///< The min ratio between 1st and 2nd highest msps for simple ambiguity resolution
     float m_minXOverlapSpanRatio; ///< The min ratio between 1st and 2nd highest x-overlap spans for simple ambiguity resolution
+    bool m_visualize;             ///< Visualize cluster split locations
 };
 
 } // namespace lar_content

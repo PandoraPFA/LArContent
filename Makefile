@@ -83,6 +83,7 @@ endif
 	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArHelpers/*.cc)
 	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArMonitoring/*.cc)
 	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArTrackShowerId/*.cc)
+	DL_SOURCES += $(wildcard $(PROJECT_DIR)/larpandoradlcontent/LArTwoDReco/*.cc)
 	DL_OBJECTS = $(DL_SOURCES:.cc=.o)
 	DL_DEPENDS = $(DL_OBJECTS:.o=.d)
 	INCLUDES += -isystem $(TORCH_DIR)/include/ -isystem $(TORCH_DIR)/include/torch/csrc/api/include/
