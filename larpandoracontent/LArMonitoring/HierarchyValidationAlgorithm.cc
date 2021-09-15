@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArMonitoring/HierarchyValidationAlgorithm.h"
 
+#include "larpandoracontent/LArHelpers/LArInteractionTypeHelper.h"
+
 using namespace pandora;
 
 namespace lar_content
@@ -75,26 +77,62 @@ StatusCode HierarchyValidationAlgorithm::Run()
 
 void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::MatchInfo &matchInfo) const
 {
+    static int event{0};
     if (m_writeTree)
     {
-        const int nGoodMatches{static_cast<int>(matchInfo.GetGoodMatches().size())};
-        const int nAboveThresholdMatches{static_cast<int>(matchInfo.GetAboveThresholdMatches().size())};
-        const int nSubThresholdMatches{static_cast<int>(matchInfo.GetSubThresholdMatches().size())};
-        const int nUnmatched{static_cast<int>(matchInfo.GetUnmatchedMC().size())};
+        const LArHierarchyHelper::MCMatchesVector &goodMatches{matchInfo.GetGoodMatches()};
+        const LArHierarchyHelper::MCMatchesVector &aboveThresholdMatches{matchInfo.GetAboveThresholdMatches()};
+        const LArHierarchyHelper::MCMatchesVector &subThresholdMatches{matchInfo.GetSubThresholdMatches()};
+        const LArHierarchyHelper::MCHierarchy::NodeVector &unmatched{matchInfo.GetUnmatchedMC()};
+        MCParticleSet primaryMCSet;
+        for (const LArHierarchyHelper::MCMatches &mcMatch : goodMatches)
+        {
+            const MCParticle *const pMC{mcMatch.GetMC()->GetLeadingMCParticle()};
+            primaryMCSet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMC));
+        }
+        for (const LArHierarchyHelper::MCMatches &mcMatch : aboveThresholdMatches)
+        {
+            const MCParticle *const pMC{mcMatch.GetMC()->GetLeadingMCParticle()};
+            primaryMCSet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMC));
+        }
+        for (const LArHierarchyHelper::MCMatches &mcMatch : subThresholdMatches)
+        {
+            const MCParticle *const pMC{mcMatch.GetMC()->GetLeadingMCParticle()};
+            primaryMCSet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMC));
+        }
+        for (const LArHierarchyHelper::MCHierarchy::Node *pNode : unmatched)
+        {
+            const MCParticle *const pMC{pNode->GetLeadingMCParticle()};
+            primaryMCSet.insert(LArMCParticleHelper::GetPrimaryMCParticle(pMC));
+        }
+
+        MCParticleList primaryMCList;
+        for (const MCParticle *const pMC : primaryMCSet)
+            primaryMCList.emplace_back(pMC);
+        const int interactionType{static_cast<int>(LArInteractionTypeHelper::GetInteractionType(primaryMCList))};
+
+        const int nGoodMatches{static_cast<int>(goodMatches.size())};
+        const int nAboveThresholdMatches{static_cast<int>(aboveThresholdMatches.size())};
+        const int nSubThresholdMatches{static_cast<int>(subThresholdMatches.size())};
+        const int nUnmatched{static_cast<int>(unmatched.size())};
         const int nNodes{static_cast<int>(matchInfo.GetNMCNodes())};
-        int hasLeadingLepton{0}, isLeadingLeptonCorrect{0};
+        int hasLeadingMuon{0}, hasLeadingElectron{0}, isLeadingLeptonCorrect{0};
 
         std::set<const LArHierarchyHelper::MCHierarchy::Node *> trackNodeSet, showerNodeSet;
         int nGoodTrackMatches{0}, nGoodShowerMatches{0};
-        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetGoodMatches())
+        for (const LArHierarchyHelper::MCMatches &mcMatch : goodMatches)
         {
             const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
+            const int pdg{std::abs(pNode->GetParticleId())};
             if (pNode->IsLeadingLepton())
             {
-                hasLeadingLepton = 1;
+                if (pdg == MU_MINUS)
+                    hasLeadingMuon = 1;
+                else if (pdg == E_MINUS)
+                    hasLeadingElectron = 1;
                 isLeadingLeptonCorrect = 1;
             }
-            const int pdg{std::abs(pNode->GetParticleId())};
+
             if (pdg == PHOTON || pdg == E_MINUS)
             {
                 showerNodeSet.insert(pNode);
@@ -108,12 +146,18 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
         }
 
         int nAboveThresholdTrackMatches{0}, nAboveThresholdShowerMatches{0};
-        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetAboveThresholdMatches())
+        for (const LArHierarchyHelper::MCMatches &mcMatch : aboveThresholdMatches)
         {
             const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
-            if (pNode->IsLeadingLepton())
-                hasLeadingLepton = 1;
             const int pdg{std::abs(pNode->GetParticleId())};
+            if (pNode->IsLeadingLepton())
+            {
+                if (pdg == MU_MINUS)
+                    hasLeadingMuon = 1;
+                else if (pdg == E_MINUS)
+                    hasLeadingElectron = 1;
+            }
+
             if (pdg == PHOTON || pdg == E_MINUS)
             {
                 showerNodeSet.insert(pNode);
@@ -126,24 +170,36 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
             }
         }
 
-        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetSubThresholdMatches())
+        for (const LArHierarchyHelper::MCMatches &mcMatch : subThresholdMatches)
         {
             const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
-            if (pNode->IsLeadingLepton())
-                hasLeadingLepton = 1;
             const int pdg{std::abs(pNode->GetParticleId())};
+            if (pNode->IsLeadingLepton())
+            {
+                if (pdg == MU_MINUS)
+                    hasLeadingMuon = 1;
+                else if (pdg == E_MINUS)
+                    hasLeadingElectron = 1;
+            }
+
             if (pdg == PHOTON || pdg == E_MINUS)
                 showerNodeSet.insert(pNode);
             else
                 trackNodeSet.insert(pNode);
         }
 
-        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetUnmatchedMC())
+        for (const LArHierarchyHelper::MCMatches &mcMatch : unmatched)
         {
             const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
-            if (pNode->IsLeadingLepton())
-                hasLeadingLepton = 1;
             const int pdg{std::abs(pNode->GetParticleId())};
+            if (pNode->IsLeadingLepton())
+            {
+                if (pdg == MU_MINUS)
+                    hasLeadingMuon = 1;
+                else if (pdg == E_MINUS)
+                    hasLeadingElectron = 1;
+            }
+
             if (pdg == PHOTON || pdg == E_MINUS)
                 showerNodeSet.insert(pNode);
             else
@@ -151,7 +207,15 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
         }
 
         const int nTrackNodes{static_cast<int>(trackNodeSet.size())}, nShowerNodes{static_cast<int>(showerNodeSet.size())};
+        const CartesianVector &trueVertex{matchInfo.GetMCNeutrino()->GetVertex()};
+        const CartesianVector &recoVertex{LArPfoHelper::GetVertex(matchInfo.GetRecoNeutrino())->GetPosition()};
+        const float vtxDx{recoVertex.GetX() - trueVertex.GetX()};
+        const float vtxDy{recoVertex.GetY() - trueVertex.GetY()};
+        const float vtxDz{recoVertex.GetZ() - trueVertex.GetZ()};
+        const float vtxDr{std::sqrt(vtxDx * vtxDx + vtxDy * vtxDy + vtxDz * vtxDz)};
 
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "event", event));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "interactionType", interactionType));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nGoodMatches", nGoodMatches));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nAboveThresholdMatches", nAboveThresholdMatches));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nSubThresholdMatches", nSubThresholdMatches));
@@ -163,10 +227,16 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nAboveThresholdShowerMatches", nAboveThresholdShowerMatches));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nTrackNodes", nTrackNodes));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "nShowerNodes", nShowerNodes));
-        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "hasLeadingLepton", hasLeadingLepton));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "hasLeadingMuon", hasLeadingMuon));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "hasLeadingElectron", hasLeadingElectron));
         PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "isLeadingLeptonCorrect", isLeadingLeptonCorrect));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDz", vtxDz));
+        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDr", vtxDr));
         PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_treename.c_str()));
     }
+    ++event;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

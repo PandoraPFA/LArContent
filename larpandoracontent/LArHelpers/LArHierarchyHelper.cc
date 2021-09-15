@@ -224,8 +224,8 @@ void LArHierarchyHelper::MCHierarchy::FillHierarchy(const MCParticleList &mcPart
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void LArHierarchyHelper::MCHierarchy::InterpretHierarchy(const MCParticle *const pRoot, MCParticleList &leadingParticles,
-    MCParticleList &childParticles, const float cosAngleTolerance) const
+void LArHierarchyHelper::MCHierarchy::InterpretHierarchy(
+    const MCParticle *const pRoot, MCParticleList &leadingParticles, MCParticleList &childParticles, const float cosAngleTolerance) const
 {
     leadingParticles.emplace_back(pRoot);
     MCParticleList foldCandidates, childCandidates;
@@ -1139,7 +1139,10 @@ LArHierarchyHelper::MatchInfo::MatchInfo() : MatchInfo(QualityCuts())
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::MatchInfo::MatchInfo(const QualityCuts &qualityCuts) : m_qualityCuts{qualityCuts}
+LArHierarchyHelper::MatchInfo::MatchInfo(const QualityCuts &qualityCuts) :
+    m_pMCNeutrino{nullptr},
+    m_pRecoNeutrino{nullptr},
+    m_qualityCuts{qualityCuts}
 {
 }
 
@@ -1147,6 +1150,8 @@ LArHierarchyHelper::MatchInfo::MatchInfo(const QualityCuts &qualityCuts) : m_qua
 
 void LArHierarchyHelper::MatchInfo::Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy)
 {
+    m_pMCNeutrino = mcHierarchy.GetNeutrino();
+    m_pRecoNeutrino = recoHierarchy.GetNeutrino();
     MCHierarchy::NodeVector mcNodes;
     mcHierarchy.GetFlattenedNodes(mcNodes);
     RecoHierarchy::NodeVector recoNodes;
