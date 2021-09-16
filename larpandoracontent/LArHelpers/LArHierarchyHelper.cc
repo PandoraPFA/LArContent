@@ -57,9 +57,16 @@ LArHierarchyHelper::FoldingParameters::FoldingParameters(const int foldingTier) 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+LArHierarchyHelper::MCHierarchy::MCHierarchy() : m_pNeutrino{nullptr}, m_nextNodeId{1}
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 LArHierarchyHelper::MCHierarchy::MCHierarchy(const ReconstructabilityCriteria &recoCriteria) :
     m_recoCriteria(recoCriteria),
-    m_pNeutrino{nullptr}
+    m_pNeutrino{nullptr},
+    m_nextNodeId{1}
 {
 }
 
@@ -401,6 +408,14 @@ void LArHierarchyHelper::MCHierarchy::GetFlattenedNodes(NodeVector &nodeVector) 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void LArHierarchyHelper::MCHierarchy::RegisterNode(const Node *pNode)
+{
+    m_nodeToIdMap.insert(std::make_pair(pNode, m_nextNodeId));
+    ++m_nextNodeId;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 const std::string LArHierarchyHelper::MCHierarchy::ToString() const
 {
     std::string str;
@@ -466,9 +481,10 @@ bool LArHierarchyHelper::MCHierarchy::IsReconstructable(const CaloHitList &caloH
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const MCParticle *pMCParticle) :
+LArHierarchyHelper::MCHierarchy::Node::Node(MCHierarchy &hierarchy, const MCParticle *pMCParticle, const int tier) :
     m_hierarchy(hierarchy),
     m_mainParticle(pMCParticle),
+    m_tier{tier},
     m_pdg{0},
     m_isLeadingLepton{false}
 {
@@ -477,15 +493,17 @@ LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const 
         m_pdg = pMCParticle->GetParticleId();
         m_mcParticles.emplace_back(pMCParticle);
     }
+    m_hierarchy.RegisterNode(this);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const MCParticleList &mcParticleList, const CaloHitList &caloHitList) :
+LArHierarchyHelper::MCHierarchy::Node::Node(MCHierarchy &hierarchy, const MCParticleList &mcParticleList, const CaloHitList &caloHitList, const int tier) :
     m_hierarchy(hierarchy),
     m_mcParticles(mcParticleList),
     m_caloHits(caloHitList),
     m_mainParticle(nullptr),
+    m_tier{tier},
     m_pdg{0},
     m_isLeadingLepton{false}
 {
@@ -496,6 +514,7 @@ LArHierarchyHelper::MCHierarchy::Node::Node(const MCHierarchy &hierarchy, const 
     }
     m_mcParticles.sort(LArMCParticleHelper::SortByMomentum);
     m_caloHits.sort();
+    m_hierarchy.RegisterNode(this);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -528,7 +547,7 @@ void LArHierarchyHelper::MCHierarchy::Node::FillHierarchy(const MCParticle *pRoo
             }
         }
 
-        Node *pNode{new Node(m_hierarchy, leadingParticles, allHits)};
+        Node *pNode{new Node(m_hierarchy, leadingParticles, allHits, this->m_tier + 1)};
         m_children.emplace_back(pNode);
         for (const MCParticle *pChild : childParticles)
             pNode->FillHierarchy(pChild, foldParameters);
@@ -566,7 +585,7 @@ void LArHierarchyHelper::MCHierarchy::Node::FillHierarchy(const MCParticle *pRoo
             // Only add the node if it either has children, or is a leaf node with hits
             if (hasChildren || (!hasChildren && !allHits.empty()))
             {
-                Node *pNode{new Node(m_hierarchy, allParticles, allHits)};
+                Node *pNode{new Node(m_hierarchy, allParticles, allHits, this->m_tier + 1)};
                 m_children.emplace_back(pNode);
                 if (hasChildren)
                 {
@@ -606,9 +625,16 @@ void LArHierarchyHelper::MCHierarchy::Node::FillFlat(const MCParticle *pRoot)
     }
     if (!allParticles.empty())
     {
-        Node *pNode{new Node(m_hierarchy, allParticles, allHits)};
+        Node *pNode{new Node(m_hierarchy, allParticles, allHits, this->m_tier + 1)};
         m_children.emplace_back(pNode);
     }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int LArHierarchyHelper::MCHierarchy::Node::GetId() const
+{
+    return m_hierarchy.m_nodeToIdMap.at(this);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

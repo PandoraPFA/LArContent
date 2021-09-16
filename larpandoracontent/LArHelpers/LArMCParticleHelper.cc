@@ -762,7 +762,7 @@ bool LArMCParticleHelper::IsBremsstrahlung(const MCParticle *const pMCParticle)
     if (!pLArMCParticle)
         return false;
 
-    switch(pLArMCParticle->GetProcess())
+    switch (pLArMCParticle->GetProcess())
     {
         case MC_PROC_E_BREM:
         case MC_PROC_MU_BREM:
@@ -783,7 +783,7 @@ bool LArMCParticleHelper::IsCapture(const MCParticle *const pMCParticle)
     if (!pLArMCParticle)
         return false;
 
-    switch(pLArMCParticle->GetProcess())
+    switch (pLArMCParticle->GetProcess())
     {
         case MC_PROC_MU_MINUS_CAPTURE_AT_REST:
         case MC_PROC_N_CAPTURE:
@@ -800,13 +800,32 @@ bool LArMCParticleHelper::IsCapture(const MCParticle *const pMCParticle)
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsDecay(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_DECAY:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool LArMCParticleHelper::IsElasticScatter(const MCParticle *const pMCParticle)
 {
     const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
     if (!pLArMCParticle)
         return false;
 
-    switch(pLArMCParticle->GetProcess())
+    switch (pLArMCParticle->GetProcess())
     {
         case MC_PROC_COULOMB_SCAT:
         case MC_PROC_NEUTRON_INELASTIC:
@@ -828,7 +847,7 @@ bool LArMCParticleHelper::IsInelasticScatter(const MCParticle *const pMCParticle
     if (!pLArMCParticle)
         return false;
 
-    switch(pLArMCParticle->GetProcess())
+    switch (pLArMCParticle->GetProcess())
     {
         case MC_PROC_COMPT:
         case MC_PROC_PHOTON_INELASTIC:
@@ -865,7 +884,7 @@ bool LArMCParticleHelper::IsIonisation(const MCParticle *const pMCParticle)
     if (!pLArMCParticle)
         return false;
 
-    switch(pLArMCParticle->GetProcess())
+    switch (pLArMCParticle->GetProcess())
     {
         case MC_PROC_E_IONI:
         case MC_PROC_MU_IONI:
@@ -887,7 +906,7 @@ bool LArMCParticleHelper::IsNuclear(const MCParticle *const pMCParticle)
     if (!pLArMCParticle)
         return false;
 
-    switch(pLArMCParticle->GetProcess())
+    switch (pLArMCParticle->GetProcess())
     {
         case MC_PROC_ELECTRON_NUCLEAR:
         case MC_PROC_PHOTON_NUCLEAR:
@@ -908,7 +927,7 @@ bool LArMCParticleHelper::IsPairProduction(const MCParticle *const pMCParticle)
     if (!pLArMCParticle)
         return false;
 
-    switch(pLArMCParticle->GetProcess())
+    switch (pLArMCParticle->GetProcess())
     {
         case MC_PROC_MU_PAIR_PROD:
         case MC_PROC_HAD_PAIR_PROD:
@@ -937,8 +956,7 @@ CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, cons
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool LArMCParticleHelper::AreTopologicallyContinuous(const MCParticle *const pMCParent, const MCParticle *const pMCChild,
-    const float cosAngleTolerance)
+bool LArMCParticleHelper::AreTopologicallyContinuous(const MCParticle *const pMCParent, const MCParticle *const pMCChild, const float cosAngleTolerance)
 {
     CartesianVector childDirection{pMCChild->GetEndpoint() - pMCChild->GetVertex()};
     if (childDirection.GetMagnitude() < std::numeric_limits<float>::epsilon())

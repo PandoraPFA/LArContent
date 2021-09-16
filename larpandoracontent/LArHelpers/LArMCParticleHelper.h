@@ -479,6 +479,15 @@ public:
     static bool IsCapture(const pandora::MCParticle *const pMCParticle);
 
     /**
+     *  @brief  Check whether or not an MC particle comes from a decay process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from decay
+     */
+    static bool IsDecay(const pandora::MCParticle *const pMCParticle);
+
+    /**
      *  @brief  Check whether or not an MC particle came from an elastic scattering process
      *
      *  @param  pMCParticle The MC particle to consider
@@ -534,8 +543,8 @@ public:
      *
      *  @return True if the partiles are topologically continous, false otherwise.
      */
-    static bool AreTopologicallyContinuous(const pandora::MCParticle *const pMCParent, const pandora::MCParticle *const pMCChild,
-        const float cosAngleTolerance);
+    static bool AreTopologicallyContinuous(
+        const pandora::MCParticle *const pMCParent, const pandora::MCParticle *const pMCChild, const float cosAngleTolerance);
 
 private:
     /**

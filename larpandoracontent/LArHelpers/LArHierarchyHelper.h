@@ -113,17 +113,19 @@ public:
              *
              *  @param  hierarchy The parent hierarchy of this node
              *  @param  pMCParticle The primary MC particle with which this node should be created
+             *  @param  tier The tier that should be assigned to this node
              */
-            Node(const MCHierarchy &hierarchy, const pandora::MCParticle *pMCParticle);
+            Node(MCHierarchy &hierarchy, const pandora::MCParticle *pMCParticle, const int tier = 1);
 
             /**
              *  @brief  Create a node from a list of MC particles
              *
              *  @param  hierarchy The parent hierarchy of this node
              *  @param  mcParticleList The MC particle list with which this node should be created
-             *  @parasm caloHitList The CaloHit list with which this node should be created
+             *  @param  caloHitList The CaloHit list with which this node should be created
+             *  @param  tier The tier that should be assigned to this node
              */
-            Node(const MCHierarchy &hierarchy, const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList);
+            Node(MCHierarchy &hierarchy, const pandora::MCParticleList &mcParticleList, const pandora::CaloHitList &caloHitList, const int tier = 1);
 
             /**
              *  @brief Destructor
@@ -160,6 +162,13 @@ public:
             const NodeVector &GetChildren() const;
 
             /**
+             *  @brief  Retrieve the unique ID of this node
+             *
+             *  @return The unique ID of this node
+             */
+            int GetId() const;
+
+            /**
              *  @brief  Retrieve the leading MC particle associated with this node
              *
              *  @return The main MC particle associated with this node
@@ -186,6 +195,13 @@ public:
              *  @return The PDG code for the leading particle in this node
              */
             int GetParticleId() const;
+
+            /**
+             *  @brief  Retrieve the hierarchy tier of this node
+             *
+             *  @return The hierarchy tier of this node
+             */
+            int GetHierarchyTier() const;
 
             /**
              *  @brief  Check if this is a particle induced by a neutrino interaction
@@ -228,11 +244,12 @@ public:
              */
             void SetLeadingLepton();
 
-            const MCHierarchy &m_hierarchy;            ///< The parent MC hierarchy
+            MCHierarchy &m_hierarchy;                  ///< The parent MC hierarchy
             pandora::MCParticleList m_mcParticles;     ///< The list of MC particles of which this node is composed
             pandora::CaloHitList m_caloHits;           ///< The list of calo hits of which this node is composed
             NodeVector m_children;                     ///< The child nodes of this node
             const pandora::MCParticle *m_mainParticle; ///< The leading MC particle for this node
+            int m_tier;                                ///< The hierarchy tier for this node
             int m_pdg;                                 ///< The PDG code of the leading MC particle for this node
             bool m_isLeadingLepton;                    ///< Whether or not this node is the leading lepton
 
@@ -242,7 +259,7 @@ public:
         /**
          *  @brief  Default constructor
          */
-        MCHierarchy() = default;
+        MCHierarchy();
 
         /**
          *  @brief  Construct a new MCHierarchy object using specified reconstructability criteria
@@ -315,6 +332,13 @@ public:
         void GetFlattenedNodes(NodeVector &nodeVector) const;
 
         /**
+         *  @brief  Register a node with the hierarchy
+         *
+         *  @param  pNode  The node to register
+         */
+        void RegisterNode(const Node *pNode);
+
+        /**
          *  @brief  Produce a string representation of the hierarchy
          *
          *  @return The string representation of the hierarchy
@@ -352,7 +376,7 @@ public:
          *
          *  @param  pMCParticle  The MC particle to assess
          *
-         *  @return  Whether or not the MC particle meets reconstructability criteria
+         *  @return Whether or not the MC particle meets reconstructability criteria
          */
         bool IsReconstructable(const pandora::MCParticle *pMCParticle) const;
 
@@ -361,7 +385,7 @@ public:
          *
          *  @param  caloHits  The calo hits to assess
          *
-         *  @return  Whether or not the hits meet reconstructability criteria
+         *  @return Whether or not the hits meet reconstructability criteria
          */
         bool IsReconstructable(const pandora::CaloHitList &caloHits) const;
 
@@ -369,6 +393,8 @@ public:
         ReconstructabilityCriteria m_recoCriteria; ///< The criteria used to determine if the node is reconstructable
         const pandora::MCParticle *m_pNeutrino;    ///< The incident neutrino, if it exists
         std::map<const pandora::MCParticle *, pandora::CaloHitList> m_mcToHitsMap; ///< The map between MC particles and calo hits
+        std::map<const Node *, int> m_nodeToIdMap;                                 ///< A map from nodes to unique ids
+        int m_nextNodeId;                                                          ///< The ID to use for the next node
     };
 
     /**
@@ -890,6 +916,13 @@ inline const pandora::MCParticle *LArHierarchyHelper::MCHierarchy::Node::GetLead
 inline int LArHierarchyHelper::MCHierarchy::Node::GetParticleId() const
 {
     return m_pdg;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline int LArHierarchyHelper::MCHierarchy::Node::GetHierarchyTier() const
+{
+    return m_tier;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
