@@ -91,7 +91,7 @@ bool DeltaRayRemovalTool::RemoveDeltaRayHits(const TensorType::ElementList &elem
             if (!this->IsContaminated(element, hitType))
                 continue;
 
-            if (!this->IsBestElement(element, hitType, elementList))
+            if (!this->IsBestElement(element, hitType, elementList, modifiedClusters))
                 continue;
 
             checkedClusters.insert(pDeltaRayCluster);

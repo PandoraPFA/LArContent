@@ -46,10 +46,12 @@ protected:
      *  @param  element the tensor element
      *  @param  hitType the hit type of the cluster under investigation
      *  @param  elementList the tensor element list
+     *  @param  modifiedClusters the set of modified clusters
      *
      *  @return  whether the input element is the best element
      */
-    bool IsBestElement(const TensorType::Element &element, const pandora::HitType hitType, const TensorType::ElementList &elementList) const;
+    bool IsBestElement(const TensorType::Element &element, const pandora::HitType hitType, const TensorType::ElementList &elementList,
+        const pandora::ClusterSet &modifiedClusters) const;
 
     /**
      *  @brief  Determine whether element satifies simple checks

@@ -73,13 +73,18 @@ bool RemovalBaseTool::IsMuonEndpoint(const TensorType::Element &element, const b
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType hitType, const TensorType::ElementList &elementList) const
+bool RemovalBaseTool::IsBestElement(const TensorType::Element &element, const HitType hitType, const TensorType::ElementList &elementList,
+    const ClusterSet &modifiedClusters) const
 {
     const float chiSquared(element.GetOverlapResult().GetReducedChi2());
     const unsigned int hitSum(element.GetClusterU()->GetNCaloHits() + element.GetClusterV()->GetNCaloHits() + element.GetClusterW()->GetNCaloHits());
 
     for (const TensorType::Element &testElement : elementList)
     {
+        if (modifiedClusters.count(testElement.GetClusterU()) || modifiedClusters.count(testElement.GetClusterV()) ||
+            modifiedClusters.count(testElement.GetClusterW()))
+            continue;
+
         if (testElement.GetCluster(hitType) != element.GetCluster(hitType))
             continue;
 
