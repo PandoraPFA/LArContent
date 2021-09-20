@@ -61,15 +61,20 @@ StatusCode ClusterAssociationAlgorithm::Run()
         for (const Cluster *const pCluster : clusterVector)
         {
             // ATTN The clusterVector may end up with dangling pointers; only protected by this check against up-to-date association list
-            ClusterAssociationMap::const_iterator mapIter = clusterAssociationMap.find(pCluster);
+            ClusterAssociationMap::const_iterator mapIterFwd = clusterAssociationMap.find(pCluster);
 
-            if (clusterAssociationMap.end() == mapIter)
+            if (clusterAssociationMap.end() == mapIterFwd)
                 continue;
 
-            if (mapIter->second.m_backwardAssociations.empty() && !mapIter->second.m_forwardAssociations.empty())
+            if (mapIterFwd->second.m_backwardAssociations.empty() && !mapIterFwd->second.m_forwardAssociations.empty())
                 this->AmbiguousPropagation(pCluster, true, clusterAssociationMap);
 
-            if (mapIter->second.m_forwardAssociations.empty() && !mapIter->second.m_backwardAssociations.empty())
+            ClusterAssociationMap::const_iterator mapIterBwd = clusterAssociationMap.find(pCluster);
+
+            if (clusterAssociationMap.end() == mapIterBwd)
+                continue;
+
+            if (mapIterBwd->second.m_forwardAssociations.empty() && !mapIterBwd->second.m_backwardAssociations.empty())
                 this->AmbiguousPropagation(pCluster, false, clusterAssociationMap);
         }
     }
