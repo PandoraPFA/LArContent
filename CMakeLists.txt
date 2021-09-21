@@ -1,5 +1,5 @@
 # use cmake 2.8 or later
-cmake_minimum_required (VERSION 2.8)
+cmake_minimum_required (VERSION 3.12)
 
 # if the CETBUILDTOOLS_VERSION environmental variable is defined, use cetbuildtools
 if(DEFINED ENV{CETBUILDTOOLS_VERSION})
@@ -16,7 +16,7 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     #  make install
     #  make package (builds distribution tarfile)
     # ======================================================================
-    project(larpandoracontent)
+    project(larpandoracontent VERSION 03.24.02.01)
 
     # cetbuildtools contains our cmake modules
     # Note that find package will add cetbuildtools Modules to CMAKE_MODULE_PATH
@@ -46,13 +46,9 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     add_subdirectory(larpandoracontent)
     option(PANDORA_LIBTORCH "Flag for building against LibTorch" ON)
     if(${PANDORA_LIBTORCH})
-        if(DEFINED ENV{LIBTORCH_DIR})
-            message(STATUS "Building with LibTorch")
-            add_definitions("-DLIBTORCH_DL")
-            add_subdirectory(larpandoradlcontent)
-        else()
-            message(WARNING "Build with LibTorch requested, but LibTorch not found. Proceeding without LibTorch.")
-        endif()
+      message(STATUS "Building with LibTorch")
+      add_definitions("-DLIBTORCH_DL")
+      add_subdirectory(larpandoradlcontent)
     endif()
 
     # tests

@@ -33,10 +33,10 @@ set( subdir_list LArCheating
 )
 
 cet_make( LIBRARY_NAME LArPandoraContent
-          SUBDIRS ${subdir_list}
-	  LIBRARIES ${PANDORASDK}
-	            ${PANDORAMONITORING}
-)
+  SUBDIRS ${subdir_list}
+	LIBRARIES PANDORASDK
+	PANDORAMONITORING
+  )
 
 install_source( SUBDIRS ${subdir_list} )
 install_headers( SUBDIRS ${subdir_list} )

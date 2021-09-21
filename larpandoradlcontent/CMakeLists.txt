@@ -1,5 +1,11 @@
 find_ups_product( libtorch )
-find_package(Torch REQUIRED)
+if (cetmodules_FOUND)
+  set(CET_PUBLIC PUBLIC)
+else()
+  unset(CET_PUBLIC)
+endif()
+
+find_package(Torch ${CET_PUBLIC} REQUIRED)
 
 include_directories(SYSTEM ${TORCH_INCLUDE_DIRS})
 
@@ -20,12 +26,12 @@ set( subdir_list LArControlFlow
 cet_make( LIBRARY_NAME LArPandoraDLContent
     SUBDIRS ${subdir_list}
     LIBRARIES
-        ${PANDORASDK}
-        ${PANDORAMONITORING}
+        PANDORASDK
+        PANDORAMONITORING
         ${LAR_CONTENT_LIBRARY_NAME}
-        ${TORCH_INSTALL_PREFIX}/lib/libtorch.so
-        ${TORCH_INSTALL_PREFIX}/lib/libtorch_cpu.so
-        ${TORCH_INSTALL_PREFIX}/lib/libc10.so
+        torch
+        torch_cpu
+        c10
 )
 
 install_source( SUBDIRS ${subdir_list} )
