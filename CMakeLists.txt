@@ -1,4 +1,4 @@
-# use cmake 2.8 or later
+# use cmake 3.12 or later
 cmake_minimum_required (VERSION 3.12)
 
 # if the CETBUILDTOOLS_VERSION environmental variable is defined, use cetbuildtools
@@ -16,7 +16,7 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     #  make install
     #  make package (builds distribution tarfile)
     # ======================================================================
-    project(larpandoracontent VERSION 03.25.01)
+    project(larpandoracontent VERSION 03.26.00)
 
     # cetbuildtools contains our cmake modules
     # Note that find package will add cetbuildtools Modules to CMAKE_MODULE_PATH
@@ -62,6 +62,8 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
 else()
     # cmake file for building in Pandora standalone cmake setup, distinct from cetbuildtools setup
     #-------------------------------------------------------------------------------------------------------------------------------------------
+    cmake_policy(SET CMP0033 OLD)
+
     if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
         message(FATAL_ERROR "LArPandoraContent requires an out-of-source build.")
     endif()
@@ -83,8 +85,8 @@ else()
     # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
     foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
         set(${PROJ}_VERSION_MAJOR 03)
-        set(${PROJ}_VERSION_MINOR 25)
-        set(${PROJ}_VERSION_PATCH 01)
+        set(${PROJ}_VERSION_MINOR 26)
+        set(${PROJ}_VERSION_PATCH 00)
         set(${PROJ}_VERSION "${${PROJ}_VERSION_MAJOR}.${${PROJ}_VERSION_MINOR}.${${PROJ}_VERSION_PATCH}")
     endforeach()
 
