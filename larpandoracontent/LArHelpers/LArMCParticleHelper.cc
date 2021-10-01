@@ -52,7 +52,9 @@ bool LArMCParticleHelper::IsCCNuEvent(const MCParticleList *const pMCParticleLis
         {
             ++nuCount;
 
-            if (absPdg == absNuPdg)
+            const LArMCParticle *const pLArMCParticle(dynamic_cast<const LArMCParticle *>(pMCParticle));
+
+            if ((absPdg == absNuPdg) && (!pLArMCParticle->GetIsNC()))
                 found = true;
         }
     }

@@ -73,6 +73,16 @@ public:
     static bool IsCCNuEvent(const pandora::MCParticleList *const pMCParticleList, const int nuPdg);
 
     /**
+     *  @brief  Get the hits in the intersection of two hit lists
+     *
+     *  @param  hitListA an input hit list
+     *  @param  hitListB another input hit list
+     *
+     *  @return The hits that are found in both hitListA and hitListB
+     */
+    static pandora::CaloHitList GetSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
+
+    /**
      *  @brief  Returns true if passed particle whose primary meets the passed criteria
      *
      *  @param  pMCParticle the input mc particle
