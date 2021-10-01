@@ -15,6 +15,7 @@
 #include "larpandoracontent/LArCheating/CheatingBeamParticleIdTool.h"
 #include "larpandoracontent/LArCheating/CheatingBeamParticleSliceSelectionTool.h"
 #include "larpandoracontent/LArCheating/CheatingClusterCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingCCElectronRefinementAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingCCLeptonClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingClusterCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingCosmicRayIdentificationAlg.h"
@@ -24,11 +25,14 @@
 #include "larpandoracontent/LArCheating/CheatingEventSlicingTool.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoDaughterVerticesAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingNeutrinoDaughterVisibleVerticesAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoHierarchyAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoIdTool.h"
 #include "larpandoracontent/LArCheating/CheatingNeutrinoSliceSelectionTool.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCharacterisationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingPfoCreationAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingPfoSubDominantHitRemovalAlgorithm.h"
+#include "larpandoracontent/LArCheating/CheatingVisibleVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexCreationAlgorithm.h"
 #include "larpandoracontent/LArCheating/CheatingVertexSelectionAlgorithm.h"
 
@@ -230,6 +234,7 @@
     d("LArEventReading",                        EventReadingAlgorithm)                                                          \
     d("LArEventWriting",                        EventWritingAlgorithm)                                                          \
     d("LArCheatingClusterCharacterisation",     CheatingClusterCharacterisationAlgorithm)                                       \
+    d("LArCheatingCCElectronRefinement",        CheatingCCElectronRefinementAlgorithm)                                          \
     d("LArCheatingCCLeptonClusterCreation",     CheatingCCLeptonClusterCreationAlgorithm)                                       \
     d("LArCheatingClusterCreation",             CheatingClusterCreationAlgorithm)                                               \
     d("LArCheatingCosmicRayIdentification",     CheatingCosmicRayIdentificationAlg)                                             \
@@ -237,8 +242,11 @@
     d("LArCheatingNeutrinoCreation",            CheatingNeutrinoCreationAlgorithm)                                              \
     d("LArCheatingNeutrinoHierarchy",           CheatingNeutrinoHierarchyAlgorithm)                                             \
     d("LArCheatingNeutrinoDaughterVertices",    CheatingNeutrinoDaughterVerticesAlgorithm)                                      \
+    d("LArCheatingNeutrinoDaughterVisibleVertices",    CheatingNeutrinoDaughterVisibleVerticesAlgorithm)                        \
     d("LArCheatingPfoCharacterisation",         CheatingPfoCharacterisationAlgorithm)                                           \
     d("LArCheatingPfoCreation",                 CheatingPfoCreationAlgorithm)                                                   \
+    d("LArCheatingPfoSubDominantHitRemoval",    CheatingPfoSubDominantHitRemovalAlgorithm)                                      \
+    d("LArCheatingVisibleVertexCreation",       CheatingVisibleVertexCreationAlgorithm)                                         \
     d("LArCheatingCosmicRayRemoval",            CheatingCosmicRayRemovalAlgorithm)                                              \
     d("LArCheatingVertexCreation",              CheatingVertexCreationAlgorithm)                                                \
     d("LArCheatingVertexSelection",             CheatingVertexSelectionAlgorithm)                                               \
