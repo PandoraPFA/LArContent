@@ -34,6 +34,10 @@ private:
 
     typedef std::unordered_map<const pandora::MCParticle *, pandora::CaloHitList> MCParticleToHitListMap;
 
+    void ClusterLeadingElectrons(const pandora::MCParticle *const pMCLeadingElectron, const pandora::CaloHitList *pCaloHitList, 
+        MCParticleToHitListMap &mcParticleToHitListMap) const;
+
+
     /**
      *  @brief  Create map between each (primary) MC particle and associated calo hits
      *
@@ -48,7 +52,7 @@ private:
      *  @param  mcPrimaryMap the mapping between mc particles and their parents
      *  @param  mcParticleToHitListMap the mc particle to hit list map
      */
-    void SimpleMCParticleCollection(const pandora::CaloHit *const pCaloHit, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap,
+    void SimpleMCParticleCollection(const pandora::CaloHit *const pCaloHit, const LArMCParticleHelper::MCRelationMap &mcPrimaryMap, const bool isNueCC, const bool isNumuCC,
         MCParticleToHitListMap &mcParticleToHitListMap) const;
 
     /**
@@ -58,7 +62,7 @@ private:
      *
      *  @return boolean
      */
-    bool SelectMCParticlesForClustering(const pandora::MCParticle *const pMCParticle) const;
+    bool SelectMCParticlesForClustering(const pandora::MCParticle *const pMCParticle, const bool isNueCC, const bool isNumuCC) const;
 
     /**
      *  @brief  Create clusters based on information in the mc particle to hit list map
@@ -68,6 +72,7 @@ private:
     void CreateClusters(const MCParticleToHitListMap &mcParticleToHitListMap) const;
 
     bool m_collapseToPrimaryMCParticles; ///< Whether to collapse mc particle hierarchies to primary particles
+    bool m_collectAllElectronHits;
     std::string m_mcParticleListName;    ///< The mc particle list name, required if want to collapse mc particle hierarchy
     pandora::IntVector m_particleIdList; ///< list of particle ids of MCPFOs to be selected
 };
