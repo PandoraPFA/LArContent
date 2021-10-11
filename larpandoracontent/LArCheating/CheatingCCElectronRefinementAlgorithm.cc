@@ -31,14 +31,11 @@ StatusCode CheatingCCElectronRefinementAlgorithm::Run()
 {
     //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
 
-    const MCParticleList *pMCParticleList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+    PfoList allPfoList; ClusterList clusterList;
+    const MCParticleList *pMCParticleList(nullptr); const PfoList *pShowerPfoList(nullptr); const CaloHitList *pCaloHitList(nullptr);
 
-    if (!pMCParticleList || pMCParticleList->empty())
-    {
-        std::cout << "CheatingCCElectronRefinementAlgorithm: No MC particle list found, returning..." << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
+    if (this->FillLists(pMCParticleList, pShowerPfoList, allPfoList, pCaloHitList, clusterList) != STATUS_CODE_SUCCESS)
+        return STATUS_CODE_SUCCESS;
 
     if (!LArMCParticleHelper::IsCCNuEvent(pMCParticleList, 12))
     {
@@ -46,56 +43,10 @@ StatusCode CheatingCCElectronRefinementAlgorithm::Run()
         return STATUS_CODE_SUCCESS;
     }
 
-    //std::cout << "this is a nue CC event!" << std::endl;
-
-    const PfoList *pShowerPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_showerPfoListName, pShowerPfoList));
-
-    if (!pShowerPfoList || pShowerPfoList->empty())
-    {
-        std::cout << "CheatingCCElectronRefinementAlgorithm: No shower pfo list found, returning..." << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
-    const PfoList *pTrackPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "TrackParticles3D", pTrackPfoList));
-
-    PfoList combinedPfoList(*pShowerPfoList);
-    if (!(!pTrackPfoList || pTrackPfoList->empty()))
-    {
-        combinedPfoList.insert(combinedPfoList.end(), pTrackPfoList->begin(), pTrackPfoList->end());
-    }
-
-    PfoList allPfoList;
-    LArPfoHelper::GetAllConnectedPfos(combinedPfoList, allPfoList);
-
-    const CaloHitList *pCaloHitList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
-
-    if (!pCaloHitList || pCaloHitList->empty())
-    {
-        std::cout << "CheatingCCElectronRefinementAlgorithm: No calo hit list found, returning..." << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
-    ClusterList clusterList;
-
-    for (const std::string &clusterListName : m_clusterListNames)
-    {
-        const ClusterList *pClusterList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
-
-        if (!pClusterList || pClusterList->empty())
-        {
-            std::cout << "CheatingCCElectronRefinementAlgorithm: No cluster list found, returning..." << std::endl;
-            return STATUS_CODE_FAILURE;
-        }
-
-        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
-    }
+    std::cout << "this is a nue CC event!" << std::endl;
 
     MCParticleToPfoMap mcElectronToPfoMap;
-    this->FindElectronToPfoMatches(pMCParticleList, pShowerPfoList, mcElectronToPfoMap);
+    this->FindElectronToPfoMatches(pShowerPfoList, mcElectronToPfoMap);
 
     if (mcElectronToPfoMap.empty())
         return STATUS_CODE_SUCCESS;
@@ -206,8 +157,7 @@ StatusCode CheatingCCElectronRefinementAlgorithm::Run()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCCElectronRefinementAlgorithm::FindElectronToPfoMatches(const MCParticleList *const pMCParticleList, const PfoList *const pShowerPfoList,
-    MCParticleToPfoMap &mcElectronToPfoMap) const
+void CheatingCCElectronRefinementAlgorithm::FindElectronToPfoMatches(const PfoList *const pShowerPfoList, MCParticleToPfoMap &mcElectronToPfoMap) const
 {
     for (const ParticleFlowObject *const pPfo : *pShowerPfoList)
     {
@@ -264,18 +214,25 @@ void CheatingCCElectronRefinementAlgorithm::FindBestElectronToPfoMatch(MCParticl
 
     mcElectronToPfoMap.clear();
 
-    for (auto &entry : tempMCElectronToPfoMap)
-    {
-        const MCParticle *const pMCElectron(entry.first);
-        const CaloHitList mcElectronHits(mcElectronToHitMap.at(pMCElectron));
-        PfoVector matchedPfoList(entry.second.begin(), entry.second.end());
+    MCParticleVector mcElectronList;
 
-        std::sort(matchedPfoList.begin(), matchedPfoList.end(), LArPfoHelper::SortByNHits);
+    for (const auto &mapEntry : tempMCElectronToPfoMap)
+        mcElectronList.push_back(mapEntry.first);
+
+    std::sort(mcElectronList.begin(), mcElectronList.end(), PointerLessThan<MCParticle>());
+
+    for (const MCParticle *const pMCElectron : mcElectronList)
+    {
+        const CaloHitList &mcElectronHits(mcElectronToHitMap.at(pMCElectron));
+        const PfoList &matchedPfoList(tempMCElectronToPfoMap.at(pMCElectron));
+        PfoVector matchedPfoVector(matchedPfoList.begin(), matchedPfoList.end());
+
+        std::sort(matchedPfoVector.begin(), matchedPfoVector.end(), LArPfoHelper::SortByNHits);
 
         float bestCompleteness(-1.0);
         const ParticleFlowObject *pBestMatchedPfo(nullptr);
 
-        for (const ParticleFlowObject *const pMatchedPfo : matchedPfoList)
+        for (const ParticleFlowObject *const pMatchedPfo : matchedPfoVector)
         {
             CaloHitList matchedPfoHitList;
 
@@ -455,27 +412,49 @@ void CheatingCCElectronRefinementAlgorithm::RefineElectronPfos(LArMCParticleHelp
 
             //CartesianVector hitPosition(pCaloHit->GetPositionVector());
             //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "hit to add", VIOLET, 2);
-
+            //std::cout << "AAAAAAA" << std::endl;
             if (pParentCluster)
             {
-                if (PandoraContentApi::RemoveFromCluster(*this, pParentCluster, pCaloHit) != STATUS_CODE_SUCCESS)
+                //std::cout << "BBBBBBBBBBBBBB" << std::endl;
+                const StatusCode statusCodeCluster(PandoraContentApi::RemoveFromCluster(*this, pParentCluster, pCaloHit));
+
+                if (statusCodeCluster != STATUS_CODE_SUCCESS)
                 {
-                    if (pParentPfo)
+                    //std::cout << "CCCCCCCCCCCC" << std::endl;
+                    if (statusCodeCluster != STATUS_CODE_NOT_ALLOWED)
                     {
-                        if (PandoraContentApi::RemoveFromPfo(*this, pParentPfo, pParentCluster) != STATUS_CODE_SUCCESS)
-                        {
-                            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pParentPfo));
-                        }
-                    }
-                    else if (!pParentCluster->IsAvailable())
-                    {
-                        continue;
+                        std::cout << "jam" << std::endl;
+                        throw StatusCodeException(statusCodeCluster);
                     }
 
+                    if (pParentPfo)
+                    {
+                        const StatusCode statusCodePfo(PandoraContentApi::RemoveFromPfo(*this, pParentPfo, pParentCluster));
+
+                        unsigned int nHits(LArPfoHelper::GetNumberOfTwoDHits(pParentPfo));
+
+                        if (nHits == 0)
+                            std::cout << "CheatingCCElectronRefinementAlgorithm: ISOBEL - PFO HAS ZERO HITS" << std::endl;
+
+                        if (statusCodePfo != STATUS_CODE_SUCCESS)
+                        {
+                            std::cout << "pfo jam" << std::endl;
+                            throw;
+                            // work out how many clusters pfo has?? if none...
+                            //{
+                            //PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pParentPfo));
+                            //}
+                        }
+                    }
+
+                    //std::cout << "EEEEEEEEEE" << std::endl;
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
                     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pParentCluster));
                 }
             }
+
+            if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
+                std::cout << "CALO HIT IS NOT AVAILABLE!!" << std::endl;
 
             ClusterList matchedPfoCluster;
             LArPfoHelper::GetClusters(pMatchedPfo, hitType, matchedPfoCluster);
@@ -537,6 +516,66 @@ bool CheatingCCElectronRefinementAlgorithm::DoesPassCut(const CaloHit *const pCa
         return false;
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode CheatingCCElectronRefinementAlgorithm::FillLists(const MCParticleList *&pMCParticleList, const PfoList *&pShowerPfoList, PfoList &allPfoList, 
+    const CaloHitList *&pCaloHitList, ClusterList &clusterList) const
+{
+    // Get MC Particles
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+    if (!pMCParticleList || pMCParticleList->empty())
+    {
+        std::cout << "CheatingCCElectronRefinementAlgorithm: No MC particle list found, returning..." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+
+    // Get all Pfos
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_showerPfoListName, pShowerPfoList));
+
+    if (!pShowerPfoList || pShowerPfoList->empty())
+    {
+        std::cout << "CheatingCCElectronRefinementAlgorithm: No shower pfo list found, returning..." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+
+    const PfoList *pTrackPfoList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "TrackParticles3D", pTrackPfoList));
+
+    PfoList combinedPfoList(*pShowerPfoList);
+    if (!(!pTrackPfoList || pTrackPfoList->empty()))
+    {
+        combinedPfoList.insert(combinedPfoList.end(), pTrackPfoList->begin(), pTrackPfoList->end());
+    }
+
+    LArPfoHelper::GetAllConnectedPfos(combinedPfoList, allPfoList);
+
+    // Get CaloHits
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+
+    if (!pCaloHitList || pCaloHitList->empty())
+    {
+        std::cout << "CheatingCCElectronRefinementAlgorithm: No calo hit list found, returning..." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+
+    for (const std::string &clusterListName : m_clusterListNames)
+    {
+        const ClusterList *pClusterList(nullptr);
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+
+        if (!pClusterList || pClusterList->empty())
+        {
+            std::cout << "CheatingCCElectronRefinementAlgorithm: No cluster list found, returning..." << std::endl;
+            return STATUS_CODE_FAILURE;
+        }
+
+        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
+    }
+
+    return STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

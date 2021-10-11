@@ -34,8 +34,10 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    void FindElectronToPfoMatches(const pandora::MCParticleList *const pMCParticleList, const pandora::PfoList *const pPfoList,
-        MCParticleToPfoMap &mcElectronToPfoMap) const;
+    pandora::StatusCode FillLists(const pandora::MCParticleList *&pMCParticleList, const pandora::PfoList *&pShowerPfoList, pandora::PfoList &allPfoList, 
+        const pandora::CaloHitList *&pCaloHitList, pandora::ClusterList &clusterList) const;
+
+    void FindElectronToPfoMatches(const pandora::PfoList *const pPfoList, MCParticleToPfoMap &mcElectronToPfoMap) const;
 
     void FindMissingElectronHits(const pandora::CaloHitList *const pCaloHitList, const MCParticleToPfoMap &mcElectronToPfoMap, 
         LArMCParticleHelper::MCContributionMap &mcElectronToHitMap) const;
