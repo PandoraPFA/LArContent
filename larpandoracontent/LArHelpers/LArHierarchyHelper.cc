@@ -998,7 +998,7 @@ unsigned int LArHierarchyHelper::MatchInfo::GetNMCNodes() const
         mcNodeSet.insert(match.GetMC());
     for (const MCMatches &match : this->GetSubThresholdMatches())
         mcNodeSet.insert(match.GetMC());
-    for (const MCMatches &match : this->GetUnmatchedMC())
+    for (const MCMatches match : this->GetUnmatchedMC())
         mcNodeSet.insert(match.GetMC());
 
     return static_cast<unsigned int>(mcNodeSet.size());
@@ -1027,7 +1027,7 @@ unsigned int LArHierarchyHelper::MatchInfo::GetNNeutrinoMCNodes() const
         if (!(pNode->IsCosmicRay() || pNode->IsTestBeamParticle()))
             mcNodeSet.insert(match.GetMC());
     }
-    for (const MCMatches &match : this->GetUnmatchedMC())
+    for (const MCMatches match : this->GetUnmatchedMC())
     {
         const MCHierarchy::Node *pNode{match.GetMC()};
         if (!(pNode->IsCosmicRay() || pNode->IsTestBeamParticle()))
@@ -1060,7 +1060,7 @@ unsigned int LArHierarchyHelper::MatchInfo::GetNCosmicRayMCNodes() const
         if (pNode->IsCosmicRay())
             mcNodeSet.insert(match.GetMC());
     }
-    for (const MCMatches &match : this->GetUnmatchedMC())
+    for (const MCMatches match : this->GetUnmatchedMC())
     {
         const MCHierarchy::Node *pNode{match.GetMC()};
         if (pNode->IsCosmicRay())
@@ -1093,7 +1093,7 @@ unsigned int LArHierarchyHelper::MatchInfo::GetNTestBeamMCNodes() const
         if (pNode->IsTestBeamParticle())
             mcNodeSet.insert(match.GetMC());
     }
-    for (const MCMatches &match : this->GetUnmatchedMC())
+    for (const MCMatches match : this->GetUnmatchedMC())
     {
         const MCHierarchy::Node *pNode{match.GetMC()};
         if (pNode->IsCosmicRay())

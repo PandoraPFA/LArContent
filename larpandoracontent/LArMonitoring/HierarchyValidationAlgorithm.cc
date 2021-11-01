@@ -138,7 +138,7 @@ void HierarchyValidationAlgorithm::EventValidation(const LArHierarchyHelper::Mat
                 trackNodeSet.insert(pNode);
         }
 
-        for (const LArHierarchyHelper::MCMatches &mcMatch : matchInfo.GetUnmatchedMC())
+        for (const LArHierarchyHelper::MCMatches mcMatch : matchInfo.GetUnmatchedMC())
         {
             const LArHierarchyHelper::MCHierarchy::Node *pNode{mcMatch.GetMC()};
             if (pNode->IsLeadingLepton())
