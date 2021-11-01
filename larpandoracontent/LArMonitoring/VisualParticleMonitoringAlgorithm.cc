@@ -149,7 +149,7 @@ void VisualParticleMonitoringAlgorithm::VisualizeMCByPdgCode(const LArMCParticle
         {"mu", MAGENTA}, {"e", RED}, {"gamma", ORANGE}, {"kaon", BLACK}, {"pi", GREEN}, {"p", BLUE}, {"other", GRAY}};
 
     std::map<std::string, CaloHitList> uHits, vHits, wHits;
-    for (const auto [key, value] : keys)
+    for (const auto & [key, value] : keys)
     {
         (void)key; // GCC 7 support, 8+ doesn't need this
         uHits[value] = CaloHitList();
@@ -160,7 +160,7 @@ void VisualParticleMonitoringAlgorithm::VisualizeMCByPdgCode(const LArMCParticle
     vHits["other"] = CaloHitList();
     wHits["other"] = CaloHitList();
 
-    for (const auto [pMC, pCaloHits] : mcMap)
+    for (const auto & [pMC, pCaloHits] : mcMap)
     {
         for (const CaloHit *pCaloHit : pCaloHits)
         {
@@ -190,7 +190,7 @@ void VisualParticleMonitoringAlgorithm::VisualizeMCByPdgCode(const LArMCParticle
     PANDORA_MONITORING_API(
         SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, m_transparencyThresholdE, m_energyScaleThresholdE, m_scalingFactor));
 
-    for (const auto [key, value] : keys)
+    for (const auto & [key, value] : keys)
     {
         (void)key; // GCC 7 support, 8+ doesn't need this
         if (!uHits[value].empty())
@@ -199,7 +199,7 @@ void VisualParticleMonitoringAlgorithm::VisualizeMCByPdgCode(const LArMCParticle
     if (!uHits["other"].empty())
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits["other"], "u_other", colors.at("other")));
 
-    for (const auto [key, value] : keys)
+    for (const auto & [key, value] : keys)
     {
         (void)key; // GCC 7 support, 8+ doesn't need this
         if (!vHits[value].empty())
@@ -208,7 +208,7 @@ void VisualParticleMonitoringAlgorithm::VisualizeMCByPdgCode(const LArMCParticle
     if (!vHits["other"].empty())
         PANDORA_MONITORING_API(VisualizeCaloHits(this->GetPandora(), &uHits["other"], "v_other", colors.at("other")));
 
-    for (const auto [key, value] : keys)
+    for (const auto & [key, value] : keys)
     {
         (void)key; // GCC 7 support, 8+ doesn't need this
         if (!wHits[value].empty())
