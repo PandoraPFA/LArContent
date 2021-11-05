@@ -12,6 +12,9 @@
 
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 
+#include <exception>
+#include <stdexcept>
+
 namespace lar_content
 {
 
@@ -32,22 +35,36 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    bool IsMatchedToGamma(const pandora::ParticleFlowObject *const pPfo) const;
+    void FillGammaHitMap(const pandora::CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &gammaHitMap) const;
 
-    void FindContaminantMCParticles(const pandora::ParticleFlowObject *const pGammaPfo, pandora::MCParticleList &contaminantMCParticleList) const;
+    const pandora::MCParticle *FindMatchedGamma(const pandora::ParticleFlowObject *const pPfo, const LArMCParticleHelper::MCContributionMap &gammaHitMap) const;
 
-    void FilterContaminantMCParticleList(const pandora::ParticleFlowObject *const pGammaPfo, pandora::MCParticleList &mcContaminantList) const;
+    void FindContaminantMCParticles(const pandora::MCParticle *const pMCGamma, const pandora::ParticleFlowObject *const pGammaPfo, pandora::MCParticleList &contaminantMCParticleList) const;
+
+    void FilterContaminantMCParticleList(const pandora::MCParticle *const pMCGamma, const pandora::ParticleFlowObject *const pGammaPfo, pandora::MCParticleList &mcContaminantList) const;
 
     bool IsShower(const pandora::MCParticle *const pMCParticle) const;
 
-    bool AreShowersSeparated(const pandora::MCParticle *const pMCParticle1, const pandora::MCParticle *const pMCParticle2) const;
+    bool AreParticlesSeparated(const pandora::MCParticle *const pMCParticle1, const pandora::MCParticle *const pMCParticle2) const;
 
-    void RemoveContaminantHits(const pandora::ParticleFlowObject *const pGammaPfo, const pandora::MCParticleList &mcContaminantList) const;
+    void GetDistinguishableChildren(const pandora::MCParticle *const pMCContaminant, const pandora::MCParticle *const pMCGamma, 
+        pandora::MCParticleList &mcHierarchyList) const;
+
+    void RemoveContaminantHits(const pandora::MCParticle *const pMCGamma, const pandora::ParticleFlowObject *const pGammaPfo, const pandora::MCParticleList &mcContaminantList,  
+        const LArMCParticleHelper::MCContributionMap &mcParticleHitMap) const;
 
     const pandora::Cluster *CreateCluster(const pandora::MCParticle *const pMCParticle, const pandora::CaloHitList &caloHitList, const pandora::HitType hitType) const;
 
+    void handle_eptr(std::exception_ptr eptr);
+
+    std::string m_caloHitListName;
     std::string m_showerPfoListName;
+    float m_maxImpactT;
+    float m_minOpeningAngle;
+    float m_minGammaCompleteness;
+    bool m_removeHierarchy;
     bool m_truncateMode;
+    float m_creationCompletenessThreshold;
 };
 
 } // namespace lar_content

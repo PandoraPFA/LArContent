@@ -34,19 +34,15 @@ private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
-    pandora::StatusCode FillLists(const pandora::MCParticleList *&pMCParticleList, const pandora::PfoList *&pShowerPfoList, pandora::PfoList &allPfoList, 
-        const pandora::CaloHitList *&pCaloHitList, pandora::ClusterList &clusterList) const;
+    void FillElectronHitMap(const pandora::CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &mcElectronToHitMap) const;
 
-    void FindElectronToPfoMatches(const pandora::PfoList *const pPfoList, MCParticleToPfoMap &mcElectronToPfoMap) const;
-
-    void FindMissingElectronHits(const pandora::CaloHitList *const pCaloHitList, const MCParticleToPfoMap &mcElectronToPfoMap, 
+    const pandora::ParticleFlowObject *FindBestPfoMatch(const pandora::MCParticle *const pMCElectron, const pandora::PfoList *const pShowerPfoList, 
         LArMCParticleHelper::MCContributionMap &mcElectronToHitMap) const;
 
-    void FindBestElectronToPfoMatch(MCParticleToPfoMap &mcElectronToPfoMap, LArMCParticleHelper::MCContributionMap &mcElectronToHitMap) const;
+    void FillOwnershipMaps(const pandora::PfoList *const pShowerPfoList);
 
-    void FillOwnershipMaps(const pandora::PfoList &pPfoList, const pandora::ClusterList &pClusterList);
-
-    void RefineElectronPfos(LArMCParticleHelper::MCContributionMap &mcElectronToHitMap, MCParticleToPfoMap &mcElectronToPfoMap) const;
+    void RefineElectronPfos(const pandora::ParticleFlowObject *const pElectronPfo, const pandora::MCParticle *const pMCElectron, 
+        LArMCParticleHelper::MCContributionMap &mcElectronToHitMap);
 
     float FindConeLength(const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &mcVertex, 
         const pandora::CartesianVector &mcDirection, const pandora::HitType hitType) const;
@@ -59,6 +55,10 @@ private:
     std::string m_trackPfoListName;
     std::string m_caloHitListName;
     pandora::StringVector m_clusterListNames; 
+
+    bool m_completenessMode;
+    float m_thresholdCompleteness;
+    float m_thresholdPurity;
     float m_maxOpeningAngle;
 
     HitToClusterMap m_hitToClusterMapU;

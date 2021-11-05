@@ -21,6 +21,9 @@ namespace lar_content
 {
 
 CheatingCCElectronRefinementAlgorithm::CheatingCCElectronRefinementAlgorithm() : 
+    m_completenessMode(true),
+    m_thresholdCompleteness(0.33f),
+    m_thresholdPurity(0.5f),
     m_maxOpeningAngle(5.f)
 {
 }
@@ -31,148 +34,81 @@ StatusCode CheatingCCElectronRefinementAlgorithm::Run()
 {
     //PandoraMonitoringApi::SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_DEFAULT, -1.f, 1.f, 1.f);
 
-    PfoList allPfoList; ClusterList clusterList;
-    const MCParticleList *pMCParticleList(nullptr); const PfoList *pShowerPfoList(nullptr); const CaloHitList *pCaloHitList(nullptr);
+    // Get Shower Pfos
+    const PfoList *pShowerPfoList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_showerPfoListName, pShowerPfoList));
 
-    if (this->FillLists(pMCParticleList, pShowerPfoList, allPfoList, pCaloHitList, clusterList) != STATUS_CODE_SUCCESS)
-        return STATUS_CODE_SUCCESS;
+    if (!pShowerPfoList || pShowerPfoList->empty())
+    {
+        std::cout << "CheatingCCElectronRefinementAlgorithm: No shower pfo list found, returning..." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
+
+    // Get MC Particles
+    const MCParticleList *pMCParticleList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
+
+    if (!pMCParticleList || pMCParticleList->empty())
+    {
+        std::cout << "CheatingCCElectronRefinementAlgorithm: No MC particle list found, returning..." << std::endl;
+        return STATUS_CODE_FAILURE;
+    }
 
     if (!LArMCParticleHelper::IsCCNuEvent(pMCParticleList, 12))
+        return STATUS_CODE_SUCCESS; 
+
+    // Get CaloHits
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
+
+    if (!pCaloHitList || pCaloHitList->empty())
     {
-        //std::cout << "This is not a nue CC event" << std::endl;
-        return STATUS_CODE_SUCCESS;
+        std::cout << "CheatingCCElectronRefinementAlgorithm: No calo hit list found, returning..." << std::endl;
+        return STATUS_CODE_FAILURE;
     }
 
-    std::cout << "this is a nue CC event!" << std::endl;
+    // Fill electron -> hit map
+    LArMCParticleHelper::MCContributionMap electronHitMap;
+    this->FillElectronHitMap(pCaloHitList, electronHitMap);
 
-    MCParticleToPfoMap mcElectronToPfoMap;
-    this->FindElectronToPfoMatches(pShowerPfoList, mcElectronToPfoMap);
-
-    if (mcElectronToPfoMap.empty())
+    if (electronHitMap.empty())
         return STATUS_CODE_SUCCESS;
 
-    ////////////////////////
-    /*
-    PfoList pfolist;
-    for (const auto &entry : mcElectronToPfoMap)
-        pfolist.insert(pfolist.begin(), entry.second.begin(), entry.second.end());
+    MCParticleVector mcElectronVector;
 
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &pfolist, "matched electron pfos", RED, true, true);
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
-    ////////////////////////
+    for (const auto &entry : electronHitMap)
+        mcElectronVector.push_back(entry.first);
 
-    LArMCParticleHelper::MCContributionMap mcElectronToHitMap;
-    this->FindMissingElectronHits(pCaloHitList, mcElectronToPfoMap, mcElectronToHitMap);
+    std::sort(mcElectronVector.begin(), mcElectronVector.end(), LArMCParticleHelper::SortByMomentum);
 
-    /////////////////////
-    /*
-    CaloHitList caloHitList;
-    for (const auto &entry : mcElectronToHitMap)
-        caloHitList.insert(caloHitList.end(), entry.second.begin(), entry.second.end());
-
-    PandoraMonitoringApi::VisualizeCaloHits(this->GetPandora(), &caloHitList, "true electron hits", BLUE);
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    */
-    ////////////////////
-
-    this->FindBestElectronToPfoMatch(mcElectronToPfoMap, mcElectronToHitMap);
-
-    if (mcElectronToPfoMap.empty())
-        return STATUS_CODE_SUCCESS;
-
-    ////////////////////////
-    /*
-    PfoList bestpfolist;
-    for (const auto &entry : mcElectronToPfoMap)
-        bestpfolist.insert(bestpfolist.begin(), entry.second.begin(), entry.second.end());
-
-    PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &bestpfolist, "BEST matched electron pfo", RED, true, true);
-    PandoraMonitoringApi::ViewEvent(this->GetPandora());
-    
-    ////////////////////////
-    ////////////////////////
-    for (const auto &entry : mcElectronToPfoMap)
+    for (const MCParticle *const pMCElectron : mcElectronVector)
     {
-        if (entry.second.empty())
+        const ParticleFlowObject *const pElectronPfo(this->FindBestPfoMatch(pMCElectron, pShowerPfoList, electronHitMap));
+
+        if (!pElectronPfo)
             continue;
+        
+        //PfoList displayPfo;
+        //displayPfo.push_back(pElectronPfo);
+        //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &displayPfo, "before", RED, true, true);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        
+        this->FillOwnershipMaps(pShowerPfoList);
 
-        const CartesianVector &mcVertex(entry.first->GetVertex());
-        const CartesianVector mcVertexU(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_U));
-        const CartesianVector mcVertexV(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_V));
-        const CartesianVector mcVertexW(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_W));
-
-        const ParticleFlowObject *const pPfo(entry.second.front());
-        CaloHitList caloHitListU, caloHitListV, caloHitListW;
-        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, caloHitListU);
-        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, caloHitListV);
-        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, caloHitListW);
-
-        float closestDistanceU(std::numeric_limits<float>::max());
-        float closestDistanceV(std::numeric_limits<float>::max());
-        float closestDistanceW(std::numeric_limits<float>::max());
-
-        for (const CaloHit *const pCaloHit : caloHitListU)
-        {
-            const CartesianVector &position(pCaloHit->GetPositionVector());
-            const float separation((position - mcVertexU).GetMagnitude());
-
-            if (separation < closestDistanceU)
-                closestDistanceU = separation;
-        }
-
-        for (const CaloHit *const pCaloHit : caloHitListV)
-        {
-            const CartesianVector &position(pCaloHit->GetPositionVector());
-            const float separation((position - mcVertexV).GetMagnitude());
-
-            if (separation < closestDistanceV)
-                closestDistanceV = separation;
-        }
-
-        for (const CaloHit *const pCaloHit : caloHitListW)
-        {
-            const CartesianVector &position(pCaloHit->GetPositionVector());
-            const float separation((position - mcVertexW).GetMagnitude());
-
-            if (separation < closestDistanceW)
-                closestDistanceW = separation;
-        }
-
-
-        std::cout << "closestDistanceU: " << closestDistanceU << std::endl;
-        std::cout << "closestDistanceV: " << closestDistanceV << std::endl;
-        std::cout << "closestDistanceW: " << closestDistanceW << std::endl;
+        this->RefineElectronPfos(pElectronPfo, pMCElectron, electronHitMap);
+        
+        //PfoList displayPfo2;
+        //displayPfo2.push_back(pElectronPfo);
+        //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &displayPfo2, "after", BLUE, true, true);
+        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
     }
-    */
-    ///////////////////////////////////////////
-
-    this->FillOwnershipMaps(allPfoList, clusterList);
-
-    this->RefineElectronPfos(mcElectronToHitMap, mcElectronToPfoMap);
 
     return STATUS_CODE_SUCCESS;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCCElectronRefinementAlgorithm::FindElectronToPfoMatches(const PfoList *const pShowerPfoList, MCParticleToPfoMap &mcElectronToPfoMap) const
-{
-    for (const ParticleFlowObject *const pPfo : *pShowerPfoList)
-    {
-        const MCParticle *pMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
-        const bool isLeadingElectron((std::abs(pMCParticle->GetParticleId()) == 11) && (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle));
-
-        if (isLeadingElectron)
-            mcElectronToPfoMap[pMCParticle].push_back(pPfo);
-    }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void CheatingCCElectronRefinementAlgorithm::FindMissingElectronHits(const CaloHitList *const pCaloHitList, const MCParticleToPfoMap &mcElectronToPfoMap, 
-    LArMCParticleHelper::MCContributionMap &mcElectronToHitMap) const
+void CheatingCCElectronRefinementAlgorithm::FillElectronHitMap(const CaloHitList *const pCaloHitList, LArMCParticleHelper::MCContributionMap &mcElectronToHitMap) const
 {
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
@@ -189,10 +125,12 @@ void CheatingCCElectronRefinementAlgorithm::FindMissingElectronHits(const CaloHi
 
         for (const MCParticle *const pMCParticle : contributingMCParticleVector)
         {
-            const float weight(weightMap.at(pMCParticle));
+            const bool isLeadingElectron((std::abs(pMCParticle->GetParticleId()) == 11) && (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle));
 
-            if (mcElectronToPfoMap.find(pMCParticle) != mcElectronToPfoMap.end())
+            if (isLeadingElectron)
             {
+                const float weight(weightMap.at(pMCParticle));
+
                 if (weight > highestWeight)
                 {
                     highestWeight = weight;
@@ -208,64 +146,89 @@ void CheatingCCElectronRefinementAlgorithm::FindMissingElectronHits(const CaloHi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCCElectronRefinementAlgorithm::FindBestElectronToPfoMatch(MCParticleToPfoMap &mcElectronToPfoMap, LArMCParticleHelper::MCContributionMap &mcElectronToHitMap) const
+const ParticleFlowObject *CheatingCCElectronRefinementAlgorithm::FindBestPfoMatch(const MCParticle *const pMCElectron, const PfoList *const pShowerPfoList, 
+    LArMCParticleHelper::MCContributionMap &mcElectronToHitMap) const
 {
-    MCParticleToPfoMap tempMCElectronToPfoMap(mcElectronToPfoMap);
+    float bestCompleteness(-1.0), furthestSeparation(-std::numeric_limits<float>::max());
+    const ParticleFlowObject *pBestCompletenessPfo(nullptr), *pFurthestPfo(nullptr);
 
-    mcElectronToPfoMap.clear();
-
-    MCParticleVector mcElectronList;
-
-    for (const auto &mapEntry : tempMCElectronToPfoMap)
-        mcElectronList.push_back(mapEntry.first);
-
-    std::sort(mcElectronList.begin(), mcElectronList.end(), PointerLessThan<MCParticle>());
-
-    for (const MCParticle *const pMCElectron : mcElectronList)
+    for (const ParticleFlowObject *const pShowerPfo : *pShowerPfoList)
     {
-        const CaloHitList &mcElectronHits(mcElectronToHitMap.at(pMCElectron));
-        const PfoList &matchedPfoList(tempMCElectronToPfoMap.at(pMCElectron));
-        PfoVector matchedPfoVector(matchedPfoList.begin(), matchedPfoList.end());
+        CaloHitList pfoHitList;
+        ClusterList pfo3DClusterList;
 
-        std::sort(matchedPfoVector.begin(), matchedPfoVector.end(), LArPfoHelper::SortByNHits);
+        LArPfoHelper::GetCaloHits(pShowerPfo, TPC_VIEW_U, pfoHitList);
+        LArPfoHelper::GetCaloHits(pShowerPfo, TPC_VIEW_V, pfoHitList);
+        LArPfoHelper::GetCaloHits(pShowerPfo, TPC_VIEW_W, pfoHitList);
+        LArPfoHelper::GetClusters(pShowerPfo, TPC_3D, pfo3DClusterList);
 
-        float bestCompleteness(-1.0);
-        const ParticleFlowObject *pBestMatchedPfo(nullptr);
+        if (pfoHitList.empty())
+            continue;
 
-        for (const ParticleFlowObject *const pMatchedPfo : matchedPfoVector)
+        const CaloHitList &mcHitList(mcElectronToHitMap.at(pMCElectron));
+        const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(pfoHitList, mcHitList));
+
+        if (sharedHitList.empty())
+            continue;
+
+        const float completeness(static_cast<float>(sharedHitList.size()) / static_cast<float>(mcHitList.size()));
+        const float purity(static_cast<float>(sharedHitList.size()) / static_cast<float>(pfoHitList.size()));
+
+        if (completeness < m_thresholdCompleteness)
+            continue;
+
+        if (purity < m_thresholdPurity)
+            continue;
+
+        if (completeness > bestCompleteness)
         {
-            CaloHitList matchedPfoHitList;
-
-            LArPfoHelper::GetCaloHits(pMatchedPfo, TPC_VIEW_U, matchedPfoHitList);
-            LArPfoHelper::GetCaloHits(pMatchedPfo, TPC_VIEW_V, matchedPfoHitList);
-            LArPfoHelper::GetCaloHits(pMatchedPfo, TPC_VIEW_W, matchedPfoHitList);
-
-            const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(matchedPfoHitList, mcElectronHits));
-            const float completeness(static_cast<float>(sharedHitList.size()) / static_cast<float>(mcElectronHits.size()));
-            const float purity(static_cast<float>(sharedHitList.size()) / static_cast<float>(matchedPfoHitList.size()));
-
-            if (completeness < 0.33)
-                continue;
-
-            if (purity < 0.5)
-                continue;
-
-            if (completeness > bestCompleteness)
-            {
-                bestCompleteness = completeness;
-                pBestMatchedPfo = pMatchedPfo;
-            }
+            bestCompleteness = completeness;
+            pBestCompletenessPfo = pShowerPfo;
         }
 
-        if (pBestMatchedPfo)
-            mcElectronToPfoMap[pMCElectron].push_back(pBestMatchedPfo);
+        if (pfo3DClusterList.empty())
+            continue;
+
+        const float separation(LArClusterHelper::GetClosestDistance(pMCElectron->GetVertex(), pfo3DClusterList.front()));
+
+        if (separation > furthestSeparation)
+        {
+            furthestSeparation = separation;
+            pFurthestPfo = pShowerPfo;
+        }
     }
+
+    if (!pFurthestPfo && pBestCompletenessPfo)
+        return pBestCompletenessPfo;
+
+    if (!pBestCompletenessPfo && pFurthestPfo)
+        return pFurthestPfo;
+
+    if (m_completenessMode)
+        return pBestCompletenessPfo;
+    else
+        return pFurthestPfo;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCCElectronRefinementAlgorithm::FillOwnershipMaps(const PfoList &allPfoList, const ClusterList &clusterList)
+void CheatingCCElectronRefinementAlgorithm::FillOwnershipMaps(const PfoList *const pShowerPfoList)
 {
+    m_hitToClusterMapU.clear(); m_hitToClusterMapV.clear(); m_hitToClusterMapW.clear();
+    m_clusterToPfoMapU.clear(); m_clusterToPfoMapV.clear(); m_clusterToPfoMapW.clear();
+
+    const PfoList *pTrackPfoList(nullptr);
+    PandoraContentApi::GetList(*this, m_trackPfoListName, pTrackPfoList);
+
+    PfoList combinedPfoList(*pShowerPfoList);
+    if (!(!pTrackPfoList || pTrackPfoList->empty()))
+    {
+        combinedPfoList.insert(combinedPfoList.end(), pTrackPfoList->begin(), pTrackPfoList->end());
+    }
+
+    PfoList allPfoList;
+    LArPfoHelper::GetAllConnectedPfos(combinedPfoList, allPfoList);
+
     for (const ParticleFlowObject *const pPfo : allPfoList)
     {
         ClusterList twoDClusterList;
@@ -283,10 +246,7 @@ void CheatingCCElectronRefinementAlgorithm::FillOwnershipMaps(const PfoList &all
             for (const CaloHit *const pIsolated : isolated)
             {
                 if (std::find(caloHitList.begin(), caloHitList.end(), pIsolated) == caloHitList.end())
-                {
-                    std::cout << "adding isolated hit..." << std::endl;
                     caloHitList.push_back(pIsolated);
-                }
             }
 
             const HitType hitType(caloHitList.front()->GetHitType());
@@ -300,7 +260,21 @@ void CheatingCCElectronRefinementAlgorithm::FillOwnershipMaps(const PfoList &all
         }
     }
 
-    //ClusterList notAvailable;
+    ClusterList clusterList;
+    for (const std::string &clusterListName : m_clusterListNames)
+    {
+        const ClusterList *pClusterList(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
+
+        if (!pClusterList || pClusterList->empty())
+        {
+            std::cout << "CheatingCCElectronRefinementAlgorithm: No cluster list found, returning..." << std::endl;
+            throw;
+        }
+
+        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
+    }
+
     for (const Cluster *const pCluster : clusterList)
     {
         const HitType hitType(LArClusterHelper::GetClusterHitType(pCluster));
@@ -313,7 +287,7 @@ void CheatingCCElectronRefinementAlgorithm::FillOwnershipMaps(const PfoList &all
         if (!pCluster->IsAvailable())
         {
             std::cout << "CLUSTER IS NOT AVAILABLE ISOBE" << std::endl;
-            //notAvailable.push_back(pCluster);
+            throw;
         }
 
         CaloHitList caloHitList;
@@ -324,145 +298,148 @@ void CheatingCCElectronRefinementAlgorithm::FillOwnershipMaps(const PfoList &all
         for (const CaloHit *const pIsolated : isolated)
         {
             if (std::find(caloHitList.begin(), caloHitList.end(), pIsolated) == caloHitList.end())
-            {
-                std::cout << "adding isolated hit..." << std::endl;
                 caloHitList.push_back(pIsolated);
-            }
         }
 
         for (const CaloHit *const pCaloHit : caloHitList)
             hitToClusterMap[pCaloHit] = pCluster;
     }
-
-    //PandoraMonitoringApi::VisualizeClusters(this->GetPandora(), &notAvailable, "not available", BLACK);
-    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void CheatingCCElectronRefinementAlgorithm::RefineElectronPfos(LArMCParticleHelper::MCContributionMap &mcElectronToHitMap, 
-    MCParticleToPfoMap &mcElectronToPfoMap) const
+void CheatingCCElectronRefinementAlgorithm::RefineElectronPfos(const ParticleFlowObject *const pElectronPfo, const MCParticle *const pMCElectron, 
+    LArMCParticleHelper::MCContributionMap &mcElectronToHitMap)
 {
-    MCParticleVector mcElectronList;
+    const CaloHitList &caloHitList(mcElectronToHitMap.at(pMCElectron));
 
-    for (auto &entry : mcElectronToHitMap)
-        mcElectronList.push_back(entry.first);
+    // Parameterise extension cone
+    const CartesianVector &mcVertex(pMCElectron->GetVertex());
+    const CartesianVector mcVertexU(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_U));
+    const CartesianVector mcVertexV(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_V));
+    const CartesianVector mcVertexW(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_W));
 
-    std::sort(mcElectronList.begin(), mcElectronList.end(), LArMCParticleHelper::SortByMomentum);
+    CartesianVector mcDirection(pMCElectron->GetMomentum());
 
-    for (const MCParticle *const pMCElectron : mcElectronList)
+    if (mcDirection.GetMagnitude() < std::numeric_limits<float>::epsilon())
+        return;
+
+    mcDirection = mcDirection * (1.f / mcDirection.GetMagnitude());
+    const CartesianVector mcDirectionU(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_U));
+    const CartesianVector mcDirectionV(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_V));
+    const CartesianVector mcDirectionW(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_W));
+
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertexU, "mcVertexU", BLACK, 1);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertexV, "mcVertexV", BLACK, 1);
+    //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertexW, "mcVertexW", BLACK, 1);
+
+    const float coneLengthU(this->FindConeLength(pElectronPfo, mcVertexU, mcDirectionU, TPC_VIEW_U));
+    const float coneLengthV(this->FindConeLength(pElectronPfo, mcVertexV, mcDirectionV, TPC_VIEW_V));
+    const float coneLengthW(this->FindConeLength(pElectronPfo, mcVertexW, mcDirectionW, TPC_VIEW_W));
+
+    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    for (const CaloHit *const pCaloHit : caloHitList)
     {
-        const CaloHitList &caloHitList(mcElectronToHitMap.at(pMCElectron));
-        const ParticleFlowObject *const pMatchedPfo(mcElectronToPfoMap.at(pMCElectron).front());
+        const HitType hitType(pCaloHit->GetHitType());
+        const CartesianVector viewMCVertex(hitType == TPC_VIEW_U ? mcVertexU : hitType == TPC_VIEW_V ? mcVertexV : mcVertexW);
+        const CartesianVector viewMCDirection(hitType == TPC_VIEW_U ? mcDirectionU : hitType == TPC_VIEW_V ? mcDirectionV : mcDirectionW);
+        const float viewConeLength(hitType == TPC_VIEW_U ? coneLengthU : hitType == TPC_VIEW_V ? coneLengthV : coneLengthW);
 
-        // Parameterise extension cone
-        const CartesianVector &mcVertex(pMCElectron->GetVertex());
-        const CartesianVector mcVertexU(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_U));
-        const CartesianVector mcVertexV(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_V));
-        const CartesianVector mcVertexW(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertex, TPC_VIEW_W));
+        if (!this->DoesPassCut(pCaloHit, viewMCVertex, viewMCDirection, viewConeLength))
+            continue;
 
-        CartesianVector mcDirection(pMCElectron->GetMomentum());
+        // Now remove...
+        const HitToClusterMap &hitToClusterMap(hitType == TPC_VIEW_U ? m_hitToClusterMapU : hitType == TPC_VIEW_V ? m_hitToClusterMapV : m_hitToClusterMapW);
+        const ClusterToPfoMap &clusterToPfoMap(hitType == TPC_VIEW_U ? m_clusterToPfoMapU : hitType == TPC_VIEW_V ? m_clusterToPfoMapV : m_clusterToPfoMapW);
+        std::string clusterListName(hitType == TPC_VIEW_U ? "ClustersU" : hitType == TPC_VIEW_V ? "ClustersV" : "ClustersW");
 
-        if (mcDirection.GetMagnitude() < std::numeric_limits<float>::epsilon())
-            return;
+        const Cluster *pParentCluster(nullptr);
+        const ParticleFlowObject *pParentPfo(nullptr);
 
-        mcDirection = mcDirection * (1.f / mcDirection.GetMagnitude());
-        const CartesianVector mcDirectionU(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_U));
-        const CartesianVector mcDirectionV(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_V));
-        const CartesianVector mcDirectionW(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_W));
-
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertexU, "mcVertexU", BLACK, 1);
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertexV, "mcVertexV", BLACK, 1);
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertexW, "mcVertexW", BLACK, 1);
-
-        const float coneLengthU(this->FindConeLength(pMatchedPfo, mcVertexU, mcDirectionU, TPC_VIEW_U));
-        const float coneLengthV(this->FindConeLength(pMatchedPfo, mcVertexV, mcDirectionV, TPC_VIEW_V));
-        const float coneLengthW(this->FindConeLength(pMatchedPfo, mcVertexW, mcDirectionW, TPC_VIEW_W));
-
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
-
-        for (const CaloHit *const pCaloHit : caloHitList)
+        if (hitToClusterMap.find(pCaloHit) != hitToClusterMap.end())
         {
-            const HitType hitType(pCaloHit->GetHitType());
-            const CartesianVector viewMCVertex(hitType == TPC_VIEW_U ? mcVertexU : hitType == TPC_VIEW_V ? mcVertexV : mcVertexW);
-            const CartesianVector viewMCDirection(hitType == TPC_VIEW_U ? mcDirectionU : hitType == TPC_VIEW_V ? mcDirectionV : mcDirectionW);
-            const float viewConeLength(hitType == TPC_VIEW_U ? coneLengthU : hitType == TPC_VIEW_V ? coneLengthV : coneLengthW);
+            pParentCluster = hitToClusterMap.at(pCaloHit);
 
-            if (!this->DoesPassCut(pCaloHit, viewMCVertex, viewMCDirection, viewConeLength))
-                continue;
+            if (clusterToPfoMap.find(pParentCluster) != clusterToPfoMap.end())
+                pParentPfo = clusterToPfoMap.at(pParentCluster);
+        }
 
-            // Now remove...
-            const HitToClusterMap &hitToClusterMap(hitType == TPC_VIEW_U ? m_hitToClusterMapU : hitType == TPC_VIEW_V ? m_hitToClusterMapV : m_hitToClusterMapW);
-            const ClusterToPfoMap &clusterToPfoMap(hitType == TPC_VIEW_U ? m_clusterToPfoMapU : hitType == TPC_VIEW_V ? m_clusterToPfoMapV : m_clusterToPfoMapW);
-            std::string clusterListName(hitType == TPC_VIEW_U ? "ClustersU" : hitType == TPC_VIEW_V ? "ClustersV" : "ClustersW");
+        if (pParentPfo == pElectronPfo)
+            continue;
 
-            const Cluster *pParentCluster(nullptr);
-            const ParticleFlowObject *pParentPfo(nullptr);
+        //CartesianVector hitPosition(pCaloHit->GetPositionVector());
+        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "hit to add", VIOLET, 2);
 
-            if (hitToClusterMap.find(pCaloHit) != hitToClusterMap.end())
+        if (pParentCluster)
+        {
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
+
+            CaloHitList clusterNormalHitList;
+            pParentCluster->GetOrderedCaloHitList().FillCaloHitList(clusterNormalHitList);
+            const CaloHitList clusterIsolatedHitList(pParentCluster->GetIsolatedCaloHitList());
+            const bool isIsolated(std::find(clusterIsolatedHitList.begin(), clusterIsolatedHitList.end(), pCaloHit) != clusterIsolatedHitList.end());
+
+            if (!isIsolated && (clusterNormalHitList.size() == 1) && !(clusterIsolatedHitList.empty()))
             {
-                pParentCluster = hitToClusterMap.at(pCaloHit);
+                const HitType isolatedHitType(LArClusterHelper::GetClusterHitType(pParentCluster));
+                HitToClusterMap &isolatedHitToClusterMap(isolatedHitType == TPC_VIEW_U ? m_hitToClusterMapU : hitType == TPC_VIEW_V ? m_hitToClusterMapV : m_hitToClusterMapW);
 
-                if (clusterToPfoMap.find(pParentCluster) != clusterToPfoMap.end())
-                    pParentPfo = clusterToPfoMap.at(pParentCluster);
-            }
-
-            if (pParentPfo == pMatchedPfo)
-                continue;
-
-            //CartesianVector hitPosition(pCaloHit->GetPositionVector());
-            //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "hit to add", VIOLET, 2);
-            //std::cout << "AAAAAAA" << std::endl;
-            if (pParentCluster)
-            {
-                //std::cout << "BBBBBBBBBBBBBB" << std::endl;
-                const StatusCode statusCodeCluster(PandoraContentApi::RemoveFromCluster(*this, pParentCluster, pCaloHit));
-
-                if (statusCodeCluster != STATUS_CODE_SUCCESS)
+                for (const CaloHit * const pIsolatedHit : clusterIsolatedHitList)
                 {
-                    //std::cout << "CCCCCCCCCCCC" << std::endl;
-                    if (statusCodeCluster != STATUS_CODE_NOT_ALLOWED)
+                    isolatedHitToClusterMap.erase(pIsolatedHit);
+                    const StatusCode isolatedStatusCode(PandoraContentApi::RemoveIsolatedFromCluster(*this, pParentCluster, pIsolatedHit));
+
+                    if (isolatedStatusCode != STATUS_CODE_SUCCESS)
                     {
-                        std::cout << "jam" << std::endl;
-                        throw StatusCodeException(statusCodeCluster);
+                        std::cout << "ISOBEL CANNOT REMOVE ISOLATED HIT?" << std::endl;
+                        throw;
                     }
-
-                    if (pParentPfo)
-                    {
-                        const StatusCode statusCodePfo(PandoraContentApi::RemoveFromPfo(*this, pParentPfo, pParentCluster));
-
-                        unsigned int nHits(LArPfoHelper::GetNumberOfTwoDHits(pParentPfo));
-
-                        if (nHits == 0)
-                            std::cout << "CheatingCCElectronRefinementAlgorithm: ISOBEL - PFO HAS ZERO HITS" << std::endl;
-
-                        if (statusCodePfo != STATUS_CODE_SUCCESS)
-                        {
-                            std::cout << "pfo jam" << std::endl;
-                            throw;
-                            // work out how many clusters pfo has?? if none...
-                            //{
-                            //PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pParentPfo));
-                            //}
-                        }
-                    }
-
-                    //std::cout << "EEEEEEEEEE" << std::endl;
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
-                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pParentCluster));
                 }
             }
 
-            if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
-                std::cout << "CALO HIT IS NOT AVAILABLE!!" << std::endl;
+            const StatusCode statusCodeCluster(isIsolated ? PandoraContentApi::RemoveIsolatedFromCluster(*this, pParentCluster, pCaloHit) : 
+                PandoraContentApi::RemoveFromCluster(*this, pParentCluster, pCaloHit));
 
-            ClusterList matchedPfoCluster;
-            LArPfoHelper::GetClusters(pMatchedPfo, hitType, matchedPfoCluster);
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, matchedPfoCluster.front(), pCaloHit));
+            if (statusCodeCluster != STATUS_CODE_SUCCESS)
+            {
+                if (statusCodeCluster != STATUS_CODE_NOT_ALLOWED)
+                {
+                    std::cout << "CheatingCCElectronRefinementAlgorithm: cluster jam" << std::endl;
+                    throw StatusCodeException(statusCodeCluster);
+                }
+
+                if (pParentPfo)
+                {
+                    const StatusCode statusCodePfo(PandoraContentApi::RemoveFromPfo(*this, pParentPfo, pParentCluster));
+                    const unsigned int nHits(LArPfoHelper::GetNumberOfTwoDHits(pParentPfo));
+
+                    if (nHits == 0)
+                        std::cout << "CheatingCCElectronRefinementAlgorithm: ISOBEL - PFO HAS ZERO HITS" << std::endl;
+
+                    if (statusCodePfo != STATUS_CODE_SUCCESS)
+                    {
+                        std::cout << "CheatingCCElectronRefinementAlgorithm: pfo jam" << std::endl;
+                        throw;
+                    }
+                }
+
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pParentCluster));
+            }
         }
 
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
+        {
+            std::cout << "CALO HIT IS NOT AVAILABLE!!" << std::endl;
+            throw;
+        }
+
+        ClusterList electronClusters;
+        LArPfoHelper::GetClusters(pElectronPfo, hitType, electronClusters);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, electronClusters.front(), pCaloHit));
     }
+
+    //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------  
@@ -520,76 +497,27 @@ bool CheatingCCElectronRefinementAlgorithm::DoesPassCut(const CaloHit *const pCa
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode CheatingCCElectronRefinementAlgorithm::FillLists(const MCParticleList *&pMCParticleList, const PfoList *&pShowerPfoList, PfoList &allPfoList, 
-    const CaloHitList *&pCaloHitList, ClusterList &clusterList) const
-{
-    // Get MC Particles
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_mcParticleListName, pMCParticleList));
-
-    if (!pMCParticleList || pMCParticleList->empty())
-    {
-        std::cout << "CheatingCCElectronRefinementAlgorithm: No MC particle list found, returning..." << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
-    // Get all Pfos
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_showerPfoListName, pShowerPfoList));
-
-    if (!pShowerPfoList || pShowerPfoList->empty())
-    {
-        std::cout << "CheatingCCElectronRefinementAlgorithm: No shower pfo list found, returning..." << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
-    const PfoList *pTrackPfoList(nullptr);
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "TrackParticles3D", pTrackPfoList));
-
-    PfoList combinedPfoList(*pShowerPfoList);
-    if (!(!pTrackPfoList || pTrackPfoList->empty()))
-    {
-        combinedPfoList.insert(combinedPfoList.end(), pTrackPfoList->begin(), pTrackPfoList->end());
-    }
-
-    LArPfoHelper::GetAllConnectedPfos(combinedPfoList, allPfoList);
-
-    // Get CaloHits
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_caloHitListName, pCaloHitList));
-
-    if (!pCaloHitList || pCaloHitList->empty())
-    {
-        std::cout << "CheatingCCElectronRefinementAlgorithm: No calo hit list found, returning..." << std::endl;
-        return STATUS_CODE_FAILURE;
-    }
-
-    for (const std::string &clusterListName : m_clusterListNames)
-    {
-        const ClusterList *pClusterList(nullptr);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, clusterListName, pClusterList));
-
-        if (!pClusterList || pClusterList->empty())
-        {
-            std::cout << "CheatingCCElectronRefinementAlgorithm: No cluster list found, returning..." << std::endl;
-            return STATUS_CODE_FAILURE;
-        }
-
-        clusterList.insert(clusterList.end(), pClusterList->begin(), pClusterList->end());
-    }
-
-    return STATUS_CODE_SUCCESS;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
 StatusCode CheatingCCElectronRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MCParticleListName", m_mcParticleListName));
 
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PfoListName", m_showerPfoListName));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ShowerPfoListName", m_showerPfoListName));
+
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "TrackPfoListName", m_trackPfoListName));
 
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "CaloHitListName", m_caloHitListName));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadVectorOfValues(xmlHandle, "ClusterListNames", m_clusterListNames));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "CompletenessMode", m_completenessMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ThresholdCompleteness", m_thresholdCompleteness));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ThresholdPurity", m_thresholdPurity));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
         XmlHelper::ReadValue(xmlHandle, "MaxOpeningAngle", m_maxOpeningAngle));

@@ -17,7 +17,8 @@ using namespace pandora;
 namespace lar_content
 {
 
-CheatingCCLeptonClusterCreationAlgorithm::CheatingCCLeptonClusterCreationAlgorithm() : m_collapseToPrimaryMCParticles(false), m_collectAllElectronHits(false)
+CheatingCCLeptonClusterCreationAlgorithm::CheatingCCLeptonClusterCreationAlgorithm() : 
+    m_collapseToPrimaryMCParticles(false), m_collectAllElectronHits(false), m_impactMode(false), m_maxOpeningAngle(90.f)
 {
 }
 
@@ -105,8 +106,31 @@ void CheatingCCLeptonClusterCreationAlgorithm::ClusterLeadingElectrons(const MCP
     for (auto &entry : mcParticleToHitListMap)
         hitsToCluster.insert(hitsToCluster.begin(), entry.second.begin(), entry.second.end());
 
+    const CartesianVector mcVertexPosition(pMCLeadingElectron->GetVertex());
+    const CartesianVector mcVertexPositionU(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertexPosition, TPC_VIEW_U));
+    const CartesianVector mcVertexPositionV(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertexPosition, TPC_VIEW_V));
+    const CartesianVector mcVertexPositionW(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertexPosition, TPC_VIEW_W));
+
+    CartesianVector mcDirection(pMCLeadingElectron->GetMomentum());
+
+    if (mcDirection.GetMagnitude() < std::numeric_limits<float>::epsilon())
+        return;
+
+    mcDirection = mcDirection * (1.f / mcDirection.GetMagnitude());
+    const CartesianVector mcDirectionU(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_U));
+    const CartesianVector mcDirectionV(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_V));
+    const CartesianVector mcDirectionW(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcDirection, TPC_VIEW_W));
+
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
+        const HitType hitType(pCaloHit->GetHitType());
+        const CartesianVector &projectedMCParticleDirection(hitType == TPC_VIEW_U ? mcDirectionU : hitType == TPC_VIEW_V ? mcDirectionV : mcDirectionW);
+        const CartesianVector &projectedMCParticleVertexPosition(hitType == TPC_VIEW_U ? mcVertexPositionU : hitType == TPC_VIEW_V ? mcVertexPositionV : mcVertexPositionW);
+        const float openingAngle(projectedMCParticleDirection.GetOpeningAngle(pCaloHit->GetPositionVector() - projectedMCParticleVertexPosition) * 180.f / 3.14);
+
+        if (openingAngle > m_maxOpeningAngle)
+            continue;
+
         if (std::find(hitsToCluster.begin(), hitsToCluster.end(), pCaloHit) != hitsToCluster.end())
             continue;
 
@@ -132,13 +156,9 @@ void CheatingCCLeptonClusterCreationAlgorithm::ClusterLeadingElectrons(const MCP
     if (mcParticleToHitListMap.find(pMCLeadingElectron) == mcParticleToHitListMap.end())
         return;
 
-    const CartesianVector mcVertexPosition(pMCLeadingElectron->GetVertex());
-    const CartesianVector mcVertexPositionU(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertexPosition, TPC_VIEW_U));
-    const CartesianVector mcVertexPositionV(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertexPosition, TPC_VIEW_V));
-    const CartesianVector mcVertexPositionW(LArGeometryHelper::ProjectPosition(this->GetPandora(), mcVertexPosition, TPC_VIEW_W));
-
     CartesianVector closestPositionU(0.f, 0.f, 0.f), closestPositionV(0.f, 0.f, 0.f), closestPositionW(0.f, 0.f, 0.f);
     float closestDistanceU(std::numeric_limits<float>::max()), closestDistanceV(std::numeric_limits<float>::max()), closestDistanceW(std::numeric_limits<float>::max());
+    float closestImpactLU(std::numeric_limits<float>::max()), closestImpactLV(std::numeric_limits<float>::max()), closestImpactLW(std::numeric_limits<float>::max());
     bool foundU(false), foundV(false), foundW(false);
 
     const CaloHitList leadingElectronHits(mcParticleToHitListMap.at(pMCLeadingElectron));
@@ -146,26 +166,51 @@ void CheatingCCLeptonClusterCreationAlgorithm::ClusterLeadingElectrons(const MCP
     for (const CaloHit *const pCaloHit : leadingElectronHits)
     {
         const HitType hitType(pCaloHit->GetHitType());
-        const CartesianVector projectedMCParticleVertexPosition(hitType == TPC_VIEW_U ? mcVertexPositionU : hitType == TPC_VIEW_V ? mcVertexPositionV : mcVertexPositionW);
-        float &closestDistance(hitType == TPC_VIEW_U ? closestDistanceU : hitType == TPC_VIEW_V ? closestDistanceV : closestDistanceW);
+        const CartesianVector &projectedMCParticleVertexPosition(hitType == TPC_VIEW_U ? mcVertexPositionU : hitType == TPC_VIEW_V ? mcVertexPositionV : mcVertexPositionW);
+        const CartesianVector &projectedMCParticleDirection(hitType == TPC_VIEW_U ? mcDirectionU : hitType == TPC_VIEW_V ? mcDirectionV : mcDirectionW);
 
-        const float separation((pCaloHit->GetPositionVector() - projectedMCParticleVertexPosition).GetMagnitudeSquared());
+        const CartesianVector &position(pCaloHit->GetPositionVector());
+        CartesianVector &closestPosition(hitType == TPC_VIEW_U ? closestPositionU : hitType == TPC_VIEW_V ? closestPositionV : closestPositionW);
+        bool &found(hitType == TPC_VIEW_U ? foundU : hitType == TPC_VIEW_V ? foundV : foundW);
 
-        if (separation < closestDistance)
+        if (m_impactMode)
         {
-            closestDistance = separation;
+            const CartesianVector displacement(position - projectedMCParticleVertexPosition);
+            const float impactL(projectedMCParticleDirection.GetDotProduct(displacement));
+            float &closestImpactL(hitType == TPC_VIEW_U ? closestImpactLU : hitType == TPC_VIEW_V ? closestImpactLV : closestImpactLW);
 
-            CartesianVector &closestPosition(hitType == TPC_VIEW_U ? closestPositionU : hitType == TPC_VIEW_V ? closestPositionV : closestPositionW);
-            closestPosition = pCaloHit->GetPositionVector();
+            if (impactL < closestImpactL)
+            {
+                closestImpactL = impactL;
+                closestPosition = pCaloHit->GetPositionVector();
+                found = true;
+            }
+        }
+        else
+        {
+            float &closestDistance(hitType == TPC_VIEW_U ? closestDistanceU : hitType == TPC_VIEW_V ? closestDistanceV : closestDistanceW);
+            const float separation((position - projectedMCParticleVertexPosition).GetMagnitudeSquared());
 
-            bool &found(hitType == TPC_VIEW_U ? foundU : hitType == TPC_VIEW_V ? foundV : foundW);
-            found = true;
+            if (separation < closestDistance)
+            {
+                closestDistance = separation;
+                closestPosition = position;
+                found = true;
+            }
         }
     }
 
     for (const CaloHit *const pCaloHit : *pCaloHitList)
     {
         if (std::find(hitsToCluster.begin(), hitsToCluster.end(), pCaloHit) != hitsToCluster.end())
+            continue;
+
+        const HitType hitType(pCaloHit->GetHitType());
+        const CartesianVector &projectedMCParticleDirection(hitType == TPC_VIEW_U ? mcDirectionU : hitType == TPC_VIEW_V ? mcDirectionV : mcDirectionW);
+        const CartesianVector &projectedMCParticleVertexPosition(hitType == TPC_VIEW_U ? mcVertexPositionU : hitType == TPC_VIEW_V ? mcVertexPositionV : mcVertexPositionW);
+        const float openingAngle(projectedMCParticleDirection.GetOpeningAngle(pCaloHit->GetPositionVector() - projectedMCParticleVertexPosition) * 180.f / 3.14);
+
+        if (openingAngle > m_maxOpeningAngle)
             continue;
 
         MCParticleVector contributingMCParticleVector;
@@ -186,17 +231,31 @@ void CheatingCCLeptonClusterCreationAlgorithm::ClusterLeadingElectrons(const MCP
                 if (!found)
                     break;
 
-                const CartesianVector projectedMCParticleVertexPosition(hitType == TPC_VIEW_U ? mcVertexPositionU : hitType == TPC_VIEW_V ? mcVertexPositionV : mcVertexPositionW);
-                const CartesianVector closestPosition(hitType == TPC_VIEW_U ? closestPositionU : hitType == TPC_VIEW_V ? closestPositionV : closestPositionW);
+                const CartesianVector &position(pCaloHit->GetPositionVector());
+                //const CartesianVector &projectedMCParticleVertexPosition(hitType == TPC_VIEW_U ? mcVertexPositionU : hitType == TPC_VIEW_V ? mcVertexPositionV : mcVertexPositionW);
+                //const CartesianVector &projectedMCParticleDirection(hitType == TPC_VIEW_U ? mcDirectionU : hitType == TPC_VIEW_V ? mcDirectionV : mcDirectionW);
 
-                const float minZ(std::min(projectedMCParticleVertexPosition.GetZ(), closestPosition.GetZ()));
-                const float maxZ(std::max(projectedMCParticleVertexPosition.GetZ(), closestPosition.GetZ()));
+                if (m_impactMode)
+                {
+                    const CartesianVector displacement(position - projectedMCParticleVertexPosition);
+                    const float impactL(projectedMCParticleDirection.GetDotProduct(displacement));
+                    const float closestImpactL(hitType == TPC_VIEW_U ? closestImpactLU : hitType == TPC_VIEW_V ? closestImpactLV : closestImpactLW);
 
-                if (pCaloHit->GetPositionVector().GetZ() < minZ)
-                    break;
+                    if ((impactL < 0.f) || (impactL > closestImpactL))
+                        break;
+                }
+                else
+                {
+                    const CartesianVector closestPosition(hitType == TPC_VIEW_U ? closestPositionU : hitType == TPC_VIEW_V ? closestPositionV : closestPositionW);
+                    const float minZ(std::min(projectedMCParticleVertexPosition.GetZ(), closestPosition.GetZ()));
+                    const float maxZ(std::max(projectedMCParticleVertexPosition.GetZ(), closestPosition.GetZ()));
 
-                if (pCaloHit->GetPositionVector().GetZ() > maxZ)
-                    break;
+                    if (position.GetZ() < minZ)
+                        break;
+
+                    if (position.GetZ() > maxZ)
+                        break;
+                }
 
                 //CartesianVector hitPosition(pCaloHit->GetPositionVector());
                 //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "ADDED", GREEN, 2);
@@ -239,6 +298,11 @@ void CheatingCCLeptonClusterCreationAlgorithm::SimpleMCParticleCollection(const 
     */
 
     const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+
+    const bool isLeadingElectron((std::abs(pMCParticle->GetParticleId()) == 11) && (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle));
+
+    if (isLeadingElectron)
+        return;
 
     if (!this->SelectMCParticlesForClustering(pMCParticle, isNueCC, isNumuCC))
         return;
@@ -334,6 +398,12 @@ StatusCode CheatingCCLeptonClusterCreationAlgorithm::ReadSettings(const TiXmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "CollectAllElectronHits", m_collectAllElectronHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ImpactMode", m_impactMode));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MaxOpeningAngle", m_maxOpeningAngle));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle, "ParticleIdList", m_particleIdList));
