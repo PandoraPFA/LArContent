@@ -18,6 +18,9 @@ namespace lar_content
  */
 class ShowerCharacterisationAlgorithm : public pandora::Algorithm
 {
+public:
+    ShowerCharacterisationAlgorithm();
+
 private:
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);

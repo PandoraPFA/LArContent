@@ -76,9 +76,10 @@
 
 #include "larpandoracontent/LArPlugins/LArParticleIdPlugins.h"
 
-#include "larpandoracontent/LArShowerRefinement/ElectronStartRefinementAlgorithm.h"
-#include "larpandoracontent/LArShowerRefinement/GammaStartRefinementAlgorithm.h"
+#include "larpandoracontent/LArShowerRefinement/ElectronStartRefinementTool.h"
+#include "larpandoracontent/LArShowerRefinement/GammaStartRefinementTool.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerCharacterisationAlgorithm.h"
+#include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
 
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/AmbiguousDeltaRayTool.h"
 #include "larpandoracontent/LArThreeDReco/LArCosmicRay/CosmicRayRemovalTool.h"
@@ -263,6 +264,7 @@
     d("LArPostProcessing",                      PostProcessingAlgorithm)                                                        \
     d("LArPreProcessing",                       PreProcessingAlgorithm)                                                         \
     d("LArShowerCharacterisation",              ShowerCharacterisationAlgorithm)                                                \
+    d("LArShowerStartRefinement",               ShowerStartRefinementAlgorithm)                                                 \
     d("LArSlicing",                             SlicingAlgorithm)                                                               \
     d("LArStreaming",                           StreamingAlgorithm)                                                             \
     d("LArTrackParticleBuilding",               TrackParticleBuildingAlgorithm)                                                 \
@@ -345,6 +347,8 @@
     d("LArVertexRefinement",                    VertexRefinementAlgorithm)
 
 #define LAR_ALGORITHM_TOOL_LIST(d)                                                                                              \
+    d("LArElectronStartRefinement",             ElectronStartRefinementTool)                                                    \
+    d("LArGammaStartRefinement",                GammaStartRefinementTool)                                                       \
     d("LArBdtBeamParticleId",                   BdtBeamParticleIdTool)                                                          \
     d("LArBeamParticleId",                      BeamParticleIdTool)                                                             \
     d("LArCosmicRayTagging",                    CosmicRayTaggingTool)                                                           \
