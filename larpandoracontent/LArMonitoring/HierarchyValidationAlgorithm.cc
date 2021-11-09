@@ -284,11 +284,16 @@ void HierarchyValidationAlgorithm::FillMatched(const LArHierarchyHelper::MCMatch
             goodMatchesInEvent.emplace_back(goodMatches.GetMC());
     }
 
-    FloatVector expectedChildrenVector;
-    IntVector goodRecoChildrenVector;
+    IntVector expectedChildrenVector, goodRecoChildrenVector;
+    FloatVector expectedAdcWeightVector;
     for (const LArHierarchyHelper::MCHierarchy::Node *pChildNode : pMCNode->GetChildren())
     {
         expectedChildrenVector.emplace_back(pChildNode->GetId());
+        float adcSum{0.f};
+        for (const CaloHit *pCaloHit : pChildNode->GetCaloHits())
+            adcSum += pCaloHit->GetInputEnergy();
+        expectedAdcWeightVector.emplace_back(adcSum);
+
         if (std::find(goodMatchesInEvent.begin(), goodMatchesInEvent.end(), pChildNode) != goodMatchesInEvent.end())
             goodRecoChildrenVector.emplace_back(1);
         else
@@ -371,6 +376,7 @@ void HierarchyValidationAlgorithm::FillMatched(const LArHierarchyHelper::MCMatch
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorV", &completenessAdcVectorV));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorW", &completenessAdcVectorW));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "expectedChildrenVector", &expectedChildrenVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "expectedAdcWeightVector", &expectedAdcWeightVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "goodRecoChildrenVector", &goodRecoChildrenVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
@@ -404,11 +410,16 @@ void HierarchyValidationAlgorithm::FillUnmatchedMC(const LArHierarchyHelper::MCH
             goodMatchesInEvent.emplace_back(goodMatches.GetMC());
     }
 
-    FloatVector expectedChildrenVector;
-    IntVector goodRecoChildrenVector;
+    IntVector expectedChildrenVector, goodRecoChildrenVector;
+    FloatVector expectedAdcWeightVector;
     for (const LArHierarchyHelper::MCHierarchy::Node *pChildNode : pNode->GetChildren())
     {
         expectedChildrenVector.emplace_back(pChildNode->GetId());
+        float adcSum{0.f};
+        for (const CaloHit *pCaloHit : pChildNode->GetCaloHits())
+            adcSum += pCaloHit->GetInputEnergy();
+        expectedAdcWeightVector.emplace_back(adcSum);
+
         if (std::find(goodMatchesInEvent.begin(), goodMatchesInEvent.end(), pChildNode) != goodMatchesInEvent.end())
             goodRecoChildrenVector.emplace_back(1);
         else
@@ -455,6 +466,7 @@ void HierarchyValidationAlgorithm::FillUnmatchedMC(const LArHierarchyHelper::MCH
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorV", &completenessVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorW", &completenessVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "expectedChildrenVector", &expectedChildrenVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "expectedAdcWeightVector", &expectedAdcWeightVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "goodRecoChildrenVector", &goodRecoChildrenVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
@@ -476,8 +488,8 @@ void HierarchyValidationAlgorithm::FillUnmatchedReco(const LArHierarchyHelper::R
     const int mcHits{0};
     const int isLeadingLepton{0};
     const int isMichel{0};
-    FloatVector expectedChildrenVector;
-    IntVector goodRecoChildrenVector;
+    IntVector expectedChildrenVector, goodRecoChildrenVector;
+    FloatVector expectedAdcWeightVector;
 
     const int nMatches{0};
     const int isGoodMatch{0};
@@ -519,6 +531,7 @@ void HierarchyValidationAlgorithm::FillUnmatchedReco(const LArHierarchyHelper::R
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorV", &completenessVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "completenessAdcVectorW", &completenessVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "expectedChildrenVector", &expectedChildrenVector));
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "expectedAdcWeightVector", &expectedAdcWeightVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "goodRecoChildrenVector", &goodRecoChildrenVector));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDx", vtxDx));
     PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_treename.c_str(), "vtxDy", vtxDy));
