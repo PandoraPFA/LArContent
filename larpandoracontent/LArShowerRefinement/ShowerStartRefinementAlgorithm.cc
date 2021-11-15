@@ -18,9 +18,13 @@ using namespace pandora;
 namespace lar_content
 {
 
-ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm()
+ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() : m_binSize(0.005)
 {
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -72,6 +76,7 @@ std::cout << "pfoVector.size(): " << pfoVector.size() << std::endl;
         }
     }
 
+
     return STATUS_CODE_SUCCESS;
 }
 
@@ -96,6 +101,8 @@ StatusCode ShowerStartRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
         m_algorithmToolVector.push_back(pShowerStartRefinementTool);
     }
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BinSize", m_binSize));
 
     return STATUS_CODE_SUCCESS;
 }

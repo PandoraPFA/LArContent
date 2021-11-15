@@ -24,6 +24,7 @@ class GammaStartRefinementTool : public ShowerStartRefinementBaseTool
 {
 public:
     GammaStartRefinementTool();
+    ~GammaStartRefinementTool();
 
     bool Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertexPosition);
 
@@ -31,6 +32,8 @@ private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     void RemoveConnectionPathway(const ProtoShower &protoShower);
+
+    int m_counter;
 };
 
 } // namespace lar_content

@@ -20,6 +20,14 @@ class ShowerStartRefinementAlgorithm : public pandora::Algorithm
 {
 public:
     ShowerStartRefinementAlgorithm();
+    //~ShowerStartRefinementAlgorithm();
+
+
+    typedef std::map<int, pandora::CaloHitList> DeviationAngleMap;
+    DeviationAngleMap m_theta0XZMap;
+    DeviationAngleMap m_theta0YZMap;
+
+    float m_binSize;
 
 private:
     pandora::StatusCode Run();
@@ -31,6 +39,8 @@ private:
     typedef std::vector<ShowerStartRefinementBaseTool *> ShowerStartRefinementToolVector;
     ShowerStartRefinementToolVector m_algorithmToolVector;
     //private:
+
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
