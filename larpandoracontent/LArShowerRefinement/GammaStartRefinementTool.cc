@@ -9,6 +9,8 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "PandoraMonitoringApi.h"
+
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -23,7 +25,7 @@ using namespace pandora;
 namespace lar_content
 {
 
-GammaStartRefinementTool::GammaStartRefinementTool() : m_counter(0)
+GammaStartRefinementTool::GammaStartRefinementTool() : m_counter(0), m_showerCounter(0)
 {
 }
 
@@ -31,9 +33,7 @@ GammaStartRefinementTool::~GammaStartRefinementTool()
 {
     try
     {
-        std::cout << "11111111111" << std::endl;
         PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ShowerDistribution", "ShowerDistribution.root", "UPDATE"));
-        std::cout << "2222222" << std::endl;
     }
     catch (const StatusCodeException &)
     {
@@ -45,10 +45,11 @@ GammaStartRefinementTool::~GammaStartRefinementTool()
 
 bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertexPosition)
 {
-    std::cout << "AAAAAAAAA" << std::endl;
-
     // only apply gamma refinement algorithm to showers
     if (!LArPfoHelper::IsShower(pShowerPfo))
+        return false;
+
+    if (!this->HasPathToNuVertex(pShowerPfo, nuVertexPosition))
         return false;
 
     ////////////////////////////////
@@ -56,349 +57,116 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
     CaloHitList caloHits3D;
     LArPfoHelper::GetCaloHits(pShowerPfo, TPC_3D, caloHits3D);
 
-    ClusterList clusters3D;
-    LArPfoHelper::GetClusters(pShowerPfo, TPC_3D, clusters3D);
-
     if (caloHits3D.size() < 100)
         return false;
     ////////////////////////////////
 
-    ++m_counter;
-    float deviationAngleX = -999;
-    float deviationAngleY = -999;
-    float deviationAngle1 = -999; // transverse
-    float deviationAngle2 = -999; // transverse
-    float deviationAngle3 = -999; // main shower direction
+    //this->FillTree(pAlgorithm, pShowerPfo, nuVertexPosition);
 
-    float xCoordinate = -999;
-    float yCoordinate = -999;
-    float zCoordinate = -999;
-    float lCoordinate1 = -999;
-    float tCoordinate1 = -999;
-    float lCoordinate2 = -999;
-    float tCoordinate2 = -999;
-    float hitEnergy = -999;
+    DeviationAngleMap deviationAngleMapU;
+    this->FillAngularDecompositionMap(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_U, deviationAngleMapU);
 
-    float lNu1 = -999;
-    float tNu1 = -999;
-    float lNu2 = -999;
-    float tNu2 = -999;
+    IntVector angularPeakVectorU;
+    this->ObtainViewPeakVector(deviationAngleMapU, angularPeakVectorU);
 
-    CartesianPointVector initialHitPositions3D;
+    bool changes(true);
 
-    for (const CaloHit *const pCaloHit : caloHits3D)
+    IntVector investigatedPeaks;
+
+    while(changes)
     {
-        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+        changes = false;
 
-        if ((hitPosition - nuVertexPosition).GetMagnitude() > 14.f)
-            continue;
+        const int bestAngularPeak(this->FindBestAngularPeak(deviationAngleMapU, angularPeakVectorU));
 
-        initialHitPositions3D.push_back(pCaloHit->GetPositionVector());
-    }
+        const CartesianVector peakDirection(std::cos(bestAngularPeak * pAlgorithm->m_binSize), 0.f, std::sin(bestAngularPeak * pAlgorithm->m_binSize));
 
-    const ThreeDSlidingFitResult threeDSlidingFit(&initialHitPositions3D, 10000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    //const CartesianVector &axisIntercept(threeDSlidingFit.GetAxisIntercept());
-    const CartesianVector &axis3(threeDSlidingFit.GetAxisDirection());
+        std::cout << "peakDirection: " << peakDirection << std::endl;
 
-    const TwoDSlidingFitResult plane1(threeDSlidingFit.GetFirstFitResult());
-    //const CartesianVector &axisIntercept1(plane1.GetAxisIntercept());
-    const CartesianVector &axis1(plane1.GetAxisDirection());
+        const CartesianVector nuVertexPositionU(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertexPosition, TPC_VIEW_U));
 
-    const TwoDSlidingFitResult plane2(threeDSlidingFit.GetSecondFitResult());
-    //const CartesianVector &axisIntercept2(plane2.GetAxisIntercept());
-    const CartesianVector &axis2(plane2.GetAxisDirection());
+        CaloHitList showerSpineHitList;
+        LongitudinalPositionMap longitudinalPositionMap;
+        this->FindShowerSpine(pAlgorithm, pShowerPfo, nuVertexPositionU, peakDirection, TPC_VIEW_U, showerSpineHitList, longitudinalPositionMap);
 
-    const CartesianVector xAxis(1.f, 0.f, 0.f);
-    const CartesianVector yAxis(0.f, 1.f, 0.f);
+        CartesianVector projection(nuVertexPositionU + (peakDirection * 14.f));
 
-    std::cout << "axis1: " << axis1 << std::endl;
-    std::cout << "axis2: " << axis2 << std::endl;
-    std::cout << "axis3: " << axis3 << std::endl;
+        PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexPositionU, &projection, "direction", BLACK, 2, 1);
+        PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &showerSpineHitList, "SPINE", BLACK);
+        PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 
-    std::cout << "min layer direction1: " << plane1.GetGlobalMinLayerDirection() << std::endl;
-    std::cout << "min layer direction2: " << plane2.GetGlobalMinLayerDirection() << std::endl;
-    std::cout << "min layer direction3: " << threeDSlidingFit.GetGlobalMinLayerDirection() << std::endl;
-
-    std::cout << "axis3 dot axis2: " << axis3.GetDotProduct(axis2) << std::endl;
-    std::cout << "axis3 dot axis1: " << axis3.GetDotProduct(axis1) << std::endl;
-
-    int highestTheta0XZ = 0, highestTheta0YZ = 0;
-
-    for (const CaloHit *const pCaloHit : caloHits3D)
-    {
-        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-
-        if ((hitPosition - nuVertexPosition).GetMagnitude() > 14.f)
-            continue;
-
-        hitEnergy = pCaloHit->GetElectromagneticEnergy();
-
-        xCoordinate = hitPosition.GetX();
-        yCoordinate = hitPosition.GetY();
-        zCoordinate = hitPosition.GetZ();
-
-        plane1.GetLocalPosition(hitPosition, lCoordinate1, tCoordinate1);
-        plane1.GetLocalPosition(nuVertexPosition, lNu1, tNu1);
-        plane2.GetLocalPosition(hitPosition, lCoordinate2, tCoordinate2);
-        plane2.GetLocalPosition(nuVertexPosition, lNu2, tNu2);
-
-        std::cout << "lNu1: " << lNu1 << std::endl;
-        std::cout << "tNu1: " << tNu1 << std::endl;
-        std::cout << "lNu2: " << lNu2 << std::endl;
-        std::cout << "tNu2: " << tNu2 << std::endl;
-
-        deviationAngleX = hitPosition.GetOpeningAngle(xAxis); 
-        deviationAngleY = hitPosition.GetOpeningAngle(yAxis); 
-        //deviationAngle1 = (hitPosition - nuVertexPosition).GetOpeningAngle(axis1);
-        //deviationAngle2 = (hitPosition - nuVertexPosition).GetOpeningAngle(axis2);
-
-        deviationAngle1 = std::atan((tCoordinate1 - tNu1) / (lCoordinate1 - lNu1));
-        deviationAngle2 = std::atan((tCoordinate2 - tNu2) / (lCoordinate2 - lNu2));
-        deviationAngle3 = (hitPosition - nuVertexPosition).GetOpeningAngle(axis3);
+        //look at energy distribution
+        this->GetEnergyDistribution(pAlgorithm, showerSpineHitList, longitudinalPositionMap);
 
         /*
-        if (tCoordinate1 < 0.f)
-            deviationAngle1 *= -1.f;
-        */
+    ProtoShowerVector protoShowerVector;
+    this->BuildProtoShowers(pShowerPfo, protoShowerVector);
 
-        const int theta0XZFactor(std::floor(deviationAngleX / pAlgorithm->m_binSize));
-        const int theta0YZFactor(std::floor(deviationAngleY / pAlgorithm->m_binSize));
+    std::cout << "DDDDDDDDDDD" << std::endl;
 
-        if (theta0XZFactor > highestTheta0XZ)
-            highestTheta0XZ = theta0XZFactor;
-
-        if (theta0YZFactor > highestTheta0YZ)
-            highestTheta0YZ = theta0YZFactor;
-
-        pAlgorithm->m_theta0XZMap[theta0XZFactor].push_back(pCaloHit);
-        pAlgorithm->m_theta0YZMap[theta0YZFactor].push_back(pCaloHit);
-
-        if (zCoordinate < 0.f)
-            deviationAngleX = (3.14 - deviationAngleX);
-
-        if (xCoordinate < 0.f)
-            deviationAngleY = (3.14 - deviationAngleY);
-
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "ShowerCounter", m_counter));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "DeviationAngleX", deviationAngleX));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "DeviationAngleY", deviationAngleY));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "DeviationAngle1", deviationAngle1));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "DeviationAngle2", deviationAngle2));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "DeviationAngle3", deviationAngle3));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "XCoordinate", xCoordinate));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "YCoordinate", yCoordinate));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "ZCoordinate", zCoordinate));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "LCoordinate1", lCoordinate1));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "TCoordinate1", tCoordinate1));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "LCoordinate2", lCoordinate2));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "TCoordinate2", tCoordinate2));
-        PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "HitEnergy", hitEnergy));
-        PANDORA_MONITORING_API(FillTree(pAlgorithm->GetPandora(), "ShowerDistribution"));
-    }
-
-
-    // Get total shower charge
-    float total = 0;
-    for (const auto &entry : pAlgorithm->m_theta0XZMap)
-    {
-        for (const CaloHit *const pCaloHit : entry.second)
-            total += pCaloHit->GetElectromagneticEnergy();
-    }
-
-    if (total == 0)
+    if (protoShowerVector.empty())
         return false;
 
-    // Get number of significant bins
-    int nSigBins0XZ(0), nSigBins0YZ(0);
+    std::cout << "EEEEEEEEEEEE" << std::endl;
 
-    for (const auto &entry : pAlgorithm->m_theta0XZMap)
+    // pfo splitting alg? (can be quite simple if we are able to build the protoShowers sufficiently...)
+    // set ProtoShower parent pfo address to match!
+    if (protoShowerVector.size() != 1)
+        return false;
+
+    for (const ProtoShower &protoShower : protoShowerVector)
     {
-        float weight = 0;
+        if (this->IsElectronPathway(protoShower))
+            continue;
 
-        for (const CaloHit *const pCaloHit : entry.second)
-            weight += pCaloHit->GetElectromagneticEnergy();
+        this->RemoveConnectionPathway(protoShower);
 
-        if ((weight / total) > 0.01)
-            ++nSigBins0XZ;
-
-        std::cout << entry.first * pAlgorithm->m_binSize << ": " << weight / total << std::endl;
+        // change metadata to say that we think that this gamma is a gamma (so that we don't extend it in the future tool)
     }
-
-    std::cout << "nSigBins0XZ: " << nSigBins0XZ << std::endl;
-
-    for (const auto &entry : pAlgorithm->m_theta0YZMap)
-    {
-        float weight = 0;
-
-        for (const CaloHit *const pCaloHit : entry.second)
-            weight += pCaloHit->GetElectromagneticEnergy();
-
-        if ((weight / total) > 0.01)
-            ++nSigBins0YZ;
-    }
-
-    std::cout << "nSigBins0YZ: " << nSigBins0YZ << std::endl;
-
-    // merge significant bins
-    /*
-    bool previous(false);
-    std::vector<CaloHitList> jam;
-
-    for (int i = 0; i <= highestTheta0XZ; ++i)
-    {
-        if (pAlgorithm->m_theta0XZMap.find(i) == pAlgorithm->m_theta0XZMap.end())
-        {
-            previous = false;
-            continue;
-        }
-
-        float weight = 0;
-
-        for (const CaloHit *const pCaloHit : pAlgorithm->m_theta0XZMap.at(i))
-            weight += pCaloHit->GetElectromagneticEnergy();
-
-        if ((weight / total) < (1.f / static_cast<float>(nSigBins0XZ)))
-        {
-            previous = false;
-            continue;
-        }
-
-        std::cout << "i: " << i << std::endl;
-        std::cout << "weight: " << weight << std::endl;
-
-        if (previous)
-        {
-            std::cout << "previous = true" << std::endl; 
-            jam.back().insert(jam.back().begin(), pAlgorithm->m_theta0XZMap.at(i).begin(), pAlgorithm->m_theta0XZMap.at(i).end());
-        }
-        else
-        {
-            std::cout << "previous = false" << std::endl;
-            jam.push_back(pAlgorithm->m_theta0XZMap.at(i));
-        }
-
-        previous = true;
-    }
-    */
-
-    bool previous(false);
-    std::vector<CaloHitList> jam;
-
-    for (int i = 0; i <= highestTheta0YZ; ++i)
-    {
-        if (pAlgorithm->m_theta0YZMap.find(i) == pAlgorithm->m_theta0YZMap.end())
-        {
-            previous = false;
-            continue;
-        }
-
-        float weight = 0;
-
-        for (const CaloHit *const pCaloHit : pAlgorithm->m_theta0YZMap.at(i))
-            weight += pCaloHit->GetElectromagneticEnergy();
-
-        if ((weight / total) < (1.f / static_cast<float>(nSigBins0XZ)))
-        {
-            previous = false;
-            continue;
-        }
-
-        std::cout << "i: " << i << std::endl;
-        std::cout << "weight: " << weight << std::endl;
-
-        if (previous)
-        {
-            std::cout << "previous = true" << std::endl; 
-            jam.back().insert(jam.back().begin(), pAlgorithm->m_theta0YZMap.at(i).begin(), pAlgorithm->m_theta0YZMap.at(i).end());
-        }
-        else
-        {
-            std::cout << "previous = false" << std::endl;
-            jam.push_back(pAlgorithm->m_theta0YZMap.at(i));
-        }
-
-        previous = true;
+        */
     }
 
 
 
-    std::cout << "number of subsections: " << jam.size() << std::endl;
 
     /*
-    int highestBin0XZ(0);
-    float highestWeight0XZ(-std::numeric_limits<float>::max());
+    this->FillAngularDecompositionMap(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_V, deviationAngleMapV);
+    this->FillAngularDecompositionMap(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, deviationAngleMapW);
 
-    for (const auto &entry : pAlgorithm->m_theta0XZMap)
-    {
-        std::cout << "theta0XZ weight: " << static_cast<float>(entry.second.size()) / total << std::endl;
-
-        float weight = 0.0;
-
-        for (const CaloHit *const pCaloHit : entry.second)
-            weight += pCaloHit->GetElectromagneticEnergy();
-
-        if (weight > highestWeight0XZ)
-        {
-            highestWeight0XZ = entry.second.size();
-            highestBin0XZ = entry.first;
-        }
-    }
-
-    //int highestBin0YZ(0);
-    //float highestWeight0YZ(-std::numeric_limits<float>::max());
-
-    for (const auto &entry : pAlgorithm->m_theta0YZMap)
-    {
-        std::cout << "theta0YZ weight: " << static_cast<float>(entry.second.size()) / total << std::endl;
-
-    }
-
-    CaloHitList visualise;
-    int highestHits = 0;
-    const CaloHitList &hits0XZ(pAlgorithm->m_theta0XZMap[highestBin0XZ]);
-
-    for (auto &entry : pAlgorithm->m_theta0YZMap)
-    {
-        const CaloHitList &sharedHits(LArMCParticleHelper::GetSharedHits(hits0XZ, entry.second));
-        const int nSharedHits(sharedHits.size());
-
-        if (nSharedHits > highestHits)
-        {
-            std::cout << "nSharedHits: " << nSharedHits << std::endl;
-            highestHits = nSharedHits;
-            visualise = sharedHits;
-        }
-    }
-
-
-    for (const CaloHit *const pCaloHit : caloHits3D)
-    {
-        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-
-        if ((hitPosition - nuVertexPosition).GetMagnitude() < 14.f)
-            continue;
-
-        deviationAngleX = hitPosition.GetOpeningAngle(xAxis); 
-        deviationAngleY = hitPosition.GetOpeningAngle(yAxis); 
-
-        if ((deviationAngleX < highestBin0XZ) || (deviationAngleX > (highestBin0XZ + pAlgorithm->m_binSize)))
-            continue;
-
-        if ((deviationAngleY < highestBin0YZ) || (deviationAngleY > (highestBin0YZ + pAlgorithm->m_binSize)))
-            continue;
-
-        visualise.push_back(pCaloHit);
-    }
+    AngularPeakVector angularPeakVector;
+    this->ObtainAngularPeakVector(pAlgorithm, deviationAngleMapU, deviationAngleMapV, deviationAngleMapW, angularPeakVector);
     */
+    ///////
+    /*
+    // do this for U view
+    int highestBin(0);
+    float highestWeight(-std::numeric_limits<float>::max());
 
-    for (const CaloHitList &visualise : jam)
-        PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &visualise, "subsection", RED);
+    for (const auto &entry : pAlgorithm->m_thetaMapU)
+    {
+        float weight = entry.second.size();
 
+        if (weight > highestWeight)
+        {
+            highestWeight = weight;
+            highestBin = entry.first;
+        }
+    }
+
+    std::cout << "highest peak: " << highestBin * pAlgorithm->m_binSize << std::endl;
+
+    const CartesianVector peakDirection(std::cos(highestBin * pAlgorithm->m_binSize), 0.f, std::sin(highestBin * pAlgorithm->m_binSize));
+
+    std::cout << "peakDirection: " << peakDirection << std::endl;
+
+    CaloHitList showerSpineHitList;
+    this->FindShowerSpine(pAlgorithm, pShowerPfo, nuVertexPositionU, peakDirection, TPC_VIEW_U, showerSpineHitList);
+
+    CartesianVector projection(nuVertexPositionU + (peakDirection * 14.f));
+
+    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexPositionU, &projection, "direction", BLACK, 2, 1);
+    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &showerSpineHitList, "SPINE", BLACK);
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-    
-
-
-    std::cout << "BBBBBBBBBB" << std::endl;
 
     // ISOBEL - SHOULD I ALSO HAVE A HIT CUT?
     if (!this->HasPathToNuVertex(pShowerPfo, nuVertexPosition))
@@ -430,8 +198,330 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
 
         // change metadata to say that we think that this gamma is a gamma (so that we don't extend it in the future tool)
     }
+    */
 
     return true;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::FillTree(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertexPosition)
+{
+    CaloHitList caloHits2D;
+    LArPfoHelper::GetCaloHits(pShowerPfo, TPC_VIEW_U, caloHits2D);
+    LArPfoHelper::GetCaloHits(pShowerPfo, TPC_VIEW_V, caloHits2D);
+    LArPfoHelper::GetCaloHits(pShowerPfo, TPC_VIEW_W, caloHits2D);
+
+    const CartesianVector nuVertexPositionU(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertexPosition, TPC_VIEW_U));
+    const CartesianVector nuVertexPositionV(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertexPosition, TPC_VIEW_V));
+    const CartesianVector nuVertexPositionW(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertexPosition, TPC_VIEW_W));
+
+    ++m_counter;
+
+    FloatVector deviationAngleU, deviationAngleV, deviationAngleW;
+    FloatVector xCoordinate, yCoordinate, zCoordinate;
+    FloatVector lCoordinateU, tCoordinateU;
+    FloatVector lCoordinateV, tCoordinateV;
+    FloatVector lCoordinateW, tCoordinateW;
+    FloatVector hitEnergyU, hitEnergyV, hitEnergyW;
+
+    float lNuU(-999.f), tNuU(-999.f);
+    float lNuV(-999.f), tNuV(-999.f);
+    float lNuW(-999.f), tNuW(-999.f);
+
+    CartesianPointVector initialHitPositionsU, initialHitPositionsV, initialHitPositionsW;
+
+    for (const CaloHit *const pCaloHit : caloHits2D)
+    {
+        const HitType hitType(pCaloHit->GetHitType());
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+        const CartesianVector nuVertexPositionProjection(hitType == TPC_VIEW_U ? nuVertexPositionU : hitType == TPC_VIEW_V ? nuVertexPositionV : nuVertexPositionW);
+        CartesianPointVector &initialHitPositions(hitType == TPC_VIEW_U ? initialHitPositionsU : hitType == TPC_VIEW_V ? initialHitPositionsV : initialHitPositionsW);
+
+        if ((hitPosition - nuVertexPositionProjection).GetMagnitude() > 14.f)
+            continue;
+
+        initialHitPositions.push_back(pCaloHit->GetPositionVector());
+    }
+
+    const TwoDSlidingFitResult twoDSlidingFitU(&initialHitPositionsU, 10000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const TwoDSlidingFitResult twoDSlidingFitV(&initialHitPositionsV, 10000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+    const TwoDSlidingFitResult twoDSlidingFitW(&initialHitPositionsW, 10000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
+    twoDSlidingFitU.GetLocalPosition(nuVertexPosition, lNuU, tNuU);
+    twoDSlidingFitV.GetLocalPosition(nuVertexPosition, lNuV, tNuV);
+    twoDSlidingFitW.GetLocalPosition(nuVertexPosition, lNuW, tNuW);
+
+    const CartesianVector xAxis(1.f, 0.f, 0.f);
+
+    for (const CaloHit *const pCaloHit : caloHits2D)
+    {
+        const HitType hitType(pCaloHit->GetHitType());
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+        const CartesianVector nuVertexPositionProjection(hitType == TPC_VIEW_U ? nuVertexPositionU : hitType == TPC_VIEW_V ? nuVertexPositionV : nuVertexPositionW);
+
+        if ((hitPosition - nuVertexPositionProjection).GetMagnitude() > 14.f)
+            continue;
+
+        FloatVector &hitEnergy(hitType == TPC_VIEW_U ? hitEnergyU : hitType == TPC_VIEW_V ? hitEnergyV : hitEnergyW);
+
+        hitEnergy.push_back(pCaloHit->GetElectromagneticEnergy());
+        xCoordinate.push_back(hitPosition.GetX());
+        yCoordinate.push_back(hitPosition.GetY());
+        zCoordinate.push_back(hitPosition.GetZ());
+
+        const TwoDSlidingFitResult &twoDSlidingFit(hitType == TPC_VIEW_U ? twoDSlidingFitU : hitType == TPC_VIEW_V ? twoDSlidingFitV : twoDSlidingFitW);
+        FloatVector &lCoordinate(hitType == TPC_VIEW_U ? lCoordinateU : hitType == TPC_VIEW_V ? lCoordinateV : lCoordinateW);
+        FloatVector &tCoordinate(hitType == TPC_VIEW_U ? tCoordinateU : hitType == TPC_VIEW_V ? tCoordinateV : tCoordinateW);
+
+        float l, t;
+        twoDSlidingFit.GetLocalPosition(hitPosition, l, t);
+
+        lCoordinate.push_back(l);
+        tCoordinate.push_back(t);
+
+        FloatVector &deviationAngle(hitType == TPC_VIEW_U ? deviationAngleU : hitType == TPC_VIEW_V ? deviationAngleV : deviationAngleW);
+
+        float deviationAngleTemp = xAxis.GetOpeningAngle(hitPosition - nuVertexPositionProjection);
+
+        if (hitPosition.GetZ() < 0.f)
+            deviationAngleTemp *= -1.f;
+
+        deviationAngle.push_back(deviationAngleTemp);
+    }
+
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "ShowerCounter", m_counter));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "DeviationAngleU", &deviationAngleU));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "DeviationAngleV", &deviationAngleV));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "DeviationAngleW", &deviationAngleW));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "XCoordinate", &xCoordinate));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "YCoordinate", &yCoordinate));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "ZCoordinate", &zCoordinate));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "LCoordinateU", &lCoordinateU));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "LCoordinateV", &lCoordinateV));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "LCoordinateW", &lCoordinateW));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "TCoordinateU", &tCoordinateU));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "TCoordinateV", &tCoordinateV));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "TCoordinateW", &tCoordinateW));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "HitEnergyU", &hitEnergyU));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "HitEnergyV", &hitEnergyV));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "HitEnergyW", &hitEnergyW));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "LCoordinateNuU", lNuU));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "LCoordinateNuV", lNuV));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "LCoordinateNuW", lNuW));
+    PANDORA_MONITORING_API(FillTree(pAlgorithm->GetPandora(), "ShowerDistribution"));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::FillAngularDecompositionMap(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
+    const CartesianVector &nuVertexPosition, const HitType hitType, DeviationAngleMap &deviationAngleMap)
+{
+    CaloHitList caloHits2D;
+    LArPfoHelper::GetCaloHits(pShowerPfo, hitType, caloHits2D);
+
+    const CartesianVector xAxis(1.f, 0.f, 0.f);
+    const CartesianVector nuVertexProjection(LArGeometryHelper::ProjectPosition(this->GetPandora(), nuVertexPosition, hitType));
+
+    for (const CaloHit *const pCaloHit : caloHits2D)
+    {
+        const HitType caloHitType(pCaloHit->GetHitType());
+
+        if (hitType != caloHitType)
+            std::cout << "ISOBEL - WRONG HIT TYPE!!" << std::endl;
+
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+
+        if ((hitPosition - nuVertexProjection).GetMagnitude() > 14.f)
+            continue;
+
+        float deviationAngle = xAxis.GetOpeningAngle(hitPosition - nuVertexProjection);
+
+        if (hitPosition.GetZ() < 0.f)
+            deviationAngle *= -1.f;
+
+        const int thetaFactor(std::floor(deviationAngle / pAlgorithm->m_binSize));
+
+        if (deviationAngleMap.find(thetaFactor) == deviationAngleMap.end())
+            deviationAngleMap[thetaFactor] = 1;
+        else
+            deviationAngleMap[thetaFactor] += 1;
+    }
+
+    this->SmoothAngularDecompositionMap(deviationAngleMap);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::SmoothAngularDecompositionMap(DeviationAngleMap &deviationAngleMap)
+{
+    for (auto &entry : deviationAngleMap)
+        std::cout << "binNo: " << entry.first << ", calo hit list size: " << entry.second << std::endl;
+
+    const int lowestThetaFactor(deviationAngleMap.begin()->first);
+    const int highestThetaFactor(deviationAngleMap.rbegin()->first);
+
+    std::cout << "lowestThetaFactor: " << lowestThetaFactor << std::endl;
+    std::cout << "highestThetaFactor: " << highestThetaFactor << std::endl;
+
+    const int smoothingWindow = 5;
+    const int loopMin = (1) * (smoothingWindow - 1) / 2;
+    const int loopMax = 1 + (smoothingWindow - 1) / 2;
+
+    DeviationAngleMap deviationAngleMapTemp(deviationAngleMap);
+
+    deviationAngleMap.clear();
+
+    for (auto &entry : deviationAngleMapTemp)
+    {
+        float total(0.f);
+        int i(entry.first);
+
+        for (int j = loopMin; j <= loopMax; ++j)
+        {
+            int bin = i + j;
+
+            if (bin < lowestThetaFactor)
+                bin = i + (smoothingWindow - j);
+
+            if (bin > highestThetaFactor)
+                bin = i - (smoothingWindow - j);
+
+            if (deviationAngleMapTemp.find(bin) == deviationAngleMapTemp.end())
+                total += 0;
+            else
+                total += deviationAngleMapTemp.at(bin);
+        }
+
+        deviationAngleMap[i] = total / smoothingWindow;
+    }
+
+    std::cout << "AFTER SMOOTHING" << std::endl;
+    for (auto &entry : deviationAngleMap)
+        std::cout << "binNo: " << entry.first << ", calo hit list size: " << entry.second << std::endl;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::ObtainAngularPeakVector(ShowerStartRefinementAlgorithm *const pAlgorithm, DeviationAngleMap &deviationAngleMapU, 
+    DeviationAngleMap &deviationAngleMapV, DeviationAngleMap &deviationAngleMapW, AngularPeakVector &angularPeakVector)
+{
+    IntVector peakVectorU, peakVectorV, peakVectorW;
+
+    this->ObtainViewPeakVector(deviationAngleMapU, peakVectorU);
+    this->ObtainViewPeakVector(deviationAngleMapV, peakVectorV);
+    this->ObtainViewPeakVector(deviationAngleMapW, peakVectorW);
+
+    for (unsigned int uPeak = 0; uPeak < peakVectorU.size(); ++uPeak)
+    {
+        const CartesianVector uDirection(std::cos(uPeak * pAlgorithm->m_binSize), 0.f, std::sin(uPeak * pAlgorithm->m_binSize));
+
+        for (unsigned int vPeak = 0; vPeak < peakVectorV.size(); ++vPeak)
+        {
+            const CartesianVector vDirection(std::cos(vPeak * pAlgorithm->m_binSize), 0.f, std::sin(vPeak * pAlgorithm->m_binSize));
+
+            for (unsigned int wPeak = 0; wPeak < peakVectorW.size(); ++wPeak)
+            {
+                const CartesianVector wDirection(std::cos(wPeak * pAlgorithm->m_binSize), 0.f, std::sin(wPeak * pAlgorithm->m_binSize));
+
+                const CartesianVector uPrediction(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, vDirection, wDirection));
+                const CartesianVector vPrediction(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, wDirection, uDirection));
+                const CartesianVector wPrediction(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, uDirection, vDirection));
+
+                const float chiSquared(uDirection.GetOpeningAngle(uPrediction) + vDirection.GetOpeningAngle(vPrediction) + wDirection.GetOpeningAngle(wPrediction));
+
+                float m_maxChiSquared = 10;
+
+                if (chiSquared > m_maxChiSquared)
+                    continue;
+
+                const float binWeightSum(deviationAngleMapU.at(uPeak) + deviationAngleMapV.at(vPeak) + deviationAngleMapW.at(wPeak));
+
+                angularPeakVector.push_back(AngularPeak(uPeak, vPeak, wPeak, chiSquared, binWeightSum));
+            }
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::ObtainViewPeakVector(DeviationAngleMap &deviationAngleMap, IntVector &viewPeakVector)
+{
+    for (auto &entry : deviationAngleMap)
+    {
+        const float bin(entry.first);
+
+        if ((deviationAngleMap.find(bin) == deviationAngleMap.begin()) || (deviationAngleMap.find(bin) == std::prev(deviationAngleMap.end())))
+            continue;
+
+        const float binWeight(entry.second);
+
+        /*
+        if (binWeight < 2.f)
+            continue;
+        */
+        const int precedingBin(bin - 1), followingBin(bin + 1);
+        const float precedingBinWeight(deviationAngleMap.find(precedingBin) == deviationAngleMap.end() ? 0.f : deviationAngleMap.at(precedingBin));
+        const float followingBinWeight(deviationAngleMap.find(followingBin) == deviationAngleMap.end() ? 0.f : deviationAngleMap.at(followingBin));
+
+        if ((binWeight < precedingBinWeight) || (binWeight < followingBinWeight))
+            continue;
+
+        viewPeakVector.push_back(bin);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+int GammaStartRefinementTool::FindBestAngularPeak(DeviationAngleMap &deviationAngleMap, IntVector &viewPeakVector)
+{
+    //ISOBEL - HAVE A CHECK OF 'IF NOT FOUND?'
+
+    float bestWeight(0.f);
+    int bestAngularPeak(0);
+
+    for (unsigned int i = 0; i < viewPeakVector.size(); ++i)
+    {
+        // ISOBEL - HAVE A CHECK ON IF NOT FOUND
+
+        if (deviationAngleMap.at(viewPeakVector[i]) > bestWeight)
+        {
+            bestWeight = deviationAngleMap.at(viewPeakVector[i]);
+            bestAngularPeak = viewPeakVector[i];
+        }
+    }
+
+    return bestAngularPeak;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::GetEnergyDistribution(ShowerStartRefinementAlgorithm *const pAlgorithm, const CaloHitList &showerSpineHitList, const LongitudinalPositionMap &longitudinalPositionMap)
+{
+    ++m_showerCounter;
+
+    FloatVector projectionVector, energies;
+
+    for (const CaloHit *pCaloHit : showerSpineHitList)
+    {
+        const float projection(longitudinalPositionMap.at(pCaloHit));
+
+        projectionVector.emplace_back(projection);
+        energies.emplace_back(1000.f * pCaloHit->GetElectromagneticEnergy());
+    }
+
+    float e0(0.f);
+
+    for (const float energy : energies)
+        e0 += energy;
+
+    for (unsigned int i = 0; i < energies.size(); ++i)
+        energies[i] = energies[i] / e0;
+
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "ShowerCounter", m_showerCounter));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "ShowerCoreProjectionL", &projectionVector));
+    PANDORA_MONITORING_API(SetTreeVariable(pAlgorithm->GetPandora(), "ShowerDistribution", "Energy", &energies));
+    PANDORA_MONITORING_API(FillTree(pAlgorithm->GetPandora(), "ShowerDistribution"));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

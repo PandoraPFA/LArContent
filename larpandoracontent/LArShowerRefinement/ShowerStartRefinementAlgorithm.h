@@ -22,10 +22,10 @@ public:
     ShowerStartRefinementAlgorithm();
     //~ShowerStartRefinementAlgorithm();
 
-
-    typedef std::map<int, pandora::CaloHitList> DeviationAngleMap;
-    DeviationAngleMap m_theta0XZMap;
-    DeviationAngleMap m_theta0YZMap;
+    typedef std::map<int, int> DeviationAngleMap;
+    DeviationAngleMap m_thetaMapU;
+    DeviationAngleMap m_thetaMapV;
+    DeviationAngleMap m_thetaMapW;
 
     float m_binSize;
 
