@@ -51,27 +51,9 @@ private:
      *  @brief  Collates variables and fills ROOT tree for MC particles with matches
      *
      *  @param  matches The MCMatches object containing the matches
-     *  @param  isGood Whether or not this is a single good match
-     *  @param  isAboveThreshold Whether or not the matches are above threshold
      *  @param  matchInfo The MatchInfo object with the full event context
      */
-    void FillMatched(const LArHierarchyHelper::MCMatches &matches, const bool isGood, const bool isAboveThreshold,
-        const LArHierarchyHelper::MatchInfo &matchInfo) const;
-
-    /**
-     *  @brief  Collates variables and fills ROOT tree for MC particles without matches
-     *
-     *  @param  node The unmatched node
-     *  @param  matchInfo The MatchInfo object with the full event context
-     */
-    void FillUnmatchedMC(const LArHierarchyHelper::MCHierarchy::Node *pNode, const LArHierarchyHelper::MatchInfo &matchInfo) const;
-
-    /**
-     *  @brief  Collates variables and fills ROOT tree for reco particles without matches
-     *
-     *  @param  node The unmatched node
-     */
-    void FillUnmatchedReco(const LArHierarchyHelper::RecoHierarchy::Node *pNode) const;
+    void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo) const;
 
     int m_event;                   ///< The current event
     std::string m_caloHitListName; ///< Name of input calo hit list

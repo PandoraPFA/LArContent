@@ -77,14 +77,6 @@ private:
     void VisualizeMatchedMC(const LArHierarchyHelper::MCMatches &matches, const int mcIdx) const;
 
     /**
-     *  @brief  Visualize the unmatched MC node
-     *
-     *  @param  pNode The MC without reco matches
-     *  @param  mcIdx The unique identifier for the MC particle
-     */
-    void VisualizeUnmatchedMC(const LArHierarchyHelper::MCHierarchy::Node *pNode, const int mcIdx) const;
-
-    /**
      *  @brief  Visualize the unmatched reco node
      *
      *  @param  pNode The unmatched reco node

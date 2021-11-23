@@ -255,28 +255,13 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
 {
     std::map<const LArHierarchyHelper::MCHierarchy::Node *, int> mcIdxMap;
     int mcIdx{0};
-    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetGoodMatches())
+    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches())
         if (mcIdxMap.find(matches.GetMC()) == mcIdxMap.end())
             mcIdxMap[matches.GetMC()] = mcIdx++;
-    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetAboveThresholdMatches())
-        if (mcIdxMap.find(matches.GetMC()) == mcIdxMap.end())
-            mcIdxMap[matches.GetMC()] = mcIdx++;
-    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetSubThresholdMatches())
-        if (mcIdxMap.find(matches.GetMC()) == mcIdxMap.end())
-            mcIdxMap[matches.GetMC()] = mcIdx++;
-    for (const LArHierarchyHelper::MCHierarchy::Node *pNode : matchInfo.GetUnmatchedMC())
-        if (mcIdxMap.find(pNode) == mcIdxMap.end())
-            mcIdxMap[pNode] = mcIdx++;
 
-    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetGoodMatches())
-        this->VisualizeMatchedMC(matches, mcIdxMap.at(matches.GetMC()));
-    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetAboveThresholdMatches())
-        this->VisualizeMatchedMC(matches, mcIdxMap.at(matches.GetMC()));
-    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetSubThresholdMatches())
+    for (const LArHierarchyHelper::MCMatches &matches : matchInfo.GetMatches())
         this->VisualizeMatchedMC(matches, mcIdxMap.at(matches.GetMC()));
 
-    for (const LArHierarchyHelper::MCHierarchy::Node *pNode : matchInfo.GetUnmatchedMC())
-        this->VisualizeUnmatchedMC(pNode, mcIdxMap.at(pNode));
     for (const LArHierarchyHelper::RecoHierarchy::Node *pNode : matchInfo.GetUnmatchedReco())
         this->VisualizeUnmatchedReco(pNode);
 
@@ -288,7 +273,7 @@ void HierarchyMonitoringAlgorithm::VisualizeMatches(const LArHierarchyHelper::Ma
 void HierarchyMonitoringAlgorithm::VisualizeMatchedMC(const LArHierarchyHelper::MCMatches &matches, const int mcIdx) const
 {
     const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
-    const int green{3};
+    const int green{3}, gray{14};
     const std::map<int, int> colors = {{0, 5}, {1, 2}, {2, 9}, {3, 1}, {4, 4}};
 
     const LArHierarchyHelper::MCHierarchy::Node *pMCNode{matches.GetMC()};
@@ -301,10 +286,20 @@ void HierarchyMonitoringAlgorithm::VisualizeMatchedMC(const LArHierarchyHelper::
     CaloHitList mcUHits, mcVHits, mcWHits;
     this->FillHitLists(pMCNode->GetCaloHits(), mcUHits, mcVHits, mcWHits);
     std::string leading{pMCNode->IsLeadingLepton() ? "_leading" : ""};
-    std::string suffix{std::to_string(mcIdx) + "_" + key + leading};
-    this->Visualize(mcUHits, "u_" + suffix, green);
-    this->Visualize(mcVHits, "v_" + suffix, green);
-    this->Visualize(mcWHits, "w_" + suffix, green);
+    if (!matches.GetRecoMatches().empty())
+    {
+        std::string suffix{std::to_string(mcIdx) + "_" + key + leading};
+        this->Visualize(mcUHits, "u_" + suffix, green);
+        this->Visualize(mcVHits, "v_" + suffix, green);
+        this->Visualize(mcWHits, "w_" + suffix, green);
+    }
+    else
+    {
+        std::string suffix{std::to_string(mcIdx) + "_" + key + "_unmatched"};
+        this->Visualize(mcUHits, "u_" + suffix, gray);
+        this->Visualize(mcVHits, "v_" + suffix, gray);
+        this->Visualize(mcWHits, "w_" + suffix, gray);
+    }
 
     int recoIdx{0};
     size_t colorIdx{0};
@@ -348,27 +343,6 @@ void HierarchyMonitoringAlgorithm::VisualizeMatchedMC(const LArHierarchyHelper::
         colorIdx = (colorIdx + 1) >= colors.size() ? 0 : colorIdx + 1;
         ++recoIdx;
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-void HierarchyMonitoringAlgorithm::VisualizeUnmatchedMC(const LArHierarchyHelper::MCHierarchy::Node *pNode, const int mcIdx) const
-{
-    const std::map<int, const std::string> keys = {{13, "mu"}, {11, "e"}, {22, "gamma"}, {321, "kaon"}, {211, "pi"}, {2212, "p"}};
-    const int gray{14};
-
-    const int pdg{pNode->GetParticleId()};
-
-    std::string key("other");
-    if (keys.find(pdg) != keys.end())
-        key = keys.at(pdg);
-
-    CaloHitList uHits, vHits, wHits;
-    this->FillHitLists(pNode->GetCaloHits(), uHits, vHits, wHits);
-    std::string suffix{std::to_string(mcIdx) + "_" + key + "_unmatched"};
-    this->Visualize(uHits, "u_" + suffix, gray);
-    this->Visualize(vHits, "v_" + suffix, gray);
-    this->Visualize(wHits, "w_" + suffix, gray);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

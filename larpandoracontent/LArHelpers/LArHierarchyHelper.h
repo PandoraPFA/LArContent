@@ -60,6 +60,29 @@ public:
     };
 
     /**
+     *  @brief  QualityCuts class
+     */
+    class QualityCuts
+    {
+    public:
+        /**
+         *  @brief Default constructor
+         */
+        QualityCuts();
+
+        /**
+         *  @brief Constructor
+         *
+         *  @param  minPurity The minimum purity for a cut to be considered good
+         *  @param  minCompleteness The minimum completeness for a cut to be considered good
+         */
+        QualityCuts(const float minPurity, const float minCompleteness);
+
+        const float m_minPurity;       ///< The minimum purity for a match to be considered good
+        const float m_minCompleteness; ///< The minimum completeness for a match to be considered good
+    };
+
+    /**
      *  @brief  MCHierarchy class
      */
     class MCHierarchy
@@ -654,6 +677,15 @@ public:
          */
         size_t GetNRecoMatches() const;
 
+        /**
+         *  @brief  Get whether this match passes quality cuts
+         *
+         *  @param  qualityCuts The quality cuts to pass
+         *
+         *  @return Whether or not this match passes quality cuts
+         */
+        bool IsQuality(const QualityCuts &qualityCuts) const;
+
     private:
         /**
          *  @brief  Core purity calculation given intersecting hits and reco hits
@@ -691,29 +723,6 @@ public:
     {
     public:
         /**
-         *  @brief  QualityCuts class
-         */
-        class QualityCuts
-        {
-        public:
-            /**
-             *  @brief Default constructor
-             */
-            QualityCuts();
-
-            /**
-             *  @brief Constructor
-             *
-             *  @param  minPurity The minimum purity for a cut to be considered good
-             *  @param  minCompleteness The minimum completeness for a cut to be considered good
-             */
-            QualityCuts(const float minPurity, const float minCompleteness);
-
-            const float m_minPurity;       ///< The minimum purity for a match to be considered good
-            const float m_minCompleteness; ///< The minimum completeness for a match to be considered good
-        };
-
-        /**
          *  @brief  Default constructor
          */
         MatchInfo();
@@ -734,33 +743,11 @@ public:
         void Match(const MCHierarchy &mcHierarchy, const RecoHierarchy &recoHierarchy);
 
         /**
-         *  @brief  Retrieve the vector of good matches (will contain either zero or one matches)
+         *  @brief  Retrieve the vector of matches (this will include null matches - i.e. MC nodes with no corresponding reco)
          *
-         *  @return The vector of good matches
+         *  @return The vector of matches
          */
-        const MCMatchesVector &GetGoodMatches() const;
-
-        /**
-         *  @brief  Retrieve the vector of matches that pass quality cuts (empty if there are either no matches passing quality cuts, or
-         *          precisely one match passing quality cuts - i.e. a good match)
-         *
-         *  @return The vector of sub-threshold matches
-         */
-        const MCMatchesVector &GetAboveThresholdMatches() const;
-
-        /**
-         *  @brief  Retrieve the vector of matches that don't pass quality cuts
-         *
-         *  @return The vector of sub-threshold matches
-         */
-        const MCMatchesVector &GetSubThresholdMatches() const;
-
-        /**
-         *  @brief  Retrieve the vector of unmatched MC nodes
-         *
-         *  @return The vector of unmatched MC
-         */
-        const MCHierarchy::NodeVector &GetUnmatchedMC() const;
+        const MCMatchesVector &GetMatches() const;
 
         /**
          *  @brief  Retrieve the vector of unmatched reco nodes
@@ -810,6 +797,13 @@ public:
         unsigned int GetNTestBeamMCNodes() const;
 
         /**
+         *  @brief  Retrieve the quality cuts for matching
+         *
+         *  @return The quality cuts
+         */
+        const QualityCuts &GetQualityCuts() const;
+
+        /**
          *  @brief  Prints information about which reco nodes are matched to the MC nodes, information about hit sharing, purity and
          *          completeness.
          *
@@ -820,7 +814,9 @@ public:
     private:
         const pandora::MCParticle *m_pMCNeutrino;           ///< The parent neutrino if it exists
         const pandora::ParticleFlowObject *m_pRecoNeutrino; ///< The parent neutrino if it exists
-        MCMatchesVector m_goodMatches;                      ///< The vector of good matches - above threshold one reco to one MC matches
+
+        MCMatchesVector m_matches;                 ///< The vector of good matches from MC to reco
+        MCMatchesVector m_goodMatches;             ///< The vector of good matches - above threshold one reco to one MC matches
         MCMatchesVector m_aboveThresholdMatches;   ///< The vector of matches that pass quality but with multiple reco matches to the MC
         MCMatchesVector m_subThresholdMatches;     ///< The vector of matches that don't pass quality cuts
         MCHierarchy::NodeVector m_unmatchedMC;     ///< The vector of unmatched MC nodes
@@ -1023,30 +1019,9 @@ inline size_t LArHierarchyHelper::MCMatches::GetNRecoMatches() const
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetGoodMatches() const
+inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetMatches() const
 {
-    return m_goodMatches;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetAboveThresholdMatches() const
-{
-    return m_aboveThresholdMatches;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const LArHierarchyHelper::MCMatchesVector &LArHierarchyHelper::MatchInfo::GetSubThresholdMatches() const
-{
-    return m_subThresholdMatches;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline const LArHierarchyHelper::MCHierarchy::NodeVector &LArHierarchyHelper::MatchInfo::GetUnmatchedMC() const
-{
-    return m_unmatchedMC;
+    return m_matches;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -1068,6 +1043,13 @@ inline const pandora::MCParticle *LArHierarchyHelper::MatchInfo::GetMCNeutrino()
 inline const pandora::ParticleFlowObject *LArHierarchyHelper::MatchInfo::GetRecoNeutrino() const
 {
     return m_pRecoNeutrino;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline const LArHierarchyHelper::QualityCuts &LArHierarchyHelper::MatchInfo::GetQualityCuts() const
+{
+    return m_qualityCuts;
 }
 
 } // namespace lar_content
