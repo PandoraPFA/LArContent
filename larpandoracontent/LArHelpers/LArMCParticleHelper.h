@@ -460,6 +460,92 @@ public:
      */
     static pandora::CaloHitList GetSharedHits(const pandora::CaloHitList &hitListA, const pandora::CaloHitList &hitListB);
 
+    /*
+     *  @brief  Check whether or not an MC particle comes from a Bremsstrahlung process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from Bremsstrahlung
+     */
+    static bool IsBremsstrahlung(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Check whether or not an MC particle comes from a capture process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from capture
+     */
+    static bool IsCapture(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Check whether or not an MC particle comes from a decay process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from decay
+     */
+    static bool IsDecay(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Check whether or not an MC particle came from an elastic scattering process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from an elastic scatter
+     */
+    static bool IsElasticScatter(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Check whether or not an MC particle came from an inelastic scattering process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from an inelastic scatter
+     */
+    static bool IsInelasticScatter(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Check whether or not an MC particle comes from an ionisation process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from ionisation
+     */
+    static bool IsIonisation(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Check whether or not an MC particle comes from a nuclear interaction process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from nuclear interaction
+     */
+    static bool IsNuclear(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Check whether or not an MC particle comes from a pair production process
+     *
+     *  @param  pMCParticle The MC particle to consider
+     *
+     *  @return  Whether or not the MC particle came from pair production
+     */
+    static bool IsPairProduction(const pandora::MCParticle *const pMCParticle);
+
+    /**
+     *  @brief  Determine if two MC particles are topologically continuous within a given tolerance.
+     *          If the parent does not travel any distance, a travelling parent is sought and the comparison made between this and the child.
+     *          If no travelling parent can be found, the particles are treated as continuous.
+     *
+     *  @param  pMCParent The parent MC particle
+     *  @param  pMCChild The child MC particle
+     *  @param  cosAngleTolerance The cosine of the maximum acceptable angular deviation
+     *
+     *  @return True if the partiles are topologically continous, false otherwise.
+     */
+    static bool AreTopologicallyContinuous(
+        const pandora::MCParticle *const pMCParent, const pandora::MCParticle *const pMCChild, const float cosAngleTolerance);
+
 private:
     /**
      *  @brief  For a given Pfo, collect the hits which are reconstructable (=good hits belonging to a selected reconstructable MCParticle)

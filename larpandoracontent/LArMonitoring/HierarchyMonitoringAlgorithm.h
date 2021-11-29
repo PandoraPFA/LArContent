@@ -41,6 +41,20 @@ private:
     void VisualizeMC(const LArHierarchyHelper::MCHierarchy &hierarchy) const;
 
     /**
+     *  @brief  Visualize MC nodes without grouping by particle id.
+     *
+     *  @param  hierarchy The MC hierarchy to render
+     **/
+    void VisualizeMCDistinct(const LArHierarchyHelper::MCHierarchy &hierarchy) const;
+
+    /**
+     *  @brief  Visualize MC nodes based on the MC process that created them.
+     *
+     *  @param  hierarchy The MC hierarchy to render
+     **/
+    void VisualizeMCProcess(const LArHierarchyHelper::MCHierarchy &hierarchy) const;
+
+    /**
      *  @brief  Visualize the reco nodes.
      *
      *  @param  hierarchy The reco hierarchy to render
@@ -63,25 +77,41 @@ private:
     void VisualizeMatchedMC(const LArHierarchyHelper::MCMatches &matches, const int mcIdx) const;
 
     /**
-     *  @brief  Visualize the unmatched MC node
-     *
-     *  @param  pNode The MC without reco matches
-     *  @param  mcIdx The unique identifier for the MC particle
-     */
-    void VisualizeUnmatchedMC(const LArHierarchyHelper::MCHierarchy::Node *pNode, const int mcIdx) const;
-
-    /**
      *  @brief  Visualize the unmatched reco node
      *
      *  @param  pNode The unmatched reco node
      */
     void VisualizeUnmatchedReco(const LArHierarchyHelper::RecoHierarchy::Node *pNode) const;
 
+    /**
+     *  @brief  Visualize a calo hit list
+     *
+     *  @param  hits The hits to visualize
+     *  @param  label The label to apply to the hits
+     *  @param  color The color to apply to the hits
+     */
+    void Visualize(const pandora::CaloHitList &hits, const std::string &label, const int color) const;
+
+    /**
+     *  @brief  Fill per view hit lists
+     *
+     *  @param  hits The input list of hits
+     *  @param  uHits The output list of hits in U
+     *  @param  vHits The output list of hits in V
+     *  @param  wHits The output list of hits in W
+     */
+    void FillHitLists(const pandora::CaloHitList &hits, pandora::CaloHitList &uHits, pandora::CaloHitList &vHits, pandora::CaloHitList &wHits) const;
+
     std::string m_caloHitListName;  ///< Name of input calo hit list
     std::string m_pfoListName;      ///< Name of input PFO list
     bool m_visualizeMC;             ///< Whether or not to visualize the MC nodes
     bool m_visualizeReco;           ///< Whether or not to visualize the reco nodes
+    bool m_visualizeDistinct;       ///< If true, allocate colours without consideration of particle id
+    bool m_visualizeProcess;        ///< If true, allocate colours based on the MC process
     bool m_match;                   ///< Whether or not to visualize the reco to MC matches
+    bool m_collectionOnly;          ///< Limit display to the collection plane only
+    bool m_foldToPrimaries;         ///< Whether or not to fold everything back to primaries
+    bool m_foldDynamic;             ///< Whether or not to fold based on process information
     float m_transparencyThresholdE; ///< Cell energy for which transparency is saturated (0%, fully opaque)
     float m_energyScaleThresholdE;  ///< Cell energy for which color is at top end of continous color palette
     float m_scalingFactor;          ///< TEve works with [cm], Pandora usually works with [mm] (but LArContent went with cm too)

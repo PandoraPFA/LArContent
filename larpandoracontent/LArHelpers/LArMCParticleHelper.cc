@@ -756,6 +756,191 @@ void LArMCParticleHelper::GetClusterToReconstructable2DHitsMap(const pandora::Cl
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+bool LArMCParticleHelper::IsBremsstrahlung(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_E_BREM:
+        case MC_PROC_MU_BREM:
+        case MC_PROC_HAD_BREM:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsCapture(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_MU_MINUS_CAPTURE_AT_REST:
+        case MC_PROC_N_CAPTURE:
+        case MC_PROC_CHIPS_NUCLEAR_CAPTURE_AT_REST:
+        case MC_PROC_HAD_FRITIOF_CAPTURE_AT_REST:
+        case MC_PROC_HAD_BERTINI_CAPTURE_AT_REST:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsDecay(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_DECAY:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsElasticScatter(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_COULOMB_SCAT:
+        case MC_PROC_NEUTRON_INELASTIC:
+        case MC_PROC_HAD_ELASTIC:
+        case MC_PROC_RAYLEIGH:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsInelasticScatter(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_COMPT:
+        case MC_PROC_PHOTON_INELASTIC:
+        case MC_PROC_PROTON_INELASTIC:
+        case MC_PROC_PI_PLUS_INELASTIC:
+        case MC_PROC_PI_MINUS_INELASTIC:
+        case MC_PROC_ION_INELASTIC:
+        case MC_PROC_HE3_INELASTIC:
+        case MC_PROC_ALPHA_INELASTIC:
+        case MC_PROC_ANTI_HE3_INELASTIC:
+        case MC_PROC_ANTI_ALPHA_INELASTIC:
+        case MC_PROC_ANTI_DEUTERON_INELASTIC:
+        case MC_PROC_ANTI_NEUTRON_INELASTIC:
+        case MC_PROC_ANTI_PROTON_INELASTIC:
+        case MC_PROC_ANTI_TRITON_INELASTIC:
+        case MC_PROC_DEUTERON_INELASTIC:
+        case MC_PROC_KAON_PLUS_INELASTIC:
+        case MC_PROC_KAON_MINUS_INELASTIC:
+        case MC_PROC_LAMBDA_INELASTIC:
+        case MC_PROC_TRITON_INELASTIC:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsIonisation(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_E_IONI:
+        case MC_PROC_MU_IONI:
+        case MC_PROC_HAD_IONI:
+        case MC_PROC_ION_IONI:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsNuclear(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_ELECTRON_NUCLEAR:
+        case MC_PROC_PHOTON_NUCLEAR:
+        case MC_PROC_MU_NUCLEAR:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::IsPairProduction(const MCParticle *const pMCParticle)
+{
+    const LArMCParticle *pLArMCParticle{dynamic_cast<const LArMCParticle *>(pMCParticle)};
+    if (!pLArMCParticle)
+        return false;
+
+    switch (pLArMCParticle->GetProcess())
+    {
+        case MC_PROC_MU_PAIR_PROD:
+        case MC_PROC_HAD_PAIR_PROD:
+            return true;
+        default:
+            return false;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, const CaloHitList &hitListB)
 {
     CaloHitList sharedHits;
@@ -769,11 +954,45 @@ CaloHitList LArMCParticleHelper::GetSharedHits(const CaloHitList &hitListA, cons
     return sharedHits;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArMCParticleHelper::AreTopologicallyContinuous(const MCParticle *const pMCParent, const MCParticle *const pMCChild, const float cosAngleTolerance)
+{
+    CartesianVector childDirection{pMCChild->GetEndpoint() - pMCChild->GetVertex()};
+    if (childDirection.GetMagnitude() < std::numeric_limits<float>::epsilon())
+        return true;
+    childDirection = childDirection.GetUnitVector();
+
+    const MCParticle *pMCUpstream{pMCParent};
+    while (true)
+    {
+        CartesianVector parentDirection{pMCUpstream->GetEndpoint() - pMCUpstream->GetVertex()};
+        if (parentDirection.GetMagnitude() > std::numeric_limits<float>::epsilon())
+        {
+            parentDirection = parentDirection.GetUnitVector();
+            return parentDirection.GetDotProduct(childDirection) >= cosAngleTolerance;
+        }
+        else
+        {
+            const MCParticleList &parentList{pMCUpstream->GetParentList()};
+            const size_t size{parentList.size()};
+            if (size == 1)
+                pMCUpstream = parentList.front();
+            else if (size == 0)
+                return true;
+            else
+                return false;
+        }
+    }
+
+    return false;
+}
+
 // private
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject *const pPfo,
-    const MCContributionMapVector &selectedMCParticleToHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D, const bool foldBackHierarchy)
+    const MCContributionMapVector &selectedMCParticleToHitsMaps, CaloHitList &reconstructableCaloHitList2D, const bool foldBackHierarchy)
 {
 
     PfoList pfoList;
@@ -795,7 +1014,7 @@ void LArMCParticleHelper::CollectReconstructable2DHits(const ParticleFlowObject 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::CollectReconstructableTestBeamHierarchy2DHits(const ParticleFlowObject *const pPfo,
-    const MCContributionMapVector &selectedMCParticleToHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D, const bool foldBackHierarchy)
+    const MCContributionMapVector &selectedMCParticleToHitsMaps, CaloHitList &reconstructableCaloHitList2D, const bool foldBackHierarchy)
 {
 
     PfoList pfoList;
@@ -824,7 +1043,7 @@ void LArMCParticleHelper::CollectReconstructableTestBeamHierarchy2DHits(const Pa
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void LArMCParticleHelper::CollectReconstructable2DHits(
-    const PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps, pandora::CaloHitList &reconstructableCaloHitList2D)
+    const PfoList &pfoList, const MCContributionMapVector &selectedMCParticleToHitsMaps, CaloHitList &reconstructableCaloHitList2D)
 {
     CaloHitList caloHitList2D;
     LArPfoHelper::GetCaloHits(pfoList, TPC_VIEW_U, caloHitList2D);

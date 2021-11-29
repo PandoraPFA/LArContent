@@ -50,32 +50,19 @@ private:
     /**
      *  @brief  Collates variables and fills ROOT tree for MC particles with matches
      *
-     *  @param matches The MCMatches object containing the matches
-     *  @param isGood Whether or not this is a single good match
-     *  @param isAboveThreshold Whether or not the matches are above threshold
+     *  @param  matches The MCMatches object containing the matches
+     *  @param  matchInfo The MatchInfo object with the full event context
      */
-    void FillMatched(const LArHierarchyHelper::MCMatches &matches, const bool isGood, const bool isAboveThreshold) const;
+    void Fill(const LArHierarchyHelper::MCMatches &matches, const LArHierarchyHelper::MatchInfo &matchInfo) const;
 
-    /**
-     *  @brief  Collates variables and fills ROOT tree for MC particles without matches
-     *
-     *  @param node The unmatched node
-     */
-    void FillUnmatchedMC(const LArHierarchyHelper::MCHierarchy::Node *pNode) const;
-
-    /**
-     *  @brief  Collates variables and fills ROOT tree for reco particles without matches
-     *
-     *  @param node The unmatched node
-     */
-    void FillUnmatchedReco(const LArHierarchyHelper::RecoHierarchy::Node *pNode) const;
-
+    int m_event;                   ///< The current event
     std::string m_caloHitListName; ///< Name of input calo hit list
     std::string m_pfoListName;     ///< Name of input PFO list
     bool m_writeTree;              ///< Whether or not to output validation information to a ROOT file
     std::string m_filename;        ///< The name of the ROOT file to write
     std::string m_treename;        ///< The name of the ROOT tree to write
     bool m_foldToPrimaries;        ///< Whether or not to fold the hierarchy back to primary particles
+    bool m_foldDynamic;            ///< Whether or not to fold the hierarchy dynamically
     bool m_foldToLeadingShowers;   ///< Whether or not to fold the hierarchy back to leading shower particles
     bool m_validateEvent;          ///< Whether to validate at the level of an event
     bool m_validateMC;             ///< Whether to validate at the level of MC nodes
