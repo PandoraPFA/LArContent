@@ -101,6 +101,20 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
     const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
 
+    for (const LArMvaHelper::MvaFeature &featureValue : featureVector)
+    {
+        if (!featureValue.IsInitialized())
+        {
+            if (m_enableProbability)
+            {
+                object_creation::ParticleFlowObject::Metadata metadata;
+                metadata.m_propertiesToAdd["TrackScore"] = -1.f;
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+            }
+            return (pPfo->GetParticleId() == MU_MINUS);
+        }
+    }
+
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
         const MCParticleList *pMCParticleList(nullptr);
@@ -240,20 +254,6 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         }
 
         return isTrueTrack;
-    }
-
-    for (const LArMvaHelper::MvaFeature &featureValue : featureVector)
-    {
-        if (!featureValue.IsInitialized())
-        {
-            if (m_enableProbability)
-            {
-                object_creation::ParticleFlowObject::Metadata metadata;
-                metadata.m_propertiesToAdd["TrackScore"] = -1.f;
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
-            }
-            return (pPfo->GetParticleId() == MU_MINUS);
-        }
     }
 
     // If no failures, proceed with MvaPfoCharacterisationAlgorithm classification
