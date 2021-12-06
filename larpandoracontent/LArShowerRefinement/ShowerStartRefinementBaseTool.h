@@ -139,6 +139,7 @@ public:
 
     virtual bool Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertexPosition) = 0;
 
+    typedef std::map<int, float> EnergySpectrumMap;
     typedef std::map<int, float> DeviationAngleMap;
     typedef std::map<const pandora::CaloHit*, float> LongitudinalPositionMap;
 
@@ -146,7 +147,7 @@ protected:
     bool HasPathToNuVertex(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &neutrinoVertex) const;
 
     void FindShowerSpine(const ShowerStartRefinementAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &neutrinoVertex,
-                         const pandora::CartesianVector &initialDirection, const pandora::HitType hitType, pandora::CaloHitList &showerSpineHitList, LongitudinalPositionMap &longitudinalPositionMap);
+        const pandora::CartesianVector &initialDirection, const pandora::HitType hitType, pandora::CaloHitList &showerSpineHitList);
 
     void GetHitsInBoundingBox(const pandora::CartesianVector &firstCorner, const pandora::CartesianVector &secondCorner, const pandora::CaloHitList &inputHitList,
         const float distanceToLine, pandora::CaloHitList &hitsInBoundingBox) const; 
@@ -168,6 +169,8 @@ protected:
 
     bool IsElectronPathway(const ProtoShower &protoShower);
 
+    float GetClosestDistance(const pandora::CartesianVector &position, const pandora::CartesianPointVector &testPositions) const;
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float m_maxDistanceForConnection;
@@ -175,7 +178,12 @@ protected:
     float m_macroSlidingFitWindow;
     float m_growingFitSegmentLength;
     float m_distanceToLine;
+    float m_initialFitDistanceToLine;
     int m_maxFittingHits;
+    float m_energySpectrumBinSize;
+    float m_hitConnectionDistance;
+    unsigned int m_minInitialHitsFound;
+
     //private:
 };
 

@@ -9,6 +9,7 @@
 #include "Pandora/AlgorithmHeaders.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArHelpers/LArHitWidthHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -26,8 +27,12 @@ ShowerStartRefinementBaseTool::ShowerStartRefinementBaseTool() :
     m_growingFitInitialLength(10.f),
     m_macroSlidingFitWindow(1000),
     m_growingFitSegmentLength(5.0f),
-    m_distanceToLine(1.0f),
-    m_maxFittingHits(20)
+    m_distanceToLine(1.f),
+    m_initialFitDistanceToLine(0.5f),
+    m_maxFittingHits(20),
+    m_energySpectrumBinSize(1.f),
+    m_hitConnectionDistance(1.f),
+    m_minInitialHitsFound(10)
 {
 }
 
@@ -61,8 +66,8 @@ bool ShowerStartRefinementBaseTool::HasPathToNuVertex(const ParticleFlowObject *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementAlgorithm *pAlgorithm, const ParticleFlowObject *const pShowerPfo, const CartesianVector &neutrinoVertex, 
-    const CartesianVector &initialDirection, const HitType hitType, CaloHitList &showerSpineHitList, LongitudinalPositionMap &longitudinalPositionMap)
+void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementAlgorithm *pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
+    const CartesianVector &neutrinoVertex, const CartesianVector &initialDirection, const HitType hitType, CaloHitList &showerSpineHitList)
 {
     CaloHitList caloHitList;
     LArPfoHelper::GetCaloHits(pShowerPfo, hitType, caloHitList);
@@ -73,27 +78,43 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
     const CartesianVector clusterSubsetBoundary(extrapolatedStartPosition + (extrapolatedDirection * m_growingFitInitialLength));
 
     CaloHitList subsetHitList;
-    this->GetHitsInBoundingBox(extrapolatedStartPosition, clusterSubsetBoundary, caloHitList, m_distanceToLine, subsetHitList);
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+        const float l(extrapolatedDirection.GetDotProduct(hitPosition - neutrinoVertex));
+        const float t(extrapolatedDirection.GetCrossProduct(hitPosition - neutrinoVertex).GetMagnitude());
 
+        if ((l < m_growingFitInitialLength) && (l > 0.f) && (t < m_initialFitDistanceToLine))
+            subsetHitList.push_back(pCaloHit);
+    }
+
+    // require initial fit to be good so that we know we have found something
+    if (subsetHitList.size() < m_minInitialHitsFound)
+        return;
+
+    /* //make this tougher - i.e. require the fit to be some initial length so we know it has found something substantial?
     if (subsetHitList.empty())
         return;
+    */
 
     showerSpineHitList.insert(showerSpineHitList.end(), subsetHitList.begin(), subsetHitList.end());
     
+    float highestL(0.f);
     CartesianPointVector runningFitPositionVector;
     for (const CaloHit *const pCaloHit : subsetHitList)
     {
-        std::cout << "extrapolatedDirection: " << extrapolatedDirection << std::endl;
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+        const float l(extrapolatedDirection.GetDotProduct(hitPosition - neutrinoVertex));
 
-        longitudinalPositionMap[pCaloHit] = extrapolatedDirection.GetDotProduct(pCaloHit->GetPositionVector() - extrapolatedStartPosition);
-        runningFitPositionVector.push_back(pCaloHit->GetPositionVector());
+        if (l > highestL)
+            highestL = l;
+
+        runningFitPositionVector.push_back(hitPosition);
     }
-
-    float longitudinalDistance(m_growingFitInitialLength);
 
     // Collect extrapolated hits by performing a running fit
     unsigned int count(0);
-    CartesianVector extrapolatedEndPosition(0.f, 0.f, 0.f);
+    CartesianVector extrapolatedEndPosition(extrapolatedStartPosition + (extrapolatedDirection * highestL));
     unsigned int hitsCollected(1);
     const float slidingFitPitch(LArGeometryHelper::GetWireZPitch(this->GetPandora()));
 
@@ -106,6 +127,8 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
 
     while (hitsCollected)
     {
+        ++count;
+
         hitsCollected = 0;
 
         try
@@ -120,50 +143,201 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
                     runningFitPositionVector.erase(runningFitPositionVector.end() - 1);
             }
 
-            std::cout << "runningFitPositionVector.size: " << runningFitPositionVector.size() << std::endl;
-
             const TwoDSlidingFitResult extrapolatedFit(&runningFitPositionVector, m_macroSlidingFitWindow, slidingFitPitch);
             
-            extrapolatedStartPosition = isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerPosition() : extrapolatedFit.GetGlobalMinLayerPosition();
+            extrapolatedStartPosition = count == 1 ? extrapolatedEndPosition : isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerPosition() : extrapolatedFit.GetGlobalMinLayerPosition();
             extrapolatedDirection = isEndDownstream ? extrapolatedFit.GetGlobalMaxLayerDirection() : extrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
             extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);
+
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedStartPosition, "start", GREEN, 2);
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedEndPosition, "end", GREEN, 2);
+
+            float extrapolatedStartL(0.f), extrapolatedStartT(0.f);
+            extrapolatedFit.GetLocalPosition(extrapolatedStartPosition, extrapolatedStartL, extrapolatedStartT);
+
+            float extrapolatedEndL(0.f), extrapolatedEndT(0.f);
+            extrapolatedFit.GetLocalPosition(extrapolatedEndPosition, extrapolatedEndL, extrapolatedEndT);
+
+            std::map<const CaloHit*, bool> identifiedHits;
 
             for (const CaloHit *const pCaloHit : caloHitList)
             {
                 if (std::find(subsetHitList.begin(), subsetHitList.end(), pCaloHit) != subsetHitList.end())
                     continue;
 
+                float hitL(0.f), hitT(0.f);
                 const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-                    
-                if (!this->IsInLineSegment(extrapolatedStartPosition, extrapolatedEndPosition, hitPosition))
+
+                extrapolatedFit.GetLocalPosition(hitPosition, hitL, hitT);
+
+                if (isEndDownstream && ((hitL < extrapolatedStartL) || (hitL > extrapolatedEndL)))
                     continue;
 
-                if (!this->IsCloseToLine(hitPosition, extrapolatedStartPosition, extrapolatedDirection, m_distanceToLine))
+                if (!isEndDownstream && ((hitL > extrapolatedStartL) || (hitL < extrapolatedEndL)))
                     continue;
 
-                ++hitsCollected;
+                if (this->IsCloseToLine(hitPosition, extrapolatedStartPosition, extrapolatedDirection, m_distanceToLine))
+                {
+                    identifiedHits[pCaloHit] = true;
+                }    
+                else
+                {
+                    const CartesianVector closestPointInHit(LArHitWidthHelper::GetClosestPointToLine2D(extrapolatedStartPosition, extrapolatedDirection, pCaloHit));
 
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedStartPosition, "start", GREEN, 2);
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "added hit", BLUE, 2);
-                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedEndPosition, "end", GREEN, 2);
+                    if (this->IsCloseToLine(closestPointInHit, extrapolatedStartPosition, extrapolatedDirection, m_distanceToLine))
+                        identifiedHits[pCaloHit] = false;
+                }
+                
+            }
+
+            /*
+            for (const auto &entry : identifiedHits)
+            {
+                const CartesianVector &hitPosition(entry.first->GetPositionVector());
+                PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "identified hit", BLUE, 2);
+            }
+            PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            */
+            bool found = true;
+
+            while(found)
+            {
+                found = false;
+
+                for (const auto &entry : identifiedHits)
+                {
+                    const CaloHit *const pCaloHit(entry.first);
+
+                    if (std::find(subsetHitList.begin(), subsetHitList.end(), pCaloHit) != subsetHitList.end())
+                        continue;
+
+                    CartesianVector hitPosition(pCaloHit->GetPositionVector());
+
+                    if (this->GetClosestDistance(hitPosition, runningFitPositionVector) > m_hitConnectionDistance)
+                    {
+                        const CartesianVector closestPointInHit(LArHitWidthHelper::GetClosestPointToLine2D(extrapolatedStartPosition, extrapolatedDirection, pCaloHit));
+                        
+                        if (LArHitWidthHelper::GetClosestDistance(pCaloHit, showerSpineHitList) > m_hitConnectionDistance)
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            runningFitPositionVector.push_back(closestPointInHit);
+                        }
+                    }
+                    else
+                    {
+                        runningFitPositionVector.push_back(hitPosition);
+                    }
+
+                    found = true;
+
+                    ++hitsCollected;
+
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "added hit", BLUE, 2);
                     
-                longitudinalPositionMap[pCaloHit] = longitudinalDistance + extrapolatedDirection.GetDotProduct(hitPosition - extrapolatedStartPosition);
+                    subsetHitList.push_back(pCaloHit);
+                    showerSpineHitList.push_back(pCaloHit);
 
-                subsetHitList.push_back(pCaloHit);
-                showerSpineHitList.push_back(pCaloHit);
-                runningFitPositionVector.push_back(hitPosition);
+                }
+            }
+
+            identifiedHits.clear();
+
+            if (hitsCollected == 0)
+            {
+                const TwoDSlidingFitResult microExtrapolatedFit(&runningFitPositionVector, 5.f, slidingFitPitch);
+            
+                extrapolatedStartPosition = count == 1 ? extrapolatedStartPosition : isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerPosition() : microExtrapolatedFit.GetGlobalMinLayerPosition();
+                extrapolatedDirection = isEndDownstream ? microExtrapolatedFit.GetGlobalMaxLayerDirection() : microExtrapolatedFit.GetGlobalMinLayerDirection() * (-1.f);
+                extrapolatedEndPosition = extrapolatedStartPosition + (extrapolatedDirection * m_growingFitSegmentLength);
+
+                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedStartPosition, "start", RED, 2);
+                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedEndPosition, "end", RED, 2);
+
+                microExtrapolatedFit.GetLocalPosition(extrapolatedStartPosition, extrapolatedStartL, extrapolatedStartT);
+                microExtrapolatedFit.GetLocalPosition(extrapolatedEndPosition, extrapolatedEndL, extrapolatedEndT);
+
+                for (const CaloHit *const pCaloHit : caloHitList)
+                {
+                    if (std::find(subsetHitList.begin(), subsetHitList.end(), pCaloHit) != subsetHitList.end())
+                        continue;
+
+                    float hitL(0.f), hitT(0.f);
+                    const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+                  
+                    microExtrapolatedFit.GetLocalPosition(hitPosition, hitL, hitT);
+
+                    if (isEndDownstream && ((hitL < extrapolatedStartL) || (hitL > extrapolatedEndL)))
+                        continue;
+
+                    if (!isEndDownstream && ((hitL > extrapolatedStartL) || (hitL < extrapolatedEndL)))
+                        continue;
+
+                    // add large hit widths but don't let them damage the fit?
+                    if (this->IsCloseToLine(hitPosition, extrapolatedStartPosition, extrapolatedDirection, m_distanceToLine))
+                    {
+                        identifiedHits[pCaloHit] = true;
+                    }
+                    else
+                    {
+                        const CartesianVector closestPointInHit(LArHitWidthHelper::GetClosestPointToLine2D(extrapolatedStartPosition, extrapolatedDirection, pCaloHit));
+
+                        if (this->IsCloseToLine(closestPointInHit, extrapolatedStartPosition, extrapolatedDirection, m_distanceToLine))
+                            identifiedHits[pCaloHit] = false;
+                    }
+                }
+
+                found = true;
+
+                while(found)
+                {
+                    found = false;
+
+                    for (const auto &entry : identifiedHits)
+                    {
+                        const CaloHit *const pCaloHit(entry.first);
+
+                        if (std::find(subsetHitList.begin(), subsetHitList.end(), pCaloHit) != subsetHitList.end())
+                            continue;
+
+                        CartesianVector hitPosition(pCaloHit->GetPositionVector());
+
+                        if (this->GetClosestDistance(hitPosition, runningFitPositionVector) > m_hitConnectionDistance)
+                        {
+                            const CartesianVector closestPointInHit(LArHitWidthHelper::GetClosestPointToLine2D(extrapolatedStartPosition, extrapolatedDirection, pCaloHit));
+                        
+                            if (LArHitWidthHelper::GetClosestDistance(pCaloHit, showerSpineHitList) > m_hitConnectionDistance)
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                runningFitPositionVector.push_back(closestPointInHit);
+                            }
+                        }
+
+                        found = true;
+
+                        ++hitsCollected;
+
+                        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "added hit", BLUE, 2);
+                    
+                        subsetHitList.push_back(pCaloHit);
+                        showerSpineHitList.push_back(pCaloHit);
+                        runningFitPositionVector.push_back(hitPosition);
+                    }
+                }
             }
         }
         catch (const StatusCodeException &)
         {
             return;
         }
-
-        PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-
-        ++count;
-        longitudinalDistance += m_growingFitSegmentLength;
     }
+
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -263,6 +437,23 @@ void ShowerStartRefinementBaseTool::BuildProtoShowers(const ParticleFlowObject *
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+float ShowerStartRefinementBaseTool::GetClosestDistance(const CartesianVector &position, const CartesianPointVector &testPositions) const
+{
+    float closestDistanceSqaured(std::numeric_limits<float>::max());
+
+    for (const CartesianVector &testPosition : testPositions)
+    {
+        const float separationSquared((testPosition - position).GetMagnitudeSquared());
+
+        if (separationSquared < closestDistanceSqaured)
+            closestDistanceSqaured = separationSquared;
+    }
+
+    return std::sqrt(closestDistanceSqaured);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 void ShowerStartRefinementBaseTool::FindShowerCores(const ParticleFlowObject *const pShowerPfo, ProtoShowerVector &protoShowerVector) const
 {
     // do fancy logic
@@ -321,7 +512,19 @@ StatusCode ShowerStartRefinementBaseTool::ReadSettings(const TiXmlHandle xmlHand
         XmlHelper::ReadValue(xmlHandle, "DistanceToLine", m_distanceToLine));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "InitialFitDistanceToLine", m_initialFitDistanceToLine));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MaxFittingsHits", m_maxFittingHits));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "EnergySpectrumBinSize", m_energySpectrumBinSize));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "HitConnectionDistance", m_hitConnectionDistance));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "HitInitialHitsFound", m_minInitialHitsFound));
 
     return STATUS_CODE_SUCCESS;
 }

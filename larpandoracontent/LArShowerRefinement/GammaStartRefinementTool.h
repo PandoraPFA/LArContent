@@ -27,6 +27,9 @@ public:
 
     void FillTree(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertexPosition);
 
+    void AngularDistributionTree(ShowerStartRefinementAlgorithm *const pAlgorithm, const DeviationAngleMap &deviationAngleMapU, 
+                             const DeviationAngleMap &deviationAngleMapV, const DeviationAngleMap &deviationAngleMapW);
+
     void FillAngularDecompositionMap(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
         const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, DeviationAngleMap &deviationAngleMap);
 
@@ -37,9 +40,22 @@ public:
 
     void ObtainViewPeakVector(DeviationAngleMap &deviationAngleMap, pandora::IntVector &viewPeakVector);
 
-    int FindBestAngularPeak(DeviationAngleMap &deviationAngleMap, pandora::IntVector &viewPeakVector);
+    bool FindBestAngularPeak(DeviationAngleMap &deviationAngleMap, pandora::IntVector &viewPeakVector, pandora::IntVector &investigatedPeaks, int &bestAngularPeak);
 
-    void GetEnergyDistribution(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, const LongitudinalPositionMap &longitudinalPositionMap);
+    void GetEnergyDistribution(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, 
+        pandora::IntVector &showerCounterVector, pandora::FloatVector &projectionVector, pandora::FloatVector &energies, EnergySpectrumMap &energySpectrumMap);
+
+    void ObtainLongitudinalDecomposition(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, 
+        LongitudinalPositionMap &longitudinalPositionMap);
+
+    bool FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList, pandora::CartesianVector &showerStartPosition, const pandora::CaloHitList &showerPfoHitList, const bool isEndDownstream);
+
+    bool IsTrackBlip(const EnergySpectrumMap &energySpectrumMap, const EnergySpectrumMap::const_iterator &iter, const float initialMean, const float initialSigma);
+
+    bool IsShowerTopology(ShowerStartRefinementAlgorithm *const pAlgorithm, const float longitudinalDistance, const pandora::CaloHitList &showerPfoHits, const pandora::CaloHitList &showerSpineHits, const bool isEndDownstream);
+
+
+    pandora::StatusCode CharacteriseShower(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerPfoHits, const pandora::CaloHitList &showerSpineHits, const pandora::CartesianVector &showerStartPosition, const pandora::CartesianVector &showerStartDirection, const bool isEndDownstream, float showerLengthFraction, pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, pandora::CartesianVector &positiveEdgeDirection, pandora::CartesianVector &negativeEdgeStart, pandora::CartesianVector &negativeEdgeEnd, pandora::CartesianVector &negativeEdgeDirection, bool &isBetween, bool &doesStraddle);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -48,6 +64,13 @@ private:
 
     int m_counter;
     int m_showerCounter;
+    int m_microSlidingFitWindow;
+    float m_minSigmaDeviation;
+    float m_trackSearchWindow;
+    int m_nInitialEnergyBins;
+    float m_minTrackBlipMean;
+    int m_showerSlidingFitWindow;
+    float m_molliereRadius;
 };
 
 } // namespace lar_content

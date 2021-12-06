@@ -311,6 +311,12 @@ public:
      *  @return  the smallest distance
      */
     static float GetClosestDistanceToPoint2D(const pandora::CaloHit *const pCaloHit, const pandora::CartesianVector &point2D);
+
+    static float GetClosestDistance(const pandora::CaloHit *const pCaloHit, const pandora::CartesianPointVector &positionVector);
+
+    static float GetClosestDistance(const pandora::CaloHit *const pThisCaloHit, const pandora::CaloHitList &caloHitList);
+
+    static float GetClosestDistance(const pandora::CaloHit *const pCaloHit1, const pandora::CaloHit *const pCaloHit2);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
