@@ -36,7 +36,8 @@ GammaStartRefinementTool::GammaStartRefinementTool() :
     m_nInitialEnergyBins(5),
     m_minTrackBlipMean(3.f),
     m_showerSlidingFitWindow(20),
-    m_molliereRadius(9.f)
+    m_molliereRadius(9.f),
+    m_minShowerOpeningAngle(3.f)
 {
 }
 
@@ -101,7 +102,7 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
         return false;
 
     ////////////////////////////////
-    // temporary 
+    // temporary  - actually works really well so keep this
     CaloHitList caloHits3D;
     LArPfoHelper::GetCaloHits(pShowerPfo, TPC_3D, caloHits3D);
 
@@ -255,9 +256,13 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
 
     for (unsigned int i = 0; i < angularPeakVectorW.size(); ++i)
     {
+        std::cout << "ccccc" << std::endl;
+
         int bestAngularPeak(0);
         if (!this->FindBestAngularPeak(deviationAngleMapW, angularPeakVectorW, investigatedPeaksW, bestAngularPeak))
             break;
+
+        std::cout << "dddddd" << std::endl;
 
         investigatedPeaksW.push_back(bestAngularPeak);
 
@@ -305,108 +310,19 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
     
     //this->AngularDistributionTree(pAlgorithm, deviationAngleMapU, deviationAngleMapV, deviationAngleMapW);
     /////////////
-        /*
-    ProtoShowerVector protoShowerVector;
-    this->BuildProtoShowers(pShowerPfo, protoShowerVector);
-
-    std::cout << "DDDDDDDDDDD" << std::endl;
-
-    if (protoShowerVector.empty())
-        return false;
-
-    std::cout << "EEEEEEEEEEEE" << std::endl;
-
-    // pfo splitting alg? (can be quite simple if we are able to build the protoShowers sufficiently...)
-    // set ProtoShower parent pfo address to match!
-    if (protoShowerVector.size() != 1)
-        return false;
-
-    for (const ProtoShower &protoShower : protoShowerVector)
-    {
-        if (this->IsElectronPathway(protoShower))
-            continue;
-
-        this->RemoveConnectionPathway(protoShower);
-
-        // change metadata to say that we think that this gamma is a gamma (so that we don't extend it in the future tool)
-    }
-        */
-
-
-    /*
-    this->FillAngularDecompositionMap(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_V, deviationAngleMapV);
-    this->FillAngularDecompositionMap(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, deviationAngleMapW);
-
-    AngularPeakVector angularPeakVector;
-    this->ObtainAngularPeakVector(pAlgorithm, deviationAngleMapU, deviationAngleMapV, deviationAngleMapW, angularPeakVector);
-    */
-    ///////
-    /*
-    // do this for U view
-    int highestBin(0);
-    float highestWeight(-std::numeric_limits<float>::max());
-
-    for (const auto &entry : pAlgorithm->m_thetaMapU)
-    {
-        float weight = entry.second.size();
-
-        if (weight > highestWeight)
-        {
-            highestWeight = weight;
-            highestBin = entry.first;
-        }
-    }
-
-    std::cout << "highest peak: " << highestBin * pAlgorithm->m_binSize << std::endl;
-
-    const CartesianVector peakDirection(std::cos(highestBin * pAlgorithm->m_binSize), 0.f, std::sin(highestBin * pAlgorithm->m_binSize));
-
-    std::cout << "peakDirection: " << peakDirection << std::endl;
-
-    CaloHitList showerSpineHitList;
-    this->FindShowerSpine(pAlgorithm, pShowerPfo, nuVertexPositionU, peakDirection, TPC_VIEW_U, showerSpineHitList);
-
-    CartesianVector projection(nuVertexPositionU + (peakDirection * 14.f));
-
-    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexPositionU, &projection, "direction", BLACK, 2, 1);
-    PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &showerSpineHitList, "SPINE", BLACK);
-    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-
-    // ISOBEL - SHOULD I ALSO HAVE A HIT CUT?
-    if (!this->HasPathToNuVertex(pShowerPfo, nuVertexPosition))
-        return false;
-
-    std::cout << "CCCCCCCCCCCC" << std::endl;
-
-    ProtoShowerVector protoShowerVector;
-    this->BuildProtoShowers(pShowerPfo, protoShowerVector);
-
-    std::cout << "DDDDDDDDDDD" << std::endl;
-
-    if (protoShowerVector.empty())
-        return false;
-
-    std::cout << "EEEEEEEEEEEE" << std::endl;
-
-    // pfo splitting alg? (can be quite simple if we are able to build the protoShowers sufficiently...)
-    // set ProtoShower parent pfo address to match!
-    if (protoShowerVector.size() != 1)
-        return false;
-
-    for (const ProtoShower &protoShower : protoShowerVector)
-    {
-        if (this->IsElectronPathway(protoShower))
-            continue;
-
-        this->RemoveConnectionPathway(protoShower);
-
-        // change metadata to say that we think that this gamma is a gamma (so that we don't extend it in the future tool)
-    }
-    */
-
+  
     return true;
 }
 
+//------------------------------------------------------------------------------------------------------------------------------------------
+/*
+void ShowerStartRefinementBaseTool::BuildProtoShowers(const ParticleFlowObject *const pShowerPfo, const HitType tpcView, ProtoShowerVector &protoShowerVector) const
+{
+
+
+
+}
+*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void GammaStartRefinementTool::FillTree(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertexPosition)
@@ -586,6 +502,9 @@ void GammaStartRefinementTool::FillAngularDecompositionMap(ShowerStartRefinement
         else
             deviationAngleMap[thetaFactor] += 1;
     }
+
+    if (deviationAngleMap.empty())
+        return;
 
     this->SmoothAngularDecompositionMap(deviationAngleMap);
 }
@@ -1135,7 +1054,7 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
     std::cout << "positive opening angle: " << (positiveEdgeDirection.GetOpeningAngle(showerStartDirection) * 180.f / 3.14) << std::endl;
     std::cout << "negative opening angle: " << (negativeEdgeDirection.GetOpeningAngle(showerStartDirection) * 180.f / 3.14) << std::endl;
 
-    if (showerOpeningAngle < 5.f)
+    if (showerOpeningAngle < m_minShowerOpeningAngle)
     {
         std::cout << "shower opening angle is too small" << std::endl;
         return false;
@@ -1150,6 +1069,8 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
     {
         std::cout << "negative edge is not in the direction of the shower" << std::endl;
     }
+
+    //make sure that lines don't cross??
 
     PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &positiveEdgeStart, &positiveEdgeEnd, "positive direction", BLACK, 2, 1);
     PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &negativeEdgeStart, &negativeEdgeEnd, "negative direction", BLACK, 2, 1);
@@ -1223,10 +1144,18 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
         const LayerFitResultMap &layerFitResultMapP(twoDShowerSlidingFit.GetPositiveEdgeFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapN(twoDShowerSlidingFit.GetNegativeEdgeFitResult().GetLayerFitResultMap());
 
+        float showerStartL(0.f), showerStartT(0.f);
+        twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(showerStartPosition, showerStartL, showerStartT);
+
+        const int startLayer(twoDShowerSlidingFit.GetShowerFitResult().GetLayer(showerStartL));
+
         //////////////////////////////////////
         // Find edge positions for visualisation
         for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
         {
+            if (iterS->first < startLayer)
+                continue;
+
             LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
             LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
 
@@ -1256,9 +1185,7 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
             if (countP != 0)
             {
                 const float separation((coordinateP - previousCoordinateP).GetMagnitude());
-
-                float thisT(0.f);
-                twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(coordinateP, pMaximumL, thisT);
+                std::cout << "separationP: " << separation << std::endl;
 
                 if (separation > 5.f)
                 {
@@ -1266,6 +1193,9 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
                     break;
                 }
             }
+
+            float thisT(0.f);
+            twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(coordinateP, pMaximumL, thisT);
 
             ++countP;
             previousCoordinateP = coordinateP;
@@ -1280,9 +1210,7 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
             if (countN != 0)
             {
                 const float separation((coordinateN - previousCoordinateN).GetMagnitude());
-
-                float thisT(0.f);
-                twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(coordinateN, nMaximumL, thisT);
+                std::cout << "separationN: " << separation << std::endl;
 
                 if (separation > 5.f)
                 {
@@ -1290,6 +1218,9 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
                     break;
                 }
             }
+
+            float thisT(0.f);
+            twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(coordinateN, nMaximumL, thisT);
 
             ++countN;
             previousCoordinateN = coordinateN;
@@ -1329,6 +1260,7 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
     }
     catch (const StatusCodeException &)
     {
+        std::cout << "couldn't perform first fit" << std::endl;
         return STATUS_CODE_FAILURE;
     }
 
@@ -1357,6 +1289,12 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
         const LayerFitResultMap &layerFitResultMapP(twoDShowerSlidingFit.GetPositiveEdgeFitResult().GetLayerFitResultMap());
         const LayerFitResultMap &layerFitResultMapN(twoDShowerSlidingFit.GetNegativeEdgeFitResult().GetLayerFitResultMap());
 
+        float showerStartL(0.f), showerStartT(0.f);
+        twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(showerStartPosition, showerStartL, showerStartT);
+
+        const int startLayer(twoDShowerSlidingFit.GetShowerFitResult().GetLayer(showerStartL));
+        const int endLayer(twoDShowerSlidingFit.GetShowerFitResult().GetMaxLayer());
+
         //////////////////////////////////////
         // Find edge positions for visualisation
         CartesianPointVector coordinateListP, coordinateListN;
@@ -1366,6 +1304,9 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
 
         for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
         {
+            if (iterS->first < startLayer)
+                continue;
+
             LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(iterS->first);
             LayerFitResultMap::const_iterator iterN = layerFitResultMapN.find(iterS->first);
 
@@ -1386,13 +1327,8 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
 
             if ((layerFitResultMapP.end() != iterP) && (layerFitResultMapN.end() != iterN))
             {
-                ++layerCount;
-
                 const CartesianVector positiveDisplacement((positiveEdgePosition - showerStartPosition).GetUnitVector());
                 const float positiveOpeningAngleFromCore(showerStartDirection.GetOpeningAngle(positiveDisplacement));
-
-                if ((positiveOpeningAngleFromCore * 180 / 3.14) > 45.f)
-                    continue;
 
                 const CartesianVector positiveClockwiseRotation(positiveDisplacement.GetZ() * std::sin(positiveOpeningAngleFromCore) + 
                     positiveDisplacement.GetX() * std::cos(positiveOpeningAngleFromCore), 0.f, positiveDisplacement.GetZ() * std::cos(positiveOpeningAngleFromCore) - 
@@ -1408,9 +1344,6 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
                 const CartesianVector negativeDisplacement((negativeEdgePosition - showerStartPosition).GetUnitVector());
                 const float negativeOpeningAngleFromCore(showerStartDirection.GetOpeningAngle(negativeDisplacement));
 
-                if ((negativeOpeningAngleFromCore * 180 / 3.14) > 45.f)
-                    continue;
-
                 const CartesianVector negativeClockwiseRotation(negativeDisplacement.GetZ() * std::sin(negativeOpeningAngleFromCore) + 
                     negativeDisplacement.GetX() * std::cos(negativeOpeningAngleFromCore), 0.f, negativeDisplacement.GetZ() * std::cos(negativeOpeningAngleFromCore) - 
                     negativeDisplacement.GetX() * std::sin(negativeOpeningAngleFromCore));
@@ -1422,13 +1355,31 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
                 const float negativeAnticlockwiseT((negativeAnticlockwiseRotation - showerStartDirection).GetMagnitude());
                 const bool isNegativeClockwise(negativeClockwiseT < negativeAnticlockwiseT);
 
+                /*
+                if ((positiveOpeningAngleFromCore * 180 / 3.14) > 45.f)
+                    continue;
+
+                if ((negativeOpeningAngleFromCore * 180 / 3.14) > 45.f)
+                    continue;
+                */
+
+                ++layerCount;
+
+                if (layerCount == 1)
+                {
+                    CartesianVector middlePosition(0.f, 0.f, 0.f);
+                    twoDShowerSlidingFit.GetShowerFitResult().GetGlobalPosition(iterS->second.GetL(), iterS->second.GetFitT(), middlePosition);
+                    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &positiveEdgePosition, "positiveEdgePosition", YELLOW, 2);
+                    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &negativeEdgePosition, "negativeEdgePosition", YELLOW, 2);
+                    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &middlePosition, "middlePosition", YELLOW, 2);
+                    isFirstBetween = (isPositiveClockwise != isNegativeClockwise);
+                }
+
+                isLastBetween = (isPositiveClockwise != isNegativeClockwise);
+
                 if (!doesStraddle)
                     doesStraddle = (isPositiveClockwise != isNegativeClockwise);
 
-                if (layerCount == 1)
-                    isFirstBetween = doesStraddle;
-
-                isLastBetween = (isPositiveClockwise != isNegativeClockwise);
                 /*
                 if (doesStraddle)
                 {
@@ -1446,77 +1397,86 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
         isBetween = (isFirstBetween || isLastBetween);
         //////////////////////////////////////
 
-
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
         // Find extremal coordinates
 
-        float showerStartL(0.f), showerStartT(0.f);
-        twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(showerStartPosition, showerStartL, showerStartT);
-
-        const int startLayer(twoDShowerSlidingFit.GetShowerFitResult().GetLayer(showerStartL));
-        const int endLayer(twoDShowerSlidingFit.GetShowerFitResult().GetMaxLayer());
-
         // positive
-        int positiveStartLayer(0);
-        int positiveEndLayer(0);
+        int positiveStartLayer(10000);
+        int positiveEndLayer(10000);
 
-        for (auto &entry : layerFitResultMapN)
+        for (auto &entry : layerFitResultMapP)
         {
+            std::cout << "entry.first: " << entry.first << std::endl;
+
             const int bestStartSeparation(std::abs(startLayer - positiveStartLayer));
             const int thisStartSeparation(std::abs(startLayer - entry.first));
 
-            if ((std::abs(bestStartSeparation - thisStartSeparation) > 0) && (thisStartSeparation < bestStartSeparation))
+            if (((bestStartSeparation - thisStartSeparation) > 0) && (thisStartSeparation < bestStartSeparation))
                 positiveStartLayer = entry.first;
 
             const int bestEndSeparation(std::abs(endLayer - positiveEndLayer));
             const int thisEndSeparation(std::abs(endLayer - entry.first));
 
-            if ((std::abs(bestEndSeparation - thisEndSeparation) > 0) && (thisEndSeparation < bestEndSeparation))
+            if (((bestEndSeparation - thisEndSeparation) > 0) && (thisEndSeparation < bestEndSeparation))
                 positiveEndLayer = entry.first;
         }
-
-        if (std::abs(startLayer - positiveStartLayer) > 2)
+        
+        if (std::abs(startLayer - positiveStartLayer) > 5)
         {
+            std::cout << "startLayer: " << startLayer << std::endl;
+            std::cout << "positiveStartLayer: " << positiveStartLayer << std::endl;
             std::cout << "positiveStartLayer too far away" << std::endl;
             return STATUS_CODE_FAILURE;
         }
-
+        
         // negative
-        int negativeStartLayer(0);
-        int negativeEndLayer(0);
+        int negativeStartLayer(10000);
+        int negativeEndLayer(10000);
 
         for (auto &entry : layerFitResultMapN)
         {
             const int bestStartSeparation(std::abs(startLayer - negativeStartLayer));
             const int thisStartSeparation(std::abs(startLayer - entry.first));
 
-            if ((std::abs(bestStartSeparation - thisStartSeparation) > 0) && (thisStartSeparation < bestStartSeparation))
+            if (((bestStartSeparation - thisStartSeparation) > 0) && (thisStartSeparation < bestStartSeparation))
                 negativeStartLayer = entry.first;
 
             const int bestEndSeparation(std::abs(endLayer - negativeEndLayer));
             const int thisEndSeparation(std::abs(endLayer - entry.first));
 
-            if ((std::abs(bestEndSeparation - thisEndSeparation) > 0) && (thisEndSeparation < bestEndSeparation))
+            if (((bestEndSeparation - thisEndSeparation) > 0) && (thisEndSeparation < bestEndSeparation))
                 negativeEndLayer = entry.first;
         }
 
-        if (std::abs(startLayer - negativeStartLayer) > 2)
+        if (std::abs(startLayer - negativeStartLayer) > 5)
         {
             std::cout << "negativeStartLayer too far away" << std::endl;
             return STATUS_CODE_FAILURE;
         }
 
-        // should this be with respect to the shower direction??
+        std::cout << "startLayer: " << startLayer << std::endl;
+        std::cout << "positiveStartLayer: " << positiveStartLayer << std::endl;
+        std::cout << "positiveEndLayer: " << positiveEndLayer << std::endl;
+        std::cout << "negativeStartLayer: " << negativeStartLayer << std::endl;
+        std::cout << "negativeEndLayer: " << negativeEndLayer << std::endl;
 
+        std::cout << "111" << std::endl;
         const float showerStartPositiveLocalL(layerFitResultMapP.at(positiveStartLayer).GetL()), showerStartPositiveLocalT(layerFitResultMapP.at(positiveStartLayer).GetFitT());
+        std::cout << "222" << std::endl;
         const float showerEndPositiveLocalL(layerFitResultMapP.at(positiveEndLayer).GetL()), showerEndPositiveLocalT(layerFitResultMapP.at(positiveEndLayer).GetFitT());
+        std::cout << "333" << std::endl;
         const float showerStartNegativeLocalL(layerFitResultMapN.at(negativeStartLayer).GetL()), showerStartNegativeLocalT(layerFitResultMapN.at(negativeStartLayer).GetFitT());
+        std::cout << "444" << std::endl;
         const float showerEndNegativeLocalL(layerFitResultMapN.at(negativeEndLayer).GetL()), showerEndNegativeLocalT(layerFitResultMapN.at(negativeEndLayer).GetFitT());
+        std::cout << "5555" << std::endl;
 
         twoDShowerSlidingFit.GetShowerFitResult().GetGlobalPosition(showerStartPositiveLocalL, showerStartPositiveLocalT, positiveEdgeStart);
         twoDShowerSlidingFit.GetShowerFitResult().GetGlobalPosition(showerEndPositiveLocalL, showerEndPositiveLocalT, positiveEdgeEnd);
         twoDShowerSlidingFit.GetShowerFitResult().GetGlobalPosition(showerStartNegativeLocalL, showerStartNegativeLocalT, negativeEdgeStart);
         twoDShowerSlidingFit.GetShowerFitResult().GetGlobalPosition(showerEndNegativeLocalL, showerEndNegativeLocalT, negativeEdgeEnd);
+        std::cout << "66666" << std::endl;
+
         /*
         std::cout << "startLayer: " << startLayer << std::endl;
         std::cout << "positiveStartLayer: " << positiveStartLayer << std::endl;
@@ -1608,6 +1568,7 @@ bool GammaStartRefinementTool::IsTrackBlip(const EnergySpectrumMap &energySpectr
     }
     catch (const StatusCodeException &)
     {
+        std::cout << "couldn't perform second shower fit" << std::endl;
         return STATUS_CODE_FAILURE;
     }
 
@@ -1645,6 +1606,9 @@ StatusCode GammaStartRefinementTool::ReadSettings(const TiXmlHandle xmlHandle)
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "MolliereRadius", m_molliereRadius));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "MinShowerOpeningAngle", m_minShowerOpeningAngle));
 
     ShowerStartRefinementBaseTool::ReadSettings(xmlHandle);
 

@@ -71,6 +71,7 @@ private:
     float m_minTrackBlipMean;
     int m_showerSlidingFitWindow;
     float m_molliereRadius;
+    float m_minShowerOpeningAngle;
 };
 
 } // namespace lar_content
