@@ -13,6 +13,8 @@
 
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
 
+#include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
+
 namespace lar_content
 {
 
@@ -20,6 +22,8 @@ class ShowerCore
 {
 public:
     ShowerCore();
+
+    ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection, const pandora::CaloHitList &coreHitList);
 
     void SetStartPosition(const pandora::CartesianVector &startPosition);
 
@@ -30,6 +34,13 @@ public:
     pandora::CartesianVector m_startDirection;
     pandora::CaloHitList m_coreHitList;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ShowerCore::ShowerCore(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection, const pandora::CaloHitList &coreHitList) : 
+    m_startPosition(startPosition), m_startDirection(startDirection), m_coreHitList(coreHitList)
+{
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -52,15 +63,6 @@ inline void ShowerCore::SetStartDirection(const pandora::CartesianVector &startD
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-
-/*
-inline ShowerCore::SetStartDirection(const CartesianVector &startDirection)
-{
-    m_startDirection = startDirection;
-}
-*/
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 class ConnectionPathway
@@ -68,11 +70,20 @@ class ConnectionPathway
 public:
     ConnectionPathway();
 
+    ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection, const pandora::CaloHitList &pathwayHitList);
+
     // when you're not feeling lazy, change this to private
     pandora::CartesianVector m_startPosition;
     pandora::CartesianVector m_startDirection;
     pandora::CaloHitList m_pathwayHitList;
 };
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ConnectionPathway::ConnectionPathway(const pandora::CartesianVector &startPosition, const pandora::CartesianVector &startDirection, const pandora::CaloHitList &pathwayHitList) : 
+    m_startPosition(startPosition), m_startDirection(startDirection), m_pathwayHitList(pathwayHitList)
+{
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -88,12 +99,20 @@ class ProtoShower
 public: 
     ProtoShower();
 
+    ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway);
+
     // when you're not feeling lazy, change this to private  
     ShowerCore m_showerCore;
     ConnectionPathway m_connectionPathway;
 };
 
 typedef std::vector<ProtoShower> ProtoShowerVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway) : m_showerCore(showerCore), m_connectionPathway(connectionPathway)
+{
+}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -139,15 +158,25 @@ public:
 
     virtual bool Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertexPosition) = 0;
 
-    typedef std::map<int, float> EnergySpectrumMap;
-    typedef std::map<int, float> DeviationAngleMap;
+    typedef std::map<int, float> AngularDecompositionMap;
     typedef std::map<const pandora::CaloHit*, float> LongitudinalPositionMap;
+    typedef std::map<int, float> EnergySpectrumMap;
+    typedef std::map<int, pandora::CaloHitList> LayerToHitMap;
 
 protected:
     bool HasPathToNuVertex(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &neutrinoVertex) const;
 
-    void FindShowerSpine(const ShowerStartRefinementAlgorithm *pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &neutrinoVertex,
-        const pandora::CartesianVector &initialDirection, const pandora::HitType hitType, pandora::CaloHitList &showerSpineHitList);
+    void FindShowerSpine(const ShowerStartRefinementAlgorithm *pAlgorithm, const pandora::CaloHitList &viewShowerHitList, 
+        const pandora::CartesianVector &projectedNuVertexPosition, const pandora::CartesianVector &initialDirection, pandora::CaloHitList &unavailableHitList, 
+        pandora::CaloHitList &showerSpineHitList);
+
+    bool CollectSubsectionHits(const ShowerStartRefinementAlgorithm *pAlgorithm, const TwoDSlidingFitResult &extrapolatedFit, const pandora::CartesianVector &extrapolatedStartPosition, 
+       const pandora::CartesianVector &extrapolatedEndPosition, const pandora::CartesianVector &extrapolatedDirection, const bool isEndDownstream, const pandora::CaloHitList &viewShowerHitList, 
+       pandora::CartesianPointVector &runningFitPositionVector, pandora::CaloHitList &unavailableHitList, pandora::CaloHitList &showerSpineHitList);
+
+    void CollectConnectedHits(const ShowerStartRefinementAlgorithm *pAlgorithm, const pandora::CaloHitList &collectedHits, const pandora::CartesianVector &extrapolatedStartPosition, 
+        const pandora::CartesianVector &extrapolatedDirection, pandora::CartesianPointVector &runningFitPositionVector, pandora::CaloHitList &unavailableHitList, 
+        pandora::CaloHitList &showerSpineHitList);
 
     void GetHitsInBoundingBox(const pandora::CartesianVector &firstCorner, const pandora::CartesianVector &secondCorner, const pandora::CaloHitList &inputHitList,
         const float distanceToLine, pandora::CaloHitList &hitsInBoundingBox) const; 
@@ -180,7 +209,7 @@ protected:
     float m_distanceToLine;
     float m_initialFitDistanceToLine;
     int m_maxFittingHits;
-    float m_energySpectrumBinSize;
+    float m_longitudinalCoordinateBinSize;
     float m_hitConnectionDistance;
     unsigned int m_minInitialHitsFound;
 
