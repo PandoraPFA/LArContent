@@ -40,23 +40,34 @@ void BoundedClusterMopUpAlgorithm::ClusterMopUp(const ClusterList &pfoClusters, 
 
     for (const Cluster *const pPfoCluster : sortedPfoClusters)
     {
-        const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
-
-        ShowerPositionMap showerPositionMap;
-        const XSampling xSampling(fitResult.GetShowerFitResult());
-        this->GetShowerPositionMap(fitResult, xSampling, showerPositionMap);
-
-        for (const Cluster *const pRemnantCluster : sortedRemnantClusters)
+        CaloHitList clusterHitList;
+        pPfoCluster->GetOrderedCaloHitList().FillCaloHitList(clusterHitList);
+        if (clusterHitList.size() <= 3)
+            continue;
+        try
         {
-            const float boundedFraction(this->GetBoundedFraction(pRemnantCluster, xSampling, showerPositionMap));
+            const TwoDSlidingShowerFitResult fitResult(pPfoCluster, m_slidingFitWindow, slidingFitPitch, m_showerEdgeMultiplier);
 
-            if (boundedFraction < m_minBoundedFraction)
-                continue;
+            ShowerPositionMap showerPositionMap;
+            const XSampling xSampling(fitResult.GetShowerFitResult());
+            this->GetShowerPositionMap(fitResult, xSampling, showerPositionMap);
+            for (const Cluster *const pRemnantCluster : sortedRemnantClusters)
+            {
+                const float boundedFraction(this->GetBoundedFraction(pRemnantCluster, xSampling, showerPositionMap));
 
-            AssociationDetails &associationDetails(clusterAssociationMap[pRemnantCluster]);
+                if (boundedFraction < m_minBoundedFraction)
+                    continue;
 
-            if (!associationDetails.insert(AssociationDetails::value_type(pPfoCluster, boundedFraction)).second)
-                throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+                AssociationDetails &associationDetails(clusterAssociationMap[pRemnantCluster]);
+
+                if (!associationDetails.insert(AssociationDetails::value_type(pPfoCluster, boundedFraction)).second)
+                    throw StatusCodeException(STATUS_CODE_ALREADY_PRESENT);
+            }
+        }
+        catch (const StatusCodeException &e)
+        {
+            if (e.GetStatusCode() != STATUS_CODE_NOT_INITIALIZED)
+                throw e;
         }
     }
 
