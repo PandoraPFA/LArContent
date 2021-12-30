@@ -88,7 +88,6 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
             if (std::find(unavailableHitList.begin(), unavailableHitList.end(), pCaloHit) == unavailableHitList.end())
             {
                 showerSpineHitList.push_back(pCaloHit);
-                unavailableHitList.push_back(pCaloHit);
             }
 
             runningFitPositionVector.push_back(hitPosition);
@@ -99,17 +98,19 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
     if (runningFitPositionVector.size() < m_minInitialHitsFound)
     {
         std::cout << "Not enough initial hits to form fit" << std::endl;
+
         showerSpineHitList.clear();
         return;
     }
 
     //////////////////////////////////
-    /*
+    if (initialDirection.GetZ() < 0.f)
+    {
     for (const CartesianVector position : runningFitPositionVector)
         PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &position, "initial hit", VIOLET, 2);
 
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-    */
+    }
     //////////////////////////////////
 
     // Perform a running fit to follow pathway
@@ -238,7 +239,7 @@ bool ShowerStartRefinementBaseTool::CollectSubsectionHits(const ShowerStartRefin
 
 void ShowerStartRefinementBaseTool::CollectConnectedHits(const ShowerStartRefinementAlgorithm *pAlgorithm, const CaloHitList &collectedHits, 
     const CartesianVector &extrapolatedStartPosition, const CartesianVector &extrapolatedDirection, CartesianPointVector &runningFitPositionVector, 
-    CaloHitList &unavailableHitList, CaloHitList &showerSpineHitList)
+                                                         CaloHitList &/*unavailableHitList*/, CaloHitList &showerSpineHitList)
 {
     // Now add connected hits - taking into account hit width if necessary
     bool found = true;
@@ -266,7 +267,6 @@ void ShowerStartRefinementBaseTool::CollectConnectedHits(const ShowerStartRefine
 
             runningFitPositionVector.push_back(hitPosition);
             showerSpineHitList.push_back(pCaloHit);
-            unavailableHitList.push_back(pCaloHit);
             ////////////////////////////////
             //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "added hit", BLUE, 2);
             ////////////////////////////////

@@ -11,6 +11,7 @@
 
 #include "PandoraMonitoringApi.h"
 
+#include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -70,9 +71,15 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
 
     ProtoShowerVector protoShowerVectorU, protoShowerVectorV, protoShowerVectorW;
 
+    std::cout << "CONNECTION PATHWAYS U" << std::endl;
+
+    ClusterList clustersBeginU;
+    LArPfoHelper::GetClusters(pShowerPfo, TPC_VIEW_U, clustersBeginU);
+    PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &clustersBeginU, "clustersBeginU", RED);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+
     this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_U, protoShowerVectorU);
 
-    std::cout << "CONNECTION PATHWAYS U" << std::endl;
     for (const ProtoShower protoShower : protoShowerVectorU)
     {
         const CaloHitList &connectionPathway(protoShower.m_connectionPathway.m_pathwayHitList);
@@ -83,9 +90,22 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
     }
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 
-    this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_V, protoShowerVectorV);
+    this->RemoveTrackPathways(pAlgorithm, pShowerPfo, protoShowerVectorU);
+
+    ClusterList clustersAfterU;
+    LArPfoHelper::GetClusters(pShowerPfo, TPC_VIEW_U, clustersAfterU);
+    PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &clustersAfterU, "clustersAfterU", BLUE);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 
     std::cout << "CONNECTION PATHWAYS V" << std::endl;
+
+    ClusterList clustersBeginV;
+    LArPfoHelper::GetClusters(pShowerPfo, TPC_VIEW_V, clustersBeginV);
+    PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &clustersBeginV, "clustersBeginV", RED);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+
+    this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_V, protoShowerVectorV);
+
     for (const ProtoShower protoShower : protoShowerVectorV)
     {
         const CaloHitList &connectionPathway(protoShower.m_connectionPathway.m_pathwayHitList);
@@ -97,9 +117,20 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
 
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 
-    this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, protoShowerVectorW);
+    this->RemoveTrackPathways(pAlgorithm, pShowerPfo, protoShowerVectorV);
+
+    PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &clustersBeginV, "clustersAfterV", BLUE);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 
     std::cout << "CONNECTION PATHWAYS W" << std::endl;
+
+    ClusterList clustersBeginW;
+    LArPfoHelper::GetClusters(pShowerPfo, TPC_VIEW_W, clustersBeginW);
+    PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &clustersBeginW, "clustersBeginW", RED);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+
+    this->BuildProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, protoShowerVectorW);
+
     for (const ProtoShower protoShower : protoShowerVectorW)
     {
         const CaloHitList &connectionPathway(protoShower.m_connectionPathway.m_pathwayHitList);
@@ -108,6 +139,11 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
         PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &connectionPathway, "ConnectionPathway", BLACK);
         PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartPosition, "ShowerStartPosition", BLACK, 2);
     }
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+
+    this->RemoveTrackPathways(pAlgorithm, pShowerPfo, protoShowerVectorW);
+
+    PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &clustersBeginW, "clustersAfterW", BLUE);
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
   
     return true;
@@ -175,18 +211,48 @@ void GammaStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorithm 
             continue;
         }
 
+        // Demand that spine is not the entire pfo
+        const float fractionCollected(static_cast<float>(showerSpineHitList.size()) / static_cast<float>(viewShowerHitList.size()));
+
+        if (fractionCollected > 0.8f)
+        {
+            std::cout << "fraction of collected hits is most of the pfo!! ahh!!" << std::endl;
+            continue;
+        }
+
         // Obtail longitudinal position of spine hits
         LongitudinalPositionMap longitudinalPositionMap;
-        this->ObtainLongitudinalDecomposition(pAlgorithm, showerSpineHitList, longitudinalPositionMap);
+        try
+        {
+            this->ObtainLongitudinalDecomposition(pAlgorithm, showerSpineHitList, longitudinalPositionMap);
+        }
+        catch(...)
+        {
+            std::cout << "the super fine fit failed probably a gap in the initial hits??" << std::endl;
+            continue;
+        }
 
         // Obtain spine energy profile
         EnergySpectrumMap energySpectrumMap;
         this->GetEnergyDistribution(pAlgorithm, showerSpineHitList, longitudinalPositionMap, energySpectrumMap);
 
+        unavailableHits.insert(unavailableHits.end(), showerSpineHitList.begin(), showerSpineHitList.end());
+
         // Find shower start position - and pathway! - and possible post shower hits? (ISOBEL TODO)
         CartesianVector showerStartPosition(0.f, 0.f, 0.f);
-        this->FindShowerStart(pAlgorithm, longitudinalPositionMap, energySpectrumMap, showerSpineHitList, showerStartPosition, viewShowerHitList, isEndDownstream, protoShowerVector);
+        this->FindShowerStart(pAlgorithm, projectedNuVertexPosition, peakDirection, longitudinalPositionMap, energySpectrumMap, showerSpineHitList, 
+            showerStartPosition, viewShowerHitList, isEndDownstream, protoShowerVector);
+
+        for (const CaloHit *const pCaloHit : unavailableHits)
+        {
+            const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "SHOWER SPINE", GREEN, 2);
+        }
+        PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     }
+
+    this->FillOutPathways(pAlgorithm, viewShowerHitList, unavailableHits, protoShowerVector);
+    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -359,8 +425,6 @@ void GammaStartRefinementTool::GetEnergyDistribution(ShowerStartRefinementAlgori
     for (const CaloHit *pCaloHit : showerSpineHitList)
         e0 += pCaloHit->GetElectromagneticEnergy();
 
-
-
     for (const CaloHit *pCaloHit : showerSpineHitList)
     {
         const float fractionalEnergy(pCaloHit->GetElectromagneticEnergy() / e0);
@@ -408,9 +472,9 @@ void GammaStartRefinementTool::ObtainLongitudinalDecomposition(ShowerStartRefine
         const int layer(iter->first);
         std::cout << "layer: " << layer << std::endl;
 
-        //CartesianVector blob(0.f, 0.f, 0.f);
-        //twoDSlidingFit.GetGlobalPosition(layerFitResultMap.at(layer).GetL(), layerFitResultMap.at(layer).GetFitT(), blob);
-        //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &blob, std::to_string(layer), BLUE, 2);
+        CartesianVector blob(0.f, 0.f, 0.f);
+        twoDSlidingFit.GetGlobalPosition(layerFitResultMap.at(layer).GetL(), layerFitResultMap.at(layer).GetFitT(), blob);
+        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &blob, std::to_string(layer), BLUE, 2);
 
         const float layerL(layerFitResultMap.at(layer).GetL());
 
@@ -456,28 +520,33 @@ void GammaStartRefinementTool::ObtainLongitudinalDecomposition(ShowerStartRefine
 
         runningDistance += layerLength;
     }
+
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool GammaStartRefinementTool::FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const LongitudinalPositionMap &longitudinalPositionMap, 
-    const EnergySpectrumMap &energySpectrumMap, const CaloHitList &showerSpineHitList, CartesianVector &showerStartPosition, const CaloHitList &showerPfoHitList, 
-    const bool isEndDownstream, ProtoShowerVector &protoShowerVector)
+bool GammaStartRefinementTool::FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const CartesianVector &projectedNuVertexPosition, 
+    const CartesianVector &startDirection, const LongitudinalPositionMap &longitudinalPositionMap, const EnergySpectrumMap &energySpectrumMap, 
+    const CaloHitList &showerSpineHitList, CartesianVector &showerStartPosition, const CaloHitList &showerPfoHitList, const bool isEndDownstream, 
+    ProtoShowerVector &protoShowerVector)
 {
     if (energySpectrumMap.size() < (m_nInitialEnergyBins + 1))
         return false;
 
     float meanEnergy(0.f), energySigma(0.f);
-    this->CharacteriseInitialEnergy(energySpectrumMap, meanEnergy, energySigma);
+    this->CharacteriseInitialEnergy(energySpectrumMap, isEndDownstream, meanEnergy, energySigma);
 
-    auto energySpectrumIter(energySpectrumMap.begin());
+    std::cout << "HERE" << std::endl;
+
+    auto energySpectrumIter(isEndDownstream ? energySpectrumMap.begin() : std::prev(energySpectrumMap.end()));
 
     for (unsigned int i = 0; i < energySpectrumMap.size(); ++i)
     {
         // Bypass bins used to asses the initial energy
         if (i < m_nInitialEnergyBins)
         {
-            ++energySpectrumIter;
+            isEndDownstream ? ++energySpectrumIter : --energySpectrumIter;
             continue;
         }
 
@@ -485,6 +554,11 @@ bool GammaStartRefinementTool::FindShowerStart(ShowerStartRefinementAlgorithm *c
         const float energyDeviation((energySpectrumIter->second - meanEnergy) / energySigma);
 
         std::cout << "energyDeviation (sigma): " << energyDeviation << std::endl;
+        ////0
+        CartesianVector jam(0.f, 0.f, 0.f), jam2(0.f, 0.f, 0.f);
+        this->ConvertLongitudinalProjectionToGlobalPosition(pAlgorithm, showerSpineHitList, longitudinalCoordinate, jam, jam2);
+        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &jam, std::to_string(longitudinalCoordinate), GREEN, 2);
+        //////
 
         // Use energy and local topology to assess whether we are at the shower start
         if ((energyDeviation > m_minSigmaDeviation) && this->IsShowerTopology(pAlgorithm, longitudinalCoordinate,
@@ -492,8 +566,9 @@ bool GammaStartRefinementTool::FindShowerStart(ShowerStartRefinementAlgorithm *c
         {
             break;
         }
-
-        ++energySpectrumIter;
+        
+        if (i != (energySpectrumMap.size() - 1))
+            isEndDownstream ? ++energySpectrumIter : --energySpectrumIter;
     }
 
     const int longitudinalStartBin(energySpectrumIter->first);
@@ -504,13 +579,17 @@ bool GammaStartRefinementTool::FindShowerStart(ShowerStartRefinementAlgorithm *c
 
     std::cout << "longitudinalStartCoordinate: " << longitudinalStartCoordinate << std::endl;
 
+
     CaloHitList pathwayHitList;
     for (const CaloHit *const pCaloHit : showerSpineHitList)
     {
         if (longitudinalPositionMap.find(pCaloHit) == longitudinalPositionMap.end())
             continue;
 
-        if (longitudinalPositionMap.at(pCaloHit) > longitudinalStartCoordinate)
+        if (isEndDownstream && (longitudinalPositionMap.at(pCaloHit) > longitudinalStartCoordinate))
+            continue;
+
+        if (!isEndDownstream && (longitudinalPositionMap.at(pCaloHit) < longitudinalStartCoordinate))
             continue;
 
         std::cout << "longitudinalPositionMap.at(pCaloHit): " << longitudinalPositionMap.at(pCaloHit) << std::endl;
@@ -524,34 +603,35 @@ bool GammaStartRefinementTool::FindShowerStart(ShowerStartRefinementAlgorithm *c
         const CartesianVector &hit(pCaloHit->GetPositionVector());
         PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hit, "path", BLUE, 2);
     }
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());    
     */
 
     protoShowerVector.push_back(ProtoShower(ShowerCore(showerStartPosition, showerStartDirection, CaloHitList()), 
-        ConnectionPathway(CartesianVector(0.f, 0.f, 0.f), CartesianVector(0.f, 0.f, 0.f), pathwayHitList)));
+        ConnectionPathway(projectedNuVertexPosition, startDirection, pathwayHitList)));
 
     return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void GammaStartRefinementTool::CharacteriseInitialEnergy(const EnergySpectrumMap &energySpectrumMap, float &meanEnergy, float &energySigma)
+void GammaStartRefinementTool::CharacteriseInitialEnergy(const EnergySpectrumMap &energySpectrumMap, const bool isEndDownstream, float &meanEnergy, float &energySigma)
 {
-    auto energySpectrumIter(energySpectrumMap.begin());
+    auto energySpectrumIter(isEndDownstream ? energySpectrumMap.begin() : std::prev(energySpectrumMap.end()));
 
     for (unsigned int i = 0 ; i < m_nInitialEnergyBins; ++i)
     {
         meanEnergy += energySpectrumIter->second;
-        ++energySpectrumIter;
+        isEndDownstream ? ++energySpectrumIter : --energySpectrumIter; 
     }
 
     meanEnergy /= static_cast<float>(m_nInitialEnergyBins);
 
-    energySpectrumIter = energySpectrumMap.begin();
+    energySpectrumIter = isEndDownstream ? energySpectrumMap.begin() : std::prev(energySpectrumMap.end());
 
     for (unsigned int i = 0; i < m_nInitialEnergyBins; ++i)
     {
         energySigma += std::pow(energySpectrumIter->second - meanEnergy, 2);
-        ++energySpectrumIter;
+        isEndDownstream ? ++energySpectrumIter : --energySpectrumIter; 
     }
 
     energySigma = std::sqrt(energySigma / m_nInitialEnergyBins);
@@ -602,6 +682,11 @@ bool GammaStartRefinementTool::IsShowerTopology(ShowerStartRefinementAlgorithm *
     std::cout << "positive opening angle: " << (positiveEdgeDirection.GetOpeningAngle(showerStartDirection) * 180.f / 3.14) << std::endl;
     std::cout << "negative opening angle: " << (negativeEdgeDirection.GetOpeningAngle(showerStartDirection) * 180.f / 3.14) << std::endl;
 
+    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &positiveEdgeStart, &positiveEdgeEnd, "positive direction", BLACK, 2, 1);
+    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &negativeEdgeStart, &negativeEdgeEnd, "negative direction", BLACK, 2, 1);
+    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+
+
     if (showerOpeningAngle < m_minShowerOpeningAngle)
     {
         std::cout << "shower opening angle is too small" << std::endl;
@@ -617,10 +702,6 @@ bool GammaStartRefinementTool::IsShowerTopology(ShowerStartRefinementAlgorithm *
     {
         std::cout << "negative edge is not in the direction of the shower" << std::endl;
     }
-
-    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &positiveEdgeStart, &positiveEdgeEnd, "positive direction", BLACK, 2, 1);
-    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &negativeEdgeStart, &negativeEdgeEnd, "negative direction", BLACK, 2, 1);
-    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     
     return true;
 }
@@ -643,8 +724,8 @@ bool GammaStartRefinementTool::IsShowerTopology(ShowerStartRefinementAlgorithm *
     CartesianVector previousLayerPosition(0.f, 0.f, 0.f);
     twoDSlidingFit.GetGlobalPosition(layerFitResultMap.begin()->second.GetL(), layerFitResultMap.begin()->second.GetFitT(), previousLayerPosition);
 
-    const CartesianVector jam(twoDSlidingFit.GetGlobalMinLayerPosition());
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &jam, "MIN LAYER POSITION", RED, 2);
+    //const CartesianVector jam(twoDSlidingFit.GetGlobalMinLayerPosition());
+    //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &jam, "MIN LAYER POSITION", RED, 2);
 
     int showerStartLayer(0);
 
@@ -685,9 +766,11 @@ StatusCode GammaStartRefinementTool::FillHaloHitPositionVector(const CaloHitList
             continue;
 
         const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
-        const float l(showerStartDirection.GetDotProduct(hitPosition - showerStartPosition));
+        float l(showerStartDirection.GetDotProduct(hitPosition - showerStartPosition));
 
-        if ((isEndDownstream && (l < 0.f)) || (!isEndDownstream && (l > 0.f)))
+        l *= isEndDownstream ? 1.f : -1.f;
+
+        if (l < 0.f)
             continue;
 
         if (showerStartDirection.GetCrossProduct(hitPosition - showerStartPosition).GetMagnitude() > m_molliereRadius)
@@ -716,8 +799,11 @@ StatusCode GammaStartRefinementTool::FillHaloHitPositionVector(const CaloHitList
         for (LayerFitResultMap::const_iterator iterS = layerFitResultMapS.begin(); iterS != layerFitResultMapS.end(); ++iterS)
         {
             const int layer(iterS->first);
+      
+            if (isEndDownstream && (layer < startLayer))
+                continue;
 
-            if (layer < startLayer)
+            if (!isEndDownstream && (layer > startLayer))
                 continue;
 
             LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(layer);
@@ -749,7 +835,7 @@ StatusCode GammaStartRefinementTool::FillHaloHitPositionVector(const CaloHitList
             const CartesianVector &coordinateP(*iterP);
             const float separationSquared((coordinateP - previousCoordinateP).GetMagnitudeSquared());
 
-            if (separationSquared > (5.f * 5.f))
+            if (separationSquared > (3.f * 3.f))
             {
                 std::cout << "gap in positive hits" << std::endl;
                 break;
@@ -769,7 +855,7 @@ StatusCode GammaStartRefinementTool::FillHaloHitPositionVector(const CaloHitList
             const CartesianVector &coordinateN(*iterN);
             const float separationSquared((coordinateN - previousCoordinateN).GetMagnitudeSquared());
 
-            if (separationSquared > (5.f * 5.f))
+            if (separationSquared > (3.f * 3.f))
             {
                 std::cout << "gap in negative hits" << std::endl;
                 break;
@@ -791,11 +877,19 @@ StatusCode GammaStartRefinementTool::FillHaloHitPositionVector(const CaloHitList
 
             twoDShowerSlidingFit.GetShowerFitResult().GetLocalPosition(hitPosition, thisL, thisT);
 
-            if (thisL > std::max(pMaximumL, nMaximumL))
+            // 0.85f because the end of showers can get really narrow
+            if (isEndDownstream && (thisL > (0.85 * std::max(pMaximumL, nMaximumL))))
+                continue;
+
+            if (!isEndDownstream && (thisL < (0.85 * std::min(pMaximumL, nMaximumL))))
                 continue;
 
             haloHitPositionVector.push_back(pCaloHit->GetPositionVector());
         }
+
+        std::cout << "coordinateListP.size(): " << coordinateListP.size() << std::endl;
+        std::cout << "coordinateListN.size(): " << coordinateListP.size() << std::endl;
+        std::cout << "haloHitList.size(): " << haloHitList.size() << std::endl;
     }
     catch (const StatusCodeException &)
     {
@@ -823,12 +917,10 @@ StatusCode GammaStartRefinementTool::CharacteriseShower(ShowerStartRefinementAlg
     /*
     CartesianVector end(showerStartPosition + (showerStartDirection * 10.f));
     PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &showerStartPosition, &end, "direction", VIOLET, 2, 1);
-
-    for (auto &entry : haloHitPositionVector)
-        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &entry, "halo", RED, 2);
-
-    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     */
+    for (auto &entry : haloHitPositionVector)
+        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &entry, "halo", BLACK, 2);
+    
     //////////////////////////////////////
 
     // now for reals...
@@ -856,7 +948,10 @@ StatusCode GammaStartRefinementTool::CharacteriseShower(ShowerStartRefinementAlg
         {
             int layer(iterS->first);
 
-            if (layer < startLayer)
+            if (isEndDownstream && (layer < startLayer))
+                continue;
+
+            if (!isEndDownstream && (layer > startLayer))
                 continue;
 
             LayerFitResultMap::const_iterator iterP = layerFitResultMapP.find(layer);
@@ -867,14 +962,14 @@ StatusCode GammaStartRefinementTool::CharacteriseShower(ShowerStartRefinementAlg
             {
                 twoDShowerSlidingFit.GetShowerFitResult().GetGlobalPosition(iterP->second.GetL(), iterP->second.GetFitT(), positiveEdgePosition);
                 coordinateListP.push_back(positiveEdgePosition);
-                //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &positiveEdgePosition, "positive edge", GREEN, 2);
+                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &positiveEdgePosition, "positive edge", GREEN, 2);
             }
 
             if (layerFitResultMapN.end() != iterN)
             {
                 twoDShowerSlidingFit.GetShowerFitResult().GetGlobalPosition(iterN->second.GetL(), iterN->second.GetFitT(), negativeEdgePosition);
                 coordinateListN.push_back(negativeEdgePosition);
-                //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &negativeEdgePosition, "negative edge", RED, 2);
+                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &negativeEdgePosition, "negative edge", RED, 2);
             }
 
             if ((layerFitResultMapP.end() != iterP) && (layerFitResultMapN.end() != iterN))
@@ -923,7 +1018,7 @@ StatusCode GammaStartRefinementTool::CharacteriseShower(ShowerStartRefinementAlg
         isBetween = (isFirstBetween || isLastBetween);
 
         //////////////////////////
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+        PandoraMonitoringApi::ViewEvent(this->GetPandora());
         //////////////////////////
 
         // Find extremal coordinates
@@ -1016,9 +1111,189 @@ StatusCode GammaStartRefinementTool::CharacteriseShower(ShowerStartRefinementAlg
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void GammaStartRefinementTool::RemoveConnectionPathway(const ProtoShower &protoShower)
+void GammaStartRefinementTool::FillMCParticleToHitMap(const CaloHitList *const pCaloHitList, const HitType tpcView, LArMCParticleHelper::MCContributionMap &mcParticleToHitMap)
 {
-    std::cout << protoShower.m_showerCore.m_startPosition.GetX() << std::endl;
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        if (pCaloHit->GetHitType() != tpcView)
+            continue;
+
+        try 
+        {
+            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+            mcParticleToHitMap[pMCParticle].push_back(pCaloHit);
+        }
+        catch(...)
+        {
+            continue;
+        }
+    }
+}
+
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::FillOutPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, const CaloHitList &showerPfoHits, 
+    CaloHitList &unavailableHits, ProtoShowerVector &protoShowerVector)
+{
+    std::map<int, MCParticleList> pathwayToMCParticleMap;
+
+    for (unsigned int i = 0; i < protoShowerVector.size(); ++i)
+    {
+        for (const CaloHit *const pCaloHit : protoShowerVector[i].m_connectionPathway.m_pathwayHitList)
+        {
+            try
+            {
+                const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+
+                if ((std::abs(pMCParticle->GetParticleId()) == 11) || (pMCParticle->GetParticleId() == 22))
+                    continue;
+
+                if ((pathwayToMCParticleMap.find(i) != pathwayToMCParticleMap.end()) && 
+                    (std::find(pathwayToMCParticleMap.at(i).begin(), pathwayToMCParticleMap.at(i).end(), pMCParticle) != pathwayToMCParticleMap.at(i).end()))
+                {
+                    continue;
+                }
+
+                pathwayToMCParticleMap[i].push_back(pMCParticle);
+            }
+            catch(...)
+            {
+                continue;
+            }
+        }
+    }
+
+    for (const CaloHit *const pCaloHit : showerPfoHits)
+    {
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+
+        if (std::find(unavailableHits.begin(), unavailableHits.end(), pCaloHit) != unavailableHits.end())
+            continue;
+
+        int bestProtoShower(-1);
+        float bestT(std::numeric_limits<float>::max());
+
+        try
+        {
+            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+
+            for (unsigned int i = 0; i < protoShowerVector.size(); ++i)
+            {
+                /*
+                if ((pathwayToMCParticleMap.find(i) != pathwayToMCParticleMap.end()) && 
+                    (std::find(pathwayToMCParticleMap.at(i).begin(), pathwayToMCParticleMap.at(i).end(), pMCParticle) == pathwayToMCParticleMap.at(i).end()))
+                {
+                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "NOT SAME MC", YELLOW, 2);
+                    continue;
+                }
+                */
+                if ((std::abs(pMCParticle->GetParticleId()) == 11) || (pMCParticle->GetParticleId() == 22))
+                    continue;
+
+                const CartesianVector pathwayDirection((protoShowerVector[i].m_showerCore.m_startPosition - protoShowerVector[i].m_connectionPathway.m_startPosition).GetUnitVector());
+                const CartesianVector displacement(pCaloHit->GetPositionVector() - protoShowerVector[i].m_connectionPathway.m_startPosition);
+                const float thisT(std::min(protoShowerVector[i].m_connectionPathway.m_startDirection.GetCrossProduct(displacement).GetMagnitude(),
+                    LArClusterHelper::GetClosestDistance(pCaloHit->GetPositionVector(), protoShowerVector[i].m_connectionPathway.m_pathwayHitList)));
+                const float thisL(pathwayDirection.GetDotProduct(displacement));
+
+                if (thisT > 1.f)
+                    continue;
+
+                if (thisL < -1.f)
+                    continue;
+
+                /*
+                if ((thisL * thisL) > (protoShowerVector[i].m_showerCore.m_startPosition - protoShowerVector[i].m_connectionPathway.m_startPosition).GetMagnitudeSquared())
+                    continue;
+                */
+
+
+                if (thisL > 10.f)
+                    continue;
+
+                if (thisT < bestT)
+                {
+                    bestT = thisT;
+                    bestProtoShower = i;
+                }
+            }
+
+            if (bestProtoShower >= 0)
+            {
+                ////////////////////////////////////
+                PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "BUFFED OUT HIT", VIOLET, 2);
+                ////////////////////////////////////
+
+                protoShowerVector[bestProtoShower].m_connectionPathway.m_pathwayHitList.push_back(pCaloHit);
+                unavailableHits.push_back(pCaloHit);
+            }
+        }
+        catch(...)
+        {
+            continue;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::RemoveTrackPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
+    const ProtoShowerVector &protoShowerVector)
+{
+    for (const ProtoShower &protoShower : protoShowerVector)
+    {
+        if (this->IsTrack(protoShower))
+            this->RemoveConnectionPathway(pAlgorithm, pShowerPfo, protoShower);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool GammaStartRefinementTool::IsTrack(const ProtoShower &protoShower)
+{
+    int showerHits(0);
+    int trackHits(0);
+
+    for (const CaloHit *const pCaloHit : protoShower.m_connectionPathway.m_pathwayHitList)
+    {
+        try
+        {
+            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+
+            if ((std::abs(pMCParticle->GetParticleId()) == 11) || (pMCParticle->GetParticleId() == 22))
+                ++showerHits;
+            else
+                ++trackHits;
+        }
+        catch(...)
+        {
+            continue;
+        }
+    }
+
+    std::cout << "fraction: " << (static_cast<float>(showerHits) / static_cast<float>(showerHits + trackHits)) << std::endl;
+
+    return ((static_cast<float>(showerHits) / static_cast<float>(showerHits + trackHits)) < 0.8);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void GammaStartRefinementTool::RemoveConnectionPathway(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShower)
+{
+    const HitType tpcView(protoShower.m_connectionPathway.m_pathwayHitList.front()->GetHitType());
+
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pShowerPfo, tpcView, clusterList);
+
+    std::string clusterListName(tpcView == TPC_VIEW_U ? "ClustersU" : tpcView == TPC_VIEW_V ? "ClustersV" : "ClustersW");
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*pAlgorithm, clusterListName));
+
+    for (const CaloHit *const pCaloHit : protoShower.m_connectionPathway.m_pathwayHitList)
+    {
+        std::cout << "REMOVE HIT" << std::endl;
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*pAlgorithm, clusterList.front(), pCaloHit));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

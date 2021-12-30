@@ -8,6 +8,8 @@
 #ifndef LAR_GAMMA_START_REFINEMENT_TOOL_H
 #define LAR_GAMMA_START_REFINEMENT_TOOL_H 1
 
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementBaseTool.h"
 
@@ -43,11 +45,11 @@ public:
     void ObtainLongitudinalDecomposition(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, 
         LongitudinalPositionMap &longitudinalPositionMap);
 
-    void CharacteriseInitialEnergy(const EnergySpectrumMap &energySpectrumMap, float &meanEnergy, float &energySigma);
+    void CharacteriseInitialEnergy(const EnergySpectrumMap &energySpectrumMap, const bool isEndDownstream, float &meanEnergy, float &energySigma);
 
-    bool FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const LongitudinalPositionMap &longitudinalPositionMap, const EnergySpectrumMap &energySpectrumMap, 
-        const pandora::CaloHitList &showerSpineHitList, pandora::CartesianVector &showerStartPosition, const pandora::CaloHitList &showerPfoHitList, 
-        const bool isEndDownstream, ProtoShowerVector &protoShowerVector);
+    bool FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &projectedNuVertexPosition, const pandora::CartesianVector &peakDirection, 
+        const LongitudinalPositionMap &longitudinalPositionMap, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList, 
+        pandora::CartesianVector &showerStartPosition, const pandora::CaloHitList &showerPfoHitList, const bool isEndDownstream, ProtoShowerVector &protoShowerVector);
 
     void ConvertLongitudinalProjectionToGlobalPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, const float longitudinalDistance, 
         pandora::CartesianVector &globalPosition, pandora::CartesianVector &globalDirection);
@@ -75,6 +77,16 @@ public:
         const pandora::CartesianVector &showerStartPosition, const pandora::CartesianVector &showerStartDirection, const bool isEndDownstream, 
         pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, pandora::CartesianVector &negativeEdgeStart, pandora::CartesianVector &negativeEdgeEnd, 
         bool &isBetween, bool &doesStraddle);
+
+    void FillMCParticleToHitMap(const pandora::CaloHitList *const pCaloHitList, const pandora::HitType tpcView, LArMCParticleHelper::MCContributionMap &mcParticleToHitMap);
+
+    void FillOutPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerPfoHits, pandora::CaloHitList &unavailableHits, ProtoShowerVector &protoShowerVector);
+
+    void RemoveTrackPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShowerVector &protoShowerVector);
+
+    bool IsTrack(const ProtoShower &protoShower);
+
+    void RemoveConnectionPathway(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShower);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
