@@ -255,6 +255,25 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
         {
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
+	    
+            LArMvaHelper::MvaFeatureVector featureVector;
+            sliceFeaturesVector.at(sliceIndex).GetFeatureVector(featureVector);
+            if(featureVector.size() != 10)
+              std::cout << "Feature Vector is not size 10 (" << featureVector.size() << ")" << std::endl;
+            else 
+              {
+                metadata.m_propertiesToAdd["NuNFinalStatePfos"] = featureVector[0].Get();
+                metadata.m_propertiesToAdd["NuNHitsTotal"] = featureVector[1].Get();
+                metadata.m_propertiesToAdd["NuVertexY"] = featureVector[2].Get();
+                metadata.m_propertiesToAdd["NuWeightedDirZ"] = featureVector[3].Get();
+                metadata.m_propertiesToAdd["NuNSpacePointsInSphere"] = featureVector[4].Get();
+                metadata.m_propertiesToAdd["NuEigenRatioInSphere"] = featureVector[5].Get();
+                metadata.m_propertiesToAdd["CRLongestTrackDirY"] = featureVector[6].Get();
+                metadata.m_propertiesToAdd["CRLongestTrackDeflection"] = featureVector[7].Get();
+                metadata.m_propertiesToAdd["CRFracHitsInLongestTrack"] = featureVector[8].Get();
+                metadata.m_propertiesToAdd["CRNHitsMax"] = featureVector[9].Get();
+              }
+
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
 
@@ -262,6 +281,25 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
         {
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
+
+            LArMvaHelper::MvaFeatureVector featureVector;
+            sliceFeaturesVector.at(sliceIndex).GetFeatureVector(featureVector);
+            if(featureVector.size() != 10)
+              std::cout << "Feature Vector is not size 10 (" << featureVector.size() << ")" << std::endl;
+            else 
+              {
+                metadata.m_propertiesToAdd["NuNFinalStatePfos"] = (float) featureVector[0].Get();
+                metadata.m_propertiesToAdd["NuNHitsTotal"] = featureVector[1].Get();
+                metadata.m_propertiesToAdd["NuVertexY"] = featureVector[2].Get();
+                metadata.m_propertiesToAdd["NuWeightedDirZ"] = featureVector[3].Get();
+                metadata.m_propertiesToAdd["NuNSpacePointsInSphere"] = featureVector[4].Get();
+                metadata.m_propertiesToAdd["NuEigenRatioInSphere"] = featureVector[5].Get();
+                metadata.m_propertiesToAdd["CRLongestTrackDirY"] = featureVector[6].Get();
+                metadata.m_propertiesToAdd["CRLongestTrackDeflection"] = featureVector[7].Get();
+                metadata.m_propertiesToAdd["CRFracHitsInLongestTrack"] = featureVector[8].Get();
+                metadata.m_propertiesToAdd["CRNHitsMax"] = featureVector[9].Get();
+              }
+
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
 
