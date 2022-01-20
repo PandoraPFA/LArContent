@@ -256,24 +256,12 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
 	    
-            LArMvaHelper::MvaFeatureVector featureVector;
-            sliceFeaturesVector.at(sliceIndex).GetFeatureVector(featureVector);
-            if(featureVector.size() != 10)
-              std::cout << "Feature Vector is not size 10 (" << featureVector.size() << ")" << std::endl;
-            else 
-              {
-                metadata.m_propertiesToAdd["NuNFinalStatePfos"] = featureVector[0].Get();
-                metadata.m_propertiesToAdd["NuNHitsTotal"] = featureVector[1].Get();
-                metadata.m_propertiesToAdd["NuVertexY"] = featureVector[2].Get();
-                metadata.m_propertiesToAdd["NuWeightedDirZ"] = featureVector[3].Get();
-                metadata.m_propertiesToAdd["NuNSpacePointsInSphere"] = featureVector[4].Get();
-                metadata.m_propertiesToAdd["NuEigenRatioInSphere"] = featureVector[5].Get();
-                metadata.m_propertiesToAdd["CRLongestTrackDirY"] = featureVector[6].Get();
-                metadata.m_propertiesToAdd["CRLongestTrackDeflection"] = featureVector[7].Get();
-                metadata.m_propertiesToAdd["CRFracHitsInLongestTrack"] = featureVector[8].Get();
-                metadata.m_propertiesToAdd["CRNHitsMax"] = featureVector[9].Get();
-              }
+	    std::map<std::string, double> featureMap;
+	    sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
 
+	    for(auto const& [ name, value ] : featureMap)
+	      metadata.m_propertiesToAdd[name] = value;
+	    
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
 
@@ -282,23 +270,11 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
 
-            LArMvaHelper::MvaFeatureVector featureVector;
-            sliceFeaturesVector.at(sliceIndex).GetFeatureVector(featureVector);
-            if(featureVector.size() != 10)
-              std::cout << "Feature Vector is not size 10 (" << featureVector.size() << ")" << std::endl;
-            else 
-              {
-                metadata.m_propertiesToAdd["NuNFinalStatePfos"] = (float) featureVector[0].Get();
-                metadata.m_propertiesToAdd["NuNHitsTotal"] = featureVector[1].Get();
-                metadata.m_propertiesToAdd["NuVertexY"] = featureVector[2].Get();
-                metadata.m_propertiesToAdd["NuWeightedDirZ"] = featureVector[3].Get();
-                metadata.m_propertiesToAdd["NuNSpacePointsInSphere"] = featureVector[4].Get();
-                metadata.m_propertiesToAdd["NuEigenRatioInSphere"] = featureVector[5].Get();
-                metadata.m_propertiesToAdd["CRLongestTrackDirY"] = featureVector[6].Get();
-                metadata.m_propertiesToAdd["CRLongestTrackDeflection"] = featureVector[7].Get();
-                metadata.m_propertiesToAdd["CRFracHitsInLongestTrack"] = featureVector[8].Get();
-                metadata.m_propertiesToAdd["CRNHitsMax"] = featureVector[9].Get();
-              }
+	    std::map<std::string, double> featureMap;
+	    sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
+
+	    for(auto const& [ name, value ] : featureMap)
+	      metadata.m_propertiesToAdd[name] = value;
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
@@ -442,6 +418,17 @@ NeutrinoIdTool<T>::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const Pfo
         m_featureVector.push_back(crFracHitsInLongestTrack);
         m_featureVector.push_back(nCRHitsMax);
 
+        m_featureMap["NuNFinalStatePfos"] = nuNFinalStatePfos;
+        m_featureMap["NuNHitsTotal"] = nuNHitsTotal;
+        m_featureMap["NuVertexY"] = nuVertexY;
+        m_featureMap["NuWeightedDirZ"] = nuWeightedDirZ;
+        m_featureMap["NuNSpacePointsInSphere"] = nuNSpacePointsInSphere;
+        m_featureMap["NuEigenRatioInSphere"] = nuEigenRatioInSphere;
+        m_featureMap["CRLongestTrackDirY"] = crLongestTrackDirY;
+        m_featureMap["CRLongestTrackDeflection"] = crLongestTrackDeflection;
+        m_featureMap["CRFracHitsInLongestTrack"] = crFracHitsInLongestTrack;
+        m_featureMap["CRNHitsMax"] = nCRHitsMax;
+
         m_isAvailable = true;
     }
     catch (StatusCodeException &)
@@ -467,6 +454,17 @@ void NeutrinoIdTool<T>::SliceFeatures::GetFeatureVector(LArMvaHelper::MvaFeature
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     featureVector.insert(featureVector.end(), m_featureVector.begin(), m_featureVector.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void NeutrinoIdTool<T>::SliceFeatures::GetFeatureMap(std::map<std::string, double> &featureMap) const
+{
+    if (!m_isAvailable)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    featureMap.insert(m_featureMap.begin(), m_featureMap.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

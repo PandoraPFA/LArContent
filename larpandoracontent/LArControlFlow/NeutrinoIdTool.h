@@ -71,6 +71,13 @@ private:
         void GetFeatureVector(LArMvaHelper::MvaFeatureVector &featureVector) const;
 
         /**
+         *  @brief  Get the feature map for the MVA
+         *
+         *  @param  featuresMap empty feature map to populate
+         */
+        void GetFeatureMap(std::map<std::string, double> &featureMap) const;
+
+        /**
          *  @brief  Get the probability that this slice contains a neutrino interaction
          *
          *  @param  t the MVA used to calculate the probability
@@ -147,6 +154,7 @@ private:
 
         bool m_isAvailable;                             ///< Is the feature vector available
         LArMvaHelper::MvaFeatureVector m_featureVector; ///< The MVA feature vector
+        std::map<std::string, double> m_featureMap;     ///< A map between MVA features and their names
         const NeutrinoIdTool *const m_pTool;            ///< The tool that owns this
     };
 
