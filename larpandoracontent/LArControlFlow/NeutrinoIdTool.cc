@@ -34,6 +34,7 @@ NeutrinoIdTool<T>::NeutrinoIdTool() :
     m_minCompleteness(0.9f),
     m_minProbability(0.0f),
     m_maxNeutrinos(1),
+    m_persistFeatures(false),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
@@ -256,12 +257,15 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
 	    
-	    std::map<std::string, double> featureMap;
-	    sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
+            if (m_persistFeatures)
+              {
+                std::map<std::string, double> featureMap;
+                sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
 
-	    for(auto const& [ name, value ] : featureMap)
-	      metadata.m_propertiesToAdd[name] = value;
-	    
+                for(auto const& [ name, value ] : featureMap)
+                  metadata.m_propertiesToAdd[name] = value;
+              }	    
+
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
 
@@ -270,11 +274,14 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
 
-	    std::map<std::string, double> featureMap;
-	    sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
+            if (m_persistFeatures)
+              {
+                std::map<std::string, double> featureMap;
+                sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
 
-	    for(auto const& [ name, value ] : featureMap)
-	      metadata.m_propertiesToAdd[name] = value;
+                for(auto const& [ name, value ] : featureMap)
+                  metadata.m_propertiesToAdd[name] = value;
+              }
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
@@ -609,6 +616,8 @@ StatusCode NeutrinoIdTool<T>::ReadSettings(const TiXmlHandle xmlHandle)
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumNeutrinoProbability", m_minProbability));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximumNeutrinos", m_maxNeutrinos));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PersistFeatures", m_persistFeatures));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
