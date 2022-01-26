@@ -428,7 +428,12 @@ void TrainedVertexSelectionAlgorithm::PopulateVertexFeatureInfoMap(const BeamCon
 {
     float bestFastScore(-std::numeric_limits<float>::max()); // not actually used - artefact of toolizing RPhi score and still using performance trick
 
-    const double beamDeweighting(this->GetBeamDeweightingScore(beamConstants, pVertex));
+    // ATTN - If beam mode is false GetBeamDeweightingScore will fail, so have a default value that we'll ignore when poplating the feature vector
+    double tempBeamDeweight{0.f};
+    if (this->IsBeamModeOn())
+        tempBeamDeweight = this->GetBeamDeweightingScore(beamConstants, pVertex);
+
+    const double beamDeweighting(tempBeamDeweight);
 
     const double energyKick(LArMvaHelper::CalculateFeaturesOfType<EnergyKickFeatureTool>(m_featureToolVector, this, pVertex,
         slidingFitDataListMap, clusterListMap, kdTreeMap, showerClusterListMap, beamDeweighting, bestFastScore)
@@ -799,7 +804,8 @@ void TrainedVertexSelectionAlgorithm::GetBestVertex(const VertexVector &vertexVe
 void TrainedVertexSelectionAlgorithm::AddVertexFeaturesToVector(
     const VertexFeatureInfo &vertexFeatureInfo, LArMvaHelper::MvaFeatureVector &featureVector, const bool useRPhi) const
 {
-    featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_beamDeweighting));
+    if (this->IsBeamModeOn())
+        featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_beamDeweighting));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_energyKick));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_globalAsymmetry));
     featureVector.push_back(static_cast<double>(vertexFeatureInfo.m_localAsymmetry));
