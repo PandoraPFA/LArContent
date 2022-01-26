@@ -256,15 +256,15 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
         {
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
-	    
+
             if (m_persistFeatures)
-              {
+            {
                 std::map<std::string, double> featureMap;
                 sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
 
-                for(auto const& [ name, value ] : featureMap)
-                  metadata.m_propertiesToAdd[name] = value;
-              }	    
+                for (auto const &[name, value] : featureMap)
+                    metadata.m_propertiesToAdd[name] = value;
+            }
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
@@ -275,13 +275,13 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
 
             if (m_persistFeatures)
-              {
+            {
                 std::map<std::string, double> featureMap;
                 sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
 
-                for(auto const& [ name, value ] : featureMap)
-                  metadata.m_propertiesToAdd[name] = value;
-              }
+                for (auto const &[name, value] : featureMap)
+                    metadata.m_propertiesToAdd[name] = value;
+            }
 
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
