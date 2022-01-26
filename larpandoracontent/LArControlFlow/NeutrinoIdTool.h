@@ -268,7 +268,7 @@ private:
     unsigned int m_maxNeutrinos; ///< The maximum number of neutrinos to select in any one event
 
     // Persistence
-    bool m_persistFeatures;      ///< If true, the mva features will be persisted in the metadata
+    bool m_persistFeatures; ///< If true, the mva features will be persisted in the metadata
 
     T m_mva;                                   ///< The mva
     std::string m_filePathEnvironmentVariable; ///< The environment variable providing a list of paths to mva files
