@@ -267,7 +267,6 @@ private:
     float m_minProbability;      ///< Minimum probability required to classify a slice as the neutrino
     unsigned int m_maxNeutrinos; ///< The maximum number of neutrinos to select in any one event
 
-    // Persistence
     bool m_persistFeatures; ///< If true, the mva features will be persisted in the metadata
 
     T m_mva;                                   ///< The mva
