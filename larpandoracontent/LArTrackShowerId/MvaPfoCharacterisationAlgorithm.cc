@@ -101,6 +101,15 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
     const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
 
+    // TEST -- USING FUNCTION TO PRINTOUT MAP
+    this->PrintFeatureToolMap();
+    // --------------------------------------
+
+    // Map version
+    const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
+	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
+    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeaturesMap(chosenFeatureToolMap, this, pPfo));
+
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
         const MCParticleList *pMCParticleList(nullptr);
@@ -266,6 +275,16 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureVector));
         object_creation::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["TrackScore"] = score;
+	// -- insert featureMap values... do I need to do something above?  --
+	std::cout << "Feature vector values: ";
+	for ( auto const& iFeature : featureVector )
+	  std::cout << iFeature.Get() << " ";
+	std::cout << std::endl;
+	for (auto const &[name, value] : featureMap) {
+	    metadata.m_propertiesToAdd[name] = value;
+	    std::cout << "TEST!!!!!!!!! " << name << " --> " << value << std::endl;
+	}
+	//////////////////////////////////////////////////////////////////////
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
         return (m_minProbabilityCut <= score);
     }
@@ -385,18 +404,34 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
 
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
+    // and the map:
+    LArMvaHelper::AlgorithmToolMap algorithmToolMap;
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", algorithmToolMap));
 
     if (m_useThreeDInformation)
     {
         AlgorithmToolVector algorithmToolVectorNoChargeInfo;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
             XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolVectorNoChargeInfo));
+	// and the map
+	LArMvaHelper::AlgorithmToolMap algorithmToolMapNoChargeInfo;
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+				 LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolMapNoChargeInfo));
 
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorThreeD));
 
         for (AlgorithmTool *const pAlgorithmTool : algorithmToolVectorNoChargeInfo)
             PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorNoChargeInfo));
+
+	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
+	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapThreeD));
+
+	// ---- AND TEST USING FUNCTION TO PRINT BACK MAP NAMES
+	this->PrintFeatureToolMap();
+
+	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMapNoChargeInfo)
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapNoChargeInfo));
     }
     else
     {
@@ -414,6 +449,17 @@ bool MvaPfoCharacterisationAlgorithm<T>::PassesFiducialCut(const CartesianVector
 {
     const float vx(vertex.GetX()), vy(vertex.GetY()), vz(vertex.GetZ());
     return m_fiducialMinX <= vx && vx <= m_fiducialMaxX && m_fiducialMinY <= vy && vy <= m_fiducialMaxY && m_fiducialMinZ <= vz && vz <= m_fiducialMaxZ;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void MvaPfoCharacterisationAlgorithm<T>::PrintFeatureToolMap() const
+{
+    std::cout << "USING FUNCTION TO READ BACK THE MAP:" << std::endl;
+    for ( auto const &[pName, pValue] : m_featureToolMapThreeD)
+        std::cout << pName << " ";
+    std::cout << std::endl;
 }
 
 template class MvaPfoCharacterisationAlgorithm<AdaBoostDecisionTree>;

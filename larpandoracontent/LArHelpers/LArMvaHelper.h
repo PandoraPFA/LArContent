@@ -10,6 +10,11 @@
 
 #include "larpandoracontent/LArObjects/LArMvaInterface.h"
 
+#include "Api/PandoraContentApi.h"
+
+#include "Helpers/XmlHelper.h"
+
+#include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 #include "Pandora/StatusCodes.h"
 
@@ -28,6 +33,7 @@ class MvaFeatureTool : public pandora::AlgorithmTool
 {
 public:
     typedef std::vector<MvaFeatureTool<Ts...> *> FeatureToolVector;
+    typedef std::map<const char*, MvaFeatureTool<Ts...> *> FeatureToolMap;
 
     /**
      *  @brief  Default constructor.
@@ -46,6 +52,10 @@ public:
 template <typename... Ts>
 using MvaFeatureToolVector = std::vector<MvaFeatureTool<Ts...> *>;
 
+// ?
+template <typename... Ts>
+using MvaFeatureToolMap = std::map<const char*, MvaFeatureTool<Ts...> *>;
+
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
@@ -57,6 +67,9 @@ public:
     typedef MvaTypes::MvaFeature MvaFeature;
     typedef MvaTypes::MvaFeatureVector MvaFeatureVector;
     typedef std::map<std::string, double> MvaFeatureMap;
+
+    typedef std::map<std::string, double> MvaFeatureMap; // -- Bringing over from Henry. Won't need this in final commit probably.
+    typedef std::map<const char*, pandora::AlgorithmTool *> AlgorithmToolMap; // idea would be to put this in PandoraInternal.h at some point in PandoraSDK
 
     /**
      *  @brief  Produce a training example with the given features and result
@@ -114,6 +127,17 @@ public:
     static MvaFeatureVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
+     *  @brief  Calculate the features in a given feature tool map, return map
+     *
+     *  @param  featureToolMap the feature tool map
+     *  @param  args arguments to pass to the tool
+     *
+     *  @return the map of features
+     */
+    template <typename... Ts, typename... TARGS>
+    static MvaFeatureMap CalculateFeaturesMap(const MvaFeatureToolMap<Ts...> &featureToolMap, TARGS &&... args);
+
+    /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
      *
      *  @param  featureToolVector the feature tool vector
@@ -134,6 +158,29 @@ public:
      */
     template <typename... Ts>
     static pandora::StatusCode AddFeatureToolToVector(pandora::AlgorithmTool *const pFeatureTool, MvaFeatureToolVector<Ts...> &featureToolVector);
+
+    /**
+     *  @brief  Add a feature tool to a map of feature tools
+     * 
+     *  @param  pFeatureTool the feature tool
+     *  @param  pFeatureToolName the name of the feature tool
+     *  @param  featureToolMap the map to append
+     * 
+     *  @return success
+     */
+    template <typename... Ts>
+    static pandora::StatusCode AddFeatureToolToMap(pandora::AlgorithmTool *const pFeatureTool, const char* pFeatureToolName, MvaFeatureToolMap<Ts...> &featureToolMap);
+
+    /**
+     *  @brief  Process a list of algorithms tools in an xml file, using a map. Idea is for this to go to XmlHelper in PandoraSDK eventually as an overload to ProcessAlgorithmToolList
+     * 
+     *  @param  algorithm the parent algorithm calling this function
+     *  @param  xmlHandle the relevant xml handle
+     *  @param  listName the name of the algorithm tool list
+     *  @param  algorithmToolMap to receive the vector of addresses of the algorithm tool instances, but also keep the name
+     */
+    static pandora::StatusCode ProcessAlgorithmToolListToMap(const pandora::Algorithm &algorithm, const pandora::TiXmlHandle &xmlHandle, const std::string &listName,
+							     AlgorithmToolMap &algorithmToolMap);
 
 private:
     /**
@@ -254,6 +301,23 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureT
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+template <typename... Ts, typename... TARGS>
+LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeaturesMap(const MvaFeatureToolMap<Ts...> &featureToolMap, TARGS &&... args)
+{
+    LArMvaHelper::MvaFeatureMap featureMap;
+    LArMvaHelper::MvaFeatureVector featureVector;
+
+    for ( auto const &[pFeatureToolName, pFeatureTool] : featureToolMap) {
+        pFeatureTool->Run(featureVector, std::forward<TARGS>(args)...);
+	auto const& featureVal = featureVector.at( featureVector.size()-1 );
+	if( featureVal.IsInitialized() ) featureMap[ pFeatureToolName ] = featureVal.Get();
+    }
+
+    return featureMap;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 template <typename T, typename... Ts, typename... TARGS>
 LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeaturesOfType(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args)
 {
@@ -282,6 +346,48 @@ pandora::StatusCode LArMvaHelper::AddFeatureToolToVector(pandora::AlgorithmTool 
 
     return pandora::STATUS_CODE_FAILURE;
 }
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename... Ts>
+pandora::StatusCode LArMvaHelper::AddFeatureToolToMap(pandora::AlgorithmTool *const pFeatureTool, const char* pFeatureToolName, MvaFeatureToolMap<Ts...> &featureToolMap)
+{
+    if (MvaFeatureTool<Ts...> *const pCastFeatureTool = dynamic_cast<MvaFeatureTool<Ts...> *const>(pFeatureTool))
+    {
+        featureToolMap[ pFeatureToolName ] = pCastFeatureTool;
+        return pandora::STATUS_CODE_SUCCESS;
+    }
+
+    return pandora::STATUS_CODE_FAILURE;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/*
+pandora::StatusCode LArMvaHelper::ProcessAlgorithmToolListToMap(const pandora::Algorithm &algorithm, const pandora::TiXmlHandle &xmlHandle, const std::string &listName,
+								AlgorithmToolMap &algorithmToolMap)
+{
+    if ("algorithm" != xmlHandle.ToNode()->ValueStr())
+        return pandora::STATUS_CODE_NOT_ALLOWED;
+
+    const pandora::TiXmlHandle algorithmListHandle = pandora::TiXmlHandle(xmlHandle.FirstChild(listName).Element());
+
+    std::cout << "ALG NAMES: ";
+
+    for (pandora::TiXmlElement *pXmlElement = algorithmListHandle.FirstChild("tool").Element(); nullptr != pXmlElement;
+	 pXmlElement = pXmlElement->NextSiblingElement("tool"))
+    {
+        pandora::AlgorithmTool *pAlgorithmTool(nullptr);
+	PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateAlgorithmTool(algorithm, pXmlElement, pAlgorithmTool));
+	std::cout << pXmlElement->Attribute("type") << " ";
+	algorithmToolMap[ pXmlElement->Attribute("type") ] = pAlgorithmTool;
+    }
+
+    std::cout << std::endl;
+
+    return pandora::STATUS_CODE_SUCCESS;
+}
+*/
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
