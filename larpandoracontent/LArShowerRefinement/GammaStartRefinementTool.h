@@ -32,32 +32,6 @@ public:
     void BuildProtoShowers(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
         const pandora::CartesianVector &nuVertexPosition, const pandora::HitType tpcView, ProtoShowerVector &protoShowerVector);
 
-    void FillAngularDecompositionMap(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &viewShowerHitList, 
-        const pandora::CartesianVector &projectedNuVertexPosition, AngularDecompositionMap &angularDecompositionMap);
-
-    void SmoothAngularDecompositionMap(AngularDecompositionMap &angularDecompositionMap);
-
-    void ObtainPeakVector(AngularDecompositionMap &angularDecompositionMap, pandora::IntVector &viewPeakVector);
-
-    void GetEnergyDistribution(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, 
-        const LongitudinalPositionMap &longitudinalPositionMap, EnergySpectrumMap &energySpectrumMap);
-
-    void ObtainLongitudinalDecomposition(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, 
-        LongitudinalPositionMap &longitudinalPositionMap);
-
-    void CharacteriseInitialEnergy(const EnergySpectrumMap &energySpectrumMap, const bool isEndDownstream, float &meanEnergy, float &energySigma);
-
-    bool FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &projectedNuVertexPosition, const pandora::CartesianVector &peakDirection, 
-        const LongitudinalPositionMap &longitudinalPositionMap, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList, 
-        pandora::CartesianVector &showerStartPosition, const pandora::CaloHitList &showerPfoHitList, const bool isEndDownstream, ProtoShowerVector &protoShowerVector);
-
-    void ConvertLongitudinalProjectionToGlobalPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, const float longitudinalDistance, 
-        pandora::CartesianVector &globalPosition, pandora::CartesianVector &globalDirection);
-
-    pandora::StatusCode FillHaloHitPositionVector(const pandora::CaloHitList &viewShowerHitList, const pandora::CaloHitList &showerSpineHitList, 
-        const pandora::CartesianVector &showerStartPosition, const pandora::CartesianVector &showerStartDirection, const bool isEndDownstream, 
-        pandora::CartesianPointVector &haloHitPositionVector);
-
 
     void FillTree(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertexPosition);
 
@@ -66,17 +40,6 @@ public:
 
     void ObtainAngularPeakVector(ShowerStartRefinementAlgorithm *const pAlgorithm, AngularDecompositionMap &angularDecompositionMapU, 
         AngularDecompositionMap &angularDecompositionMapV, AngularDecompositionMap &angularDecompositionMapW, AngularPeakVector &angularPeakVector);
-
-    bool FindBestAngularPeak(AngularDecompositionMap &angularDecompositionMap, pandora::IntVector &viewPeakVector, pandora::IntVector &investigatedPeaks, int &bestAngularPeak);
-
-
-    bool IsShowerTopology(ShowerStartRefinementAlgorithm *const pAlgorithm, const float longitudinalDistance, const pandora::CaloHitList &showerPfoHits, 
-        const pandora::CaloHitList &showerSpineHits, const bool isEndDownstream);
-
-    pandora::StatusCode CharacteriseShower(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerPfoHits, const pandora::CaloHitList &showerSpineHits, 
-        const pandora::CartesianVector &showerStartPosition, const pandora::CartesianVector &showerStartDirection, const bool isEndDownstream, 
-        pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, pandora::CartesianVector &negativeEdgeStart, pandora::CartesianVector &negativeEdgeEnd, 
-        bool &isBetween, bool &doesStraddle);
 
     void FillMCParticleToHitMap(const pandora::CaloHitList *const pCaloHitList, const pandora::HitType tpcView, LArMCParticleHelper::MCContributionMap &mcParticleToHitMap);
 
@@ -94,18 +57,10 @@ private:
     void RemoveConnectionPathway(const ProtoShower &protoShower);
 
     int m_counter;
-    float m_theta0XZBinSize;
-    float m_pathwaySearchRegion;
-    int m_smoothingWindow;
     int m_showerCounter;
-    int m_microSlidingFitWindow;
-    float m_minSigmaDeviation;
     float m_trackSearchWindow;
-    unsigned int m_nInitialEnergyBins;
     float m_minTrackBlipMean;
-    int m_showerSlidingFitWindow;
-    float m_molliereRadius;
-    float m_minShowerOpeningAngle;
+    float m_electronFraction;
 };
 
 } // namespace lar_content

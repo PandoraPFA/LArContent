@@ -166,6 +166,17 @@ public:
 protected:
     bool HasPathToNuVertex(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &neutrinoVertex) const;
 
+    bool HasPathToNuVertex(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &neutrinoVertex, const pandora::HitType &hitType) const;
+
+    void FillAngularDecompositionMap(const pandora::CaloHitList &viewShowerHitList, const pandora::CartesianVector &projectedNuVertexPosition, 
+        AngularDecompositionMap &angularDecompositionMap);
+
+    void SmoothAngularDecompositionMap(AngularDecompositionMap &angularDecompositionMap);
+
+    void ObtainPeakVector(AngularDecompositionMap &angularDecompositionMap, pandora::IntVector &viewPeakVector);
+
+    bool FindBestAngularPeak(AngularDecompositionMap &angularDecompositionMap, pandora::IntVector &viewPeakVector, pandora::IntVector &investigatedPeaks, int &bestAngularPeak);
+
     void FindShowerSpine(const ShowerStartRefinementAlgorithm *pAlgorithm, const pandora::CaloHitList &viewShowerHitList, 
         const pandora::CartesianVector &projectedNuVertexPosition, const pandora::CartesianVector &initialDirection, pandora::CaloHitList &unavailableHitList, 
         pandora::CaloHitList &showerSpineHitList);
@@ -178,31 +189,44 @@ protected:
         const pandora::CartesianVector &extrapolatedDirection, pandora::CartesianPointVector &runningFitPositionVector, pandora::CaloHitList &unavailableHitList, 
         pandora::CaloHitList &showerSpineHitList);
 
-    void GetHitsInBoundingBox(const pandora::CartesianVector &firstCorner, const pandora::CartesianVector &secondCorner, const pandora::CaloHitList &inputHitList,
-        const float distanceToLine, pandora::CaloHitList &hitsInBoundingBox) const; 
-
-    bool IsInBoundingBox(const float minX, const float maxX, const float minZ, const float maxZ, const pandora::CartesianVector &hitPosition) const;
-
     bool IsCloseToLine(const pandora::CartesianVector &hitPosition, const pandora::CartesianVector &lineStart, const pandora::CartesianVector &lineDirection, 
         const float distanceToLine) const;
 
-    bool IsInLineSegment(const pandora::CartesianVector &lowerBoundary, const pandora::CartesianVector &upperBoundary, const pandora::CartesianVector &point) const;
-
-    void BuildProtoShowers(const pandora::ParticleFlowObject *const pShowerPfo, ProtoShowerVector &protoShowerVector) const;
-
-    void FindShowerCores(const pandora::ParticleFlowObject *const pShowerPfo, ProtoShowerVector &protoShowerVector) const;
-
-    void FindShowerStartPositions(const pandora::ParticleFlowObject *const pShowerPfo, ProtoShowerVector &protoShowerVector) const;
-
-    void FindConnectionPathways(const pandora::ParticleFlowObject *const pShowerPfo, ProtoShowerVector &protoShowerVector) const;
-
-    bool IsElectronPathway(const ProtoShower &protoShower);
-
     float GetClosestDistance(const pandora::CartesianVector &position, const pandora::CartesianPointVector &testPositions) const;
+
+    void ObtainLongitudinalDecomposition(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, 
+        LongitudinalPositionMap &longitudinalPositionMap);
+
+    void GetEnergyDistribution(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, 
+        const LongitudinalPositionMap &longitudinalPositionMap, EnergySpectrumMap &energySpectrumMap);
+
+    bool IsShowerTopology(ShowerStartRefinementAlgorithm *const pAlgorithm, const float longitudinalDistance, const pandora::CaloHitList &showerPfoHits, 
+        const pandora::CaloHitList &showerSpineHits, const bool isEndDownstream);
+
+    void CharacteriseInitialEnergy(const EnergySpectrumMap &energySpectrumMap, const bool isEndDownstream, float &meanEnergy, float &energySigma);
+
+    bool FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &projectedNuVertexPosition, const pandora::CartesianVector &peakDirection, 
+        const LongitudinalPositionMap &longitudinalPositionMap, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList, 
+        pandora::CartesianVector &showerStartPosition, const pandora::CaloHitList &showerPfoHitList, const bool isEndDownstream, ProtoShowerVector &protoShowerVector);
+
+    void ConvertLongitudinalProjectionToGlobalPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, const float longitudinalDistance, 
+        pandora::CartesianVector &globalPosition, pandora::CartesianVector &globalDirection);
+
+    pandora::StatusCode FillHaloHitPositionVector(const pandora::CaloHitList &viewShowerHitList, const pandora::CaloHitList &showerSpineHitList, 
+        const pandora::CartesianVector &showerStartPosition, const pandora::CartesianVector &showerStartDirection, const bool isEndDownstream, 
+        pandora::CartesianPointVector &haloHitPositionVector);
+
+    pandora::StatusCode CharacteriseShower(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerPfoHits, const pandora::CaloHitList &showerSpineHits, 
+        const pandora::CartesianVector &showerStartPosition, const pandora::CartesianVector &showerStartDirection, const bool isEndDownstream, 
+        pandora::CartesianVector &positiveEdgeStart, pandora::CartesianVector &positiveEdgeEnd, pandora::CartesianVector &negativeEdgeStart, pandora::CartesianVector &negativeEdgeEnd, 
+        bool &isBetween, bool &doesStraddle);
 
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     float m_maxDistanceForConnection;
+    float m_pathwaySearchRegion;
+    float m_theta0XZBinSize;
+    int m_smoothingWindow;
     float m_growingFitInitialLength;
     float m_macroSlidingFitWindow;
     float m_growingFitSegmentLength;
@@ -212,6 +236,12 @@ protected:
     float m_longitudinalCoordinateBinSize;
     float m_hitConnectionDistance;
     unsigned int m_minInitialHitsFound;
+    int m_microSlidingFitWindow;
+    unsigned int m_nInitialEnergyBins;
+    float m_minSigmaDeviation;
+    float m_molliereRadius;
+    int m_showerSlidingFitWindow;
+    float m_minShowerOpeningAngle;
 
     //private:
 };
