@@ -415,9 +415,12 @@ void TrainedVertexSelectionAlgorithm::AddEventFeaturesToVector(const EventFeatur
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventEnergy));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_eventArea));
     featureVector.push_back(static_cast<double>(eventFeatureInfo.m_longitudinality));
-    featureVector.push_back(static_cast<double>(eventFeatureInfo.m_nHits));
-    featureVector.push_back(static_cast<double>(eventFeatureInfo.m_nClusters));
-    featureVector.push_back(static_cast<double>(eventFeatureInfo.m_nCandidates));
+    if (this->IsBeamModeOn())
+    {
+        featureVector.push_back(static_cast<double>(eventFeatureInfo.m_nHits));
+        featureVector.push_back(static_cast<double>(eventFeatureInfo.m_nClusters));
+        featureVector.push_back(static_cast<double>(eventFeatureInfo.m_nCandidates));
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
