@@ -622,7 +622,7 @@ void ThreeDOpeningAngleFeatureTool::RunWithMap(LArMvaHelper::MvaFeatureMap &feat
 	return;
     }
 
-    featureMap[ featureToolName+"_AngleDiff" ] = toolFeatureVec[1].Get();
+    featureMap[ featureToolName+"_AngleDiff" ] = toolFeatureVec[0].Get();
 
     for ( auto const& feature : toolFeatureVec )
       featureVector.push_back(feature);
