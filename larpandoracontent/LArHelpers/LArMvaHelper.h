@@ -33,7 +33,7 @@ class MvaFeatureTool : public pandora::AlgorithmTool
 {
 public:
     typedef std::vector<MvaFeatureTool<Ts...> *> FeatureToolVector;
-    typedef std::map<const char*, MvaFeatureTool<Ts...> *> FeatureToolMap;
+    typedef std::map<std::string, MvaFeatureTool<Ts...> *> FeatureToolMap;
 
     /**
      *  @brief  Default constructor.
@@ -47,6 +47,8 @@ public:
      *  @param  args arguments to pass to the tool
      */
     virtual void Run(MvaTypes::MvaFeatureVector &featureVector, Ts... args) = 0;
+    virtual void RunWithMap(MvaTypes::MvaFeatureMap &featureMap, MvaTypes::MvaFeatureVector &featureVector, std::string featureToolName,
+			    const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo){ return; };
 };
 
 template <typename... Ts>
@@ -54,7 +56,7 @@ using MvaFeatureToolVector = std::vector<MvaFeatureTool<Ts...> *>;
 
 // ?
 template <typename... Ts>
-using MvaFeatureToolMap = std::map<const char*, MvaFeatureTool<Ts...> *>;
+using MvaFeatureToolMap = std::map<std::string, MvaFeatureTool<Ts...> *>;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -68,8 +70,8 @@ public:
     typedef MvaTypes::MvaFeatureVector MvaFeatureVector;
     typedef std::map<std::string, double> MvaFeatureMap;
 
-    typedef std::map<std::string, double> MvaFeatureMap; // -- Bringing over from Henry. Won't need this in final commit probably.
-    typedef std::map<const char*, pandora::AlgorithmTool *> AlgorithmToolMap; // idea would be to put this in PandoraInternal.h at some point in PandoraSDK
+    typedef MvaTypes::MvaFeatureMap MvaFeatureMap;
+    typedef std::map<std::string, pandora::AlgorithmTool *> AlgorithmToolMap; // idea would be to put this in PandoraInternal.h at some point in PandoraSDK
 
     /**
      *  @brief  Produce a training example with the given features and result
@@ -127,15 +129,17 @@ public:
     static MvaFeatureVector CalculateFeatures(const MvaFeatureToolVector<Ts...> &featureToolVector, TARGS &&... args);
 
     /**
-     *  @brief  Calculate the features in a given feature tool map, return map
+     *  @brief  Calculate the features in a given feature tool map, and fill a MvaFeatureMap and MvaFeatureVector
      *
+     *  @param  mapToFill the feature map to fill
+     *  @param  vectorToFill the feature vector to fill
      *  @param  featureToolMap the feature tool map
      *  @param  args arguments to pass to the tool
      *
-     *  @return the map of features
+     *  @return void
      */
     template <typename... Ts, typename... TARGS>
-    static MvaFeatureMap CalculateFeaturesMap(const MvaFeatureToolMap<Ts...> &featureToolMap, TARGS &&... args);
+    static void FillFeaturesMap(MvaFeatureMap &mapToFill, MvaFeatureVector &vectorToFill, const MvaFeatureToolMap<Ts...> &featureToolMap, TARGS &&... args);
 
     /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
@@ -169,7 +173,7 @@ public:
      *  @return success
      */
     template <typename... Ts>
-    static pandora::StatusCode AddFeatureToolToMap(pandora::AlgorithmTool *const pFeatureTool, const char* pFeatureToolName, MvaFeatureToolMap<Ts...> &featureToolMap);
+    static pandora::StatusCode AddFeatureToolToMap(pandora::AlgorithmTool *const pFeatureTool, std::string pFeatureToolName, MvaFeatureToolMap<Ts...> &featureToolMap);
 
     /**
      *  @brief  Process a list of algorithms tools in an xml file, using a map. Idea is for this to go to XmlHelper in PandoraSDK eventually as an overload to ProcessAlgorithmToolList
@@ -302,18 +306,10 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureT
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename... Ts, typename... TARGS>
-LArMvaHelper::MvaFeatureMap LArMvaHelper::CalculateFeaturesMap(const MvaFeatureToolMap<Ts...> &featureToolMap, TARGS &&... args)
+void LArMvaHelper::FillFeaturesMap(MvaFeatureMap &mapToFill, MvaFeatureVector &vectorToFill, const MvaFeatureToolMap<Ts...> &featureToolMap, TARGS &&... args)
 {
-    LArMvaHelper::MvaFeatureMap featureMap;
-    LArMvaHelper::MvaFeatureVector featureVector;
-
-    for ( auto const &[pFeatureToolName, pFeatureTool] : featureToolMap) {
-        pFeatureTool->Run(featureVector, std::forward<TARGS>(args)...);
-	auto const& featureVal = featureVector.at( featureVector.size()-1 );
-	if( featureVal.IsInitialized() ) featureMap[ pFeatureToolName ] = featureVal.Get();
-    }
-
-    return featureMap;
+  for ( auto const &[pFeatureToolName, pFeatureTool] : featureToolMap)
+    pFeatureTool->RunWithMap(mapToFill, vectorToFill, pFeatureToolName, std::forward<TARGS>(args)...);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -350,7 +346,7 @@ pandora::StatusCode LArMvaHelper::AddFeatureToolToVector(pandora::AlgorithmTool 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename... Ts>
-pandora::StatusCode LArMvaHelper::AddFeatureToolToMap(pandora::AlgorithmTool *const pFeatureTool, const char* pFeatureToolName, MvaFeatureToolMap<Ts...> &featureToolMap)
+pandora::StatusCode LArMvaHelper::AddFeatureToolToMap(pandora::AlgorithmTool *const pFeatureTool, std::string pFeatureToolName, MvaFeatureToolMap<Ts...> &featureToolMap)
 {
     if (MvaFeatureTool<Ts...> *const pCastFeatureTool = dynamic_cast<MvaFeatureTool<Ts...> *const>(pFeatureTool))
     {

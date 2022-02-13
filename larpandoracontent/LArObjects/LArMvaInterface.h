@@ -81,6 +81,7 @@ public:
 
     typedef InitializedDouble MvaFeature;
     typedef std::vector<MvaFeature> MvaFeatureVector;
+    typedef std::map<std::string, MvaFeature> MvaFeatureMap;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
