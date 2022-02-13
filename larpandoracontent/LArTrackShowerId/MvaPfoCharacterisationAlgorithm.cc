@@ -108,7 +108,10 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     // Map version
     const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
 	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
-    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeaturesMap(chosenFeatureToolMap, this, pPfo));
+    //const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeaturesMap(chosenFeatureToolMap, this, pPfo));
+    LArMvaHelper::MvaFeatureVector secondFeatureVector;
+    LArMvaHelper::MvaFeatureMap featureMap;
+    LArMvaHelper::FillFeaturesMap(featureMap,secondFeatureVector,chosenFeatureToolMap, this, pPfo);
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
@@ -280,10 +283,13 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 	for ( auto const& iFeature : featureVector )
 	  std::cout << iFeature.Get() << " ";
 	std::cout << std::endl;
+	int ct_items=0;
 	for (auto const &[name, value] : featureMap) {
-	    metadata.m_propertiesToAdd[name] = value;
-	    std::cout << "TEST!!!!!!!!! " << name << " --> " << value << std::endl;
+	    metadata.m_propertiesToAdd[name] = value.Get();
+	    std::cout << "TEST!!!!!!!!! " << name << " --> " << value.Get() << std::endl;
+	    ct_items+=1;
 	}
+	std::cout << ct_items << " items in the map." << std::endl;
 	//////////////////////////////////////////////////////////////////////
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
         return (m_minProbabilityCut <= score);
