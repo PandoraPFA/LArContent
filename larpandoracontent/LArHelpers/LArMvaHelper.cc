@@ -14,8 +14,10 @@ namespace lar_content
 {
 
 StatusCode LArMvaHelper::ProcessAlgorithmToolListToMap(const Algorithm &algorithm, const TiXmlHandle &xmlHandle, const std::string &listName,
-						       AlgorithmToolMap &algorithmToolMap)
+						       std::vector<std::string> &algorithmToolNameVector, AlgorithmToolMap &algorithmToolMap)
 {
+    // Fill a vector with names in the desired run order as well as the map
+
     if ("algorithm" != xmlHandle.ToNode()->ValueStr())
         return STATUS_CODE_NOT_ALLOWED;
 
@@ -32,6 +34,7 @@ StatusCode LArMvaHelper::ProcessAlgorithmToolListToMap(const Algorithm &algorith
 	std::string toolName = pXmlElement->Attribute("type");
 	if ( algorithmToolMap.find(toolName) != algorithmToolMap.end() ) toolName=toolName+"_"+pAlgorithmTool->GetInstanceName();
 	algorithmToolMap[ toolName ] = pAlgorithmTool;
+	algorithmToolNameVector.push_back( toolName );
     }
 
     std::cout << std::endl;

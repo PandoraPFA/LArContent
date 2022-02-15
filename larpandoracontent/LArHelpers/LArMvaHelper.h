@@ -139,7 +139,8 @@ public:
      *  @return void
      */
     template <typename... Ts, typename... TARGS>
-    static void FillFeaturesMap(MvaFeatureMap &mapToFill, MvaFeatureVector &vectorToFill, const MvaFeatureToolMap<Ts...> &featureToolMap, TARGS &&... args);
+    static void FillFeaturesMap(MvaFeatureMap &mapToFill, MvaFeatureVector &vectorToFill,
+				const MvaFeatureToolMap<Ts...> &featureToolMap, const std::vector<std::string> &featureToolOrder, TARGS &&... args);
 
     /**
      *  @brief  Calculate the features of a given derived feature tool type in a feature tool vector
@@ -184,7 +185,7 @@ public:
      *  @param  algorithmToolMap to receive the vector of addresses of the algorithm tool instances, but also keep the name
      */
     static pandora::StatusCode ProcessAlgorithmToolListToMap(const pandora::Algorithm &algorithm, const pandora::TiXmlHandle &xmlHandle, const std::string &listName,
-							     AlgorithmToolMap &algorithmToolMap);
+							     std::vector<std::string> &algorithToolNameVector, AlgorithmToolMap &algorithmToolMap);
 
 private:
     /**
@@ -306,10 +307,18 @@ LArMvaHelper::MvaFeatureVector LArMvaHelper::CalculateFeatures(const MvaFeatureT
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 template <typename... Ts, typename... TARGS>
-void LArMvaHelper::FillFeaturesMap(MvaFeatureMap &mapToFill, MvaFeatureVector &vectorToFill, const MvaFeatureToolMap<Ts...> &featureToolMap, TARGS &&... args)
+void LArMvaHelper::FillFeaturesMap(MvaFeatureMap &mapToFill, MvaFeatureVector &vectorToFill,
+				   const MvaFeatureToolMap<Ts...> &featureToolMap, const std::vector<std::string> &featureToolOrder, TARGS &&... args)
 {
-  for ( auto const &[pFeatureToolName, pFeatureTool] : featureToolMap)
-    pFeatureTool->RunWithMap(mapToFill, vectorToFill, pFeatureToolName, std::forward<TARGS>(args)...);
+    for ( auto const& pFeatureToolName : featureToolOrder ) {
+        auto pFeatureToolIter = featureToolMap.find( pFeatureToolName );
+	if ( pFeatureToolIter == featureToolMap.end() ) {
+	    // TODO: Okay we probably want a better error handling here... ask Pandora team.
+	    std::cout << "ERROR - TRYING TO RUN ALGORITHM " << pFeatureToolName << " BUT THE TOOL IS NOT IN THE CORRESPONDING MAP... ABORTING" << std::endl;
+	    std::abort();
+	}
+	pFeatureToolIter->second->RunWithMap(mapToFill, vectorToFill, pFeatureToolName, std::forward<TARGS>(args)...);
+    }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

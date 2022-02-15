@@ -110,10 +110,11 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     // Map version
     const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
 	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
+    const std::vector<std::string> chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
     //const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeaturesMap(chosenFeatureToolMap, this, pPfo));
     LArMvaHelper::MvaFeatureVector featureVector;
     LArMvaHelper::MvaFeatureMap featureMap;
-    LArMvaHelper::FillFeaturesMap(featureMap,featureVector,chosenFeatureToolMap, this, pPfo);
+    LArMvaHelper::FillFeaturesMap(featureMap,featureVector,chosenFeatureToolMap,chosenFeatureToolOrder, this, pPfo);
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
@@ -414,27 +415,28 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
         }
     }
 
+    // Still need this in case we end up using the non-3d info version... (TODO: make sure this links up correctly)
     AlgorithmToolVector algorithmToolVector;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureTools", algorithmToolVector));
     // and the map:
     LArMvaHelper::AlgorithmToolMap algorithmToolMap;
-    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", algorithmToolMap));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureTools", m_algorithmToolNames, algorithmToolMap));
 
     if (m_useThreeDInformation)
     {
-        AlgorithmToolVector algorithmToolVectorNoChargeInfo;
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolVectorNoChargeInfo));
+        //AlgorithmToolVector algorithmToolVectorNoChargeInfo;
+        //PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+        //    XmlHelper::ProcessAlgorithmToolList(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolVectorNoChargeInfo));
 	// and the map
 	LArMvaHelper::AlgorithmToolMap algorithmToolMapNoChargeInfo;
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-				 LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureToolsNoChargeInfo", algorithmToolMapNoChargeInfo));
+				 LArMvaHelper::ProcessAlgorithmToolListToMap(*this, xmlHandle, "FeatureToolsNoChargeInfo", m_algorithmToolNamesNoChargeInfo, algorithmToolMapNoChargeInfo));
 
-        for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorThreeD));
+        //for (AlgorithmTool *const pAlgorithmTool : algorithmToolVector)
+        //    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorThreeD));
 
-        for (AlgorithmTool *const pAlgorithmTool : algorithmToolVectorNoChargeInfo)
-            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorNoChargeInfo));
+        //for (AlgorithmTool *const pAlgorithmTool : algorithmToolVectorNoChargeInfo)
+        //    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToVector(pAlgorithmTool, m_featureToolVectorNoChargeInfo));
 
 	for ( auto const &[pAlgorithmToolName, pAlgorithmTool] : algorithmToolMap)
 	    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, LArMvaHelper::AddFeatureToolToMap(pAlgorithmTool, pAlgorithmToolName, m_featureToolMapThreeD));

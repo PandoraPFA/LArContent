@@ -37,11 +37,14 @@ protected:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 
     ClusterCharacterisationFeatureTool::FeatureToolVector m_featureToolVector;         ///< The feature tool map
-    PfoCharacterisationFeatureTool::FeatureToolVector m_featureToolVectorThreeD;       ///< The feature tool map for 3D info
+    //PfoCharacterisationFeatureTool::FeatureToolVector m_featureToolVectorThreeD;       ///< The feature tool map for 3D info
     PfoCharacterisationFeatureTool::FeatureToolVector m_featureToolVectorNoChargeInfo; ///< The feature tool map for missing W view
     // Maps to store in metadata
     PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapThreeD;
     PfoCharacterisationFeatureTool::FeatureToolMap m_featureToolMapNoChargeInfo;
+
+    std::vector<std::string> m_algorithmToolNames;
+    std::vector<std::string> m_algorithmToolNamesNoChargeInfo;
 
     T m_mva;             ///< The mva
     T m_mvaNoChargeInfo; ///< The mva for missing W view
