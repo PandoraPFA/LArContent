@@ -97,9 +97,11 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     ClusterList wClusterList;
     LArPfoHelper::GetClusters(pPfo, TPC_VIEW_W, wClusterList);
 
+    /*
     const PfoCharacterisationFeatureTool::FeatureToolVector &chosenFeatureToolVector(
         wClusterList.empty() ? m_featureToolVectorNoChargeInfo : m_featureToolVectorThreeD);
     const LArMvaHelper::MvaFeatureVector featureVector(LArMvaHelper::CalculateFeatures(chosenFeatureToolVector, this, pPfo));
+    */
 
     // TEST -- USING FUNCTION TO PRINTOUT MAP
     this->PrintFeatureToolMap();
@@ -109,9 +111,9 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
 	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
     //const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeaturesMap(chosenFeatureToolMap, this, pPfo));
-    LArMvaHelper::MvaFeatureVector secondFeatureVector;
+    LArMvaHelper::MvaFeatureVector featureVector;
     LArMvaHelper::MvaFeatureMap featureMap;
-    LArMvaHelper::FillFeaturesMap(featureMap,secondFeatureVector,chosenFeatureToolMap, this, pPfo);
+    LArMvaHelper::FillFeaturesMap(featureMap,featureVector,chosenFeatureToolMap, this, pPfo);
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
@@ -284,10 +286,12 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
 	  std::cout << iFeature.Get() << " ";
 	std::cout << std::endl;
 	int ct_items=0;
-	for (auto const &[name, value] : featureMap) {
-	    metadata.m_propertiesToAdd[name] = value.Get();
-	    std::cout << "TEST!!!!!!!!! " << name << " --> " << value.Get() << std::endl;
-	    ct_items+=1;
+	if ( m_persistFeatures ) {
+	    for (auto const &[name, value] : featureMap) {
+	        metadata.m_propertiesToAdd[name] = value.Get();
+		std::cout << "TEST!!!!!!!!! " << name << " --> " << value.Get() << std::endl;
+		ct_items+=1;
+	    }
 	}
 	std::cout << ct_items << " items in the map." << std::endl;
 	//////////////////////////////////////////////////////////////////////
@@ -321,6 +325,8 @@ StatusCode MvaPfoCharacterisationAlgorithm<T>::ReadSettings(const TiXmlHandle xm
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FoldToPrimaries", m_primaryParameters.m_foldBackHierarchy));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PersistFeatures", m_persistFeatures));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "TrainingSetMode", m_trainingSetMode));
 

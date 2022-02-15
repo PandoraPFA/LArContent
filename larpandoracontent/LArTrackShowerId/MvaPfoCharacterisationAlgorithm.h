@@ -46,6 +46,8 @@ protected:
     T m_mva;             ///< The mva
     T m_mvaNoChargeInfo; ///< The mva for missing W view
 
+    bool m_persistFeatures;               ///< Whether to write the features to the properties map
+
     bool m_trainingSetMode;               ///< Whether to train
     bool m_testBeamMode;                  ///< Whether the training set is from a test beam experiment
     bool m_enableProbability;             ///< Whether to use probabilities instead of binary classification
