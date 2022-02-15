@@ -28,8 +28,10 @@ StatusCode LArMvaHelper::ProcessAlgorithmToolListToMap(const Algorithm &algorith
     {
         AlgorithmTool *pAlgorithmTool(nullptr);
 	PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateAlgorithmTool(algorithm, pXmlElement, pAlgorithmTool));
-	std::cout << pXmlElement->Attribute("type") << " ";
-	algorithmToolMap[ pXmlElement->Attribute("type") ] = pAlgorithmTool;
+	std::cout << pXmlElement->Attribute("type") << " instance(" << pAlgorithmTool->GetInstanceName() << ") ";
+	std::string toolName = pXmlElement->Attribute("type");
+	if ( algorithmToolMap.find(toolName) != algorithmToolMap.end() ) toolName=toolName+"_"+pAlgorithmTool->GetInstanceName();
+	algorithmToolMap[ toolName ] = pAlgorithmTool;
     }
 
     std::cout << std::endl;
