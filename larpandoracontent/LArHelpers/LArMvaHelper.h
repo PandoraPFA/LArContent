@@ -47,8 +47,7 @@ public:
      *  @param  args arguments to pass to the tool
      */
     virtual void Run(MvaTypes::MvaFeatureVector &featureVector, Ts... args) = 0;
-    virtual void RunWithMap(MvaTypes::MvaFeatureMap &featureMap, MvaTypes::MvaFeatureVector &featureVector, std::string featureToolName,
-			    const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo){ return; };
+    virtual void RunWithMap(MvaTypes::MvaFeatureMap &featureMap, MvaTypes::MvaFeatureVector &featureVector, std::string featureToolName, Ts... args){ return; };
 };
 
 template <typename... Ts>
