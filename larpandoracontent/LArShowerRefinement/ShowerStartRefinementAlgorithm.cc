@@ -22,7 +22,9 @@ using namespace pandora;
 namespace lar_content
 {
 
-ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() : m_binSize(0.005)
+ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() : 
+    m_binSize(0.005),     
+    m_electronFraction(0.3f)
 {
 }
 
@@ -54,11 +56,13 @@ StatusCode ShowerStartRefinementAlgorithm::Run()
     // run tools
     for (const ParticleFlowObject *const pPfo : pfoVector)
     {
-        if (std::find(m_deletedPfos.begin(), m_deletedPfos.end(), pPfo) != m_deletedPfos.end())
-            continue;
-
         for (ShowerStartRefinementBaseTool *const pShowerStartRefinementTool : m_algorithmToolVector)
+        {
+            if (std::find(m_deletedPfos.begin(), m_deletedPfos.end(), pPfo) != m_deletedPfos.end())
+                continue;
+
             pShowerStartRefinementTool->Run(this, pPfo, nuVertexPosition);
+        }
     }
 
     return STATUS_CODE_SUCCESS;
@@ -104,6 +108,93 @@ StatusCode ShowerStartRefinementAlgorithm::GetNeutrinoVertex(CartesianVector &ne
 
         return STATUS_CODE_NOT_INITIALIZED;
     }
+
+    neutrinoVertex = pNuVertexList->front()->GetPosition();
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CaloHitList ShowerStartRefinementAlgorithm::GetAllHitsOfType(const HitType hitType)
+{
+    CaloHitList viewHitList;
+
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList));
+
+    if (!pCaloHitList || pCaloHitList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ShowerStartRefinementBaseTool: unable to find calo hit list " << "CaloHitList2D" << std::endl;
+
+        return viewHitList;
+    }
+
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        if (pCaloHit->GetHitType() == hitType)
+            viewHitList.push_back(pCaloHit);
+    }
+
+    return viewHitList;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+CaloHitList ShowerStartRefinementAlgorithm::GetXIntervalHitsOfType(const ParticleFlowObject *const pShowerPfo, const HitType hitType)
+{
+    CaloHitList intervalHitList;
+
+    ClusterList clustersU, clustersV, clustersW;
+    LArPfoHelper::GetClusters(pShowerPfo, TPC_VIEW_U, clustersU); 
+    LArPfoHelper::GetClusters(pShowerPfo, TPC_VIEW_V, clustersV); 
+    LArPfoHelper::GetClusters(pShowerPfo, TPC_VIEW_W, clustersW); 
+
+    CartesianVector uMin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    CartesianVector uMax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    CartesianVector vMin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    CartesianVector vMax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+    CartesianVector wMin(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
+    CartesianVector wMax(-std::numeric_limits<float>::max(), -std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
+
+    if (!clustersU.empty())
+        LArClusterHelper::GetClusterBoundingBox(clustersU.front(), uMin, uMax);
+
+    if (!clustersV.empty())
+        LArClusterHelper::GetClusterBoundingBox(clustersV.front(), vMin, vMax);
+
+    if (!clustersW.empty())
+        LArClusterHelper::GetClusterBoundingBox(clustersW.front(), wMin, wMax);
+
+    float xMin(std::min(std::min(uMin.GetX(), vMin.GetX()), wMin.GetX()));
+    float xMax(std::max(std::max(uMax.GetX(), vMax.GetX()), wMax.GetX()));
+
+    CaloHitList viewHitList;
+
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList));
+
+    if (!pCaloHitList || pCaloHitList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ShowerStartRefinementBaseTool: unable to find calo hit list " << "CaloHitList2D" << std::endl;
+
+        return intervalHitList;
+    }
+
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        if (pCaloHit->GetHitType() != hitType)
+            continue;
+
+        const CartesianVector &hitPosition(pCaloHit->GetPositionVector());
+
+        if ((hitPosition.GetX() > xMin) && (hitPosition.GetX() < xMax))
+            intervalHitList.push_back(pCaloHit);
+    }
+
+    return intervalHitList;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -217,15 +308,15 @@ void ShowerStartRefinementAlgorithm::FillOwnershipMaps()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ElectronStartRefinementTool::IsElectronPathway(const CaloHitList &hitsToAdd)
+bool ShowerStartRefinementAlgorithm::IsElectronPathway(const CaloHitList &connectionPathwayHitList)
 {
-    int showerHitCount;
+    int showerHitCount(0);
 
-    for (const CaloHit *const pHitToAdd : hitsToAdd)
+    for (const CaloHit *const pConnectionPathwayHit : connectionPathwayHitList)
     {
         try
         {
-            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pHitToAdd));
+            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pConnectionPathwayHit));
             const int pdg(std::abs(pMCParticle->GetParticleId()));
 
             if ((pdg == 11) || (pdg == 22))
@@ -237,7 +328,7 @@ bool ElectronStartRefinementTool::IsElectronPathway(const CaloHitList &hitsToAdd
         }
     }
 
-    const float showerProportion(static_cast<float>(showerHitCount) / static_cast<float>(hitsToAdd.size()));
+    const float showerProportion(static_cast<float>(showerHitCount) / static_cast<float>(connectionPathwayHitList.size()));
 
     return (showerProportion > 0.5f); 
 }
@@ -256,7 +347,7 @@ void ShowerStartRefinementAlgorithm::AddElectronPathway(const ParticleFlowObject
     LArPfoHelper::GetClusters(pShowerPfo, TPC_3D, showerClusters3D);
 
     const ThreeDSlidingFitResult showerSlidingFit(showerClusters3D.front(), 1000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-    const CartesianVector &showerDirection3D(showerSlidingFit.GetGlobalMaxLayerPosition());
+    const CartesianVector &showerDirection3D(showerSlidingFit.GetGlobalMaxLayerDirection());
 
     std::map<const ParticleFlowObject*, int> showerHitCountMap;
 
@@ -274,6 +365,9 @@ void ShowerStartRefinementAlgorithm::AddElectronPathway(const ParticleFlowObject
         const ParticleFlowObject *const pPathwayShower(clusterToPfoMap.at(hitToClusterMap.at(pPathwayHit)));
 
         if (LArPfoHelper::IsTrack(pPathwayShower))
+            continue;
+
+        if (pPathwayShower == pShowerPfo)
             continue;
 
         if (showerHitCountMap.find(pPathwayShower) == showerHitCountMap.end())
@@ -294,13 +388,22 @@ void ShowerStartRefinementAlgorithm::AddElectronPathway(const ParticleFlowObject
         ClusterList pathwayClusters3D;
         LArPfoHelper::GetClusters(entry.first, TPC_3D, pathwayClusters3D);
 
-        const ThreeDSlidingFitResult pathwaySlidingFit(pathwayClusters3D.front(), 1000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
-        const CartesianVector &pathwayDirection(pathwaySlidingFit.GetGlobalMaxLayerPosition());
+        if (pathwayClusters3D.size() == 0)
+            continue;
 
-        const float openingAngle(pathwayDirection.GetOpeningAngle(showerDirection3D) * 180 / M_PI);
+        try
+        {
+            const ThreeDSlidingFitResult pathwaySlidingFit(pathwayClusters3D.front(), 1000, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+            const CartesianVector &pathwayDirection(pathwaySlidingFit.GetGlobalMaxLayerDirection());
 
-        if (openingAngle > 5.f)
-            significantShowersToMerge.push_back(entry.first);
+            const float openingAngle(pathwayDirection.GetOpeningAngle(showerDirection3D) * 180 / M_PI);
+
+            if (openingAngle < 5.f)
+                significantShowersToMerge.push_back(entry.first);
+        }
+        catch (...)
+        {
+        }
     }
 
     // Add in hits first, then deal with merges
@@ -320,6 +423,9 @@ void ShowerStartRefinementAlgorithm::AddElectronPathway(const ParticleFlowObject
             if (clusterToPfoMap.find(pParentCluster) != clusterToPfoMap.end())
             {
                 pParentPfo = clusterToPfoMap.at(pParentCluster);
+
+                if (pParentPfo == pShowerPfo)
+                    continue;
 
                 if (std::find(significantShowersToMerge.begin(), significantShowersToMerge.end(), pParentPfo) != significantShowersToMerge.end())
                     continue;
@@ -402,6 +508,116 @@ void ShowerStartRefinementAlgorithm::AddElectronPathway(const ParticleFlowObject
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ShowerStartRefinementAlgorithm::SetElectronVertex(const CartesianVector &nuVertexPosition, const ParticleFlowObject *const pShowerPfo)
+{
+    object_creation::ParticleFlowObject::Metadata metadata;
+    metadata.m_propertiesToAdd["ShowerVertexX"] = nuVertexPosition.GetX();
+    metadata.m_propertiesToAdd["ShowerVertexY"] = nuVertexPosition.GetY();
+    metadata.m_propertiesToAdd["ShowerVertexZ"] = nuVertexPosition.GetZ();
+
+    std::cout << "nuVertexPosition.GetX(): " << nuVertexPosition.GetX() << std::endl;
+    std::cout << "nuVertexPosition.GetY(): " << nuVertexPosition.GetY() << std::endl;
+    std::cout << "nuVertexPosition.GetZ(): " << nuVertexPosition.GetZ() << std::endl;
+
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pShowerPfo, metadata));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerStartRefinementAlgorithm::SetGammaVertex(const CartesianVector &showerVertex, const ParticleFlowObject *const pShowerPfo)
+{
+    if (!pShowerPfo->GetVertexList().empty())
+    {
+        if (pShowerPfo->GetVertexList().size() != 1)
+        {
+            std::cout << "vertex not equal to one!!" << std::endl;
+            throw;
+        }
+
+        const Vertex *const pVertex(pShowerPfo->GetVertexList().front());
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pVertex, "GammaVertices"));
+    }
+
+
+    const VertexList *pVertexList = NULL;
+    std::string vertexListName;
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::CreateTemporaryListAndSetCurrent(*this, pVertexList, vertexListName));
+
+    PandoraContentApi::Vertex::Parameters parameters;
+    parameters.m_position = showerVertex;
+    parameters.m_vertexLabel = VERTEX_INTERACTION;
+    parameters.m_vertexType = VERTEX_3D;
+
+    const Vertex *pVertex(NULL);
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Vertex::Create(*this, parameters, pVertex));
+
+    if (!pVertexList->empty())
+    {
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, "GammaVertices"));
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pShowerPfo, pVertex));
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ShowerStartRefinementAlgorithm::IsTrack(const ProtoShower &protoShower)
+{
+    int showerHits(0), trackHits(0), electronHits(0);
+
+    for (const CaloHit *const pCaloHit : protoShower.m_connectionPathway.m_pathwayHitList)
+    {
+        try
+        {
+            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+            const int pdg(std::abs(pMCParticle->GetParticleId()));
+
+            if ((pdg == 11) || (pdg == 22))
+            {
+                ++showerHits;
+
+                if (pdg == 11)
+                    ++electronHits;
+            }
+            else
+            {
+                ++trackHits;
+            }
+        }
+        catch(...)
+        {
+            continue;
+        }
+    }
+
+    const float electronFraction(static_cast<float>(electronHits) / static_cast<float>(showerHits));
+    const bool isElectron(electronFraction > m_electronFraction);
+
+    if (isElectron)
+        return false;
+
+    const float showerFraction(static_cast<float>(showerHits) / static_cast<float>(showerHits + trackHits));
+    const bool isShower(showerFraction > 0.5f); // was 0.8 but with it being 0.5 we can probably now get rid of the elctron stuff
+    return (!isShower); // i think i should remove the electron stuff and lower this to 0.5?
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerStartRefinementAlgorithm::RemoveConnectionPathway(const ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShower)
+{
+    const HitType hitType(protoShower.m_connectionPathway.m_pathwayHitList.front()->GetHitType());
+
+    ClusterList clusterList;
+    LArPfoHelper::GetClusters(pShowerPfo, hitType, clusterList);
+
+    std::string clusterListName(hitType == TPC_VIEW_U ? "ClustersU" : hitType == TPC_VIEW_V ? "ClustersV" : "ClustersW");
+    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
+
+    for (const CaloHit *const pCaloHit : protoShower.m_connectionPathway.m_pathwayHitList)
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::RemoveFromCluster(*this, clusterList.front(), pCaloHit));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 StatusCode ShowerStartRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
@@ -422,7 +638,13 @@ StatusCode ShowerStartRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHan
         m_algorithmToolVector.push_back(pShowerStartRefinementTool);
     }
 
-    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "BinSize", m_binSize));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "BinSize", m_binSize));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ElectronFraction", m_electronFraction));
+
+    PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 
     return STATUS_CODE_SUCCESS;
 }

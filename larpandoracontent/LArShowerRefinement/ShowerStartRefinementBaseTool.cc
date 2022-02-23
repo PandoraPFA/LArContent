@@ -301,7 +301,9 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
                 showerSpineHitList.push_back(pCaloHit);
             }
 
-            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "INITIAL HIT", VIOLET, 2);
+            ////////////////////////////
+            //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "INITIAL HIT", VIOLET, 2);
+            ////////////////////////////
             runningFitPositionVector.push_back(hitPosition);
         }
     }
@@ -311,11 +313,16 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
     {
         ////////////////////////////////////
         //std::cout << "Not enough initial hits to form fit" << std::endl;
+        //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
         ////////////////////////////////////
 
         showerSpineHitList.clear();
         return;
     }
+
+    ///////////////////
+    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+    ////////////////////
 
     // Perform a running fit to follow pathway
     const bool isEndDownstream(initialDirection.GetZ() > 0.f);
@@ -378,7 +385,7 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
     }
 
     ////////////////////////////////////
-    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
+    //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     ////////////////////////////////////
 }
 
@@ -390,8 +397,8 @@ bool ShowerStartRefinementBaseTool::CollectSubsectionHits(const ShowerStartRefin
     CaloHitList &showerSpineHitList)
 { 
     ////////////////////////////
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedStartPosition, "start", GREEN, 2);
-    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedEndPosition, "end", GREEN, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedStartPosition, "start", GREEN, 2);
+    //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &extrapolatedEndPosition, "end", GREEN, 2);
     ////////////////////////////
 
     float extrapolatedStartL(0.f), extrapolatedStartT(0.f);
@@ -481,7 +488,7 @@ void ShowerStartRefinementBaseTool::CollectConnectedHits(const ShowerStartRefine
             showerSpineHitList.push_back(pCaloHit);
  
             ////////////////////////////////
-            PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "added hit", BLUE, 2);
+            //PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &hitPosition, "added hit", BLUE, 2);
             ////////////////////////////////
         }
     }
@@ -635,7 +642,7 @@ void ShowerStartRefinementBaseTool::GetEnergyDistribution(ShowerStartRefinementA
 bool ShowerStartRefinementBaseTool::FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const CartesianVector &projectedNuVertexPosition, 
     const CartesianVector &startDirection, const LongitudinalPositionMap &longitudinalPositionMap, const EnergySpectrumMap &energySpectrumMap, 
     const CaloHitList &showerSpineHitList, CartesianVector &showerStartPosition, const CaloHitList &showerPfoHitList, const bool isEndDownstream, 
-    ProtoShowerVector &protoShowerVector)
+    ProtoShowerVector &protoShowerVector, const bool isHelper)
 {
     float meanEnergy(0.f), energySigma(0.f);
 
@@ -658,7 +665,7 @@ bool ShowerStartRefinementBaseTool::FindShowerStart(ShowerStartRefinementAlgorit
         const float energyDeviation((energySpectrumIter->second - meanEnergy) / energySigma);
 
         /////////////////////////////////
-        /*
+        /*        
         std::cout << "energyDeviation (sigma): " << energyDeviation << std::endl;
 
         CartesianVector jam(0.f, 0.f, 0.f), jam2(0.f, 0.f, 0.f);
@@ -685,26 +692,35 @@ bool ShowerStartRefinementBaseTool::FindShowerStart(ShowerStartRefinementAlgorit
     CartesianVector showerStartDirection(0.f, 0.f, 0.f);
     this->ConvertLongitudinalProjectionToGlobalPosition(pAlgorithm, showerSpineHitList, longitudinalStartCoordinate, showerStartPosition, showerStartDirection);
 
-    CaloHitList pathwayHitList;
-    for (const CaloHit *const pCaloHit : showerSpineHitList)
+    showerStartDirection = isEndDownstream ? showerStartDirection : showerStartDirection * (-1.f);
+
+    CaloHitList pathwayHitList, showerHitList;
+    for (const CaloHit *const pCaloHit : showerPfoHitList)
     {
-        if (longitudinalPositionMap.find(pCaloHit) == longitudinalPositionMap.end())
-            continue;
+        if (longitudinalPositionMap.find(pCaloHit) != longitudinalPositionMap.end())
+        {
+            if ((isEndDownstream && (longitudinalPositionMap.at(pCaloHit) < longitudinalStartCoordinate)) || 
+                (!isEndDownstream && (longitudinalPositionMap.at(pCaloHit) > longitudinalStartCoordinate)))
+            {
+                pathwayHitList.push_back(pCaloHit);
+            }
+            else
+            {
+                showerHitList.push_back(pCaloHit);
+            }
+        }
+        else
+        {
+            const float t(showerStartDirection.GetCrossProduct(showerStartPosition - pCaloHit->GetPositionVector()).GetMagnitude());
+            const float l(showerStartDirection.GetDotProduct(pCaloHit->GetPositionVector() - showerStartPosition));
 
-        if (isEndDownstream && (longitudinalPositionMap.at(pCaloHit) > longitudinalStartCoordinate))
-            continue;
-
-        if (!isEndDownstream && (longitudinalPositionMap.at(pCaloHit) < longitudinalStartCoordinate))
-            continue;
-
-        /////////////////////////////////
-        /*
-        std::cout << "longitudinalPositionMap.at(pCaloHit): " << longitudinalPositionMap.at(pCaloHit) << std::endl;
-        */
-        /////////////////////////////////
-
-        pathwayHitList.push_back(pCaloHit);
+            if ((l > 0.f) && (t < m_molliereRadius))
+                showerHitList.push_back(pCaloHit);
+        }
     }
+    
+    showerHitList.clear();
+
 
     /////////////////////////////////
     /*
@@ -717,8 +733,8 @@ bool ShowerStartRefinementBaseTool::FindShowerStart(ShowerStartRefinementAlgorit
     */
     /////////////////////////////////
 
-    protoShowerVector.push_back(ProtoShower(ShowerCore(showerStartPosition, showerStartDirection, CaloHitList()), 
-        ConnectionPathway(projectedNuVertexPosition, startDirection, pathwayHitList)));
+    protoShowerVector.push_back(ProtoShower(ShowerCore(showerStartPosition, showerStartDirection, showerHitList), 
+        ConnectionPathway(projectedNuVertexPosition, startDirection, pathwayHitList), isHelper));
 
     return showerStartFound;
 }
@@ -1262,7 +1278,6 @@ StatusCode ShowerStartRefinementBaseTool::FillHaloHitPositionVector(const CaloHi
     return STATUS_CODE_SUCCESS;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1270,6 +1285,14 @@ StatusCode ShowerStartRefinementBaseTool::FillHaloHitPositionVector(const CaloHi
 bool SortByDistanceToPoint::operator()(const CartesianVector &lhs, const CartesianVector &rhs)
 {
     return (m_referencePoint.GetDistanceSquared(lhs) < m_referencePoint.GetDistanceSquared(rhs));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+
+bool SortByDistanceToPoint::operator()(const CaloHit *const lhs, const CaloHit *const rhs)
+{
+    return (m_referencePoint.GetDistanceSquared(lhs->GetPositionVector()) < m_referencePoint.GetDistanceSquared(rhs->GetPositionVector()));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------

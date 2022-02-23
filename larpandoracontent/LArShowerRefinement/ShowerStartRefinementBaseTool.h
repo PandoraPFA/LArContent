@@ -99,24 +99,47 @@ class ProtoShower
 public: 
     ProtoShower();
 
-    ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway);
+    ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const bool isHelper);
 
     // when you're not feeling lazy, change this to private  
     ShowerCore m_showerCore;
     ConnectionPathway m_connectionPathway;
+    bool m_isHelper;
 };
 
 typedef std::vector<ProtoShower> ProtoShowerVector;
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway) : m_showerCore(showerCore), m_connectionPathway(connectionPathway)
+inline ProtoShower::ProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const bool isHelper) : 
+    m_showerCore(showerCore), m_connectionPathway(connectionPathway), m_isHelper(isHelper)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-inline ProtoShower::ProtoShower() : m_showerCore(), m_connectionPathway()
+inline ProtoShower::ProtoShower() : m_showerCore(), m_connectionPathway(), m_isHelper(false)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+class ElectronProtoShower : public ProtoShower
+{
+public: 
+    ElectronProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const bool isHelper, const pandora::CaloHitList &hitsToAdd);
+
+    // when you're not feeling lazy, change this to private  
+    pandora::CaloHitList m_hitsToAdd;
+};
+
+typedef std::vector<ElectronProtoShower> ElectronProtoShowerVector;
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+inline ElectronProtoShower::ElectronProtoShower(const ShowerCore &showerCore, const ConnectionPathway &connectionPathway, const bool isHelper, 
+    const pandora::CaloHitList &hitsToAdd) : ProtoShower(showerCore, connectionPathway, isHelper), m_hitsToAdd(hitsToAdd)
 {
 }
 
@@ -207,7 +230,8 @@ protected:
 
     bool FindShowerStart(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &projectedNuVertexPosition, const pandora::CartesianVector &peakDirection, 
         const LongitudinalPositionMap &longitudinalPositionMap, const EnergySpectrumMap &energySpectrumMap, const pandora::CaloHitList &showerSpineHitList, 
-        pandora::CartesianVector &showerStartPosition, const pandora::CaloHitList &showerPfoHitList, const bool isEndDownstream, ProtoShowerVector &protoShowerVector);
+        pandora::CartesianVector &showerStartPosition, const pandora::CaloHitList &showerPfoHitList, const bool isEndDownstream, ProtoShowerVector &protoShowerVector,
+        const bool isHelper);
 
     void ConvertLongitudinalProjectionToGlobalPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerSpineHitList, const float longitudinalDistance, 
         pandora::CartesianVector &globalPosition, pandora::CartesianVector &globalDirection);
@@ -267,6 +291,7 @@ protected:
              *  @return  whether lhs hit is closer to the referencePoint than the rhs hit
              */
             bool operator()(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
+            bool operator()(const pandora::CaloHit *const lhs, const pandora::CaloHit *const rhs);
 
         private:
             const pandora::CartesianVector m_referencePoint; ///< The point relative to which constituent hits are ordered

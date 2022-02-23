@@ -16,6 +16,7 @@
 namespace lar_content
 {
 
+class ProtoShower;
 class ShowerStartRefinementBaseTool;
 
 class ShowerStartRefinementAlgorithm : public PfoMopUpBaseAlgorithm
@@ -39,13 +40,21 @@ public:
     ClusterToPfoMap m_clusterToPfoMapW;
 
     pandora::PfoList m_deletedPfos;
-
     float m_binSize;
+    float m_electronFraction;
+
+    pandora::CaloHitList GetAllHitsOfType(const pandora::HitType hitType);
+    pandora::CaloHitList GetXIntervalHitsOfType(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::HitType hitType);
 
     void FillOwnershipMaps();
 
     bool IsElectronPathway(const pandora::CaloHitList &hitsToAdd);
     void AddElectronPathway(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CaloHitList &pathwayHitList);
+
+    void SetElectronVertex(const pandora::CartesianVector &nuVertexPosition, const pandora::ParticleFlowObject *const pShowerPfo);
+    void SetGammaVertex(const pandora::CartesianVector &showerVertex, const pandora::ParticleFlowObject *const pShowerPfo);
+    bool IsTrack(const ProtoShower &protoShower);
+    void RemoveConnectionPathway(const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShower);
 
 private:
     pandora::StatusCode Run();

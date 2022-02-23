@@ -31,9 +31,11 @@ public:
         const pandora::CartesianVector &nuVertexPosition);
 
     void BuildProtoShowers(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
-        const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, ProtoShowerVector &protoShowerVector);
+        const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector,
+        pandora::CaloHitList &usedCaloHitList);
 
-    pandora::CaloHitList GetAllHitsOfType(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::HitType hitType);
+    void BuildHelperProtoShowers(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &nuVertexPosition, 
+        const pandora::HitType tpcView, pandora::CartesianPointVector &significantPeakDirections, pandora::CaloHitList &usedHitList);
 
     void CollectHitsWithinROI(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerHitList, 
         const pandora::CaloHitList &allHitList, const pandora::CartesianVector &projectedNuVertexPosition, pandora::CaloHitList &collectedHits);
@@ -53,26 +55,38 @@ public:
         const pandora::CartesianVector &peakDirection, const pandora::CaloHitList &viewShowerHitList, const pandora::CartesianVector &showerVertexPosition, 
         const pandora::CaloHitList &showerSpineHitList);
 
-    bool IsShowerExtendable(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
-        const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, const ProtoShowerVector &protoShowerVectorW);
+    bool IsShowerExtendable(ShowerStartRefinementAlgorithm *const pAlgorithm, const ElectronProtoShowerVector &protoShowerVectorU, 
+        const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW);
 
-    void GetHitsToAdd(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShower, 
-        const pandora::ParticleFlowObject *const pShowerPfo, pandora::CaloHitList &hitsToAdd);
+    bool IsElectronPathway(ShowerStartRefinementAlgorithm *const pAlgorithm, const ElectronProtoShowerVector &protoShowerVectorU, 
+        const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW);
 
-    bool AreDirectionsConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &directionU, 
-        const pandora::CartesianVector &directionV, const pandora::CartesianVector &directionW, const float allowance);
+    bool ArePathwaysConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW);
+
+   bool AreShowerStartsConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+       const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float allowance);
+
+    bool AreDirectionsConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float allowance);
 
     void ExtendShower(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
-        const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, const ProtoShowerVector &protoShowerVectorW);
+        const ElectronProtoShowerVector &protoShowerVectorU, const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW);
 
     void ExtendShowerOneView(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
-        const ProtoShowerVector &showersToExtend);
+        const ElectronProtoShowerVector &showersToExtend);
 
     void ExtendShowerTwoView(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
-        const ProtoShowerVector &showersToExtend);
+        const ElectronProtoShowerVector &showersToExtend);
 
     void ExtendShowerThreeView(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
-        const ProtoShowerVector &showersToExtend);
+        const ElectronProtoShowerVector &showersToExtend);
+
+    void RefineHitsToAdd(ShowerStartRefinementAlgorithm *const pAlgorithm, ElectronProtoShower &protoShower,
+        const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector, 
+        const pandora::CartesianPointVector &significantPeakDirections);
+
+    pandora::CaloHitList FindContinuousPath(const pandora::CaloHitList &refinedHitList, const pandora::CartesianVector &nuVertexPosition);
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -80,6 +94,10 @@ private:
     int m_showerSlidingFitWindow;
     float m_maxCoincideneTransverseSeparation;
     float m_minSpinePurity;
+    float m_maxAngularDeviation;
+    float m_maxXSeparation;
+    bool m_extendMode;
+    bool m_moveVertexMode;
 };
 
 } // namespace lar_content
