@@ -111,10 +111,10 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
     const PfoCharacterisationFeatureTool::FeatureToolMap &chosenFeatureToolMap(
 	wClusterList.empty() ? m_featureToolMapNoChargeInfo : m_featureToolMapThreeD);
     const std::vector<std::string> chosenFeatureToolOrder(wClusterList.empty() ? m_algorithmToolNamesNoChargeInfo : m_algorithmToolNames);
-    //const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeaturesMap(chosenFeatureToolMap, this, pPfo));
-    LArMvaHelper::MvaFeatureVector featureVector;
-    LArMvaHelper::MvaFeatureMap featureMap;
-    LArMvaHelper::FillFeaturesMap(featureMap,featureVector,chosenFeatureToolMap,chosenFeatureToolOrder, this, pPfo);
+    const LArMvaHelper::MvaFeatureMap featureMap(LArMvaHelper::CalculateFeatures(chosenFeatureToolMap, chosenFeatureToolOrder, this, pPfo));
+    //LArMvaHelper::MvaFeatureVector featureVector;
+    //LArMvaHelper::MvaFeatureMap featureMap;
+    //LArMvaHelper::FillFeaturesMap(featureMap,featureVector,chosenFeatureToolMap,chosenFeatureToolOrder, this, pPfo);
 
     if (m_trainingSetMode && m_applyReconstructabilityChecks)
     {
@@ -226,7 +226,7 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
                 std::string outputFile(m_trainingOutputFile);
                 const std::string end = ((wClusterList.empty()) ? "noChargeInfo.txt" : ".txt");
                 outputFile.append(end);
-                LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
+                LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureMap, chosenFeatureToolOrder);
             }
         }
 
@@ -251,40 +251,42 @@ bool MvaPfoCharacterisationAlgorithm<T>::IsClearTrack(const pandora::ParticleFlo
         {
             std::string outputFile(m_trainingOutputFile);
             outputFile.append(wClusterList.empty() ? "noChargeInfo.txt" : ".txt");
-            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureVector);
+            LArMvaHelper::ProduceTrainingExample(outputFile, isTrueTrack, featureMap, chosenFeatureToolOrder);
         }
 
         return isTrueTrack;
     }
 
-    for (const LArMvaHelper::MvaFeature &featureValue : featureVector)
+    for ( auto const &[featureKey, featureValue] : featureMap )
     {
         if (!featureValue.IsInitialized())
         {
-            if (m_enableProbability)
-            {
-                object_creation::ParticleFlowObject::Metadata metadata;
-                metadata.m_propertiesToAdd["TrackScore"] = -1.f;
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
-            }
-            return (pPfo->GetParticleId() == MU_MINUS);
-        }
+	    if (m_enableProbability)
+	    {
+	        object_creation::ParticleFlowObject::Metadata metadata;
+		metadata.m_propertiesToAdd["TrackScore"] = -1.f;
+		PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pPfo, metadata));
+	    }
+	    return (pPfo->GetParticleId() == MU_MINUS);
+	}
     }
 
     // If no failures, proceed with MvaPfoCharacterisationAlgorithm classification
     if (!m_enableProbability)
     {
-        return LArMvaHelper::Classify((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureVector);
+        return LArMvaHelper::Classify((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureMap, chosenFeatureToolOrder);
     }
     else
     {
-        const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureVector));
+        const double score(LArMvaHelper::CalculateProbability((wClusterList.empty() ? m_mvaNoChargeInfo : m_mva), featureMap, chosenFeatureToolOrder));
         object_creation::ParticleFlowObject::Metadata metadata;
         metadata.m_propertiesToAdd["TrackScore"] = score;
 	// -- insert featureMap values... do I need to do something above?  --
 	std::cout << "Feature vector values: ";
-	for ( auto const& iFeature : featureVector )
-	  std::cout << iFeature.Get() << " ";
+	//for ( auto const& iFeature : featureVector )
+	//  std::cout << iFeature.Get() << " ";
+	for (auto const &[name, value] : featureMap)
+	  std::cout << value.Get() << " ";
 	std::cout << std::endl;
 	int ct_items=0;
 	if ( m_persistFeatures ) {

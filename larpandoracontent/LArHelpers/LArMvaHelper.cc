@@ -14,7 +14,7 @@ namespace lar_content
 {
 
 StatusCode LArMvaHelper::ProcessAlgorithmToolListToMap(const Algorithm &algorithm, const TiXmlHandle &xmlHandle, const std::string &listName,
-						       std::vector<std::string> &algorithmToolNameVector, AlgorithmToolMap &algorithmToolMap)
+						       StringVector &algorithmToolNameVector, AlgorithmToolMap &algorithmToolMap)
 {
     // Fill a vector with names in the desired run order as well as the map
 

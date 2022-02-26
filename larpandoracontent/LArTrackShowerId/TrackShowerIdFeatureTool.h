@@ -148,7 +148,7 @@ public:
     ThreeDLinearFitFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
-    void RunWithMap(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::MvaFeatureVector &featureVector, std::string featureToolName,
+    void Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
              const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
@@ -186,7 +186,7 @@ public:
     ThreeDVertexDistanceFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
-    void RunWithMap(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::MvaFeatureVector &featureVector, std::string featureToolName,
+    void Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
 	     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
@@ -207,7 +207,7 @@ public:
     ThreeDOpeningAngleFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
-    void RunWithMap(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::MvaFeatureVector &featureVector, std::string featureToolName,
+    void Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
 	     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
@@ -253,7 +253,7 @@ public:
     ThreeDPCAFeatureTool();
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
-    void RunWithMap(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::MvaFeatureVector &featureVector, std::string featureToolName,
+    void Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
 	     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
@@ -297,7 +297,7 @@ public:
     };
 
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
-    void RunWithMap(LArMvaHelper::MvaFeatureMap &featureMap, LArMvaHelper::MvaFeatureVector &featureVector, std::string featureToolName,
+    void Run(const std::string featureToolName, LArMvaHelper::MvaFeatureMap &featureMap,
 	     const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
