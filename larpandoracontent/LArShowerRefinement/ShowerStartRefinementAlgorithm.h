@@ -51,10 +51,15 @@ public:
     bool IsElectronPathway(const pandora::CaloHitList &hitsToAdd);
     void AddElectronPathway(const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CaloHitList &pathwayHitList);
 
-    void SetElectronVertex(const pandora::CartesianVector &nuVertexPosition, const pandora::ParticleFlowObject *const pShowerPfo);
+    void SetElectronMetadata(const pandora::CartesianVector &nuVertexPosition, const pandora::ParticleFlowObject *const pShowerPfo);
     void SetGammaVertex(const pandora::CartesianVector &showerVertex, const pandora::ParticleFlowObject *const pShowerPfo);
     bool IsTrack(const ProtoShower &protoShower);
     void RemoveConnectionPathway(const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShower);
+
+    void FillGammaHitMap();
+    void FillElectronHitMap();
+    bool IsElectron(const pandora::ParticleFlowObject *const pPfo) const;
+    bool IsGamma(const pandora::ParticleFlowObject *const pPfo) const;
 
 private:
     pandora::StatusCode Run();
@@ -68,8 +73,12 @@ private:
     typedef std::vector<ShowerStartRefinementBaseTool *> ShowerStartRefinementToolVector;
     ShowerStartRefinementToolVector m_algorithmToolVector;
     //private:
+    float m_minElectronCompleteness;
+    float m_minElectronPurity;
+    float m_minGammaCompleteness;
 
-
+    std::map<const pandora::MCParticle*, pandora::CaloHitList> m_gammaHitMap;
+    std::map<const pandora::MCParticle*, pandora::CaloHitList> m_electronHitMap;
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

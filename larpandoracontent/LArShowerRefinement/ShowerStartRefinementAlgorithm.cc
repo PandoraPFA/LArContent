@@ -10,6 +10,8 @@
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArMonitoringHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
@@ -24,7 +26,10 @@ namespace lar_content
 
 ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() : 
     m_binSize(0.005),     
-    m_electronFraction(0.3f)
+    m_electronFraction(0.3f),
+    m_minElectronCompleteness(0.33f),
+    m_minElectronPurity(0.5f),
+    m_minGammaCompleteness(0.33f)
 {
 }
 
@@ -52,6 +57,9 @@ StatusCode ShowerStartRefinementAlgorithm::Run()
     CartesianVector nuVertexPosition(0.f, 0.f, 0.f);
     if (this->GetNeutrinoVertex(nuVertexPosition) != STATUS_CODE_SUCCESS)
         return STATUS_CODE_SUCCESS;
+
+    this->FillGammaHitMap();
+    this->FillElectronHitMap();
 
     // run tools
     for (const ParticleFlowObject *const pPfo : pfoVector)
@@ -308,6 +316,174 @@ void ShowerStartRefinementAlgorithm::FillOwnershipMaps()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+void ShowerStartRefinementAlgorithm::FillGammaHitMap()
+{
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList));
+
+    if (!pCaloHitList || pCaloHitList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ShowerStartRefinementBaseTool: unable to find calo hit list " << "CaloHitList2D" << std::endl;
+
+        return;
+    }
+
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        try
+        {
+            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
+            
+            if (pMCParticle->GetParticleId() == 22)
+                m_gammaHitMap[pMCParticle].push_back(pCaloHit);
+        }
+        catch (...)
+        {
+            continue;
+        }
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerStartRefinementAlgorithm::FillElectronHitMap()
+{
+    const CaloHitList *pCaloHitList(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList));
+
+    if (!pCaloHitList || pCaloHitList->empty())
+    {
+        if (PandoraContentApi::GetSettings(*this)->ShouldDisplayAlgorithmInfo())
+            std::cout << "ShowerStartRefinementBaseTool: unable to find calo hit list " << "CaloHitList2D" << std::endl;
+
+        return;
+    }
+
+    for (const CaloHit *const pCaloHit : *pCaloHitList)
+    {
+        MCParticleVector contributingMCParticleVector;
+        const MCParticleWeightMap &weightMap(pCaloHit->GetMCParticleWeightMap());
+
+        for (const auto &mapEntry : weightMap)
+            contributingMCParticleVector.push_back(mapEntry.first);
+
+        std::sort(contributingMCParticleVector.begin(), contributingMCParticleVector.end(), PointerLessThan<MCParticle>());
+
+        float highestWeight(0.f);
+        const MCParticle *highestElectronContributor(nullptr);
+
+        for (const MCParticle *const pMCParticle : contributingMCParticleVector)
+        {
+            const bool isLeadingElectron((std::abs(pMCParticle->GetParticleId()) == 11) && (LArMCParticleHelper::GetPrimaryMCParticle(pMCParticle) == pMCParticle));
+
+            if (isLeadingElectron)
+            {
+                const float weight(weightMap.at(pMCParticle));
+
+                if (weight > highestWeight)
+                {
+                    highestWeight = weight;
+                    highestElectronContributor = pMCParticle;
+                }
+            }
+        }
+
+        if (highestElectronContributor)
+            m_electronHitMap[highestElectronContributor].push_back(pCaloHit);
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ShowerStartRefinementAlgorithm::IsElectron(const ParticleFlowObject *const pPfo) const
+{
+    MCParticleVector mcElectronVector;
+
+    for (auto &entry : m_electronHitMap)
+        mcElectronVector.push_back(entry.first);
+
+    CaloHitList pfoHitList;
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, pfoHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, pfoHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, pfoHitList);
+
+    for (const MCParticle *const pMCElectron : mcElectronVector)
+    {
+        const CaloHitList &mcElectronHitList(m_electronHitMap.at(pMCElectron));
+        const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(pfoHitList, mcElectronHitList));
+
+        const float completeness(static_cast<float>(sharedHitList.size()) / static_cast<float>(mcElectronHitList.size()));
+        const float purity(static_cast<float>(sharedHitList.size()) / static_cast<float>(pfoHitList.size()));
+
+        if (completeness < m_minElectronCompleteness)
+            continue;
+
+        if (purity < m_minElectronPurity)
+            continue;
+
+        return true;
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+bool ShowerStartRefinementAlgorithm::IsGamma(const ParticleFlowObject *const pPfo) const
+{
+    const MCParticle *pMainMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
+    const int pdg(std::abs(pMainMCParticle->GetParticleId()));
+    
+    if (pdg == 22)
+        return true;
+       
+    if (pdg == 11)
+        return false;
+
+    // but does it contain a large chunk of a gamma even if it is not the main owner?
+    // find gamma with highest number of shared hits that has a completeness of >50 % in one view
+
+    MCParticleVector mcGammaVector;
+
+    for (auto &entry : m_gammaHitMap)
+    {
+        if (entry.first->GetParticleId() == 22)
+            mcGammaVector.push_back(entry.first);
+    }
+
+    std::sort(mcGammaVector.begin(), mcGammaVector.end(), LArMCParticleHelper::SortByMomentum);
+
+    CaloHitList pfoHitList;
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, pfoHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, pfoHitList);
+    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, pfoHitList);
+
+    for (const MCParticle *const pMCGamma : mcGammaVector)
+    {
+        const CaloHitList &mcGammaHitList(m_gammaHitMap.at(pMCGamma));
+
+        if (mcGammaHitList.size() < 100)
+            continue;
+
+        const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(pfoHitList, mcGammaHitList));
+
+        // get each view completeness
+        for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        {
+            const float completeness(static_cast<float>(LArMonitoringHelper::CountHitsByType(hitType, sharedHitList)) / 
+                static_cast<float>(LArMonitoringHelper::CountHitsByType(hitType, mcGammaHitList)));
+
+            if (completeness > m_minGammaCompleteness)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 bool ShowerStartRefinementAlgorithm::IsElectronPathway(const CaloHitList &connectionPathwayHitList)
 {
     int showerHitCount(0);
@@ -508,16 +684,13 @@ void ShowerStartRefinementAlgorithm::AddElectronPathway(const ParticleFlowObject
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ShowerStartRefinementAlgorithm::SetElectronVertex(const CartesianVector &nuVertexPosition, const ParticleFlowObject *const pShowerPfo)
+void ShowerStartRefinementAlgorithm::SetElectronMetadata(const CartesianVector &nuVertexPosition, const ParticleFlowObject *const pShowerPfo)
 {
     object_creation::ParticleFlowObject::Metadata metadata;
     metadata.m_propertiesToAdd["ShowerVertexX"] = nuVertexPosition.GetX();
     metadata.m_propertiesToAdd["ShowerVertexY"] = nuVertexPosition.GetY();
     metadata.m_propertiesToAdd["ShowerVertexZ"] = nuVertexPosition.GetZ();
-
-    std::cout << "nuVertexPosition.GetX(): " << nuVertexPosition.GetX() << std::endl;
-    std::cout << "nuVertexPosition.GetY(): " << nuVertexPosition.GetY() << std::endl;
-    std::cout << "nuVertexPosition.GetZ(): " << nuVertexPosition.GetZ() << std::endl;
+    metadata.m_propertiesToAdd["dEdX"] = 2.3;
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pShowerPfo, metadata));
 }

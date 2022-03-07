@@ -57,6 +57,9 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
     if (caloHits3D.size() < 100)
         return false;
 
+    if (!pAlgorithm->IsGamma(pShowerPfo))
+        return false;
+
     // Keep track of 'taken' hits
     CaloHitList usedHitListU, usedHitListV, usedHitListW;
     ProtoShowerVector protoShowerVectorU, protoShowerVectorV, protoShowerVectorW;
@@ -98,9 +101,10 @@ void GammaStartRefinementTool::RemoveThreeViewConnectionPathways(ShowerStartRefi
 
     for (auto &entry : threeViewConnectionPathways)
     {
-        const int mapIndex(entry.first);
+        //const int mapIndex(entry.first);
         const ProtoShowerVector &protoShowerVector(entry.second);
 
+        /*
         unsigned int refinementCount(0);
 
         for (const ProtoShower &protoShower : protoShowerVector)
@@ -112,7 +116,7 @@ void GammaStartRefinementTool::RemoveThreeViewConnectionPathways(ShowerStartRefi
         if (refinementCount >= 2)
         {
             toRefineIndices.push_back(mapIndex);
-
+        */
             for (const ProtoShower &protoShower : protoShowerVector)
             {
                 if (!protoShower.m_isHelper)
@@ -130,7 +134,7 @@ void GammaStartRefinementTool::RemoveThreeViewConnectionPathways(ShowerStartRefi
                     pAlgorithm->RemoveConnectionPathway(pShowerPfo, protoShower);
                 }
             }
-        }
+            //}
     }
 
     //////////////////////////

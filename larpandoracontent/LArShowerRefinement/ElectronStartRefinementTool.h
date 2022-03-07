@@ -34,7 +34,7 @@ public:
         const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector,
         pandora::CaloHitList &usedCaloHitList);
 
-    void BuildHelperProtoShowers(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &nuVertexPosition, 
+    void BuildHelperProtoShowers(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo ,const pandora::CartesianVector &nuVertexPosition, 
         const pandora::HitType tpcView, pandora::CartesianPointVector &significantPeakDirections, pandora::CaloHitList &usedHitList);
 
     void CollectHitsWithinROI(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CaloHitList &showerHitList, 
@@ -83,8 +83,7 @@ public:
         const ElectronProtoShowerVector &showersToExtend);
 
     void RefineHitsToAdd(ShowerStartRefinementAlgorithm *const pAlgorithm, ElectronProtoShower &protoShower,
-        const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector, 
-        const pandora::CartesianPointVector &significantPeakDirections);
+        const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, const pandora::CartesianPointVector &significantPeakDirections);
 
     pandora::CaloHitList FindContinuousPath(const pandora::CaloHitList &refinedHitList, const pandora::CartesianVector &nuVertexPosition);
 
