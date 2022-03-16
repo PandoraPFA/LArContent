@@ -71,6 +71,13 @@ private:
         void GetFeatureVector(LArMvaHelper::MvaFeatureVector &featureVector) const;
 
         /**
+         *  @brief  Get the feature map for the MVA
+         *
+         *  @param  featuresMap empty feature map to populate
+         */
+        void GetFeatureMap(LArMvaHelper::MvaFeatureMap &featureMap) const;
+
+        /**
          *  @brief  Get the probability that this slice contains a neutrino interaction
          *
          *  @param  t the MVA used to calculate the probability
@@ -147,6 +154,7 @@ private:
 
         bool m_isAvailable;                             ///< Is the feature vector available
         LArMvaHelper::MvaFeatureVector m_featureVector; ///< The MVA feature vector
+        LArMvaHelper::MvaFeatureMap m_featureMap;       ///< A map between MVA features and their names
         const NeutrinoIdTool *const m_pTool;            ///< The tool that owns this
     };
 
@@ -258,6 +266,8 @@ private:
     // Classification
     float m_minProbability;      ///< Minimum probability required to classify a slice as the neutrino
     unsigned int m_maxNeutrinos; ///< The maximum number of neutrinos to select in any one event
+
+    bool m_persistFeatures; ///< If true, the mva features will be persisted in the metadata
 
     T m_mva;                                   ///< The mva
     std::string m_filePathEnvironmentVariable; ///< The environment variable providing a list of paths to mva files

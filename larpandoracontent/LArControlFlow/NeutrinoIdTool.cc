@@ -34,6 +34,7 @@ NeutrinoIdTool<T>::NeutrinoIdTool() :
     m_minCompleteness(0.9f),
     m_minProbability(0.0f),
     m_maxNeutrinos(1),
+    m_persistFeatures(false),
     m_filePathEnvironmentVariable("FW_SEARCH_PATH")
 {
 }
@@ -255,6 +256,16 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
         {
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
+
+            if (m_persistFeatures)
+            {
+                LArMvaHelper::MvaFeatureMap featureMap;
+                sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
+
+                for (auto const &[name, value] : featureMap)
+                    metadata.m_propertiesToAdd[name] = value;
+            }
+
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
 
@@ -262,6 +273,16 @@ void NeutrinoIdTool<T>::SelectPfosByProbability(const pandora::Algorithm *const 
         {
             object_creation::ParticleFlowObject::Metadata metadata;
             metadata.m_propertiesToAdd["NuScore"] = nuProbability;
+
+            if (m_persistFeatures)
+            {
+                LArMvaHelper::MvaFeatureMap featureMap;
+                sliceFeaturesVector.at(sliceIndex).GetFeatureMap(featureMap);
+
+                for (auto const &[name, value] : featureMap)
+                    metadata.m_propertiesToAdd[name] = value;
+            }
+
             PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pPfo, metadata));
         }
 
@@ -404,6 +425,17 @@ NeutrinoIdTool<T>::SliceFeatures::SliceFeatures(const PfoList &nuPfos, const Pfo
         m_featureVector.push_back(crFracHitsInLongestTrack);
         m_featureVector.push_back(nCRHitsMax);
 
+        m_featureMap["NuNFinalStatePfos"] = nuNFinalStatePfos;
+        m_featureMap["NuNHitsTotal"] = nuNHitsTotal;
+        m_featureMap["NuVertexY"] = nuVertexY;
+        m_featureMap["NuWeightedDirZ"] = nuWeightedDirZ;
+        m_featureMap["NuNSpacePointsInSphere"] = nuNSpacePointsInSphere;
+        m_featureMap["NuEigenRatioInSphere"] = nuEigenRatioInSphere;
+        m_featureMap["CRLongestTrackDirY"] = crLongestTrackDirY;
+        m_featureMap["CRLongestTrackDeflection"] = crLongestTrackDeflection;
+        m_featureMap["CRFracHitsInLongestTrack"] = crFracHitsInLongestTrack;
+        m_featureMap["CRNHitsMax"] = nCRHitsMax;
+
         m_isAvailable = true;
     }
     catch (StatusCodeException &)
@@ -429,6 +461,17 @@ void NeutrinoIdTool<T>::SliceFeatures::GetFeatureVector(LArMvaHelper::MvaFeature
         throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 
     featureVector.insert(featureVector.end(), m_featureVector.begin(), m_featureVector.end());
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+template <typename T>
+void NeutrinoIdTool<T>::SliceFeatures::GetFeatureMap(LArMvaHelper::MvaFeatureMap &featureMap) const
+{
+    if (!m_isAvailable)
+        throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+
+    featureMap.insert(m_featureMap.begin(), m_featureMap.end());
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -573,6 +616,8 @@ StatusCode NeutrinoIdTool<T>::ReadSettings(const TiXmlHandle xmlHandle)
         STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinimumNeutrinoProbability", m_minProbability));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MaximumNeutrinos", m_maxNeutrinos));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "PersistFeatures", m_persistFeatures));
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "FilePathEnvironmentVariable", m_filePathEnvironmentVariable));
