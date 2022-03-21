@@ -96,6 +96,7 @@ public:
      *  @param  featureMap the map of features
      *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
      */
+    template <typename... TLISTS>
     static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result,  const MvaFeatureMap &featureMap, const StringVector &featureToolOrder);
 
     /**
@@ -120,6 +121,7 @@ public:
      *
      *  @return success
      */
+    template <typename... TLISTS>
     static bool Classify(const MvaInterface &classifier, const MvaFeatureMap &featureMap, const StringVector &featureToolOrder);
 
     /**
@@ -155,6 +157,7 @@ public:
      *
      *  @return the classification probability
      */
+    template <typename... TLISTS>
     static double CalculateProbability(const MvaInterface &classifier, const MvaFeatureMap &featureMap, const StringVector &featureToolOrder );
 
     /**
@@ -307,6 +310,7 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+template <typename... TLISTS>
 pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result,
 							 const LArMvaHelper::MvaFeatureMap &featureMap, const LArMvaHelper::StringVector &featureToolOrder)
 {
@@ -332,6 +336,7 @@ bool LArMvaHelper::Classify(const MvaInterface &classifier, TLISTS &&... feature
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+template <typename... TLISTS>
 bool LArMvaHelper::Classify(const MvaInterface &classifier, const LArMvaHelper::MvaFeatureMap &featureMap, const LArMvaHelper::StringVector &featureToolOrder )
 {
     // Make a feature vector from the map and calculate the features
@@ -364,6 +369,7 @@ double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, TLISTS
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+template <typename... TLISTS>
 double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const LArMvaHelper::MvaFeatureMap &featureMap, const LArMvaHelper::StringVector &featureToolOrder )
 {
     // Make a feature vector from the map and calculate the features
