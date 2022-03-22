@@ -16,7 +16,7 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     #  make install
     #  make package (builds distribution tarfile)
     # ======================================================================
-    project(larpandoracontent VERSION 03.26.01)
+    project(larpandoracontent VERSION 03.26.01.01)
 
     # cetbuildtools contains our cmake modules
     # Note that find package will add cetbuildtools Modules to CMAKE_MODULE_PATH
