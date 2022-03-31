@@ -65,6 +65,7 @@ private:
     bool m_removeHierarchy;
     bool m_truncateMode;
     float m_creationCompletenessThreshold;
+    bool m_isActive;
 };
 
 } // namespace lar_content

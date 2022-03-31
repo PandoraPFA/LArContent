@@ -24,7 +24,8 @@ CheatingCCElectronRefinementAlgorithm::CheatingCCElectronRefinementAlgorithm() :
     m_completenessMode(true),
     m_thresholdCompleteness(0.33f),
     m_thresholdPurity(0.5f),
-    m_maxOpeningAngle(5.f)
+    m_maxOpeningAngle(5.f),
+    m_extensionMode(true)
 {
 }
 
@@ -339,6 +340,8 @@ void CheatingCCElectronRefinementAlgorithm::RefineElectronPfos(const ParticleFlo
 
     //PandoraMonitoringApi::ViewEvent(this->GetPandora());
 
+    bool hitsAdded(false);
+
     for (const CaloHit *const pCaloHit : caloHitList)
     {
         const HitType hitType(pCaloHit->GetHitType());
@@ -349,94 +352,107 @@ void CheatingCCElectronRefinementAlgorithm::RefineElectronPfos(const ParticleFlo
         if (!this->DoesPassCut(pCaloHit, viewMCVertex, viewMCDirection, viewConeLength))
             continue;
 
-        // Now remove...
-        const HitToClusterMap &hitToClusterMap(hitType == TPC_VIEW_U ? m_hitToClusterMapU : hitType == TPC_VIEW_V ? m_hitToClusterMapV : m_hitToClusterMapW);
-        const ClusterToPfoMap &clusterToPfoMap(hitType == TPC_VIEW_U ? m_clusterToPfoMapU : hitType == TPC_VIEW_V ? m_clusterToPfoMapV : m_clusterToPfoMapW);
-        std::string clusterListName(hitType == TPC_VIEW_U ? "ClustersU" : hitType == TPC_VIEW_V ? "ClustersV" : "ClustersW");
+        hitsAdded = true;
 
-        const Cluster *pParentCluster(nullptr);
-        const ParticleFlowObject *pParentPfo(nullptr);
-
-        if (hitToClusterMap.find(pCaloHit) != hitToClusterMap.end())
+        if (m_extensionMode)
         {
-            pParentCluster = hitToClusterMap.at(pCaloHit);
+            // Now remove...
+            const HitToClusterMap &hitToClusterMap(hitType == TPC_VIEW_U ? m_hitToClusterMapU : hitType == TPC_VIEW_V ? m_hitToClusterMapV : m_hitToClusterMapW);
+            const ClusterToPfoMap &clusterToPfoMap(hitType == TPC_VIEW_U ? m_clusterToPfoMapU : hitType == TPC_VIEW_V ? m_clusterToPfoMapV : m_clusterToPfoMapW);
+            std::string clusterListName(hitType == TPC_VIEW_U ? "ClustersU" : hitType == TPC_VIEW_V ? "ClustersV" : "ClustersW");
 
-            if (clusterToPfoMap.find(pParentCluster) != clusterToPfoMap.end())
-                pParentPfo = clusterToPfoMap.at(pParentCluster);
-        }
+            const Cluster *pParentCluster(nullptr);
+            const ParticleFlowObject *pParentPfo(nullptr);
 
-        if (pParentPfo == pElectronPfo)
-            continue;
-
-        //CartesianVector hitPosition(pCaloHit->GetPositionVector());
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "hit to add", VIOLET, 2);
-
-        if (pParentCluster)
-        {
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
-
-            CaloHitList clusterNormalHitList;
-            pParentCluster->GetOrderedCaloHitList().FillCaloHitList(clusterNormalHitList);
-            const CaloHitList clusterIsolatedHitList(pParentCluster->GetIsolatedCaloHitList());
-            const bool isIsolated(std::find(clusterIsolatedHitList.begin(), clusterIsolatedHitList.end(), pCaloHit) != clusterIsolatedHitList.end());
-
-            if (!isIsolated && (clusterNormalHitList.size() == 1) && !(clusterIsolatedHitList.empty()))
+            if (hitToClusterMap.find(pCaloHit) != hitToClusterMap.end())
             {
-                const HitType isolatedHitType(LArClusterHelper::GetClusterHitType(pParentCluster));
-                HitToClusterMap &isolatedHitToClusterMap(isolatedHitType == TPC_VIEW_U ? m_hitToClusterMapU : hitType == TPC_VIEW_V ? m_hitToClusterMapV : m_hitToClusterMapW);
+                pParentCluster = hitToClusterMap.at(pCaloHit);
 
-                for (const CaloHit * const pIsolatedHit : clusterIsolatedHitList)
-                {
-                    isolatedHitToClusterMap.erase(pIsolatedHit);
-                    const StatusCode isolatedStatusCode(PandoraContentApi::RemoveIsolatedFromCluster(*this, pParentCluster, pIsolatedHit));
-
-                    if (isolatedStatusCode != STATUS_CODE_SUCCESS)
-                    {
-                        std::cout << "ISOBEL CANNOT REMOVE ISOLATED HIT?" << std::endl;
-                        throw;
-                    }
-                }
+                if (clusterToPfoMap.find(pParentCluster) != clusterToPfoMap.end())
+                    pParentPfo = clusterToPfoMap.at(pParentCluster);
             }
 
-            const StatusCode statusCodeCluster(isIsolated ? PandoraContentApi::RemoveIsolatedFromCluster(*this, pParentCluster, pCaloHit) : 
-                PandoraContentApi::RemoveFromCluster(*this, pParentCluster, pCaloHit));
+            if (pParentPfo == pElectronPfo)
+                continue;
 
-            if (statusCodeCluster != STATUS_CODE_SUCCESS)
+            //CartesianVector hitPosition(pCaloHit->GetPositionVector());
+            //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &hitPosition, "hit to add", VIOLET, 2);
+
+            if (pParentCluster)
             {
-                if (statusCodeCluster != STATUS_CODE_NOT_ALLOWED)
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
+
+                CaloHitList clusterNormalHitList;
+                pParentCluster->GetOrderedCaloHitList().FillCaloHitList(clusterNormalHitList);
+                const CaloHitList clusterIsolatedHitList(pParentCluster->GetIsolatedCaloHitList());
+                const bool isIsolated(std::find(clusterIsolatedHitList.begin(), clusterIsolatedHitList.end(), pCaloHit) != clusterIsolatedHitList.end());
+
+                if (!isIsolated && (clusterNormalHitList.size() == 1) && !(clusterIsolatedHitList.empty()))
                 {
-                    std::cout << "CheatingCCElectronRefinementAlgorithm: cluster jam" << std::endl;
-                    throw StatusCodeException(statusCodeCluster);
-                }
+                    const HitType isolatedHitType(LArClusterHelper::GetClusterHitType(pParentCluster));
+                    HitToClusterMap &isolatedHitToClusterMap(isolatedHitType == TPC_VIEW_U ? m_hitToClusterMapU : hitType == TPC_VIEW_V ? m_hitToClusterMapV : m_hitToClusterMapW);
 
-                if (pParentPfo)
-                {
-                    const StatusCode statusCodePfo(PandoraContentApi::RemoveFromPfo(*this, pParentPfo, pParentCluster));
-                    const unsigned int nHits(LArPfoHelper::GetNumberOfTwoDHits(pParentPfo));
-
-                    if (nHits == 0)
-                        std::cout << "CheatingCCElectronRefinementAlgorithm: ISOBEL - PFO HAS ZERO HITS" << std::endl;
-
-                    if (statusCodePfo != STATUS_CODE_SUCCESS)
+                    for (const CaloHit * const pIsolatedHit : clusterIsolatedHitList)
                     {
-                        std::cout << "CheatingCCElectronRefinementAlgorithm: pfo jam" << std::endl;
-                        throw;
+                        isolatedHitToClusterMap.erase(pIsolatedHit);
+                        const StatusCode isolatedStatusCode(PandoraContentApi::RemoveIsolatedFromCluster(*this, pParentCluster, pIsolatedHit));
+
+                        if (isolatedStatusCode != STATUS_CODE_SUCCESS)
+                        {
+                            std::cout << "ISOBEL CANNOT REMOVE ISOLATED HIT?" << std::endl;
+                            throw;
+                        }
                     }
                 }
 
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pParentCluster));
+                const StatusCode statusCodeCluster(isIsolated ? PandoraContentApi::RemoveIsolatedFromCluster(*this, pParentCluster, pCaloHit) : 
+                    PandoraContentApi::RemoveFromCluster(*this, pParentCluster, pCaloHit));
+
+                if (statusCodeCluster != STATUS_CODE_SUCCESS)
+                {
+                    if (statusCodeCluster != STATUS_CODE_NOT_ALLOWED)
+                    {
+                        std::cout << "CheatingCCElectronRefinementAlgorithm: cluster jam" << std::endl;
+                        throw StatusCodeException(statusCodeCluster);
+                    }
+
+                    if (pParentPfo)
+                    {
+                        const StatusCode statusCodePfo(PandoraContentApi::RemoveFromPfo(*this, pParentPfo, pParentCluster));
+                        const unsigned int nHits(LArPfoHelper::GetNumberOfTwoDHits(pParentPfo));
+
+                        if (nHits == 0)
+                            std::cout << "CheatingCCElectronRefinementAlgorithm: ISOBEL - PFO HAS ZERO HITS" << std::endl;
+
+                        if (statusCodePfo != STATUS_CODE_SUCCESS)
+                        {
+                            std::cout << "CheatingCCElectronRefinementAlgorithm: pfo jam" << std::endl;
+                            throw;
+                        }
+                    }
+
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pParentCluster));;
+                }
             }
-        }
 
-        if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
-        {
-            std::cout << "CALO HIT IS NOT AVAILABLE!!" << std::endl;
-            throw;
-        }
+            if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
+            {
+                std::cout << "CALO HIT IS NOT AVAILABLE!!" << std::endl;
+                throw;
+            }
 
-        ClusterList electronClusters;
-        LArPfoHelper::GetClusters(pElectronPfo, hitType, electronClusters);
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, electronClusters.front(), pCaloHit));
+            ClusterList electronClusters;
+            LArPfoHelper::GetClusters(pElectronPfo, hitType, electronClusters);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToCluster(*this, electronClusters.front(), pCaloHit));
+        }
+    }
+
+    if (hitsAdded)
+    {
+        object_creation::ParticleFlowObject::Metadata metadata;
+        metadata.m_propertiesToAdd["ActiveCheatingElectronAlg"] = 1.f;
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pElectronPfo, metadata));
     }
 
     //PandoraMonitoringApi::ViewEvent(this->GetPandora());
@@ -521,6 +537,9 @@ StatusCode CheatingCCElectronRefinementAlgorithm::ReadSettings(const TiXmlHandle
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
         XmlHelper::ReadValue(xmlHandle, "MaxOpeningAngle", m_maxOpeningAngle));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "ExtensionMode", m_extensionMode));
 
     return STATUS_CODE_SUCCESS;
 }

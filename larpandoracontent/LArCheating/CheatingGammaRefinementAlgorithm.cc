@@ -27,7 +27,8 @@ CheatingGammaRefinementAlgorithm::CheatingGammaRefinementAlgorithm() :
     m_minGammaCompleteness(0.33f),
     m_removeHierarchy(false),
     m_truncateMode(false),
-    m_creationCompletenessThreshold(0.6f)
+    m_creationCompletenessThreshold(0.6f),
+    m_isActive(true)
 {
 }
 
@@ -136,7 +137,6 @@ const MCParticle *CheatingGammaRefinementAlgorithm::FindMatchedGamma(const Parti
 {
     const MCParticle *pMainMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
     const int pdg(std::abs(pMainMCParticle->GetParticleId()));
-
     
     if (pdg == 22)
         return pMainMCParticle;
@@ -265,7 +265,6 @@ void CheatingGammaRefinementAlgorithm::FindContaminantMCParticles(const MCPartic
             }
         }
     }
-
     
     //for (const CartesianVector jam : hitPositions)
     //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &jam, "remove", VIOLET, 1);
@@ -425,6 +424,8 @@ void CheatingGammaRefinementAlgorithm::RemoveContaminantHits(const MCParticle *c
     LArPfoHelper::GetClusters(pGammaPfo, TPC_VIEW_V, twoDClusterList);
     LArPfoHelper::GetClusters(pGammaPfo, TPC_VIEW_W, twoDClusterList);
 
+    bool hitsRemoved(false);
+
     MCParticleToHitListMap mcParticleToHitListMapU, mcParticleToHitListMapV, mcParticleToHitListMapW;
 
     for (const Cluster *const pCluster : twoDClusterList)
@@ -478,141 +479,157 @@ void CheatingGammaRefinementAlgorithm::RemoveContaminantHits(const MCParticle *c
                     continue;
             }
 
-            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
+            hitsRemoved = true;
 
-            CaloHitList clusterNormalHitList;
-            pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterNormalHitList);
-            const CaloHitList clusterIsolatedHitList(pCluster->GetIsolatedCaloHitList());
-
-            const bool isIsolated(std::find(isolatedHitList.begin(), isolatedHitList.end(), pCaloHit) != isolatedHitList.end());
-
-            if (!isIsolated && (clusterNormalHitList.size() == 1) && !(clusterIsolatedHitList.empty()))
+            // Remove calo hits
+            if (m_isActive)
             {
-                for (const CaloHit * const pIsolatedHit : clusterIsolatedHitList)
-                {
-                    removedIsolatedHits.push_back(pIsolatedHit);
-                    const StatusCode isolatedStatusCode(PandoraContentApi::RemoveIsolatedFromCluster(*this, pCluster, pIsolatedHit));
+                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<Cluster>(*this, clusterListName));
 
-                    if (isolatedStatusCode != STATUS_CODE_SUCCESS)
+                CaloHitList clusterNormalHitList;
+                pCluster->GetOrderedCaloHitList().FillCaloHitList(clusterNormalHitList);
+                const CaloHitList clusterIsolatedHitList(pCluster->GetIsolatedCaloHitList());
+
+                const bool isIsolated(std::find(isolatedHitList.begin(), isolatedHitList.end(), pCaloHit) != isolatedHitList.end());
+
+                if (!isIsolated && (clusterNormalHitList.size() == 1) && !(clusterIsolatedHitList.empty()))
+                {
+                    for (const CaloHit * const pIsolatedHit : clusterIsolatedHitList)
                     {
-                        std::cout << "ISOBEL CANNOT REMOVE ISOLATED HIT?" << std::endl;
-                        throw;
+                        removedIsolatedHits.push_back(pIsolatedHit);
+                        const StatusCode isolatedStatusCode(PandoraContentApi::RemoveIsolatedFromCluster(*this, pCluster, pIsolatedHit));
+
+                        if (isolatedStatusCode != STATUS_CODE_SUCCESS)
+                        {
+                            std::cout << "ISOBEL CANNOT REMOVE ISOLATED HIT?" << std::endl;
+                            throw;
+                        }
                     }
                 }
-            }
 
-            const StatusCode statusCodeCluster(isIsolated ? PandoraContentApi::RemoveIsolatedFromCluster(*this, pCluster, pCaloHit) :
-                PandoraContentApi::RemoveFromCluster(*this, pCluster, pCaloHit));
+                const StatusCode statusCodeCluster(isIsolated ? PandoraContentApi::RemoveIsolatedFromCluster(*this, pCluster, pCaloHit) :
+                    PandoraContentApi::RemoveFromCluster(*this, pCluster, pCaloHit));
 
-            //std::cout << StatusCodeToString(statusCodeCluster) << std::endl;
-
-            if (statusCodeCluster != STATUS_CODE_SUCCESS)
-            {
-                if (statusCodeCluster != STATUS_CODE_NOT_ALLOWED)
+                if (statusCodeCluster != STATUS_CODE_SUCCESS)
                 {
-                    std::cout << "CheatingGammaRefinementAlgorithm: cluster jam" << std::endl;
-                    throw StatusCodeException(statusCodeCluster);
+                    if (statusCodeCluster != STATUS_CODE_NOT_ALLOWED)
+                    {
+                        std::cout << "CheatingGammaRefinementAlgorithm: cluster jam" << std::endl;
+                        throw StatusCodeException(statusCodeCluster);
+                    }
+
+                    const StatusCode statusCodePfo(PandoraContentApi::RemoveFromPfo(*this, pGammaPfo, pCluster));
+                    const unsigned int nHits(LArPfoHelper::GetNumberOfTwoDHits(pGammaPfo));
+
+                    if (nHits == 0)
+                        std::cout << "CheatingGammaRefinementAlgorithm: ISOBEL - PFO HAS ZERO HITS" << std::endl;
+
+                    if (statusCodePfo != STATUS_CODE_SUCCESS)
+                    {
+                        std::cout << "CheatingGammaRefinementAlgorithm: pfo jam" << std::endl;
+                        throw;
+                    }
+
+                    PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pCluster));
                 }
 
-                const StatusCode statusCodePfo(PandoraContentApi::RemoveFromPfo(*this, pGammaPfo, pCluster));
-                const unsigned int nHits(LArPfoHelper::GetNumberOfTwoDHits(pGammaPfo));
-
-                if (nHits == 0)
-                    std::cout << "CheatingGammaRefinementAlgorithm: ISOBEL - PFO HAS ZERO HITS" << std::endl;
-
-                if (statusCodePfo != STATUS_CODE_SUCCESS)
+                if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
                 {
-                    std::cout << "CheatingGammaRefinementAlgorithm: pfo jam" << std::endl;
+                    std::cout << "CheatingGammaRefinementAlgorithm: CALO HIT IS NOT AVAILABLE!!" << std::endl;
                     throw;
                 }
-
-                PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::Delete(*this, pCluster));
-            }
-
-            if (!PandoraContentApi::IsAvailable(*this, pCaloHit))
-            {
-                std::cout << "CheatingGammaRefinementAlgorithm: CALO HIT IS NOT AVAILABLE!!" << std::endl;
-                throw;
-            }
     
-            viewMCParticleToHitListMap[pMCParticle].push_back(pCaloHit);
+                viewMCParticleToHitListMap[pMCParticle].push_back(pCaloHit);
+            }
         }
     }
-     
-    MCParticleVector mcContaminantVector(mcContaminantList.begin(), mcContaminantList.end());
-    std::sort(mcContaminantVector.begin(), mcContaminantVector.end(), LArMCParticleHelper::SortByMomentum);
 
-    for (const MCParticle *const pMCParticle : mcContaminantVector)
-    {
-        if (mcParticleHitMap.find(pMCParticle) == mcParticleHitMap.end())
-            continue;
+    // Do some particle creation
+    if (m_isActive)
+    {     
+        MCParticleVector mcContaminantVector(mcContaminantList.begin(), mcContaminantList.end());
+        std::sort(mcContaminantVector.begin(), mcContaminantVector.end(), LArMCParticleHelper::SortByMomentum);
 
-        const CaloHitList &mcParticleHitList(mcParticleHitMap.at(pMCParticle));
+        for (const MCParticle *const pMCParticle : mcContaminantVector)
+        {
+            if (mcParticleHitMap.find(pMCParticle) == mcParticleHitMap.end())
+                continue;
 
-        PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
-        pfoParameters.m_particleId = (this->IsShower(pMCParticle) ? 11 : 13);
-        pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
-        pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
-        pfoParameters.m_energy = pMCParticle->GetEnergy();
-        pfoParameters.m_momentum = pMCParticle->GetMomentum();
+            const CaloHitList &mcParticleHitList(mcParticleHitMap.at(pMCParticle));
 
-        CaloHitList allHits(0);
+            PandoraContentApi::ParticleFlowObject::Parameters pfoParameters;
+            pfoParameters.m_particleId = (this->IsShower(pMCParticle) ? 11 : 13);
+            pfoParameters.m_charge = PdgTable::GetParticleCharge(pfoParameters.m_particleId.Get());
+            pfoParameters.m_mass = PdgTable::GetParticleMass(pfoParameters.m_particleId.Get());
+            pfoParameters.m_energy = pMCParticle->GetEnergy();
+            pfoParameters.m_momentum = pMCParticle->GetMomentum();
 
-        if (mcParticleToHitListMapU.find(pMCParticle) == mcParticleToHitListMapU.end())
-            continue;
+            CaloHitList allHits(0);
 
-        if (mcParticleToHitListMapV.find(pMCParticle) == mcParticleToHitListMapV.end())
-            continue;
+            if (mcParticleToHitListMapU.find(pMCParticle) == mcParticleToHitListMapU.end())
+                continue;
 
-        if (mcParticleToHitListMapW.find(pMCParticle) == mcParticleToHitListMapW.end())
-            continue;
+            if (mcParticleToHitListMapV.find(pMCParticle) == mcParticleToHitListMapV.end())
+                continue;
 
-        allHits.insert(allHits.end(), mcParticleToHitListMapU.at(pMCParticle).begin(), mcParticleToHitListMapU.at(pMCParticle).end());
-        allHits.insert(allHits.end(), mcParticleToHitListMapV.at(pMCParticle).begin(), mcParticleToHitListMapV.at(pMCParticle).end());
-        allHits.insert(allHits.end(), mcParticleToHitListMapW.at(pMCParticle).begin(), mcParticleToHitListMapW.at(pMCParticle).end());
+            if (mcParticleToHitListMapW.find(pMCParticle) == mcParticleToHitListMapW.end())
+                continue;
 
-        if (allHits.size() < 100)
-            continue;
+            allHits.insert(allHits.end(), mcParticleToHitListMapU.at(pMCParticle).begin(), mcParticleToHitListMapU.at(pMCParticle).end());
+            allHits.insert(allHits.end(), mcParticleToHitListMapV.at(pMCParticle).begin(), mcParticleToHitListMapV.at(pMCParticle).end());
+            allHits.insert(allHits.end(), mcParticleToHitListMapW.at(pMCParticle).begin(), mcParticleToHitListMapW.at(pMCParticle).end());
 
-        // completeness cut
-        const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(allHits, mcParticleHitList));
-        const float completeness(static_cast<float>(sharedHitList.size()) / static_cast<float>(mcParticleHitList.size()));
+            if (allHits.size() < 100)
+                continue;
 
-        if (completeness < m_creationCompletenessThreshold)
-            continue;
+            // completeness cut
+            const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(allHits, mcParticleHitList));
+            const float completeness(static_cast<float>(sharedHitList.size()) / static_cast<float>(mcParticleHitList.size()));
 
-        pfoParameters.m_clusterList.push_back(this->CreateCluster(pMCParticle, mcParticleToHitListMapU.at(pMCParticle), TPC_VIEW_U));
-        pfoParameters.m_clusterList.push_back(this->CreateCluster(pMCParticle, mcParticleToHitListMapV.at(pMCParticle), TPC_VIEW_V));
-        pfoParameters.m_clusterList.push_back(this->CreateCluster(pMCParticle, mcParticleToHitListMapW.at(pMCParticle), TPC_VIEW_W));
+            if (completeness < m_creationCompletenessThreshold)
+                continue;
 
-        const PfoList *pTemporaryList(nullptr);
-        std::string temporaryListName, currentListName;
+            pfoParameters.m_clusterList.push_back(this->CreateCluster(pMCParticle, mcParticleToHitListMapU.at(pMCParticle), TPC_VIEW_U));
+            pfoParameters.m_clusterList.push_back(this->CreateCluster(pMCParticle, mcParticleToHitListMapV.at(pMCParticle), TPC_VIEW_V));
+            pfoParameters.m_clusterList.push_back(this->CreateCluster(pMCParticle, mcParticleToHitListMapW.at(pMCParticle), TPC_VIEW_W));
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<ParticleFlowObject>(*this, currentListName));
+            const PfoList *pTemporaryList(nullptr);
+            std::string temporaryListName, currentListName;
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
-            PandoraContentApi::CreateTemporaryListAndSetCurrent<PfoList>(*this, pTemporaryList, temporaryListName));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentListName<ParticleFlowObject>(*this, currentListName));
 
-        const ParticleFlowObject *pPfo(nullptr);
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=,
+                PandoraContentApi::CreateTemporaryListAndSetCurrent<PfoList>(*this, pTemporaryList, temporaryListName));
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
+            const ParticleFlowObject *pPfo(nullptr);
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, 
-            PandoraContentApi::SaveList<ParticleFlowObject>(*this, temporaryListName, this->IsShower(pMCParticle) ? "ShowerParticles3D" : "TrackParticles3D"));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::Create(*this, pfoParameters, pPfo));
 
-        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<ParticleFlowObject>(*this, currentListName));
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, 
+                PandoraContentApi::SaveList<ParticleFlowObject>(*this, temporaryListName, this->IsShower(pMCParticle) ? "ShowerParticles3D" : "TrackParticles3D"));
+
+            PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ReplaceCurrentList<ParticleFlowObject>(*this, currentListName));
       
-        
-        //PfoList createdDisplay;
-        //createdDisplay.push_back(pPfo);
-        //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &createdDisplay, "CREATED DISPLAY", BLUE, true, true);
-        //CartesianVector vertexPosition(pMCParticle->GetVertex());
-        //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &vertexPosition, "CREATED VERTEX", BLUE, 2);
-        //this->AreParticlesSeparated(pMCGamma, pMCParticle);
-        //PandoraMonitoringApi::ViewEvent(this->GetPandora());
-        //created.push_back(pPfo);
+            ///////////////////////////////////
+            //PfoList createdDisplay;
+            //createdDisplay.push_back(pPfo);
+            //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &createdDisplay, "CREATED DISPLAY", BLUE, true, true);
+            //CartesianVector vertexPosition(pMCParticle->GetVertex());
+            //PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &vertexPosition, "CREATED VERTEX", BLUE, 2);
+            //this->AreParticlesSeparated(pMCGamma, pMCParticle);
+            //PandoraMonitoringApi::ViewEvent(this->GetPandora());
+            //created.push_back(pPfo);
+            ///////////////////////////////////
+        }
     }
     
+    if (hitsRemoved)
+    {
+        object_creation::ParticleFlowObject::Metadata metadata;
+        metadata.m_propertiesToAdd["ActiveCheatingGammaAlg"] = 1.f;
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pGammaPfo, metadata));
+    }
 
     //PandoraMonitoringApi::VisualizeParticleFlowObjects(this->GetPandora(), &created, "CREATED", BLUE, true, true);
     //PandoraMonitoringApi::ViewEvent(this->GetPandora());
@@ -675,6 +692,8 @@ StatusCode CheatingGammaRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlH
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
         XmlHelper::ReadValue(xmlHandle, "CreationCompletenessThreshold", m_creationCompletenessThreshold));
 
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, 
+        XmlHelper::ReadValue(xmlHandle, "IsActive", m_isActive));
 
     return STATUS_CODE_SUCCESS;
 }

@@ -60,6 +60,7 @@ private:
     float m_thresholdCompleteness;
     float m_thresholdPurity;
     float m_maxOpeningAngle;
+    bool m_extensionMode;
 
     HitToClusterMap m_hitToClusterMapU;
     HitToClusterMap m_hitToClusterMapV;
