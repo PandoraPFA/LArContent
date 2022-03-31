@@ -101,6 +101,9 @@ public:
     void AngularDistributionTree(ShowerStartRefinementAlgorithm *const pAlgorithm, const AngularDecompositionMap &angularDecompositionMapU, 
         const AngularDecompositionMap &angularDecompositionMapV, const AngularDecompositionMap &angularDecompositionMapW);
 
+    bool FindShowerVertexFromPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVector, 
+        const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &showerStart3D);
+
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
 

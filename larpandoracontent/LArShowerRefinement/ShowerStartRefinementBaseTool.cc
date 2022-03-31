@@ -16,6 +16,7 @@
 #include "larpandoracontent/LArObjects/LArTwoDSlidingFitResult.h"
 #include "larpandoracontent/LArObjects/LArTwoDSlidingShowerFitResult.h"
 
+#include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementBaseTool.h"
 
 using namespace pandora;
@@ -24,7 +25,7 @@ namespace lar_content
 {
 
 ShowerStartRefinementBaseTool::ShowerStartRefinementBaseTool() : 
-    m_maxDistanceForConnection(5.f),
+    m_maxDistanceForConnection(3.f),
     m_pathwaySearchRegion(14.f),
     m_theta0XZBinSize(0.005f),
     m_smoothingWindow(3),

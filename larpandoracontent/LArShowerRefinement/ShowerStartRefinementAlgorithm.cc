@@ -15,7 +15,9 @@
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
 #include "larpandoracontent/LArObjects/LArThreeDSlidingFitResult.h"
+#include "larpandoracontent/LArObjects/LArPointingCluster.h"
 
+#include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementAlgorithm.h"
 #include "larpandoracontent/LArShowerRefinement/ShowerStartRefinementBaseTool.h"
 
@@ -29,7 +31,8 @@ ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() :
     m_electronFraction(0.3f),
     m_minElectronCompleteness(0.33f),
     m_minElectronPurity(0.5f),
-    m_minGammaCompleteness(0.33f)
+    m_minGammaCompleteness(0.33f),
+    m_thresholdSignalGammaDisplacement(-3.f)
 {
 }
 
@@ -430,86 +433,128 @@ bool ShowerStartRefinementAlgorithm::IsElectron(const ParticleFlowObject *const 
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerStartRefinementAlgorithm::IsGamma(const ParticleFlowObject *const pPfo) const
+// our signal here is actually gammas that have made a mistake by getting back to the nu vertex. i.e. their reco vertex is closer to the nu vertex than the truth says
+
+bool ShowerStartRefinementAlgorithm::IsGamma(const ParticleFlowObject *const pPfo, const CartesianVector &nuVertexPosition) const
 {
     const MCParticle *pMainMCParticle(LArMCParticleHelper::GetMainMCParticle(pPfo));
-    const int pdg(std::abs(pMainMCParticle->GetParticleId()));
-    
-    if (pdg == 22)
-        return true;
-       
+    int pdg(std::abs(pMainMCParticle->GetParticleId()));
+
     if (pdg == 11)
         return false;
 
+    std::cout << "DDDDDDDDD" << std::endl;
+
     // but does it contain a large chunk of a gamma even if it is not the main owner?
     // find gamma with highest number of shared hits that has a completeness of >50 % in one view
-
-    MCParticleVector mcGammaVector;
-
-    for (auto &entry : m_gammaHitMap)
+    if (pdg != 22)
     {
-        if (entry.first->GetParticleId() == 22)
-            mcGammaVector.push_back(entry.first);
-    }
+        unsigned int highestSharedHits(0);
 
-    std::sort(mcGammaVector.begin(), mcGammaVector.end(), LArMCParticleHelper::SortByMomentum);
-
-    CaloHitList pfoHitList;
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, pfoHitList);
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, pfoHitList);
-    LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, pfoHitList);
-
-    for (const MCParticle *const pMCGamma : mcGammaVector)
-    {
-        const CaloHitList &mcGammaHitList(m_gammaHitMap.at(pMCGamma));
-
-        if (mcGammaHitList.size() < 100)
-            continue;
-
-        const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(pfoHitList, mcGammaHitList));
-
-        // get each view completeness
-        for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+        MCParticleVector mcGammaVector;
+        for (auto &entry : m_gammaHitMap)
         {
-            const float completeness(static_cast<float>(LArMonitoringHelper::CountHitsByType(hitType, sharedHitList)) / 
-                static_cast<float>(LArMonitoringHelper::CountHitsByType(hitType, mcGammaHitList)));
+            if (entry.first->GetParticleId() == 22)
+            {
+                const CaloHitList &mcGammaHitList(m_gammaHitMap.at(entry.first));
 
-            if (completeness > m_minGammaCompleteness)
-                return true;
+                if (mcGammaHitList.size() > 100)
+                    mcGammaVector.push_back(entry.first);
+            }
+        }
+
+        std::sort(mcGammaVector.begin(), mcGammaVector.end(), LArMCParticleHelper::SortByMomentum);
+
+        CaloHitList pfoHitList;
+        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_U, pfoHitList);
+        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_V, pfoHitList);
+        LArPfoHelper::GetCaloHits(pPfo, TPC_VIEW_W, pfoHitList);
+
+        for (const MCParticle *const pMCGamma : mcGammaVector)
+        {
+            const CaloHitList &mcGammaHitList(m_gammaHitMap.at(pMCGamma));
+            const CaloHitList sharedHitList(LArMCParticleHelper::GetSharedHits(pfoHitList, mcGammaHitList));
+
+           // get each view completeness
+            for (const HitType hitType : {TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W})
+            {
+                const float completeness(static_cast<float>(LArMonitoringHelper::CountHitsByType(hitType, sharedHitList)) /
+                    static_cast<float>(LArMonitoringHelper::CountHitsByType(hitType, mcGammaHitList)));
+
+                if ((completeness > m_minGammaCompleteness) && (sharedHitList.size() > highestSharedHits))
+                {
+                    pMainMCParticle = pMCGamma;
+                    highestSharedHits = sharedHitList.size();
+                }
+            }
         }
     }
 
-    return false;
+    pdg = std::abs(pMainMCParticle->GetParticleId());
+
+    if (pdg != 22)
+        return false;
+
+    std::cout << "AAAAAAAAAAAAA" << std::endl;
+
+    CaloHitList caloHitList3D;
+    LArPfoHelper::GetCaloHits(pPfo, TPC_3D, caloHitList3D);
+
+    if (caloHitList3D.empty())
+        return false;
+
+    std::cout << "BBBBBBBBBBBBB" << std::endl;
+
+    float closestDistance(std::numeric_limits<float>::max());
+    CartesianVector showerVertex(0.f, 0.f, 0.f);
+
+        for (const CaloHit *const pCaloHit : caloHitList3D)
+        {
+            float jam = (pCaloHit->GetPositionVector() - nuVertexPosition).GetMagnitude();
+            if (jam < closestDistance)
+            {
+                closestDistance = jam;
+                showerVertex = pCaloHit->GetPositionVector();
+            }
+        }
+
+
+        /*
+        LArPointingCluster pointingCluster(clusters3D.front(), 20, LArGeometryHelper::GetWireZPitch(this->GetPandora()));
+
+        const CartesianVector innerVertex(pointingCluster.GetInnerVertex().GetPosition());
+        const CartesianVector outerVertex(pointingCluster.GetOuterVertex().GetPosition());
+
+        if ((outerVertex - nuVertexPosition).GetMagnitude() < (innerVertex - nuVertexPosition).GetMagnitude())
+        {
+            showerVertex = outerVertex;
+        }
+        else
+        {
+            showerVertex = innerVertex;
+        }
+        */
+
+    const CartesianVector &mcVertex(pMainMCParticle->GetVertex());
+    const float mcSeparation((mcVertex - nuVertexPosition).GetMagnitude());
+    const float recoSeparation((showerVertex - nuVertexPosition).GetMagnitude());
+    const float difference(recoSeparation - mcSeparation);
+
+
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &mcVertex, "mcVertex", BLACK, 2);
+    PandoraMonitoringApi::AddMarkerToVisualization(this->GetPandora(), &showerVertex, "showerVertex", GREEN, 2);
+    PandoraMonitoringApi::ViewEvent(this->GetPandora());
+
+    std::cout << "CCCCCCCC" << std::endl;
+
+    if (difference > m_thresholdSignalGammaDisplacement)
+        return false;
+
+    return true;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool ShowerStartRefinementAlgorithm::IsElectronPathway(const CaloHitList &connectionPathwayHitList)
-{
-    int showerHitCount(0);
-
-    for (const CaloHit *const pConnectionPathwayHit : connectionPathwayHitList)
-    {
-        try
-        {
-            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pConnectionPathwayHit));
-            const int pdg(std::abs(pMCParticle->GetParticleId()));
-
-            if ((pdg == 11) || (pdg == 22))
-                ++showerHitCount;
-        }
-        catch(...)
-        {
-            continue;
-        }
-    }
-
-    const float showerProportion(static_cast<float>(showerHitCount) / static_cast<float>(connectionPathwayHitList.size()));
-
-    return (showerProportion > 0.5f); 
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 void ShowerStartRefinementAlgorithm::AddElectronPathway(const ParticleFlowObject *const pShowerPfo, const CaloHitList &pathwayHitList)
 {
@@ -691,6 +736,7 @@ void ShowerStartRefinementAlgorithm::SetElectronMetadata(const CartesianVector &
     metadata.m_propertiesToAdd["ShowerVertexY"] = nuVertexPosition.GetY();
     metadata.m_propertiesToAdd["ShowerVertexZ"] = nuVertexPosition.GetZ();
     metadata.m_propertiesToAdd["dEdX"] = 2.3;
+    metadata.m_propertiesToAdd["ActiveHybridElectronAlg"] = 1.f;
 
     PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*this, pShowerPfo, metadata));
 }
@@ -729,48 +775,6 @@ void ShowerStartRefinementAlgorithm::SetGammaVertex(const CartesianVector &showe
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::SaveList<Vertex>(*this, "GammaVertices"));
         PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::AddToPfo<Vertex>(*this, pShowerPfo, pVertex));
     }
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-bool ShowerStartRefinementAlgorithm::IsTrack(const ProtoShower &protoShower)
-{
-    int showerHits(0), trackHits(0), electronHits(0);
-
-    for (const CaloHit *const pCaloHit : protoShower.m_connectionPathway.m_pathwayHitList)
-    {
-        try
-        {
-            const MCParticle *pMCParticle(MCParticleHelper::GetMainMCParticle(pCaloHit));
-            const int pdg(std::abs(pMCParticle->GetParticleId()));
-
-            if ((pdg == 11) || (pdg == 22))
-            {
-                ++showerHits;
-
-                if (pdg == 11)
-                    ++electronHits;
-            }
-            else
-            {
-                ++trackHits;
-            }
-        }
-        catch(...)
-        {
-            continue;
-        }
-    }
-
-    const float electronFraction(static_cast<float>(electronHits) / static_cast<float>(showerHits));
-    const bool isElectron(electronFraction > m_electronFraction);
-
-    if (isElectron)
-        return false;
-
-    const float showerFraction(static_cast<float>(showerHits) / static_cast<float>(showerHits + trackHits));
-    const bool isShower(showerFraction > 0.5f); // was 0.8 but with it being 0.5 we can probably now get rid of the elctron stuff
-    return (!isShower); // i think i should remove the electron stuff and lower this to 0.5?
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -816,6 +820,9 @@ StatusCode ShowerStartRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
         XmlHelper::ReadValue(xmlHandle, "ElectronFraction", m_electronFraction));
+
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=,
+        XmlHelper::ReadValue(xmlHandle, "ThresholdSignalGammaDisplacement", m_thresholdSignalGammaDisplacement));
 
     PfoMopUpBaseAlgorithm::ReadSettings(xmlHandle);
 

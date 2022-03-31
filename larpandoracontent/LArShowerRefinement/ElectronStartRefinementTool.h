@@ -55,14 +55,23 @@ public:
         const pandora::CartesianVector &peakDirection, const pandora::CaloHitList &viewShowerHitList, const pandora::CartesianVector &showerVertexPosition, 
         const pandora::CaloHitList &showerSpineHitList);
 
-    bool IsShowerExtendable(ShowerStartRefinementAlgorithm *const pAlgorithm, const ElectronProtoShowerVector &protoShowerVectorU, 
-        const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW);
+    bool IsShowerExtendable(ShowerStartRefinementAlgorithm *const pAlgorithm, const ElectronProtoShower &protoShowerU, 
+        const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW);
 
     bool IsElectronPathway(ShowerStartRefinementAlgorithm *const pAlgorithm, const ElectronProtoShowerVector &protoShowerVectorU, 
         const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW);
 
-    bool ArePathwaysConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
-        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW);
+    bool ArePathwaysConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &nuVertexPosition, 
+        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW);
+
+    bool FindShowerVertexFromPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU,
+        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
+
+    bool FindShowerVertexFromDirection(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition, 
+        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
+
+    bool FindShowerVertexFromXProjection(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition, 
+        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
 
    bool AreShowerStartsConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float allowance);
@@ -71,7 +80,7 @@ public:
         const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float allowance);
 
     void ExtendShower(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
-        const ElectronProtoShowerVector &protoShowerVectorU, const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW);
+        const ElectronProtoShower &protoShowerU, const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW);
 
     void ExtendShowerOneView(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
         const ElectronProtoShowerVector &showersToExtend);
@@ -85,6 +94,11 @@ public:
     void RefineHitsToAdd(ShowerStartRefinementAlgorithm *const pAlgorithm, ElectronProtoShower &protoShower,
         const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, const pandora::CartesianPointVector &significantPeakDirections);
 
+    bool IsShowerConnected(const pandora::CartesianVector &showerVertexPosition, const pandora::CartesianVector &projectedNuVertexPosition, 
+        const pandora::CartesianVector &peakDirection);
+
+    void AssignShowerHits(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::HitType &hitType, ElectronProtoShowerVector &protoShowerVector);
+
     pandora::CaloHitList FindContinuousPath(const pandora::CaloHitList &refinedHitList, const pandora::CartesianVector &nuVertexPosition);
 
 private:
@@ -95,6 +109,7 @@ private:
     float m_minSpinePurity;
     float m_maxAngularDeviation;
     float m_maxXSeparation;
+    float m_maxSeparation;
     bool m_extendMode;
     bool m_moveVertexMode;
 };

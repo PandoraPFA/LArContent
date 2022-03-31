@@ -12,6 +12,7 @@
 #include "PandoraMonitoringApi.h"
 
 #include "larpandoracontent/LArHelpers/LArClusterHelper.h"
+#include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
@@ -48,17 +49,16 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
     if (!LArPfoHelper::IsShower(pShowerPfo))
         return false;
 
-    if (!this->HasPathToNuVertex(pShowerPfo, nuVertexPosition))
-        return false;
-
     CaloHitList caloHits3D;
     LArPfoHelper::GetCaloHits(pShowerPfo, TPC_3D, caloHits3D);
 
     if (caloHits3D.size() < 100)
         return false;
 
-    if (!pAlgorithm->IsGamma(pShowerPfo))
+    if (!pAlgorithm->IsGamma(pShowerPfo, nuVertexPosition))
         return false;
+
+    std::cout << "HAS PASSED TRUTH GAMMA HERE" << std::endl;
 
     // Keep track of 'taken' hits
     CaloHitList usedHitListU, usedHitListV, usedHitListW;
@@ -85,6 +85,18 @@ bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgori
     this->MatchConnectionPathways(pAlgorithm, nuVertexPosition, pShowerPfo, protoShowerVectorU, protoShowerVectorV, protoShowerVectorW, 
         threeViewConnectionPathways, twoViewConnectionPathways, oneViewConnectionPathways);
 
+    if (threeViewConnectionPathways.empty() && oneViewConnectionPathways.empty())
+        return false;
+
+    // this is to say that the hybrid algorithm was active
+    if (!threeViewConnectionPathways.empty())
+    {
+        object_creation::ParticleFlowObject::Metadata metadata;
+        metadata.m_propertiesToAdd["ActiveHybridGammaAlg"] = 1.f;
+
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::ParticleFlowObject::AlterMetadata(*pAlgorithm, pShowerPfo, metadata));
+    }
+
     // remove pathways
     this->RemoveThreeViewConnectionPathways(pAlgorithm, threeViewConnectionPathways, pShowerPfo, nuVertexPosition);
     this->RemoveOneViewConnectionPathways(pAlgorithm, oneViewConnectionPathways, pShowerPfo);
@@ -101,7 +113,7 @@ void GammaStartRefinementTool::RemoveThreeViewConnectionPathways(ShowerStartRefi
 
     for (auto &entry : threeViewConnectionPathways)
     {
-        //const int mapIndex(entry.first);
+        const int mapIndex(entry.first);
         const ProtoShowerVector &protoShowerVector(entry.second);
 
         /*
@@ -115,12 +127,14 @@ void GammaStartRefinementTool::RemoveThreeViewConnectionPathways(ShowerStartRefi
 
         if (refinementCount >= 2)
         {
-            toRefineIndices.push_back(mapIndex);
         */
+            toRefineIndices.push_back(mapIndex);
+
             for (const ProtoShower &protoShower : protoShowerVector)
             {
                 if (!protoShower.m_isHelper)
                 {
+
                     //////////////////////////
                     /*
                     for (const CaloHit *const pCaloHit : protoShower.m_connectionPathway.m_pathwayHitList)
@@ -142,9 +156,11 @@ void GammaStartRefinementTool::RemoveThreeViewConnectionPathways(ShowerStartRefi
     //PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     //////////////////////////
 
+    /*
     CartesianVector showerVertex(0.f, 0.f, 0.f);
     if (this->FindShowerVertex(pAlgorithm, threeViewConnectionPathways, toRefineIndices, nuVertexPosition, pShowerPfo, showerVertex))
         pAlgorithm->SetGammaVertex(showerVertex, pShowerPfo);
+    */
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -153,66 +169,43 @@ bool GammaStartRefinementTool::FindShowerVertex(ShowerStartRefinementAlgorithm *
     const IntVector &toRefineIndices, const CartesianVector &nuVertexPosition, const ParticleFlowObject *const pShowerPfo, CartesianVector &showerVertex)
 {
     bool found(false);
-    unsigned int bestShowerHits(0);
-    float bestDistanceFromNu(-std::numeric_limits<float>::max());
+    float bestDistanceFromNu(std::numeric_limits<float>::max());
 
     for (auto &entry : threeViewConnectionPathways)
     {
         const int mapIndex(entry.first);
-        const ProtoShowerVector &protoShowerVector(entry.second);
+
+        if (std::find(toRefineIndices.begin(), toRefineIndices.end(), mapIndex) == toRefineIndices.end())
+            continue;
 
         unsigned int viewsWithShowerHits(0);
-        unsigned int showerHits(0);
 
+        const ProtoShowerVector &protoShowerVector(entry.second);
         for (const ProtoShower &protoShower : protoShowerVector)
         {
-            if (protoShower.m_showerCore.m_coreHitList.size() == 0)
+            if (protoShower.m_showerCore.m_coreHitList.size() < 5)
                 break;
 
             ++viewsWithShowerHits;
-            showerHits += protoShower.m_showerCore.m_coreHitList.size();
         }
 
         if (viewsWithShowerHits != 3)
             continue;
 
-        CartesianVector showerStartU(0.f, 0.f, 0.f), showerStartV(0.f, 0.f, 0.f), showerStartW(0.f, 0.f, 0.f);
-
-        for (const ProtoShower &protoShower : protoShowerVector)
+        CartesianVector showerStart3D(0.f, 0.f, 0.f);
+        if (!LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, nuVertexPosition, protoShowerVector[0], protoShowerVector[1], protoShowerVector[2],
+            nuVertexPosition, showerStart3D))
         {
-            const HitType hitType(protoShower.m_connectionPathway.m_pathwayHitList.front()->GetHitType());
-
-            CartesianVector &showerStart(hitType == TPC_VIEW_U ? showerStartU : hitType == TPC_VIEW_V ? showerStartV : showerStartW);
-            showerStart = protoShower.m_showerCore.m_startPosition;
+            continue;
         }
 
-        const float xSeparationUV(std::fabs(showerStartU.GetX() - showerStartV.GetX()));
-        const float xSeparationUW(std::fabs(showerStartU.GetX() - showerStartW.GetX()));
-        const float xSeparationVW(std::fabs(showerStartV.GetX() - showerStartW.GetX()));
+        const float distanceFromNu((showerStart3D - nuVertexPosition).GetMagnitude());
 
-        if ((xSeparationUW > m_maxXSeparation) && (xSeparationVW > m_maxXSeparation) && (xSeparationUV > m_maxXSeparation))
-            continue;
-
-        if (showerHits >= bestShowerHits)
+        if (distanceFromNu < bestDistanceFromNu)
         {
-            float chi2(0.f);
-            CartesianVector showerStart3D(0.f, 0.f, 0.f);
-
-            LArGeometryHelper::MergeThreePositions3D(pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, TPC_VIEW_W, showerStartU, showerStartV, showerStartW, showerStart3D, chi2);
-            const float distanceFromNu((showerStart3D - nuVertexPosition).GetMagnitude());
-
-            if ((showerHits > bestShowerHits) || ((showerHits == bestShowerHits) && (distanceFromNu > bestDistanceFromNu)))
-            {
-                if (std::find(toRefineIndices.begin(), toRefineIndices.end(), mapIndex) != toRefineIndices.end())
-                    found = true;
-
-                ClusterList clusters3D;
-                LArPfoHelper::GetClusters(pShowerPfo, TPC_3D, clusters3D);
-
-                bestShowerHits = showerHits;
-                bestDistanceFromNu = distanceFromNu;
-                showerVertex = showerStart3D;
-            }
+            found = true;
+            bestDistanceFromNu = distanceFromNu;
+            showerVertex = showerStart3D;
         }
     }
 
@@ -233,7 +226,6 @@ bool GammaStartRefinementTool::FindShowerVertex(ShowerStartRefinementAlgorithm *
     return found;
 }
 
-
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void GammaStartRefinementTool::RemoveOneViewConnectionPathways(ShowerStartRefinementAlgorithm *const pAlgorithm, 
@@ -245,7 +237,7 @@ void GammaStartRefinementTool::RemoveOneViewConnectionPathways(ShowerStartRefine
 
         for (const ProtoShower &protoShower : protoShowerVector)
         {
-            if (!protoShower.m_isHelper && pAlgorithm->IsTrack(protoShower))
+            if (!protoShower.m_isHelper) //&& pAlgorithm->IsTrack(protoShower))
             {
                 //////////////////////////
                 /*
@@ -318,14 +310,17 @@ void GammaStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorithm 
     const CartesianVector &nuVertexPosition, const HitType tpcView, ProtoShowerVector &protoShowerVector, CaloHitList &usedHitList)
 {
     /////////////////////////////////
-    /*
+
     std::cout << "Investigating " << (tpcView == TPC_VIEW_U ? "U" : tpcView == TPC_VIEW_V ? "V" : "W") << " view..." << std::endl;
     ClusterList clustersBegin;
     LArPfoHelper::GetClusters(pShowerPfo, tpcView, clustersBegin);
-    PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &clustersBegin, "clustersBegin", RED);
+    PandoraMonitoringApi::VisualizeClusters(pAlgorithm->GetPandora(), &clustersBegin, "clustersBegin", BLUE);
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-    */
+
     /////////////////////////////////
+
+    if (!this->HasPathToNuVertex(pShowerPfo, nuVertexPosition, tpcView))
+        return;
 
     CaloHitList viewShowerHitList;
     LArPfoHelper::GetCaloHits(pShowerPfo, tpcView, viewShowerHitList);
@@ -475,19 +470,21 @@ void GammaStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorithm 
     this->FillOutPathways(pAlgorithm, viewShowerHitList, usedHitList, protoShowerVector);
 
     /////////////////////////////////
-    /*
+
     for (const ProtoShower protoShower : protoShowerVector)
     {
         const CaloHitList &connectionPathway(protoShower.m_connectionPathway.m_pathwayHitList);
         const CaloHitList &showerCore(protoShower.m_showerCore.m_coreHitList);
         const CartesianVector &showerStartPosition(protoShower.m_showerCore.m_startPosition);
 
-        PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &connectionPathway, "ConnectionPathway", BLUE);
+        PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &connectionPathway, "ConnectionPathway", BLACK);
         PandoraMonitoringApi::VisualizeCaloHits(pAlgorithm->GetPandora(), &showerCore, "ShowerCore", RED);
-        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartPosition, "ShowerStartPosition", RED, 2);
+        PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartPosition, "ShowerStartPosition", BLACK, 2);
     }
+
+    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPosition, "Projected Nu Vertex", GREEN, 2);
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-    */
+
     /////////////////////////////////
 }
 
@@ -505,6 +502,7 @@ void GammaStartRefinementTool::BuildHelperProtoShowers(ShowerStartRefinementAlgo
     PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     */
     /////////////////////////////////
+
     // can probably be more efficient here and use the shower start extrema
     const CaloHitList helperHitList(pAlgorithm->GetXIntervalHitsOfType(pShowerPfo, tpcView));
 
@@ -579,7 +577,7 @@ void GammaStartRefinementTool::BuildHelperProtoShowers(ShowerStartRefinementAlgo
     }
 
     /////////////////////////////////
-    /*    
+    /*
     for (const ProtoShower protoShower : protoShowerVector)
     {
         const CaloHitList &connectionPathway(protoShower.m_connectionPathway.m_pathwayHitList);
@@ -687,7 +685,6 @@ void GammaStartRefinementTool::MatchConnectionPathways(ShowerStartRefinementAlgo
     ////////////////////////////
     /*
     std::cout << "THREE VIEW MATCHES - SHOWER START" << std::endl;
-
     for (auto &entry : threeViewConnectionPathways)
     {
         CartesianVector origin(0.f, 0.f, 0.f);
@@ -706,8 +703,8 @@ void GammaStartRefinementTool::MatchConnectionPathways(ShowerStartRefinementAlgo
       matchedProtoShowersW, threeViewConnectionPathways);
 
     ////////////////////////////
-    /*
-    std::cout << "THREE VIEW MATCHES - PEAK DIRECTION" << std::endl;
+
+    std::cout << "THREE VIEW MATCHES" << std::endl;
 
     for (auto &entry : threeViewConnectionPathways)
     {
@@ -720,7 +717,7 @@ void GammaStartRefinementTool::MatchConnectionPathways(ShowerStartRefinementAlgo
         PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     }
     //threeViewConnectionPathways.clear();
-    */
+
     ////////////////////////////
 
     /* // this can lead to mistakes.. if you get a three view match want to make sure that it is DEFINITELY correct
@@ -746,7 +743,7 @@ void GammaStartRefinementTool::MatchConnectionPathways(ShowerStartRefinementAlgo
         matchedProtoShowersW, oneViewConnectionPathways);
 
     ////////////////////////////
-    /*
+
     std::cout << "ONE VIEW MATCHES" << std::endl;
 
     for (auto &entry : oneViewConnectionPathways)
@@ -759,7 +756,7 @@ void GammaStartRefinementTool::MatchConnectionPathways(ShowerStartRefinementAlgo
 
         PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
     }
-    */
+
     ////////////////////////////
 }
 
@@ -776,7 +773,7 @@ void GammaStartRefinementTool::MatchShowerStart(ShowerStartRefinementAlgorithm *
         found = false;
 
         int bestProtoShowerU(0), bestProtoShowerV(0), bestProtoShowerW(0);
-        float bestSeparationSum(std::numeric_limits<float>::max());
+        float bestMetric(std::numeric_limits<float>::max());
 
         for (unsigned int uIndex = 0; uIndex < protoShowerVectorU.size(); ++uIndex)
         {
@@ -784,8 +781,6 @@ void GammaStartRefinementTool::MatchShowerStart(ShowerStartRefinementAlgorithm *
                 continue;
 
             const ProtoShower &protoShowerU(protoShowerVectorU[uIndex]);
-            const CartesianVector &showerStartU(protoShowerU.m_showerCore.m_startPosition);
-            const CartesianVector &showerPeakDirectionU(protoShowerU.m_connectionPathway.m_startDirection);
 
             for (unsigned int vIndex = 0; vIndex < protoShowerVectorV.size(); ++vIndex)
             {
@@ -793,16 +788,6 @@ void GammaStartRefinementTool::MatchShowerStart(ShowerStartRefinementAlgorithm *
                     continue;
 
                 const ProtoShower &protoShowerV(protoShowerVectorV[vIndex]);
-                const CartesianVector &showerStartV(protoShowerV.m_showerCore.m_startPosition);
-                const CartesianVector &showerPeakDirectionV(protoShowerV.m_connectionPathway.m_startDirection);
-
-                if (showerPeakDirectionU.GetX() * showerPeakDirectionV.GetX() < 0.f)
-                    continue;
-
-                const float xSeparationUV(std::fabs(showerStartU.GetX() - showerStartV.GetX()));
-
-                if (xSeparationUV > m_maxXSeparation)
-                    continue;
 
                 for (unsigned int wIndex = 0; wIndex < protoShowerVectorW.size(); ++wIndex)
                 {
@@ -810,102 +795,24 @@ void GammaStartRefinementTool::MatchShowerStart(ShowerStartRefinementAlgorithm *
                         continue;
 
                     const ProtoShower &protoShowerW(protoShowerVectorW[wIndex]);
-                    const CartesianVector &showerStartW(protoShowerW.m_showerCore.m_startPosition);
-                    const CartesianVector &showerPeakDirectionW(protoShowerW.m_connectionPathway.m_startDirection);
 
                     if (protoShowerU.m_isHelper && protoShowerV.m_isHelper && protoShowerW.m_isHelper)
                         continue;
 
-                    if (showerPeakDirectionU.GetX() * showerPeakDirectionW.GetX() < 0.f)
+                    float metric(std::numeric_limits<float>::max());
+                    if (!LArConnectionPathwayHelper::AreShowerStartsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxXSeparation, m_maxSeparation, metric))
                         continue;
 
-                    if (showerPeakDirectionV.GetX() * showerPeakDirectionW.GetX() < 0.f)
+                    if (!LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxAngularDeviation))
                         continue;
 
-                    const float xSeparationUW(std::fabs(showerStartU.GetX() - showerStartW.GetX()));
-                    const float xSeparationVW(std::fabs(showerStartV.GetX() - showerStartW.GetX()));
-
-                    if ((xSeparationUW > m_maxXSeparation) || (xSeparationVW > m_maxXSeparation))
-                        continue;
-
-                    float chi2(0.f);
-                    CartesianVector projectionU(0.f, 0.f, 0.f), projectionV(0.f, 0.f, 0.f), projectionW(0.f, 0.f, 0.f);
-
-                    LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, showerStartV, showerStartW, projectionU, chi2);
-                    const float separationSquaredU((projectionU - showerStartU).GetMagnitudeSquared());
-                    const CartesianVector directionProjectionU(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_V, 
-                        TPC_VIEW_W, showerPeakDirectionV, showerPeakDirectionW));
-                    const float angularDeviationU(directionProjectionU.GetOpeningAngle(showerPeakDirectionU) * 180.f / M_PI);
-
-                    LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, showerStartW, showerStartU, projectionV, chi2);
-                    const float separationSquaredV((projectionV - showerStartV).GetMagnitudeSquared());
-                    const CartesianVector directionProjectionV(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_W, 
-                        TPC_VIEW_U, showerPeakDirectionW, showerPeakDirectionU));
-                    const float angularDeviationV(directionProjectionV.GetOpeningAngle(showerPeakDirectionV) * 180.f / M_PI);
-
-                    LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, showerStartU, showerStartV, projectionW, chi2);
-                    const float separationSquaredW((projectionW - showerStartW).GetMagnitudeSquared());
-                    const CartesianVector directionProjectionW(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_U, 
-                        TPC_VIEW_V, showerPeakDirectionU, showerPeakDirectionV));
-                    const float angularDeviationW(directionProjectionW.GetOpeningAngle(showerPeakDirectionW) * 180.f / M_PI);
-
-                    //////////////////
-                    /*
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionU, "U PROJECTION", RED, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionV, "V PROJECTION", RED, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionW, "W PROJECTION", RED, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartU, "U SHOWER START", BLACK, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartV, "V SHOWER START", BLACK, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartW, "W SHOWER START", BLACK, 2);
-                    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-                    */
-                    //////////////////
-
-                    if (angularDeviationU > m_maxAngularDeviation)
-                    {
-                        //std::cout << "angularDeviationU: " << angularDeviationU << std::endl;
-                        continue;
-                    }
-
-                    if (angularDeviationV > m_maxAngularDeviation)
-                    {
-                        //std::cout << "angularDeviationV: " << angularDeviationV << std::endl;
-                        continue;
-                    }
-
-                    if (angularDeviationW > m_maxAngularDeviation)
-                    {
-                        //std::cout << "angularDeviationW: " << angularDeviationW << std::endl;
-                        continue;
-                    }
-
-                    if (separationSquaredU > m_maxSeparation * m_maxSeparation)
-                    {
-                        //std::cout << "separationSquaredU: " << separationSquaredU << std::endl;
-                        continue;
-                    }
-
-                    if (separationSquaredV > m_maxSeparation * m_maxSeparation)
-                    {
-                        //std::cout << "separationSquaredV: " << separationSquaredV << std::endl;
-                        continue;
-                    }
-
-                    if (separationSquaredW > m_maxSeparation * m_maxSeparation)
-                    {
-                        //std::cout << "separationSquaredW: " << separationSquaredW << std::endl;
-                        continue;
-                    }
-
-                    const float separationSum(std::sqrt(separationSquaredU) + std::sqrt(separationSquaredV) + std::sqrt(separationSquaredW));
-
-                    if (separationSum < bestSeparationSum)
+                    if (metric < bestMetric)
                     {
                         found = true;
                         bestProtoShowerU = uIndex;
                         bestProtoShowerV = vIndex;
                         bestProtoShowerW = wIndex;
-                        bestSeparationSum = separationSum;
+                        bestMetric = metric;
                     }
                 }
             }
@@ -941,7 +848,7 @@ void GammaStartRefinementTool::MatchPeakDirection(ShowerStartRefinementAlgorithm
         found = false;
 
         int bestProtoShowerU(0), bestProtoShowerV(0), bestProtoShowerW(0);
-        float bestAngularDeviationSum(std::numeric_limits<float>::max());
+        float bestMetric(std::numeric_limits<float>::max());
 
         for (unsigned int uIndex = 0; uIndex < protoShowerVectorU.size(); ++uIndex)
         {
@@ -949,7 +856,6 @@ void GammaStartRefinementTool::MatchPeakDirection(ShowerStartRefinementAlgorithm
                 continue;
 
             const ProtoShower &protoShowerU(protoShowerVectorU[uIndex]);
-            const CartesianVector &showerPeakDirectionU(protoShowerU.m_connectionPathway.m_startDirection);
 
             for (unsigned int vIndex = 0; vIndex < protoShowerVectorV.size(); ++vIndex)
             {
@@ -957,10 +863,6 @@ void GammaStartRefinementTool::MatchPeakDirection(ShowerStartRefinementAlgorithm
                     continue;
 
                 const ProtoShower &protoShowerV(protoShowerVectorV[vIndex]);
-                const CartesianVector &showerPeakDirectionV(protoShowerV.m_connectionPathway.m_startDirection);
-
-                if (showerPeakDirectionU.GetX() * showerPeakDirectionV.GetX() < 0.f)
-                    continue;
 
                 for (unsigned int wIndex = 0; wIndex < protoShowerVectorW.size(); ++wIndex)
                 {
@@ -968,81 +870,21 @@ void GammaStartRefinementTool::MatchPeakDirection(ShowerStartRefinementAlgorithm
                         continue;
 
                     const ProtoShower &protoShowerW(protoShowerVectorW[wIndex]);
-                    const CartesianVector &showerPeakDirectionW(protoShowerW.m_connectionPathway.m_startDirection);
 
                     if (protoShowerU.m_isHelper && protoShowerV.m_isHelper && protoShowerW.m_isHelper)
                         continue;
 
-                    if (showerPeakDirectionU.GetX() * showerPeakDirectionW.GetX() < 0.f)
+                    float metric(std::numeric_limits<float>::max());
+                    if (!LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxAngularDeviation, metric))
                         continue;
 
-                    if (showerPeakDirectionV.GetX() * showerPeakDirectionW.GetX() < 0.f)
-                        continue;
-
-                    // Now assess compatability
-                    const CartesianVector projectionU(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_V, 
-                        TPC_VIEW_W, showerPeakDirectionV, showerPeakDirectionW));
-                    const float angularDeviationU(projectionU.GetOpeningAngle(showerPeakDirectionU) * 180.f / M_PI);
-
-                    const CartesianVector projectionV(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_W, 
-                        TPC_VIEW_U, showerPeakDirectionW, showerPeakDirectionU));
-                    const float angularDeviationV(projectionV.GetOpeningAngle(showerPeakDirectionV) * 180.f / M_PI);
-
-                    const CartesianVector projectionW(LArGeometryHelper::MergeTwoDirections(pAlgorithm->GetPandora(), TPC_VIEW_U, 
-                        TPC_VIEW_V, showerPeakDirectionU, showerPeakDirectionV));
-                    const float angularDeviationW(projectionW.GetOpeningAngle(showerPeakDirectionW) * 180.f / M_PI);
-
-                    ////////////////////////////////////////
-                    /*
-                    const CartesianVector &nuVertexU(protoShowerU.m_connectionPathway.m_startPosition);
-                    const CartesianVector &nuVertexV(protoShowerV.m_connectionPathway.m_startPosition);
-                    const CartesianVector &nuVertexW(protoShowerW.m_connectionPathway.m_startPosition);
-                    const CartesianVector endU(nuVertexU + (showerPeakDirectionU * 10.f));
-                    const CartesianVector endV(nuVertexV + (showerPeakDirectionV * 10.f));
-                    const CartesianVector endW(nuVertexW + (showerPeakDirectionW * 10.f));
-                    const CartesianVector projectionEndU(nuVertexU + (projectionU * 10.f));
-                    const CartesianVector projectionEndV(nuVertexV + (projectionV * 10.f));
-                    const CartesianVector projectionEndW(nuVertexW + (projectionW * 10.f));
-                    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexU, &projectionEndU, "PROJECTION U", RED, 2, 2);
-                    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexV, &projectionEndV, "PROJECTION V", RED, 2, 2);
-                    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexW, &projectionEndW, "PROJECTION W", RED, 2, 2);
-                    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexU, &endU, "DIRECTION U", BLACK, 2, 2);
-                    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexV, &endV, "DIRECTION V", BLACK, 2, 2);
-                    PandoraMonitoringApi::AddLineToVisualization(pAlgorithm->GetPandora(), &nuVertexW, &endW, "DIRECTION W", BLACK, 2, 2);
-                    std::cout << "angularDeviationU: " << angularDeviationU << std::endl;
-                    std::cout << "angularDeviationV: " << angularDeviationV << std::endl;
-                    std::cout << "angularDeviationW: " << angularDeviationW << std::endl;
-                    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-                    */
-                    ////////////////////////////////////////
-
-                    if (angularDeviationU > m_maxAngularDeviation)
-                    {
-                        //std::cout << "angularDeviationU: " << angularDeviationU << std::endl;
-                        continue;
-                    }
-
-                    if (angularDeviationV > m_maxAngularDeviation)
-                    {
-                        //std::cout << "angularDeviationV: " << angularDeviationV << std::endl;
-                        continue;
-                    }
-
-                    if (angularDeviationW > m_maxAngularDeviation)
-                    {
-                        //std::cout << "angularDeviationW: " << angularDeviationW << std::endl;
-                        continue;
-                    }
-
-                    const float angularDeviationSum(std::sqrt(angularDeviationU) + std::sqrt(angularDeviationV) + std::sqrt(angularDeviationW));
-
-                    if (angularDeviationSum < bestAngularDeviationSum)
+                    if (metric < bestMetric)
                     {
                         found = true;
                         bestProtoShowerU = uIndex;
                         bestProtoShowerV = vIndex;
                         bestProtoShowerW = wIndex;
-                        bestAngularDeviationSum = angularDeviationSum;
+                        bestMetric = metric;
                     }
                 }
             }
@@ -1065,144 +907,6 @@ void GammaStartRefinementTool::MatchPeakDirection(ShowerStartRefinementAlgorithm
     }
 }
 
-//------------------------------------------------------------------------------------------------------------------------------------------
-// so here i am saying, well what if two shower starts agree but the third doesnt? so i needthose two vertices to have a similar x <-- this doesnt work very well REMOVE
-void GammaStartRefinementTool::MatchShowerStart2(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShowerVector &protoShowerVectorU, 
-    const ProtoShowerVector &protoShowerVectorV, const ProtoShowerVector &protoShowerVectorW, IntVector &matchedProtoShowersU, 
-    IntVector &matchedProtoShowersV, IntVector &matchedProtoShowersW, MatchedConnectionPathwayMap &matchedConnectionPathwayMap)
-{
-    bool found(true);
-
-    while(found)
-    {
-        found = false;
-
-        int bestProtoShowerU(0), bestProtoShowerV(0), bestProtoShowerW(0);
-        float bestSeparationSum(std::numeric_limits<float>::max());
-
-        for (unsigned int uIndex = 0; uIndex < protoShowerVectorU.size(); ++uIndex)
-        {
-            if (std::find(matchedProtoShowersU.begin(), matchedProtoShowersU.end(), uIndex) != matchedProtoShowersU.end())
-                continue;
-
-            const ProtoShower &protoShowerU(protoShowerVectorU[uIndex]);
-            const CartesianVector &showerStartU(protoShowerU.m_showerCore.m_startPosition);
-
-            for (unsigned int vIndex = 0; vIndex < protoShowerVectorV.size(); ++vIndex)
-            {
-                if (std::find(matchedProtoShowersV.begin(), matchedProtoShowersV.end(), vIndex) != matchedProtoShowersV.end())
-                    continue;
-
-                const ProtoShower &protoShowerV(protoShowerVectorV[vIndex]);
-                const CartesianVector &showerStartV(protoShowerV.m_showerCore.m_startPosition);
-
-                for (unsigned int wIndex = 0; wIndex < protoShowerVectorW.size(); ++wIndex)
-                {
-                    if (std::find(matchedProtoShowersW.begin(), matchedProtoShowersW.end(), wIndex) != matchedProtoShowersW.end())
-                        continue;
-
-                    const ProtoShower &protoShowerW(protoShowerVectorW[wIndex]);
-                    const CartesianVector &showerStartW(protoShowerW.m_showerCore.m_startPosition);
-
-                    if (protoShowerU.m_isHelper && protoShowerV.m_isHelper && protoShowerW.m_isHelper)
-                        continue;
-
-                    float chi2(0.f);
-                    CartesianVector projectionU(0.f, 0.f, 0.f), projectionV(0.f, 0.f, 0.f), projectionW(0.f, 0.f, 0.f);
-
-                    // l and t?
-
-                    float uMin(protoShowerU.m_connectionPathway.m_startDirection.GetX() > 0.f ? protoShowerU.m_connectionPathway.m_startPosition.GetX() : 
-                               protoShowerU.m_showerCore.m_startPosition.GetX() - 2.f);
-                    float uMax(protoShowerU.m_connectionPathway.m_startDirection.GetX() > 0.f ? protoShowerU.m_showerCore.m_startPosition.GetX() + 2.f : 
-                               protoShowerU.m_connectionPathway.m_startPosition.GetX());
-
-                    float vMin(protoShowerV.m_connectionPathway.m_startDirection.GetX() > 0.f ? protoShowerV.m_connectionPathway.m_startPosition.GetX() : 
-                               protoShowerV.m_showerCore.m_startPosition.GetX() -2.f);
-                    float vMax(protoShowerV.m_connectionPathway.m_startDirection.GetX() > 0.f ? protoShowerV.m_showerCore.m_startPosition.GetX() + 2.f : 
-                               protoShowerV.m_connectionPathway.m_startPosition.GetX());
-
-                    float wMin(protoShowerW.m_connectionPathway.m_startDirection.GetX() > 0.f ? protoShowerW.m_connectionPathway.m_startPosition.GetX() : 
-                               protoShowerW.m_showerCore.m_startPosition.GetX() - 2.f);
-                    float wMax(protoShowerW.m_connectionPathway.m_startDirection.GetX() > 0.f ? protoShowerW.m_showerCore.m_startPosition.GetX() + 2.f : 
-                               protoShowerW.m_connectionPathway.m_startPosition.GetX());
-
-                    float separationU(std::numeric_limits<float>::max());
-
-                    const float xSeparationUV(std::fabs(protoShowerU.m_showerCore.m_startPosition.GetX() - protoShowerV.m_showerCore.m_startPosition.GetX()));
-                    const float xSeparationUW(std::fabs(protoShowerU.m_showerCore.m_startPosition.GetX() - protoShowerW.m_showerCore.m_startPosition.GetX()));
-                    const float xSeparationVW(std::fabs(protoShowerV.m_showerCore.m_startPosition.GetX() - protoShowerW.m_showerCore.m_startPosition.GetX()));
-
-                    if ((xSeparationVW < m_maxXSeparation) && (protoShowerV.m_showerCore.m_startPosition.GetX() > uMin) && (protoShowerV.m_showerCore.m_startPosition.GetX() < uMax)
-                        && (protoShowerW.m_showerCore.m_startPosition.GetX() > uMin) && (protoShowerW.m_showerCore.m_startPosition.GetX() < uMax))
-                    {
-                        LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), TPC_VIEW_V, TPC_VIEW_W, showerStartV, showerStartW, projectionU, chi2);
-                        separationU = LArClusterHelper::GetClosestDistance(projectionU, protoShowerU.m_connectionPathway.m_pathwayHitList);
-                    }
-
-                    float separationV(std::numeric_limits<float>::max());
-
-                    if ((xSeparationUW < m_maxXSeparation) && (protoShowerW.m_showerCore.m_startPosition.GetX() > vMin) && (protoShowerW.m_showerCore.m_startPosition.GetX() < vMax)
-                        && (protoShowerU.m_showerCore.m_startPosition.GetX() > vMin) && (protoShowerU.m_showerCore.m_startPosition.GetX() < vMax))
-                    {
-                        LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), TPC_VIEW_W, TPC_VIEW_U, showerStartW, showerStartU, projectionV, chi2);
-                        separationV = LArClusterHelper::GetClosestDistance(projectionV, protoShowerV.m_connectionPathway.m_pathwayHitList);
-                    }
-
-                    float separationW(LArClusterHelper::GetClosestDistance(projectionW, protoShowerW.m_connectionPathway.m_pathwayHitList));
-
-                    if ((xSeparationUV < m_maxXSeparation) && (protoShowerU.m_showerCore.m_startPosition.GetX() > wMin) && (protoShowerU.m_showerCore.m_startPosition.GetX() < wMax)
-                        && (protoShowerV.m_showerCore.m_startPosition.GetX() > wMin) && (protoShowerV.m_showerCore.m_startPosition.GetX() < wMax))
-                    {
-                        LArGeometryHelper::MergeTwoPositions(pAlgorithm->GetPandora(), TPC_VIEW_U, TPC_VIEW_V, showerStartU, showerStartV, projectionW, chi2);
-                        separationW = LArClusterHelper::GetClosestDistance(projectionW, protoShowerW.m_connectionPathway.m_pathwayHitList);
-                    }
-
-                    //////////////////
-                    /*
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionU, "U PROJECTION", RED, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionV, "V PROJECTION", RED, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectionW, "W PROJECTION", RED, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartU, "U SHOWER START", BLACK, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartV, "V SHOWER START", BLACK, 2);
-                    PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &showerStartW, "W SHOWER START", BLACK, 2);
-                    PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
-                    */
-                    //////////////////
-
-                    const float minSeparation(std::min(std::min(separationU, separationV), separationW));
-
-                    if (minSeparation > m_maxProjectedShowerStartSeparation)
-                        continue;
-
-                    if (minSeparation < bestSeparationSum)
-                    {
-                        found = true;
-                        bestProtoShowerU = uIndex;
-                        bestProtoShowerV = vIndex;
-                        bestProtoShowerW = wIndex;
-                        bestSeparationSum = minSeparation;
-                    }
-                }
-            }
-        }
-
-        if (found)
-        {
-            matchedProtoShowersU.push_back(bestProtoShowerU);
-            matchedProtoShowersV.push_back(bestProtoShowerV);
-            matchedProtoShowersW.push_back(bestProtoShowerW);
-
-            ProtoShowerVector matchedProtoShowers;
-            matchedProtoShowers.push_back(protoShowerVectorU[bestProtoShowerU]);
-            matchedProtoShowers.push_back(protoShowerVectorV[bestProtoShowerV]);
-            matchedProtoShowers.push_back(protoShowerVectorW[bestProtoShowerW]);
-
-            int mapInt(matchedConnectionPathwayMap.size());
-            matchedConnectionPathwayMap[mapInt] = matchedProtoShowers;
-        }
-    }
-}
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 void GammaStartRefinementTool::AddUnmatched(const ProtoShowerVector &protoShowerVectorU, const ProtoShowerVector &protoShowerVectorV, 

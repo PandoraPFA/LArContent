@@ -52,7 +52,7 @@ private:
      *  @param  pointingClusterMap the input map of 3D pointing clusters
      *  @param  pfoVector the input list of Pfos
      */
-    void BuildDaughterParticles(const LArPointingClusterMap &pointingClusterMap, const pandora::PfoVector &pfoVector) const;
+    void BuildDaughterParticles(const LArPointingClusterMap &pointingClusterMap, const pandora::PfoVector &pfoVector, const pandora::VertexList *const pVertexList) const;
 
     /**
      *  @brief  Reconstruct the vertex and direction of a track-like Pfos
@@ -60,14 +60,14 @@ private:
      *  @param  pointingClusterMap the input map of 3D pointing clusters
      *  @param  pPfo the input Pfo
      */
-    void BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, const pandora::ParticleFlowObject *const pDaughterPfo) const;
+    void BuildDaughterTrack(const LArPointingClusterMap &pointingClusterMap, const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::VertexList *const pVertexList) const;
 
     /**
      *  @brief  Reconstruct the vertex and direction of a shower-like Pfos
      *
      *  @param  pPfo the input Pfo
      */
-    void BuildDaughterShower(const pandora::ParticleFlowObject *const pDaughterPfo) const;
+    void BuildDaughterShower(const pandora::ParticleFlowObject *const pDaughterPfo, const pandora::VertexList *const pVertexList) const;
 
     /**
      *  @brief  Set the vertex and direction of the Pfos
@@ -77,7 +77,7 @@ private:
      *  @param  pPfo the input Pfo
      */
     void SetParticleParameters(const pandora::CartesianVector &vtxPosition, const pandora::CartesianVector &vtxDirection,
-        const pandora::ParticleFlowObject *const pPfo) const;
+        const pandora::ParticleFlowObject *const pPfo, const pandora::VertexList *const pVertexList) const;
 
     bool m_useParentShowerVertex;    ///< use the parent pfo for the shower vertices
     unsigned int m_halfWindowLayers; ///< number of layers to use for half-window of sliding fit

@@ -11,6 +11,8 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
+
 #include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
 namespace lar_content
@@ -59,7 +61,7 @@ public:
     void FillGammaHitMap();
     void FillElectronHitMap();
     bool IsElectron(const pandora::ParticleFlowObject *const pPfo) const;
-    bool IsGamma(const pandora::ParticleFlowObject *const pPfo) const;
+    bool IsGamma(const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &nuVertexPosition) const;
 
 private:
     pandora::StatusCode Run();
@@ -76,6 +78,7 @@ private:
     float m_minElectronCompleteness;
     float m_minElectronPurity;
     float m_minGammaCompleteness;
+    float m_thresholdSignalGammaDisplacement;
 
     std::map<const pandora::MCParticle*, pandora::CaloHitList> m_gammaHitMap;
     std::map<const pandora::MCParticle*, pandora::CaloHitList> m_electronHitMap;
