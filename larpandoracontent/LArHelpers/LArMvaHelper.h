@@ -77,7 +77,7 @@ public:
     typedef std::map<std::string, pandora::AlgorithmTool *> AlgorithmToolMap; // idea would be to put this in PandoraInternal.h at some point in PandoraSDK
 
     /**
-     *  @brief  Produce a training example with the given features and result
+     *  @brief  Produce a training example with the given features and result - meant for use with vectors primarily
      *
      *  @param  trainingOutputFile the file to which to append the example
      *  @param  featureLists the lists of features
@@ -87,17 +87,16 @@ public:
     template <typename... TLISTS>
     static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists);
 
-    // BH - for now let's make this NOT templated. You need to give it an already concatenated map...
-    // TODO: make more widely useful via additional templating...
     /**
-     *  @brief  Produce a training example with the given features and result
+     *  @brief  Produce a training example with the given features and result - meant for use with maps of features
      *
      *  @param  trainingOutputFile the file to which to append the example
      *  @param  featureMap the map of features
      *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
+     *  @param  featureLists the lists of features - in this mode forced to be not more than parameter in the pack
      */
-    template <typename... TLISTS>
-    static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result,  const MvaFeatureMap &featureMap, const StringVector &featureToolOrder);
+    template <typename TLIST>
+    static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, const StringVector &featureToolOrder, TLIST && featureList);
 
     /**
      *  @brief  Use the trained classifier to predict the boolean class of an example
@@ -310,17 +309,20 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename... TLISTS>
+template <typename TLIST>
 pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result,
-							 const LArMvaHelper::MvaFeatureMap &featureMap, const LArMvaHelper::StringVector &featureToolOrder)
+							 const LArMvaHelper::StringVector &featureToolOrder, TLIST && featureList)
 {
+    static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureMap>::value,
+		  "LArMvaHelper: Could not Produce Training Example as the list was not a map of MvaFeatures, yet this structure of parameters is being used.");
+
     // Make a feature vector from the map and calculate the features
     LArMvaHelper::MvaFeatureVector featureVector;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-        if ( featureMap.find( pFeatureToolName ) == featureMap.end() )
+        if ( featureList.find( pFeatureToolName ) == featureList.end() )
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	featureVector.push_back( featureMap.at( pFeatureToolName ) );
+	featureVector.push_back( featureList.at( pFeatureToolName ) );
     }
 
     return ProduceTrainingExample( trainingOutputFile, result, featureVector );
