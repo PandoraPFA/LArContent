@@ -26,11 +26,14 @@ namespace lar_dl_content
 DlVertexingAlgorithm::DlVertexingAlgorithm():
     m_trainingMode{false},
     m_trainingOutputFile{""},
+    m_pass{1},
     m_height{256},
     m_width{256},
     m_pixelShift{0.f},
     m_pixelScale{1.f},
-    m_visualise{false}
+    m_regionSize{32.f},
+    m_visualise{false},
+    m_rng(static_cast<std::mt19937::result_type>(0))
 {
 }
 
@@ -64,6 +67,7 @@ StatusCode DlVertexingAlgorithm::Train()
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetMCToHitsMap(mcToHitsMap));
     MCParticleList hierarchy;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->CompleteMCHierarchy(mcToHitsMap, hierarchy));
+    std::normal_distribution<> gauss(0.f, 15.f);
 
     for (const std::string &listname : m_caloHitListNames)
     {
@@ -71,6 +75,7 @@ StatusCode DlVertexingAlgorithm::Train()
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, listname, pCaloHitList));
         if (pCaloHitList->empty())
             continue;
+        m_rng.seed(static_cast<std::mt19937::result_type>(pCaloHitList->size()));
 
         HitType view{pCaloHitList->front()->GetHitType()};
         const bool isU{view == TPC_VIEW_U}, isV{view == TPC_VIEW_V}, isW{view == TPC_VIEW_W};
@@ -80,79 +85,61 @@ StatusCode DlVertexingAlgorithm::Train()
         CartesianPointVector vertices;
         for (const MCParticle *mc : hierarchy)
         {
-            if (!LArMCParticleHelper::IsNeutrino(mc))
-            {   // Secondary vertices - will have coicident start and endpoints, only add once
-/*                if (LArMCParticleHelper::GetHierarchyTier(mc) == 1)
-                {
-                    const int pdg{std::abs(mc->GetParticleId())};
-                    if (pdg == 11 || pdg == 22)
-                    {   // Shower, don't retain endpoint
-                        CartesianVector vertex{mc->GetVertex()};
-                        if (std::find(vertices.begin(), vertices.end(), vertex) == vertices.end())
-                            vertices.push_back(vertex);
-                    }
-                    else
-                    {   // Track, retain endpoint
-                        const CartesianVector &vertex{mc->GetVertex()};
-                        const CartesianVector &endpoint{mc->GetEndpoint()};
-                        if (std::find(vertices.begin(), vertices.end(), vertex) == vertices.end())
-                            vertices.push_back(vertex);
-                        if (std::find(vertices.begin(), vertices.end(), endpoint) == vertices.end())
-                            vertices.push_back(endpoint);
-                    }
-                }*/
-            }
-            else
-            {   // Primary vertex - unique, so add directly to vertex vector
+            if (LArMCParticleHelper::IsNeutrino(mc))
                 vertices.push_back(mc->GetVertex());
-            }
         }
-
+        if (vertices.empty())
+            continue;
+        const CartesianVector &vertex{vertices.front()};
         const std::string trainingFilename{m_trainingOutputFile + "_" + listname + ".csv"};
-        const unsigned long nVertices{vertices.size()};
+        const unsigned long nVertices{1};
         unsigned long nHits{0};
         const unsigned int nuance{LArMCParticleHelper::GetNuanceCode(hierarchy.front())};
-        LArMvaHelper::MvaFeatureVector featureVector;
-
-        featureVector.push_back(static_cast<double>(nuance));
-        featureVector.push_back(static_cast<double>(nVertices));
 
         // Vertices
         const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-        for (const CartesianVector vertex : vertices)
-        {
-            const double x{vertex.GetX()};
-            featureVector.push_back(x);
-            if (isW)
-                featureVector.push_back(transform->YZtoW(vertex.GetY(), vertex.GetZ()));
-            else if (isV)
-                featureVector.push_back(transform->YZtoV(vertex.GetY(), vertex.GetZ()));
-            else
-                featureVector.push_back(transform->YZtoU(vertex.GetY(), vertex.GetZ()));
-        }
+        const double xVtx{vertex.GetX()};
+        double zVtx{0.};
+        if (isW)
+            zVtx = transform->YZtoW(vertex.GetY(), vertex.GetZ());
+        else if (isV)
+            zVtx = transform->YZtoV(vertex.GetY(), vertex.GetZ());
+        else
+            zVtx = transform->YZtoU(vertex.GetY(), vertex.GetZ());
 
         // Calo hits
+        double xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
+        // If we're on a refinement pass, constrain the region of interest
+        if (m_pass > 1)
+        {
+            const double xJitter{gauss(m_rng)}, zJitter{gauss(m_rng)};
+            xMin = (xVtx + xJitter) - m_regionSize;
+            xMax = (xVtx + xJitter) + m_regionSize;
+            zMin = (zVtx + zJitter) - m_regionSize;
+            zMax = (zVtx + zJitter) + m_regionSize;
+        }
+
+        LArMvaHelper::MvaFeatureVector featureVector;
+        featureVector.emplace_back(static_cast<double>(nuance));
+        featureVector.emplace_back(static_cast<double>(nVertices));
+        featureVector.emplace_back(xVtx);
+        featureVector.emplace_back(zVtx);
+
         for (const CaloHit *pCaloHit : *pCaloHitList)
         {
-            try
-            {
-/*                const MCParticle *const pMCParticle{MCParticleHelper::GetMainMCParticle(pCaloHit)};
-                // Discard non-reconstructable hits
-                if (mcToHitsMap.find(pMCParticle) == mcToHitsMap.end())
-                    continue;*/
-
-                const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetInputEnergy()};
-                featureVector.push_back(static_cast<double>(x));
-                featureVector.push_back(static_cast<double>(z));
-                featureVector.push_back(static_cast<double>(adc));
-                ++nHits;
-            }
-            catch (...)
-            {
-            }
+            const float x{pCaloHit->GetPositionVector().GetX()}, z{pCaloHit->GetPositionVector().GetZ()}, adc{pCaloHit->GetInputEnergy()};
+            // If on a refinement pass, drop hits outside the region of interest
+            if (m_pass > 1 && (x < xMin || x > xMax || z < zMin || z > zMax))
+                continue;
+            featureVector.emplace_back(static_cast<double>(x));
+            featureVector.emplace_back(static_cast<double>(z));
+            featureVector.emplace_back(static_cast<double>(adc));
+            ++nHits;
         }
         featureVector.insert(featureVector.begin() + 2, static_cast<double>(nHits));
-        LArMvaHelper::ProduceTrainingExample(trainingFilename, true, featureVector);
+        // Only write out the feature vector if there were enough hits in the (possibly perturbed) region of interest
+        if (nHits > 10)
+            LArMvaHelper::ProduceTrainingExample(trainingFilename, true, featureVector);
     }
 
     return STATUS_CODE_SUCCESS;
@@ -302,6 +289,7 @@ StatusCode DlVertexingAlgorithm::Infer()
                             std::cout << "U: " << rx_u << " " << ru << " " << dr_u << std::endl;
                             std::cout << "V: " << rx_v << " " << rv << " " << dr_v << std::endl;
                             std::cout << "W: " << rx_w << " " << rw << " " << dr_w << std::endl;*/
+                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "pass", m_pass));
                             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_u", dr_u));
                             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_v", dr_v));
                             PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_w", dr_w));
@@ -393,6 +381,11 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const pandora::CaloHit
     {
         const float x{pCaloHit->GetPositionVector().GetX()};
         const float z{pCaloHit->GetPositionVector().GetZ()};
+        if (m_pass > 1)
+        {
+            if (x < xMin || x > xMax || z < zMin || z > zMax)
+                continue;
+        }
         const float adc{pCaloHit->GetInputEnergy() < 500 ? pCaloHit->GetInputEnergy() : 500};
         const int pixelX{static_cast<int>(std::floor((x - xBinEdges[0]) / dx))};
         const int pixelZ{(m_height - 1) - static_cast<int>(std::floor((z - zBinEdges[0]) / dz))};
@@ -474,8 +467,6 @@ StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(const CaloHi
                 rowBest = row;
                 colBest = col;
             }
-    (void)rowBest;
-    (void)colBest;
 
 /*    for (int row = 0; row < canvasHeight; ++row)
         for (int col = 0; col < canvasWidth; ++col)
@@ -666,6 +657,38 @@ void DlVertexingAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &x
         if (z > zMax)
             zMax = z;
     }
+
+    if (m_pass > 1)
+    {
+        // Constrain the hits to the allowed region if needed
+        const VertexList *pVertexList(nullptr);
+        PANDORA_THROW_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, m_inputVertexListName, pVertexList));
+        if (pVertexList->empty() || caloHitList.empty())
+            throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+        const CartesianVector &centroid{pVertexList->front()->GetPosition()};
+        const HitType view{caloHitList.front()->GetHitType()};
+        float xCentroid{centroid.GetX()}, zCentroid{0.f};
+        const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+        switch (view)
+        {
+            case TPC_VIEW_U:
+                zCentroid = transform->YZtoU(centroid.GetY(), centroid.GetZ());
+                break;
+            case TPC_VIEW_V:
+                zCentroid = transform->YZtoV(centroid.GetY(), centroid.GetZ());
+                break;
+            case TPC_VIEW_W:
+                zCentroid = transform->YZtoW(centroid.GetY(), centroid.GetZ());
+                break;
+            default:
+                throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+                break;
+        }
+
+        xMin = std::max(xMin, xCentroid - m_regionSize); xMax = std::min(xMax, xCentroid + m_regionSize);
+        zMin = std::max(zMin, zCentroid - m_regionSize); zMax = std::min(zMax, zCentroid + m_regionSize);
+    }
+
     // Avoid unreasonable rescaling of very small hit regions
     const float xRange{xMax - xMin}, zRange{zMax - zMin};
     if (2 * xRange < m_width)
@@ -715,6 +738,12 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         m_trainingMode));
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualise",
         m_visualise));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Pass",
+        m_pass));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageHeight",
+        m_height));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ImageWidth",
+        m_width));
 
     if (m_trainingMode)
     {
@@ -735,6 +764,10 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PixelShift", m_pixelShift));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PixelScale", m_pixelScale));
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
+        if (m_pass > 1)
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "InputVertexListName", m_inputVertexListName));
+        }
     }
 
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadVectorOfValues(xmlHandle,

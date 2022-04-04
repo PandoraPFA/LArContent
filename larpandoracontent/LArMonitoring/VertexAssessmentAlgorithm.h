@@ -48,6 +48,7 @@ private:
     pandora::StatusCode GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const;
 
     bool m_visualize;   ///< Whether or not to visualize the vertices
+    std::string m_vertexListName;   ///< The name of the vertex list to assess
 };
 
 } // namespace lar_content

@@ -130,7 +130,7 @@ void VertexAssessmentAlgorithm::Visualize() const
     }
 
     const VertexList *pVertexList{nullptr};
-    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, "NeutrinoVertices3D", pVertexList))
+    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_vertexListName, pVertexList))
     {
         if (pVertexList && !pVertexList->empty())
         {
@@ -201,6 +201,7 @@ StatusCode VertexAssessmentAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCCont
 StatusCode VertexAssessmentAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "Visualize", m_visualize));
+    PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "VertexListName", m_vertexListName));
 
     return STATUS_CODE_SUCCESS;
 }
