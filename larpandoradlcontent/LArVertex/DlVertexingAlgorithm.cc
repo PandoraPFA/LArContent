@@ -223,9 +223,34 @@ StatusCode DlVertexingAlgorithm::Infer()
         if (m_visualise)
         {
             PANDORA_MONITORING_API(SetEveDisplayParameters(this->GetPandora(), true, DETECTOR_VIEW_XZ, -1.f, 1.f, 1.f));
+            try
+            {
+                float x{0.f}, u{0.f}, v{0.f}, w{0.f};
+                this->GetTrueVertexPosition(x, u, v, w);
+                if (isU)
+                {
+                    const CartesianVector trueVertex(x, 0.f, u);
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &trueVertex, "U(true)", BLUE, 3));
+                }
+                else if (isV)
+                {
+                    const CartesianVector trueVertex(x, 0.f, v);
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &trueVertex, "V(true)", BLUE, 3));
+                }
+                else if (isW)
+                {
+                    const CartesianVector trueVertex(x, 0.f, w);
+                    PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &trueVertex, "W(true)", BLUE, 3));
+                }
+            }
+            catch (StatusCodeException &e)
+            {
+                std::cerr << "DlVertexingAlgorithm: Warning. Couldn't find true vertex." << std::endl;
+            }
             for (const auto pos : positionVector)
             {
-                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, "hit", isU ? RED : isV ? GREEN : BLUE, 1));
+                std::string label{isU ? "U" : isV ? "V" : "W"};
+                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &pos, label, RED, 3));
             }
             PANDORA_MONITORING_API(ViewEvent(this->GetPandora()));
         }
@@ -729,6 +754,54 @@ StatusCode DlVertexingAlgorithm::MakeCandidateVertexList(const CartesianPointVec
 
     return STATUS_CODE_SUCCESS;
 }
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void DlVertexingAlgorithm::GetTrueVertexPosition(float &x, float &y, float &z) const
+{
+    const CartesianVector &trueVertex{this->GetTrueVertex()};
+    x = trueVertex.GetX();
+    y = trueVertex.GetY();
+    z = trueVertex.GetZ();
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+void DlVertexingAlgorithm::GetTrueVertexPosition(float &x, float &u, float &v, float &w) const
+{
+    const CartesianVector &trueVertex{this->GetTrueVertex()};
+    const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+    x = trueVertex.GetX();
+    u = static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()));
+    v = static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()));
+    w = static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()));
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+const CartesianVector &DlVertexingAlgorithm::GetTrueVertex() const
+{
+    const MCParticleList *pMCParticleList{nullptr};
+    if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList) && pMCParticleList)
+    {
+        MCParticleVector primaries;
+        LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
+        if (!primaries.empty())
+        {
+            const MCParticle *primary{primaries.front()};
+            const MCParticleList &parents{primary->GetParentList()};
+            if (parents.size() == 1)
+            {
+                const MCParticle *trueNeutrino{parents.front()};
+                if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
+                    return primaries.front()->GetVertex();
+            }
+        }
+    }
+
+    throw StatusCodeException(STATUS_CODE_NOT_FOUND);
+}
+
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 

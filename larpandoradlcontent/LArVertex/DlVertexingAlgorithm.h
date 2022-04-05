@@ -186,7 +186,7 @@ private:
      *  @param  zMax The output maximum z value
      *
      *  @return The StatusCode resulting from the function
-     **/
+     */
     void GetHitRegion(const pandora::CaloHitList& caloHitList, float& xMin, float& xMax, float& zMin, float& zMax) const;
 
     /**
@@ -197,6 +197,21 @@ private:
      *  @return The StatusCode resulting from the function
      */
     pandora::StatusCode MakeCandidateVertexList(const pandora::CartesianPointVector &positions);
+
+    /**
+     *  @brief  Retrieve the true neutrino vertex position.
+     */
+    void GetTrueVertexPosition(float &x, float &y, float &z) const;
+
+    /**
+     *  @brief  Retrieve the true neutrino vertex position.
+     */
+    void GetTrueVertexPosition(float &x, float &u, float &v, float &w) const;
+
+    /**
+     *  @brief  Retrieve the true neutrino vertex.
+     */
+    const pandora::CartesianVector &GetTrueVertex() const;
 
     bool                    m_trainingMode;             ///< Training mode
     std::string             m_trainingOutputFile;       ///< Output file name for training examples
