@@ -651,11 +651,11 @@ const pandora::Vertex *TrainedVertexSelectionAlgorithm::ProduceTrainingExamples(
             if (pBestVertex && (bestVertexDr < maxRadius))
             {
                 if (coinFlip(generator))
-                    LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList,
-                        bestVertexFeatureList, featureList, sharedFeatureList);
+                    LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", true,
+							 LArMvaHelper::ConcatenateFeatureLists(eventFeatureList, bestVertexFeatureList, featureList, sharedFeatureList));
                 else
-                    LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList,
-                        featureList, bestVertexFeatureList, sharedFeatureList);
+                    LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", false,
+							 LArMvaHelper::ConcatenateFeatureLists(eventFeatureList, featureList, bestVertexFeatureList, sharedFeatureList));
             }
         }
         else
@@ -663,11 +663,11 @@ const pandora::Vertex *TrainedVertexSelectionAlgorithm::ProduceTrainingExamples(
             if (pBestVertex && (bestVertexDr < maxRadius))
             {
                 if (coinFlip(generator))
-                    LArMvaHelper::ProduceTrainingExample(
-                        trainingOutputFile + "_" + interactionType + ".txt", true, eventFeatureList, bestVertexFeatureList, featureList);
+                    LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", true,
+							 LArMvaHelper::ConcatenateFeatureLists(eventFeatureList, bestVertexFeatureList, featureList));
                 else
-                    LArMvaHelper::ProduceTrainingExample(
-                        trainingOutputFile + "_" + interactionType + ".txt", false, eventFeatureList, featureList, bestVertexFeatureList);
+                    LArMvaHelper::ProduceTrainingExample(trainingOutputFile + "_" + interactionType + ".txt", false,
+							 LArMvaHelper::ConcatenateFeatureLists(eventFeatureList, featureList, bestVertexFeatureList));
             }
         }
     }

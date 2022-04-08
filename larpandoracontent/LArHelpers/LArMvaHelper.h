@@ -77,87 +77,82 @@ public:
     typedef std::map<std::string, pandora::AlgorithmTool *> AlgorithmToolMap; // idea would be to put this in PandoraInternal.h at some point in PandoraSDK
 
     /**
-     *  @brief  Produce a training example with the given features and result - meant for use with vectors primarily
+     *  @brief  Produce a training example with the given features and result
      *
      *  @param  trainingOutputFile the file to which to append the example
-     *  @param  featureLists the lists of features
+     *  @param  featureContainer the container of features
      *
      *  @return success
      */
-    template <typename... TLISTS>
-    static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists);
+    template <typename TCONTAINER>
+    static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TCONTAINER && featureContainer);
 
     /**
-     *  @brief  Produce a training example with the given features and result - meant for use with maps of features
+     *  @brief  Produce a training example with the given features and result - using a map
      *
      *  @param  trainingOutputFile the file to which to append the example
-     *  @param  featureMap the map of features
      *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
-     *  @param  featureLists the lists of features - in this mode forced to be not more than parameter in the pack
+     *  @param  featureContainer the container of features
      */
-    template <typename TLIST>
-    static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, const StringVector &featureToolOrder, TLIST && featureList);
+    template <typename TCONTAINER>
+    static pandora::StatusCode ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, const StringVector &featureToolOrder, TCONTAINER && featureContainer);
 
     /**
      *  @brief  Use the trained classifier to predict the boolean class of an example
      *
      *  @param  classifier the classifier
-     *  @param  featureLists the lists of features
+     *  @param  featureContainer the container of features
      *
      *  @return the predicted boolean class of the example
      */
-    template <typename... TLISTS>
-    static bool Classify(const MvaInterface &classifier, TLISTS &&... featureLists);
+    template <typename TCONTAINER>
+    static bool Classify(const MvaInterface &classifier, TCONTAINER && featureContainer);
 
-    // BH - for now let's make this NOT templated. You need to give it an already concatenated map...
-    // TODO: make more widely useful via additional templating...
     /**
-     *  @brief  Use the trained classifier to predict the boolean class of an example
+     *  @brief  Use the trained classifier to predict the boolean class of an example -- using a map
      *
      *  @param  classifier the classifier
-     *  @param  featureMap the map of features
      *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
+     *  @param  featureContainer the container of features
      *
      *  @return success
      */
-    template <typename... TLISTS>
-    static bool Classify(const MvaInterface &classifier, const MvaFeatureMap &featureMap, const StringVector &featureToolOrder);
+    template <typename TCONTAINER>
+    static bool Classify(const MvaInterface &classifier, const StringVector &featureToolOrder, TCONTAINER && featureContainer);
 
     /**
      *  @brief  Use the trained classifer to calculate the classification score of an example (>0 means boolean class true)
      *
      *  @param  classifier the classifier
-     *  @param  featureLists the lists of features
+     *  @param  featureContainer the container of features
      *
      *  @return the classification score
      */
-    template <typename... TLISTS>
-    static double CalculateClassificationScore(const MvaInterface &classifier, TLISTS &&... featureLists);
+    template <typename TCONTAINER>
+    static double CalculateClassificationScore(const MvaInterface &classifier, TCONTAINER && featureContainer);
 
     /**
      *  @brief  Use the trained mva to calculate a classification probability for an example
      *
      *  @param  classifier the classifier
-     *  @param  featureLists the lists of features
+     *  @param  featureContainer the container of features
      *
      *  @return the classification probability
      */
-    template <typename... TLISTS>
-    static double CalculateProbability(const MvaInterface &classifier, TLISTS &&... featureLists);
+    template <typename TCONTAINER>
+    static double CalculateProbability(const MvaInterface &classifier, TCONTAINER && featureContainer);
 
-    // BH - for now let's make this NOT templated. You need to give it an already concatenated map...
-    // TODO: make more widely useful via additional templating...
     /**
-     *  @brief  Use the trained mva to calculate a classification probability for an example
+     *  @brief  Use the trained mva to calculate a classification probability for an example -- using a map
      *
      *  @param  classifier the classifier
-     *  @param  featureMap the map of features
      *  @param  featureToolOrder the vector of strings corresponding to ordered list of keys
+     *  @param  featureContainer the container of features
      *
      *  @return the classification probability
      */
-    template <typename... TLISTS>
-    static double CalculateProbability(const MvaInterface &classifier, const MvaFeatureMap &featureMap, const StringVector &featureToolOrder );
+    template <typename TCONTAINER>
+    static double CalculateProbability(const MvaInterface &classifier, const StringVector &featureToolOrder, TCONTAINER && featureContainer );
 
     /**
      *  @brief  Calculate the features in a given feature tool vector
@@ -227,6 +222,22 @@ public:
     static pandora::StatusCode ProcessAlgorithmToolListToMap(const pandora::Algorithm &algorithm, const pandora::TiXmlHandle &xmlHandle, const std::string &listName,
 							     StringVector &algorithToolNameVector, AlgorithmToolMap &algorithmToolMap);
 
+    /**
+     *  @brief  Recursively concatenate vectors of features
+     * 
+     *  @param  featureList a list of features
+     *  @param  featureLists optional further lists of features
+     * 
+     *  @return the concatenated vector of features
+     */
+    template <typename TLIST, typename... TLISTS>
+    static MvaFeatureVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
+
+    /**
+     *  @brief  Recursively concatenate vectors of features (terminating method)
+     */
+    static MvaFeatureVector ConcatenateFeatureLists();
+
 private:
     /**
      *  @brief  Get a timestamp string for this point in time
@@ -266,28 +277,12 @@ private:
      */
     template <typename TLIST>
     static pandora::StatusCode WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList);
-
-    /**
-     *  @brief  Recursively concatenate vectors of features
-     *
-     *  @param  featureList a list of features
-     *  @param  featureLists optional further lists of features
-     *
-     *  @return the concatenated vector of features
-     */
-    template <typename TLIST, typename... TLISTS>
-    static MvaFeatureVector ConcatenateFeatureLists(TLIST &&featureList, TLISTS &&... featureLists);
-
-    /**
-     *  @brief  Recursively concatenate vectors of features (terminating method)
-     */
-    static MvaFeatureVector ConcatenateFeatureLists();
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename... TLISTS>
-pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TLISTS &&... featureLists)
+template <typename TCONTAINER>
+pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result, TCONTAINER && featureContainer)
 {
     std::ofstream outfile;
     outfile.open(trainingOutputFile, std::ios_base::app); // always append to the output file
@@ -301,7 +296,7 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
     std::string delimiter(",");
     outfile << GetTimestampString() << delimiter;
 
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, WriteFeaturesToFile(outfile, delimiter, featureLists...));
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, WriteFeaturesToFile(outfile, delimiter, featureContainer));
     outfile << static_cast<int>(result) << '\n';
 
     return pandora::STATUS_CODE_SUCCESS;
@@ -309,20 +304,20 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename TLIST>
+template <typename TCONTAINER>
 pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trainingOutputFile, const bool result,
-							 const LArMvaHelper::StringVector &featureToolOrder, TLIST && featureList)
+							 const LArMvaHelper::StringVector &featureToolOrder, TCONTAINER && featureContainer)
 {
-    static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureMap>::value,
-		  "LArMvaHelper: Could not Produce Training Example as the list was not a map of MvaFeatures, yet this structure of parameters is being used.");
+    //static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureMap>::value,
+    //		  "LArMvaHelper: Could not Produce Training Example as the list was not a map of MvaFeatures, yet this structure of parameters is being used.");
 
     // Make a feature vector from the map and calculate the features
     LArMvaHelper::MvaFeatureVector featureVector;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-        if ( featureList.find( pFeatureToolName ) == featureList.end() )
+        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() )
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	featureVector.push_back( featureList.at( pFeatureToolName ) );
+	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
     }
 
     return ProduceTrainingExample( trainingOutputFile, result, featureVector );
@@ -330,24 +325,24 @@ pandora::StatusCode LArMvaHelper::ProduceTrainingExample(const std::string &trai
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename... TLISTS>
-bool LArMvaHelper::Classify(const MvaInterface &classifier, TLISTS &&... featureLists)
+template <typename TCONTAINER>
+bool LArMvaHelper::Classify(const MvaInterface &classifier, TCONTAINER && featureContainer)
 {
-    return classifier.Classify(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return classifier.Classify(featureContainer);
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename... TLISTS>
-bool LArMvaHelper::Classify(const MvaInterface &classifier, const LArMvaHelper::MvaFeatureMap &featureMap, const LArMvaHelper::StringVector &featureToolOrder )
+template <typename TCONTAINER>
+bool LArMvaHelper::Classify(const MvaInterface &classifier, const LArMvaHelper::StringVector &featureToolOrder, TCONTAINER && featureContainer )
 {
     // Make a feature vector from the map and calculate the features
     LArMvaHelper::MvaFeatureVector featureVector;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-        if ( featureMap.find( pFeatureToolName ) == featureMap.end() )
+        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() )
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	featureVector.push_back( featureMap.at( pFeatureToolName ) );
+	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
     }
 
     return Classify(classifier, featureVector);
@@ -355,32 +350,32 @@ bool LArMvaHelper::Classify(const MvaInterface &classifier, const LArMvaHelper::
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename... TLISTS>
-double LArMvaHelper::CalculateClassificationScore(const MvaInterface &classifier, TLISTS &&... featureLists)
+template <typename TCONTAINER>
+double LArMvaHelper::CalculateClassificationScore(const MvaInterface &classifier, TCONTAINER && featureContainer)
 {
-    return classifier.CalculateClassificationScore(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return classifier.CalculateClassificationScore( featureContainer );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename... TLISTS>
-double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, TLISTS &&... featureLists)
+template <typename TCONTAINER>
+double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, TCONTAINER && featureContainer)
 {
-    return classifier.CalculateProbability(ConcatenateFeatureLists(std::forward<TLISTS>(featureLists)...));
+    return classifier.CalculateProbability( featureContainer );
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename... TLISTS>
-double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const LArMvaHelper::MvaFeatureMap &featureMap, const LArMvaHelper::StringVector &featureToolOrder )
+template <typename TCONTAINER>
+double LArMvaHelper::CalculateProbability(const MvaInterface &classifier, const LArMvaHelper::StringVector &featureToolOrder, TCONTAINER && featureContainer )
 {
     // Make a feature vector from the map and calculate the features
     LArMvaHelper::MvaFeatureVector featureVector;
 
     for ( auto const& pFeatureToolName : featureToolOrder ) {
-        if ( featureMap.find( pFeatureToolName ) == featureMap.end() )
+        if ( featureContainer.find( pFeatureToolName ) == featureContainer.end() )
 	    throw pandora::StatusCodeException(pandora::STATUS_CODE_NOT_FOUND);
-	featureVector.push_back( featureMap.at( pFeatureToolName ) );
+	featureVector.push_back( featureContainer.at( pFeatureToolName ) );
     }
 
     return CalculateProbability(classifier, featureVector);
