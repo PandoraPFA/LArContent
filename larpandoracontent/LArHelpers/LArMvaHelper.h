@@ -247,36 +247,28 @@ private:
     static std::string GetTimestampString();
 
     /**
-     *  @brief  Recursively write the features of the given lists to file
+     *  @brief  Write the features of the given lists to file
      *
      *  @param  outfile the std::ofstream object to use
      *  @param  delimiter the delimiter string
-     *  @param  featureList a list of features to write
-     *  @param  featureLists optional further lists of features to write
+     *  @param  featureContainer a container of features to write
      *
      *  @return success
      */
-    template <typename TLIST, typename... TLISTS>
-    static pandora::StatusCode WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists);
-
-    /**
-     *  @brief  Recursively write the features of the given lists to file (terminating method)
-     *
-     *  @return success
-     */
-    static pandora::StatusCode WriteFeaturesToFile(std::ofstream &, const std::string &);
+    template <typename TCONTAINER>
+    static pandora::StatusCode WriteFeaturesToFile(std::ofstream &outfile, const std::string &delimiter, TCONTAINER &&featureContainer);
 
     /**
      *  @brief  Write the features of the given list to file (implementation method)
      *
      *  @param  outfile the std::ofstream object to use
      *  @param  delimiter the delimiter string
-     *  @param  featureList a list of features to write
+     *  @param  featureContainer a container of features to write
      *
      *  @return success
      */
-    template <typename TLIST>
-    static pandora::StatusCode WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList);
+    template <typename TCONTAINER>
+    static pandora::StatusCode WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TCONTAINER &&featureContainer);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -505,30 +497,23 @@ inline std::string LArMvaHelper::GetTimestampString()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename TLIST, typename... TLISTS>
+template <typename TCONTAINER>
 inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(
-    std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList, TLISTS &&... featureLists)
+    std::ofstream &outfile, const std::string &delimiter, TCONTAINER &&featureContainer)
 {
-    static_assert(std::is_same<typename std::decay<TLIST>::type, LArMvaHelper::MvaFeatureVector>::value,
+    static_assert(std::is_same<typename std::decay<TCONTAINER>::type, LArMvaHelper::MvaFeatureVector>::value,
         "LArMvaHelper: Could not write training set example because a passed parameter was not a vector of MvaFeatures");
 
-    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, WriteFeaturesToFileImpl(outfile, delimiter, featureList));
-    return WriteFeaturesToFile(outfile, delimiter, featureLists...);
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-inline pandora::StatusCode LArMvaHelper::WriteFeaturesToFile(std::ofstream &, const std::string &)
-{
+    PANDORA_RETURN_RESULT_IF(pandora::STATUS_CODE_SUCCESS, !=, WriteFeaturesToFileImpl(outfile, delimiter, featureContainer));
     return pandora::STATUS_CODE_SUCCESS;
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-template <typename TLIST>
-pandora::StatusCode LArMvaHelper::WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TLIST &&featureList)
+template <typename TCONTAINER>
+pandora::StatusCode LArMvaHelper::WriteFeaturesToFileImpl(std::ofstream &outfile, const std::string &delimiter, TCONTAINER &&featureContainer)
 {
-    for (const MvaFeature &feature : featureList)
+    for (const MvaFeature &feature : featureContainer)
         outfile << feature.Get() << delimiter;
 
     return pandora::STATUS_CODE_SUCCESS;
