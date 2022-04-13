@@ -44,7 +44,8 @@ GammaStartRefinementTool::~GammaStartRefinementTool()
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertexPosition)
+bool GammaStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, const CartesianVector &nuVertexPosition, 
+    const CaloHitList *const pCaloHitListU, const CaloHitList *const pCaloHitListV, const CaloHitList *const pCaloHitListW)
 {
     if (!LArPfoHelper::IsShower(pShowerPfo))
         return false;
@@ -194,7 +195,7 @@ bool GammaStartRefinementTool::FindShowerVertex(ShowerStartRefinementAlgorithm *
 
         CartesianVector showerStart3D(0.f, 0.f, 0.f);
         if (!LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, nuVertexPosition, protoShowerVector[0], protoShowerVector[1], protoShowerVector[2],
-            nuVertexPosition, showerStart3D))
+            m_maxXSeparation, showerStart3D))
         {
             continue;
         }
@@ -800,7 +801,8 @@ void GammaStartRefinementTool::MatchShowerStart(ShowerStartRefinementAlgorithm *
                         continue;
 
                     float metric(std::numeric_limits<float>::max());
-                    if (!LArConnectionPathwayHelper::AreShowerStartsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxXSeparation, m_maxSeparation, metric))
+                    if (!LArConnectionPathwayHelper::AreShowerStartsConsistent(pAlgorithm, protoShowerU.m_showerCore.m_startPosition, protoShowerV.m_showerCore.m_startPosition, 
+                        protoShowerW.m_showerCore.m_startPosition, m_maxXSeparation, m_maxSeparation, metric))
                         continue;
 
                     if (!LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxAngularDeviation))
@@ -875,8 +877,11 @@ void GammaStartRefinementTool::MatchPeakDirection(ShowerStartRefinementAlgorithm
                         continue;
 
                     float metric(std::numeric_limits<float>::max());
-                    if (!LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxAngularDeviation, metric))
+                    if (!LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU.m_connectionPathway.m_startDirection, 
+                        protoShowerV.m_connectionPathway.m_startDirection, protoShowerW.m_connectionPathway.m_startDirection, m_maxAngularDeviation, metric))
+                    {
                         continue;
+                    }
 
                     if (metric < bestMetric)
                     {

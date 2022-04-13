@@ -50,7 +50,7 @@ ElectronStartRefinementTool::~ElectronStartRefinementTool()
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const ParticleFlowObject *const pShowerPfo, 
-    const CartesianVector &nuVertexPosition)
+    const CartesianVector &nuVertexPosition, const CaloHitList *const pCaloHitListU, const CaloHitList *const pCaloHitListV, const CaloHitList *const pCaloHitListW)
 {
     // Only apply electron refinement algorithm to showers
     if (!LArPfoHelper::IsShower(pShowerPfo))
@@ -61,9 +61,6 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
     LArPfoHelper::GetCaloHits(pShowerPfo, TPC_3D, caloHits3D);
 
     if (caloHits3D.size() < 50)
-        return false;
-
-    if (!pAlgorithm->IsElectron(pShowerPfo))
         return false;
 
     CaloHitList usedHitListU, usedHitListV, usedHitListW;
@@ -78,9 +75,7 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
         {
             for (ElectronProtoShower &protoShowerW : protoShowerVectorW)
             {
-                // ISOBEL HERE WILL BE THE BDT 'IS ELECTRON' DECISION MAKER
                 //////////////////////////////
-
                 const CartesianVector projectedNuVertexPositionU(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_U));
                 const CartesianVector projectedNuVertexPositionV(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_V));
                 const CartesianVector projectedNuVertexPositionW(LArGeometryHelper::ProjectPosition(pAlgorithm->GetPandora(), nuVertexPosition, TPC_VIEW_W));
@@ -99,8 +94,9 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
                 PandoraMonitoringApi::AddMarkerToVisualization(pAlgorithm->GetPandora(), &projectedNuVertexPositionW, "Nu vertex position", GREEN, 2);
                 PandoraMonitoringApi::ViewEvent(pAlgorithm->GetPandora());
                 /////////////////////////////
-                   
-                if (!this->ArePathwaysConsistent(pAlgorithm, nuVertexPosition, protoShowerU, protoShowerV, protoShowerW))
+                LArConnectionPathwayHelper::Consistency consistency(LArConnectionPathwayHelper::Consistency::POSITION);
+
+                if (!this->ArePathwaysConsistent(pAlgorithm, nuVertexPosition, protoShowerU, protoShowerV, protoShowerW, consistency))
                 {
                     //////////////////////////
 
@@ -112,40 +108,31 @@ bool ElectronStartRefinementTool::Run(ShowerStartRefinementAlgorithm *const pAlg
                 }
                 else
                 {
+                    if (pAlgorithm->m_createTrainingTrees)
+                    {
+                        std::string treeString(pAlgorithm->IsElectron(pShowerPfo) ? "ElectronSignalTree" : "ElectronBackgroundTree");
+
+                        std::cout << "treeString: " << treeString << std::endl;
+
+                        LArConnectionPathwayHelper::FillElectronTreeVariables(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW, nuVertexPosition, 
+                            consistency, pAlgorithm->m_electronTreeVariables);
+
+                        pAlgorithm->FillTree(treeString);
+                    }
+
+                    if (!pAlgorithm->IsElectron(pShowerPfo))
+                        continue;
+
+                    // past the point of no return
+
                     if (m_extendMode)
                     {
                         if (this->IsShowerExtendable(pAlgorithm, protoShowerU, protoShowerV, protoShowerW))
-                        {
-                            this->AssignShowerHits(pAlgorithm, TPC_VIEW_U, protoShowerVectorU);
-                            this->AssignShowerHits(pAlgorithm, TPC_VIEW_V, protoShowerVectorV);
-                            this->AssignShowerHits(pAlgorithm, TPC_VIEW_W, protoShowerVectorW);
-
-                            usedHitListU.clear(); usedHitListV.clear(); usedHitListW.clear();
-                            usedHitListU.insert(usedHitListU.begin(), protoShowerU.m_connectionPathway.m_pathwayHitList.begin(), protoShowerU.m_connectionPathway.m_pathwayHitList.end());
-                            usedHitListV.insert(usedHitListV.begin(), protoShowerV.m_connectionPathway.m_pathwayHitList.begin(), protoShowerV.m_connectionPathway.m_pathwayHitList.end());
-                            usedHitListW.insert(usedHitListW.begin(), protoShowerW.m_connectionPathway.m_pathwayHitList.begin(), protoShowerW.m_connectionPathway.m_pathwayHitList.end());
-                            usedHitListU.insert(usedHitListU.begin(), protoShowerU.m_showerCore.m_coreHitList.begin(), protoShowerU.m_showerCore.m_coreHitList.end());
-                            usedHitListV.insert(usedHitListV.begin(), protoShowerV.m_showerCore.m_coreHitList.begin(), protoShowerV.m_showerCore.m_coreHitList.end());
-                            usedHitListW.insert(usedHitListW.begin(), protoShowerW.m_showerCore.m_coreHitList.begin(), protoShowerW.m_showerCore.m_coreHitList.end());
-
-                            CartesianPointVector peakDirectionsU, peakDirectionsV, peakDirectionsW;
-                            this->BuildHelperProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_U, peakDirectionsU, usedHitListU);
-                            this->BuildHelperProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_V, peakDirectionsV, usedHitListV);
-                            this->BuildHelperProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, TPC_VIEW_W, peakDirectionsW, usedHitListW);
-
-                            this->RefineHitsToAdd(pAlgorithm, protoShowerU, nuVertexPosition, TPC_VIEW_U, peakDirectionsU);
-                            this->RefineHitsToAdd(pAlgorithm, protoShowerV, nuVertexPosition, TPC_VIEW_V, peakDirectionsV);
-                            this->RefineHitsToAdd(pAlgorithm, protoShowerW, nuVertexPosition, TPC_VIEW_W, peakDirectionsW);
-
                             this->ExtendShower(pAlgorithm, pShowerPfo, protoShowerU, protoShowerV, protoShowerW);
-                        }
                     }
                         // set vertex
                     if (m_moveVertexMode)
                         pAlgorithm->SetElectronMetadata(nuVertexPosition, pShowerPfo);
-
-                    //////////////////////////
-                    //////////////////////////
 
                     return true;
                 }
@@ -312,7 +299,14 @@ void ElectronStartRefinementTool::BuildProtoShowers(ShowerStartRefinementAlgorit
 
         usedHitList.insert(usedHitList.begin(), showerSpineHitList.begin(), showerSpineHitList.end());
 
-        protoShowerVector.push_back(ElectronProtoShower(protoShowerVectorTemp.front().m_showerCore, protoShowerVectorTemp.front().m_connectionPathway, false, hitsToAdd));
+        protoShowerVector.push_back(ElectronProtoShower(protoShowerVectorTemp.front().m_showerCore, protoShowerVectorTemp.front().m_connectionPathway, showerSpineHitList, 
+            false, CaloHitList(), CartesianPointVector(), hitsToAdd));
+
+        // now identify the ambiguous hits in protoshower
+        CartesianPointVector peakDirections;
+        this->BuildHelperProtoShowers(pAlgorithm, pShowerPfo, nuVertexPosition, hitType, peakDirections, showerSpineHitList);
+
+        this->RefineHitsToAdd(pAlgorithm, protoShowerVector.back(), nuVertexPosition, hitType, peakDirections);
 
         /////////////////////////////////
         /*
@@ -490,12 +484,16 @@ void ElectronStartRefinementTool::RefineHitsToAdd(ShowerStartRefinementAlgorithm
             if ((otherT < thisT) || (otherT < 0.5f))
             {
                 found = true;
-                break;
+
+                if (std::find(protoShower.m_ambiguousDirectionVector.begin(), protoShower.m_ambiguousDirectionVector.end(), significantPeakDirection) == 
+                    protoShower.m_ambiguousDirectionVector.end())
+                {
+                    protoShower.m_ambiguousDirectionVector.push_back(significantPeakDirection);
+                }
             }
         }
 
-        if (!found)
-            refinedHitList.push_back(pHitToAdd);
+        found ? protoShower.m_ambiguousHitList.push_back(pHitToAdd) : refinedHitList.push_back(pHitToAdd);
     }
 
     //////////////////////////////
@@ -532,7 +530,7 @@ CaloHitList ElectronStartRefinementTool::FindContinuousPath(const CaloHitList &r
     CaloHitList continuousHitList;
 
     CaloHitVector refinedHitVector(refinedHitList.begin(), refinedHitList.end());
-    std::sort(refinedHitVector.begin(), refinedHitVector.end(), SortByDistanceToPoint(projectedNuVertexPosition));
+    std::sort(refinedHitVector.begin(), refinedHitVector.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(projectedNuVertexPosition));
 
     unsigned int startIndex(refinedHitVector.size());
 
@@ -792,31 +790,6 @@ bool ElectronStartRefinementTool::IsShowerConnected(const CartesianVector &showe
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-// I can add something here to make sure the shower actually has a shower bit once i sort out the shower core stuff?
-
-bool ElectronStartRefinementTool::IsElectronPathway(ShowerStartRefinementAlgorithm *const pAlgorithm, const ElectronProtoShowerVector &protoShowerVectorU, 
-    const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW)
-{
-    // Return if have not found a connection pathway in each view
-    if ((protoShowerVectorU.size() != 1) || (protoShowerVectorV.size() != 1) || (protoShowerVectorW.size() != 1))
-        return false;
-
-    /*
-    const ElectronProtoShower &protoShowerU(protoShowerVectorU.front());
-    const ElectronProtoShower &protoShowerV(protoShowerVectorV.front());
-    const ElectronProtoShower &protoShowerW(protoShowerVectorW.front());
-
-    const bool isElectronPathwayU(pAlgorithm->IsElectronPathway(protoShowerU.m_connectionPathway.m_pathwayHitList));
-    const bool isElectronPathwayV(pAlgorithm->IsElectronPathway(protoShowerV.m_connectionPathway.m_pathwayHitList));
-    const bool isElectronPathwayW(pAlgorithm->IsElectronPathway(protoShowerW.m_connectionPathway.m_pathwayHitList));
-
-    if ((isElectronPathwayU && isElectronPathwayV) || (isElectronPathwayU && isElectronPathwayW) || (isElectronPathwayV && isElectronPathwayW))
-        return true;
-    */
-    return true;
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
 
 bool ElectronStartRefinementTool::IsShowerExtendable(ShowerStartRefinementAlgorithm *const pAlgorithm, const ElectronProtoShower &protoShowerU, 
     const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW)
@@ -837,29 +810,21 @@ bool ElectronStartRefinementTool::IsShowerExtendable(ShowerStartRefinementAlgori
 // could then even pick up two view issues? if that turns out to be a problem?
 
 bool ElectronStartRefinementTool::ArePathwaysConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const CartesianVector &nuVertexPosition,
-    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW)
+    const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, LArConnectionPathwayHelper::Consistency &consistency)
 {
-    bool vertexFound(false);
-    CartesianVector showerStart3D(0.f, 0.f, 0.f);
-
     if (LArConnectionPathwayHelper::AreShowerStartsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxXSeparation, m_maxSeparation))
     {
-        if (LArConnectionPathwayHelper::FindShowerVertexFromPosition(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, showerStart3D))
-            vertexFound = true;
+        consistency = LArConnectionPathwayHelper::Consistency::POSITION;
     }
     else if (LArConnectionPathwayHelper::AreDirectionsConsistent(pAlgorithm, protoShowerU, protoShowerV, protoShowerW, m_maxAngularDeviation))
     {
-        if (LArConnectionPathwayHelper::FindShowerVertexFromDirection(pAlgorithm, nuVertexPosition, protoShowerU, protoShowerV, protoShowerW, showerStart3D))
-            vertexFound = true;
+        consistency = LArConnectionPathwayHelper::Consistency::DIRECTION;
     }
     else
         return false;
 
-    if (!vertexFound)
-    {
-        if (!LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, nuVertexPosition, protoShowerU, protoShowerV, protoShowerW, m_maxSeparation, showerStart3D))
-            return false;
-    }
+    //std::cout << "isobel do not forget to take this out" << std::endl;
+    //consistency = LArConnectionPathwayHelper::Consistency::X_PROJECTION;
 
     return true;
 }

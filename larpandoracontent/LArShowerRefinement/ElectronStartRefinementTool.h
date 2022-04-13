@@ -28,7 +28,8 @@ public:
     ~ElectronStartRefinementTool();
 
     bool Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
-        const pandora::CartesianVector &nuVertexPosition);
+        const pandora::CartesianVector &nuVertexPosition, const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, 
+        const pandora::CaloHitList *const pCaloHitListW);
 
     void BuildProtoShowers(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
         const pandora::CartesianVector &nuVertexPosition, const pandora::HitType hitType, ElectronProtoShowerVector &protoShowerVector,
@@ -62,22 +63,7 @@ public:
         const ElectronProtoShowerVector &protoShowerVectorV, const ElectronProtoShowerVector &protoShowerVectorW);
 
     bool ArePathwaysConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector &nuVertexPosition, 
-        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW);
-
-    bool FindShowerVertexFromPosition(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU,
-        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
-
-    bool FindShowerVertexFromDirection(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition, 
-        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
-
-    bool FindShowerVertexFromXProjection(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition, 
-        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
-
-   bool AreShowerStartsConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
-       const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float allowance);
-
-    bool AreDirectionsConsistent(ShowerStartRefinementAlgorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
-        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float allowance);
+        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, LArConnectionPathwayHelper::Consistency &consistency);
 
     void ExtendShower(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
         const ElectronProtoShower &protoShowerU, const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW);

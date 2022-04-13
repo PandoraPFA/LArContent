@@ -53,7 +53,8 @@ class ShowerStartRefinementBaseTool : public pandora::AlgorithmTool
 public:
     ShowerStartRefinementBaseTool();
 
-    virtual bool Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertexPosition) = 0;
+    virtual bool Run(ShowerStartRefinementAlgorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const pandora::CartesianVector &nuVertexPosition, 
+        const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, const pandora::CaloHitList *const pCaloHitListW) = 0;
 
     typedef std::map<int, float> AngularDecompositionMap;
     typedef std::map<const pandora::CaloHit*, float> LongitudinalPositionMap;
@@ -143,33 +144,6 @@ protected:
 
     //private:
 };
-
-        class SortByDistanceToPoint
-        {
-        public:
-            /**
-             *  @brief  Constructor
-             *
-             *  @param  referencePoint the point relative to which constituent hits are ordered
-             */
-        SortByDistanceToPoint(const pandora::CartesianVector referencePoint) : m_referencePoint(referencePoint)
-            {
-            }
-
-            /**
-             *  @brief  Sort constituent hits by their position relative to a referencePoint
-             *
-             *  @param  lhs first constituent hit
-             *  @param  rhs second constituent hit
-             *
-             *  @return  whether lhs hit is closer to the referencePoint than the rhs hit
-             */
-            bool operator()(const pandora::CartesianVector &lhs, const pandora::CartesianVector &rhs);
-            bool operator()(const pandora::CaloHit *const lhs, const pandora::CaloHit *const rhs);
-
-        private:
-            const pandora::CartesianVector m_referencePoint; ///< The point relative to which constituent hits are ordered
-        };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------

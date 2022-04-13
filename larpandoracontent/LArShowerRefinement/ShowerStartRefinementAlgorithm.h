@@ -11,6 +11,8 @@
 #include "Pandora/Algorithm.h"
 #include "Pandora/AlgorithmTool.h"
 
+#include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
+
 #include "larpandoracontent/LArShowerRefinement/LArProtoShower.h"
 
 #include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
@@ -62,9 +64,14 @@ public:
     void FillElectronHitMap();
     bool IsElectron(const pandora::ParticleFlowObject *const pPfo) const;
     bool IsGamma(const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &nuVertexPosition) const;
+    void FillTree(const std::string &treeName);
+
+    bool m_createTrainingTrees;
+    LArConnectionPathwayHelper::ElectronTreeVariables m_electronTreeVariables;
 
 private:
     pandora::StatusCode Run();
+    void InitialiseElectronTrees();
     void FillPfoVector(pandora::PfoVector &pfoVector);
     pandora::StatusCode GetNeutrinoVertex(pandora::CartesianVector &neutrinoVertex);
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
@@ -74,7 +81,7 @@ private:
 
     typedef std::vector<ShowerStartRefinementBaseTool *> ShowerStartRefinementToolVector;
     ShowerStartRefinementToolVector m_algorithmToolVector;
-    //private:
+
     float m_minElectronCompleteness;
     float m_minElectronPurity;
     float m_minGammaCompleteness;

@@ -10,6 +10,7 @@
 #include "Pandora/AlgorithmTool.h"
 
 #include "larpandoracontent/LArHelpers/LArHitWidthHelper.h"
+#include "larpandoracontent/LArHelpers/LArConnectionPathwayHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPfoHelper.h"
 
@@ -346,7 +347,7 @@ void ShowerStartRefinementBaseTool::FindShowerSpine(const ShowerStartRefinementA
             if (excessHitsInFit > 0)
             {
                 // Remove furthest away hits
-                std::sort(runningFitPositionVector.begin(), runningFitPositionVector.end(), SortByDistanceToPoint(extrapolatedEndPosition));
+                std::sort(runningFitPositionVector.begin(), runningFitPositionVector.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(extrapolatedEndPosition));
 
                 for (int i = 0; i < excessHitsInFit; ++i)
                     runningFitPositionVector.erase(std::prev(runningFitPositionVector.end()));
@@ -735,7 +736,7 @@ bool ShowerStartRefinementBaseTool::FindShowerStart(ShowerStartRefinementAlgorit
     /////////////////////////////////
 
     protoShowerVector.push_back(ProtoShower(ShowerCore(showerStartPosition, showerStartDirection, showerHitList), 
-        ConnectionPathway(projectedNuVertexPosition, startDirection, pathwayHitList), isHelper));
+        ConnectionPathway(projectedNuVertexPosition, startDirection, pathwayHitList), showerSpineHitList, isHelper));
 
     return showerStartFound;
 }
@@ -1191,8 +1192,8 @@ StatusCode ShowerStartRefinementBaseTool::FillHaloHitPositionVector(const CaloHi
         if ((coordinateListP.size() == 0) || (coordinateListN.size() == 0))
             return STATUS_CODE_FAILURE;
 
-        std::sort(coordinateListP.begin(), coordinateListP.end(), SortByDistanceToPoint(showerStartPosition));
-        std::sort(coordinateListN.begin(), coordinateListN.end(), SortByDistanceToPoint(showerStartPosition));
+        std::sort(coordinateListP.begin(), coordinateListP.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(showerStartPosition));
+        std::sort(coordinateListN.begin(), coordinateListN.end(), LArConnectionPathwayHelper::SortByDistanceToPoint(showerStartPosition));
 
         float pMaximumL(std::numeric_limits<float>::max());
         CartesianVector previousCoordinateP(coordinateListP.front());
@@ -1280,21 +1281,6 @@ StatusCode ShowerStartRefinementBaseTool::FillHaloHitPositionVector(const CaloHi
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-
-bool SortByDistanceToPoint::operator()(const CartesianVector &lhs, const CartesianVector &rhs)
-{
-    return (m_referencePoint.GetDistanceSquared(lhs) < m_referencePoint.GetDistanceSquared(rhs));
-}
-
-//------------------------------------------------------------------------------------------------------------------------------------------
-
-
-bool SortByDistanceToPoint::operator()(const CaloHit *const lhs, const CaloHit *const rhs)
-{
-    return (m_referencePoint.GetDistanceSquared(lhs->GetPositionVector()) < m_referencePoint.GetDistanceSquared(rhs->GetPositionVector()));
-}
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 

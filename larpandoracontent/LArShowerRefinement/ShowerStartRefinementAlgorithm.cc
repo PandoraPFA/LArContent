@@ -29,6 +29,7 @@ namespace lar_content
 ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() : 
     m_binSize(0.005),     
     m_electronFraction(0.3f),
+    m_createTrainingTrees(true),
     m_minElectronCompleteness(0.33f),
     m_minElectronPurity(0.5f),
     m_minGammaCompleteness(0.33f),
@@ -40,13 +41,25 @@ ShowerStartRefinementAlgorithm::ShowerStartRefinementAlgorithm() :
 
 ShowerStartRefinementAlgorithm::~ShowerStartRefinementAlgorithm()
 {
-    try
+    if (m_createTrainingTrees)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ShowerDistribution", "ShowerDistribution.root", "UPDATE"));
-    }
-    catch (const StatusCodeException &)
-    {
-        std::cout << "THE LIMIT DOES NOT EXIST" << std::endl;
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ElectronSignalTree", "ConnectionPathwayTrees.root", "UPDATE"));
+        }
+        catch (const StatusCodeException &)
+        {
+            std::cout << "THE LIMIT DOES NOT EXIST" << std::endl;
+        }
+
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ElectronBackgroundTree", "ConnectionPathwayTrees.root", "UPDATE"));
+        }
+        catch (const StatusCodeException &)
+        {
+            std::cout << "THE LIMIT DOES NOT EXIST" << std::endl;
+        }
     }
 }
 
@@ -64,6 +77,17 @@ StatusCode ShowerStartRefinementAlgorithm::Run()
     this->FillGammaHitMap();
     this->FillElectronHitMap();
 
+    this->InitialiseElectronTrees();
+
+    const CaloHitList *pCaloHitListU(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, "CaloHitListU", pCaloHitListU));
+
+    const CaloHitList *pCaloHitListV(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, "CaloHitListV", pCaloHitListV));
+
+    const CaloHitList *pCaloHitListW(nullptr);
+    PANDORA_THROW_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_INITIALIZED, !=, PandoraContentApi::GetList(*this, "CaloHitListW", pCaloHitListW));
+
     // run tools
     for (const ParticleFlowObject *const pPfo : pfoVector)
     {
@@ -72,11 +96,33 @@ StatusCode ShowerStartRefinementAlgorithm::Run()
             if (std::find(m_deletedPfos.begin(), m_deletedPfos.end(), pPfo) != m_deletedPfos.end())
                 continue;
 
-            pShowerStartRefinementTool->Run(this, pPfo, nuVertexPosition);
+            pShowerStartRefinementTool->Run(this, pPfo, nuVertexPosition, pCaloHitListU, pCaloHitListV, pCaloHitListW);
         }
     }
 
     return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerStartRefinementAlgorithm::InitialiseElectronTrees()
+{
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayLength", m_electronTreeVariables.m_pathwayLength));
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayLength", m_electronTreeVariables.m_pathwayLength));
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ShowerStartRefinementAlgorithm::FillTree(const std::string &treeName)
+{
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronSignalTree", "PathwayLength", m_electronTreeVariables.m_pathwayLength));
+
+    PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "ElectronBackgroundTree", "PathwayLength", m_electronTreeVariables.m_pathwayLength));
+
+    std::cout << "IN fill tree: " << m_electronTreeVariables.m_pathwayLength << std::endl;
+
+    PANDORA_MONITORING_API(FillTree(this->GetPandora(), treeName));
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -830,3 +876,14 @@ StatusCode ShowerStartRefinementAlgorithm::ReadSettings(const TiXmlHandle xmlHan
 }
 
 } // namespace lar_content
+
+    /*
+    try
+    {
+        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "ShowerDistribution", "ShowerDistribution.root", "UPDATE"));
+    }
+    catch (const StatusCodeException &)
+    {
+        std::cout << "THE LIMIT DOES NOT EXIST" << std::endl;
+    }
+    */
