@@ -63,7 +63,7 @@ StatusCode HierarchyValidationAlgorithm::Run()
     LArHierarchyHelper::FillRecoHierarchy(*pPfoList, foldParameters, recoHierarchy);
     LArHierarchyHelper::MatchInfo matchInfo;
     LArHierarchyHelper::MatchHierarchies(mcHierarchy, recoHierarchy, matchInfo);
-    matchInfo.Print(mcHierarchy);
+    //matchInfo.Print(mcHierarchy);
 
     if (m_validateEvent)
         this->EventValidation(matchInfo);

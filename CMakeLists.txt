@@ -16,7 +16,7 @@ if(DEFINED ENV{CETBUILDTOOLS_VERSION})
     #  make install
     #  make package (builds distribution tarfile)
     # ======================================================================
-    project(larpandoracontent VERSION 03.26.01)
+    project(larpandoracontent VERSION 03.27.00)
 
     # cetbuildtools contains our cmake modules
     # Note that find package will add cetbuildtools Modules to CMAKE_MODULE_PATH
@@ -89,8 +89,8 @@ else()
     # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
     foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
         set(${PROJ}_VERSION_MAJOR 03)
-        set(${PROJ}_VERSION_MINOR 26)
-        set(${PROJ}_VERSION_PATCH 01)
+        set(${PROJ}_VERSION_MINOR 27)
+        set(${PROJ}_VERSION_PATCH 00)
         set(${PROJ}_VERSION "${${PROJ}_VERSION_MAJOR}.${${PROJ}_VERSION_MINOR}.${${PROJ}_VERSION_PATCH}")
     endforeach()
 
