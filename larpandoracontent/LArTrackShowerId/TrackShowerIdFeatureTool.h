@@ -130,7 +130,9 @@ public:
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
+
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -186,6 +188,57 @@ public:
 
 private:
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+};
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+/**
+ *   @brief  ConeShapeFeatureTool class for the calculation of charge distribution and conicalness
+ */
+class ConeShapeFeatureTool : public PfoCharacterisationFeatureTool
+{
+public:
+    /**
+     *  @brief  Default constructor
+     */
+    ConeShapeFeatureTool();
+    
+    void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
+
+private:
+    pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
+  
+    unsigned int m_conMinHits;
+    float m_minCharge;
+    float m_conFracRange;
+    float m_MoliereRadius;
+    float m_MoliereRadiusFrac;
+
+    /**
+     *  @brief Calculate charge distribution in relation to the Moeliere radius
+     *
+     *  @param caloHitList: the list of three dimensional calo hits
+     *  @param pfoStart: start position of the pfo
+     *  @param pfoDir: direction of pfo from the principle vector of pca
+     *  @param chargeCore: to receive sum of charge within Moeliete radius * fraction
+     *  @param chargeHalo: to receive sum of charge outside of Moeliere radius * fraction
+     *  @param chargeCon: to receive weighted sum of total charge
+     */
+    void CalculateChargeDistribution(const pandora::CaloHitList caloHitList, const pandora::CartesianVector &pfoStart, 
+	const pandora::CartesianVector &pfoDir, float &chargeCore, float &chargeHalo, float &chargeCon);
+
+    /**
+     *  @brief Calculate conicalness as a ratio of charge distribution at the end and start of pfo
+     *
+     *  @param caloHitList: the list of three dimensional calo hits
+     *  @param pfoStart: start position of the pfo
+     *  @param pfoDir: direction of pfo from the principle vector of pca
+     *  @param pfoLength: length of the whole pfo
+     *  return conicalness
+     */
+    float CalculateConicalness(const pandora::CaloHitList &caloHitList, const pandora::CartesianVector &pfoStart, 
+	const pandora::CartesianVector &pfoDir, const float pfoLength);
+
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
