@@ -193,15 +193,15 @@ private:
 //------------------------------------------------------------------------------------------------------------------------------------------
 
 /**
- *   @brief  ConeShapeFeatureTool class for the calculation of charge distribution and conicalness
+ *   @brief  ConeChargeFeatureTool class for the calculation of charge distribution and conicalness
  */
-class ConeShapeFeatureTool : public PfoCharacterisationFeatureTool
+class ConeChargeFeatureTool : public PfoCharacterisationFeatureTool
 {
 public:
     /**
      *  @brief  Default constructor
      */
-    ConeShapeFeatureTool();
+    ConeChargeFeatureTool();
     
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 

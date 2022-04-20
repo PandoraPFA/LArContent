@@ -298,13 +298,13 @@ StatusCode PfoHierarchyFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-ConeShapeFeatureTool::ConeShapeFeatureTool(): m_conMinHits(3), m_minCharge (0.1f), m_conFracRange(0.2f), m_MoliereRadius(10.1f), m_MoliereRadiusFrac(0.2f)
+ConeChargeFeatureTool::ConeChargeFeatureTool(): m_conMinHits(3), m_minCharge (0.1f), m_conFracRange(0.2f), m_MoliereRadius(10.1f), m_MoliereRadiusFrac(0.2f)
 {
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConeShapeFeatureTool::Run(
+void ConeChargeFeatureTool::Run(
     LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
 {
     if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
@@ -357,7 +357,7 @@ void ConeShapeFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConeShapeFeatureTool::CalculateChargeDistribution(const CaloHitList caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, 
+void ConeChargeFeatureTool::CalculateChargeDistribution(const CaloHitList caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, 
 	float &chargeCore, float &chargeHalo, float &chargeCon)
 {
     for (const CaloHit *const pCaloHit : caloHitList)
@@ -375,7 +375,7 @@ void ConeShapeFeatureTool::CalculateChargeDistribution(const CaloHitList caloHit
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ConeShapeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, const float pfoLength)
+float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, const float pfoLength)
 {
 
     float totalChargeStart(0.f), totalChargeEnd(0.f);
@@ -414,7 +414,7 @@ float ConeShapeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList,
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-StatusCode ConeShapeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+StatusCode ConeChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConMinHits", m_conMinHits));
 
