@@ -194,7 +194,7 @@ bool GammaStartRefinementTool::FindShowerVertex(ShowerStartRefinementAlgorithm *
             continue;
 
         CartesianVector showerStart3D(0.f, 0.f, 0.f);
-        if (!LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, nuVertexPosition, protoShowerVector[0], protoShowerVector[1], protoShowerVector[2],
+        if (!LArConnectionPathwayHelper::FindShowerVertexFromXProjection(pAlgorithm, pShowerPfo, nuVertexPosition, protoShowerVector[0], protoShowerVector[1], protoShowerVector[2],
             m_maxXSeparation, showerStart3D))
         {
             continue;

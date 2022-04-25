@@ -17,6 +17,8 @@
 
 #include "larpandoracontent/LArUtility/PfoMopUpBaseAlgorithm.h"
 
+#include "TMVA/Reader.h"
+
 namespace lar_content
 {
 
@@ -58,13 +60,14 @@ public:
     void SetElectronMetadata(const pandora::CartesianVector &nuVertexPosition, const pandora::ParticleFlowObject *const pShowerPfo);
     void SetGammaVertex(const pandora::CartesianVector &showerVertex, const pandora::ParticleFlowObject *const pShowerPfo);
     bool IsTrack(const ProtoShower &protoShower);
+    bool TMVAIsElectron(LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
     void RemoveConnectionPathway(const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShower);
 
     void FillGammaHitMap();
     void FillElectronHitMap();
     bool IsElectron(const pandora::ParticleFlowObject *const pPfo) const;
     bool IsGamma(const pandora::ParticleFlowObject *const pPfo, const pandora::CartesianVector &nuVertexPosition) const;
-    void FillTree(const std::string &treeName);
+    void FillTree(const std::string &treeName, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
     bool m_createTrainingTrees;
     LArConnectionPathwayHelper::ElectronTreeVariables m_electronTreeVariables;
@@ -86,6 +89,10 @@ private:
     float m_minElectronPurity;
     float m_minGammaCompleteness;
     float m_thresholdSignalGammaDisplacement;
+    float m_electronTMVACut;
+
+    TMVA::Reader m_TMVAReader;
+    LArConnectionPathwayHelper::ElectronTreeVariables m_TMVAElectronTreeVariables;
 
     std::map<const pandora::MCParticle*, pandora::CaloHitList> m_gammaHitMap;
     std::map<const pandora::MCParticle*, pandora::CaloHitList> m_electronHitMap;

@@ -76,9 +76,14 @@ public:
          */
         ElectronTreeVariables();
 
-        float m_pathwayLength;
+        float m_pathwayLengthMin;
+        float m_pathwayLengthMiddle;
+        float m_pathwayLengthMax;
         float m_pathwayShowerStartDelta;
         float m_pathwayMaxScatteringAngle;
+        float m_minShowerStartPathwayScatteringAngle2D;
+        float m_middleShowerStartPathwayScatteringAngle2D;
+        float m_maxShowerStartPathwayScatteringAngle2D;
         float m_pathwayEnergyMeanU;
         float m_pathwayEnergyMeanV;
         float m_pathwayEnergyMeanW;
@@ -92,30 +97,62 @@ public:
         float m_pathwayMiddleEnergySigma;
         float m_pathwayMaxEnergySigma;
         float m_postShowerStartLength;
-        int m_postShowerStartNHits;
+        float m_postShowerStartNHits;
+        float m_postShowerStartNHitsU;
+        float m_postShowerStartNHitsV;
+        float m_postShowerStartNHitsW;
+        float m_minNPostShowerStartHits;
+        float m_maxNPostShowerStartHits;
         float m_postShowerStartScatterAngle;
+        float m_postShowerStartScatterAngleU;
+        float m_postShowerStartScatterAngleV;
+        float m_postShowerStartScatterAngleW;
+        float m_minPostShowerStartScatterAngle;
+        float m_maxPostShowerStartScatterAngle;
+        float m_postShowerStartMinHalfOpeningAngle;
+        float m_postShowerStartMaxHalfOpeningAngle;
+        float m_postShowerStartOpeningAngle;
+        float m_postShowerStartOpeningAngleAsymmetry;
         float m_postShowerStartMeanTransverseAngle;
+        float m_postShowerStartMeanLWeightedTransverseAngle;
         float m_postShowerStartMeanRadialDistance;
         float m_postShowerStartRadialDistanceSigma;
         float m_postShowerStartEnergyWeightedMeanRadialDistance;
         float m_postShowerStartEstimatedMoliereRadius;
+        float m_postShowerStartLWeightedMeanRadialDistance;
+        float m_postShowerStartLWeightedRadialDistanceSigma;
         float m_postShowerStartInitialGapSize;
         float m_postShowerStartMaxGapSize;
         float m_initialRegionDistanceToNuVertex;
         float m_initialRegionDistanceInGaps;
         float m_initialRegionMaxGapSize;
+        float m_nViewsWithAmbiguousHits;
+        float m_nAmbiguousHits2D;
+        float m_minNAmbiguousHits;
+        float m_maxNAmbiguousHits;
+        float m_ambiguousHitUnaccountedEnergyU;
+        float m_ambiguousHitUnaccountedEnergyV;
+        float m_ambiguousHitUnaccountedEnergyW;
+        float m_ambiguousHitMinUnaccountedEnergy;
+        float m_ambiguousHitMaxUnaccountedEnergy;
+        float m_ambiguousHitShowerEnergyRatioU;
+        float m_ambiguousHitShowerEnergyRatioV;
+        float m_ambiguousHitShowerEnergyRatioW;
+        float m_ambiguousHitMinShowerEnergyRatio;
+        float m_ambiguousHitMaxShowerEnergyRatio;
     };
 
     static void FillElectronTreeVariables(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
-        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const pandora::CartesianVector &nuVertexPosition, 
+        const ElectronProtoShower &protoShowerU, const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW, const pandora::CartesianVector &nuVertexPosition, 
+        const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, const pandora::CaloHitList *const pCaloHitListW,
         const LArConnectionPathwayHelper::Consistency &consistency, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
     static bool FillAmbiguousHitVariables(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
         const ElectronProtoShower &protoShowerU, const ElectronProtoShower &protoShowerV, const ElectronProtoShower &protoShowerW, const pandora::CartesianVector &nuVertexPosition,
-        pandora::CartesianVector &middleShowerStart3D, const TwoDSlidingFitResult &spineFitU, const TwoDSlidingFitResult &spineFitV, const TwoDSlidingFitResult &spineFitW,
-        const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, const pandora::CaloHitList *const pCaloHitListW);
+        pandora::CartesianVector &middleShowerStart3D, const pandora::CaloHitList *const pCaloHitListU, const pandora::CaloHitList *const pCaloHitListV, 
+        const pandora::CaloHitList *const pCaloHitListW, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
-    static void GetViewAmbiguousHitVariables(pandora::Algorithm *const pAlgorithm, const ElectronProtoShower &protoShower, 
+    static bool GetViewAmbiguousHitVariables(pandora::Algorithm *const pAlgorithm, const ElectronProtoShower &protoShower, 
         const pandora::HitType hitType, const pandora::CartesianVector &nuVertexPosition, const pandora::CartesianVector &connectionPathwayDirection3D,
         const pandora::CaloHitList *const pCaloHitList, float &unaccountedHitEnergy, float &showerEnergyRatio);
 
@@ -130,21 +167,32 @@ public:
         const pandora::CartesianVector &nuVertexPosition, const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, 
         const ProtoShower &protoShowerW, pandora::CartesianVector &middleShowerStart3D, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
-    static bool FindShowerStarts3D(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
+    static bool FindPostShowerStart2DVariables(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo,
+        const pandora::HitType hitType, const ProtoShower &protoShower, const bool isDownstream, const pandora::CartesianVector &projectedShowerStart, 
+        const pandora::CartesianVector &initialShowerDirection, const pandora::CartesianVector &connectionPathwayDirection, int &nViewPostShowerHits, float &postShowerStartViewScatterAngle);
+
+    static bool FindShowerStarts3D(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, const ProtoShower &protoShowerU, 
         const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const LArConnectionPathwayHelper::Consistency &consistency, 
         const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &minShowerStart3D, pandora::CartesianVector &middleShowerStart3D, 
         pandora::CartesianVector &maxShowerStart3D);
 
     static bool FillConnectionPathwayVariables(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
-        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &minShowerStart3D,
+        const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const pandora::ParticleFlowObject *const pShowerPfo, 
+        const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &minShowerStart3D,
         pandora::CartesianVector &middleShowerStart3D, pandora::CartesianVector &maxShowerStart3D, LArConnectionPathwayHelper::ElectronTreeVariables &electronTreeVariables);
 
-    static float GetLargest3DKink(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, 
-        const ProtoShower &protoShowerW, const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &maxShowerStart3D);
+    static float GetLargest3DKink(pandora::Algorithm *const pAlgorithm, const TwoDSlidingFitResult &spineFitU, const TwoDSlidingFitResult &spineFitV, 
+        const TwoDSlidingFitResult &spineFitW, const pandora::CartesianVector &nuVertexPosition, pandora::CartesianVector &maxShowerStart3D);
 
     static float GetLargest3DKinkFromView(pandora::Algorithm *const pAlgorithm, const TwoDSlidingFitResult &spineFit, 
         const TwoDSlidingFitResult &spineFit1, const TwoDSlidingFitResult &spineFit2, const pandora::HitType hitType, const pandora::HitType hitType1, 
         const pandora::HitType hitType2, const pandora::CartesianVector &maxShowerStart3D);
+
+    static float Get2DKink(pandora::Algorithm *const pAlgorithm, const TwoDSlidingFitResult &spineFitU,
+        const TwoDSlidingFitResult &spineFitV, const TwoDSlidingFitResult &spineFitW, const pandora::CartesianVector &showerStart3D);
+
+    static float GetLargest2DKinkFromView(pandora::Algorithm *const pAlgorithm, const TwoDSlidingFitResult &spineFit, 
+        const pandora::HitType hitType, const pandora::CartesianVector &showerStart3D);
 
     static bool FillConnectionPathwayEnergyVariables(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU,
         const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &middleShowerStart3D, 
@@ -184,14 +232,16 @@ public:
    static bool FindShowerVertexFromDirection(pandora::Algorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition, 
        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, pandora::CartesianVector &showerStart3D);
 
-    static bool FindShowerVertexFromXProjection(pandora::Algorithm *const pAlgorithm, const pandora::CartesianVector nuVertexPosition,
-        const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxSeparation, 
-        pandora::CartesianVector &showerStart3D);
+   static bool FindShowerVertexFromXProjection(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
+        const pandora::CartesianVector nuVertexPosition, const ProtoShower &protoShowerU, const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, 
+        const float maxSeparation, pandora::CartesianVector &showerStart3D);
 
     static bool FindShowerVertexFromXProjection(pandora::Algorithm *const pAlgorithm, const ProtoShower &protoShowerU, 
         const ProtoShower &protoShowerV, const ProtoShower &protoShowerW, const float maxSeparation, 
         pandora::CartesianVector &showerStart3D);
 
+    static bool FindShowerVertexFromXProjection(pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pShowerPfo, 
+        const ProtoShower &protoShower, const ProtoShower &protoShower1, const float maxSeparation, pandora::CartesianVector &showerStart3D);
 };
 
 } // namespace lar_content
