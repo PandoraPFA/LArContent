@@ -319,35 +319,26 @@ void ConeChargeFeatureTool::Run(
     {    
         CaloHitList clusterCaloHitList;
         clusterListW.front()->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
-       
-        CartesianVector pfoStart(0.f, 0.f, 0.f);
-    
-        try
-        {
-            pfoStart = LArPfoHelper::GetVertex(pInputPfo)->GetPosition();
-        }
-        catch (const StatusCodeException &)
-        {
-            pfoStart = clusterCaloHitList.front()->GetPositionVector();
-        }
-
+        
+        const CartesianVector pfoStart(clusterCaloHitList.front()->GetPositionVector());
+            
         CartesianVector centroid(0.f, 0.f, 0.f);
         LArPcaHelper::EigenVectors eigenVecs;
         LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
 
         LArPcaHelper::RunPca(clusterCaloHitList, centroid, eigenValues, eigenVecs);
 
-        float pfoLength = std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo));
-
         float chargeCore(0.f), chargeHalo(0.f), chargeCon(0.f);
-    
+   
         this->CalculateChargeDistribution(clusterCaloHitList, pfoStart, eigenVecs[0], chargeCore, chargeHalo, chargeCon);
 
-        haloTotalRatio = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeHalo / (chargeCore + chargeHalo) : -1.0;
+        haloTotalRatio = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeHalo / (chargeCore + chargeHalo) : -1.f;
 
-        concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.0;
+        concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
         
-        conicalness = this->CalculateConicalness(clusterCaloHitList, pfoStart, eigenVecs[0], pfoLength);
+        const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
+
+        conicalness = (pfoLength > std::numeric_limits<float>::epsilon()) ? this->CalculateConicalness(clusterCaloHitList, pfoStart, eigenVecs[0], pfoLength) : 1.f;
     }
 
     featureVector.push_back(haloTotalRatio);
@@ -357,12 +348,12 @@ void ConeChargeFeatureTool::Run(
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-void ConeChargeFeatureTool::CalculateChargeDistribution(const CaloHitList caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, 
+void ConeChargeFeatureTool::CalculateChargeDistribution(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, 
 	float &chargeCore, float &chargeHalo, float &chargeCon)
 {
     for (const CaloHit *const pCaloHit : caloHitList)
     {
-        float distFromTrackFit = ((pCaloHit->GetPositionVector() - pfoStart).GetCrossProduct(pfoDir)).GetMagnitude();
+        const float distFromTrackFit(((pCaloHit->GetPositionVector() - pfoStart).GetCrossProduct(pfoDir)).GetMagnitude());
 
         if (distFromTrackFit < m_MoliereRadiusFrac * m_MoliereRadius)
             chargeCore += pCaloHit->GetInputEnergy();
@@ -375,7 +366,7 @@ void ConeChargeFeatureTool::CalculateChargeDistribution(const CaloHitList caloHi
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, const float pfoLength)
+float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, const float &pfoLength)
 {
 
     float totalChargeStart(0.f), totalChargeEnd(0.f);
@@ -384,8 +375,8 @@ float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList
     
     for (const CaloHit *const pCaloHit : caloHitList)
     {
-        float distFromTrackFit = ((pCaloHit->GetPositionVector() - pfoStart).GetCrossProduct(pfoDir)).GetMagnitude();
-        float hitLength = std::fabs((pCaloHit->GetPositionVector() - pfoStart).GetDotProduct(pfoDir)); 
+        const float distFromTrackFit(((pCaloHit->GetPositionVector() - pfoStart).GetCrossProduct(pfoDir)).GetMagnitude());
+        const float hitLength(std::fabs((pCaloHit->GetPositionVector() - pfoStart).GetDotProduct(pfoDir))); 
  
         if (hitLength / pfoLength < m_conFracRange) 
         {
@@ -393,7 +384,7 @@ float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList
             ++nHitsConStart;
             totalChargeStart += pCaloHit->GetInputEnergy();
         }
-        else if (1. - hitLength / pfoLength < m_conFracRange) 
+        else if (1.f - hitLength / pfoLength < m_conFracRange) 
         {
             chargeConEnd += distFromTrackFit * distFromTrackFit * pCaloHit->GetInputEnergy();
             ++nHitsConEnd;
@@ -405,9 +396,9 @@ float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList
     
     if (nHitsConStart >= m_conMinHits && nHitsConEnd >= m_conMinHits && totalChargeEnd > m_minCharge && 
    	std::sqrt(chargeConStart) > m_minCharge && totalChargeStart > m_minCharge) 
-        conicalness = (std::sqrt(chargeConEnd) / totalChargeEnd) / (std::sqrt(chargeConStart) / totalChargeStart);
+        conicalness = (std::sqrt(chargeConEnd / chargeConStart)) / (totalChargeEnd / totalChargeStart);
     else 
-        conicalness = 1.;
+        conicalness = 1.f;
 
     return conicalness;
 }
