@@ -43,6 +43,15 @@ public:
      */
     static ClusterDirection GetClusterDirectionInZ(const pandora::Pandora &pandora, const pandora::Vertex *const pVertex,
         const pandora::Cluster *const pCluster, const float tanAngle, const float apexShift);
+
+    /**
+     *  @brief  Determine if a vertex is within a detector's fiducial volume
+     *
+     *  @param  vertex The vertex to check
+     *  @param  detector The string describing the detector of interest
+     *                      DUNEFD HD: dune_fd_hd
+     */
+    static bool IsInFiducialVolume(const pandora::CartesianVector &vertex, const std::string &detector);
 };
 
 } // namespace lar_content

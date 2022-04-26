@@ -8,6 +8,7 @@
 #ifndef LAR_GEOMETRY_HELPER_H
 #define LAR_GEOMETRY_HELPER_H 1
 
+#include "Objects/Cluster.h"
 #include "Pandora/PandoraEnumeratedTypes.h"
 #include "Pandora/StatusCodes.h"
 

@@ -11,6 +11,7 @@
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArPointingClusterHelper.h"
 
+#include <algorithm>
 #include <limits>
 
 using namespace pandora;
@@ -56,6 +57,21 @@ LArVertexHelper::ClusterDirection LArVertexHelper::GetClusterDirectionInZ(
     }
 
     throw StatusCodeException(STATUS_CODE_FAILURE);
+}
+
+//-----------------------------------------------------------------------------------------------------------------------------------------
+
+bool LArVertexHelper::IsInFiducialVolume(const CartesianVector &vertex, const std::string &detector)
+{
+    if (detector == "dune_fd_hd")
+    {
+        const float x{vertex.GetX()};
+        const float y{vertex.GetY()};
+        const float z{vertex.GetZ()};
+        return -310 < x && x < 310 && -550 < y && y < 550 && 50 < z && z < 1244;
+    }
+    else
+        return false;
 }
 
 } // namespace lar_content
