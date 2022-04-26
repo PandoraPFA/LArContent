@@ -392,13 +392,11 @@ float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList
         }
     }
 
-    float conicalness(-1.f);
+    float conicalness(1.f);
     
     if (nHitsConStart >= m_conMinHits && nHitsConEnd >= m_conMinHits && totalChargeEnd > m_minCharge && 
    	std::sqrt(chargeConStart) > m_minCharge && totalChargeStart > m_minCharge) 
         conicalness = (std::sqrt(chargeConEnd / chargeConStart)) / (totalChargeEnd / totalChargeStart);
-    else 
-        conicalness = 1.f;
 
     return conicalness;
 }
