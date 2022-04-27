@@ -130,9 +130,7 @@ public:
     void Run(LArMvaHelper::MvaFeatureVector &featureVector, const pandora::Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo);
 
 private:
-
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------
@@ -246,8 +244,7 @@ private:
      *  return conicalness
      */
     float CalculateConicalness(const pandora::CaloHitList &caloHitList, const pandora::CartesianVector &pfoStart, 
-	const pandora::CartesianVector &pfoDir, const float &pfoLength);
-
+	const pandora::CartesianVector &pfoDir, const float pfoLength);
 };
 
 //------------------------------------------------------------------------------------------------------------------------------------------

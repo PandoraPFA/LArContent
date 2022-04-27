@@ -320,24 +320,17 @@ void ConeChargeFeatureTool::Run(
         CaloHitList clusterCaloHitList;
         clusterListW.front()->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
         
-        const CartesianVector pfoStart(clusterCaloHitList.front()->GetPositionVector());
-            
+        const CartesianVector& pfoStart(clusterCaloHitList.front()->GetPositionVector());
         CartesianVector centroid(0.f, 0.f, 0.f);
         LArPcaHelper::EigenVectors eigenVecs;
         LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
-
         LArPcaHelper::RunPca(clusterCaloHitList, centroid, eigenValues, eigenVecs);
 
         float chargeCore(0.f), chargeHalo(0.f), chargeCon(0.f);
-   
         this->CalculateChargeDistribution(clusterCaloHitList, pfoStart, eigenVecs[0], chargeCore, chargeHalo, chargeCon);
-
         haloTotalRatio = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeHalo / (chargeCore + chargeHalo) : -1.f;
-
         concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
-        
         const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
-
         conicalness = (pfoLength > std::numeric_limits<float>::epsilon()) ? this->CalculateConicalness(clusterCaloHitList, pfoStart, eigenVecs[0], pfoLength) : 1.f;
     }
 
@@ -359,16 +352,15 @@ void ConeChargeFeatureTool::CalculateChargeDistribution(const CaloHitList &caloH
             chargeCore += pCaloHit->GetInputEnergy();
         else
             chargeHalo += pCaloHit->GetInputEnergy();
-        
-        chargeCon += pCaloHit->GetInputEnergy() / std::max(1.E-2f, distFromTrackFit);
+
+        chargeCon += pCaloHit->GetInputEnergy() / std::max(1.E-2f, distFromTrackFit); /* Set 1.E-2f to prevent division by 0 and to set max histogram bin as 100 */
     }
 }
 
 //------------------------------------------------------------------------------------------------------------------------------------------
 
-float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, const float &pfoLength)
+float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, const float pfoLength)
 {
-
     float totalChargeStart(0.f), totalChargeEnd(0.f);
     float chargeConStart(0.f), chargeConEnd(0.f);
     unsigned int nHitsConStart(0), nHitsConEnd(0);
@@ -406,13 +398,9 @@ float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList
 StatusCode ConeChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
 {
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConMinHits", m_conMinHits));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCharge", m_minCharge));
-    
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConFracRange", m_conFracRange));
-
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MoliereRadius", m_MoliereRadius));
-    
     PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MoliereRadiusFrac", m_MoliereRadiusFrac));
 
     return STATUS_CODE_SUCCESS;
