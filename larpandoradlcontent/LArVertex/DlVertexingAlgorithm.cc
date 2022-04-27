@@ -12,8 +12,9 @@
 #include <torch/torch.h>
 
 #include "larpandoracontent/LArHelpers/LArFileHelper.h"
-#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
+#include "larpandoracontent/LArHelpers/LArMvaHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
 #include "larpandoradlcontent/LArVertex/DlVertexingAlgorithm.h"
 
@@ -149,6 +150,9 @@ StatusCode DlVertexingAlgorithm::Train()
 
 StatusCode DlVertexingAlgorithm::Infer()
 {
+    static int event{-1};
+    if (m_pass == 1)
+        ++event;
     CartesianPointVector vertexCandidatesU, vertexCandidatesV, vertexCandidatesW;
     for (const std::string listName : m_caloHitListNames)
     {
@@ -295,31 +299,34 @@ StatusCode DlVertexingAlgorithm::Infer()
                             const CartesianVector &trueVertex{primaries.front()->GetVertex()};
 //                            std::cout << "True vertex (" << trueVertex.GetX() << ", " << trueVertex.GetY() << ", " << trueVertex.GetZ() <<
 //                                ")" << std::endl;
-                            const CartesianVector &recoVertex{vertexTuples.back().GetPosition()};
-                            const float tx{trueVertex.GetX()};
-                            const float tu{static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()))};
-                            const float tv{static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()))};
-                            const float tw{static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()))};
-                            const float rx_u{vertexCandidatesU.front().GetX()};
-                            const float ru{vertexCandidatesU.front().GetZ()};
-                            const float rx_v{vertexCandidatesV.front().GetX()};
-                            const float rv{vertexCandidatesV.front().GetZ()};
-                            const float rx_w{vertexCandidatesW.front().GetX()};
-                            const float rw{vertexCandidatesW.front().GetZ()};
-                            const float dr_u{std::sqrt((rx_u - tx) * (rx_u - tx) + (ru - tu) * (ru - tu))};
-                            const float dr_v{std::sqrt((rx_v - tx) * (rx_v - tx) + (rv - tv) * (rv - tv))};
-                            const float dr_w{std::sqrt((rx_w - tx) * (rx_w - tx) + (rw - tw) * (rw - tw))};
-                            const float dr{(recoVertex - trueVertex).GetMagnitude()};
-/*                            std::cout << "Truth: " << tx << " " << tu << " " << tv << " " << tw << std::endl;
-                            std::cout << "U: " << rx_u << " " << ru << " " << dr_u << std::endl;
-                            std::cout << "V: " << rx_v << " " << rv << " " << dr_v << std::endl;
-                            std::cout << "W: " << rx_w << " " << rw << " " << dr_w << std::endl;*/
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "pass", m_pass));
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_u", dr_u));
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_v", dr_v));
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_w", dr_w));
-                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr", dr));
-                            PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
+                            if (LArVertexHelper::IsInFiducialVolume(trueVertex, "dune_fd_hd"))
+                            {
+                                const CartesianVector &recoVertex{vertexTuples.back().GetPosition()};
+                                const float tx{trueVertex.GetX()};
+                                const float tu{static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()))};
+                                const float tv{static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()))};
+                                const float tw{static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()))};
+                                const float rx_u{vertexCandidatesU.front().GetX()};
+                                const float ru{vertexCandidatesU.front().GetZ()};
+                                const float rx_v{vertexCandidatesV.front().GetX()};
+                                const float rv{vertexCandidatesV.front().GetZ()};
+                                const float rx_w{vertexCandidatesW.front().GetX()};
+                                const float rw{vertexCandidatesW.front().GetZ()};
+                                const float dr_u{std::sqrt((rx_u - tx) * (rx_u - tx) + (ru - tu) * (ru - tu))};
+                                const float dr_v{std::sqrt((rx_v - tx) * (rx_v - tx) + (rv - tv) * (rv - tv))};
+                                const float dr_w{std::sqrt((rx_w - tx) * (rx_w - tx) + (rw - tw) * (rw - tw))};
+                                const float dr{(recoVertex - trueVertex).GetMagnitude()};
+    /*                            std::cout << "Truth: " << tx << " " << tu << " " << tv << " " << tw << std::endl;
+                                std::cout << "U: " << rx_u << " " << ru << " " << dr_u << std::endl;
+                                std::cout << "V: " << rx_v << " " << rv << " " << dr_v << std::endl;
+                                std::cout << "W: " << rx_w << " " << rw << " " << dr_w << std::endl;*/
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "pass", m_pass));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_u", dr_u));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_v", dr_v));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_w", dr_w));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr", dr));
+                                PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
+                            }
                         }
                     }
                 }
