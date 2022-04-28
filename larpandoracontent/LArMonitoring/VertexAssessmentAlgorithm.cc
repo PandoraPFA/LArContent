@@ -12,6 +12,7 @@
 
 #include "larpandoracontent/LArHelpers/LArGeometryHelper.h"
 #include "larpandoracontent/LArHelpers/LArMCParticleHelper.h"
+#include "larpandoracontent/LArHelpers/LArVertexHelper.h"
 
 using namespace pandora;
 
@@ -58,6 +59,8 @@ StatusCode VertexAssessmentAlgorithm::Run()
 
 void VertexAssessmentAlgorithm::Visualize() const
 {
+    static int event{-1};
+    ++event;
     const CaloHitList *pCaloHitListU{nullptr}, *pCaloHitListV{nullptr}, *pCaloHitListW{nullptr};
     if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, "CaloHitListU", pCaloHitListU))
         return;
@@ -81,21 +84,17 @@ void VertexAssessmentAlgorithm::Visualize() const
         }
     }
 
-    const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-    const MCParticleList *pMCParticleList{nullptr};
-    CartesianVector trueVertex(0.f, 0.f, 0.f);
-    bool truthAvailable{false};
-    bool isReconstructable{true};
     try
     {
+        const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+        const MCParticleList *pMCParticleList{nullptr};
+        CartesianVector trueVertex(0.f, 0.f, 0.f);
         if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList))
         {
             if (pMCParticleList)
             {
                 LArMCParticleHelper::MCContributionMap mcToHitsMap;
                 this->GetMCToHitsMap(mcToHitsMap);
-                if (mcToHitsMap.empty())
-                    isReconstructable = false;
 
                 MCParticleVector primaries;
                 LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
@@ -108,7 +107,6 @@ void VertexAssessmentAlgorithm::Visualize() const
                         const MCParticle *trueNeutrino{parents.front()};
                         if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
                         {
-                            truthAvailable = true;
                             trueVertex = primaries.front()->GetVertex();
                             if (m_visualize)
                             {
@@ -132,49 +130,65 @@ void VertexAssessmentAlgorithm::Visualize() const
     const VertexList *pVertexList{nullptr};
     if (STATUS_CODE_SUCCESS == PandoraContentApi::GetList(*this, m_vertexListName, pVertexList))
     {
-        if (pVertexList && !pVertexList->empty())
+        const MCParticleList *pMCParticleList{nullptr};
+        if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList))
         {
-            for (const Vertex *pVertex : *pVertexList)
+            if (pMCParticleList)
             {
-                const CartesianVector recoVertex(pVertex->GetPosition());
-                if (pVertex->GetVertexLabel() == VERTEX_INTERACTION)
+                LArMCParticleHelper::MCContributionMap mcToHitsMap;
+                MCParticleVector primaries;
+                LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
+                if (!primaries.empty())
                 {
-                    if (m_visualize)
+                    const MCParticle *primary{primaries.front()};
+                    const MCParticleList &parents{primary->GetParentList()};
+                    if (parents.size() == 1)
                     {
-                        const CartesianVector recoU(recoVertex.GetX(), 0.f, static_cast<float>(transform->YZtoU(recoVertex.GetY(), recoVertex.GetZ())));
-                        const CartesianVector recoV(recoVertex.GetX(), 0.f, static_cast<float>(transform->YZtoV(recoVertex.GetY(), recoVertex.GetZ())));
-                        const CartesianVector recoW(recoVertex.GetX(), 0.f, static_cast<float>(transform->YZtoW(recoVertex.GetY(), recoVertex.GetZ())));
-                        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &recoU, "reco_vtx_u", RED, 2));
-                        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &recoV, "reco_vtx_v", GREEN, 2));
-                        PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &recoW, "reco_vtx_w", BLUE, 2));
-                    }
-                    if (truthAvailable && isReconstructable)
-                    {
-                        const float dr{std::sqrt(recoVertex.GetDistanceSquared(trueVertex))};
-                        std::cout << "dr: " << dr << std::endl;
-                        PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr", dr));
-                        PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
+                        const MCParticle *trueNeutrino{parents.front()};
+                        if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
+                        {
+                            const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+                            const CartesianVector &trueVertex{primaries.front()->GetVertex()};
+                            if (LArVertexHelper::IsInFiducialVolume(trueVertex, "dune_fd_hd"))
+                            {
+                                if (pVertexList && !pVertexList->empty())
+                                {
+                                    for (const Vertex *pVertex : *pVertexList)
+                                    {
+                                        const CartesianVector &recoVertex(pVertex->GetPosition());
+                                        if (pVertex->GetVertexLabel() == VERTEX_INTERACTION)
+                                        {
+                                            if (m_visualize)
+                                            {
+                                                const CartesianVector recoU(recoVertex.GetX(), 0.f, static_cast<float>(transform->YZtoU(
+                                                    recoVertex.GetY(), recoVertex.GetZ())));
+                                                const CartesianVector recoV(recoVertex.GetX(), 0.f, static_cast<float>(transform->YZtoV(
+                                                    recoVertex.GetY(), recoVertex.GetZ())));
+                                                const CartesianVector recoW(recoVertex.GetX(), 0.f, static_cast<float>(transform->YZtoW(
+                                                    recoVertex.GetY(), recoVertex.GetZ())));
+                                                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &recoU, "reco_vtx_u", RED, 2));
+                                                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &recoV, "reco_vtx_v", GREEN, 2));
+                                                PANDORA_MONITORING_API(AddMarkerToVisualization(this->GetPandora(), &recoW, "reco_vtx_w", BLUE, 2));
+                                            }
+
+                                            const CartesianVector &dv{recoVertex - trueVertex};
+                                            const float dr{dv.GetMagnitude()};
+                                            const float dx{dv.GetX()}, dy{dv.GetY()}, dz{dv.GetZ()};
+                                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "event", event));
+                                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "pass", 1));
+                                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr", dr));
+                                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dx", dx));
+                                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dy", dy));
+                                            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dz", dz));
+                                            PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
-        }
-        else
-        {
-            if (truthAvailable && isReconstructable)
-            {   // Failed to find a vertex, apply large distance penalty
-                const float dr{5000.f};
-                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr", dr));
-                PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
-            }
-        }
-    }
-    else
-    {
-        if (truthAvailable && isReconstructable)
-        {   // Failed to find a vertex, apply large distance penalty
-            const float dr{5000.f};
-            PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr", dr));
-            PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
         }
     }
 }
