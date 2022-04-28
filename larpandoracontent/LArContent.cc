@@ -393,7 +393,8 @@
     d("LArThreeDChargeFeatureTool",             ThreeDChargeFeatureTool)                                                        \
     d("LArThreeDPCAFeatureTool",                ThreeDPCAFeatureTool)                                                           \
     d("LArThreeDOpeningAngleFeatureTool",       ThreeDOpeningAngleFeatureTool)                                                  \
-    d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)
+    d("LArPfoHierarchyFeatureTool",             PfoHierarchyFeatureTool)                                                        \
+    d("LArConeChargeFeatureTool",             	ConeChargeFeatureTool)
 
 #define LAR_PARTICLE_ID_LIST(d)                                                                                                 \
     d("LArMuonId",                              LArParticleIdPlugins::LArMuonId)

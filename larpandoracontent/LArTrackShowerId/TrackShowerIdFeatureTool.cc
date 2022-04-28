@@ -298,6 +298,117 @@ StatusCode PfoHierarchyFeatureTool::ReadSettings(const TiXmlHandle /*xmlHandle*/
 //------------------------------------------------------------------------------------------------------------------------------------------
 //------------------------------------------------------------------------------------------------------------------------------------------
 
+ConeChargeFeatureTool::ConeChargeFeatureTool(): m_conMinHits(3), m_minCharge (0.1f), m_conFracRange(0.2f), m_MoliereRadius(10.1f), m_MoliereRadiusFrac(0.2f)
+{
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ConeChargeFeatureTool::Run(
+    LArMvaHelper::MvaFeatureVector &featureVector, const Algorithm *const pAlgorithm, const pandora::ParticleFlowObject *const pInputPfo)
+{
+    if (PandoraContentApi::GetSettings(*pAlgorithm)->ShouldDisplayAlgorithmInfo())
+        std::cout << "----> Running Algorithm Tool: " << this->GetInstanceName() << ", " << this->GetType() << std::endl;
+    
+    ClusterList clusterListW;
+    LArPfoHelper::GetClusters(pInputPfo, TPC_VIEW_W, clusterListW);
+
+    LArMvaHelper::MvaFeature haloTotalRatio, concentration, conicalness;
+    
+    if(!clusterListW.empty())
+    {    
+        CaloHitList clusterCaloHitList;
+        clusterListW.front()->GetOrderedCaloHitList().FillCaloHitList(clusterCaloHitList);
+        
+        const CartesianVector& pfoStart(clusterCaloHitList.front()->GetPositionVector());
+        CartesianVector centroid(0.f, 0.f, 0.f);
+        LArPcaHelper::EigenVectors eigenVecs;
+        LArPcaHelper::EigenValues eigenValues(0.f, 0.f, 0.f);
+        LArPcaHelper::RunPca(clusterCaloHitList, centroid, eigenValues, eigenVecs);
+
+        float chargeCore(0.f), chargeHalo(0.f), chargeCon(0.f);
+        this->CalculateChargeDistribution(clusterCaloHitList, pfoStart, eigenVecs[0], chargeCore, chargeHalo, chargeCon);
+        haloTotalRatio = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeHalo / (chargeCore + chargeHalo) : -1.f;
+        concentration = (chargeCore + chargeHalo > std::numeric_limits<float>::epsilon()) ? chargeCon / (chargeCore + chargeHalo) : -1.f;
+        const float pfoLength(std::sqrt(LArPfoHelper::GetThreeDLengthSquared(pInputPfo)));
+        conicalness = (pfoLength > std::numeric_limits<float>::epsilon()) ? this->CalculateConicalness(clusterCaloHitList, pfoStart, eigenVecs[0], pfoLength) : 1.f;
+    }
+
+    featureVector.push_back(haloTotalRatio);
+    featureVector.push_back(concentration);
+    featureVector.push_back(conicalness);
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+void ConeChargeFeatureTool::CalculateChargeDistribution(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, 
+	float &chargeCore, float &chargeHalo, float &chargeCon)
+{
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        const float distFromTrackFit(((pCaloHit->GetPositionVector() - pfoStart).GetCrossProduct(pfoDir)).GetMagnitude());
+
+        if (distFromTrackFit < m_MoliereRadiusFrac * m_MoliereRadius)
+            chargeCore += pCaloHit->GetInputEnergy();
+        else
+            chargeHalo += pCaloHit->GetInputEnergy();
+
+        chargeCon += pCaloHit->GetInputEnergy() / std::max(1.E-2f, distFromTrackFit); /* Set 1.E-2f to prevent division by 0 and to set max histogram bin as 100 */
+    }
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+float ConeChargeFeatureTool::CalculateConicalness(const CaloHitList &caloHitList, const CartesianVector &pfoStart, const CartesianVector &pfoDir, const float pfoLength)
+{
+    float totalChargeStart(0.f), totalChargeEnd(0.f);
+    float chargeConStart(0.f), chargeConEnd(0.f);
+    unsigned int nHitsConStart(0), nHitsConEnd(0);
+    
+    for (const CaloHit *const pCaloHit : caloHitList)
+    {
+        const float distFromTrackFit(((pCaloHit->GetPositionVector() - pfoStart).GetCrossProduct(pfoDir)).GetMagnitude());
+        const float hitLength(std::fabs((pCaloHit->GetPositionVector() - pfoStart).GetDotProduct(pfoDir))); 
+ 
+        if (hitLength / pfoLength < m_conFracRange) 
+        {
+            chargeConStart += distFromTrackFit * distFromTrackFit * pCaloHit->GetInputEnergy();
+            ++nHitsConStart;
+            totalChargeStart += pCaloHit->GetInputEnergy();
+        }
+        else if (1.f - hitLength / pfoLength < m_conFracRange) 
+        {
+            chargeConEnd += distFromTrackFit * distFromTrackFit * pCaloHit->GetInputEnergy();
+            ++nHitsConEnd;
+            totalChargeEnd += pCaloHit->GetInputEnergy();
+        }
+    }
+
+    float conicalness(1.f);
+    
+    if (nHitsConStart >= m_conMinHits && nHitsConEnd >= m_conMinHits && totalChargeEnd > m_minCharge && 
+   	std::sqrt(chargeConStart) > m_minCharge && totalChargeStart > m_minCharge) 
+        conicalness = (std::sqrt(chargeConEnd / chargeConStart)) / (totalChargeEnd / totalChargeStart);
+
+    return conicalness;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+
+StatusCode ConeChargeFeatureTool::ReadSettings(const TiXmlHandle xmlHandle)
+{
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConMinHits", m_conMinHits));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MinCharge", m_minCharge));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "ConFracRange", m_conFracRange));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MoliereRadius", m_MoliereRadius));
+    PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "MoliereRadiusFrac", m_MoliereRadiusFrac));
+
+    return STATUS_CODE_SUCCESS;
+}
+
+//------------------------------------------------------------------------------------------------------------------------------------------
+//------------------------------------------------------------------------------------------------------------------------------------------
+
 ThreeDLinearFitFeatureTool::ThreeDLinearFitFeatureTool() : m_slidingLinearFitWindow(3), m_slidingLinearFitWindowLarge(10000)
 {
 }
