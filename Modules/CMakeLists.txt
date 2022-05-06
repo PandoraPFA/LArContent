@@ -1,0 +1,4 @@
+install(DIRECTORY ./ DESTINATION Modules
+  FILES_MATCHING PATTERN "*.cmake" PATTERN "[.#]*.cmake" EXCLUDE)
+file(COPY . DESTINATION .
+  FILES_MATCHING PATTERN "*.cmake" PATTERN "[.#]*.cmake" EXCLUDE)

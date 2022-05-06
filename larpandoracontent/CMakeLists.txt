@@ -1,42 +1,24 @@
-include_directories( $ENV{EIGEN_INC} )
+list(TRANSFORM ${PROJECT_NAME}_SRCS REPLACE "/+[^/]+$" "/"
+  OUTPUT_VARIABLE subdir_list)
+list(REMOVE_DUPLICATES subdir_list)
 
-set( subdir_list LArCheating
-                 LArControlFlow
-		 LArCustomParticles
-		 LArHelpers
-		 LArMonitoring
-		 LArObjects
-		 LArPersistency
-		 LArPlugins
-		 LArThreeDReco
-		 LArThreeDReco/LArCosmicRay
-		 LArThreeDReco/LArEventBuilding
-		 LArThreeDReco/LArHitCreation
-		 LArThreeDReco/LArLongitudinalTrackMatching
-		 LArThreeDReco/LArPfoMopUp
-		 LArThreeDReco/LArPfoRecovery
-		 LArThreeDReco/LArShowerFragments
-		 LArThreeDReco/LArShowerMatching
-		 LArThreeDReco/LArThreeDBase
-		 LArThreeDReco/LArTrackFragments
-		 LArThreeDReco/LArTransverseTrackMatching
-		 LArThreeDReco/LArTwoViewMatching
-		 LArTrackShowerId
-		 LArTwoDReco
-		 LArTwoDReco/LArClusterAssociation
-		 LArTwoDReco/LArClusterCreation
-		 LArTwoDReco/LArClusterMopUp
-		 LArTwoDReco/LArClusterSplitting
-		 LArTwoDReco/LArCosmicRay
-		 LArUtility
-		 LArVertex
+cet_make_library(LIBRARY_NAME ${LAR_CONTENT_LIBRARY_NAME}
+  VERSION ${${PROJECT_NAME}_VERSION}
+  SOVERSION ${${PROJECT_NAME}_SOVERSION}
+  SOURCE ${${PROJECT_NAME}_SRCS}
+  LIBRARIES
+  PUBLIC
+  PandoraPFA::PandoraMonitoring
+  PandoraPFA::PandoraSDK
+  PRIVATE
+  Eigen3::Eigen
 )
 
-cet_make( LIBRARY_NAME LArPandoraContent
-  SUBDIRS ${subdir_list}
-	LIBRARIES PANDORASDK
-	PANDORAMONITORING
-  )
+# This definition is used in headers, so is propagated downstream with
+# PUBLIC.
+target_compile_definitions(${LAR_CONTENT_LIBRARY_NAME}
+  PUBLIC MONITORING
+)
 
-install_source( SUBDIRS ${subdir_list} )
-install_headers( SUBDIRS ${subdir_list} )
+install_source(SUBDIRS ${subdir_list})
+install_headers(SUBDIRS ${subdir_list})

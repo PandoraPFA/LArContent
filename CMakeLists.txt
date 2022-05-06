@@ -1,103 +1,97 @@
 # use cmake 3.12 or later
-cmake_minimum_required (VERSION 3.12)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR) ### MIGRATE-NO-ACTION
 
-# if the CETBUILDTOOLS_VERSION environmental variable is defined, use cetbuildtools
-if(DEFINED ENV{CETBUILDTOOLS_VERSION})
-    # ======================================================================
-    #  larpandoracontent main build file
-    #
-    #  cd .../path/to/build/directory
-    #  source .../path/to/larpandoracontent/ups/setup_for_development <-d|-p>
-    #  cmake [-DCMAKE_INSTALL_PREFIX=/install/path]
-    #        -DCMAKE_BUILD_TYPE=$CETPKG_TYPE
-    #        $CETPKG_SOURCE
-    #  make
-    #  make test
-    #  make install
-    #  make package (builds distribution tarfile)
-    # ======================================================================
-    project(larpandoracontent VERSION 03.28.00)
+# To disable even if available, add
+# -DCMAKE_DISABLE_FIND_PACKAGE_cetmodules:BOOL=ON to CMake command line.
+find_package(cetmodules 3.13.00 QUIET) # Handling for CET-VAR
 
-    # cetbuildtools contains our cmake modules
-    # Note that find package will add cetbuildtools Modules to CMAKE_MODULE_PATH
-    find_package(cetbuildtools REQUIRED)
-    ##message(STATUS "larpandoracontent: CMAKE_MODULE_PATH is ${CMAKE_MODULE_PATH}")
+set(LAR_CONTENT_SOURCE_DIRNAME larpandoracontent)
+set(LAR_DL_CONTENT_SOURCE_DIRNAME larpandoradlcontent)
 
-    include(CetCMakeEnv)
-    cet_cmake_env()
+if (cetmodules_FOUND)
+  cmake_minimum_required(VERSION 3.20 FATAL_ERROR)
+  set(LAR_CONTENT_LIBRARY_NAME LArPandoraContent)
+  set(LAR_PROJECT_NAME larpandoracontent) ## CET-VAR
+  set(PANDORA_LIBTORCH_DEF ON)
+  set(CET_EXPORT EXPORT)
+  set(LAR_CONTENT_SOURCE_SHUNT ${LAR_CONTENT_SOURCE_DIRNAME})
+  set(LAR_DL_CONTENT_SOURCE_SHUNT ${LAR_DL_CONTENT_SOURCE_DIRNAME})
+  set(PANDORA_MONITORING TRUE)
+else() # Configure for standalone build.
+  if (NOT LAR_CONTENT_LIBRARY_NAME STREQUAL "LArPandoraContent")
+    set(LAR_CONTENT_LIBRARY_NAME LArContent)
+  endif()
+  set(LAR_PROJECT_NAME ${LAR_CONTENT_LIBRARY_NAME})
+  cmake_policy(SET CMP0033 OLD)
+endif()
 
-    cet_set_compiler_flags(DIAGS CAUTIOUS
-      WERROR
-      NO_UNDEFINED
-      EXTRA_FLAGS -pedantic
-      )
+# Single project() call with/without Cetmodules (CMake >=3.0, CMP0048).
+project(${LAR_PROJECT_NAME} VERSION 03.28.00)
 
-    cet_report_compiler_flags()
+# Build options.
+option(PANDORA_LIBTORCH "Flag for building against LibTorch" ${PANDORA_LIBTORCH_DEF})
+if (EXISTS "${CMAKE_PROJECT_BINARY_DIR}/doc")
+  option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
+endif()
 
-    find_ups_product( pandora )
-    find_ups_product( eigen )
+if (cetmodules_FOUND)
+  include(CetCMakeEnv)
+  cet_cmake_env()
 
-    cet_find_library( PANDORASDK NAMES PandoraSDK PATHS ENV PANDORA_LIB )
-    cet_find_library( PANDORAMONITORING NAMES PandoraMonitoring PATHS ENV PANDORA_LIB )
-    set(LAR_CONTENT_LIBRARY_NAME "LArPandoraContent")
-    add_definitions("-DMONITORING")
+  cet_set_compiler_flags(DIAGS CAUTIOUS
+    WERROR
+    NO_UNDEFINED
+    EXTRA_FLAGS -pedantic
+  )
 
-    # ADD SOURCE CODE SUBDIRECTORIES HERE
-    add_subdirectory(larpandoracontent)
-    option(PANDORA_LIBTORCH "Flag for building against LibTorch" ON)
-    if(${PANDORA_LIBTORCH})
-      if(DEFINED ENV{LIBTORCH_DIR})
-        message(STATUS "Building with LibTorch")
-        add_definitions("-DLIBTORCH_DL")
-        add_subdirectory(larpandoradlcontent)
-      else()
-        message(WARNING "Build with LibTorch requested, but LibTorch not found. Proceeding without LibTorch.")
-      endif()
-    endif()
+  cet_report_compiler_flags(REPORT_THRESHOLD VERBOSE)
 
-    # tests
-    #add_subdirectory(test)
+  cet_cmake_module_directories(Modules)
+  add_subdirectory(Modules)
+endif()
 
-    # ups - table and config files
-    add_subdirectory(ups)
+# Dependencies and other common configuration.
+find_package(PandoraSDK 03.04.00 REQUIRED ${CET_EXPORT})
+if (PANDORA_MONITORING)
+  find_package(PandoraMonitoring 03.05.00 REQUIRED ${CET_EXPORT})
+endif()
+find_package(Eigen3 3.3 REQUIRED)
 
-    # packaging utility
-    include(UseCPack)
+set(${PROJECT_NAME}_SOVERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR})
+file(GLOB_RECURSE ${PROJECT_NAME}_SRCS RELATIVE "${PROJECT_SOURCE_DIR}/${LAR_CONTENT_SOURCE_SHUNT}"
+  "${LAR_CONTENT_SOURCE_DIRNAME}/*.cc")
+
+if (PANDORA_LIBTORCH)
+  find_package(Torch REQUIRED ${CET_EXPORT})
+  string(REGEX REPLACE "^(LAr(Pandora)?)(Content)$" "\\1DL\\3"
+    LAR_DL_CONTENT_LIBRARY_NAME "${LAR_CONTENT_LIBRARY_NAME}")
+  set(DL_PROJECT_NAME "${LAR_DL_CONTENT_LIBRARY_NAME}")
+  foreach (bit IN ITEMS "" _MAJOR _MINOR _PATCH _TWEAK)
+    set(${DL_PROJECT_NAME}_VERSION${bit}
+      ${${PROJECT_NAME}_VERSION${bit}})
+  endforeach()
+  set(${DL_PROJECT_NAME}_SOVERSION "${${DL_PROJECT_NAME}_VERSION_MAJOR}.${${DL_PROJECT_NAME}_VERSION_MINOR}")
+  file(GLOB_RECURSE ${DL_PROJECT_NAME}_SRCS RELATIVE "${PROJECT_SOURCE_DIR}/${LAR_DL_CONTENT_SOURCE_SHUNT}"
+    "${LAR_DL_CONTENT_SOURCE_DIRNAME}/*.cc")
+  message(STATUS "Building against LibTorch")
+endif()
+
+if (cetmodules_FOUND)
+  add_subdirectory(${LAR_CONTENT_SOURCE_DIRNAME})
+  add_subdirectory(${LAR_DL_CONTENT_SOURCE_DIRNAME})
+  cet_cmake_config()
+  ### MIGRATE-NO-ACTION # No nagging beyond this point.
 else()
-    # cmake file for building in Pandora standalone cmake setup, distinct from cetbuildtools setup
-    #-------------------------------------------------------------------------------------------------------------------------------------------
-    cmake_policy(SET CMP0033 OLD)
-
+    ####################################################################
+    # Standalone build instructions (no Cetmodules).
+    ####################################################################
     if(${CMAKE_SOURCE_DIR} STREQUAL ${CMAKE_BINARY_DIR})
-        message(FATAL_ERROR "LArPandoraContent requires an out-of-source build.")
+        message(FATAL_ERROR "${CMAKE_PROJECT_NAME} requires an out-of-source build.")
     endif()
 
-    # project name
-    if(NOT LAR_CONTENT_LIBRARY_NAME STREQUAL "LArPandoraContent")
-        set(LAR_CONTENT_LIBRARY_NAME "LArContent")
-    endif()
-    project(${LAR_CONTENT_LIBRARY_NAME})
-
-    # DL Content
-    option(PANDORA_LIBTORCH "Flag for building against LibTorch" OFF)
+    set(${PROJECT_NAME}_TOP_LEVEL_DIR "./${LAR_CONTENT_SOURCE_DIRNAME}")
     if(PANDORA_LIBTORCH)
-        set(DL_PROJECT_NAME "LArDLContent")
-        set(LAR_DL_CONTENT_LIBRARY_NAME "${DL_PROJECT_NAME}")
-    endif()
-
-    # project version
-    # ATTN This package supports two build systems; please ensure version is specified here *and* in ups/product_deps
-    foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
-        set(${PROJ}_VERSION_MAJOR 03)
-        set(${PROJ}_VERSION_MINOR 28)
-        set(${PROJ}_VERSION_PATCH 00)
-        set(${PROJ}_VERSION "${${PROJ}_VERSION_MAJOR}.${${PROJ}_VERSION_MINOR}.${${PROJ}_VERSION_PATCH}")
-    endforeach()
-
-    set(${PROJECT_NAME}_TOP_LEVEL_DIR "./larpandoracontent")
-    if(PANDORA_LIBTORCH)
-        set(${DL_PROJECT_NAME}_SOVERSION "${${DL_PROJECT_NAME}_VERSION_MAJOR}.${${DL_PROJECT_NAME}_VERSION_MINOR}")
-        set(${DL_PROJECT_NAME}_TOP_LEVEL_DIR "./larpandoradlcontent")
+      set(${DL_PROJECT_NAME}_TOP_LEVEL_DIR "./${LAR_DL_CONTENT_SOURCE_DIRNAME}")
     endif()
 
     #-------------------------------------------------------------------------------------------------------------------------------------------
@@ -107,25 +101,20 @@ else()
     # Prefer local include directory to any paths to installed header files
     include_directories(./)
 
-    find_package(PandoraSDK 03.04.01 REQUIRED)
     include_directories(${PandoraSDK_INCLUDE_DIRS})
     link_libraries(${PandoraSDK_LIBRARIES})
     add_definitions(${PandoraSDK_DEFINITIONS})
 
     if(PANDORA_MONITORING)
-        find_package(PandoraMonitoring 03.05.00 REQUIRED)
         include_directories(${PandoraMonitoring_INCLUDE_DIRS})
         link_libraries(${PandoraMonitoring_LIBRARIES})
         add_definitions(${PandoraMonitoring_DEFINITIONS})
         add_definitions("-DMONITORING")
     endif()
 
-    find_package(Eigen3 3.3 REQUIRED NO_MODULE)
     include_directories(SYSTEM ${EIGEN3_INCLUDE_DIRS})
 
     if(PANDORA_LIBTORCH)
-        message(STATUS "Building against LibTorch")
-        find_package(Torch REQUIRED)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
         include_directories(${TORCH_INCLUDE_DIRS})
         link_libraries(${TORCH_LIBRARIES})
@@ -147,21 +136,17 @@ else()
     # Build products
 
     foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
-        # - Collect sources - not ideal because you have to keep running CMake to pick up changes
-        file(GLOB_RECURSE LAR_CONTENT_SRCS RELATIVE ${PROJECT_SOURCE_DIR} "${${PROJ}_TOP_LEVEL_DIR}/*.cc")
-
         # - Add library and properties
-        add_library(${PROJ} SHARED ${LAR_CONTENT_SRCS})
+        add_library(${PROJ} SHARED ${${PROJ}_SRCS})
         set_target_properties(${PROJ} PROPERTIES VERSION ${${PROJ}_VERSION} SOVERSION ${${PROJ}_SOVERSION})
     endforeach()
 
     # - Optional documents
-    option(LArContent_BUILD_DOCS "Build documentation for ${PROJECT_NAME}" OFF)
     if(LArContent_BUILD_DOCS)
         add_subdirectory(doc)
     endif()
 
- #-------------------------------------------------------------------------------------------------------------------------------------------
+    #-------------------------------------------------------------------------------------------------------------------------------------------
     # Install products
     foreach(PROJ IN LISTS PROJECT_NAME DL_PROJECT_NAME)
         # - library
