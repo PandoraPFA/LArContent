@@ -186,31 +186,29 @@ void CosmicRayVertexBuildingAlgorithm::BuildCosmicRayParent(const LArPointingClu
             // ATTN X is the vertical coordinate in Dual-Phase geometry
             const float minVerticalCoordinate(m_isDualPhase ? minPosition.GetX() : minPosition.GetY());
             const float maxVerticalCoordinate(m_isDualPhase ? maxPosition.GetX() : maxPosition.GetY());
-            const float vtxVerticalCoordinate(m_isDualPhase ? vtxPosition.GetX() : vtxPosition.GetY());
-            const float endVerticalCoordinate(m_isDualPhase ? endPosition.GetX() : endPosition.GetY());
 
-            if (!foundVtx || (minVerticalCoordinate > std::max(maxVerticalCoordinate, vtxVerticalCoordinate)))
+            if (!foundVtx || (minVerticalCoordinate > std::max(maxVerticalCoordinate, m_isDualPhase ? vtxPosition.GetX() : vtxPosition.GetY())))
             {
                 foundVtx = true;
                 vtxPosition = minPosition;
                 vtxDirection = minDirection;
             }
 
-            if (!foundVtx || (maxVerticalCoordinate > std::max(minVerticalCoordinate, vtxVerticalCoordinate)))
+            if (!foundVtx || (maxVerticalCoordinate > std::max(minVerticalCoordinate, m_isDualPhase ? vtxPosition.GetX() : vtxPosition.GetY())))
             {
                 foundVtx = true;
                 vtxPosition = maxPosition;
                 vtxDirection = maxDirection;
             }
 
-            if (!foundEnd || (minVerticalCoordinate < std::min(maxVerticalCoordinate, endVerticalCoordinate)))
+            if (!foundEnd || (minVerticalCoordinate < std::min(maxVerticalCoordinate, m_isDualPhase ? endPosition.GetX() : endPosition.GetY())))
             {
                 foundEnd = true;
                 endPosition = minPosition;
                 endDirection = minDirection;
             }
 
-            if (!foundEnd || (maxVerticalCoordinate < std::min(minVerticalCoordinate, endVerticalCoordinate)))
+            if (!foundEnd || (maxVerticalCoordinate < std::min(minVerticalCoordinate, m_isDualPhase ? endPosition.GetX() : endPosition.GetY())))
             {
                 foundEnd = true;
                 endPosition = maxPosition;
