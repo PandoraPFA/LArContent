@@ -213,6 +213,12 @@ private:
      */
     const pandora::CartesianVector &GetTrueVertex() const;
 
+    /**
+     *  @brief  Populate a root true with vertex information.
+     */
+    void PopulateRootTree(const std::vector<VertexTuple> &vertexTuples, const pandora::CartesianPointVector &vertexCandidatesU,
+        const pandora::CartesianPointVector &vertexCandidatesV, const pandora::CartesianPointVector &vertexCandidatesW) const;
+
     bool                    m_trainingMode;             ///< Training mode
     std::string             m_trainingOutputFile;       ///< Output file name for training examples
     std::string             m_inputVertexListName;      ///< Input vertex list name if 2nd pass
@@ -221,13 +227,16 @@ private:
     LArDLHelper::TorchModel m_modelU;                   ///< The model for the U view
     LArDLHelper::TorchModel m_modelV;                   ///< The model for the V view
     LArDLHelper::TorchModel m_modelW;                   ///< The model for the W view
+    int                     m_event;                    ///< The current event number
     int                     m_pass;                     ///< The pass of the train/infer step
     int                     m_height;                   ///< The height of the images
     int                     m_width;                    ///< The width of the images
-    float                   m_pixelShift;               ///< Pixel normalisation shift
-    float                   m_pixelScale;               ///< Pixel normalisation scale
+    float                   m_maxHitAdc;                ///< Maximum ADC value to allow
     float                   m_regionSize;               ///< The half width/height of the event region to consider in cm
     bool                    m_visualise;                ///< Whether or not to visualise the candidate vertices
+    bool                    m_writeTree;                ///< Whether or not to write validation details to a ROOT tree
+    std::string             m_rootTreeName;             ///< The ROOT tree name
+    std::string             m_rootFileName;             ///< The ROOT file name
     std::mt19937            m_rng;                      ///< The random number generator
     const double            PY_EPSILON{1.1920929e-7};   ///< The value of epsilon in Python
 };

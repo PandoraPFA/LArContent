@@ -27,26 +27,30 @@ namespace lar_dl_content
 DlVertexingAlgorithm::DlVertexingAlgorithm():
     m_trainingMode{false},
     m_trainingOutputFile{""},
+    m_event{-1},
     m_pass{1},
     m_height{256},
     m_width{256},
-    m_pixelShift{0.f},
-    m_pixelScale{1.f},
+    m_maxHitAdc{500.f},
     m_regionSize{32.f},
     m_visualise{false},
+    m_writeTree{false},
     m_rng(static_cast<std::mt19937::result_type>(0))
 {
 }
 
 DlVertexingAlgorithm::~DlVertexingAlgorithm()
 {
-    try
+    if (m_writeTree)
     {
-        PANDORA_MONITORING_API(SaveTree(this->GetPandora(), "vertex", "vertex.root", "RECREATE"));
-    }
-    catch (StatusCodeException e)
-    {
-        std::cout << "VertexAssessmentAlgorithm: Unable to write to ROOT tree" << std::endl;
+        try
+        {
+            PANDORA_MONITORING_API(SaveTree(this->GetPandora(), m_rootTreeName, m_rootFileName, "RECREATE"));
+        }
+        catch (StatusCodeException e)
+        {
+            std::cout << "VertexAssessmentAlgorithm: Unable to write to ROOT tree" << std::endl;
+        }
     }
 }
 
@@ -150,9 +154,8 @@ StatusCode DlVertexingAlgorithm::Train()
 
 StatusCode DlVertexingAlgorithm::Infer()
 {
-    static int event{-1};
     if (m_pass == 1)
-        ++event;
+        ++m_event;
     CartesianPointVector vertexCandidatesU, vertexCandidatesV, vertexCandidatesW;
     for (const std::string listName : m_caloHitListNames)
     {
@@ -196,17 +199,9 @@ StatusCode DlVertexingAlgorithm::Infer()
         auto classesAccessor{classes.accessor<long, 3>()};
         const double scaleFactor{std::sqrt(m_height * m_height + m_width * m_width)};
         std::map<int, bool> haveSeenMap;
-        //std::cout << std::fixed << std::setprecision(2);
         for (const auto [ row, col ] : pixelVector)
         {
             const auto cls{classesAccessor[0][row][col]};
-            /*std::cout << "(" << row << ", " << col << ") [" << cls << "]: ";
-            for (int i = 0; i < 20; ++i)
-            {
-                const auto raw{outputAccessor[0][i][row][col]};
-                std::cout << raw << " ";
-            }
-            std::cout << std::endl;*/
             if (cls > 0 && cls < 19)
             {
                 const int inner{static_cast<int>(std::round(std::ceil(scaleFactor * thresholds[cls - 1])))};
@@ -277,69 +272,6 @@ StatusCode DlVertexingAlgorithm::Infer()
     {
         vertexTuples.emplace_back(VertexTuple(this->GetPandora(), vertexCandidatesU.front(), vertexCandidatesV.front(),
             vertexCandidatesW.front()));
-
-        const MCParticleList *pMCParticleList{nullptr};
-        if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList))
-        {
-            if (pMCParticleList)
-            {
-                LArMCParticleHelper::MCContributionMap mcToHitsMap;
-                MCParticleVector primaries;
-                LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
-                if (!primaries.empty())
-                {
-                    const MCParticle *primary{primaries.front()};
-                    const MCParticleList &parents{primary->GetParentList()};
-                    if (parents.size() == 1)
-                    {
-                        const MCParticle *trueNeutrino{parents.front()};
-                        if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
-                        {
-                            const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
-                            const CartesianVector &trueVertex{primaries.front()->GetVertex()};
-//                            std::cout << "True vertex (" << trueVertex.GetX() << ", " << trueVertex.GetY() << ", " << trueVertex.GetZ() <<
-//                                ")" << std::endl;
-                            if (LArVertexHelper::IsInFiducialVolume(trueVertex, "dune_fd_hd"))
-                            {
-                                //std::cout << " - In FV" << std::endl;
-                                const CartesianVector &recoVertex{vertexTuples.front().GetPosition()};
-                                const float tx{trueVertex.GetX()};
-                                const float tu{static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()))};
-                                const float tv{static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()))};
-                                const float tw{static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()))};
-                                const float rx_u{vertexCandidatesU.front().GetX()};
-                                const float ru{vertexCandidatesU.front().GetZ()};
-                                const float rx_v{vertexCandidatesV.front().GetX()};
-                                const float rv{vertexCandidatesV.front().GetZ()};
-                                const float rx_w{vertexCandidatesW.front().GetX()};
-                                const float rw{vertexCandidatesW.front().GetZ()};
-                                const float dr_u{std::sqrt((rx_u - tx) * (rx_u - tx) + (ru - tu) * (ru - tu))};
-                                const float dr_v{std::sqrt((rx_v - tx) * (rx_v - tx) + (rv - tv) * (rv - tv))};
-                                const float dr_w{std::sqrt((rx_w - tx) * (rx_w - tx) + (rw - tw) * (rw - tw))};
-                                const CartesianVector &dv{recoVertex - trueVertex};
-                                const float dr{dv.GetMagnitude()};
-                                const float dx{dv.GetX()}, dy{dv.GetY()}, dz{dv.GetZ()};
-                                //std::cout << "Truth: " << trueVertex.GetX() << " " << trueVertex.GetY() << " " << trueVertex.GetZ() << std::endl;
-                                /*std::cout << "Truth: " << tx << " " << tu << " " << tv << " " << tw << std::endl;
-                                std::cout << "U: " << rx_u << " " << ru << " " << dr_u << std::endl;
-                                std::cout << "V: " << rx_v << " " << rv << " " << dr_v << std::endl;
-                                std::cout << "W: " << rx_w << " " << rw << " " << dr_w << std::endl;*/
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "event", event));
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "pass", m_pass));
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_u", dr_u));
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_v", dr_v));
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr_w", dr_w));
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dr", dr));
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dx", dx));
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dy", dy));
-                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), "vertex", "dz", dz));
-                                PANDORA_MONITORING_API(FillTree(this->GetPandora(), "vertex"));
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
     else if (nEmptyLists == 1)
     {
@@ -398,7 +330,6 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const pandora::CaloHit
 {
     // Determine the range of coordinates for the view
     float xMin{0.f}, xMax{0.f}, zMin{0.f}, zMax{0.f};
-    //std::cout << "Hit Region in view " << caloHits.front()->GetHitType() << std::endl;
     GetHitRegion(caloHits, xMin, xMax, zMin, zMax);
 
     // Determine the bin edges - need double precision here for consistency with Python binning
@@ -426,7 +357,7 @@ StatusCode DlVertexingAlgorithm::MakeNetworkInputFromHits(const pandora::CaloHit
             if (x < xMin || x > xMax || z < zMin || z > zMax)
                 continue;
         }
-        const float adc{pCaloHit->GetInputEnergy() < 500 ? pCaloHit->GetInputEnergy() : 500};
+        const float adc{pCaloHit->GetInputEnergy() < m_maxHitAdc ? pCaloHit->GetInputEnergy() : m_maxHitAdc};
         const int pixelX{static_cast<int>(std::floor((x - xBinEdges[0]) / dx))};
         const int pixelZ{(m_height - 1) - static_cast<int>(std::floor((z - zBinEdges[0]) / dz))};
         accessor[0][0][pixelZ][pixelX] += adc;
@@ -508,15 +439,6 @@ StatusCode DlVertexingAlgorithm::MakeWirePlaneCoordinatesFromCanvas(const CaloHi
                 colBest = col;
             }
 
-/*    for (int row = 0; row < canvasHeight; ++row)
-        for (int col = 0; col < canvasWidth; ++col)
-            if (canvas[row][col] > (best * 0.9f))
-            {
-                const float x{static_cast<float>((col - columnOffset) * dx + xMin + xShift)};
-                const float z{static_cast<float>(dz * ((m_height - 1) - (row - rowOffset)) + zMin + zShift)};
-                CartesianVector pt(x, 0.f, z);
-                positionVector.emplace_back(pt);
-            }*/
     const float x{static_cast<float>((colBest - columnOffset) * dx + xMin + xShift)};
     const float z{static_cast<float>(dz * ((m_height - 1) - (rowBest - rowOffset)) + zMin + zShift)};
     CartesianVector pt(x, 0.f, z);
@@ -743,7 +665,6 @@ void DlVertexingAlgorithm::GetHitRegion(const CaloHitList &caloHitList, float &x
         zMin -= padding;
         zMax += padding;
     }
-    //std::cout << "Min/Max: " << xMin << " " << xMax << " " << zMin << " " << zMax << std::endl;
 }
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
@@ -817,6 +738,67 @@ const CartesianVector &DlVertexingAlgorithm::GetTrueVertex() const
     throw StatusCodeException(STATUS_CODE_NOT_FOUND);
 }
 
+void DlVertexingAlgorithm::PopulateRootTree(const std::vector<VertexTuple> &vertexTuples, const pandora::CartesianPointVector &vertexCandidatesU,
+    const pandora::CartesianPointVector &vertexCandidatesV, const pandora::CartesianPointVector &vertexCandidatesW) const
+{
+    if (m_writeTree)
+    {
+        const MCParticleList *pMCParticleList{nullptr};
+        if (STATUS_CODE_SUCCESS == PandoraContentApi::GetCurrentList(*this, pMCParticleList))
+        {
+            if (pMCParticleList)
+            {
+                LArMCParticleHelper::MCContributionMap mcToHitsMap;
+                MCParticleVector primaries;
+                LArMCParticleHelper::GetPrimaryMCParticleList(pMCParticleList, primaries);
+                if (!primaries.empty())
+                {
+                    const MCParticle *primary{primaries.front()};
+                    const MCParticleList &parents{primary->GetParentList()};
+                    if (parents.size() == 1)
+                    {
+                        const MCParticle *trueNeutrino{parents.front()};
+                        if (LArMCParticleHelper::IsNeutrino(trueNeutrino))
+                        {
+                            const LArTransformationPlugin *transform{this->GetPandora().GetPlugins()->GetLArTransformationPlugin()};
+                            const CartesianVector &trueVertex{primaries.front()->GetVertex()};
+                            if (LArVertexHelper::IsInFiducialVolume(trueVertex, "dune_fd_hd"))
+                            {
+                                const CartesianVector &recoVertex{vertexTuples.front().GetPosition()};
+                                const float tx{trueVertex.GetX()};
+                                const float tu{static_cast<float>(transform->YZtoU(trueVertex.GetY(), trueVertex.GetZ()))};
+                                const float tv{static_cast<float>(transform->YZtoV(trueVertex.GetY(), trueVertex.GetZ()))};
+                                const float tw{static_cast<float>(transform->YZtoW(trueVertex.GetY(), trueVertex.GetZ()))};
+                                const float rx_u{vertexCandidatesU.front().GetX()};
+                                const float ru{vertexCandidatesU.front().GetZ()};
+                                const float rx_v{vertexCandidatesV.front().GetX()};
+                                const float rv{vertexCandidatesV.front().GetZ()};
+                                const float rx_w{vertexCandidatesW.front().GetX()};
+                                const float rw{vertexCandidatesW.front().GetZ()};
+                                const float dr_u{std::sqrt((rx_u - tx) * (rx_u - tx) + (ru - tu) * (ru - tu))};
+                                const float dr_v{std::sqrt((rx_v - tx) * (rx_v - tx) + (rv - tv) * (rv - tv))};
+                                const float dr_w{std::sqrt((rx_w - tx) * (rx_w - tx) + (rw - tw) * (rw - tw))};
+                                const CartesianVector &dv{recoVertex - trueVertex};
+                                const float dr{dv.GetMagnitude()};
+                                const float dx{dv.GetX()}, dy{dv.GetY()}, dz{dv.GetZ()};
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "event", m_event));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "pass", m_pass));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "dr_u", dr_u));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "dr_v", dr_v));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "dr_w", dr_w));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "dr", dr));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "dx", dx));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "dy", dy));
+                                PANDORA_MONITORING_API(SetTreeVariable(this->GetPandora(), m_rootTreeName, "dz", dz));
+                                PANDORA_MONITORING_API(FillTree(this->GetPandora(), m_rootTreeName));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 //-----------------------------------------------------------------------------------------------------------------------------------------
 
@@ -849,8 +831,14 @@ StatusCode DlVertexingAlgorithm::ReadSettings(const TiXmlHandle xmlHandle)
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "ModelFileNameW", modelName));
         modelName = LArFileHelper::FindFileInPath(modelName, "FW_SEARCH_PATH");
         LArDLHelper::LoadModel(modelName, m_modelW);
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PixelShift", m_pixelShift));
-        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "PixelScale", m_pixelScale));
+        PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "MaxHitAdc", m_maxHitAdc));
+        PANDORA_RETURN_RESULT_IF_AND_IF(STATUS_CODE_SUCCESS, STATUS_CODE_NOT_FOUND, !=, XmlHelper::ReadValue(xmlHandle, "WriteTree", m_writeTree));
+        if (m_writeTree)
+        {
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootTreeName", m_rootTreeName));
+            PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "RootFileName", m_rootFileName));
+        }
+
         PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, XmlHelper::ReadValue(xmlHandle, "OutputVertexListName", m_outputVertexListName));
         if (m_pass > 1)
         {
