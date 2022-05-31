@@ -59,14 +59,14 @@ DlVertexingAlgorithm::~DlVertexingAlgorithm()
 StatusCode DlVertexingAlgorithm::Run()
 {
     if (m_trainingMode)
-        return this->Train();
+        return this->PrepareTrainingSample();
     else
         return this->Infer();
 
     return STATUS_CODE_SUCCESS;
 }
 
-StatusCode DlVertexingAlgorithm::Train()
+StatusCode DlVertexingAlgorithm::PrepareTrainingSample()
 {
     LArMCParticleHelper::MCContributionMap mcToHitsMap;
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, this->GetMCToHitsMap(mcToHitsMap));
@@ -211,7 +211,7 @@ StatusCode DlVertexingAlgorithm::Infer()
         }
 
         CartesianPointVector positionVector;
-        MakeWirePlaneCoordinatesFromCanvas(*pCaloHitList, canvas, canvasWidth, canvasHeight, colOffset, rowOffset, positionVector);
+        this->MakeWirePlaneCoordinatesFromCanvas(*pCaloHitList, canvas, canvasWidth, canvasHeight, colOffset, rowOffset, positionVector);
         if (isU)
             vertexCandidatesU.emplace_back(positionVector.front());
         else if (isV)

@@ -60,7 +60,7 @@ private:
 
     pandora::StatusCode Run();
     pandora::StatusCode ReadSettings(const pandora::TiXmlHandle xmlHandle);
-    pandora::StatusCode Train();
+    pandora::StatusCode PrepareTrainingSample();
     pandora::StatusCode Infer();
 
     /*

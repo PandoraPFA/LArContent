@@ -71,7 +71,9 @@ bool LArVertexHelper::IsInFiducialVolume(const CartesianVector &vertex, const st
         return -310 < x && x < 310 && -550 < y && y < 550 && 50 < z && z < 1244;
     }
     else
-        return false;
+    {
+        throw StatusCodeException(STATUS_CODE_INVALID_PARAMETER);
+    }
 }
 
 } // namespace lar_content

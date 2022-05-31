@@ -58,7 +58,7 @@ StatusCode VertexAssessmentAlgorithm::Run()
 
 void VertexAssessmentAlgorithm::Visualize() const
 {
-    const CaloHitList *pCaloHitListU{nullptr}, *pCaloHitListV, *pCaloHitListW{nullptr};
+    const CaloHitList *pCaloHitListU{nullptr}, *pCaloHitListV{nullptr}, *pCaloHitListW{nullptr};
     if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, "CaloHitListU", pCaloHitListU))
         return;
     if (STATUS_CODE_SUCCESS != PandoraContentApi::GetList(*this, "CaloHitListV", pCaloHitListV))
@@ -183,9 +183,9 @@ void VertexAssessmentAlgorithm::Visualize() const
 
 StatusCode VertexAssessmentAlgorithm::GetMCToHitsMap(LArMCParticleHelper::MCContributionMap &mcToHitsMap) const
 {
-    const CaloHitList *pCaloHitList2D(nullptr);
+    const CaloHitList *pCaloHitList2D{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetList(*this, "CaloHitList2D", pCaloHitList2D));
-    const MCParticleList *pMCParticleList(nullptr);
+    const MCParticleList *pMCParticleList{nullptr};
     PANDORA_RETURN_RESULT_IF(STATUS_CODE_SUCCESS, !=, PandoraContentApi::GetCurrentList(*this, pMCParticleList));
 
     LArMCParticleHelper::PrimaryParameters parameters;
